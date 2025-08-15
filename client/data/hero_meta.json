@@ -1,0 +1,21 @@
+{
+  "aric":   { "class":"warrior", "role":"dps", "attack_type":"melee",  "element":"neutral", "weapon_pref":"sword" },
+  "lyria":  { "class":"ranger",  "role":"dps", "attack_type":"ranged", "element":"nature",  "weapon_pref":"bow" },
+  "brokk":  { "class":"guardian","role":"tank","attack_type":"melee",  "element":"earth",   "weapon_pref":"hammer_shield" },
+
+  "seraph": { "class":"cleric",  "role":"support","attack_type":"magic","element":"light",   "weapon_pref":"staff" },
+  "kaelen": { "class":"rogue",   "role":"dps", "attack_type":"melee",  "element":"dark",    "weapon_pref":"daggers" },
+  "morrin": { "class":"guardian","role":"tank","attack_type":"melee",  "element":"earth",   "weapon_pref":"mace_shield" },
+
+  "elara":  { "class":"mage",    "role":"dps", "attack_type":"magic",  "element":"arcane",  "weapon_pref":"staff" },
+  "darrion":{ "class":"warrior", "role":"bruiser","attack_type":"melee","element":"fire",   "weapon_pref":"greatsword" },
+  "sylva":  { "class":"druid",   "role":"support","attack_type":"magic","element":"nature", "weapon_pref":"staff" },
+
+  "ragnar": { "class":"barbarian","role":"dps","attack_type":"melee",  "element":"fire",    "weapon_pref":"axe" },
+  "selene": { "class":"ranger",  "role":"dps","attack_type":"ranged", "element":"light",   "weapon_pref":"bow" },
+  "tharion":{ "class":"necromancer","role":"control","attack_type":"magic","element":"dark","weapon_pref":"staff" },
+
+  "auriel": { "class":"angel","role":"support_tank","attack_type":"magic","element":"light","weapon_pref":"spear_shield" },
+  "zephyr": { "class":"summoner","role":"dps_control","attack_type":"magic","element":"wind","weapon_pref":"tome" },
+  "arkan":  { "class":"archmage","role":"dps","attack_type":"magic","element":"arcane","weapon_pref":"staff" }
+}
