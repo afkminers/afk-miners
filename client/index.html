@@ -12,42 +12,98 @@
   <link rel="stylesheet" href="css/auth.css">
   <link rel="stylesheet" href="css/gacha.css">
 
-  <!-- Fixes rápidos -->
+  <!-- Fixes rápidos + estilos do HUB -->
   <style>
-    /* continuamos usando canvas para o glow principal */
+    /* ——— ajustes que você já tinha ——— */
     .hero-glow{ display:none !important; }
-    /* força a animação dos heróis mesmo com reduce-motion */
     @media (prefers-reduced-motion: reduce){
       body.force-anim .hero-wrap{ animation: heroFloat 5.2s ease-in-out infinite !important; }
     }
-    /* nunca deixe canvas com borda/outline */
     #landingFx, #authParticles, .hero-canvas{ border:none!important; outline:none!important; box-shadow:none!important; }
-
-    /* remove 1px da direita do PNG do wizard (corrige risco branco) */
     #heroR-img.fix-edge{ clip-path: inset(0 1px 0 0); }
-    /* camadas de distorção (duplicatas da imagem, recortadas) */
     .distort{
       position:absolute; inset:0; width:100%; height:100%; object-fit:contain; image-rendering:pixelated; pointer-events:none;
       filter:url(#distortWave);
-      opacity:.9;                /* mistura leve */
-      mix-blend-mode:normal;     /* “refrata” sem exagerar */
-      transform-origin:50% 50%;
+      opacity:.9; mix-blend-mode:normal; transform-origin:50% 50%;
       animation: distortPulse 3.2s ease-in-out infinite;
     }
     @keyframes distortPulse{
       0%,100%{ transform:translateZ(0) scale(1.002) }
       50%    { transform:translateZ(0) scale(1.006) }
     }
-    /* recortes aproximados (percentuais no bbox da imagem) */
-    /* Zephyr esquerda */
     #heroL .distort.head  { clip-path: polygon(30% 6%, 54% 5%, 62% 14%, 58% 29%, 44% 33%, 32% 30%); }
     #heroL .distort.chest { clip-path: polygon(28% 30%, 55% 30%, 64% 48%, 50% 62%, 28% 58%); }
-    /* Wizard direita */
     #heroR .distort.head  { clip-path: polygon(67% 15%, 86% 15%, 90% 28%, 84% 40%, 70% 40%, 66% 28%); }
     #heroR .distort.chest { clip-path: polygon(62% 40%, 88% 40%, 90% 62%, 70% 68%, 58% 60%); }
-
-    /* um espaço central visível evita qualquer “linha de coluna” por rounding */
     .login-heroes{ grid-template-columns: 1fr 8vw 1fr !important; }
+
+    /* ——— HUB (menu principal) ——— */
+    .hub {
+      margin: 24px auto 40px;
+      max-width: 1200px;
+      padding: 0 16px;
+    }
+    .hub-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(14px, 2.2vw, 20px);
+      letter-spacing: 1px;
+      text-align: center;
+      margin: 6px 0 18px;
+      color: #ffe9c6;
+      text-shadow: 0 2px 0 #5a2b10, 0 3px 0 #000;
+    }
+    .hub-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    @media (max-width: 980px){
+      .hub-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 720px){
+      .hub-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .card {
+      position: relative;
+      aspect-ratio: 9/16;                 /* mesmo formato das artes 768x1152 */
+      border: 6px solid #2b1408;
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      background: #2b1408;
+      box-shadow: 0 8px 0 #2b1408, 0 10px 22px rgba(0,0,0,.45);
+      transform: translateY(0);
+      transition: transform .08s ease, box-shadow .08s ease, filter .08s ease;
+    }
+    .card:hover { transform: translateY(-3px); filter: saturate(1.1); }
+    .card:active { transform: translateY(0); filter: none; }
+
+    .card-art {
+      position:absolute; inset:0;
+      background-size: cover;
+      background-position: center;
+      image-rendering: pixelated;
+    }
+    .card-bar {
+      position:absolute; left:0; right:0; bottom:0;
+      background: #A0522D;            /* 👈 nossa tarja padrão */
+      border-top: 6px solid #2b1408;
+      padding: 12px 10px 14px;
+      text-align: center;
+    }
+    .card-title {
+      font-family:'Press Start 2P', monospace;
+      color:#fff3cc;
+      text-shadow: 0 2px 0 #2b1408, 0 4px 0 #000;
+      font-size: clamp(13px, 1.8vw, 22px);
+      letter-spacing: 1px;
+      line-height: 1.1;
+    }
+
+    /* views internas controladas via JS */
+    .view { display:none; }
+    .view.active { display:block; }
   </style>
 </head>
 <body class="force-anim">
@@ -55,13 +111,10 @@
   <!-- SVG filter para heat-shimmer (animado) -->
   <svg width="0" height="0" style="position:absolute; left:-9999px; top:-9999px;">
     <filter id="distortWave" x="-10%" y="-10%" width="120%" height="120%" filterUnits="objectBoundingBox">
-      <!-- ruído animado -->
       <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="8" result="noise">
         <animate attributeName="baseFrequency" values="0.9;0.6;0.9" dur="3.2s" repeatCount="indefinite"/>
       </feTurbulence>
-      <!-- suaviza ruído -->
       <feGaussianBlur in="noise" stdDeviation="0.6" result="blur"/>
-      <!-- pequena deslocação -->
       <feDisplacementMap in="SourceGraphic" in2="blur" scale="6" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
   </svg>
@@ -90,7 +143,6 @@
     <div class="hero-side">
       <div id="heroL" class="hero-wrap">
         <img id="heroL-img" class="hero-img" src="img/ui/zephyr2.png" alt="" onerror="this.classList.add('broken')">
-        <!-- camadas de distorção local -->
         <img class="distort head"  src="img/ui/zephyr2.png" alt="">
         <img class="distort chest" src="img/ui/zephyr2.png" alt="">
         <canvas id="heroL-canvas" class="hero-canvas"></canvas>
@@ -103,7 +155,6 @@
     <div class="hero-side">
       <div id="heroR" class="hero-wrap">
         <img id="heroR-img" class="hero-img fix-edge" src="img/ui/wizard_full.png" alt="" onerror="this.classList.add('broken')">
-        <!-- camadas de distorção local -->
         <img class="distort head"  src="img/ui/wizard_full.png" alt="">
         <img class="distort chest" src="img/ui/wizard_full.png" alt="">
         <canvas id="heroR-canvas" class="hero-canvas"></canvas>
@@ -223,27 +274,79 @@
     </div>
   </div>
 
+  <!-- APP -->
   <main id="appMain" class="hidden">
     <div class="topbar">
       <div class="pill" id="userInfo">—</div>
       <button class="btn8" id="btnLogout">Logout</button>
     </div>
 
-    <h1>AFK Miners — Sistema de Gacha</h1>
-
-    <section class="ui-frame bg-dither">
-      <div class="ui-title">GACHA</div>
-      <div style="padding:16px">
-        <button id="btnGacha" class="btn btn-ok">Summon (100 coins)</button>
-        <p id="balance"></p>
-        <div id="result" style="padding:10px;background:#171724;min-height:32px"></div>
+    <!-- HUB: menu principal -->
+    <section id="view-hub" class="hub view active">
+      <div class="hub-title">MAIN MENU</div>
+      <div class="hub-grid">
+        <!-- Ajuste os caminhos das imagens se necessário -->
+        <div class="card" data-go="treasure">
+          <div class="card-art" style="background-image:url('img/menu/treasure-hunt.png')"></div>
+          <div class="card-bar"><div class="card-title">TREASURE<br>HUNT</div></div>
+        </div>
+        <div class="card" data-go="training">
+          <div class="card-art" style="background-image:url('img/menu/training.png')"></div>
+          <div class="card-bar"><div class="card-title">TRAINING</div></div>
+        </div>
+        <div class="card" data-go="summon">
+          <div class="card-art" style="background-image:url('img/menu/summon.png')"></div>
+          <div class="card-bar"><div class="card-title">SUMMON</div></div>
+        </div>
+        <div class="card" data-go="inventory">
+          <div class="card-art" style="background-image:url('img/menu/inventory.png')"></div>
+          <div class="card-bar"><div class="card-title">INVENTORY</div></div>
+        </div>
+        <div class="card" data-go="heroes">
+          <div class="card-art" style="background-image:url('img/menu/heroes.png')"></div>
+          <div class="card-bar"><div class="card-title">HEROES</div></div>
+        </div>
+        <div class="card" data-go="dungeon">
+          <div class="card-art" style="background-image:url('img/menu/dungeon.png')"></div>
+          <div class="card-bar"><div class="card-title">DUNGEON</div></div>
+        </div>
+        <div class="card" data-go="pvp">
+          <div class="card-art" style="background-image:url('img/menu/pvp.png')"></div>
+          <div class="card-bar"><div class="card-title">PVP</div></div>
+        </div>
+        <div class="card" data-go="house">
+          <div class="card-art" style="background-image:url('img/menu/house.png')"></div>
+          <div class="card-bar"><div class="card-title">HOUSE</div></div>
+        </div>
       </div>
     </section>
 
-    <section class="ui-frame bg-dither">
+    <!-- VIEWS internas (placeholders + vistas reais) -->
+    <section id="view-treasure"  class="view ui-frame bg-dither"><div class="ui-title">TREASURE HUNT</div><div style="padding:16px">🧭 Em breve: mapa PvE/Farm com auto-run e drops.</div></section>
+    <section id="view-training"  class="view ui-frame bg-dither"><div class="ui-title">TRAINING</div><div style="padding:16px">🏹 Em breve: dummies, testes de DPS e upgrades.</div></section>
+
+    <!-- GACHA/INVENTORY que já existiam -->
+    <section id="view-summon" class="view">
+      <h1>AFK Miners — Sistema de Gacha</h1>
+      <section class="ui-frame bg-dither">
+        <div class="ui-title">GACHA</div>
+        <div style="padding:16px">
+          <button id="btnGacha" class="btn btn-ok">Summon (100 coins)</button>
+          <p id="balance"></p>
+          <div id="result" style="padding:10px;background:#171724;min-height:32px"></div>
+        </div>
+      </section>
+    </section>
+
+    <section id="view-inventory" class="view ui-frame bg-dither">
       <div class="ui-title">INVENTORY</div>
       <div style="padding:16px"><div id="inventory"></div></div>
     </section>
+
+    <section id="view-heroes"   class="view ui-frame bg-dither"><div class="ui-title">HEROES</div><div style="padding:16px">🧙 Gestão de equipe, slots e sinergias.</div></section>
+    <section id="view-dungeon"  class="view ui-frame bg-dither"><div class="ui-title">DUNGEON</div><div style="padding:16px">🕳️ Portais, chaves e bosses.</div></section>
+    <section id="view-pvp"      class="view ui-frame bg-dither"><div class="ui-title">PVP</div><div style="padding:16px">⚔️ Arena async (defesas salvas, ataques por tickets).</div></section>
+    <section id="view-house"    class="view ui-frame bg-dither"><div class="ui-title">HOUSE</div><div style="padding:16px">🏠 Recuperação e buffs por mobília.</div></section>
   </main>
 
   <!-- SFX -->
@@ -260,7 +363,7 @@
   <!-- FX da LANDING -->
   <script type="module" src="js/landing_fx.js"></script>
 
-  <!-- Abrir/fechar modal pelo PLAY + esconder/mostrar heróis conforme estado -->
+  <!-- Abrir/fechar modal + sync da landing -->
   <script>
     const openBtn  = document.getElementById('btnOpenAuth');
     const closeBtn = document.getElementById('btnCloseAuth');
@@ -281,6 +384,54 @@
     syncLanding();
     const obs = new MutationObserver(syncLanding);
     obs.observe(appMain, { attributes:true, attributeFilter:['class'] });
+  </script>
+
+  <!-- Routerzinho do HUB (SPA leve) -->
+  <script>
+    const clickSfx = document.getElementById('sfx-click');
+
+    const views = {
+      hub:       document.getElementById('view-hub'),
+      treasure:  document.getElementById('view-treasure'),
+      training:  document.getElementById('view-training'),
+      summon:    document.getElementById('view-summon'),
+      inventory: document.getElementById('view-inventory'),
+      heroes:    document.getElementById('view-heroes'),
+      dungeon:   document.getElementById('view-dungeon'),
+      pvp:       document.getElementById('view-pvp'),
+      house:     document.getElementById('view-house'),
+    };
+
+    function showView(name){
+      for (const k in views){
+        views[k].classList.toggle('active', k === name);
+        if (k !== name) views[k].classList.remove('active');
+        views[k].style.display = (k === name) ? '' : 'none';
+      }
+      if (clickSfx) { try { clickSfx.currentTime = 0; clickSfx.play(); } catch(e){} }
+      // manter hash legível
+      if (name === 'hub') history.replaceState({}, '', '#');
+      else history.replaceState({}, '', `#${name}`);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    // grid de cards → navega para a view
+    document.querySelectorAll('.hub-grid .card').forEach(card=>{
+      card.addEventListener('click', ()=>{
+        const target = card.getAttribute('data-go');
+        if (target && views[target]) showView(target);
+      });
+    });
+
+    // botão Logout volta pro hub quando voltar pro app
+    document.getElementById('btnLogout')?.addEventListener('click', ()=> showView('hub'));
+
+    // abrir view direto pela hash (ex: #summon)
+    const initial = (location.hash || '').replace('#','').trim();
+    if (initial && views[initial]) showView(initial); else showView('hub');
+
+    // helper para outras partes do app abrirem/fecharem views
+    window.AFK = Object.assign(window.AFK||{}, { showView });
   </script>
 </body>
 </html>
