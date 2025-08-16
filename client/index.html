@@ -26,7 +26,10 @@
       body.force-anim .hero-wrap{ animation: heroFloat 5.2s ease-in-out infinite !important; }
     }
     #landingFx, #authParticles, .hero-canvas{ border:none!important; outline:none!important; box-shadow:none!important; }
-    #heroR-img.fix-edge{ clip-path: inset(0 1px 0 0); }
+
+    /* FIX: recorta 1px do LADO ESQUERDO do wizard para sumir a listra */
+    #heroR-img.fix-edge{ clip-path: inset(0 0 0 1px); }
+
     .distort{
       position:absolute; inset:0; width:100%; height:100%; object-fit:contain; image-rendering:pixelated; pointer-events:none;
       filter:url(#distortWave);
@@ -42,8 +45,8 @@
     #heroR .distort.head  { clip-path: polygon(67% 15%, 86% 15%, 90% 28%, 84% 40%, 70% 40%, 66% 28%); }
     #heroR .distort.chest { clip-path: polygon(62% 40%, 88% 40%, 90% 62%, 70% 68%, 58% 60%); }
 
-    /* ===== heróis um pouco menores e mais embaixo ===== */
-    :root{ --heroMax: 58vh; --heroTopSpace: 14px; }
+    /* ===== heróis mais embaixo (bem afastados do header) ===== */
+    :root{ --heroMax: 58vh; --heroTopSpace: clamp(60px, 12vh, 160px); }
     .login-heroes{
       grid-template-columns: 1fr 8vw 1fr !important;
       margin-top: var(--heroTopSpace);
@@ -55,7 +58,7 @@
       width:auto; height:auto; object-fit:contain; image-rendering:pixelated;
     }
     @media (max-width: 820px){
-      :root{ --heroMax: 42vh; --heroTopSpace: 10px; }
+      :root{ --heroMax: 42vh; --heroTopSpace: clamp(40px, 10vh, 120px); }
     }
 
     /* ——— HEADER (centralizado + grupos próximos do PLAY) ——— */
@@ -923,4 +926,3 @@
   </script>
 </body>
 </html>
-
