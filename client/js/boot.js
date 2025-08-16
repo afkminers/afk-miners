@@ -21,6 +21,7 @@ const btnRegister= document.getElementById('btnRegister');
 const regMsg     = document.getElementById('regMsg');
 
 const btnLogout  = document.getElementById('btnLogout');
+const btnLogoutTop = document.getElementById('btnLogoutTop'); // topo direito
 
 // Header buttons
 const btnPlay    = document.getElementById('btnPlay');
@@ -90,17 +91,30 @@ function updateHud(profileOrCoins) {
 // liga gacha com callback de HUD
 const gacha = bindGachaUI(ctx, { onHudUpdate: updateHud });
 
+/* ========= helpers visual ========= */
+function setLogoutVisibility(signed){
+  const show = !!signed;
+  btnLogoutTop?.classList.toggle('hidden', !show);
+}
+function setLoggedOutGlow(on){
+  document.body.classList.toggle('logged-out', !!on);
+}
+
 /* ========= Estados de tela ========= */
 function showLanding(){
   // Landing = sem app e sem modal aberto; com FX rodando ao fundo.
   appMain.classList.add('hidden');
   authScreen.classList.add('hidden');
+  setLogoutVisibility(false);
+  setLoggedOutGlow(true);
   initLoginFx();
 }
 async function showApp(profile) {
   stopLoginFx();
   authScreen.classList.add('hidden');
   appMain.classList.remove('hidden');
+  setLogoutVisibility(true);
+  setLoggedOutGlow(false);
   updateHud(profile);
   await gacha.init(profile);
 }
@@ -110,7 +124,7 @@ async function trySession() {
   await getCsrf();
   const me = await apiGet(`${API}/api/auth/me`);
   if (me?.profile) showApp(me.profile);
-  else showLanding(); // <<< não abre o modal automaticamente
+  else showLanding(); // não abre o modal automaticamente
 }
 trySession();
 
@@ -144,7 +158,9 @@ btnRegister.onclick = async () => {
   await trySession();
 };
 
-btnLogout.onclick = async () => {
+async function handleLogout(){
   await doLogout();
   showLanding();
-};
+}
+btnLogout?.addEventListener('click', handleLogout);
+btnLogoutTop?.addEventListener('click', handleLogout);

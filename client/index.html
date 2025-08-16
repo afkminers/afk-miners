@@ -12,8 +12,11 @@
   <link rel="stylesheet" href="css/auth.css">
   <link rel="stylesheet" href="css/gacha.css">
 
-  <!-- Fixes rápidos + estilos do HUB -->
+  <!-- Fixes rápidos + estilos do HUB + header compacto -->
   <style>
+    /* util */
+    .hidden{ display:none !important; }
+
     /* ——— ajustes que você já tinha ——— */
     .hero-glow{ display:none !important; }
     @media (prefers-reduced-motion: reduce){
@@ -37,11 +40,133 @@
     #heroR .distort.chest { clip-path: polygon(62% 40%, 88% 40%, 90% 62%, 70% 68%, 58% 60%); }
     .login-heroes{ grid-template-columns: 1fr 8vw 1fr !important; }
 
+    /* ——— HEADER (centralizado + grupos próximos do PLAY) ——— */
+    .site-header{
+      position: sticky; top: 0; z-index: 50;
+      /* translúcido com blur leve para não brigar com as artes */
+      background: rgba(26,18,16,.85);
+      backdrop-filter: blur(2px);
+      border-bottom: 4px solid #0c0706;
+      box-shadow: 0 6px 0 #000;
+    }
+    /* faixa dither fraquinha logo abaixo da barra */
+    .site-header::after{
+      content:"";
+      display:block;
+      height:6px;
+      background:
+        repeating-linear-gradient(
+          45deg,
+          rgba(255,255,255,.08) 0 6px,
+          rgba(0,0,0,.08) 6px 12px
+        );
+      border-top: 3px solid #2a1813;
+      border-bottom: 3px solid #0c0706;
+      box-shadow: inset 0 -2px 0 #000;
+    }
+
+    .nav-wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:center; /* tudo gira em torno do PLAY */
+      gap: 14px;              /* grupos bem próximos */
+      padding: 10px 12px 10px;
+      position: relative;
+    }
+    .nav-left, .nav-right{
+      display:flex; align-items:center; gap:10px;
+    }
+    .btn-play{
+      font-family:"Press Start 2P", monospace;
+      padding: 10px 26px;
+      background: linear-gradient(#ffb23e, #f39b2d);
+      border: 6px solid #2b1512;
+      border-radius: 14px;
+      color:#2b1512;
+      text-shadow: 0 1px 0 #ffd9a0;
+      box-shadow: 0 6px 0 #2b1512, inset 0 -3px 0 rgba(0,0,0,.35);
+      cursor:pointer;
+      transition: filter .15s ease, transform .08s ease, box-shadow .15s ease;
+    }
+    .btn-play:hover{ filter:brightness(1.06); transform: translateY(-1px); }
+    /* Glow sutil quando deslogado */
+    @keyframes playGlow {
+      0%,100%{ box-shadow: 0 6px 0 #2b1512, 0 0 0 rgba(255,200,80,0), 0 0 0 rgba(255,200,80,0); }
+      50%   { box-shadow: 0 6px 0 #2b1512, 0 0 22px rgba(255,200,80,.55), 0 0 44px rgba(255,200,80,.25); }
+    }
+    body.logged-out .btn-play{ animation: playGlow 1.8s ease-in-out infinite; }
+
+    .nav-link{
+      display:inline-block;
+      font-family:"Press Start 2P", monospace;
+      font-size: 13px;
+      color:#f8dede;
+      background:#5a2328;
+      padding:8px 14px;
+      border:4px solid #361317;
+      border-radius:12px;
+      box-shadow:0 4px 0 #2a0f12, inset 0 -2px 0 rgba(0,0,0,.25);
+      text-decoration:none;
+      transition: filter .15s ease, transform .08s ease;
+    }
+    .nav-link:hover{ filter:brightness(1.06); transform: translateY(-1px); }
+
+    /* Ações no canto superior direito (Logout + Config) */
+    .header-actions{
+      position:absolute; right:12px; top:6px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .btn-logout, .btn-gear{
+      display:flex; align-items:center; justify-content:center;
+      gap:8px;
+      padding:8px 14px;
+      border:4px solid #2b1512; border-radius:12px;
+      font-family:"Press Start 2P", monospace; font-size:13px;
+      color:#2b1512; background:linear-gradient(#ffb23e,#f39b2d);
+      box-shadow:0 4px 0 #2b1512, inset 0 -2px 0 rgba(0,0,0,.25);
+      cursor:pointer; min-height:38px;
+      transition: filter .15s ease, transform .08s ease;
+    }
+    .btn-logout:hover, .btn-gear:hover{ filter:brightness(1.06); transform: translateY(-1px); }
+
+    .btn-gear{
+      width:44px; padding:8px; /* só o ícone */
+    }
+    .btn-gear svg{ width:20px; height:20px; display:block; }
+
+    /* Dropdown de configurações */
+    .cfg-menu{
+      position:absolute; right:0; top:48px;
+      width: 240px;
+      background:#2b1a12; border:6px solid #000; border-radius:12px;
+      box-shadow:0 8px 0 #000, 0 16px 22px rgba(0,0,0,.55);
+      padding:8px; display:none; z-index:60;
+    }
+    .cfg-menu.open{ display:block; }
+    .cfg-item{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:8px;
+      padding:8px 10px; margin:6px 0;
+      color:#ffe8c0; font-family:"Press Start 2P", monospace; font-size:12px;
+      background:#1e1410; border:4px solid #000; border-radius:10px;
+    }
+    .cfg-item input[type="checkbox"]{ transform: scale(1.2); }
+    .cfg-footer{
+      display:flex; justify-content:flex-end; gap:8px; margin-top:6px;
+    }
+    .cfg-btn{
+      padding:6px 10px; border:3px solid #000; border-radius:10px;
+      font-family:"Press Start 2P", monospace; font-size:11px;
+      background:#73402a; color:#fff; cursor:pointer;
+    }
+
     /* ——— MOLDURA RETRÔ (main-stage) ——— */
     .main-stage {
       position: relative;
       margin: 24px auto 56px;
-      width: min(1200px, calc(100vw - 32px)); /* centralizada e um pouco mais compacta */
+      width: min(1200px, calc(100vw - 32px)); /* centralizada e compacta */
       box-sizing: border-box;
       padding: 22px 24px;
       background:
@@ -61,7 +186,7 @@
         repeating-linear-gradient(0deg,  #233245 0 32px, #1e2c3d 32px 64px);
       opacity:.22;
       pointer-events:none;
-      z-index:-1; /* 👈 fica ATRÁS dos cards */
+      z-index:-1;
     }
 
     /* HUD dentro da moldura */
@@ -90,7 +215,7 @@
       font-size:24px;
     }
 
-    /* GRID de cards (mais baixo e central) */
+    /* GRID de cards (cabe em 1366x768 sem scroll) */
     .menu-grid{
       display:grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -103,7 +228,7 @@
     @media (max-width: 820px) { .menu-grid{ grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 520px) { .menu-grid{ grid-template-columns: 1fr; } }
 
-    /* CARD do menu (menor para caber em 1366x768 sem scroll) */
+    /* CARD do menu (menor) */
     .menu-card{
       width: clamp(160px, 20vw, 230px);
       cursor:pointer; user-select:none;
@@ -111,7 +236,6 @@
       box-shadow:0 6px 0 #000, 0 16px 22px rgba(0,0,0,.55);
       transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
     }
-    /* Hover com brilho leve old-school */
     .menu-card:hover{
       transform: translateY(-3px);
       filter: brightness(1.08) saturate(1.08);
@@ -122,12 +246,12 @@
     }
     .menu-card:active{ transform: translateY(0); filter: none; }
 
-    /* Área da imagem — menos vertical e legenda mais perto */
+    /* Imagem menos vertical e legenda mais próxima */
     .menu-thumb{
-      aspect-ratio: 4 / 3;                  /* antes 3/5 -> agora mais “deitada” */
+      aspect-ratio: 4 / 3;
       background:#0d0d12;
       display:flex; align-items:center; justify-content:center;
-      padding:8px 8px 6px;                   /* legenda mais próxima */
+      padding:8px 8px 6px;
       border-bottom:4px solid #000;
     }
     .menu-thumb img{
@@ -163,9 +287,12 @@
       cursor:pointer; box-shadow:0 3px 0 #000, inset 0 -3px 0 #000;
     }
     .btn-back:hover{ filter:brightness(1.12); }
+
+    /* esconde o logout antigo da topbar (agora usamos o do header) */
+    .topbar #btnLogout{ display:none; }
   </style>
 </head>
-<body class="force-anim">
+<body class="force-anim logged-out">
 
   <!-- SVG filter para heat-shimmer (animado) -->
   <svg width="0" height="0" style="position:absolute; left:-9999px; top:-9999px;">
@@ -178,18 +305,51 @@
     </filter>
   </svg>
 
-  <!-- HEADER com PLAY central -->
+  <!-- HEADER com PLAY central + Logout/Config no topo direito -->
   <header class="site-header">
     <div class="nav-wrap">
       <nav class="nav-left">
         <a class="nav-link" href="#">Overview</a>
         <a class="nav-link" href="#">Roadmap</a>
       </nav>
-      <button id="btnOpenAuth" class="btn-play">PLAY</button>
+
+      <button id="btnPlay" class="btn-play">PLAY</button>
+
       <nav class="nav-right">
         <a class="nav-link" href="#">Leaderboard</a>
         <a class="nav-link" href="#">Support</a>
       </nav>
+
+      <!-- canto superior direito -->
+      <div class="header-actions">
+        <button id="btnLogoutTop" class="btn-logout hidden" title="Logout">Logout</button>
+        <div style="position:relative">
+          <button id="btnGear" class="btn-gear" title="Configurações" aria-haspopup="true" aria-expanded="false">
+            <!-- ícone engrenagem -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges">
+              <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
+              <path d="M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12M12 2v3M12 19v3"/>
+            </svg>
+          </button>
+          <div id="cfgMenu" class="cfg-menu" role="menu" aria-hidden="true">
+            <div class="cfg-item">
+              <span>Mute SFX</span>
+              <input id="optMute" type="checkbox">
+            </div>
+            <div class="cfg-item">
+              <span>Reduced motion</span>
+              <input id="optReduce" type="checkbox">
+            </div>
+            <div class="cfg-item">
+              <span>Fullscreen</span>
+              <button id="optFull" class="cfg-btn">Toggle</button>
+            </div>
+            <div class="cfg-footer">
+              <button id="optClose" class="cfg-btn">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -234,7 +394,7 @@
     </div>
 
     <div class="auth-card">
-      <button class="auth-close" id="btnCloseAuth">X</button>
+      <button class="auth-close" id="authClose">X</button>
       <div class="auth-head">AFK MINERS — LOGIN / SIGN UP</div>
 
       <div class="auth-pane">
@@ -323,7 +483,7 @@
         <button class="btn btn-ok" id="btnOk">OKAY</button>
         <button class="btn btn-again" id="btnAgain">SUMMON AGAIN (100)</button>
         <button class="btn btn-again" id="btnAgain10">SUMMON x10</button>
-        <div class="press-any">PRESS ANY KEY OR CLICK OKAY</div>
+        <div class="press-any">PRESS ANY KEY OR CLICK TO SKIP</div>
         <label class="skipbox"><input type="checkbox" id="chkSkip"> Skip chest animation</label>
         <div id="againHint" style="position:absolute;width:100%;bottom:34px;text-align:center;font-family:'Press Start 2P',monospace;font-size:10px;color:#7a4c20;display:none;">Not enough coins</div>
       </div>
@@ -484,10 +644,11 @@
   <!-- FX da LANDING -->
   <script type="module" src="js/landing_fx.js"></script>
 
-  <!-- Abrir/fechar modal + sync da landing -->
+  <!-- Abrir/fechar modal + sync da landing + config menu + logout top -->
   <script>
-    const openBtn  = document.getElementById('btnOpenAuth');
-    const closeBtn = document.getElementById('btnCloseAuth');
+    // abre/fecha auth
+    const openBtn  = document.getElementById('btnOpenAuth') || document.getElementById('btnPlay');
+    const closeBtn = document.getElementById('btnCloseAuth') || document.getElementById('authClose');
     const auth     = document.getElementById('authScreen');
     const appMain  = document.getElementById('appMain');
     const landing  = document.querySelector('.login-heroes');
@@ -505,6 +666,47 @@
     syncLanding();
     const obs = new MutationObserver(syncLanding);
     obs.observe(appMain, { attributes:true, attributeFilter:['class'] });
+
+    // Config dropdown
+    const gearBtn = document.getElementById('btnGear');
+    const cfgMenu = document.getElementById('cfgMenu');
+    const cfgClose= document.getElementById('optClose');
+    const optMute = document.getElementById('optMute');
+    const optReduce = document.getElementById('optReduce');
+    const optFull   = document.getElementById('optFull');
+
+    function toggleCfg(open){
+      if (!cfgMenu) return;
+      cfgMenu.classList.toggle('open', open ?? !cfgMenu.classList.contains('open'));
+      if (gearBtn) gearBtn.setAttribute('aria-expanded', cfgMenu.classList.contains('open'));
+      cfgMenu.setAttribute('aria-hidden', !cfgMenu.classList.contains('open'));
+    }
+    if (gearBtn) gearBtn.addEventListener('click', ()=> toggleCfg());
+    if (cfgClose) cfgClose.addEventListener('click', ()=> toggleCfg(false));
+    document.addEventListener('click', (e)=>{
+      if (!cfgMenu || !gearBtn) return;
+      if (cfgMenu.contains(e.target) || gearBtn.contains(e.target)) return;
+      cfgMenu.classList.remove('open');
+      gearBtn.setAttribute('aria-expanded','false');
+    });
+
+    // placeholders de opções simples
+    optMute?.addEventListener('change', (e)=> {
+      localStorage.setItem('sfx-muted', e.target.checked ? '1' : '0');
+      document.dispatchEvent(new CustomEvent('sfx-mute', { detail:{ muted: e.target.checked }}));
+    });
+    optReduce?.addEventListener('change', (e)=>{
+      document.body.classList.toggle('prefers-reduced', e.target.checked);
+    });
+    optFull?.addEventListener('click', async ()=>{
+      if (!document.fullscreenElement) { try{ await document.documentElement.requestFullscreen(); }catch{} }
+      else { try{ await document.exitFullscreen(); }catch{} }
+    });
+
+    // Logout do topo dispara o antigo (boot.js também trata diretamente)
+    const btnLogoutTop = document.getElementById('btnLogoutTop');
+    const btnLogoutOld = document.getElementById('btnLogout');
+    btnLogoutTop?.addEventListener('click', ()=> btnLogoutOld?.click());
   </script>
 
   <!-- Router do HUB + som imediato + HUD coins (com vários fallbacks) -->
@@ -533,13 +735,13 @@
         views[k].classList.toggle('active', k === name);
         views[k].style.display = (k === name) ? '' : 'none';
       }
-      showHub(!name); // HUB só aparece quando nenhuma view interna está ativa
+      showHub(!name);
       if (clickSfx) { try { clickSfx.currentTime = 0; clickSfx.play(); } catch(e){} }
       history.replaceState({}, '', name ? `#${name}` : '#');
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
 
-    // Hover/som imediato no mousedown + navegação
+    // Som imediato no mousedown + navegação
     document.querySelectorAll('.menu-card').forEach(card=>{
       card.addEventListener('mousedown', ()=>{ try{ clickSfx.currentTime=0; clickSfx.play(); }catch(e){} });
       card.addEventListener('click', ()=>{
