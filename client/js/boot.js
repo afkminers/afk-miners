@@ -10,22 +10,27 @@ const appMain    = document.getElementById('appMain');
 const userInfo   = document.getElementById('userInfo');
 
 // Auth form
-const loginName  = document.getElementById('loginName');
-const loginPass  = document.getElementById('loginPass');
-const btnLogin   = document.getElementById('btnLogin');
-const loginMsg   = document.getElementById('loginMsg');
+const loginName   = document.getElementById('loginName');
+const loginPass   = document.getElementById('loginPass');
+const btnLogin    = document.getElementById('btnLogin');
+const loginMsg    = document.getElementById('loginMsg');
 
-const regName    = document.getElementById('regName');
-const regPass    = document.getElementById('regPass');
-const btnRegister= document.getElementById('btnRegister');
-const regMsg     = document.getElementById('regMsg');
+const regName     = document.getElementById('regName');
+const regPass     = document.getElementById('regPass');
+const btnRegister = document.getElementById('btnRegister');
+const regMsg      = document.getElementById('regMsg');
 
-const btnLogout  = document.getElementById('btnLogout');
-const btnLogoutTop = document.getElementById('btnLogoutTop'); // topo direito
+const btnLogout     = document.getElementById('btnLogout');
+const btnLogoutTop  = document.getElementById('btnLogoutTop'); // topo direito
+const mobileLogout  = document.getElementById('mobileLogout'); // item do menu mobile
 
 // Header buttons
-const btnPlay    = document.getElementById('btnPlay');
-const authClose  = document.getElementById('authClose');
+const btnPlay   = document.getElementById('btnPlay');
+const authClose = document.getElementById('authClose');
+
+// Mobile menu
+const btnHamb   = document.getElementById('btnHamb');
+const mobMenu   = document.getElementById('mobileMenu');
 
 // Referências gacha
 const ctx = {
@@ -95,18 +100,23 @@ const gacha = bindGachaUI(ctx, { onHudUpdate: updateHud });
 function setLogoutVisibility(signed){
   const show = !!signed;
   btnLogoutTop?.classList.toggle('hidden', !show);
+  mobileLogout?.classList.toggle('hidden', !show);
 }
 function setLoggedOutGlow(on){
   document.body.classList.toggle('logged-out', !!on);
 }
+function closeMobileMenu(){
+  mobMenu?.classList.remove('open');
+  btnHamb?.setAttribute('aria-expanded','false');
+}
 
 /* ========= Estados de tela ========= */
 function showLanding(){
-  // Landing = sem app e sem modal aberto; com FX rodando ao fundo.
   appMain.classList.add('hidden');
   authScreen.classList.add('hidden');
   setLogoutVisibility(false);
   setLoggedOutGlow(true);
+  closeMobileMenu();
   initLoginFx();
 }
 async function showApp(profile) {
@@ -115,6 +125,7 @@ async function showApp(profile) {
   appMain.classList.remove('hidden');
   setLogoutVisibility(true);
   setLoggedOutGlow(false);
+  closeMobileMenu();
   updateHud(profile);
   await gacha.init(profile);
 }
@@ -124,7 +135,7 @@ async function trySession() {
   await getCsrf();
   const me = await apiGet(`${API}/api/auth/me`);
   if (me?.profile) showApp(me.profile);
-  else showLanding(); // não abre o modal automaticamente
+  else showLanding();
 }
 trySession();
 
@@ -132,13 +143,10 @@ trySession();
 if (btnPlay) {
   btnPlay.onclick = () => {
     authScreen.classList.remove('hidden');
-    // já estamos na landing com FX ligado
   };
 }
 if (authClose) {
-  authClose.onclick = () => {
-    authScreen.classList.add('hidden');
-  };
+  authClose.onclick = () => authScreen.classList.add('hidden');
 }
 
 /* ========= Auth handlers ========= */
@@ -146,7 +154,7 @@ btnLogin.onclick = async () => {
   loginMsg.textContent = '';
   const data = await doLogin(loginName.value.trim(), loginPass.value);
   if (data?.error) { loginMsg.textContent = data.error; return; }
-  celebrate();          // faíscas de sucesso
+  celebrate();
   await trySession();
 };
 
@@ -154,7 +162,7 @@ btnRegister.onclick = async () => {
   regMsg.textContent = '';
   const data = await doRegister(regName.value.trim(), regPass.value);
   if (data?.error) { regMsg.textContent = data.error; return; }
-  celebrate();          // faíscas de sucesso
+  celebrate();
   await trySession();
 };
 
@@ -164,3 +172,17 @@ async function handleLogout(){
 }
 btnLogout?.addEventListener('click', handleLogout);
 btnLogoutTop?.addEventListener('click', handleLogout);
+mobileLogout?.addEventListener('click', handleLogout);
+
+/* ========= Mobile menu ========= */
+btnHamb?.addEventListener('click', () => {
+  mobMenu.classList.toggle('open');
+  const open = mobMenu.classList.contains('open');
+  btnHamb.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+window.addEventListener('resize', closeMobileMenu);
+document.addEventListener('click', (e)=>{
+  if (!mobMenu || !btnHamb) return;
+  if (mobMenu.contains(e.target) || btnHamb.contains(e.target)) return;
+  closeMobileMenu();
+});
