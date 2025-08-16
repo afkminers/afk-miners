@@ -186,3 +186,4 @@ document.addEventListener('click', (e)=>{
   if (mobMenu.contains(e.target) || btnHamb.contains(e.target)) return;
   closeMobileMenu();
 });
+
