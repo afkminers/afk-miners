@@ -6,13 +6,19 @@ const FX = (() => {
   let cvs, ctx, DPR = 1, W = 0, H = 0, on = false, raf = 0, t = 0;
   const sparks = [];
 
-  // âncoras (frações 0..1)
+  // âncoras (frações 0..1) relativas a cada imagem
   const anchors = {
     // Zephyr (esquerda) — mão azul e chamas laranja
-    L1: { x: 0.26, y: 0.43, hue: 195, r: 96 }, // maior alcance
-    L2: { x: 0.72, y: 0.62, hue: 30,  r: 102 },
+    L1: { x: 0.26, y: 0.43, hue: 195, r: 96 }, // azul
+    L2: { x: 0.72, y: 0.62, hue: 30,  r: 102 }, // laranja
+
+    // Elara (centro) — gema do cajado (esq) e orbe (dir)
+    // OBS: valores são aproximações que funcionam bem com a elara.png enviada (de corpo inteiro)
+    C1: { x: 0.18, y: 0.18, hue: 185, r: 92 },  // cajado (ciano)
+    C2: { x: 0.72, y: 0.47, hue: 170, r: 98 },  // orbe (turquesa)
+
     // Wizard (direita) — orbe do cajado
-    R1: { x: 0.21, y: 0.18, hue: 300, r: 98 }
+    R1: { x: 0.21, y: 0.18, hue: 300, r: 98 }   // magenta/roxo
   };
 
   function sel() {
@@ -36,7 +42,7 @@ const FX = (() => {
     if (!el) return null;
     const r = el.getBoundingClientRect();
     return { l: r.left * DPR, t: r.top * DPR, w: r.width * DPR, h: r.height * DPR };
-  }
+    }
 
   function fromFrac(rect, f) {
     if (!rect) return { x: -9999, y: -9999 };
@@ -78,23 +84,30 @@ const FX = (() => {
     ctx.clearRect(0, 0, W, H);
 
     const rL = imgRect('heroL-img');
+    const rC = imgRect('heroC-img');
     const rR = imgRect('heroR-img');
 
     const pL1 = fromFrac(rL, anchors.L1);
     const pL2 = fromFrac(rL, anchors.L2);
+    const pC1 = fromFrac(rC, anchors.C1);
+    const pC2 = fromFrac(rC, anchors.C2);
     const pR1 = fromFrac(rR, anchors.R1);
 
     const jig = (n, amp=3) => Math.sin((t + n) * 0.06) * amp;
 
     // glows maiores
-    glow(pL1.x + jig(0,2), pL1.y + jig(3,2), anchors.L1.r, anchors.L1.hue);
-    glow(pL2.x + jig(7,2), pL2.y + jig(5,2), anchors.L2.r, anchors.L2.hue);
-    glow(pR1.x + jig(2,2), pR1.y + jig(9,2), anchors.R1.r, anchors.R1.hue);
+    if (rL){ glow(pL1.x + jig(0,2), pL1.y + jig(3,2), anchors.L1.r, anchors.L1.hue);
+             glow(pL2.x + jig(7,2), pL2.y + jig(5,2), anchors.L2.r, anchors.L2.hue); }
+    if (rC){ glow(pC1.x + jig(4,2), pC1.y + jig(6,2), anchors.C1.r, anchors.C1.hue);
+             glow(pC2.x + jig(5,2), pC2.y + jig(8,2), anchors.C2.r, anchors.C2.hue); }
+    if (rR){ glow(pR1.x + jig(2,2), pR1.y + jig(9,2), anchors.R1.r, anchors.R1.hue); }
 
     // mais partículas por frame
-    for (let i = 0; i < 2; i++) addSpark(pL1.x, pL1.y, anchors.L1.hue);
-    for (let i = 0; i < 2; i++) addSpark(pL2.x, pL2.y, anchors.L2.hue);
-    for (let i = 0; i < 2; i++) addSpark(pR1.x, pR1.y, anchors.R1.hue);
+    if (rL){ for (let i = 0; i < 2; i++) addSpark(pL1.x, pL1.y, anchors.L1.hue);
+             for (let i = 0; i < 2; i++) addSpark(pL2.x, pL2.y, anchors.L2.hue); }
+    if (rC){ for (let i = 0; i < 2; i++) addSpark(pC1.x, pC1.y, anchors.C1.hue);
+             for (let i = 0; i < 2; i++) addSpark(pC2.x, pC2.y, anchors.C2.hue); }
+    if (rR){ for (let i = 0; i < 2; i++) addSpark(pR1.x, pR1.y, anchors.R1.hue); }
 
     // update/desenho das faíscas
     for (let i = sparks.length - 1; i >= 0; i--) {

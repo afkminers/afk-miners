@@ -27,6 +27,15 @@
     }
     #landingFx, #authParticles, .hero-canvas{ border:none!important; outline:none!important; box-shadow:none!important; }
 
+    /* BG exclusivo da landing (fica atrás dos heróis e do FX) */
+    #landingBg{
+      position:fixed; inset:0;
+      z-index:0;                 /* header tem 50; canvas/heróis ficam acima naturalmente */
+      background: #0f0d10 url("img/bg/landing-chaos.png") center top / cover no-repeat;
+      opacity:1;
+      pointer-events:none;       /* não bloqueia cliques no cabeçalho */
+    }
+
     /* FIX: recorta 1px do LADO ESQUERDO do wizard para sumir a listra */
     #heroR-img.fix-edge{ clip-path: inset(0 0 0 1px); }
 
@@ -48,14 +57,27 @@
     /* ===== heróis mais embaixo (bem afastados do header) ===== */
     :root{ --heroMax: 58vh; --heroTopSpace: clamp(290px, 12vh, 160px); }
     .login-heroes{
-      grid-template-columns: 1fr 8vw 1fr !important;
+      position: relative;
+      z-index: 1; /* acima do landingBg */
+      display: grid;
+      grid-template-columns: 1fr 8vw 1fr 8vw 1fr; /* Zephyr | gap | Elara | gap | Wizard */
       margin-top: var(--heroTopSpace);
       align-items: end;
+      width: 100%;
     }
     .hero-wrap{ display:flex; align-items:flex-end; justify-content:center; }
     .hero-img{
       max-height: var(--heroMax);
       width:auto; height:auto; object-fit:contain; image-rendering:pixelated;
+      filter: drop-shadow(0 10px 0 rgba(0,0,0,.5));
+    }
+    /* Elara um tico menor para caber os 3 */
+    #heroC-img.hero-img { max-height: calc(var(--heroMax) - 6vh); }
+
+    @media (max-width: 1100px){
+      /* em telas menores some a Elara para não esmagar */
+      .login-heroes{ grid-template-columns: 1fr 8vw 1fr; }
+      .hero-center{ display:none; }
     }
     @media (max-width: 820px){
       :root{ --heroMax: 42vh; --heroTopSpace: clamp(40px, 10vh, 120px); }
@@ -410,6 +432,9 @@
     </div>
   </header>
 
+  <!-- ==== CAMADA DE BACKGROUND SÓ DA LANDING ==== -->
+  <div id="landingBg" aria-hidden="true"></div>
+
   <!-- Canvas de partículas da landing -->
   <canvas id="landingFx"></canvas>
 
@@ -420,6 +445,16 @@
       <div id="heroL" class="hero-wrap">
         <img id="heroL-img" class="hero-img" src="img/ui/zephyr2.png" alt="" onerror="this.classList.add('broken')">
         <canvas id="heroL-canvas" class="hero-canvas"></canvas>
+      </div>
+    </div>
+
+    <div></div><!-- espaçador do grid -->
+
+    <!-- Elara (centro) -->
+    <div class="hero-side hero-center">
+      <div id="heroC" class="hero-wrap">
+        <img id="heroC-img" class="hero-img" src="img/ui/elara.png" alt="" onerror="this.classList.add('broken')">
+        <canvas id="heroC-canvas" class="hero-canvas"></canvas>
       </div>
     </div>
 
@@ -706,6 +741,7 @@
     const appMain  = document.getElementById('appMain');
     const landing  = document.querySelector('.login-heroes');
     const landFx   = document.getElementById('landingFx');
+    const landBg   = document.getElementById('landingBg');
 
     if (openBtn && auth) openBtn.addEventListener('click', () => auth.classList.remove('hidden'));
     if (closeBtn && auth) closeBtn.addEventListener('click', () => auth.classList.add('hidden'));
@@ -714,6 +750,7 @@
       const showApp = !appMain.classList.contains('hidden');
       if (landing) landing.style.display = showApp ? 'none' : '';
       if (landFx)  landFx.style.display  = showApp ? 'none' : '';
+      if (landBg)  landBg.style.display  = showApp ? 'none' : '';
       document.dispatchEvent(new CustomEvent('landing-visibility', { detail:{ visible: !showApp } }));
     }
     syncLanding();
