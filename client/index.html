@@ -37,73 +37,132 @@
     #heroR .distort.chest { clip-path: polygon(62% 40%, 88% 40%, 90% 62%, 70% 68%, 58% 60%); }
     .login-heroes{ grid-template-columns: 1fr 8vw 1fr !important; }
 
-    /* ——— HUB (menu principal) ——— */
-    .hub {
-      margin: 24px auto 40px;
-      max-width: 1200px;
-      padding: 0 16px;
-    }
-    .hub-title {
-      font-family: 'Press Start 2P', monospace;
-      font-size: clamp(14px, 2.2vw, 20px);
-      letter-spacing: 1px;
-      text-align: center;
-      margin: 6px 0 18px;
-      color: #ffe9c6;
-      text-shadow: 0 2px 0 #5a2b10, 0 3px 0 #000;
-    }
-    .hub-grid {
-      display: grid;
-      gap: 18px;
-      grid-template-columns: repeat(4, 1fr);
-    }
-    @media (max-width: 980px){
-      .hub-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-    @media (max-width: 720px){
-      .hub-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    .card {
+    /* ——— MOLDURA RETRÔ (main-stage) ——— */
+    .main-stage {
       position: relative;
-      aspect-ratio: 9/16;                 /* mesmo formato das artes 768x1152 */
-      border: 6px solid #2b1408;
-      border-radius: 14px;
-      overflow: hidden;
-      cursor: pointer;
-      background: #2b1408;
-      box-shadow: 0 8px 0 #2b1408, 0 10px 22px rgba(0,0,0,.45);
-      transform: translateY(0);
-      transition: transform .08s ease, box-shadow .08s ease, filter .08s ease;
+      margin: 24px auto 56px;
+      width: min(1200px, calc(100vw - 32px)); /* centralizada e um pouco mais compacta */
+      box-sizing: border-box;
+      padding: 22px 24px;
+      background:
+        radial-gradient(ellipse at 50% 0%, #2a1d15 0%, #1b1410 60%, #120d0a 100%) padding-box,
+        linear-gradient(#5b3a27, #2b1a12) border-box;
+      border: 10px solid transparent;
+      border-radius: 18px;
+      box-shadow: 0 0 0 4px #000 inset, 0 8px 0 #000, 0 18px 24px rgba(0,0,0,.6);
+      overflow: visible;
     }
-    .card:hover { transform: translateY(-3px); filter: saturate(1.1); }
-    .card:active { transform: translateY(0); filter: none; }
+    .main-stage::before{
+      content:"";
+      position:absolute; inset:14px;
+      border-radius: 8px;
+      background:
+        repeating-linear-gradient(90deg, #233245 0 32px, #1e2c3d 32px 64px),
+        repeating-linear-gradient(0deg,  #233245 0 32px, #1e2c3d 32px 64px);
+      opacity:.22;
+      pointer-events:none;
+      z-index:-1; /* 👈 fica ATRÁS dos cards */
+    }
 
-    .card-art {
-      position:absolute; inset:0;
-      background-size: cover;
-      background-position: center;
-      image-rendering: pixelated;
+    /* HUD dentro da moldura */
+    .stage-hud{
+      display:flex; align-items:center; justify-content:flex-end;
+      gap:16px; margin:0 4px 8px;
     }
-    .card-bar {
-      position:absolute; left:0; right:0; bottom:0;
-      background: #A0522D;            /* 👈 nossa tarja padrão */
-      border-top: 6px solid #2b1408;
-      padding: 12px 10px 14px;
-      text-align: center;
+    .hud-pill{
+      display:flex; align-items:center; gap:8px;
+      font-family:"Press Start 2P", monospace;
+      font-size:12px; color:#ffe8b7;
+      background:#2b1a12; border:4px solid #000; border-radius:10px;
+      padding:8px 10px; box-shadow:0 3px 0 #000, inset 0 -3px 0 #000;
+      min-width: 92px; justify-content: center;
     }
-    .card-title {
-      font-family:'Press Start 2P', monospace;
-      color:#fff3cc;
-      text-shadow: 0 2px 0 #2b1408, 0 4px 0 #000;
-      font-size: clamp(13px, 1.8vw, 22px);
-      letter-spacing: 1px;
-      line-height: 1.1;
+    .hud-coin svg{ width:20px; height:20px; display:block; }
+
+    /* Título central */
+    .menu-title{
+      text-align:center;
+      font-family:"Press Start 2P", monospace;
+      color:#f7eac3;
+      text-shadow:0 3px 0 #000, 0 6px 0 #3b2218;
+      letter-spacing:2px;
+      margin:8px 0 16px;
+      font-size:24px;
+    }
+
+    /* GRID de cards (mais baixo e central) */
+    .menu-grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:22px 26px;
+      justify-items:center;
+      align-items:start;
+      padding:10px 6px 16px;
+    }
+    @media (max-width: 1100px){ .menu-grid{ grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 820px) { .menu-grid{ grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 520px) { .menu-grid{ grid-template-columns: 1fr; } }
+
+    /* CARD do menu (menor para caber em 1366x768 sem scroll) */
+    .menu-card{
+      width: clamp(160px, 20vw, 230px);
+      cursor:pointer; user-select:none;
+      background:#2b1a12; border:6px solid #000; border-radius:14px;
+      box-shadow:0 6px 0 #000, 0 16px 22px rgba(0,0,0,.55);
+      transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+    }
+    /* Hover com brilho leve old-school */
+    .menu-card:hover{
+      transform: translateY(-3px);
+      filter: brightness(1.08) saturate(1.08);
+      box-shadow:
+        0 0 14px rgba(255, 230, 140, .35),
+        0 6px 0 #000,
+        0 16px 22px rgba(0,0,0,.55);
+    }
+    .menu-card:active{ transform: translateY(0); filter: none; }
+
+    /* Área da imagem — menos vertical e legenda mais perto */
+    .menu-thumb{
+      aspect-ratio: 4 / 3;                  /* antes 3/5 -> agora mais “deitada” */
+      background:#0d0d12;
+      display:flex; align-items:center; justify-content:center;
+      padding:8px 8px 6px;                   /* legenda mais próxima */
+      border-bottom:4px solid #000;
+    }
+    .menu-thumb img{
+      width:100%; height:100%; object-fit:contain; image-rendering:pixelated;
+      display:block;
+    }
+
+    /* Rodapé do card (tarja fixa #A0522D) */
+    .menu-cap{
+      background:#A0522D;
+      padding:8px 10px 10px;
+      border-top:4px solid #000;
+      text-align:center;
+    }
+    .menu-cap span{
+      font-family:"Press Start 2P", monospace;
+      color:#fff2c9; text-shadow:0 3px 0 #000;
+      display:block; line-height:1.1; letter-spacing:1px;
+      font-size:14px;
+      word-break:break-word;
     }
 
     /* views internas controladas via JS */
     .view { display:none; }
     .view.active { display:block; }
+
+    /* Botão BACK nas views internas */
+    .btn-back{
+      margin:10px; padding:8px 14px;
+      font-family:"Press Start 2P", monospace; font-size:12px;
+      color:#fff;
+      background:#b54141; border:4px solid #000; border-radius:10px;
+      cursor:pointer; box-shadow:0 3px 0 #000, inset 0 -3px 0 #000;
+    }
+    .btn-back:hover{ filter:brightness(1.12); }
   </style>
 </head>
 <body class="force-anim">
@@ -281,52 +340,94 @@
       <button class="btn8" id="btnLogout">Logout</button>
     </div>
 
-    <!-- HUB: menu principal -->
-    <section id="view-hub" class="hub view active">
-      <div class="hub-title">MAIN MENU</div>
-      <div class="hub-grid">
-        <!-- Ajuste os caminhos das imagens se necessário -->
-        <div class="card" data-go="treasure">
-          <div class="card-art" style="background-image:url('img/menu/treasure-hunt.png')"></div>
-          <div class="card-bar"><div class="card-title">TREASURE<br>HUNT</div></div>
+    <!-- HUB com moldura -->
+    <section id="view-hub" class="main-stage">
+      <!-- HUD com moedas -->
+      <div class="stage-hud">
+        <div class="hud-pill hud-coin" title="AFK Coins">
+          <!-- Ícone exclusivo AFK (SVG) -->
+          <svg viewBox="0 0 64 64" shape-rendering="crispEdges" aria-hidden="true">
+            <circle cx="32" cy="32" r="28" fill="#ffcd4d" />
+            <circle cx="32" cy="32" r="22" fill="#ffd96a" />
+            <circle cx="32" cy="32" r="22" fill="url(#shine)"/>
+            <g transform="translate(32,32) scale(.88) translate(-32,-32)">
+              <circle cx="32" cy="32" r="26" fill="none" stroke="#a06a16" stroke-width="4"/>
+              <rect x="30" y="18" width="4" height="22" rx="2" fill="#6b3b1a"/>
+              <path d="M18 24 Q32 16 46 24 L46 28 Q32 20 18 28 Z" fill="#7b8fa6" stroke="#2c3b4a" stroke-width="2"/>
+            </g>
+            <defs>
+              <radialGradient id="shine" cx="30%" cy="30%">
+                <stop offset="0"  stop-color="#fff7cc" stop-opacity=".65"/>
+                <stop offset="1"  stop-color="#ffd96a" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+          </svg>
+          <span id="hudCoins">—</span>
         </div>
-        <div class="card" data-go="training">
-          <div class="card-art" style="background-image:url('img/menu/training.png')"></div>
-          <div class="card-bar"><div class="card-title">TRAINING</div></div>
+      </div>
+
+      <h2 class="menu-title">MAIN MENU</h2>
+
+      <div class="menu-grid">
+        <!-- Cada card toca sfx no mousedown e navega (SPA) -->
+        <div class="menu-card" data-go="treasure">
+          <div class="menu-thumb"><img src="img/menu/treasure-hunt.png" alt="Treasure Hunt"></div>
+          <div class="menu-cap"><span>TREASURE<br>HUNT</span></div>
         </div>
-        <div class="card" data-go="summon">
-          <div class="card-art" style="background-image:url('img/menu/summon.png')"></div>
-          <div class="card-bar"><div class="card-title">SUMMON</div></div>
+
+        <div class="menu-card" data-go="training">
+          <div class="menu-thumb"><img src="img/menu/training.png" alt="Training"></div>
+          <div class="menu-cap"><span>TRAINING</span></div>
         </div>
-        <div class="card" data-go="inventory">
-          <div class="card-art" style="background-image:url('img/menu/inventory.png')"></div>
-          <div class="card-bar"><div class="card-title">INVENTORY</div></div>
+
+        <div class="menu-card" data-go="summon">
+          <div class="menu-thumb"><img src="img/menu/summon.png" alt="Summon"></div>
+          <div class="menu-cap"><span>SUMMON</span></div>
         </div>
-        <div class="card" data-go="heroes">
-          <div class="card-art" style="background-image:url('img/menu/heroes.png')"></div>
-          <div class="card-bar"><div class="card-title">HEROES</div></div>
+
+        <div class="menu-card" data-go="inventory">
+          <div class="menu-thumb"><img src="img/menu/inventory.png" alt="Inventory"></div>
+          <div class="menu-cap"><span>INVENTORY</span></div>
         </div>
-        <div class="card" data-go="dungeon">
-          <div class="card-art" style="background-image:url('img/menu/dungeon.png')"></div>
-          <div class="card-bar"><div class="card-title">DUNGEON</div></div>
+
+        <div class="menu-card" data-go="heroes">
+          <div class="menu-thumb"><img src="img/menu/heroes.png" alt="Heroes"></div>
+          <div class="menu-cap"><span>HEROES</span></div>
         </div>
-        <div class="card" data-go="pvp">
-          <div class="card-art" style="background-image:url('img/menu/pvp.png')"></div>
-          <div class="card-bar"><div class="card-title">PVP</div></div>
+
+        <div class="menu-card" data-go="dungeon">
+          <div class="menu-thumb"><img src="img/menu/dungeon.png" alt="Dungeon"></div>
+          <div class="menu-cap"><span>DUNGEON</span></div>
         </div>
-        <div class="card" data-go="house">
-          <div class="card-art" style="background-image:url('img/menu/house.png')"></div>
-          <div class="card-bar"><div class="card-title">HOUSE</div></div>
+
+        <div class="menu-card" data-go="pvp">
+          <div class="menu-thumb"><img src="img/menu/pvp.png" alt="PvP"></div>
+          <div class="menu-cap"><span>PVP</span></div>
+        </div>
+
+        <div class="menu-card" data-go="house">
+          <div class="menu-thumb"><img src="img/menu/house.png" alt="House"></div>
+          <div class="menu-cap"><span>HOUSE</span></div>
         </div>
       </div>
     </section>
 
-    <!-- VIEWS internas (placeholders + vistas reais) -->
-    <section id="view-treasure"  class="view ui-frame bg-dither"><div class="ui-title">TREASURE HUNT</div><div style="padding:16px">🧭 Em breve: mapa PvE/Farm com auto-run e drops.</div></section>
-    <section id="view-training"  class="view ui-frame bg-dither"><div class="ui-title">TRAINING</div><div style="padding:16px">🏹 Em breve: dummies, testes de DPS e upgrades.</div></section>
+    <!-- VIEWS internas (com botão BACK) -->
+    <section id="view-treasure"  class="view ui-frame bg-dither">
+      <button class="btn-back" data-back>← BACK</button>
+      <div class="ui-title">TREASURE HUNT</div>
+      <div style="padding:16px">🧭 Em breve: mapa PvE/Farm com auto-run e drops.</div>
+    </section>
+
+    <section id="view-training"  class="view ui-frame bg-dither">
+      <button class="btn-back" data-back>← BACK</button>
+      <div class="ui-title">TRAINING</div>
+      <div style="padding:16px">🏹 Em breve: dummies, testes de DPS e upgrades.</div>
+    </section>
 
     <!-- GACHA/INVENTORY que já existiam -->
     <section id="view-summon" class="view">
+      <button class="btn-back" data-back>← BACK</button>
       <h1>AFK Miners — Sistema de Gacha</h1>
       <section class="ui-frame bg-dither">
         <div class="ui-title">GACHA</div>
@@ -339,14 +440,34 @@
     </section>
 
     <section id="view-inventory" class="view ui-frame bg-dither">
+      <button class="btn-back" data-back>← BACK</button>
       <div class="ui-title">INVENTORY</div>
       <div style="padding:16px"><div id="inventory"></div></div>
     </section>
 
-    <section id="view-heroes"   class="view ui-frame bg-dither"><div class="ui-title">HEROES</div><div style="padding:16px">🧙 Gestão de equipe, slots e sinergias.</div></section>
-    <section id="view-dungeon"  class="view ui-frame bg-dither"><div class="ui-title">DUNGEON</div><div style="padding:16px">🕳️ Portais, chaves e bosses.</div></section>
-    <section id="view-pvp"      class="view ui-frame bg-dither"><div class="ui-title">PVP</div><div style="padding:16px">⚔️ Arena async (defesas salvas, ataques por tickets).</div></section>
-    <section id="view-house"    class="view ui-frame bg-dither"><div class="ui-title">HOUSE</div><div style="padding:16px">🏠 Recuperação e buffs por mobília.</div></section>
+    <section id="view-heroes"   class="view ui-frame bg-dither">
+      <button class="btn-back" data-back>← BACK</button>
+      <div class="ui-title">HEROES</div>
+      <div style="padding:16px">🧙 Gestão de equipe, slots e sinergias.</div>
+    </section>
+
+    <section id="view-dungeon"  class="view ui-frame bg-dither">
+      <button class="btn-back" data-back>← BACK</button>
+      <div class="ui-title">DUNGEON</div>
+      <div style="padding:16px">🕳️ Portais, chaves e bosses.</div>
+    </section>
+
+    <section id="view-pvp"      class="view ui-frame bg-dither">
+      <button class="btn-back" data-back>← BACK</button>
+      <div class="ui-title">PVP</div>
+      <div style="padding:16px">⚔️ Arena async (defesas salvas, ataques por tickets).</div>
+    </section>
+
+    <section id="view-house"    class="view ui-frame bg-dither">
+      <button class="btn-back" data-back>← BACK</button>
+      <div class="ui-title">HOUSE</div>
+      <div style="padding:16px">🏠 Recuperação e buffs por mobília.</div>
+    </section>
   </main>
 
   <!-- SFX -->
@@ -386,12 +507,12 @@
     obs.observe(appMain, { attributes:true, attributeFilter:['class'] });
   </script>
 
-  <!-- Routerzinho do HUB (SPA leve) -->
+  <!-- Router do HUB + som imediato + HUD coins (com vários fallbacks) -->
   <script>
     const clickSfx = document.getElementById('sfx-click');
 
+    const hub = document.getElementById('view-hub');
     const views = {
-      hub:       document.getElementById('view-hub'),
       treasure:  document.getElementById('view-treasure'),
       training:  document.getElementById('view-training'),
       summon:    document.getElementById('view-summon'),
@@ -402,36 +523,119 @@
       house:     document.getElementById('view-house'),
     };
 
+    function showHub(show){
+      if (!hub) return;
+      hub.style.display = show ? '' : 'none';
+    }
+
     function showView(name){
       for (const k in views){
         views[k].classList.toggle('active', k === name);
-        if (k !== name) views[k].classList.remove('active');
         views[k].style.display = (k === name) ? '' : 'none';
       }
+      showHub(!name); // HUB só aparece quando nenhuma view interna está ativa
       if (clickSfx) { try { clickSfx.currentTime = 0; clickSfx.play(); } catch(e){} }
-      // manter hash legível
-      if (name === 'hub') history.replaceState({}, '', '#');
-      else history.replaceState({}, '', `#${name}`);
+      history.replaceState({}, '', name ? `#${name}` : '#');
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
 
-    // grid de cards → navega para a view
-    document.querySelectorAll('.hub-grid .card').forEach(card=>{
+    // Hover/som imediato no mousedown + navegação
+    document.querySelectorAll('.menu-card').forEach(card=>{
+      card.addEventListener('mousedown', ()=>{ try{ clickSfx.currentTime=0; clickSfx.play(); }catch(e){} });
       card.addEventListener('click', ()=>{
         const target = card.getAttribute('data-go');
         if (target && views[target]) showView(target);
       });
     });
 
-    // botão Logout volta pro hub quando voltar pro app
-    document.getElementById('btnLogout')?.addEventListener('click', ()=> showView('hub'));
+    // Botões BACK das subviews
+    document.querySelectorAll('[data-back]').forEach(btn=>{
+      btn.addEventListener('click', ()=> showView(''));
+    });
 
-    // abrir view direto pela hash (ex: #summon)
+    // Abrir view pela hash (ex: #summon)
     const initial = (location.hash || '').replace('#','').trim();
-    if (initial && views[initial]) showView(initial); else showView('hub');
+    if (initial && views[initial]) { showView(initial); } else { showView(''); }
 
-    // helper para outras partes do app abrirem/fecharem views
-    window.AFK = Object.assign(window.AFK||{}, { showView });
+    // ---------------- HUD COINS ----------------
+    const hudCoinsEl = document.getElementById('hudCoins');
+
+    function setHUDCoins(v){
+      if (!hudCoinsEl) return;
+      hudCoinsEl.textContent = Number.isFinite(+v) ? String(v) : '0';
+    }
+
+    async function fetchCoinsFromAPI(){
+      const endpoints = ['/api/player/me','/api/me','/api/user/me','/api/profile'];
+      for (const url of endpoints){
+        try{
+          const r = await fetch(url, { credentials:'include' });
+          if (!r.ok) continue;
+          const data = await r.json();
+          const v = data?.coins ?? data?.balance ?? data?.wallet ?? data?.data?.coins;
+          if (typeof v !== 'undefined') return v;
+        }catch(e){}
+      }
+      return null;
+    }
+
+    function parseCoinsFromUserInfo(){
+      const t = document.getElementById('userInfo')?.textContent || '';
+      const m = t.match(/Coins?\s*([0-9]+)/i);
+      return m ? +m[1] : null;
+    }
+
+    function observeUserInfo(){
+      const el = document.getElementById('userInfo');
+      if (!el) return;
+      const mo = new MutationObserver(()=> {
+        const v = parseCoinsFromUserInfo();
+        if (v != null) setHUDCoins(v);
+      });
+      mo.observe(el, { childList:true, characterData:true, subtree:true });
+    }
+
+    function observeGachaCounter(){
+      const el = document.getElementById('coinCount');
+      if (!el) return;
+      const mo = new MutationObserver(()=> {
+        const v = parseInt(el.textContent || '0', 10);
+        if (!Number.isNaN(v)) setHUDCoins(v);
+      });
+      mo.observe(el, { childList:true, characterData:true, subtree:true });
+    }
+
+    window.addEventListener('storage', (ev)=>{
+      if (ev.key && ev.key.toLowerCase().includes('coin')){
+        const v = parseInt(ev.newValue || '0', 10);
+        if (!Number.isNaN(v)) setHUDCoins(v);
+      }
+    });
+
+    document.addEventListener('coins-updated', ev => {
+      const v = ev?.detail?.coins ?? ev?.detail?.balance;
+      if (typeof v !== 'undefined') setHUDCoins(v);
+    });
+
+    (async function initCoins(){
+      // 1) tenta API
+      let v = await fetchCoinsFromAPI();
+      if (v != null) { setHUDCoins(v); }
+      else {
+        // 2) tenta pill do topo
+        v = parseCoinsFromUserInfo();
+        if (v != null) setHUDCoins(v);
+      }
+      // 3) observa mudanças
+      observeUserInfo();
+      observeGachaCounter();
+      // 4) tentativa tardia (boot.js pode preencher depois)
+      setTimeout(async ()=>{
+        const vv = await fetchCoinsFromAPI();
+        if (vv != null) setHUDCoins(vv);
+      }, 1500);
+    })();
+    // -------------------------------------------
   </script>
 </body>
 </html>

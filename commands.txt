@@ -1,0 +1,3 @@
+npm run deploy  -- rodar sempre após subir uma atualização pro site
+npm start -- ligar server local
+
