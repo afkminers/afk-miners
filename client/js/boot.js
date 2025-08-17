@@ -38,6 +38,7 @@ const ctx = {
   elGacha:   document.getElementById('btnGacha'),
   elBalance: document.getElementById('balance'),
   elResult:  document.getElementById('result'),
+  // IMPORTANTE: continua sendo #inventory (agora na view HEROES)
   elInv:     document.getElementById('inventory'),
 
   overlay:   document.getElementById('summon'),
@@ -101,6 +102,11 @@ function updateHud(profileOrCoins) {
 
   if (ctx.coinCount) ctx.coinCount.textContent = coins;
   if (ctx.elBalance) ctx.elBalance.textContent = `Moedas: ${coins}`;
+
+  // avisa quem mais estiver ouvindo (HUD global no index.html)
+  try {
+    document.dispatchEvent(new CustomEvent('coins-updated', { detail: { coins } }));
+  } catch {}
 }
 
 // liga gacha com callback de HUD
@@ -152,7 +158,7 @@ async function showApp(profile) {
     __profileModalBound = true;
     const modal = bindProfileModal();
     const invEl = document.getElementById('inventory');
-    const getInv = () => gacha.getInventory ? gacha.getInventory() : (window.AFK_INVENTORY || []);
+    const getInv = () => (gacha.getInventory ? gacha.getInventory() : (window.AFK_INVENTORY || []));
     if (invEl) {
       setupInventoryOpen(invEl, getInv, modal.open);
       // rebind na próxima renderização do inventory

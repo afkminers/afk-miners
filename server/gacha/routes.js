@@ -21,6 +21,7 @@ function pickRarity() {
   for (const x of RARITY_PROB) { acc += x.p; if (r <= acc) return x.rarity; }
   return 'COMMON';
 }
+
 const imageUrlFor = (heroKey) => `/img/heroes/${heroKey}.png`;
 
 router.post('/', async (req, res) => {
@@ -43,14 +44,15 @@ router.post('/', async (req, res) => {
     const def = Math.max(1, Math.floor(chosen.base_defense * m));
     const spd = Math.max(1, Math.floor(chosen.base_speed   * m));
 
+    // debita o custo
     await run(`UPDATE players SET coins = coins - ? WHERE id = ?`, [SUMMON_COST_COINS, playerId]);
 
-    const invId = randomUUID();
+    // salva o herói do jogador em player_heroes
+    const heroId = randomUUID();
     await run(`
-      INSERT INTO inventory (id,playerId,heroKey,name,rarity,attack,defense,speed,createdAt)
-      VALUES (?,?,?,?,?,?,?,?,?)`,
-      [invId, playerId, chosen.heroKey, chosen.name, rarity, atk, def, spd, Date.now()]
-    );
+      INSERT INTO player_heroes (id,playerId,heroKey,name,rarity,attack,defense,speed,createdAt)
+      VALUES (?,?,?,?,?,?,?,?,?)
+    `, [heroId, playerId, chosen.heroKey, chosen.name, rarity, atk, def, spd, Date.now()]);
 
     const updated = await get(`SELECT coins,gems FROM players WHERE id=?`, [playerId]);
 
@@ -58,7 +60,7 @@ router.post('/', async (req, res) => {
       cost: SUMMON_COST_COINS,
       newBalance: updated,
       hero: {
-        id: invId,
+        id: heroId,
         heroKey: chosen.heroKey,
         name: chosen.name,
         rarity,
@@ -70,7 +72,7 @@ router.post('/', async (req, res) => {
         role: chosen.role,
         attack_type: chosen.attack_type,
         element: chosen.element,
-        weapon_pref: chosen.weapon_pref
+        weapon_pref: chosen.weapon_pref,
       }
     });
   } catch (e) {

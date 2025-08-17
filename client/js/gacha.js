@@ -6,10 +6,11 @@ export function bindGachaUI(ctx, opts = {}) {
   let player = null;
   let summonCost = 100;
 
-  // estado de inventory
-  let inventory = [];
+  // ===== HEROES =====
+  let __heroes = [];
+  const heroesEl = document.getElementById('heroesGrid') || document.getElementById('inventory'); // fallback
 
-  // helpers visuais
+  // ---------- helpers visuais ----------
   function playSfx(id) {
     const el = document.getElementById('sfx-' + id);
     if (!el) return;
@@ -27,17 +28,16 @@ export function bindGachaUI(ctx, opts = {}) {
   function setRarityBg(r) { ctx.rarBg.className = 'rar-bg ' + r; }
   function openOverlay(){ ctx.overlay.classList.add('show'); ctx.overlay.setAttribute('aria-hidden','false'); }
   function closeOverlay(){ ctx.overlay.classList.remove('show'); ctx.overlay.setAttribute('aria-hidden','true'); }
-
   function cap(s){ if(!s) return '—'; return s.replace(/_/g,' ').replace(/\b\w/g, c=>c.toUpperCase()); }
 
-  // partículas simples
+  // ---------- FX simples ----------
   const pixCanvas = document.getElementById('pixFx');
   const pCtx = pixCanvas.getContext('2d',{alpha:true});
   let pixRAF=0, pixArr=[];
   function startPix(){ resizePix(); pixArr=[]; for(let i=0;i<30;i++) pixArr.push(spawnPix()); cancelAnimationFrame(pixRAF); loopPix(); window.addEventListener('resize',resizePix); }
   function stopPix(){ cancelAnimationFrame(pixRAF); pCtx.clearRect(0,0,pixCanvas.width,pixCanvas.height); window.removeEventListener('resize',resizePix); }
   function resizePix(){ const r = pixCanvas.parentElement.getBoundingClientRect(); pixCanvas.width=Math.max(1,Math.floor(r.width)); pixCanvas.height=Math.max(1,Math.floor(r.height)); }
-  function spawnPix(){ return { x:Math.random()*pixCanvas.width, y:pixCanvas.height+Math.random()*40, s:2+(Math.random()<.25?2:0), spd:0.45+Math.random()*0.75, col:Math.random()<.5?'#ffffff':'#ffd36c' }; }
+  function spawnPix(){ return { x:Math.random()*pixCanvas.width, y:pixCanvas.height+Math.random()*40, s:2+(Math.random()<.25?2:0), spd:0.45+Math.random()*0.75, col:Math.random()<.5?'#fff':'#ffd36c' }; }
   function loopPix(){ pCtx.clearRect(0,0,pixCanvas.width,pixCanvas.height); for(const p of pixArr){ p.y-=p.spd; if(p.y<-6){ p.x=Math.random()*pixCanvas.width; p.y=pixCanvas.height+12; } pCtx.fillStyle=p.col; pCtx.fillRect(Math.round(p.x),Math.round(p.y),p.s,p.s); } pixRAF=requestAnimationFrame(loopPix); }
 
   function spawnSparks(){
@@ -77,13 +77,13 @@ export function bindGachaUI(ctx, opts = {}) {
   function fillPanel(hero){
     const rarity=(hero.rarity||'COMMON').toUpperCase();
     ctx.sumImg.src = hero.imageUrl || `img/heroes/${hero.heroKey}.png`;
-    ctx.sumImg.alt = hero.name;
-    ctx.sumName.textContent = hero.name;
+    ctx.sumImg.alt = hero.name || 'hero';
+    ctx.sumName.textContent = hero.name || '—';
     ctx.rarTag.textContent = rarity.replace('_',' ');
     ctx.rarTag.className = 'rar-tag rar-'+rarity;
-    ctx.stAtk.textContent = hero.attack;
-    ctx.stDef.textContent = hero.defense;
-    ctx.stSpd.textContent = hero.speed;
+    ctx.stAtk.textContent = hero.attack ?? 0;
+    ctx.stDef.textContent = hero.defense ?? 0;
+    ctx.stSpd.textContent = hero.speed ?? 0;
     ctx.stClass.textContent = cap(hero.class);
     ctx.stRole.textContent  = cap(hero.role);
     ctx.stType.textContent  = cap(hero.attack_type);
@@ -100,6 +100,7 @@ export function bindGachaUI(ctx, opts = {}) {
     ctx.btnAgain.textContent = `SUMMON AGAIN (${summonCost})`;
   }
 
+  // ---------- UI dos cards ----------
   function heroCardMarkup(h,{animate=false}={}){
     const rarity=(h.rarity||'').toUpperCase();
     const img=h.imageUrl||`img/heroes/${h.heroKey}.png`;
@@ -117,19 +118,35 @@ export function bindGachaUI(ctx, opts = {}) {
     `;
   }
 
-  async function refreshPlayer(){
+  function renderHeroes(){
+    if (!heroesEl) return;
+    heroesEl.innerHTML = (__heroes || []).map(h => heroCardMarkup(h)).join('');
+    // compat: se houver um #inventory diferente do #heroesGrid, espelhar
+    const invMirror = document.getElementById('inventory');
+    if (invMirror && invMirror !== heroesEl) invMirror.innerHTML = heroesEl.innerHTML;
+    document.dispatchEvent(new Event('heroes:rendered'));
+    // compat legacy:
+    document.dispatchEvent(new CustomEvent('inventory:rendered', { detail:{ inventory: __heroes } }));
+  }
+
+  // ---------- API / sessão ----------
+  async function refreshFromServer(){
     const data = await apiGet(`${API}/api/player/me`);
     if (data?.error) return;
-    player = data.profile;
+
+    // perfil + HUD
+    player = data.profile || player;
     onHudUpdate(player);
 
-    ctx.elResult.innerHTML = '';
-    inventory = Array.isArray(data.inventory) ? data.inventory : [];
-    ctx.elInv.innerHTML = inventory.map(h=>heroCardMarkup(h)).join('');
-
-    // deixa inventário acessível p/ outros módulos e dispara evento
-    window.AFK_INVENTORY = inventory;
-    document.dispatchEvent(new CustomEvent('inventory:rendered', { detail:{ inventory } }));
+    // pega heróis (ou inventory como fallback até todo backend migrar)
+    const list = Array.isArray(data.heroes) ? data.heroes
+                : Array.isArray(data.inventory) ? data.inventory
+                : [];
+    __heroes = list;
+    // deixa global p/ outras partes
+    window.AFK_HEROES = __heroes;
+    window.AFK_INVENTORY = __heroes; // compat
+    renderHeroes();
   }
 
   async function doSummonAPI(){
@@ -137,6 +154,9 @@ export function bindGachaUI(ctx, opts = {}) {
     const data = await apiPost(`${API}/api/gacha`, {});
     if (data.error) throw new Error(data.error);
     if (typeof data.cost === 'number') summonCost = data.cost;
+    // se vier saldo atualizado, reflita no HUD
+    const coins = data?.newBalance?.coins;
+    if (typeof coins === 'number') onHudUpdate({ coins, name: player?.name });
     return data;
   }
 
@@ -144,6 +164,7 @@ export function bindGachaUI(ctx, opts = {}) {
     const rarity=(data.hero.rarity||'COMMON').toUpperCase();
     if(!ctx.skipChk.checked){ await playChestSequence(rarity); } else { playSfx(rarity); flash(); }
     ctx.chestWrap.classList.add('hidden');
+
     fillPanel(data.hero);
     ctx.resultPane.classList.remove('hidden');
     ctx.multiPane.classList.add('hidden');
@@ -151,9 +172,12 @@ export function bindGachaUI(ctx, opts = {}) {
     ctx.heroPane.classList.add('revealed');
     startPix();
 
-    ctx.elResult.innerHTML = heroCardMarkup(data.hero,{animate:true});
-    await refreshPlayer();
-    const canAgain = Number(player?.coins||0) >= summonCost;
+    // adiciona no topo da lista local e re-renderiza (sem bater no servidor)
+    __heroes.unshift(data.hero);
+    renderHeroes();
+
+    // atualiza estado do botão again
+    const canAgain = Number((data?.newBalance?.coins ?? player?.coins) || 0) >= summonCost;
     setAgainState(canAgain, !canAgain);
   }
 
@@ -168,6 +192,7 @@ export function bindGachaUI(ctx, opts = {}) {
 
     const results=[];
     for(let i=0;i<count;i++){ results.push(await doSummonAPI()); }
+
     for(const r of results){
       const rarity=(r.hero.rarity||'COMMON').toUpperCase();
       const card = document.createElement('div');
@@ -179,12 +204,16 @@ export function bindGachaUI(ctx, opts = {}) {
         <div class="mini-name" style="font-weight:800">${r.hero.name}</div>
       `;
       ctx.multiGrid.appendChild(card);
+      // acumula local também
+      __heroes.unshift(r.hero);
       playSfx(rarity);
       await new Promise(res=>setTimeout(res,120));
     }
 
-    await refreshPlayer();
-    const canAgain = Number(player?.coins||0) >= summonCost;
+    renderHeroes();
+
+    const coinsLeft = results.at(-1)?.newBalance?.coins ?? player?.coins ?? 0;
+    const canAgain = Number(coinsLeft) >= summonCost;
     setAgainState(canAgain, !canAgain);
     ctx.okbar.classList.remove('hidden');
   }
@@ -210,14 +239,14 @@ export function bindGachaUI(ctx, opts = {}) {
         await playOneSummonAndReveal(data);
       }
     }catch(e){
-      ctx.elResult.textContent = e.message || 'Falha ao girar gacha';
+      if (ctx.elResult) ctx.elResult.textContent = e.message || 'Falha ao girar gacha';
       ctx.burst.classList.remove('show');
       ctx.chestHint.style.display='none';
       ctx.okbar.classList.remove('hidden');
     }
   }
 
-  // fecha overlay (apenas ESC ou clique fora)
+  // ---------- binds ----------
   function hardCloseOverlay(){
     ctx.burst.classList.remove('show');
     ctx.chestSvg.classList.remove('open');
@@ -232,22 +261,23 @@ export function bindGachaUI(ctx, opts = {}) {
   });
   ctx.overlay.addEventListener('click',(e)=>{ if(e.target===ctx.overlay) hardCloseOverlay(); });
 
-  // binds públicos (somente botões do gacha)
-  ctx.elGacha.onclick  = async ()=>{ await startSummon(1); };
-  ctx.btnAgain.onclick = async ()=>{ await startSummon(1); };
-  ctx.btnAgain10.onclick=async ()=>{ await startSummon(10,true); };
+  ctx.elGacha.onclick   = async ()=>{ await startSummon(1); };
+  ctx.btnAgain.onclick  = async ()=>{ await startSummon(1); };
+  ctx.btnAgain10.onclick= async ()=>{ await startSummon(10,true); };
 
-  // init público
+  // ---------- init público ----------
   async function init(profile){
     player = profile;
     onHudUpdate(player);
-    await refreshPlayer();
+    await refreshFromServer();
     const canAgain = Number(player?.coins||0) >= summonCost;
     setAgainState(canAgain, !canAgain);
   }
 
-  // expõe um getter caso precise
-  function getInventory(){ return inventory; }
+  // ---------- getters públicos ----------
+  function getHeroes(){ return __heroes; }
+  // compat: algumas partes antigas podem chamar getInventory()
+  function getInventory(){ return __heroes; }
 
-  return { init, getInventory };
+  return { init, getHeroes, getInventory };
 }

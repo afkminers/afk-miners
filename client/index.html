@@ -645,16 +645,23 @@
       </section>
     </section>
 
+    <!-- INVENTORY agora para ITENS -->
     <section id="view-inventory" class="view ui-frame bg-dither">
       <button class="btn-back" data-back>← BACK</button>
-      <div class="ui-title">INVENTORY</div>
-      <div style="padding:16px"><div id="inventory"></div></div>
+      <div class="ui-title">INVENTORY (ITEMS)</div>
+      <div style="padding:16px">
+        <div id="itemsGrid"></div>
+        <p style="margin-top:12px;color:#c9c3b8">Em breve: itens, materiais e craft ficarão aqui.</p>
+      </div>
     </section>
 
+    <!-- HEROES mostra as cartas de heróis do jogador -->
     <section id="view-heroes" class="view ui-frame bg-dither">
       <button class="btn-back" data-back>← BACK</button>
       <div class="ui-title">HEROES</div>
-      <div style="padding:16px">🧙 Gestão de equipe, slots e sinergias.</div>
+      <div style="padding:16px">
+        <div id="inventory"></div>
+      </div>
     </section>
 
     <section id="view-dungeon" class="view ui-frame bg-dither">
