@@ -1,2 +1,55 @@
+# === Geral / SO ===
+.DS_Store
+Thumbs.db
 
+# === Node ===
+node_modules/
+npm-debug.log*
+yarn-error.log
+pnpm-debug.log
+
+# === Ambiente ===
+.env
+.env.*
+!.env.example
+
+# === Builds / caches (client e server) ===
+dist/
+build/
+.cache/
+.tmp/
+coverage/
+
+# Ferramentas comuns
+.client/
+.vite/
+.parcel-cache/
+.next/
+.svelte-kit/
+.vercel/
+
+# === Editores ===
+.vscode/
+.idea/
+
+# === Arquivos grandes / artefatos ===
+*.zip
+*.7z
+*.tar
+*.gz
 meu-jogo.zip
+
+# === Client espec?ficos ===
+client/dist/
+client/build/
+client/.vite/
+client/.parcel-cache/
+client/.next/
+
+# === Server espec?ficos ===
+server/dist/
+server/build/
+
+# === DB local (se for s? dev; ajuste se quiser versionar)
+server/*.sqlite
+server/*.sqlite3
