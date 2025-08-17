@@ -53,3 +53,7 @@ server/build/
 # === DB local (se for s? dev; ajuste se quiser versionar)
 server/*.sqlite
 server/*.sqlite3
+
+# ignore zips
+*.zip
+
