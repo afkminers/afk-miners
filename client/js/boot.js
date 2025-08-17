@@ -3,6 +3,7 @@ import { API, getCsrf, apiGet } from './api.js';
 import { doLogin, doRegister, doLogout } from './auth.js';
 import { bindGachaUI } from './gacha.js';
 import { initLoginFx, stopLoginFx, celebrate } from './login_fx.js';
+import { bindProfileModal, setupInventoryOpen } from './player_profile.js'; // << NOVO
 
 // UI base
 const authScreen = document.getElementById('authScreen');
@@ -21,8 +22,8 @@ const btnRegister = document.getElementById('btnRegister');
 const regMsg      = document.getElementById('regMsg');
 
 const btnLogout     = document.getElementById('btnLogout');
-const btnLogoutTop  = document.getElementById('btnLogoutTop'); // topo direito
-const mobileLogout  = document.getElementById('mobileLogout'); // item do menu mobile
+const btnLogoutTop  = document.getElementById('btnLogoutTop');
+const mobileLogout  = document.getElementById('mobileLogout');
 
 // Header buttons
 const btnPlay   = document.getElementById('btnPlay');
@@ -79,15 +80,24 @@ const ctx = {
   coinCount: document.getElementById('coinCount'),
 };
 
+// ===== Estado de sessão =====
+let __profile = null;
+window.__isAuth = false;
+
 // HUD centralizado
 function updateHud(profileOrCoins) {
   const coins = typeof profileOrCoins === 'number'
     ? profileOrCoins
     : Number(profileOrCoins?.coins ?? 0);
 
-  const name  = (window.__playerName || profileOrCoins?.name || '').toString();
+  const name = (window.__playerName || profileOrCoins?.name || '').toString();
   if (name) window.__playerName = name;
-  if (userInfo) userInfo.textContent = name ? `${name} • Coins ${coins}` : `Coins ${coins}`;
+
+  if (userInfo) {
+    userInfo.textContent = name
+      ? `${name} • Coins ${coins}`
+      : `Coins ${coins}`;
+  }
 
   if (ctx.coinCount) ctx.coinCount.textContent = coins;
   if (ctx.elBalance) ctx.elBalance.textContent = `Moedas: ${coins}`;
@@ -117,8 +127,12 @@ function showLanding(){
   setLogoutVisibility(false);
   setLoggedOutGlow(true);
   closeMobileMenu();
+  window.__isAuth = false;
   initLoginFx();
 }
+
+let __profileModalBound = false; // evita binds duplicados
+
 async function showApp(profile) {
   stopLoginFx();
   authScreen.classList.add('hidden');
@@ -126,8 +140,27 @@ async function showApp(profile) {
   setLogoutVisibility(true);
   setLoggedOutGlow(false);
   closeMobileMenu();
+
+  __profile = profile;
+  window.__isAuth = true;
+
   updateHud(profile);
   await gacha.init(profile);
+
+  // === Bind do modal de perfil (somente uma vez)
+  if (!__profileModalBound) {
+    __profileModalBound = true;
+    const modal = bindProfileModal();
+    const invEl = document.getElementById('inventory');
+    const getInv = () => gacha.getInventory ? gacha.getInventory() : (window.AFK_INVENTORY || []);
+    if (invEl) {
+      setupInventoryOpen(invEl, getInv, modal.open);
+      // rebind na próxima renderização do inventory
+      document.addEventListener('inventory:rendered', () => {
+        setupInventoryOpen(invEl, getInv, modal.open);
+      });
+    }
+  }
 }
 
 /* ========= Sessão ========= */
@@ -139,12 +172,18 @@ async function trySession() {
 }
 trySession();
 
-/* ========= Play/Close do modal ========= */
+/* ========= PLAY ========= */
 if (btnPlay) {
   btnPlay.onclick = () => {
-    authScreen.classList.remove('hidden');
+    if (window.__isAuth && __profile) {
+      showApp(__profile); // main menu
+    } else {
+      authScreen.classList.remove('hidden'); // login
+    }
   };
 }
+
+/* ========= Close do modal de auth ========= */
 if (authClose) {
   authClose.onclick = () => authScreen.classList.add('hidden');
 }
@@ -186,4 +225,3 @@ document.addEventListener('click', (e)=>{
   if (mobMenu.contains(e.target) || btnHamb.contains(e.target)) return;
   closeMobileMenu();
 });
-

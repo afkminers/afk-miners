@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="css/retro-overrides.css">
   <link rel="stylesheet" href="css/auth.css">
   <link rel="stylesheet" href="css/gacha.css">
+  <link rel="stylesheet" href="css/profile.css">
+
 
   <!-- Fixes rápidos + estilos do HUB + header compacto -->
   <style>
@@ -845,6 +847,18 @@
     observer.observe(document.body, { subtree:true, attributes:true, attributeFilter:['class'] });
   </script>
 
+    <!-- Helper p/ habilitar SFX só depois de interação -->
+  <script>
+    let __userInteracted = false;
+    window.addEventListener('pointerdown', () => { __userInteracted = true; }, { once:true });
+    window.addEventListener('keydown',     () => { __userInteracted = true; }, { once:true });
+
+    function safePlay(el){
+      if (!__userInteracted || !el) return; // só toca após clique/tecla
+      try { el.currentTime = 0; el.play(); } catch {}
+    }
+  </script>
+
   <!-- Router do HUB + som imediato + HUD coins (com vários fallbacks) -->
   <script>
     const clickSfx = document.getElementById('sfx-click');
@@ -872,14 +886,14 @@
         views[k].style.display = (k === name) ? '' : 'none';
       }
       showHub(!name);
-      if (clickSfx) { try { clickSfx.currentTime = 0; clickSfx.play(); } catch(e){} }
+      safePlay(clickSfx);
       history.replaceState({}, '', name ? `#${name}` : '#');
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
 
     // Som imediato no mousedown + navegação
     document.querySelectorAll('.menu-card').forEach(card=>{
-      card.addEventListener('mousedown', ()=>{ try{ clickSfx.currentTime=0; clickSfx.play(); }catch(e){} });
+      card.addEventListener('mousedown', ()=>{ safePlay(clickSfx); });
       card.addEventListener('click', ()=>{
         const target = card.getAttribute('data-go');
         if (target && views[target]) showView(target);
@@ -904,18 +918,21 @@
     }
 
     async function fetchCoinsFromAPI(){
-      const endpoints = ['/api/player/me','/api/me','/api/user/me','/api/profile'];
+      const endpoints = ['/api/player/me', '/api/auth/me']; // só os válidos
       for (const url of endpoints){
         try{
-          const r = await fetch(url, { credentials:'include' });
-          if (!r.ok) continue;
+          const r = await fetch(url, { credentials:'include', cache:'no-store' });
+          if (!r.ok) continue;                 // ignora 401/404 silenciosamente
           const data = await r.json();
-          const v = data?.coins ?? data?.balance ?? data?.wallet ?? data?.data?.coins;
+          // tenta achar coins em vários formatos
+          const profile = data?.profile || data; 
+          const v = profile?.coins ?? data?.coins ?? data?.balance ?? data?.data?.coins;
           if (typeof v !== 'undefined') return v;
-        }catch(e){}
+        }catch(e){ /* ignora erros de rede */ }
       }
       return null;
     }
+
 
     function parseCoinsFromUserInfo(){
       const t = document.getElementById('userInfo')?.textContent || '';
@@ -975,6 +992,122 @@
     })();
     // -------------------------------------------
   </script>
+
+  <!-- Modal Perfil de Herói -->
+<div id="profileModal" class="pf-overlay" aria-hidden="true" style="display:none">
+  <div class="pf-dialog" role="dialog" aria-modal="true" aria-labelledby="pf-name">
+    <button class="pf-close" aria-label="Close">×</button>
+
+    <div class="pf-header">
+      <div class="pf-portrait"><img id="pf-img" alt="hero portrait"></div>
+      <div class="pf-titlebox">
+        <div id="pf-rarity" class="pf-rarity">RARE</div>
+        <h2 id="pf-name" class="pf-name">Hero Name</h2>
+        <div class="pf-meta" id="pf-meta">class • role • type • elem • weapon</div>
+      </div>
+    </div>
+
+    <div class="pf-body">
+      <div class="pf-stats">
+        <div class="pf-stat">⚔️ <span id="pf-atk">0</span></div>
+        <div class="pf-stat">🛡️ <span id="pf-def">0</span></div>
+        <div class="pf-stat">⚡ <span id="pf-spd">0</span></div>
+      </div>
+
+      <!-- Placeholder para skills (Fase B) -->
+      <div id="pf-skills-placeholder" class="pf-skills-placeholder">
+        Skills vêm aqui quando ativarmos a Fase B.
+      </div>
+    </div>
+
+    <div class="pf-footer">
+      <button id="pf-ok" class="pf-btn">OK</button>
+    </div>
+  </div>
+</div>
+  <script>
+    // === Wiring do modal de Perfil ===
+    (function () {
+      const pf       = document.getElementById('profileModal');
+      const pfClose  = pf.querySelector('.pf-close');
+      const pfOk     = document.getElementById('pf-ok');
+
+      // abre/fecha
+      function openProfile(hero){
+        if (!hero) return;
+        // Preenche campos (caso já não esteja fazendo isso em outro lugar)
+        const cap = s => (s||'—').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+        document.getElementById('pf-img').src  = hero.imageUrl || `img/heroes/${hero.heroKey}.png`;
+        document.getElementById('pf-img').alt  = hero.name || 'hero portrait';
+        document.getElementById('pf-name').textContent = hero.name || '—';
+        const rar = (hero.rarity||'COMMON').toUpperCase();
+        const rarEl = document.getElementById('pf-rarity');
+        rarEl.textContent = rar.replace('_',' ');
+        rarEl.className = 'pf-rarity rar-'+rar;
+        document.getElementById('pf-meta').textContent = [hero.class,hero.role,hero.attack_type,hero.element,hero.weapon_pref]
+          .filter(Boolean).map(cap).join(' • ');
+        document.getElementById('pf-atk').textContent = hero.attack  ?? 0;
+        document.getElementById('pf-def').textContent = hero.defense ?? 0;
+        document.getElementById('pf-spd').textContent = hero.speed  ?? 0;
+
+        // abre
+        pf.style.display = '';
+        pf.classList.add('show');
+        pf.setAttribute('aria-hidden','false');
+
+        // foca o botão OK (acessibilidade)
+        setTimeout(()=> pfOk?.focus(), 0);
+      }
+      function closeProfile(){
+        pf.classList.remove('show');
+        pf.setAttribute('aria-hidden','true');
+        pf.style.display = 'none';
+      }
+
+      // ESC + clique fora + botões
+      pfClose.onclick = closeProfile;
+      pfOk.onclick    = closeProfile;
+      pf.addEventListener('click', (e)=>{ if(e.target === pf) closeProfile(); });
+      window.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && pf.classList.contains('show')) closeProfile(); });
+
+      // expõe para o restante do app (inventory chamar isso)
+      window.openProfile = openProfile;
+      window.closeProfile = closeProfile;
+    })();
+  </script>
+
+  <script>
+    // Quando o gacha terminar de desenhar os cards do inventário
+    document.addEventListener('inventory:rendered', () => {
+      const inv = document.getElementById('inventory');
+      if (!inv || inv.dataset.bound === '1') return; // evita bind duplicado
+      inv.dataset.bound = '1';
+
+      function getHeroFromCard(card) {
+        const id = card?.getAttribute('data-id');
+        const list = window.AFK_INVENTORY || [];
+        return list.find(x => String(x.id) === String(id));
+      }
+
+      inv.addEventListener('click', (e) => {
+        const card = e.target.closest('.card');
+        if (!card) return;
+        const hero = getHeroFromCard(card);
+        if (hero && window.openProfile) window.openProfile(hero); // abre o modal de perfil
+      });
+
+      inv.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const card = e.target.closest('.card');
+        if (!card) return;
+        e.preventDefault();
+        const hero = getHeroFromCard(card);
+        if (hero && window.openProfile) window.openProfile(hero);
+      });
+    });
+  </script>
+
+
 </body>
 </html>
 

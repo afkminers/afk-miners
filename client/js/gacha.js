@@ -6,6 +6,9 @@ export function bindGachaUI(ctx, opts = {}) {
   let player = null;
   let summonCost = 100;
 
+  // estado de inventory
+  let inventory = [];
+
   // helpers visuais
   function playSfx(id) {
     const el = document.getElementById('sfx-' + id);
@@ -102,7 +105,7 @@ export function bindGachaUI(ctx, opts = {}) {
     const img=h.imageUrl||`img/heroes/${h.heroKey}.png`;
     const metaLine=[h.class,h.role,h.attack_type,h.element].filter(Boolean).map(x=>x.replace(/_/g,' ')).join(' • ');
     return `
-      <div class="card ${rarity} ${animate?'drop':''}">
+      <div class="card ${rarity} ${animate?'drop':''}" data-id="${h.id}" data-key="${h.heroKey}" tabindex="0" role="button" aria-label="${h.name} (${rarity.replace('_',' ')})">
         <div class="badge">${rarity.replace('_',' ')}</div>
         <div class="portrait"><img src="${img}" alt="${h.name}" style="image-rendering:pixelated"></div>
         <div class="meta">
@@ -115,15 +118,18 @@ export function bindGachaUI(ctx, opts = {}) {
   }
 
   async function refreshPlayer(){
-    // nunca use cache pra esse endpoint
     const data = await apiGet(`${API}/api/player/me`);
     if (data?.error) return;
     player = data.profile;
-    // HUD (topo, overlay e "Moedas:")
     onHudUpdate(player);
-    // cards
+
     ctx.elResult.innerHTML = '';
-    ctx.elInv.innerHTML = data.inventory.map(h=>heroCardMarkup(h)).join('');
+    inventory = Array.isArray(data.inventory) ? data.inventory : [];
+    ctx.elInv.innerHTML = inventory.map(h=>heroCardMarkup(h)).join('');
+
+    // deixa inventário acessível p/ outros módulos e dispara evento
+    window.AFK_INVENTORY = inventory;
+    document.dispatchEvent(new CustomEvent('inventory:rendered', { detail:{ inventory } }));
   }
 
   async function doSummonAPI(){
@@ -146,7 +152,7 @@ export function bindGachaUI(ctx, opts = {}) {
     startPix();
 
     ctx.elResult.innerHTML = heroCardMarkup(data.hero,{animate:true});
-    await refreshPlayer(); // <-- atualiza HUD e inventário
+    await refreshPlayer();
     const canAgain = Number(player?.coins||0) >= summonCost;
     setAgainState(canAgain, !canAgain);
   }
@@ -177,7 +183,7 @@ export function bindGachaUI(ctx, opts = {}) {
       await new Promise(res=>setTimeout(res,120));
     }
 
-    await refreshPlayer(); // <-- atualiza HUD após o x10
+    await refreshPlayer();
     const canAgain = Number(player?.coins||0) >= summonCost;
     setAgainState(canAgain, !canAgain);
     ctx.okbar.classList.remove('hidden');
@@ -211,7 +217,7 @@ export function bindGachaUI(ctx, opts = {}) {
     }
   }
 
-  // fecha overlay
+  // fecha overlay (apenas ESC ou clique fora)
   function hardCloseOverlay(){
     ctx.burst.classList.remove('show');
     ctx.chestSvg.classList.remove('open');
@@ -221,10 +227,12 @@ export function bindGachaUI(ctx, opts = {}) {
   }
   ctx.closeX.onclick=hardCloseOverlay;
   ctx.btnOk.onclick=hardCloseOverlay;
-  window.addEventListener('keydown', ()=>{ if(ctx.overlay.classList.contains('show')) hardCloseOverlay(); });
+  window.addEventListener('keydown', (e)=>{ 
+    if(e.key === 'Escape' && ctx.overlay.classList.contains('show')) hardCloseOverlay(); 
+  });
   ctx.overlay.addEventListener('click',(e)=>{ if(e.target===ctx.overlay) hardCloseOverlay(); });
 
-  // binds públicos
+  // binds públicos (somente botões do gacha)
   ctx.elGacha.onclick  = async ()=>{ await startSummon(1); };
   ctx.btnAgain.onclick = async ()=>{ await startSummon(1); };
   ctx.btnAgain10.onclick=async ()=>{ await startSummon(10,true); };
@@ -232,11 +240,14 @@ export function bindGachaUI(ctx, opts = {}) {
   // init público
   async function init(profile){
     player = profile;
-    onHudUpdate(player);  // pinta HUD inicial
-    await refreshPlayer(); // puxa inventário e saldo atual do back (no-store)
+    onHudUpdate(player);
+    await refreshPlayer();
     const canAgain = Number(player?.coins||0) >= summonCost;
     setAgainState(canAgain, !canAgain);
   }
 
-  return { init };
+  // expõe um getter caso precise
+  function getInventory(){ return inventory; }
+
+  return { init, getInventory };
 }

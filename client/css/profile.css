@@ -1,0 +1,124 @@
+/* client/css/profile.css */
+
+/* Overlay desligado por padrão */
+.pf-overlay {
+  display: none; /* 🔑 começa desligado */
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  transition: opacity .2s ease; /* 🔑 transição suave */
+}
+.pf-overlay.show { 
+  display: flex !important; 
+  opacity: 1;
+}
+
+/* Janela */
+.pf-dialog {
+  width: min(960px, 92vw);
+  max-height: min(86vh, 900px);
+  overflow: hidden;
+  background: #2b1a12;
+  border: 8px solid #000;
+  border-radius: 16px;
+  box-shadow: 0 10px 0 #000, 0 24px 28px rgba(0,0,0,.5);
+  display: flex; 
+  flex-direction: column;
+}
+
+/* Cabeçalho */
+.pf-header {
+  display: flex; gap: 16px;
+  padding: 16px;
+  background:
+    radial-gradient(ellipse at 50% 0%, #2a1d15 0%, #1b1410 60%, #120d0a 100%) padding-box,
+    linear-gradient(#5b3a27, #2b1a12) border-box;
+  border-bottom: 6px solid #000;
+}
+.pf-portrait {
+  width: 220px; min-width: 220px; height: 300px;
+  background: #0d0d12;
+  border: 6px solid #000; border-radius: 12px;
+  display:flex; align-items:center; justify-content:center;
+}
+.pf-portrait img {
+  width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated;
+}
+.pf-titlebox { display:flex; flex-direction:column; justify-content:center; gap:8px; }
+.pf-rarity {
+  display:inline-block;
+  font-family: "Press Start 2P", monospace;
+  font-size: 12px;
+  color: #2b1512;
+  background: #ffd36c;
+  border: 4px solid #2b1512; border-radius: 10px;
+  padding: 6px 10px;
+  width: fit-content;
+}
+.pf-name {
+  margin: 0;
+  font-family: "Press Start 2P", monospace;
+  color: #f7eac3;
+  text-shadow: 0 3px 0 #000, 0 6px 0 #3b2218;
+  letter-spacing: 1px;
+  font-size: 22px;
+}
+.pf-meta {
+  font-family: "Press Start 2P", monospace;
+  color: #ffe8c0; opacity: .85;
+  font-size: 12px;
+}
+
+/* Corpo */
+.pf-body { 
+  padding: 16px; 
+  display:flex; 
+  flex-direction:column; 
+  gap:16px; 
+  overflow-y: auto;  /* 🔑 scroll interno */
+  flex: 1;           /* ocupa espaço disponível */
+}
+.pf-stats { display:flex; gap: 16px; }
+.pf-stat {
+  display:flex; align-items:center; gap:8px;
+  font-family: "Press Start 2P", monospace;
+  color: #ffe8b7; font-size: 14px;
+  background:#2b1a12; border:4px solid #000; border-radius:10px;
+  padding:8px 10px; box-shadow:0 3px 0 #000, inset 0 -3px 0 #000;
+}
+.pf-skills-placeholder {
+  margin-top: 8px;
+  font-family: "Press Start 2P", monospace;
+  color:#cbb090; font-size: 12px;
+}
+
+/* Rodapé */
+.pf-footer {
+  display:flex; justify-content:flex-end; gap:10px;
+  padding: 12px 16px;
+  border-top: 6px solid #000;
+  background: #1e1410;
+}
+.pf-btn {
+  padding:10px 16px;
+  border:4px solid #000; border-radius:12px;
+  font-family:"Press Start 2P", monospace; font-size:13px;
+  background:#73402a; color:#fff; cursor:pointer;
+  box-shadow:0 3px 0 #000, inset 0 -2px 0 rgba(0,0,0,.25);
+}
+.pf-btn:hover { filter: brightness(1.1); }
+
+/* Botão fechar */
+.pf-close {
+  position:absolute; right:10px; top:10px;
+  width:36px; height:36px; line-height: 20px;
+  border:4px solid #000; border-radius:10px;
+  font-family:"Press Start 2P", monospace;
+  color:#fff; background:linear-gradient(#f26a5b,#d24a3a);
+  box-shadow:0 3px 0 #000, inset 0 -2px 0 rgba(0,0,0,.25);
+  cursor:pointer;
+}
