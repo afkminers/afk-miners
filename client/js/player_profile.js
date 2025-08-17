@@ -19,25 +19,30 @@ export function bindProfileModal() {
   function fill(hero){
     const rarity=(hero.rarity||'COMMON').toUpperCase();
     el.img.src = hero.imageUrl || `img/heroes/${hero.heroKey}.png`;
-    el.img.alt = hero.name;
+    el.img.alt = hero.name || 'hero portrait';
     el.rarity.textContent = rarity.replace('_',' ');
-    el.rarity.className = 'pf-rarity '+rarity;
-    el.name.textContent = hero.name;
+    el.rarity.className = 'pf-rarity rar-'+rarity;
+    el.name.textContent = hero.name || '—';
     el.meta.textContent = [hero.class,hero.role,hero.attack_type,hero.element,hero.weapon_pref]
       .filter(Boolean).map(cap).join(' • ');
-    el.atk.textContent = hero.attack;
-    el.def.textContent = hero.defense;
-    el.spd.textContent = hero.speed;
+    el.atk.textContent = hero.attack ?? 0;
+    el.def.textContent = hero.defense ?? 0;
+    el.spd.textContent = hero.speed ?? 0;
   }
 
   function open(hero){
+    if (!hero) return;
     fill(hero);
+    overlay.style.display = '';
     overlay.classList.add('show');
     overlay.setAttribute('aria-hidden','false');
+    // acessibilidade: foco no OK
+    setTimeout(()=> document.getElementById('pf-ok')?.focus(), 0);
   }
   function close(){
     overlay.classList.remove('show');
     overlay.setAttribute('aria-hidden','true');
+    overlay.style.display = 'none';
   }
 
   closeBtn.onclick = close;
@@ -49,18 +54,17 @@ export function bindProfileModal() {
 }
 
 /**
- * Helper para integrar com a grade do Inventory:
+ * Integração com a grade do Inventory:
  * chame setupInventoryOpen(invContainer, getInventoryArray, modal.open)
  */
 export function setupInventoryOpen(invContainer, getInventory, openFn){
-  // Delegation: clique/enter/space em .card
   function resolveCard(target){
     const card = target.closest('.card');
     if(!card) return null;
     const id = card.getAttribute('data-id');
     if(!id) return null;
-    const inv = getInventory();
-    const hero = inv?.find?.(x => String(x.id)===String(id));
+    const inv = getInventory?.() || [];
+    const hero = inv.find?.(x => String(x.id)===String(id));
     return hero || null;
   }
   invContainer.addEventListener('click',(e)=>{

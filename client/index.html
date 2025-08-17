@@ -12,42 +12,31 @@
   <link rel="stylesheet" href="css/auth.css">
   <link rel="stylesheet" href="css/gacha.css">
   <link rel="stylesheet" href="css/profile.css">
-
-
-  <!-- Fixes rápidos + estilos do HUB + header compacto -->
   <style>
-    /* ===== reset base p/ remover “faixa” antes da barra ===== */
     html, body { margin:0; padding:0; background:#151316; }
-
-    /* util */
     .hidden{ display:none !important; }
 
-    /* ——— ajustes que você já tinha ——— */
     .hero-glow{ display:none !important; }
     @media (prefers-reduced-motion: reduce){
       body.force-anim .hero-wrap{ animation: heroFloat 5.2s ease-in-out infinite !important; }
     }
     #landingFx, #authParticles, .hero-canvas{ border:none!important; outline:none!important; box-shadow:none!important; }
 
-    /* BG exclusivo da landing (fica atrás dos heróis e do FX) */
     #landingBg{
       position:fixed; inset:0;
-      z-index:0;                 /* header tem 50; canvas/heróis ficam acima naturalmente */
+      z-index:0;
       background: #0f0d10 url("img/bg/landing-chaos.png") center top / cover no-repeat;
       opacity:1;
-      pointer-events:none;       /* não bloqueia cliques no cabeçalho */
+      pointer-events:none;
     }
-
-    /* Camadas de FX (traseira e frontal) */
     .fx-layer{
       position:fixed; inset:0;
       width:100%; height:100%;
       pointer-events:none; border:0; outline:0; box-shadow:none;
     }
-    #landingFxBack{ z-index:1; }   /* vento/trovão atrás dos heróis */
-    #landingFx{ z-index:3; }       /* glows/partículas na frente */
+    #landingFxBack{ z-index:1; }
+    #landingFx{ z-index:3; }
 
-    /* FIX: recorta 1px do LADO ESQUERDO do wizard para sumir a listra */
     #heroR-img.fix-edge{ clip-path: inset(0 0 0 1px); }
 
     .distort{
@@ -65,13 +54,12 @@
     #heroR .distort.head  { clip-path: polygon(67% 15%, 86% 15%, 90% 28%, 84% 40%, 70% 40%, 66% 28%); }
     #heroR .distort.chest { clip-path: polygon(62% 40%, 88% 40%, 90% 62%, 70% 68%, 58% 60%); }
 
-    /* ===== heróis mais embaixo (bem afastados do header) ===== */
     :root{ --heroMax: 58vh; --heroTopSpace: clamp(290px, 12vh, 160px); }
     .login-heroes{
       position: relative;
-      z-index: 2; /* acima do landingBg e do FX de trás */
+      z-index: 2;
       display: grid;
-      grid-template-columns: 1fr 8vw 1fr 8vw 1fr; /* Zephyr | gap | Elara | gap | Wizard */
+      grid-template-columns: 1fr 8vw 1fr 8vw 1fr;
       margin-top: var(--heroTopSpace);
       align-items: end;
       width: 100%;
@@ -82,11 +70,9 @@
       width:auto; height:auto; object-fit:contain; image-rendering:pixelated;
       filter: drop-shadow(0 10px 0 rgba(0,0,0,.5));
     }
-    /* Elara um tico menor para caber os 3 */
     #heroC-img.hero-img { max-height: calc(var(--heroMax) - 6vh); }
 
     @media (max-width: 1100px){
-      /* em telas menores some a Elara para não esmagar */
       .login-heroes{ grid-template-columns: 1fr 8vw 1fr; }
       .hero-center{ display:none; }
     }
@@ -94,7 +80,6 @@
       :root{ --heroMax: 42vh; --heroTopSpace: clamp(40px, 10vh, 120px); }
     }
 
-    /* ——— HEADER (centralizado + grupos próximos do PLAY) ——— */
     .site-header{
       position: sticky; top: 0; z-index: 50;
       background: rgba(26,18,16,.88);
@@ -102,7 +87,6 @@
       border-bottom: 3px solid #0c0706;
       box-shadow: 0 4px 0 #000;
     }
-    /* faixa dither fraquinha logo abaixo da barra */
     .site-header::after{
       content:"";
       display:block;
@@ -123,14 +107,12 @@
       margin: 0 auto;
       display:flex;
       align-items:center;
-      justify-content:center; /* tudo gira em torno do PLAY */
-      gap: 14px;              /* grupos bem próximos */
-      padding: 6px 10px;      /* << compacto p/ “trazer pra cima” */
+      justify-content:center;
+      gap: 14px;
+      padding: 6px 10px;
       position: relative;
     }
-    .nav-left, .nav-right{
-      display:flex; align-items:center; gap:10px;
-    }
+    .nav-left, .nav-right{ display:flex; align-items:center; gap:10px; }
     .btn-play{
       font-family:"Press Start 2P", monospace;
       padding: 9px 24px;
@@ -144,7 +126,6 @@
       transition: filter .15s ease, transform .08s ease, box-shadow .15s ease;
     }
     .btn-play:hover{ filter:brightness(1.06); transform: translateY(-1px); }
-    /* Glow sutil quando deslogado */
     @keyframes playGlow {
       0%,100%{ box-shadow: 0 6px 0 #2b1512, 0 0 0 rgba(255,200,80,0), 0 0 0 rgba(255,200,80,0); }
       50%   { box-shadow: 0 6px 0 #2b1512, 0 0 22px rgba(255,200,80,.55), 0 0 44px rgba(255,200,80,.25); }
@@ -166,7 +147,6 @@
     }
     .nav-link:hover{ filter:brightness(1.06); transform: translateY(-1px); }
 
-    /* Ações no canto superior direito (Logout + Config + Hamb) */
     .header-actions{
       position:absolute; right:10px; top:4px;
       display:flex; align-items:center; gap:8px;
@@ -183,11 +163,9 @@
       transition: filter .15s ease, transform .08s ease;
     }
     .btn-logout:hover, .btn-gear:hover, .btn-hamb:hover{ filter:brightness(1.06); transform: translateY(-1px); }
-
     .btn-gear, .btn-hamb{ width:42px; padding:8px; }
     .btn-gear svg, .btn-hamb svg{ width:20px; height:20px; display:block; }
 
-    /* Dropdown de configurações */
     .cfg-menu{
       position:absolute; right:0; top:44px;
       width: 240px;
@@ -204,17 +182,14 @@
       background:#1e1410; border:4px solid #000; border-radius:10px;
     }
     .cfg-item input[type="checkbox"]{ transform: scale(1.2); }
-    .cfg-footer{
-      display:flex; justify-content:flex-end; gap:8px; margin-top:6px;
-    }
+    .cfg-footer{ display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
     .cfg-btn{
       padding:6px 10px; border:3px solid #000; border-radius:10px;
       font-family:"Press Start 2P", monospace; font-size:11px;
       background:#73402a; color:#fff; cursor:pointer;
     }
 
-    /* ===== MENU MOBILE (lista) ===== */
-    .btn-hamb{ display:none; }         /* desktop: escondido */
+    .btn-hamb{ display:none; }
     .mobile-menu{
       position:fixed; left:8px; right:8px; top:56px; z-index:55;
       background:#241712f2; border:6px solid #000; border-radius:14px;
@@ -229,18 +204,16 @@
       box-shadow:0 3px 0 #2a0f12, inset 0 -2px 0 rgba(0,0,0,.25);
       text-decoration:none;
     }
-
     @media (max-width: 820px){
-      .nav-left, .nav-right{ display:none; } /* troca por lista */
+      .nav-left, .nav-right{ display:none; }
       .btn-hamb{ display:flex; }
       .header-actions{ right:8px; gap:6px; }
     }
 
-    /* ——— MOLDURA RETRÔ (main-stage) ——— */
     .main-stage {
       position: relative;
       margin: 24px auto 56px;
-      width: min(1200px, calc(100vw - 32px)); /* centralizada e compacta */
+      width: min(1200px, calc(100vw - 32px));
       box-sizing: border-box;
       padding: 22px 24px;
       background:
@@ -263,7 +236,6 @@
       z-index:-1;
     }
 
-    /* HUD dentro da moldura */
     .stage-hud{
       display:flex; align-items:center; justify-content:flex-end;
       gap:16px; margin:0 4px 8px;
@@ -278,7 +250,6 @@
     }
     .hud-coin svg{ width:20px; height:20px; display:block; }
 
-    /* Título central */
     .menu-title{
       text-align:center;
       font-family:"Press Start 2P", monospace;
@@ -289,7 +260,6 @@
       font-size:24px;
     }
 
-    /* GRID de cards (cabe em 1366x768 sem scroll) */
     .menu-grid{
       display:grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -302,7 +272,6 @@
     @media (max-width: 820px) { .menu-grid{ grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 520px) { .menu-grid{ grid-template-columns: 1fr; } }
 
-    /* CARD do menu (menor) */
     .menu-card{
       width: clamp(160px, 20vw, 230px);
       cursor:pointer; user-select:none;
@@ -320,7 +289,6 @@
     }
     .menu-card:active{ transform: translateY(0); filter: none; }
 
-    /* Imagem menos vertical e legenda mais próxima */
     .menu-thumb{
       aspect-ratio: 4 / 3;
       background:#0d0d12;
@@ -333,7 +301,6 @@
       display:block;
     }
 
-    /* Rodapé do card (tarja fixa #A0522D) */
     .menu-cap{
       background:#A0522D;
       padding:8px 10px 10px;
@@ -348,11 +315,9 @@
       word-break:break-word;
     }
 
-    /* views internas controladas via JS */
     .view { display:none; }
     .view.active { display:block; }
 
-    /* Botão BACK nas views internas */
     .btn-back{
       margin:10px; padding:8px 14px;
       font-family:"Press Start 2P", monospace; font-size:12px;
@@ -362,13 +327,12 @@
     }
     .btn-back:hover{ filter:brightness(1.12); }
 
-    /* esconde o logout antigo da topbar (agora usamos o do header) */
     .topbar #btnLogout{ display:none; }
   </style>
 </head>
 <body class="force-anim logged-out">
 
-  <!-- SVG filter para heat-shimmer (animado) -->
+  <!-- SVG filter para heat-shimmer -->
   <svg width="0" height="0" style="position:absolute; left:-9999px; top:-9999px;">
     <filter id="distortWave" x="-10%" y="-10%" width="120%" height="120%" filterUnits="objectBoundingBox">
       <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="8" result="noise">
@@ -379,7 +343,7 @@
     </filter>
   </svg>
 
-  <!-- HEADER com PLAY central + Logout/Config no topo direito -->
+  <!-- HEADER -->
   <header class="site-header">
     <div class="nav-wrap">
       <nav class="nav-left">
@@ -394,9 +358,7 @@
         <a class="nav-link" href="#">Support</a>
       </nav>
 
-      <!-- canto superior direito -->
       <div class="header-actions">
-        <!-- hambúrguer (mostra só no mobile) -->
         <button id="btnHamb" class="btn-hamb" aria-label="Menu" aria-controls="mobileMenu" aria-expanded="false" title="Menu">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges">
             <path d="M3 6h18M3 12h18M3 18h18"/>
@@ -406,7 +368,6 @@
         <button id="btnLogoutTop" class="btn-logout hidden" title="Logout">Logout</button>
         <div style="position:relative">
           <button id="btnGear" class="btn-gear" title="Configurações" aria-haspopup="true" aria-expanded="false">
-            <!-- ícone engrenagem -->
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges">
               <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
               <path d="M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12M12 2v3M12 19v3"/>
@@ -433,7 +394,6 @@
       </div>
     </div>
 
-    <!-- MENU DE LISTA (mobile) -->
     <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
       <a href="#">Overview</a>
       <a href="#">Roadmap</a>
@@ -443,38 +403,27 @@
     </div>
   </header>
 
-  <!-- ==== CAMADA DE BACKGROUND SÓ DA LANDING ==== -->
+  <!-- Landing BG -->
   <div id="landingBg" aria-hidden="true"></div>
-
-  <!-- ==== FX TRASEIRO (vento/trovão) ==== -->
   <canvas id="landingFxBack" class="fx-layer"></canvas>
-
-  <!-- Canvas de partículas da landing (glows na frente) -->
   <canvas id="landingFx" class="fx-layer"></canvas>
 
-  <!-- Heróis laterais (landing) -->
+  <!-- Heróis -->
   <div class="login-heroes" aria-hidden="true">
-    <!-- Zephyr (esquerda) -->
     <div class="hero-side">
       <div id="heroL" class="hero-wrap">
         <img id="heroL-img" class="hero-img" src="img/ui/zephyr2.png" alt="" onerror="this.classList.add('broken')">
         <canvas id="heroL-canvas" class="hero-canvas"></canvas>
       </div>
     </div>
-
-    <div></div><!-- espaçador do grid -->
-
-    <!-- Elara (centro) -->
+    <div></div>
     <div class="hero-side hero-center">
       <div id="heroC" class="hero-wrap">
         <img id="heroC-img" class="hero-img" src="img/ui/elara.png" alt="" onerror="this.classList.add('broken')">
         <canvas id="heroC-canvas" class="hero-canvas"></canvas>
       </div>
     </div>
-
-    <div></div><!-- espaçador do grid -->
-
-    <!-- Wizard (direita) -->
+    <div></div>
     <div class="hero-side">
       <div id="heroR" class="hero-wrap">
         <img id="heroR-img" class="hero-img fix-edge" src="img/ui/wizard_full.png" alt="" onerror="this.classList.add('broken')">
@@ -483,7 +432,7 @@
     </div>
   </div>
 
-  <!-- MODAL AUTH (abre ao clicar no PLAY) -->
+  <!-- MODAL AUTH -->
   <div id="authScreen" class="hidden">
     <div id="authDecor" aria-hidden="true">
       <div class="parallax">
@@ -520,7 +469,7 @@
   <!-- FLASH -->
   <div id="flash"></div>
 
-  <!-- OVERLAY GACHA (inalterado) -->
+  <!-- OVERLAY GACHA -->
   <div id="summon" class="overlay" aria-hidden="true">
     <div class="rar-bg COMMON" id="rarBg"></div>
     <div class="stage ui-frame bg-dither">
@@ -602,12 +551,9 @@
       <button class="btn8" id="btnLogout">Logout</button>
     </div>
 
-    <!-- HUB com moldura -->
     <section id="view-hub" class="main-stage">
-      <!-- HUD com moedas -->
       <div class="stage-hud">
         <div class="hud-pill hud-coin" title="AFK Coins">
-          <!-- Ícone exclusivo AFK (SVG) -->
           <svg viewBox="0 0 64 64" shape-rendering="crispEdges" aria-hidden="true">
             <circle cx="32" cy="32" r="28" fill="#ffcd4d" />
             <circle cx="32" cy="32" r="22" fill="#ffd96a" />
@@ -631,7 +577,6 @@
       <h2 class="menu-title">MAIN MENU</h2>
 
       <div class="menu-grid">
-        <!-- Cada card toca sfx no mousedown e navega (SPA) -->
         <div class="menu-card" data-go="treasure">
           <div class="menu-thumb"><img src="img/menu/treasure-hunt.png" alt="Treasure Hunt"></div>
           <div class="menu-cap"><span>TREASURE<br>HUNT</span></div>
@@ -674,7 +619,7 @@
       </div>
     </section>
 
-    <!-- VIEWS internas (com botão BACK) -->
+    <!-- VIEWS -->
     <section id="view-treasure"  class="view ui-frame bg-dither">
       <button class="btn-back" data-back>← BACK</button>
       <div class="ui-title">TREASURE HUNT</div>
@@ -687,7 +632,6 @@
       <div style="padding:16px">🏹 Em breve: dummies, testes de DPS e upgrades.</div>
     </section>
 
-    <!-- GACHA/INVENTORY que já existiam -->
     <section id="view-summon" class="view">
       <button class="btn-back" data-back>← BACK</button>
       <h1>AFK Miners — Sistema de Gacha</h1>
@@ -707,25 +651,25 @@
       <div style="padding:16px"><div id="inventory"></div></div>
     </section>
 
-    <section id="view-heroes"   class="view ui-frame bg-dither">
+    <section id="view-heroes" class="view ui-frame bg-dither">
       <button class="btn-back" data-back>← BACK</button>
       <div class="ui-title">HEROES</div>
       <div style="padding:16px">🧙 Gestão de equipe, slots e sinergias.</div>
     </section>
 
-    <section id="view-dungeon"  class="view ui-frame bg-dither">
+    <section id="view-dungeon" class="view ui-frame bg-dither">
       <button class="btn-back" data-back>← BACK</button>
       <div class="ui-title">DUNGEON</div>
       <div style="padding:16px">🕳️ Portais, chaves e bosses.</div>
     </section>
 
-    <section id="view-pvp"      class="view ui-frame bg-dither">
+    <section id="view-pvp" class="view ui-frame bg-dither">
       <button class="btn-back" data-back>← BACK</button>
       <div class="ui-title">PVP</div>
       <div style="padding:16px">⚔️ Arena async (defesas salvas, ataques por tickets).</div>
     </section>
 
-    <section id="view-house"    class="view ui-frame bg-dither">
+    <section id="view-house" class="view ui-frame bg-dither">
       <button class="btn-back" data-back>← BACK</button>
       <div class="ui-title">HOUSE</div>
       <div style="padding:16px">🏠 Recuperação e buffs por mobília.</div>
@@ -743,12 +687,11 @@
 
   <!-- App principal -->
   <script type="module" src="js/boot.js"></script>
-  <!-- FX da LANDING (inclui frente + trás) -->
+  <!-- FX da LANDING -->
   <script type="module" src="js/landing_fx.js"></script>
 
-  <!-- Abrir/fechar modal + sync da landing + config menu + logout top + menu mobile -->
+  <!-- Scripts utilitários inline (landing/menu/HUD/safePlay) -->
   <script>
-    // abre/fecha auth
     const openBtn  = document.getElementById('btnOpenAuth') || document.getElementById('btnPlay');
     const closeBtn = document.getElementById('btnCloseAuth') || document.getElementById('authClose');
     const auth     = document.getElementById('authScreen');
@@ -773,7 +716,6 @@
     const obs = new MutationObserver(syncLanding);
     obs.observe(appMain, { attributes:true, attributeFilter:['class'] });
 
-    // Config dropdown
     const gearBtn = document.getElementById('btnGear');
     const cfgMenu = document.getElementById('cfgMenu');
     const cfgClose= document.getElementById('optClose');
@@ -796,7 +738,6 @@
       gearBtn.setAttribute('aria-expanded','false');
     });
 
-    // placeholders de opções simples
     optMute?.addEventListener('change', (e)=> {
       localStorage.setItem('sfx-muted', e.target.checked ? '1' : '0');
       document.dispatchEvent(new CustomEvent('sfx-mute', { detail:{ muted: e.target.checked }}));
@@ -809,12 +750,10 @@
       else { try{ await document.exitFullscreen(); }catch{} }
     });
 
-    // Logout do topo dispara o antigo (boot.js também trata diretamente)
     const btnLogoutTop = document.getElementById('btnLogoutTop');
     const btnLogoutOld = document.getElementById('btnLogout');
     btnLogoutTop?.addEventListener('click', ()=> btnLogoutOld?.click());
 
-    // -------- MENU MOBILE --------
     const btnHamb   = document.getElementById('btnHamb');
     const mobMenu   = document.getElementById('mobileMenu');
     const mobLogout = document.getElementById('mobileLogout');
@@ -833,13 +772,11 @@
     });
     window.addEventListener('resize', closeMobile);
 
-    // Espelha o logout no item da lista
     mobLogout?.addEventListener('click', ()=>{
       btnLogoutOld?.click();
       closeMobile();
     });
 
-    // Mostra/oculta item Logout no menu mobile conforme visibilidade do topo
     const observer = new MutationObserver(()=>{
       const isHidden = document.getElementById('btnLogoutTop')?.classList.contains('hidden');
       mobLogout?.classList.toggle('hidden', !!isHidden);
@@ -847,19 +784,17 @@
     observer.observe(document.body, { subtree:true, attributes:true, attributeFilter:['class'] });
   </script>
 
-    <!-- Helper p/ habilitar SFX só depois de interação -->
+  <!-- safePlay + Router/HUD Coins -->
   <script>
     let __userInteracted = false;
     window.addEventListener('pointerdown', () => { __userInteracted = true; }, { once:true });
     window.addEventListener('keydown',     () => { __userInteracted = true; }, { once:true });
-
     function safePlay(el){
-      if (!__userInteracted || !el) return; // só toca após clique/tecla
+      if (!__userInteracted || !el) return;
       try { el.currentTime = 0; el.play(); } catch {}
     }
   </script>
 
-  <!-- Router do HUB + som imediato + HUD coins (com vários fallbacks) -->
   <script>
     const clickSfx = document.getElementById('sfx-click');
 
@@ -891,7 +826,6 @@
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
 
-    // Som imediato no mousedown + navegação
     document.querySelectorAll('.menu-card').forEach(card=>{
       card.addEventListener('mousedown', ()=>{ safePlay(clickSfx); });
       card.addEventListener('click', ()=>{
@@ -900,39 +834,33 @@
       });
     });
 
-    // Botões BACK das subviews
     document.querySelectorAll('[data-back]').forEach(btn=>{
       btn.addEventListener('click', ()=> showView(''));
     });
 
-    // Abrir view pela hash (ex: #summon)
     const initial = (location.hash || '').replace('#','').trim();
     if (initial && views[initial]) { showView(initial); } else { showView(''); }
 
-    // ---------------- HUD COINS ----------------
     const hudCoinsEl = document.getElementById('hudCoins');
-
     function setHUDCoins(v){
       if (!hudCoinsEl) return;
       hudCoinsEl.textContent = Number.isFinite(+v) ? String(v) : '0';
     }
 
     async function fetchCoinsFromAPI(){
-      const endpoints = ['/api/player/me', '/api/auth/me']; // só os válidos
+      const endpoints = ['/api/player/me', '/api/auth/me'];
       for (const url of endpoints){
         try{
           const r = await fetch(url, { credentials:'include', cache:'no-store' });
-          if (!r.ok) continue;                 // ignora 401/404 silenciosamente
+          if (!r.ok) continue;
           const data = await r.json();
-          // tenta achar coins em vários formatos
           const profile = data?.profile || data; 
           const v = profile?.coins ?? data?.coins ?? data?.balance ?? data?.data?.coins;
           if (typeof v !== 'undefined') return v;
-        }catch(e){ /* ignora erros de rede */ }
+        }catch(e){}
       }
       return null;
     }
-
 
     function parseCoinsFromUserInfo(){
       const t = document.getElementById('userInfo')?.textContent || '';
@@ -973,141 +901,50 @@
     });
 
     (async function initCoins(){
-      // 1) tenta API
       let v = await fetchCoinsFromAPI();
       if (v != null) { setHUDCoins(v); }
       else {
-        // 2) tenta pill do topo
         v = parseCoinsFromUserInfo();
         if (v != null) setHUDCoins(v);
       }
-      // 3) observa mudanças
       observeUserInfo();
       observeGachaCounter();
-      // 4) tentativa tardia (boot.js pode preencher depois)
       setTimeout(async ()=>{
         const vv = await fetchCoinsFromAPI();
         if (vv != null) setHUDCoins(vv);
       }, 1500);
     })();
-    // -------------------------------------------
   </script>
 
-  <!-- Modal Perfil de Herói -->
-<div id="profileModal" class="pf-overlay" aria-hidden="true" style="display:none">
-  <div class="pf-dialog" role="dialog" aria-modal="true" aria-labelledby="pf-name">
-    <button class="pf-close" aria-label="Close">×</button>
+  <!-- Modal Perfil de Herói (HTML apenas; JS fica no boot/player_profile) -->
+  <div id="profileModal" class="pf-overlay" aria-hidden="true" style="display:none">
+    <div class="pf-dialog" role="dialog" aria-modal="true" aria-labelledby="pf-name">
+      <button class="pf-close" aria-label="Close">×</button>
 
-    <div class="pf-header">
-      <div class="pf-portrait"><img id="pf-img" alt="hero portrait"></div>
-      <div class="pf-titlebox">
-        <div id="pf-rarity" class="pf-rarity">RARE</div>
-        <h2 id="pf-name" class="pf-name">Hero Name</h2>
-        <div class="pf-meta" id="pf-meta">class • role • type • elem • weapon</div>
-      </div>
-    </div>
-
-    <div class="pf-body">
-      <div class="pf-stats">
-        <div class="pf-stat">⚔️ <span id="pf-atk">0</span></div>
-        <div class="pf-stat">🛡️ <span id="pf-def">0</span></div>
-        <div class="pf-stat">⚡ <span id="pf-spd">0</span></div>
+      <div class="pf-header">
+        <div class="pf-portrait"><img id="pf-img" alt="hero portrait"></div>
+        <div class="pf-titlebox">
+          <div id="pf-rarity" class="pf-rarity">RARE</div>
+          <h2 id="pf-name" class="pf-name">Hero Name</h2>
+          <div class="pf-meta" id="pf-meta">class • role • type • elem • weapon</div>
+        </div>
       </div>
 
-      <!-- Placeholder para skills (Fase B) -->
-      <div id="pf-skills-placeholder" class="pf-skills-placeholder">
-        Skills vêm aqui quando ativarmos a Fase B.
+      <div class="pf-body">
+        <div class="pf-stats">
+          <div class="pf-stat">⚔️ <span id="pf-atk">0</span></div>
+          <div class="pf-stat">🛡️ <span id="pf-def">0</span></div>
+          <div class="pf-stat">⚡ <span id="pf-spd">0</span></div>
+        </div>
+        <div id="pf-skills-placeholder" class="pf-skills-placeholder">
+          Skills vêm aqui quando ativarmos a Fase B.
+        </div>
       </div>
-    </div>
 
-    <div class="pf-footer">
-      <button id="pf-ok" class="pf-btn">OK</button>
+      <div class="pf-footer">
+        <button id="pf-ok" class="pf-btn">OK</button>
+      </div>
     </div>
   </div>
-</div>
-  <script>
-    // === Wiring do modal de Perfil ===
-    (function () {
-      const pf       = document.getElementById('profileModal');
-      const pfClose  = pf.querySelector('.pf-close');
-      const pfOk     = document.getElementById('pf-ok');
-
-      // abre/fecha
-      function openProfile(hero){
-        if (!hero) return;
-        // Preenche campos (caso já não esteja fazendo isso em outro lugar)
-        const cap = s => (s||'—').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-        document.getElementById('pf-img').src  = hero.imageUrl || `img/heroes/${hero.heroKey}.png`;
-        document.getElementById('pf-img').alt  = hero.name || 'hero portrait';
-        document.getElementById('pf-name').textContent = hero.name || '—';
-        const rar = (hero.rarity||'COMMON').toUpperCase();
-        const rarEl = document.getElementById('pf-rarity');
-        rarEl.textContent = rar.replace('_',' ');
-        rarEl.className = 'pf-rarity rar-'+rar;
-        document.getElementById('pf-meta').textContent = [hero.class,hero.role,hero.attack_type,hero.element,hero.weapon_pref]
-          .filter(Boolean).map(cap).join(' • ');
-        document.getElementById('pf-atk').textContent = hero.attack  ?? 0;
-        document.getElementById('pf-def').textContent = hero.defense ?? 0;
-        document.getElementById('pf-spd').textContent = hero.speed  ?? 0;
-
-        // abre
-        pf.style.display = '';
-        pf.classList.add('show');
-        pf.setAttribute('aria-hidden','false');
-
-        // foca o botão OK (acessibilidade)
-        setTimeout(()=> pfOk?.focus(), 0);
-      }
-      function closeProfile(){
-        pf.classList.remove('show');
-        pf.setAttribute('aria-hidden','true');
-        pf.style.display = 'none';
-      }
-
-      // ESC + clique fora + botões
-      pfClose.onclick = closeProfile;
-      pfOk.onclick    = closeProfile;
-      pf.addEventListener('click', (e)=>{ if(e.target === pf) closeProfile(); });
-      window.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && pf.classList.contains('show')) closeProfile(); });
-
-      // expõe para o restante do app (inventory chamar isso)
-      window.openProfile = openProfile;
-      window.closeProfile = closeProfile;
-    })();
-  </script>
-
-  <script>
-    // Quando o gacha terminar de desenhar os cards do inventário
-    document.addEventListener('inventory:rendered', () => {
-      const inv = document.getElementById('inventory');
-      if (!inv || inv.dataset.bound === '1') return; // evita bind duplicado
-      inv.dataset.bound = '1';
-
-      function getHeroFromCard(card) {
-        const id = card?.getAttribute('data-id');
-        const list = window.AFK_INVENTORY || [];
-        return list.find(x => String(x.id) === String(id));
-      }
-
-      inv.addEventListener('click', (e) => {
-        const card = e.target.closest('.card');
-        if (!card) return;
-        const hero = getHeroFromCard(card);
-        if (hero && window.openProfile) window.openProfile(hero); // abre o modal de perfil
-      });
-
-      inv.addEventListener('keydown', (e) => {
-        if (e.key !== 'Enter' && e.key !== ' ') return;
-        const card = e.target.closest('.card');
-        if (!card) return;
-        e.preventDefault();
-        const hero = getHeroFromCard(card);
-        if (hero && window.openProfile) window.openProfile(hero);
-      });
-    });
-  </script>
-
-
 </body>
 </html>
-
