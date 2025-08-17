@@ -1,0 +1,184 @@
+/* ====== HEADER NAV (estilo retrô, com PLAY central) ====== */
+.site-header{
+  position: fixed; top:0; left:0; right:0; z-index:1200;
+  display:flex; justify-content:center;
+  background: linear-gradient(180deg,#3a1f22,#2c171a 60%, #201014);
+  box-shadow: 0 8px 24px rgba(0,0,0,.45) inset, 0 8px 18px rgba(0,0,0,.35);
+  border-bottom: 4px solid #7a3c3f;
+}
+.nav-wrap{
+  width: min(1280px, 96vw);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; /* esquerda | PLAY | direita */
+  align-items: center;
+  gap: 14px;
+  padding: 10px 8px;
+}
+.brand{ display:none; }
+
+.nav-left,.nav-right{ display:flex; gap:12px; }
+.nav-right{ justify-content: flex-end; }
+
+.nav-link{
+  font-family:'Press Start 2P', monospace;
+  font-size:12px; color:#ffe6cf; text-decoration:none;
+  padding:10px 12px; border:3px solid #8e4a4d; border-radius:10px;
+  background:linear-gradient(#6a3135,#5a272b);
+  box-shadow:0 3px 0 #4a1f22, 0 6px 12px rgba(0,0,0,.25);
+  transition: transform .08s linear, filter .12s ease;
+}
+.nav-link:hover{ filter:brightness(1.08); transform: translateY(-1px); }
+
+.btn-play{
+  font-family:'Press Start 2P', monospace; font-size:18px; color:#221409;
+  padding:12px 28px; cursor:pointer;
+  border:4px solid #8e6c49; border-radius:14px;
+  background:linear-gradient(180deg,#ffc763 0%, #ffad3f 55%, #ff9426 100%);
+  box-shadow:0 4px 0 #8e6c49, 0 8px 18px rgba(0,0,0,.3);
+  transition: transform .08s linear, box-shadow .1s ease, filter .1s ease, background .15s ease;
+}
+.btn-play:hover{
+  /* azul retrô no hover */
+  background: linear-gradient(180deg,#76c0ff,#4fa3ff 55%, #2a86ff 100%);
+  box-shadow:0 4px 0 #2a5da8, 0 10px 22px rgba(35,110,220,.35);
+  color:#0d1730;
+  transform: translateY(-1px);
+}
+.btn-play:active{ transform:translateY(2px); box-shadow:0 2px 0 #8e6c49, 0 4px 12px rgba(0,0,0,.25) }
+
+/* empurra conteúdo pra baixo da barra */
+body{ padding-top:72px; }
+
+/* ====== Base (modal de auth) ====== */
+#authScreen{
+  position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:1600;
+  background: radial-gradient(circle at 40% 30%, rgba(255,235,200,.08), transparent 50%), #0f1118;
+  overflow:hidden;
+}
+.auth-card{
+  position:relative; z-index:2;
+  width:min(960px, 94vw);
+  display:grid; grid-template-columns:1fr 1fr; gap:18px;
+  border:6px solid #7a5b3d; border-radius:10px; background:linear-gradient(#d9ccb6,#c8b096);
+  box-shadow:0 30px 60px rgba(0,0,0,.55);
+}
+.auth-head{ grid-column:1/-1; text-align:center; padding:14px 16px; border-bottom:4px solid #8e6c49;
+  font-family:'Press Start 2P', monospace; color:#2a1c10; background:linear-gradient(#eee1cd,#dcc8a9) }
+.auth-pane{ padding:18px }
+.auth-pane h3{ font-family:'Press Start 2P', monospace; font-size:14px; color:#2a1c10; margin:0 0 12px }
+.auth-field{ margin-bottom:12px; }
+.auth-field input{
+  width:100%; padding:12px; border:3px solid #8e6c49; background:#efe5d4; color:#2a1c10; border-radius:8px;
+  font-family:'Press Start 2P', monospace; font-size:12px;
+}
+.btn8{
+  font-family:'Press Start 2P', monospace; font-size:14px; color:#3a220e; padding:12px 20px;
+  border:4px solid #8e6c49; border-radius:10px; cursor:pointer;
+  background:linear-gradient(180deg,#ffc763 0%, #ffad3f 55%, #ff9426 100%);
+  box-shadow:0 4px 0 #8e6c49, 0 8px 18px rgba(0,0,0,.3);
+}
+.btn8:active{ transform:translateY(2px); box-shadow:0 2px 0 #8e6c49, 0 4px 12px rgba(0,0,0,.25) }
+.auth-msg{ min-height:20px; margin-top:10px; font-family:'Press Start 2P', monospace; font-size:11px; color:#2a1c10 }
+.hidden{ display:none !important }
+
+/* ====== Landing FX (canvas por trás dos personagens) ====== */
+#landingFx{
+  position:fixed; inset:0; z-index:2; pointer-events:none;
+  display:block; width:100%; height:100%;
+  background:transparent; border:none; outline:none; box-shadow:none;
+}
+
+/* ====== Personagens laterais (SÓ na landing) ====== */
+.login-heroes {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  z-index:3; /* acima do canvas, abaixo do header e do modal */
+  padding-bottom: 40px;
+}
+.hero-side {
+  display: flex; justify-content: center; align-items: end;
+  height: 100%;
+}
+.hero-wrap {
+  position: relative;
+  width: min(28vw, 380px);
+  aspect-ratio: 3 / 5;
+  filter: drop-shadow(0 12px 24px rgba(0,0,0,.45));
+  animation: heroFloat 5.2s ease-in-out infinite;
+  will-change: transform;
+}
+.hero-img{
+  position: absolute; inset:0; width:100%; height:100%;
+  object-fit: contain;
+  image-rendering: pixelated; /* 8-bit modernizado */
+  filter: contrast(1.05) saturate(1.08);
+}
+/* se a imagem não carregar, não mostra “caixa” quebrada */
+.hero-img[src=""], .hero-img:not([src]){ display:none; }
+.hero-img.broken{ display:none; }
+
+.hero-glow{
+  position: absolute; inset: 0; border-radius: 12px;
+  background: radial-gradient( circle at 60% 18%,
+    rgba(255,245,180,.35), rgba(255,255,255,0) 35% );
+  mix-blend-mode: screen; opacity: .45;
+  animation: glowPulse 2.4s ease-in-out infinite;
+}
+.hero-canvas{ position:absolute; inset:0; }
+
+@keyframes heroFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes glowPulse { 0%,100%{opacity:.35} 50%{opacity:.65} }
+
+/* ====== Efeitos do modal (parallax/scanlines) ====== */
+#authDecor{ position:absolute; inset:0; z-index:1; pointer-events:none; }
+#authDecor .parallax{ position:absolute; inset:0; overflow:hidden; }
+#authDecor .layer{ position:absolute; inset:-6%; background-repeat:repeat-x; background-position:center bottom; image-rendering:pixelated; }
+#authDecor .l0{ background-image:linear-gradient(#0c0f17, #121423 60%, #0c0f17 100%); }
+#authDecor .l1{ opacity:.55; animation:scrollX 90s linear infinite; }
+#authDecor .l2{ opacity:.85; animation:scrollX 50s linear infinite; }
+#authDecor .l1{ background-image:url('../img/ui/bg_mid.png'); background-size:contain; }
+#authDecor .l2{ background-image:url('../img/ui/bg_near.png'); background-size:contain; }
+@keyframes scrollX{ from{ background-position:0 100% } to{ background-position:-2048px 100% } }
+#authParticles{
+  position:absolute; inset:0; display:block; width:100%; height:100%;
+  background:transparent; border:none; outline:none; box-shadow:none;
+}
+#authDecor .char{
+  position:absolute; bottom:4%; width:min(22vw, 280px);
+  filter:drop-shadow(0 8px 0 rgba(0,0,0,.35)) drop-shadow(0 18px 22px rgba(0,0,0,.45));
+  image-rendering:pixelated; transform:translateY(0) scale(1); animation:idleBob 3.6s ease-in-out infinite;
+}
+#authDecor .char.left { left:4%;  transform-origin:50% 100%; }
+#authDecor .char.right{ right:4%; transform-origin:50% 100%; animation-delay:.9s; }
+@keyframes idleBob{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-6px) } }
+#authDecor .scanlines{
+  position:absolute; inset:0; background:
+    linear-gradient(rgba(255,255,255,.05),rgba(0,0,0,0) 2px) 0 0/100% 2px,
+    radial-gradient(ellipse at center, rgba(255,255,255,.04), rgba(0,0,0,0) 60%);
+  opacity:.18; mix-blend-mode:overlay;
+}
+#authScreen.tilt .auth-card{
+  transform: perspective(900px) rotateX(var(--tiltY, 0deg)) rotateY(var(--tiltX, 0deg));
+  transition: transform .08s linear;
+}
+.auth-close{
+  position:absolute; right:10px; top:10px; z-index:3;
+  width:40px; height:40px; border:4px solid #8e6c49; border-radius:10px; cursor:pointer;
+  background:linear-gradient(#f26a5b,#d24a3a); color:#fff; font-weight:bold;
+  box-shadow:0 4px 0 #8e6c49;
+}
+.auth-close:active{ transform:translateY(1px) }
+
+/* ====== Mostrar heróis SÓ quando appMain estiver oculto ====== */
+/* Navegadores modernos */
+body:has(#appMain:not(.hidden)) .login-heroes,
+body:has(#appMain:not(.hidden)) #landingFx { display:none !important; }
+
+/* Acessibilidade */
+@media (prefers-reduced-motion: reduce){
+  .hero-wrap, .hero-glow { animation:none }
+  #authDecor .l1, #authDecor .l2, #authDecor .char { animation:none }
+  #authScreen.tilt .auth-card{ transform:none }
+}
