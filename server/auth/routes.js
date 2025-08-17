@@ -66,7 +66,7 @@ router.post('/register', async (req, res) => {
     if (starter) {
       await run(
         `INSERT INTO player_heroes
-           (id, playerId, heroKey, name, rarity, attack, defense, speed, createdAt)
+           (id,playerId,heroKey,name,rarity,attack,defense,speed,createdAt)
          VALUES (?,?,?,?,?,?,?,?,?)`,
         [
           randomUUID(), id, starter.heroKey, starter.name, starter.rarity,
