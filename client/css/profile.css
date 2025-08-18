@@ -114,8 +114,7 @@
 
 .pf-stat.pill b{ font-size:13px; }
 
-
-/* ============ Coluna 2: Equip grid (compacto) ============ */
+/* ============ Coluna 2: Equip grid (com Grid Areas) ============ */
 .pf-equip{
   display:grid; gap:6px;
   grid-template-columns: repeat(3, 74px);
@@ -123,21 +122,47 @@
   align-content:start;
   justify-content:start;
   min-width:0;
-  margin:0 8px 0 6px;            /* respiro extra à direita e do card */
+  margin:0 8px 0 6px;
+
+  /* NOVA ORDEM (boots quadrada embaixo de legs, coluna central) */
+  grid-template-areas:
+    "amulet  helmet  back"
+    "weapon  armor   shield"
+    "ring1   legs    ring2"
+    ".       boots   .";
 }
 @media (max-width:520px){
-  .pf-equip{ grid-template-columns: repeat(3, 70px); grid-auto-rows:70px; }
+  .pf-equip{
+    grid-template-columns: repeat(3, 70px);
+    grid-auto-rows:70px;
+  }
 }
+
+/* mapeando slots para áreas */
+.pf-equip .slot[data-slot="amulet"] { grid-area: amulet; }
+.pf-equip .slot[data-slot="helmet"] { grid-area: helmet; }
+.pf-equip .slot[data-slot="back"]   { grid-area: back;   }
+.pf-equip .slot[data-slot="weapon"] { grid-area: weapon; }
+.pf-equip .slot[data-slot="armor"]  { grid-area: armor;  }
+.pf-equip .slot[data-slot="shield"] { grid-area: shield; }
+.pf-equip .slot[data-slot="ring1"]  { grid-area: ring1;  }
+.pf-equip .slot[data-slot="legs"]   { grid-area: legs;   }
+.pf-equip .slot[data-slot="ring2"]  { grid-area: ring2;  }
+.pf-equip .slot[data-slot="boots"]  { grid-area: boots;  }
+/* se um dia usar belt:
+.pf-equip .slot[data-slot="belt"]   { grid-area: belt; } */
+
+/* slot base */
 .pf-equip .slot{
   background:#1a1310;
   border:4px solid #000; border-radius:10px;
   box-shadow: inset 0 -3px 0 rgba(0,0,0,.35), 0 3px 0 #000;
   position:relative;
+  transition: transform .08s ease, filter .15s ease, box-shadow .15s ease;
+  outline: none; /* para focus-visible custom */
 }
-.pf-equip .slot.wide{
-  grid-column: 1 / span 3;
-  height: 48px;
-}
+
+/* rótulo do slot */
 .pf-equip .slot::after{
   content: attr(data-slot);
   position:absolute; bottom:3px; left:6px;
@@ -145,6 +170,37 @@
   font-size:9px; color:#b9a78e; opacity:.85;
 }
 .pf-equip .slot.has-item::after{ opacity:0; }
+
+/* Glow sutil ao passar o mouse / focar via teclado */
+.pf-equip .slot:hover,
+.pf-equip .slot:focus-visible{
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow:
+    0 0 14px rgba(255, 230, 140, .35),
+    0 3px 0 #000,
+    inset 0 -3px 0 rgba(0,0,0,.35);
+}
+
+/* anel pulsante (decorativo) */
+.pf-equip .slot::before{
+  content:"";
+  position:absolute; inset:-2px;
+  border-radius:12px;
+  pointer-events:none;
+  opacity:0;
+}
+.pf-equip .slot:hover::before,
+.pf-equip .slot:focus-visible::before{
+  animation: slotGlow 1.2s ease-in-out infinite;
+  opacity:1;
+}
+
+@keyframes slotGlow{
+  0%  { box-shadow: 0 0 0 0 rgba(255, 214, 120, .35); }
+  70% { box-shadow: 0 0 0 8px rgba(255, 214, 120, .0); }
+  100%{ box-shadow: 0 0 0 0 rgba(255, 214, 120, .0); }
+}
 
 /* Belt nunca aparece (remove espaço) */
 .pf-equip .slot[data-slot="belt"]{ display:none !important; }
@@ -178,7 +234,10 @@
   font-size:12px; color:#f7eac3; text-shadow:0 2px 0 #000;
   margin:4px 0 6px; letter-spacing:1px;
 }
-.pf-skill{ margin:6px 0; }
+.pf-skill{
+  margin:6px 0;
+  position:relative; /* para tooltip */
+}
 .pf-skill-name{
   font-weight:700; margin-bottom:3px; color:#ffe8c0;
   font-family:"Press Start 2P", monospace;
@@ -194,7 +253,28 @@
   background:#f39b2d; box-shadow: inset 0 -2px 0 rgba(0,0,0,.25);
   transition: width .6s ease-out;
 }
-.pf-skill-tip{ font-size:10px; color:#c9c3b8; margin-top:2px; }
+
+/* ----- Tooltip retrô: escondido por padrão ----- */
+.pf-skill-tip{
+  display:none;                 /* escondido no hub */
+  position:absolute;
+  top:100%; left:0;
+  margin-top:4px;
+  padding:6px 8px;
+  background:#2b1a12;
+  border:3px solid #000;
+  border-radius:8px;
+  box-shadow:0 3px 0 #000, inset 0 -2px 0 rgba(0,0,0,.25);
+  font-family:"Press Start 2P", monospace; /* pixel retro */
+  font-size:10px; color:#ffe8c0;
+  white-space:nowrap;
+  z-index:5;
+  pointer-events:none;
+}
+/* mostra no hover/focus para mouse e teclado */
+.pf-skill:hover .pf-skill-tip,
+.pf-skill:focus-within .pf-skill-tip{ display:block; }
+
 .pf-skill-null{ color:#9f8d7a; font-style:italic; }
 
 /* ============ Footer + close ============ */
@@ -243,4 +323,35 @@
   .pf-equip{ grid-template-columns: repeat(3, 68px); grid-auto-rows:68px; }
   .pf-equip .slot.wide{ height:44px; }
   #pf-skills-placeholder, .pf-skill-scroll{ max-height:240px; }
+}
+
+/* título padrão dos blocos (Hero/Training) */
+.pf-skill-block-title{
+  font-family:"Press Start 2P", monospace;
+  font-size:12px;
+  color:#f7eac3;
+  letter-spacing:1px;
+  margin:6px 0 10px;
+  text-shadow:0 2px 0 #000;
+}
+
+/* variação “tarja retrô” para o título principal */
+.pf-skill-block-title--primary{
+  display:inline-block;
+  padding:6px 10px;
+  color:#fff;
+  background:linear-gradient(#5b3a27,#2b1a12);
+  border:4px solid #000;
+  border-radius:8px;
+  box-shadow:0 3px 0 #000, inset 0 -2px 0 rgba(0,0,0,.35);
+}
+
+/* (opcional) linha separadora fininha abaixo do bloco de skills */
+.pf-skill-divider{
+  height:4px;
+  background:linear-gradient(90deg, #3a2a20, #2a1d15);
+  border:2px solid #000;
+  border-radius:6px;
+  box-shadow:0 2px 0 #000;
+  margin:8px 0 10px;
 }

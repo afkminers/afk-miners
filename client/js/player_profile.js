@@ -119,14 +119,29 @@ async function loadHeroSkills(hero, signal){
    Render helpers
    ========================= */
 function renderTrainBars(skills){
-  return skills.map(s=>{
-    const pct  = Math.max(0, Math.min(100, Math.round((s.progress||0)*100)));
+  const labelMap = {
+    SWORD:    'Sword Fighting',
+    AXE:      'Axe Fighting',
+    CLUB:     'Club Fighting',
+    DISTANCE: 'Distance Fighting',
+    SHIELD:   'Shield Fighting',
+    MAGIC:    'Magic Level'
+  };
+
+  return (skills || []).map(s => {
+    const rawType = String(s.skillType || '').toUpperCase();
+    const nice    = labelMap[rawType] || cap(s.skillType);
+
+    const pct  = Math.max(0, Math.min(100, Math.round((s.progress || 0) * 100)));
     const left = Math.max(0, (s.need ?? 0) - (s.tries ?? 0));
+    const tip  = `${pct}% — faltam ${left} ${left === 1 ? 'try' : 'tries'}`;
+
+    // dica vai no title (nativo) e também num <div> que só aparece no hover via CSS
     return `
-      <div class="pf-skill">
-        <div class="pf-skill-name">${cap(s.skillType)} <b>${s.level}</b></div>
+      <div class="pf-skill" title="${tip}">
+        <div class="pf-skill-name">${nice} <b>${s.level}</b></div>
         <div class="pf-skill-bar"><span data-pct="${pct}"></span></div>
-        <div class="pf-skill-tip">${pct}% — faltam ${left} tries</div>
+        <div class="pf-skill-tip">${tip}</div>
       </div>
     `;
   }).join('');
@@ -207,14 +222,17 @@ export function bindProfileModal() {
       ? renderTrainBars(cache.playerSkills)
       : '<div class="pf-skill-null">—</div>';
 
+    // Hero Skills agora com a MESMA tarja retrô do Training Skills
     el.skillsBox.innerHTML = `
       <div class="pf-skill-block">
-        <div class="pf-skill-block-title">Hero Skills</div>
+        <div class="pf-skill-block-title pf-skill-block-title--primary">Hero Skills</div>
         ${renderHeroSkills(heroSkills)}
       </div>
-      <hr style="opacity:.15;margin:10px 0">
+
+      <div class="pf-skill-divider"></div>
+
       <div class="pf-skill-block">
-        <div class="pf-skill-block-title">Training Skills</div>
+        <div class="pf-skill-block-title pf-skill-block-title--primary">Training Skills</div>
         ${trainHTML}
       </div>
     `;
