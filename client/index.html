@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/auth.css">
   <link rel="stylesheet" href="css/gacha.css">
   <link rel="stylesheet" href="css/profile.css">
+  <link rel="stylesheet" href="css/main.css">
   <style>
     html, body { margin:0; padding:0; background:#151316; }
     .hidden{ display:none !important; }
@@ -328,6 +329,25 @@
     .btn-back:hover{ filter:brightness(1.12); }
 
     .topbar #btnLogout{ display:none; }
+
+    /* ===== Site footer retrô ===== */
+    .site-footer{
+      margin-top: 28px;
+      padding: 10px 16px;
+      text-align:center;
+      font-family:"Press Start 2P", monospace;
+      font-size: 11px;
+      color:#ffe8c0;
+      background:
+        radial-gradient(ellipse at 50% 0%, #2a1d15 0%, #1b1410 60%, #120d0a 100%) padding-box,
+        linear-gradient(#5b3a27, #2b1a12) border-box;
+      border-top: 8px solid #000;
+      box-shadow: 0 -6px 0 #000, 0 -14px 20px rgba(0,0,0,.45);
+    }
+    .site-footer small{ opacity:.85; }
+    /* Deixar fixo no rodapé? troque por:
+       .site-footer{ position:fixed; left:0; right:0; bottom:0; z-index:10; }
+       e adicione padding-bottom no body/main para não sobrepor conteúdo. */
   </style>
 </head>
 <body class="force-anim logged-out">
@@ -951,26 +971,23 @@
 
         <!-- Coluna 2: Grade de Equipamentos (sem belt) -->
         <div class="pf-equip">
-          <!-- linha 1 -->
           <div class="slot" data-slot="helmet"  title="Helmet"></div>
           <div class="slot" data-slot="amulet"  title="Amulet"></div>
           <div class="slot" data-slot="back"    title="Back"></div>
-          <!-- linha 2 -->
-          <div class="slot" data-slot="armor"   title="Armor"></div>
+
           <div class="slot" data-slot="weapon"  title="Weapon"></div>
+          <div class="slot" data-slot="armor"   title="Armor"></div>
           <div class="slot" data-slot="shield"  title="Shield"></div>
-          <!-- linha 3 -->
-          <div class="slot" data-slot="legs"    title="Legs"></div>
+
           <div class="slot" data-slot="ring1"   title="Ring 1"></div>
+          <div class="slot" data-slot="legs"    title="Legs"></div>
           <div class="slot" data-slot="ring2"   title="Ring 2"></div>
-          <!-- linha 4: apenas boots larga -->
-          <div class="slot" data-slot="boots" title="Boots"></div>
-          <!-- sem BELT para não sobrar espaço -->
+
+          <div class="slot" data-slot="boots"   title="Boots"></div>
         </div>
 
         <!-- Coluna 3: Skills (rolagem própria) -->
         <section class="pf-skill-side">
-          <!--<div class="pf-skill-head">Skills</div>-->
           <div id="pf-skills-placeholder" class="pf-skill-scroll"></div>
         </section>
       </div>
@@ -981,16 +998,19 @@
     </div>
   </div>
 
-
-
-
-
-
-
-      <div class="pf-footer">
-        <button id="pf-ok" class="pf-btn">OK</button>
-      </div>
+    <!-- rodapé -->
+  <footer class="retro-footer">
+    <div class="footer-content">
+      <span class="footer-title">AFK Miners • Pixel Game © 2025</span>
+      <nav class="footer-links">
+        <a href="https://www.youtube.com/@afkminers" target="_blank">📺 YouTube</a>
+        <a href="https://www.instagram.com/afkminers" target="_blank">📸 Instagram</a>
+        <a href="https://x.com/afkminers" target="_blank">🐦 Twitter/X</a>
+        <a href="https://discord.gg/2mYkedhyX3" target="_blank">💬 Discord</a>
+      </nav>
     </div>
-  </div>
+  </footer>
+
+
 </body>
 </html>
