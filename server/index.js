@@ -36,6 +36,9 @@ app.use('/api', catalogRoutes);
 app.use('/api/player', requireAuth, playerRoutes);
 app.use('/api/gacha', requireAuth, gachaRoutes);
 
+// skill
+app.use('/api/skills', require('./skills/routes'));
+
 // SPA fallback
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next();

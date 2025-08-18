@@ -3,7 +3,7 @@ import { API, getCsrf, apiGet } from './api.js';
 import { doLogin, doRegister, doLogout } from './auth.js';
 import { bindGachaUI } from './gacha.js';
 import { initLoginFx, stopLoginFx, celebrate } from './login_fx.js';
-import { bindProfileModal, setupInventoryOpen } from './player_profile.js'; // << PERFIL
+import { bindProfileModal, setupInventoryOpen } from './player_profile.js'; // PERFIL
 
 // UI base
 const authScreen = document.getElementById('authScreen');
@@ -38,7 +38,6 @@ const ctx = {
   elGacha:   document.getElementById('btnGacha'),
   elBalance: document.getElementById('balance'),
   elResult:  document.getElementById('result'),
-  // IMPORTANTE: continua sendo #inventory (agora na view HEROES)
   elInv:     document.getElementById('inventory'),
 
   overlay:   document.getElementById('summon'),
@@ -103,7 +102,6 @@ function updateHud(profileOrCoins) {
   if (ctx.coinCount) ctx.coinCount.textContent = coins;
   if (ctx.elBalance) ctx.elBalance.textContent = `Moedas: ${coins}`;
 
-  // avisa quem mais estiver ouvindo (HUD global no index.html)
   try {
     document.dispatchEvent(new CustomEvent('coins-updated', { detail: { coins } }));
   } catch {}
@@ -137,7 +135,7 @@ function showLanding(){
   initLoginFx();
 }
 
-let __profileModalBound = false; // evita binds duplicados
+let __profileModalBound = false;
 
 async function showApp(profile) {
   stopLoginFx();
@@ -153,7 +151,7 @@ async function showApp(profile) {
   updateHud(profile);
   await gacha.init(profile);
 
-  // === Bind do modal de perfil (somente uma vez)
+  // === Bind do modal de perfil (uma única vez)
   if (!__profileModalBound) {
     __profileModalBound = true;
     const modal = bindProfileModal();
@@ -161,7 +159,6 @@ async function showApp(profile) {
     const getInv = () => (gacha.getInventory ? gacha.getInventory() : (window.AFK_INVENTORY || []));
     if (invEl) {
       setupInventoryOpen(invEl, getInv, modal.open);
-      // rebind na próxima renderização do inventory
       document.addEventListener('inventory:rendered', () => {
         setupInventoryOpen(invEl, getInv, modal.open);
       });
@@ -182,9 +179,9 @@ trySession();
 if (btnPlay) {
   btnPlay.onclick = () => {
     if (window.__isAuth && __profile) {
-      showApp(__profile); // main menu
+      showApp(__profile);
     } else {
-      authScreen.classList.remove('hidden'); // login
+      authScreen.classList.remove('hidden');
     }
   };
 }

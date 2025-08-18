@@ -923,30 +923,69 @@
     })();
   </script>
 
-  <!-- Modal Perfil de Herói (HTML apenas; JS fica no boot/player_profile) -->
+  <!-- Profile / Equip Modal (layout compacto com skills à direita) -->
   <div id="profileModal" class="pf-overlay" aria-hidden="true" style="display:none">
-    <div class="pf-dialog" role="dialog" aria-modal="true" aria-labelledby="pf-name">
-      <button class="pf-close" aria-label="Close">×</button>
+    <div class="pf-dialog" role="dialog" aria-modal="true">
+      <button class="pf-close" aria-label="Close">✕</button>
 
-      <div class="pf-header">
-        <div class="pf-portrait"><img id="pf-img" alt="hero portrait"></div>
-        <div class="pf-titlebox">
-          <div id="pf-rarity" class="pf-rarity">RARE</div>
-          <h2 id="pf-name" class="pf-name">Hero Name</h2>
-          <div class="pf-meta" id="pf-meta">class • role • type • elem • weapon</div>
+      <!-- HEADER: 3 colunas — retrato | equip | skills -->
+      <div class="pf-header pf-header-3cols">
+        <!-- Coluna 1: Retrato + infos -->
+        <div class="pf-leftcol">
+          <div class="pf-portrait"><img id="pf-img" alt="hero portrait"></div>
+
+          <div class="pf-info">
+            <div id="pf-level"  class="pf-level">Lvl 1 (0%)</div>
+            <div id="pf-rarity" class="pf-rarity">COMMON</div>
+          </div>
+
+          <div id="pf-mini-meta" class="pf-mini-meta">—</div>
+
+          <!-- Stats: “pílulas” verticais lado a lado -->
+          <div class="pf-stats-row">
+            <div class="pf-stat pill"><span>⚔</span><b id="pf-atk">0</b></div>
+            <div class="pf-stat pill"><span>🛡</span><b id="pf-def">0</b></div>
+            <div class="pf-stat pill"><span>⚡</span><b id="pf-spd">0</b></div>
+          </div>
         </div>
+
+        <!-- Coluna 2: Grade de Equipamentos (sem belt) -->
+        <div class="pf-equip">
+          <!-- linha 1 -->
+          <div class="slot" data-slot="helmet"  title="Helmet"></div>
+          <div class="slot" data-slot="amulet"  title="Amulet"></div>
+          <div class="slot" data-slot="back"    title="Back"></div>
+          <!-- linha 2 -->
+          <div class="slot" data-slot="armor"   title="Armor"></div>
+          <div class="slot" data-slot="weapon"  title="Weapon"></div>
+          <div class="slot" data-slot="shield"  title="Shield"></div>
+          <!-- linha 3 -->
+          <div class="slot" data-slot="legs"    title="Legs"></div>
+          <div class="slot" data-slot="ring1"   title="Ring 1"></div>
+          <div class="slot" data-slot="ring2"   title="Ring 2"></div>
+          <!-- linha 4: apenas boots larga -->
+          <div class="slot wide" data-slot="boots" title="Boots"></div>
+          <!-- sem BELT para não sobrar espaço -->
+        </div>
+
+        <!-- Coluna 3: Skills (rolagem própria) -->
+        <section class="pf-skill-side">
+          <div class="pf-skill-head">Skills</div>
+          <div id="pf-skills-placeholder" class="pf-skill-scroll"></div>
+        </section>
       </div>
 
-      <div class="pf-body">
-        <div class="pf-stats">
-          <div class="pf-stat">⚔️ <span id="pf-atk">0</span></div>
-          <div class="pf-stat">🛡️ <span id="pf-def">0</span></div>
-          <div class="pf-stat">⚡ <span id="pf-spd">0</span></div>
-        </div>
-        <div id="pf-skills-placeholder" class="pf-skills-placeholder">
-          Skills vêm aqui quando ativarmos a Fase B.
-        </div>
+      <div class="pf-footer">
+        <button id="pf-ok" class="pf-btn">OK</button>
       </div>
+    </div>
+  </div>
+
+
+
+
+
+
 
       <div class="pf-footer">
         <button id="pf-ok" class="pf-btn">OK</button>

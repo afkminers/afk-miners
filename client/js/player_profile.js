@@ -1,77 +1,300 @@
 // client/js/player_profile.js
+import { API } from './api.js';
+
+/* =========================
+   Caches leves (com TTL)
+   ========================= */
+const cache = {
+  playerSkills: null,   // [{ skillType, level, tries, need, progress }]
+  playerLevel:  null,   // { level, xp, next, progress }
+  lastFetch:    0,
+
+  equip:        null,   // { equipment:{slot->itemKey}, equipped:[{itemKey,name,slot,icon}], bag:[...] }
+  lastEquip:    0
+};
+const TTL_ME = 15_000; // 15s
+const TTL_EQ = 10_000; // 10s
+
+/* Controla buscas concorrentes quando reabre o modal rapidamente */
+let openState = {
+  controller: null,      // AbortController para /me e /skills
+  currentHero: null      // referência do herói atualmente aberto
+};
+
+/* =========================
+   Helpers utilitários
+   ========================= */
+const cap = (s) => !s ? '—' : String(s).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+
+function animateProgressBars(container){
+  if (!container) return;
+  const spans = container.querySelectorAll('.pf-skill-bar span[data-pct]');
+  requestAnimationFrame(()=>{
+    spans.forEach(sp => {
+      const pct = Number(sp.getAttribute('data-pct')) || 0;
+      sp.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+    });
+  });
+}
+
+/* =========================
+   EQUIP: leitura + pintura
+   ========================= */
+async function fetchEquip(force=false){
+  if (!force && cache.equip && Date.now()-cache.lastEquip < TTL_EQ) return cache.equip;
+  try{
+    const r = await fetch(`${API}/api/equip/my`, { credentials:'include', cache:'no-store' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    cache.equip = await r.json(); // { equipment, equipped:[...], bag:[...] }
+  }catch(e){
+    console.warn('Falha ao buscar /api/equip/my (usando vazio)', e);
+    cache.equip = { equipment:{}, equipped:[], bag:[] };
+  }
+  cache.lastEquip = Date.now();
+  return cache.equip;
+}
+
+function paintEquipGrid(data){
+  const slots = ['helmet','amulet','back','armor','weapon','shield','legs','ring1','ring2','boots','belt'];
+  const byKey = Object.fromEntries((data?.equipped||[]).map(x => [x.itemKey, x]));
+
+  for (const s of slots){
+    const el = document.querySelector(`.pf-equip .slot[data-slot="${s}"]`);
+    if (!el) continue;
+
+    el.classList.remove('has-item');
+    el.style.removeProperty('background-image');
+
+    const key  = data?.equipment?.[s];
+    const meta = key && byKey[key];
+    if (meta?.icon){
+      el.style.backgroundImage    = `url(${meta.icon})`;
+      el.style.backgroundSize     = 'contain';
+      el.style.backgroundRepeat   = 'no-repeat';
+      el.style.backgroundPosition = 'center';
+      el.title = `${meta.name} (${meta.slot})`;
+      el.classList.add('has-item');
+    } else {
+      el.title = s.toUpperCase();
+    }
+  }
+}
+
+/* =========================
+   API player/me + skills
+   ========================= */
+async function fetchPlayerMeOnce(signal){
+  if (cache.playerSkills && Date.now() - cache.lastFetch < TTL_ME) return;
+  try{
+    const r = await fetch(`${API}/api/player/me`, { credentials:'include', cache:'no-store', signal });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    if (Array.isArray(data?.skills)) cache.playerSkills = data.skills;
+    if (data?.level) cache.playerLevel = data.level;
+    cache.lastFetch = Date.now();
+  }catch(e){
+    if (e?.name === 'AbortError') return;
+    console.error('Falha ao buscar /api/player/me', e);
+  }
+}
+
+async function loadHeroSkills(hero, signal){
+  try{
+    const q = new URLSearchParams({
+      heroKey: hero.heroKey,
+      rarity: (hero.rarity||'COMMON').toUpperCase()
+    });
+    const r = await fetch(`${API}/api/skills/by-hero?`+q.toString(), { credentials:'include', cache:'no-store', signal });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    return Array.isArray(data.skills) ? data.skills : [];
+  }catch(e){
+    if (e?.name === 'AbortError') return [];
+    console.error('Falha ao buscar /api/skills/by-hero', e);
+    return [];
+  }
+}
+
+/* =========================
+   Render helpers
+   ========================= */
+function renderTrainBars(skills){
+  return skills.map(s=>{
+    const pct  = Math.max(0, Math.min(100, Math.round((s.progress||0)*100)));
+    const left = Math.max(0, (s.need ?? 0) - (s.tries ?? 0));
+    return `
+      <div class="pf-skill">
+        <div class="pf-skill-name">${cap(s.skillType)} <b>${s.level}</b></div>
+        <div class="pf-skill-bar"><span data-pct="${pct}"></span></div>
+        <div class="pf-skill-tip">${pct}% — faltam ${left} tries</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderHeroSkills(list){
+  if (!list?.length) return `<div class="pf-skill-null">No hero skills</div>`;
+  return list.map(s=>`
+    <div class="pf-skill">
+      <div class="pf-skill-name">${s.name} <small>(${s.type})</small></div>
+      <div class="pf-skill-tip">Power ${s.power} • CD ${s.cooldown} • Elem ${s.element}</div>
+    </div>
+  `).join('');
+}
+
+/* =========================
+   Modal / Perfil
+   ========================= */
 export function bindProfileModal() {
   const overlay = document.getElementById('profileModal');
-  const closeBtn = overlay.querySelector('.pf-close');
-  const okBtn = document.getElementById('pf-ok');
-
-  const el = {
-    img: document.getElementById('pf-img'),
-    rarity: document.getElementById('pf-rarity'),
-    name: document.getElementById('pf-name'),
-    meta: document.getElementById('pf-meta'),
-    atk: document.getElementById('pf-atk'),
-    def: document.getElementById('pf-def'),
-    spd: document.getElementById('pf-spd'),
-  };
-
-  function cap(s){ if(!s) return '—'; return String(s).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
-
-  function fill(hero){
-    const rarity=(hero.rarity||'COMMON').toUpperCase();
-    el.img.src = hero.imageUrl || `img/heroes/${hero.heroKey}.png`;
-    el.img.alt = hero.name || 'hero portrait';
-    el.rarity.textContent = rarity.replace('_',' ');
-    el.rarity.className = 'pf-rarity rar-'+rarity;
-    el.name.textContent = hero.name || '—';
-    el.meta.textContent = [hero.class,hero.role,hero.attack_type,hero.element,hero.weapon_pref]
-      .filter(Boolean).map(cap).join(' • ');
-    el.atk.textContent = hero.attack ?? 0;
-    el.def.textContent = hero.defense ?? 0;
-    el.spd.textContent = hero.speed ?? 0;
+  if (!overlay) {
+    console.warn('[profile] #profileModal não encontrado');
+    return { open() {}, close() {}, refreshEquip(){}, refreshAll(){} };
   }
 
-  function open(hero){
+  const closeBtn = overlay.querySelector('.pf-close');
+  const okBtn    = document.getElementById('pf-ok');
+
+  const el = {
+    img:        document.getElementById('pf-img'),
+    rarity:     document.getElementById('pf-rarity'),
+    miniMeta:   document.getElementById('pf-mini-meta'),
+    atk:        document.getElementById('pf-atk'),
+    def:        document.getElementById('pf-def'),
+    spd:        document.getElementById('pf-spd'),
+    skillsBox:  document.getElementById('pf-skills-placeholder'),
+    levelBadge: document.getElementById('pf-level') // “Lvl X (Y%)”
+  };
+
+  function fillHeader(hero){
+    const rarity=(hero.rarity||'COMMON').toUpperCase();
+    if (el.img){
+      el.img.src = hero.imageUrl || `img/heroes/${hero.heroKey}.png`;
+      el.img.alt = hero.name || 'hero portrait';
+      el.img.onerror = () => { el.img.onerror=null; el.img.src = `img/heroes/${hero.heroKey}.png`; };
+    }
+    if (el.rarity){
+      el.rarity.textContent = rarity.replace('_',' ');
+      el.rarity.className = 'pf-rarity rar-'+rarity;
+    }
+    if (el.miniMeta){
+      el.miniMeta.textContent = [hero.class,hero.role,hero.attack_type,hero.element,hero.weapon_pref]
+        .filter(Boolean).map(cap).join(' • ');
+    }
+    if (el.atk) el.atk.textContent = hero.attack ?? 0;
+    if (el.def) el.def.textContent = hero.defense ?? 0;
+    if (el.spd) el.spd.textContent = hero.speed ?? 0;
+  }
+
+  async function fillSkillsArea(hero, signal){
+    if (!el.skillsBox) return;
+    el.skillsBox.innerHTML = `
+      <div class="pf-loading">
+        <div class="spinner"></div>
+        <span>Loading skills…</span>
+      </div>
+    `;
+
+    const [heroSkills] = await Promise.all([ loadHeroSkills(hero, signal) ]);
+    await fetchPlayerMeOnce(signal);
+
+    if (cache.playerLevel && el.levelBadge){
+      const pct = Math.round((cache.playerLevel.progress||0)*100);
+      el.levelBadge.textContent = `Lvl ${cache.playerLevel.level} (${pct}%)`;
+    }
+
+    const trainHTML = cache.playerSkills
+      ? renderTrainBars(cache.playerSkills)
+      : '<div class="pf-skill-null">—</div>';
+
+    el.skillsBox.innerHTML = `
+      <div class="pf-skill-block">
+        <div class="pf-skill-block-title">Hero Skills</div>
+        ${renderHeroSkills(heroSkills)}
+      </div>
+      <hr style="opacity:.15;margin:10px 0">
+      <div class="pf-skill-block">
+        <div class="pf-skill-block-title">Training Skills</div>
+        ${trainHTML}
+      </div>
+    `;
+
+    animateProgressBars(el.skillsBox);
+  }
+
+  async function fillEquip(){
+    const eq = await fetchEquip(); // cache + TTL
+    paintEquipGrid(eq);
+  }
+
+  async function open(hero){
     if (!hero) return;
-    fill(hero);
+
+    // Cancela buscas anteriores se ainda estiverem ativas
+    if (openState.controller) { try{ openState.controller.abort(); }catch{} }
+    openState.controller = new AbortController();
+    openState.currentHero = hero;
+
+    fillHeader(hero);
+    await Promise.all([
+      fillSkillsArea(hero, openState.controller.signal),
+      fillEquip()
+    ]);
+
     overlay.style.display = '';
     overlay.classList.add('show');
     overlay.setAttribute('aria-hidden','false');
-    // acessibilidade: foco no OK
     setTimeout(()=> document.getElementById('pf-ok')?.focus(), 0);
   }
+
   function close(){
+    if (openState.controller) { try{ openState.controller.abort(); }catch{} }
     overlay.classList.remove('show');
     overlay.setAttribute('aria-hidden','true');
     overlay.style.display = 'none';
   }
 
-  closeBtn.onclick = close;
-  okBtn.onclick = close;
+  // Expor uma forma fácil de atualizar equipamentos externamente
+  async function refreshEquip(force=false){
+    await fetchEquip(force);
+    paintEquipGrid(cache.equip);
+  }
+
+  // Recarrega tudo (skills + equip). Útil após ganhos ou trocar item.
+  async function refreshAll(){
+    const hero = openState.currentHero;
+    if (!hero) return;
+    if (openState.controller) { try{ openState.controller.abort(); }catch{} }
+    openState.controller = new AbortController();
+    await fetchPlayerMeOnce(openState.controller.signal);
+    await fillSkillsArea(hero, openState.controller.signal);
+    await refreshEquip(true);
+  }
+
+  // Eventos opcionais para integrar com outras telas
+  document.addEventListener('equip-updated', () => refreshEquip(true));
+  document.addEventListener('player-updated', () => refreshAll());
+
+  closeBtn && (closeBtn.onclick = close);
+  okBtn && (okBtn.onclick = close);
   overlay.addEventListener('click',(e)=>{ if(e.target===overlay) close(); });
   window.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && overlay.classList.contains('show')) close(); });
 
-  return { open, close };
+  return { open, close, refreshEquip, refreshAll };
 }
 
-/**
- * Integração com a grade do Inventory:
- * chame setupInventoryOpen(invContainer, getInventoryArray, modal.open)
- */
+/* Inventory → abre modal */
 export function setupInventoryOpen(invContainer, getInventory, openFn){
   function resolveCard(target){
-    const card = target.closest('.card');
-    if(!card) return null;
-    const id = card.getAttribute('data-id');
-    if(!id) return null;
+    const card = target.closest('.card'); if(!card) return null;
+    const id = card.getAttribute('data-id'); if(!id) return null;
     const inv = getInventory?.() || [];
-    const hero = inv.find?.(x => String(x.id)===String(id));
-    return hero || null;
+    return inv.find?.(x => String(x.id)===String(id)) || null;
   }
-  invContainer.addEventListener('click',(e)=>{
-    const hero = resolveCard(e.target);
-    if(hero) openFn(hero);
+  invContainer.addEventListener('click', e=>{
+    const hero = resolveCard(e.target); if(hero) openFn(hero);
   });
-  invContainer.addEventListener('keydown',(e)=>{
+  invContainer.addEventListener('keydown', e=>{
     if(e.key==='Enter'||e.key===' '){
       const hero = resolveCard(e.target);
       if(hero){ e.preventDefault(); openFn(hero); }
