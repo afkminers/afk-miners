@@ -45,3 +45,77 @@ h1{margin:0 0 16px}
 #flash{position:fixed;inset:0;background:#fff;pointer-events:none;opacity:0;transition:opacity .18s ease;z-index:2000}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .pill{font-family:'Press Start 2P',monospace;font-size:12px;color:#1a1410;background:#efe5d4;border:3px solid #8e6c49;border-radius:6px;padding:6px 10px}
+
+/* ====== RETRO TOAST ====== */
+.retro-toast{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  bottom: 34px;
+  z-index: 4000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.retro-toast.show{
+  display: flex;
+  animation: toastIn .12s ease-out forwards, toastOut .25s ease-in forwards 2.2s;
+}
+@keyframes toastIn{ from{ opacity:0; transform:translateX(-50%) translateY(10px) } to{ opacity:1; transform:translateX(-50%) translateY(0) } }
+@keyframes toastOut{ to{ opacity:0; transform:translateX(-50%) translateY(8px) } }
+
+.retro-toast .box{
+  font-family:'Press Start 2P',monospace;
+  font-size:12px;
+  color:#2b1512;
+  background: linear-gradient(#ffe7bb,#ffd37a);
+  border: 6px solid #000;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 6px 0 #000, 0 12px 18px rgba(0,0,0,.45), inset 0 -3px 0 rgba(0,0,0,.25);
+  text-shadow: 0 1px 0 #fff2cf;
+}
+.retro-toast.error  .box{ background:linear-gradient(#ffbbb0,#ff8a7d); color:#200b0b; }
+.retro-toast.warn   .box{ background:linear-gradient(#fff3b0,#ffd96a); }
+.retro-toast.ok     .box{ background:linear-gradient(#c7ffb0,#9ff07c); }
+
+/* ====== AJUSTES PARA RESULTADOS INLINE DO MENU ====== */
+#result:empty { display:none; } /* esconde se vazio */
+
+/* ====== GACHA MENU UI (banner, preço, botões, odds, heroesGrid) ====== */
+.g-menu{ padding:16px 14px }
+.g-banner{
+  position:relative; overflow:hidden; border:6px solid #000; border-radius:14px;
+  background:#0d0d12; box-shadow:0 6px 0 #000, 0 16px 22px rgba(0,0,0,.45);
+}
+.g-banner img{ display:block; width:100%; height:200px; object-fit:cover; image-rendering:pixelated }
+.g-caption{
+  position:absolute; left:10px; bottom:8px; display:flex; align-items:center; gap:10px; color:#ffe8c0;
+  text-shadow:0 2px 0 #000; font-family:"Press Start 2P", monospace; font-size:12px;
+}
+.g-price-pill{
+  display:flex; align-items:center; gap:6px; background:#2b1a12; border:4px solid #000; border-radius:10px;
+  padding:6px 8px; box-shadow:0 3px 0 #000, inset 0 -3px 0 #000;
+}
+.g-actions{ display:flex; gap:14px; justify-content:center; margin:14px 0 8px }
+.btn-xl{ padding:12px 22px; font-size:14px }
+.g-lower{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:12px }
+.g-odds, .g-hero-tease{
+  background:#1b1410; border:6px solid #000; border-radius:12px; padding:10px;
+  box-shadow:0 6px 0 #000, inset 0 -3px 0 #000;
+}
+.g-odds-title{
+  font-family:"Press Start 2P", monospace; color:#f7eac3; margin-bottom:8px; text-align:center;
+}
+.g-odds ul{ list-style:none; margin:0; padding:0; color:#ffe8c0; font-family:monospace; line-height:1.6 }
+.g-hero-tease{ text-align:center; color:#c9b497 }
+.g-hero-tease img{ width:120px; height:120px; object-fit:contain; image-rendering:pixelated; filter:drop-shadow(0 10px 0 rgba(0,0,0,.45)) }
+.g-inline-hint{
+  margin-top:12px; padding:10px; border-radius:10px; background:#171724; color:#d6d7e8; min-height:0;
+  font-family:monospace; font-size:13px;
+}
+.g-inline-hint:empty{ display:none; }
+
+/* opcional: grid de heróis no menu (reusa seus estilos de card existentes) */
+#heroesGrid{ margin-top:14px }

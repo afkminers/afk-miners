@@ -35,10 +35,11 @@ const mobMenu   = document.getElementById('mobileMenu');
 
 // Referências gacha
 const ctx = {
-  elGacha:   document.getElementById('btnGacha'),
-  elBalance: document.getElementById('balance'),
-  elResult:  document.getElementById('result'),
-  elInv:     document.getElementById('inventory'),
+  elGacha:    document.getElementById('btnGacha'),
+  elGacha10:  document.getElementById('btnGacha10'), // NOVO: botão x10 no menu
+  elBalance:  document.getElementById('balance'),
+  elResult:   document.getElementById('result'),
+  elInv:      document.getElementById('inventory'),
 
   overlay:   document.getElementById('summon'),
   rarBg:     document.getElementById('rarBg'),

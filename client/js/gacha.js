@@ -18,8 +18,34 @@ export function bindGachaUI(ctx, opts = {}) {
   function openOverlay(){ ctx.overlay.classList.add('show'); ctx.overlay.setAttribute('aria-hidden','false'); }
   function closeOverlay(){ ctx.overlay.classList.remove('show'); ctx.overlay.setAttribute('aria-hidden','true'); }
   function cap(s){ if(!s) return '—'; return String(s).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
-  function lockButtons(lock=true){
-    [ctx.elGacha, ctx.btnAgain, ctx.btnAgain10].forEach(b=>{ if(b) b.disabled = lock; });
+  function lockButtons(lock=true){ [ctx.elGacha, ctx.elGacha10, ctx.btnAgain, ctx.btnAgain10].forEach(b=>{ if(b) b.disabled = lock; }); }
+
+  // Toast local (somente na tela de Summon)
+  function toast(msg, type='error'){
+    try { window.showSummonToast?.(msg, { type, duration: 3000 }); } catch {}
+  }
+
+  // dica inline temporária no menu (não persistente)
+  function inlineHint(msg){
+    if (!ctx.elResult) return;
+    ctx.elResult.textContent = msg || '';
+    if (msg) setTimeout(()=>{ if (ctx.elResult.textContent === msg) ctx.elResult.textContent=''; }, 1800);
+  }
+
+  // Mostra erro VISÍVEL no modal e garante um estado limpo
+  function showErrorInOverlay(msg){
+    if (!ctx.overlay.classList.contains('show')) openOverlay();
+    stopPix();
+    ctx.burst.classList.remove('show');
+    if (ctx.chestHint) ctx.chestHint.style.display='none';
+    ctx.chestSvg.classList.remove('open');
+    ctx.chestWrap.classList.add('hidden');
+    ctx.resultPane.classList.add('hidden');
+    ctx.multiPane.classList.add('hidden');
+    if (ctx.elResult) ctx.elResult.textContent = ''; // não sujar o menu
+    ctx.okbar.classList.remove('hidden');
+    lockButtons(false);
+    toast(String(msg||'ERROR'), 'error');
   }
 
   // ---------- FX simples ----------
@@ -96,6 +122,9 @@ export function bindGachaUI(ctx, opts = {}) {
     if (ctx.btnAgain10) ctx.btnAgain10.disabled = !enabled;
     if (ctx.againHint)  ctx.againHint.style.display = hint ? 'block':'none';
     if (ctx.btnAgain)   ctx.btnAgain.textContent = `SUMMON AGAIN (${summonCost})`;
+    // atualiza preço no menu se existir
+    const priceEl = document.getElementById('pullPrice');
+    if (priceEl) priceEl.textContent = `${summonCost} / pull`;
   }
 
   // ---------- UI dos cards ----------
@@ -140,10 +169,9 @@ export function bindGachaUI(ctx, opts = {}) {
   }
 
   async function doSummonAPI(){
-    // sempre garantir CSRF antes de POST
     await getCsrf();
     const data=await apiPost(`${API}/api/gacha`,{});
-    if(typeof data.cost==='number') summonCost=data.cost;
+    if(typeof data.cost==='number'){ summonCost=data.cost; setAgainState(true); }
     if(data.error) return { error:data.error, cost:summonCost, newBalance:data.newBalance };
     const coins=data?.newBalance?.coins;
     if(typeof coins==='number') onHudUpdate({ coins, name:player?.name });
@@ -152,7 +180,7 @@ export function bindGachaUI(ctx, opts = {}) {
 
   async function playOneSummonAndReveal(data){
     if(data.error){
-      if (ctx.elResult) ctx.elResult.textContent=data.error;
+      showErrorInOverlay(data.error);
       setAgainState(false,true);
       return;
     }
@@ -180,29 +208,34 @@ export function bindGachaUI(ctx, opts = {}) {
     ctx.chestWrap.classList.add('hidden');
     ctx.multiPane.classList.remove('hidden');
     ctx.multiGrid.innerHTML='';
-    let results = [];
-    let batchWorked = false;
 
+    let results = [];
     try{
       await getCsrf();
       const data = await apiPost(`${API}/api/gacha?count=${count}`, {});
-      if (!data || data.error || !Array.isArray(data.pulls)) throw new Error(data?.error || 'Batch indisponível');
-      batchWorked = true;
+      if (!data || data.error || !Array.isArray(data.pulls)) throw new Error(data?.error || 'Batch unavailable');
       results = data.pulls.map(h => ({ hero: h, newBalance: data.newBalance }));
-      if(typeof data.cost==='number') summonCost=data.cost;
+      if(typeof data.cost==='number'){ summonCost=data.cost; }
       const coins=data?.newBalance?.coins;
       if(typeof coins==='number') onHudUpdate({ coins, name:player?.name });
-    }catch{
+    }catch(e){
       // fallback: sequencial
+      results = [];
       for(let i=0;i<count;i++){
         const r=await doSummonAPI();
-        if(r.error){ if (ctx.elResult) ctx.elResult.textContent=r.error; break; }
+        if(r.error){
+          showErrorInOverlay(r.error);
+          break;
+        }
         results.push(r);
+      }
+      if (!results.length){
+        return; // já mostramos o erro
       }
     }
 
     for(const r of results){
-      const h = batchWorked ? r.hero : r.hero;
+      const h = r.hero;
       const rarity=(h.rarity||'COMMON').toUpperCase();
       const card=document.createElement('div');
       card.className=`mini ${rarity} pop`;
@@ -222,7 +255,7 @@ export function bindGachaUI(ctx, opts = {}) {
     renderHeroes();
 
     const last = results.at(-1);
-    const coinsLeft = (batchWorked ? last?.newBalance?.coins : last?.newBalance?.coins) ?? player?.coins ?? 0;
+    const coinsLeft = last?.newBalance?.coins ?? player?.coins ?? 0;
     const canAgain = Number(coinsLeft) >= summonCost;
     setAgainState(canAgain,!canAgain);
     ctx.okbar.classList.remove('hidden');
@@ -230,8 +263,26 @@ export function bindGachaUI(ctx, opts = {}) {
 
   async function startSummon(count=1,isMulti=false){
     if(!player) return;
-    openOverlay();
+
+    // ===== Pré-validação: NÃO abre overlay se faltar moedas =====
+    const need  = (Number(count)||1) * Number(summonCost||100);
+    const coins = Number(player?.coins ?? 0);
+    if (coins < need){
+      if (!ctx.overlay.classList.contains('show')){
+        // feedback leve (toast local) e opcionalmente dica inline no menu
+        toast('Not enough coins','error');
+        inlineHint('Not enough coins');
+        return;
+      }
+      // Se por algum motivo já estiver com overlay aberto, usa o fallback visual
+      showErrorInOverlay('Not enough coins');
+      return;
+    }
+
+    // ===== Estado base e overlay =====
+    if (!ctx.overlay.classList.contains('show')) openOverlay();
     lockButtons(true);
+
     ctx.okbar.classList.add('hidden');
     ctx.resultPane.classList.add('hidden');
     ctx.multiPane.classList.add('hidden');
@@ -249,10 +300,7 @@ export function bindGachaUI(ctx, opts = {}) {
         await playOneSummonAndReveal(data);
       }
     }catch(e){
-      if (ctx.elResult) ctx.elResult.textContent = e?.message || 'Falha ao girar gacha';
-      ctx.burst.classList.remove('show');
-      if (ctx.chestHint) ctx.chestHint.style.display='none';
-      ctx.okbar.classList.remove('hidden');
+      showErrorInOverlay(e?.message || 'Failed to summon');
     }finally{
       lockButtons(false);
     }
@@ -271,18 +319,21 @@ export function bindGachaUI(ctx, opts = {}) {
   window.addEventListener('keydown',e=>{ if(e.key==='Escape'&&ctx.overlay.classList.contains('show')) hardCloseOverlay(); });
   ctx.overlay.addEventListener('click',e=>{ if(e.target===ctx.overlay) hardCloseOverlay(); });
 
-  if (ctx.elGacha)    ctx.elGacha.onclick   = async()=>{ await startSummon(1); };
-  if (ctx.btnAgain)   ctx.btnAgain.onclick  = async()=>{ await startSummon(1); };
-  if (ctx.btnAgain10) ctx.btnAgain10.onclick= async()=>{ await startSummon(10,true); };
+  if (ctx.elGacha)    ctx.elGacha.onclick    = async()=>{ await startSummon(1); };
+  if (ctx.elGacha10)  ctx.elGacha10.onclick  = async()=>{ await startSummon(10,true); };
+  if (ctx.btnAgain)   ctx.btnAgain.onclick   = async()=>{ await startSummon(1); };
+  if (ctx.btnAgain10) ctx.btnAgain10.onclick = async()=>{ await startSummon(10,true); };
 
   // ---------- init ----------
   async function init(profile){
     player=profile;
     onHudUpdate(player);
-    await getCsrf();          // pega CSRF no boot para evitar 403/500
+    await getCsrf();
     await refreshFromServer();
     const canAgain=Number(player?.coins||0)>=summonCost;
     setAgainState(canAgain,!canAgain);
+    // limpa qualquer resíduo no box do menu
+    inlineHint('');
   }
 
   function getHeroes(){ return __heroes; }

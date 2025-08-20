@@ -655,15 +655,95 @@
     <section id="view-summon" class="view">
       <button class="btn-back" data-back>← BACK</button>
       <h1>AFK Miners — Sistema de Gacha</h1>
+
+      <!-- BLOCO INTERNO DO GACHA -->
       <section class="ui-frame bg-dither">
         <div class="ui-title">GACHA</div>
-        <div style="padding:16px">
-          <button id="btnGacha" class="btn btn-ok">Summon (100 coins)</button>
-          <p id="balance"></p>
-          <div id="result" style="padding:10px;background:#171724;min-height:32px"></div>
+
+        <div class="g-menu">
+          <div class="g-banner">
+            <img src="img/menu/banner-gacha.png" alt="Gacha Banner" onerror="this.style.display='none'">
+            <div class="g-caption">
+              <div class="g-price-pill">
+                <svg viewBox="0 0 16 16" style="width:14px;height:14px">
+                  <circle cx="8" cy="8" r="7" fill="#ffcd4d"/>
+                  <circle cx="8" cy="8" r="5" fill="#ffd96a"/>
+                  <rect x="7" y="4" width="2" height="8" fill="#a06a16"/>
+                </svg>
+                <span>100 / pull</span>
+              </div>
+              <small>Featured pool • rotating</small>
+            </div>
+          </div>
+
+          <div class="g-actions">
+            <button id="btnGacha"   class="btn btn-ok btn-xl">SUMMON ×1</button>
+            <button id="btnGacha10" class="btn btn-again btn-xl">SUMMON ×10</button>
+          </div>
+
+          <div class="g-lower">
+            <div class="g-odds">
+              <div class="g-odds-title">RATES</div>
+              <ul>
+                <li>COMMON … 71%</li>
+                <li>RARE … 20%</li>
+                <li>SUPER RARE … 7%</li>
+                <li>LEGENDARY … 2%</li>
+                
+              </ul>
+            </div>
+            <div class="g-hero-tease">
+              <img src="img/ui/chest.png" alt="Chest" onerror="this.style.display='none'">
+              <small>Tap to open the chest and reveal your hero!</small>
+            </div>
+          </div>
+
+          <!-- opcional: hints do menu -->
+          <div id="balance" style="display:none"></div>
+          <div id="result" class="g-inline-hint"></div>
         </div>
       </section>
+      <!-- FIM DO BLOCO INTERNO DO GACHA -->
+
+      <!-- Toast ONLY for Summon view -->
+      <div id="summonToast" class="retro-toast" role="status" aria-live="polite" aria-atomic="true" style="display:none">
+        <div class="box">Not enough coins</div>
+      </div>
+      <script>
+        (function(){
+          const el  = document.getElementById('summonToast');
+          const box = el?.querySelector('.box');
+          let timer = null;
+
+          window.showSummonToast = function(msg='OK', {type='error', duration=3000}={}){
+            if(!el || !box) return;
+            el.classList.remove('error','warn','ok','show');
+            el.style.display = 'flex';
+            if(type==='ok') el.classList.add('ok');
+            else if(type==='warn') el.classList.add('warn');
+            else el.classList.add('error');
+            box.textContent = String(msg);
+            void el.offsetWidth; // restart animation
+            el.classList.add('show');
+            clearTimeout(timer);
+            timer = setTimeout(()=>{ 
+              el.classList.remove('show'); 
+              setTimeout(()=>{ el.style.display='none'; }, 250);
+            }, duration);
+          };
+
+          window.hideSummonToast = function(){
+            if(!el) return;
+            el.classList.remove('show');
+            setTimeout(()=>{ el.style.display='none'; }, 200);
+          };
+
+          // Garantia: trocou de subpágina -> some
+          window.addEventListener('hashchange', ()=> window.hideSummonToast());
+        })();
+      </script>
     </section>
+
 
     <!-- INVENTORY agora para ITENS -->
     <section id="view-inventory" class="view ui-frame bg-dither">
@@ -703,114 +783,6 @@
     </section>
   </main>
 
-  <!-- SFX -->
-  <audio id="sfx-COMMON"     src="sfx/common.mp3"     preload="auto"></audio>
-  <audio id="sfx-RARE"       src="sfx/rare.mp3"       preload="auto"></audio>
-  <audio id="sfx-SUPER_RARE" src="sfx/super_rare.mp3" preload="auto"></audio>
-  <audio id="sfx-LEGENDARY"  src="sfx/legendary.mp3"  preload="auto"></audio>
-  <audio id="sfx-MYTHIC"     src="sfx/mythic.mp3"     preload="auto"></audio>
-  <audio id="sfx-ULTIMATE"   src="sfx/ultimate.mp3"   preload="auto"></audio>
-  <audio id="sfx-click"      src="sfx/click.mp3"      preload="auto"></audio>
-
-  <!-- App principal -->
-  <script type="module" src="js/boot.js"></script>
-  <!-- FX da LANDING -->
-  <script type="module" src="js/landing_fx.js"></script>
-
-  <!-- Scripts utilitários inline (landing/menu/HUD/safePlay) -->
-  <script>
-    const openBtn  = document.getElementById('btnOpenAuth') || document.getElementById('btnPlay');
-    const closeBtn = document.getElementById('btnCloseAuth') || document.getElementById('authClose');
-    const auth     = document.getElementById('authScreen');
-    const appMain  = document.getElementById('appMain');
-    const landing  = document.querySelector('.login-heroes');
-    const landFx   = document.getElementById('landingFx');
-    const landFxBack = document.getElementById('landingFxBack');
-    const landBg   = document.getElementById('landingBg');
-
-    if (openBtn && auth) openBtn.addEventListener('click', () => auth.classList.remove('hidden'));
-    if (closeBtn && auth) closeBtn.addEventListener('click', () => auth.classList.add('hidden'));
-
-    function syncLanding(){
-      const showApp = !appMain.classList.contains('hidden');
-      if (landing)    landing.style.display    = showApp ? 'none' : '';
-      if (landFx)     landFx.style.display     = showApp ? 'none' : '';
-      if (landFxBack) landFxBack.style.display = showApp ? 'none' : '';
-      if (landBg)     landBg.style.display     = showApp ? 'none' : '';
-      document.dispatchEvent(new CustomEvent('landing-visibility', { detail:{ visible: !showApp } }));
-    }
-    syncLanding();
-    const obs = new MutationObserver(syncLanding);
-    obs.observe(appMain, { attributes:true, attributeFilter:['class'] });
-
-    const gearBtn = document.getElementById('btnGear');
-    const cfgMenu = document.getElementById('cfgMenu');
-    const cfgClose= document.getElementById('optClose');
-    const optMute = document.getElementById('optMute');
-    const optReduce = document.getElementById('optReduce');
-    const optFull   = document.getElementById('optFull');
-
-    function toggleCfg(open){
-      if (!cfgMenu) return;
-      cfgMenu.classList.toggle('open', open ?? !cfgMenu.classList.contains('open'));
-      if (gearBtn) gearBtn.setAttribute('aria-expanded', cfgMenu.classList.contains('open'));
-      cfgMenu.setAttribute('aria-hidden', !cfgMenu.classList.contains('open'));
-    }
-    if (gearBtn) gearBtn.addEventListener('click', ()=> toggleCfg());
-    if (cfgClose) cfgClose.addEventListener('click', ()=> toggleCfg(false));
-    document.addEventListener('click', (e)=>{
-      if (!cfgMenu || !gearBtn) return;
-      if (cfgMenu.contains(e.target) || gearBtn.contains(e.target)) return;
-      cfgMenu.classList.remove('open');
-      gearBtn.setAttribute('aria-expanded','false');
-    });
-
-    optMute?.addEventListener('change', (e)=> {
-      localStorage.setItem('sfx-muted', e.target.checked ? '1' : '0');
-      document.dispatchEvent(new CustomEvent('sfx-mute', { detail:{ muted: e.target.checked }}));
-    });
-    optReduce?.addEventListener('change', (e)=>{
-      document.body.classList.toggle('prefers-reduced', e.target.checked);
-    });
-    optFull?.addEventListener('click', async ()=>{
-      if (!document.fullscreenElement) { try{ await document.documentElement.requestFullscreen(); }catch{} }
-      else { try{ await document.exitFullscreen(); }catch{} }
-    });
-
-    const btnLogoutTop = document.getElementById('btnLogoutTop');
-    const btnLogoutOld = document.getElementById('btnLogout');
-    btnLogoutTop?.addEventListener('click', ()=> btnLogoutOld?.click());
-
-    const btnHamb   = document.getElementById('btnHamb');
-    const mobMenu   = document.getElementById('mobileMenu');
-    const mobLogout = document.getElementById('mobileLogout');
-
-    function closeMobile(){ mobMenu?.classList.remove('open'); btnHamb?.setAttribute('aria-expanded','false'); }
-
-    btnHamb?.addEventListener('click', ()=>{
-      mobMenu.classList.toggle('open');
-      btnHamb.setAttribute('aria-expanded', mobMenu.classList.contains('open') ? 'true' : 'false');
-      mobMenu.setAttribute('aria-hidden', mobMenu.classList.contains('open') ? 'false' : 'true');
-    });
-    document.addEventListener('click', (e)=>{
-      if (!mobMenu || !btnHamb) return;
-      if (mobMenu.contains(e.target) || btnHamb.contains(e.target)) return;
-      closeMobile();
-    });
-    window.addEventListener('resize', closeMobile);
-
-    mobLogout?.addEventListener('click', ()=>{
-      btnLogoutOld?.click();
-      closeMobile();
-    });
-
-    const observer = new MutationObserver(()=>{
-      const isHidden = document.getElementById('btnLogoutTop')?.classList.contains('hidden');
-      mobLogout?.classList.toggle('hidden', !!isHidden);
-    });
-    observer.observe(document.body, { subtree:true, attributes:true, attributeFilter:['class'] });
-  </script>
-
   <!-- safePlay + Router/HUD Coins -->
   <script>
     let __userInteracted = false;
@@ -847,6 +819,10 @@
         views[k].classList.toggle('active', k === name);
         views[k].style.display = (k === name) ? '' : 'none';
       }
+
+        // se não é a tela de summon, garante que o toast não fique visível
+      if (name !== 'summon') { try { window.hideSummonToast?.(); } catch {} }
+
       showHub(!name);
       safePlay(clickSfx);
       history.replaceState({}, '', name ? `#${name}` : '#');
@@ -998,7 +974,7 @@
     </div>
   </div>
 
-    <!-- rodapé -->
+  <!-- rodapé -->
   <footer class="retro-footer">
     <div class="footer-content">
       <span class="footer-title">AFK Miners • Pixel Game © 2025</span>
@@ -1011,6 +987,138 @@
     </div>
   </footer>
 
+  <script>
+    // Exponho uma função global para os módulos chamarem: window.showRetroToast(msg, type)
+    (function(){
+      const el = document.getElementById('retroToast');
+      const box = el?.querySelector('.box');
+      let timer = null;
+      window.showRetroToast = function(msg='OK', type='error'){
+        if(!el || !box) return;
+        el.classList.remove('error','warn','ok','show');
+        if (type==='ok') el.classList.add('ok');
+        else if (type==='warn') el.classList.add('warn');
+        else el.classList.add('error');
+        box.textContent = String(msg);
+        void el.offsetWidth; // restart animation
+        el.style.display = 'flex';
+        el.classList.add('show');
+        // bip 8-bit (reusa sfx-click + safePlay)
+        try{ safePlay(document.getElementById('sfx-click')); }catch{}
+        clearTimeout(timer);
+        timer = setTimeout(()=>{ el.classList.remove('show'); }, 2400);
+      };
+    })();
+  </script>
+
+  <!-- SFX -->
+  <audio id="sfx-COMMON"     src="sfx/common.mp3"     preload="auto"></audio>
+  <audio id="sfx-RARE"       src="sfx/rare.mp3"       preload="auto"></audio>
+  <audio id="sfx-SUPER_RARE" src="sfx/super_rare.mp3" preload="auto"></audio>
+  <audio id="sfx-LEGENDARY"  src="sfx/legendary.mp3"  preload="auto"></audio>
+  <audio id="sfx-MYTHIC"     src="sfx/mythic.mp3"     preload="auto"></audio>
+  <audio id="sfx-ULTIMATE"   src="sfx/ultimate.mp3"   preload="auto"></audio>
+  <audio id="sfx-click"      src="sfx/click.mp3"      preload="auto"></audio>
+
+  <!-- App principal -->
+  <script type="module" src="js/boot.js"></script>
+  <!-- FX da LANDING -->
+  <script type="module" src="js/landing_fx.js"></script>
+
+  <!-- Scripts utilitários inline (landing/menu/HUD/safePlay) -->
+  <script>
+    const openBtn  = document.getElementById('btnOpenAuth') || document.getElementById('btnPlay');
+    const closeBtn = document.getElementById('btnCloseAuth') || document.getElementById('authClose');
+    const auth     = document.getElementById('authScreen');
+    const appMain  = document.getElementById('appMain');
+    const landing  = document.querySelector('.login-heroes');
+    const landFx   = document.getElementById('landingFx');
+    const landFxBack = document.getElementById('landingFxBack');
+    const landBg   = document.getElementById('landingBg');
+
+    if (openBtn && auth) openBtn.addEventListener('click', () => auth.classList.remove('hidden'));
+    if (closeBtn && auth) closeBtn.addEventListener('click', () => auth.classList.add('hidden'));
+
+    function syncLanding(){
+      const showApp = !appMain.classList.contains('hidden');
+      if (landing)    landing.style.display    = showApp ? 'none' : '';
+      if (landFx)     landFx.style.display     = showApp ? 'none' : '';
+      if (landFxBack) landFxBack.style.display = showApp ? 'none' : '';
+      if (landBg)     landBg.style.display     = showApp ? 'none' : '';
+      document.dispatchEvent(new CustomEvent('landing-visibility', { detail:{ visible: !showApp } }));
+    }
+    syncLanding();
+    const obs = new MutationObserver(syncLanding);
+    obs.observe(appMain, { attributes:true, attributeFilter:['class'] });
+
+    const gearBtn = document.getElementById('btnGear');
+    const cfgMenu = document.getElementById('cfgMenu');
+    const cfgClose= document.getElementById('optClose');
+    const optMute = document.getElementById('optMute');
+    const optReduce = document.getElementById('optReduce');
+    const optFull   = document.getElementById('optFull');
+
+    function toggleCfg(open){
+      if (!cfgMenu) return;
+      cfgMenu.classList.toggle('open', open ?? !cfgMenu.classList.contains('open'));
+      if (gearBtn) gearBtn.setAttribute('aria-expanded', cfgMenu.classList.contains('open'));
+      cfgMenu.setAttribute('aria-hidden', !cfgMenu.classList.contains('open'));
+    }
+    if (gearBtn) gearBtn.addEventListener('click', ()=> toggleCfg());
+    if (cfgClose) cfgClose.addEventListener('click', ()=> toggleCfg(false));
+    document.addEventListener('click', (e)=>{
+      if (!cfgMenu || !gearBtn) return;
+      if (cfgMenu.contains(e.target) || gearBtn.contains(e.target)) return;
+      cfgMenu.classList.remove('open');
+      gearBtn.setAttribute('aria-expanded','false');
+    });
+
+    optMute?.addEventListener('change', (e)=> {
+      localStorage.setItem('sfx-muted', e.target.checked ? '1' : '0');
+      document.addEventListener('sfx-mute', { detail:{ muted: e.target.checked }});
+      document.dispatchEvent(new CustomEvent('sfx-mute', { detail:{ muted: e.target.checked }}));
+    });
+    optReduce?.addEventListener('change', (e)=>{
+      document.body.classList.toggle('prefers-reduced', e.target.checked);
+    });
+    optFull?.addEventListener('click', async ()=>{
+      if (!document.fullscreenElement) { try{ await document.documentElement.requestFullscreen(); }catch{} }
+      else { try{ await document.exitFullscreen(); }catch{} }
+    });
+
+    const btnLogoutTop = document.getElementById('btnLogoutTop');
+    const btnLogoutOld = document.getElementById('btnLogout');
+    btnLogoutTop?.addEventListener('click', ()=> btnLogoutOld?.click());
+
+    const btnHamb   = document.getElementById('btnHamb');
+    const mobMenu   = document.getElementById('mobileMenu');
+    const mobLogout = document.getElementById('mobileLogout');
+
+    function closeMobile(){ mobMenu?.classList.remove('open'); btnHamb?.setAttribute('aria-expanded','false'); }
+
+    btnHamb?.addEventListener('click', ()=>{
+      mobMenu.classList.toggle('open');
+      btnHamb.setAttribute('aria-expanded', mobMenu.classList.contains('open') ? 'true' : 'false');
+      mobMenu.setAttribute('aria-hidden', mobMenu.classList.contains('open') ? 'false' : 'true');
+    });
+    document.addEventListener('click', (e)=>{
+      if (!mobMenu || !btnHamb) return;
+      if (mobMenu.contains(e.target) || btnHamb.contains(e.target)) return;
+      closeMobile();
+    });
+    window.addEventListener('resize', closeMobile);
+
+    mobLogout?.addEventListener('click', ()=>{
+      btnLogoutOld?.click();
+      closeMobile();
+    });
+
+    const observer = new MutationObserver(()=>{
+      const isHidden = document.getElementById('btnLogoutTop')?.classList.contains('hidden');
+      mobLogout?.classList.toggle('hidden', !!isHidden);
+    });
+    observer.observe(document.body, { subtree:true, attributes:true, attributeFilter:['class'] });
+  </script>
 
 </body>
 </html>

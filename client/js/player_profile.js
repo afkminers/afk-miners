@@ -46,8 +46,8 @@ async function fetchEquip(force=false){
     const r = await fetch(`${API}/api/equip/my`, { credentials:'include', cache:'no-store' });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     cache.equip = await r.json(); // { equipment, equipped:[...], bag:[...] }
-  }catch(e){
-    console.warn('Falha ao buscar /api/equip/my (usando vazio)', e);
+  }catch(_e){
+    // Backend ainda não tem /api/equip/my? ok — seguimos com vazio sem poluir console.
     cache.equip = { equipment:{}, equipped:[], bag:[] };
   }
   cache.lastEquip = Date.now();
@@ -81,7 +81,7 @@ function paintEquipGrid(data){
 }
 
 /* =========================
-   API player/me + skills
+   API player/me + skills (globais)
    ========================= */
 async function fetchPlayerMeOnce(signal){
   if (cache.playerSkills && Date.now() - cache.lastFetch < TTL_ME) return;
@@ -98,19 +98,29 @@ async function fetchPlayerMeOnce(signal){
   }
 }
 
+/* =========================
+   Skills do herói (NOVO endpoint)
+   ========================= */
 async function loadHeroSkills(hero, signal){
+  // Agora o backend expõe: GET /api/skills/me?heroId=...
+  if (!hero?.id) return [];
   try{
-    const q = new URLSearchParams({
-      heroKey: hero.heroKey,
-      rarity: (hero.rarity||'COMMON').toUpperCase()
-    });
-    const r = await fetch(`${API}/api/skills/by-hero?`+q.toString(), { credentials:'include', cache:'no-store', signal });
+    const r = await fetch(
+      `${API}/api/skills/me?heroId=${encodeURIComponent(hero.id)}`,
+      { credentials:'include', cache:'no-store', signal }
+    );
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
-    return Array.isArray(data.skills) ? data.skills : [];
+    const rows = await r.json();
+    // Espera-se: [{ skill_type, level, tries_progress }]
+    // Normaliza para o renderer
+    return (Array.isArray(rows) ? rows : []).map(s => ({
+      skillType: String(s.skill_type || s.skillType || '').toUpperCase(),
+      level: Number(s.level ?? 1),
+      progress: Number(s.tries_progress ?? s.progress ?? 0) // 0..1
+    }));
   }catch(e){
     if (e?.name === 'AbortError') return [];
-    console.error('Falha ao buscar /api/skills/by-hero', e);
+    console.error('Falha ao buscar /api/skills/me', e);
     return [];
   }
 }
@@ -118,28 +128,29 @@ async function loadHeroSkills(hero, signal){
 /* =========================
    Render helpers
    ========================= */
-function renderTrainBars(skills){
-  const labelMap = {
-    SWORD:    'Sword Fighting',
-    AXE:      'Axe Fighting',
-    CLUB:     'Club Fighting',
-    DISTANCE: 'Distance Fighting',
-    SHIELD:   'Shield Fighting',
-    MAGIC:    'Magic Level'
-  };
+const niceLabel = {
+  SWORD:    'Sword Fighting',
+  AXE:      'Axe Fighting',
+  CLUB:     'Club Fighting',
+  DISTANCE: 'Distance Fighting',
+  SHIELD:   'Shielding',
+  MAGIC:    'Magic Level'
+};
 
+function renderTrainBars(skills){
   return (skills || []).map(s => {
-    const rawType = String(s.skillType || '').toUpperCase();
-    const nice    = labelMap[rawType] || cap(s.skillType);
+    const rawType = String(s.skillType || s.skill_type || '').toUpperCase();
+    const nice    = niceLabel[rawType] || cap(rawType);
 
     const pct  = Math.max(0, Math.min(100, Math.round((s.progress || 0) * 100)));
     const left = Math.max(0, (s.need ?? 0) - (s.tries ?? 0));
-    const tip  = `${pct}% — faltam ${left} ${left === 1 ? 'try' : 'tries'}`;
+    const tip  = s.need != null
+      ? `${pct}% — faltam ${left} ${left === 1 ? 'try' : 'tries'}`
+      : `${pct}%`;
 
-    // dica vai no title (nativo) e também num <div> que só aparece no hover via CSS
     return `
       <div class="pf-skill" title="${tip}">
-        <div class="pf-skill-name">${nice} <b>${s.level}</b></div>
+        <div class="pf-skill-name">${nice} <b>${s.level ?? 1}</b></div>
         <div class="pf-skill-bar"><span data-pct="${pct}"></span></div>
         <div class="pf-skill-tip">${tip}</div>
       </div>
@@ -149,12 +160,18 @@ function renderTrainBars(skills){
 
 function renderHeroSkills(list){
   if (!list?.length) return `<div class="pf-skill-null">No hero skills</div>`;
-  return list.map(s=>`
-    <div class="pf-skill">
-      <div class="pf-skill-name">${s.name} <small>(${s.type})</small></div>
-      <div class="pf-skill-tip">Power ${s.power} • CD ${s.cooldown} • Elem ${s.element}</div>
-    </div>
-  `).join('');
+  // Para skills do herói (player_hero_skills) temos tipo + level (+ progresso)
+  return list.map(s=>{
+    const label = niceLabel[s.skillType] || cap(s.skillType);
+    const pct   = Math.max(0, Math.min(100, Math.round((s.progress || 0) * 100)));
+    return `
+      <div class="pf-skill" title="${pct}%">
+        <div class="pf-skill-name">${label} <b>${s.level}</b></div>
+        <div class="pf-skill-bar"><span data-pct="${pct}"></span></div>
+        <div class="pf-skill-tip">${pct}%</div>
+      </div>
+    `;
+  }).join('');
 }
 
 /* =========================
@@ -222,7 +239,7 @@ export function bindProfileModal() {
       ? renderTrainBars(cache.playerSkills)
       : '<div class="pf-skill-null">—</div>';
 
-    // Hero Skills agora com a MESMA tarja retrô do Training Skills
+    // Hero Skills + Training Skills
     el.skillsBox.innerHTML = `
       <div class="pf-skill-block">
         <div class="pf-skill-block-title pf-skill-block-title--primary">Hero Skills</div>
