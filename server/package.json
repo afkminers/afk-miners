@@ -5,15 +5,21 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
+    "dev": "nodemon index.js",
+    "serve": "node index.js",
 
-    "dev": "nodemon index.js",      
-    "serve": "node index.js",       
-
-    "git:add": "git add -A",        
-    "git:commit": "git commit -m \"update\"", 
+    "git:add": "git add -A",
+    "git:commit": "git commit -m \"update\"",
     "git:push": "git push origin main",
+    "deploy": "npm run git:add && npm run git:commit && npm run git:push",
 
-    "deploy": "npm run git:add && npm run git:commit && npm run git:push"
+    "db:drop": "if exist db\\database.sqlite del /Q db\\database.sqlite",
+    "db:migrate": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/000_core_auth.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001_skills.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001a_hero_training.sql\"",
+    "db:seed": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/001_skill_maps.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/002_skill_curves.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/003_class_skill_rates.sql\"",
+    "db:tables": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".tables\"",
+    "db:info": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".schema\"",
+    "db:verify": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \"SELECT 'heroes_master' as t, COUNT(*) FROM heroes_master; SELECT 'player_heroes', COUNT(*) FROM player_heroes; SELECT 'weapon_skill_map', COUNT(*) FROM weapon_skill_map; SELECT 'skill_curves', COUNT(*) FROM skill_curves; SELECT 'class_skill_rates', COUNT(*) FROM class_skill_rates;\"",
+    "db:reset": "npm run db:drop && npm run db:migrate && npm run db:seed"
   },
   "keywords": [],
   "author": "",
