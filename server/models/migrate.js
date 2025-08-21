@@ -31,6 +31,25 @@ async function migrate() {
     )
   `);
 
+  await run(`
+    CREATE TABLE IF NOT EXISTS player_team(
+      player_id TEXT NOT NULL,
+      hero_id INTEGER NOT NULL,
+      slot INTEGER NOT NULL,
+      PRIMARY KEY(player_id, slot),
+      FOREIGN KEY(player_id) REFERENCES players(id),
+      FOREIGN KEY(hero_id) REFERENCES player_heroes(id)
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS player_team_config(
+      player_id TEXT PRIMARY KEY,
+      config_json TEXT NOT NULL DEFAULT '{}',
+      FOREIGN KEY(player_id) REFERENCES players(id)
+    )
+  `);
+
   // retrocompat: garantir password_hash
   const pCols = new Set((await all(`PRAGMA table_info(players)`)).map(c => c.name));
   if (!pCols.has('password_hash')) await run(`ALTER TABLE players ADD COLUMN password_hash TEXT DEFAULT ''`);

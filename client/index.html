@@ -779,7 +779,10 @@
     <section id="view-house" class="view ui-frame bg-dither">
       <button class="btn-back" data-back>← BACK</button>
       <div class="ui-title">HOUSE</div>
-      <div style="padding:16px">🏠 Recuperação e buffs por mobília.</div>
+      <div style="padding:16px">
+        <button id="openTeam" class="btn-logout">Manage Team</button>
+        <div id="teamList" style="margin-top:8px"></div>
+      </div>
     </section>
   </main>
 
@@ -920,7 +923,19 @@
   </script>
 
   <!-- Profile / Equip Modal (layout compacto com skills à direita) -->
-  <div id="profileModal" class="pf-overlay" aria-hidden="true" style="display:none">
+  <div id="teamModal" class="pf-overlay" aria-hidden="true" style="display:none">
+  <div class="pf-dialog" role="dialog" aria-modal="true">
+    <button id="teamClose" class="pf-close" aria-label="Close">✕</button>
+    <h2 class="pf-title">Team</h2>
+    <div id="teamSlots" class="pf-skill-scroll" style="margin-bottom:8px;"></div>
+    <div id="teamHeroes" class="pf-skill-scroll" style="max-height:200px;"></div>
+    <div class="pf-footer">
+      <button id="teamSave" class="pf-btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="profileModal" class="pf-overlay" aria-hidden="true" style="display:none">
     <div class="pf-dialog" role="dialog" aria-modal="true">
       <button class="pf-close" aria-label="Close">✕</button>
 

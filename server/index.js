@@ -16,6 +16,7 @@ const authRoutes = require('./auth/routes');
 const playerRoutes = require('./player/routes');
 const gachaRoutes = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
+const teamRoutes = require('./team/routes');
 
 // ========= CONFIG =========
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -48,6 +49,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api', catalogRoutes);
 app.use('/api/player', requireAuth, playerRoutes);
 app.use('/api/gacha', requireAuth, gachaRoutes);
+app.use('/api/team', requireAuth, teamRoutes);
 
 // skills (suas rotas já existentes — mantidas)
 app.use('/api/skills', require('./skills/routes'));
