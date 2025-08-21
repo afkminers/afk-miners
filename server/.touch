@@ -1,0 +1,5 @@
+echo noop> client/.touch
+echo noop> server/.touch
+git add client/.touch server/.touch
+git commit -m "chore: touch client + server"
+git push origin main
