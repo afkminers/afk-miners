@@ -19,7 +19,9 @@
     "db:tables": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".tables\"",
     "db:info": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".schema\"",
     "db:verify": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \"SELECT 'heroes_master' as t, COUNT(*) FROM heroes_master; SELECT 'player_heroes', COUNT(*) FROM player_heroes; SELECT 'weapon_skill_map', COUNT(*) FROM weapon_skill_map; SELECT 'skill_curves', COUNT(*) FROM skill_curves; SELECT 'class_skill_rates', COUNT(*) FROM class_skill_rates;\"",
-    "db:reset": "npm run db:drop && npm run db:migrate && npm run db:seed"
+    "db:reset": "npm run db:drop && npm run db:migrate && npm run db:seed",
+
+    "test": "echo \"No tests yet\" && exit 0"
   },
   "keywords": [],
   "author": "",
