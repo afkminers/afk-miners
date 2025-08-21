@@ -15,7 +15,7 @@ const RARITY_PROB = [
   { rarity: 'SUPER_RARE',  p: 0.07 },
   { rarity: 'LEGENDARY',   p: 0.025 },
   { rarity: 'MYTHIC',      p: 0.004 },
-  { rarity: 'ULTIMATE',    p: 0.001 },
+  { rarity: 'ULTIMATE',    p: 0.07 },
 ];
 
 // Multiplicadores de status por raridade
