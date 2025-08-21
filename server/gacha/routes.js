@@ -29,7 +29,7 @@ const RAR_MULTI = {
 };
 
 // Custo do summon
-const SUMMON_COST_COINS = 100;
+const SUMMON_COST_COINS = 1;
 
 const imageUrlFor = (heroKey) => `/img/heroes/${heroKey}.png`;
 
