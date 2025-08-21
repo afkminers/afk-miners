@@ -2,6 +2,7 @@
 import { API, getCsrf, apiGet } from './api.js';
 import { doLogin, doRegister, doLogout } from './auth.js';
 import { bindGachaUI } from './gacha.js';
+import { bindTeamUI } from './team.js';
 import { initLoginFx, stopLoginFx, celebrate } from './login_fx.js';
 import { bindProfileModal, setupInventoryOpen } from './player_profile.js'; // PERFIL
 
@@ -83,6 +84,7 @@ const ctx = {
 
 // ===== Estado de sessão =====
 let __profile = null;
+let teamUI = null;
 window.__isAuth = false;
 
 // HUD centralizado
@@ -151,6 +153,9 @@ async function showApp(profile) {
 
   updateHud(profile);
   await gacha.init(profile);
+
+  if (!teamUI) teamUI = bindTeamUI();
+  await teamUI.refresh();
 
   // === Bind do modal de perfil (uma única vez)
   if (!__profileModalBound) {
