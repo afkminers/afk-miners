@@ -113,11 +113,22 @@ async function loadHeroSkills(hero, signal){
     const rows = await r.json();
     // Espera-se: [{ skill_type, level, tries_progress }]
     // Normaliza para o renderer
-    return (Array.isArray(rows) ? rows : []).map(s => ({
-      skillType: String(s.skill_type || s.skillType || '').toUpperCase(),
-      level: Number(s.level ?? 1),
-      progress: Number(s.tries_progress ?? s.progress ?? 0) // 0..1
-    }));
+    return (Array.isArray(rows) ? rows : []).map(s => {
+      const need = Number(s.need ?? 0);
+      const tries = Number(s.tries_progress ?? s.tries ?? 0);
+      const pct = (s.progress_pct != null)
+        ? Number(s.progress_pct)
+        : (need > 0 ? (tries / need) : 0);
+
+      return {
+        skillType: String(s.skill_type || s.skillType || '').toUpperCase(),
+        level: Number(s.level ?? 1),
+        progress: Math.max(0, Math.min(1, pct)), // 0..1
+        need,
+        tries
+      };
+    });
+
   }catch(e){
     if (e?.name === 'AbortError') return [];
     console.error('Falha ao buscar /api/skills/me', e);
@@ -143,14 +154,36 @@ function renderTrainBars(skills){
     const nice    = niceLabel[rawType] || cap(rawType);
 
     const pct  = Math.max(0, Math.min(100, Math.round((s.progress || 0) * 100)));
-    const left = Math.max(0, (s.need ?? 0) - (s.tries ?? 0));
-    const tip  = s.need != null
-      ? `${pct}% — faltam ${left} ${left === 1 ? 'try' : 'tries'}`
-      : `${pct}%`;
+    const tip  = `${pct}% — You are ${pct}% to the next level.`; // <- sem “faltam X tries”
 
     return `
-      <div class="pf-skill" title="${tip}">
+      <div class="pf-skill">
         <div class="pf-skill-name">${nice} <b>${s.level ?? 1}</b></div>
+        <div class="pf-skill-bar"><span data-pct="${pct}"></span></div>
+        <div class="pf-skill-tip">You are ${pct}% to the next level.</div>
+      </div>
+    `;
+
+  }).join('');
+}
+
+
+function renderHeroSkills(list){
+  if (!list?.length) return `<div class="pf-skill-null">No hero skills</div>`;
+
+  return list.map(s => {
+    const label = niceLabel[s.skillType] || cap(s.skillType);
+
+    const need  = Number(s.need ?? 0);
+    const tries = Number(s.tries ?? 0);
+    const frac  = Number.isFinite(s.progress) ? s.progress : (need > 0 ? tries/need : 0);
+
+    const pct   = Math.max(0, Math.min(100, Math.round(frac * 100)));
+    const tip   = `You are ${pct}% to the next level.`; // frase estilo Tibia
+
+    return `
+      <div class="pf-skill">
+        <div class="pf-skill-name">${label} <b>${s.level}</b></div>
         <div class="pf-skill-bar"><span data-pct="${pct}"></span></div>
         <div class="pf-skill-tip">${tip}</div>
       </div>
@@ -158,21 +191,7 @@ function renderTrainBars(skills){
   }).join('');
 }
 
-function renderHeroSkills(list){
-  if (!list?.length) return `<div class="pf-skill-null">No hero skills</div>`;
-  // Para skills do herói (player_hero_skills) temos tipo + level (+ progresso)
-  return list.map(s=>{
-    const label = niceLabel[s.skillType] || cap(s.skillType);
-    const pct   = Math.max(0, Math.min(100, Math.round((s.progress || 0) * 100)));
-    return `
-      <div class="pf-skill" title="${pct}%">
-        <div class="pf-skill-name">${label} <b>${s.level}</b></div>
-        <div class="pf-skill-bar"><span data-pct="${pct}"></span></div>
-        <div class="pf-skill-tip">${pct}%</div>
-      </div>
-    `;
-  }).join('');
-}
+
 
 /* =========================
    Modal / Perfil
@@ -227,35 +246,36 @@ export function bindProfileModal() {
       </div>
     `;
 
-    const [heroSkills] = await Promise.all([ loadHeroSkills(hero, signal) ]);
+    // Busca as skills do herói + level do player (para o badge)
+    const [heroSkillsRaw] = await Promise.all([ loadHeroSkills(hero, signal) ]);
     await fetchPlayerMeOnce(signal);
 
+    // Atualiza badge "Lvl X (Y%)"
     if (cache.playerLevel && el.levelBadge){
       const pct = Math.round((cache.playerLevel.progress||0)*100);
       el.levelBadge.textContent = `Lvl ${cache.playerLevel.level} (${pct}%)`;
     }
 
-    const trainHTML = cache.playerSkills
-      ? renderTrainBars(cache.playerSkills)
-      : '<div class="pf-skill-null">—</div>';
+    // ORDEM desejada: Sword → Axe → Club → Distance → Magic → Shield
+    const ORDER = ['SWORD','AXE','CLUB','DISTANCE','MAGIC','SHIELD'];
+    const heroSkills = [...(heroSkillsRaw||[])].sort((a,b) => {
+      const ia = ORDER.indexOf(String(a.skillType||'').toUpperCase());
+      const ib = ORDER.indexOf(String(b.skillType||'').toUpperCase());
+      return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
+    });
 
-    // Hero Skills + Training Skills
+    // Renderiza SOMENTE "Hero Skills" (sem a seção Training Skills)
     el.skillsBox.innerHTML = `
       <div class="pf-skill-block">
         <div class="pf-skill-block-title pf-skill-block-title--primary">Hero Skills</div>
         ${renderHeroSkills(heroSkills)}
       </div>
-
-      <div class="pf-skill-divider"></div>
-
-      <div class="pf-skill-block">
-        <div class="pf-skill-block-title pf-skill-block-title--primary">Training Skills</div>
-        ${trainHTML}
-      </div>
     `;
 
+    // anima as barras (usa data-pct já calculado em renderHeroSkills)
     animateProgressBars(el.skillsBox);
   }
+
 
   async function fillEquip(){
     const eq = await fetchEquip(); // cache + TTL

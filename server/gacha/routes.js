@@ -10,12 +10,12 @@ router.use(requireAuth);
 // Probabilidades por raridade (soma 1.0)
 const RARITY_ORDER = ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY', 'MYTHIC', 'ULTIMATE'];
 const RARITY_PROB = [
-  { rarity: 'COMMON',      p: 0.72 },
+  { rarity: 'COMMON',      p: 0.75 },
   { rarity: 'RARE',        p: 0.18 },
-  { rarity: 'SUPER_RARE',  p: 0.07 },
-  { rarity: 'LEGENDARY',   p: 0.025 },
-  { rarity: 'MYTHIC',      p: 0.004 },
-  { rarity: 'ULTIMATE',    p: 0.07 },
+  { rarity: 'SUPER_RARE',  p: 0.06 },
+  { rarity: 'LEGENDARY',   p: 0.009 },
+  { rarity: 'MYTHIC',      p: 0.001 },
+  { rarity: 'ULTIMATE',    p: 0.0005 },
 ];
 
 // Multiplicadores de status por raridade

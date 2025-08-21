@@ -43,18 +43,32 @@ router.get('/me', async (req, res) => {
     const owner = await all(`SELECT 1 FROM player_heroes WHERE id=? AND playerId=?`, [heroId, req.user.id]);
     if (!owner.length) return res.status(404).json({ error: 'Herói não encontrado' });
 
-    const rows = await all(
-      `SELECT skill_type, level, tries_progress
-         FROM player_hero_skills
-        WHERE hero_id = ?
-        ORDER BY skill_type`,
-      [heroId]
-    );
+    // junta com skill_curves para obter tries_needed (need) do nível atual
+    const rows = await all(`
+      SELECT
+        ps.skill_type,
+        ps.level,
+        ps.tries_progress,
+        sc.tries_needed AS need,
+        CASE
+          WHEN sc.tries_needed IS NOT NULL AND sc.tries_needed > 0
+            THEN CAST(ps.tries_progress AS REAL) / sc.tries_needed
+          ELSE 0
+        END AS progress_pct
+      FROM player_hero_skills ps
+      LEFT JOIN skill_curves sc
+        ON sc.skill_type = ps.skill_type
+       AND sc.level      = ps.level
+      WHERE ps.hero_id = ?
+      ORDER BY ps.skill_type
+    `, [heroId]);
+
     res.json(rows);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Falha ao listar skills do herói' });
   }
 });
+
 
 module.exports = router;
