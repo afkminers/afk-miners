@@ -4,7 +4,7 @@ import { API, getCsrf, apiGet, apiPost } from './api.js';
 export function bindGachaUI(ctx, opts = {}) {
   const onHudUpdate = opts.onHudUpdate || (() => {});
   let player = null;
-  let summonCost = 100;
+  let summonCost = 1;
 
   // ===== HEROES =====
   let __heroes = [];
