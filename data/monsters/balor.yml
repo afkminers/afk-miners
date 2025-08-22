@@ -1,0 +1,45 @@
+key: balor
+name: Balor
+xp: 6200
+health:
+  max: 9500
+  regenPerSec: 3
+speed: 110
+look:
+  spriteKey: balor
+flags:
+  hostile: true
+  pushable: false
+  summons: 0
+  targetChange:
+    intervalMs: 1000
+    chancePercent: 5
+elements:
+  physical: 0
+  fire: 25
+  ice: -10
+  holy: -15
+  death: 15
+attacks:
+- type: melee
+  intervalMs: 2000
+  min: 300
+  max: 520
+- type: spell
+  key: hellfire_blast
+  intervalMs: 3500
+  chancePercent: 25
+defenses:
+  armor: 45
+  defense: 40
+  behaviors:
+    runOnHealthPercent: 10
+loot:
+- item: gold_coin
+  min: 80
+  max: 250
+  chance: 100000
+- item: demon_horn
+  min: 1
+  max: 1
+  chance: 1200

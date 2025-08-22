@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>House Debug</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html, body { margin:0; background:#0b0f13; color:#e6edf3; font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial }
+    header { padding:10px 14px; border-bottom:1px solid #1f2630; display:flex; gap:12px; align-items:center }
+    button { padding:8px 12px; border:1px solid #334155; background:#111827; color:#e6edf3; border-radius:8px; cursor:pointer }
+    button:hover { background:#0b1220 }
+    #wrap { padding:12px; display:flex; gap:16px; align-items:flex-start }
+    #info { min-width:260px; font-size:14px; line-height:1.4 }
+    canvas { image-rendering: pixelated; border:1px solid #1f2630; border-radius:8px; background:#0d1117 }
+    .tag { display:inline-block; padding:2px 6px; border:1px solid #334155; border-radius:6px; font-size:12px; margin-right:6px }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="tag">map: house</span>
+    <button id="btnReload">Recarregar do servidor</button>
+    <span id="status">—</span>
+  </header>
+
+  <div id="wrap">
+    <canvas id="view" width="640" height="640"></canvas>
+    <div id="info">
+      <div><strong>Start:</strong> <span id="startPos">—</span></div>
+      <div style="margin-top:8px"><strong>Spawns:</strong></div>
+      <ul id="spawnList"></ul>
+      <p style="margin-top:10px;opacity:.7">Este debug só lê <code>/api/admin/content/map/house/*</code> e desenha shapes.</p>
+    </div>
+  </div>
+
+  <script type="module" src="./js/house.js"></script>
+</body>
+</html>

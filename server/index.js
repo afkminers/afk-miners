@@ -1,174 +1,138 @@
-// index.js (unificado)
-// Mantém: auth/CSRF, rotas existentes, static SPA, migrate
-// Adiciona: /api/training (start/stop/status) + worker + endpoints de debug de treino
-
+// index.js
 require('dotenv').config();
 
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
+const express  = require('express');
+const path     = require('path');
+const cors     = require('cors');
+const sqlite3  = require('sqlite3').verbose();
 
 const { migrate } = require('./models/migrate');
 const { cookieParser, requireAuth, requireCsrf, csrfRoute } = require('./auth/middleware');
 
-const authRoutes = require('./auth/routes');
-const playerRoutes = require('./player/routes');
-const gachaRoutes = require('./gacha/routes');
+const authRoutes    = require('./auth/routes');
+const playerRoutes  = require('./player/routes');
+const gachaRoutes   = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 
-// ========= CONFIG =========
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const PORT = Number(process.env.PORT || 3000);
-const CLIENT_ROOT_DIR = path.join(__dirname, '..', 'client');
+const K = require('./balance/config'); // knobs
 
-// Ritmo/limites do sistema de treino (ajuste no .env se quiser)
-const TRIES_PER_MINUTE_BASE = Number(process.env.TRIES_PER_MINUTE_BASE || 60);
-const WORKER_TICK_SECONDS   = Number(process.env.WORKER_TICK_SECONDS   || 60);
-const MAX_SESSION_SECONDS   = Number(process.env.MAX_SESSION_SECONDS   || 12 * 3600);
-const DEFAULT_START_LEVEL   = Number(process.env.DEFAULT_START_LEVEL   || 1);
+// ======== Pipeline de Conteúdo (YAML/Tiled) ========
+const { loadAll, loadMap } = require('./content/loader'); // <- agora exporta loadMap tb
+const CONTENT_PIPELINE = process.env.CONTENT_PIPELINE || 'off'; // off | shadow | on
+// ===================================================
+
+// ========= CONFIG =========
+const NODE_ENV            = process.env.NODE_ENV || 'development';
+const PORT                = Number(process.env.PORT || 3000);
+const CLIENT_ROOT_DIR     = path.join(__dirname, '..', 'client');
+const WORKER_TICK_SECONDS = Number(process.env.WORKER_TICK_SECONDS || 3);
 
 // ========= APP =========
 const app = express();
-
-// middlewares
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
 app.use(requireCsrf);
-
-// estático
 app.use(express.static(CLIENT_ROOT_DIR));
-
-// CSRF token
 app.get('/api/csrf', csrfRoute);
 
-// rotas existentes
-app.use('/api/auth', authRoutes);
-app.use('/api', catalogRoutes);
+app.use('/api/auth',   authRoutes);
+app.use('/api',        catalogRoutes);
 app.use('/api/player', requireAuth, playerRoutes);
-app.use('/api/gacha', requireAuth, gachaRoutes);
-
-// skills (suas rotas já existentes — mantidas)
+app.use('/api/gacha',  requireAuth, gachaRoutes);
 app.use('/api/skills', require('./skills/routes'));
 
-// ========= DB (treino) =========
+// ========= DB =========
 const DB_PATH = path.join(__dirname, 'db', 'database.sqlite');
 const db = new sqlite3.Database(DB_PATH);
+const dbGet = (sql, params=[]) => new Promise((res,rej)=>db.get(sql, params,(e,r)=>e?rej(e):res(r)));
+const dbAll = (sql, params=[]) => new Promise((res,rej)=>db.all(sql, params,(e,r)=>e?rej(e):res(r)));
+const dbRun = (sql, params=[]) => new Promise((res,rej)=>db.run(sql, params,function(e){e?rej(e):res(this)}));
 
-// helpers async
-const dbGet = (sql, params = []) =>
-  new Promise((resolve, reject) => db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row))));
-const dbAll = (sql, params = []) =>
-  new Promise((resolve, reject) => db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows))));
-const dbRun = (sql, params = []) =>
-  new Promise((resolve, reject) => db.run(sql, params, function (err) { err ? reject(err) : resolve(this); }));
+// --- bootstrap de segurança do pipeline (cria tabelas se faltarem) ---
+db.exec(`
+PRAGMA foreign_keys=ON;
+CREATE TABLE IF NOT EXISTS content_files (
+  path TEXT PRIMARY KEY,
+  checksum TEXT NOT NULL,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS monsters_master (
+  id INTEGER PRIMARY KEY,
+  key TEXT UNIQUE,
+  name TEXT,
+  xp INTEGER,
+  healthMax INTEGER,
+  speed INTEGER,
+  flagsJSON TEXT,
+  elementsJSON TEXT,
+  attacksJSON TEXT,
+  defensesJSON TEXT,
+  lootJSON TEXT,
+  lookJSON TEXT,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS items_master (
+  id INTEGER PRIMARY KEY,
+  key TEXT UNIQUE,
+  dataJSON TEXT,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS sprites_master (
+  id INTEGER PRIMARY KEY,
+  key TEXT UNIQUE,
+  kind TEXT,
+  dataJSON TEXT,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS maps (
+  key TEXT PRIMARY KEY,
+  dataJSON TEXT,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS map_objects (
+  id INTEGER PRIMARY KEY,
+  mapKey TEXT,
+  type TEXT,
+  x INTEGER, y INTEGER, w INTEGER, h INTEGER,
+  propsJSON TEXT,
+  FOREIGN KEY(mapKey) REFERENCES maps(key)
+);
+CREATE TABLE IF NOT EXISTS spawns (
+  id INTEGER PRIMARY KEY,
+  mapKey TEXT,
+  monsterKey TEXT,
+  x INTEGER, y INTEGER, w INTEGER, h INTEGER,
+  count INTEGER, respawnSec INTEGER,
+  levelMin INTEGER, levelMax INTEGER,
+  FOREIGN KEY(mapKey) REFERENCES maps(key)
+);
+`, (e) => {
+  if (e) console.error("[content] bootstrap error:", e.message);
+  else console.log("[content] tables ready (bootstrap)");
+});
+// ---------------------------------------------------------------------------
 
-// set de tipos válidos
-const SKILLS = new Set(['SWORD', 'AXE', 'CLUB', 'DISTANCE', 'SHIELD', 'MAGIC']);
+// ========= Helpers =========
+const SKILLS = new Set(['SWORD','AXE','CLUB','DISTANCE','SHIELD','MAGIC']);
 
-// ========= Funções de domínio (treino) =========
 async function resolveSkillType(weaponOrSkill) {
   if (!weaponOrSkill) return null;
   const raw = String(weaponOrSkill);
-  const up = raw.toUpperCase();
+  const up  = raw.toUpperCase();
   if (SKILLS.has(up)) return up;
 
   const row = await dbGet(
-    `SELECT skill_type FROM weapon_skill_map WHERE LOWER(weapon) = LOWER(?)`,
+    `SELECT skill_type FROM weapon_skill_map WHERE LOWER(weapon_type) = LOWER(?)`,
     [raw]
   );
   return row?.skill_type || null;
 }
 
-async function getClassRate(heroClass, skillType) {
-  if (!heroClass) return 1.0;
-  const row = await dbGet(
-    `SELECT rate FROM class_skill_rates WHERE class = ? AND skill_type = ?`,
-    [String(heroClass).toUpperCase(), skillType]
-  );
-  return row?.rate ?? 1.0;
-}
-
-async function ensureSkillRow(heroId, skillType) {
-  const row = await dbGet(
-    `SELECT hero_id, skill_type FROM player_hero_skills WHERE hero_id = ? AND skill_type = ?`,
-    [heroId, skillType]
-  );
-  if (!row) {
-    await dbRun(
-      `INSERT INTO player_hero_skills (hero_id, skill_type, level, tries_progress) VALUES (?, ?, ?, 0)`,
-      [heroId, skillType, DEFAULT_START_LEVEL]
-    );
-  }
-}
-
-async function getSkillState(heroId, skillType) {
-  return await dbGet(
-    `SELECT level, tries_progress FROM player_hero_skills WHERE hero_id = ? AND skill_type = ?`,
-    [heroId, skillType]
-  );
-}
-
-async function setSkillState(heroId, skillType, level, triesProgress) {
-  await dbRun(
-    `UPDATE player_hero_skills SET level = ?, tries_progress = ? WHERE hero_id = ? AND skill_type = ?`,
-    [level, triesProgress, heroId, skillType]
-  );
-}
-
-async function triesNeeded(skillType, level) {
-  const row = await dbGet(
-    `SELECT tries_needed FROM skill_curves WHERE skill_type = ? AND level = ?`,
-    [skillType, level]
-  );
-  return row ? row.tries_needed : null; // null = cap
-}
-
-async function applyTries(heroId, skillType, triesToApply) {
-  if (triesToApply <= 0) return { leveled: 0 };
-
-  await ensureSkillRow(heroId, skillType);
-  let { level, tries_progress } = await getSkillState(heroId, skillType);
-  let remaining = triesToApply;
-  let leveled = 0;
-
-  while (remaining > 0) {
-    const need = await triesNeeded(skillType, level);
-    if (need == null) break; // cap
-    const missing = need - tries_progress;
-
-    if (remaining >= missing) {
-      level += 1;
-      tries_progress = 0;
-      remaining -= missing;
-      leveled += 1;
-    } else {
-      tries_progress += remaining;
-      remaining = 0;
-    }
-  }
-
-  await setSkillState(heroId, skillType, level, tries_progress);
-  return { leveled };
-}
-
-async function processTrainingSlice({ heroId, skillType, heroClass, seconds }) {
-  if (seconds <= 0) return { appliedTries: 0, leveled: 0 };
-
-  const rate = await getClassRate(heroClass, skillType);
-  const triesPerMinute = TRIES_PER_MINUTE_BASE * rate;
-  const triesToApply = (triesPerMinute / 60) * seconds;
-
-  const { leveled } = await applyTries(heroId, skillType, triesToApply);
-  return { appliedTries: triesToApply, leveled };
-}
-
 // ========= Rotas de Treino =========
-// Nota: coloquei requireAuth para seguir seu padrão de proteger rotas de jogo
 const trainingRouter = express.Router();
 
-// Iniciar treino
+// START
 trainingRouter.post('/start', requireAuth, async (req, res) => {
   try {
     const { heroId, weaponOrSkill, heroClass } = req.body || {};
@@ -179,214 +143,269 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
     const skillType = await resolveSkillType(weaponOrSkill);
     if (!skillType) return res.status(400).json({ error: 'weaponOrSkill inválido' });
 
-    await ensureSkillRow(heroId, skillType);
-
     const nowIso = new Date().toISOString();
-    const notes = JSON.stringify({ heroClass: String(heroClass).toUpperCase() });
+    const notes  = JSON.stringify({ heroClass: String(heroClass).toUpperCase() });
 
-    const existing = await dbGet(`SELECT rowid as id, status FROM hero_training WHERE hero_id = ?`, [heroId]);
-    if (existing) {
+    const t = await dbGet(`SELECT * FROM hero_training WHERE hero_id=?`, [heroId]);
+    if (t) {
       await dbRun(
         `UPDATE hero_training
-           SET skill_type = ?, status = 'RUNNING', last_tick_at = ?, notes = ?, session_seconds = COALESCE(session_seconds,0)
-         WHERE hero_id = ?`,
-        [skillType, nowIso, notes, heroId]
+            SET skill_type=?, status='RUNNING',
+                started_at=COALESCE(started_at, ?),
+                last_tick_at=?,
+                notes=?,
+                daily_reset_at = COALESCE(daily_reset_at, datetime('now','start of day','+1 day')),
+                energy_current = COALESCE(energy_current, energy_max)
+          WHERE hero_id=?`,
+        [skillType, nowIso, nowIso, notes, heroId]
       );
     } else {
       await dbRun(
-        `INSERT INTO hero_training (hero_id, skill_type, status, started_at, last_tick_at, energy_spent, session_seconds, notes)
-         VALUES (?, ?, 'RUNNING', ?, ?, 0, 0, ?)`,
+        `INSERT INTO hero_training
+           (hero_id, skill_type, status, started_at, last_tick_at,
+            energy_current, energy_max, energy_spent, session_seconds, daily_seconds, daily_reset_at, notes)
+         VALUES (?, ?, 'RUNNING', ?, ?, 100, 100, 0, 0, 0, datetime('now','start of day','+1 day'), ?)`,
         [heroId, skillType, nowIso, nowIso, notes]
       );
     }
 
-    res.json({ ok: true, message: 'Treino iniciado', heroId, skillType, heroClass: String(heroClass).toUpperCase() });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'erro ao iniciar treino' });
+    res.json({ ok:true, message:'Training started', heroId, skillType });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error:'erro ao iniciar treino' });
   }
 });
 
-// Parar treino (processa pendente)
+// STOP
 trainingRouter.post('/stop', requireAuth, async (req, res) => {
   try {
     const { heroId } = req.body || {};
-    if (!heroId) return res.status(400).json({ error: 'heroId é obrigatório' });
+    if (!heroId) return res.status(400).json({ error:'heroId é obrigatório' });
 
-    const t = await dbGet(`SELECT * FROM hero_training WHERE hero_id = ?`, [heroId]);
-    if (!t || t.status !== 'RUNNING') return res.json({ ok: true, message: 'Nenhuma sessão ativa' });
+    const t = await dbGet(`SELECT * FROM hero_training WHERE hero_id=?`, [heroId]);
+    if (!t || t.status !== 'RUNNING') return res.json({ ok:true, message:'No active session' });
 
-    const now = Date.now();
-    const last = Date.parse(t.last_tick_at || t.started_at);
-    let delta = Math.max(0, Math.floor((now - last) / 1000));
+    const now   = Date.now();
+    const last  = Date.parse(t.last_tick_at || t.started_at || new Date(0).toISOString());
+    const delta = Math.max(0, Math.floor((now - last)/1000));
 
-    const sess = Number(t.session_seconds || 0);
-    const allowed = Math.max(0, Math.min(delta, MAX_SESSION_SECONDS - sess));
-
-    let heroClass = null;
-    try { heroClass = JSON.parse(t.notes || '{}').heroClass; } catch {}
-
-    if (allowed > 0) {
-      await processTrainingSlice({
-        heroId: t.hero_id,
-        skillType: t.skill_type,
-        heroClass,
-        seconds: allowed
-      });
-    }
+    const energyCost = K.ENERGY_PER_MIN_WHEN_TRAINING * (delta/60);
+    const newEnergy  = Math.max(0, (t.energy_current || 0) - energyCost);
 
     await dbRun(
-      `UPDATE hero_training SET status = 'STOPPED', last_tick_at = ?, session_seconds = ?, notes = ? WHERE hero_id = ?`,
-      [new Date(now - (delta - allowed) * 1000).toISOString(), sess + allowed, t.notes, heroId]
+      `UPDATE hero_training
+          SET status='STOPPED',
+              last_tick_at=?,
+              session_seconds=COALESCE(session_seconds,0)+?,
+              daily_seconds=COALESCE(daily_seconds,0)+?,
+              energy_current=?,
+              energy_spent=COALESCE(energy_spent,0)+?
+        WHERE hero_id=?`,
+      [new Date(now).toISOString(), delta, delta, newEnergy, energyCost, heroId]
     );
 
-    res.json({ ok: true, message: 'Treino parado', processed_seconds: allowed });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'erro ao parar treino' });
+    res.json({ ok:true, message:'Training stopped', processed_seconds: delta });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error:'erro ao parar treino' });
   }
 });
 
-// Status + ETA para próximo nível
+// STATUS
 trainingRouter.get('/status', requireAuth, async (req, res) => {
   try {
     const heroId = req.query.heroId;
-    if (!heroId) return res.status(400).json({ error: 'heroId é obrigatório' });
+    if (!heroId) return res.status(400).json({ error:'heroId é obrigatório' });
 
-    const t = await dbGet(`SELECT * FROM hero_training WHERE hero_id = ?`, [heroId]);
-    if (!t) return res.json({ status: 'IDLE' });
+    const t = await dbGet(`SELECT * FROM hero_training WHERE hero_id=?`, [heroId]);
+    if (!t) return res.json({ status:'IDLE' });
 
-    const skill = await getSkillState(heroId, t.skill_type);
-    if (!skill) return res.json({ status: t.status, detail: 'sem registro em player_hero_skills' });
-
-    const need = await triesNeeded(t.skill_type, skill.level);
-    let next = null;
-    if (need != null) {
-      const remaining = Math.max(0, need - skill.tries_progress);
-      let heroClass = null;
-      try { heroClass = JSON.parse(t.notes || '{}').heroClass; } catch {}
-      const rate = await getClassRate(heroClass, t.skill_type);
-      const triesPerMinute = TRIES_PER_MINUTE_BASE * rate;
-      const minutes = triesPerMinute > 0 ? remaining / triesPerMinute : null;
-      next = {
-        remaining_tries: remaining,
-        eta_minutes_at_current_rate: minutes != null ? Math.ceil(minutes) : null
-      };
+    const skillRow = await dbGet(
+      `SELECT level, tries_progress FROM player_hero_skills WHERE hero_id=? AND skill_type=?`,
+      [heroId, t.skill_type]
+    );
+    let need = null, remaining = null, pct = null;
+    if (skillRow) {
+      const n = await dbGet(
+        `SELECT tries_needed FROM skill_curves WHERE skill_type=? AND level=?`,
+        [t.skill_type, skillRow.level]
+      );
+      need = n?.tries_needed ?? null;
+      if (need != null) {
+        remaining = Math.max(0, need - (skillRow.tries_progress||0));
+        pct = Math.floor((skillRow.tries_progress/need) * 100);
+      }
     }
 
     res.json({
       status: t.status,
-      skill_type: t.skill_type,
       hero_id: t.hero_id,
-      class: (() => { try { return JSON.parse(t.notes || '{}').heroClass; } catch { return null; } })(),
-      level: skill.level,
-      tries_progress: skill.tries_progress,
+      skill_type: t.skill_type,
+      class: (()=>{try{return JSON.parse(t.notes||'{}').heroClass}catch{return null}})(),
+      energy_current: t.energy_current,
+      energy_max: t.energy_max,
       session_seconds: t.session_seconds,
-      started_at: t.started_at,
-      last_tick_at: t.last_tick_at,
-      next
+      daily_seconds: t.daily_seconds,
+      caps: { daily: K.DAILY_TRAIN_CAP_SECONDS, session: K.MAX_SESSION_SECONDS },
+      level: skillRow?.level ?? null,
+      tries_progress: skillRow?.tries_progress ?? null,
+      tries_needed: need,
+      remaining_tries: remaining,
+      progress_pct: pct
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'erro ao consultar status' });
-  }
-});
-
-// Endpoints de debug do treino (prefixo /api/training/debug para não colidir com /api/skills existente)
-trainingRouter.get('/debug/curves', requireAuth, async (req, res) => {
-  try {
-    const skill = (req.query.skill || '').toUpperCase();
-    if (!skill || !SKILLS.has(skill)) return res.status(400).json({ error: 'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC' });
-    const rows = await dbAll(`SELECT level, tries_needed FROM skill_curves WHERE skill_type = ? ORDER BY level`, [skill]);
-    res.json({ skill_type: skill, rows });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'erro ao listar curvas' });
-  }
-});
-
-trainingRouter.get('/debug/class-rates', requireAuth, async (req, res) => {
-  try {
-    const rows = await dbAll(`SELECT class, skill_type, rate FROM class_skill_rates ORDER BY class, skill_type`, []);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'erro ao listar rates' });
-  }
-});
-
-trainingRouter.get('/debug/me', requireAuth, async (req, res) => {
-  try {
-    const heroId = req.query.heroId;
-    if (!heroId) return res.status(400).json({ error: 'heroId é obrigatório' });
-    const rows = await dbAll(
-      `SELECT skill_type, level, tries_progress FROM player_hero_skills WHERE hero_id = ? ORDER BY skill_type`,
-      [heroId]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'erro ao listar skills do herói' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error:'erro ao consultar status' });
   }
 });
 
 app.use('/api/training', trainingRouter);
 
-// ========= WORKER =========
+// ========= ROTAS UTILITÁRIAS (pipeline YAML) =========
+app.get('/api/admin/content/monsters', async (req, res) => {
+  db.all('SELECT key,name,xp FROM monsters_master ORDER BY key', (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.get('/api/assets/items', (req, res) => {
+  db.all('SELECT key, dataJSON FROM items_master ORDER BY key', (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows.map(r => ({ key: r.key, data: JSON.parse(r.dataJSON) })));
+  });
+});
+
+app.get('/api/assets/sprites', (req, res) => {
+  db.all('SELECT key, kind, dataJSON FROM sprites_master ORDER BY key', (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows.map(r => ({ key: r.key, kind: r.kind, data: JSON.parse(r.dataJSON) })));
+  });
+});
+
+// ===== DEBUG MAPS =====
+app.get('/api/admin/content/maps', (req, res) => {
+  db.all('SELECT key, length(dataJSON) AS bytes, updated_at FROM maps ORDER BY key', (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.get('/api/admin/content/map/:key/objects', (req, res) => {
+  db.all(
+    'SELECT id, type, x, y, w, h, propsJSON FROM map_objects WHERE mapKey=? ORDER BY id',
+    [req.params.key],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows.map(r => ({ ...r, props: safeParse(r.propsJSON) })));
+    }
+  );
+});
+
+app.get('/api/admin/content/map/:key/spawns', (req, res) => {
+  db.all(
+    'SELECT id, monsterKey, x, y, w, h, count, respawnSec, levelMin, levelMax FROM spawns WHERE mapKey=? ORDER BY id',
+    [req.params.key],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    }
+  );
+});
+
+// reload de mapa sem reiniciar
+app.post('/api/admin/content/reload-map', async (req, res) => {
+  try {
+    const mapKey = (req.query.map || 'house').toString();
+    await loadMap(db, path.join(__dirname, '..'), mapKey);
+    res.json({ ok: true, reloaded: mapKey });
+  } catch (e) {
+    console.error('[content] reload-map error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+function safeParse(s) { try { return JSON.parse(s || '{}'); } catch { return {}; } }
+
+// ========= WORKER (stamina/limites; NÃO dá tries) =========
 async function trainingTick() {
   try {
-    const running = await dbAll(`SELECT * FROM hero_training WHERE status = 'RUNNING'`, []);
+    await dbRun(`
+      UPDATE hero_training
+         SET daily_seconds=CASE
+               WHEN daily_reset_at IS NULL THEN daily_seconds
+               WHEN datetime('now') >= daily_reset_at THEN 0
+               ELSE daily_seconds
+             END,
+             daily_reset_at=CASE
+               WHEN daily_reset_at IS NULL THEN datetime('now','start of day','+1 day')
+               WHEN datetime('now') >= daily_reset_at THEN datetime('now','start of day','+1 day')
+               ELSE daily_reset_at
+             END
+    `, []);
+
+    const running = await dbAll(`SELECT * FROM hero_training WHERE status='RUNNING'`, []);
     const now = Date.now();
 
     for (const t of running) {
-      const last = Date.parse(t.last_tick_at || t.started_at);
-      let delta = Math.max(0, Math.floor((now - last) / 1000));
+      const last  = Date.parse(t.last_tick_at || t.started_at || new Date().toISOString());
+      let delta   = Math.max(0, Math.floor((now - last)/1000));
       if (delta <= 0) continue;
 
-      const sess = Number(t.session_seconds || 0);
-      const allowed = Math.max(0, Math.min(delta, MAX_SESSION_SECONDS - sess));
+      const sessLeft = Math.max(0, K.MAX_SESSION_SECONDS     - (t.session_seconds || 0));
+      const dayLeft  = Math.max(0, K.DAILY_TRAIN_CAP_SECONDS - (t.daily_seconds   || 0));
+      let allowed    = Math.min(delta, sessLeft, dayLeft);
+
+      const energySec = Math.floor(((t.energy_current || 0) / K.ENERGY_PER_MIN_WHEN_TRAINING) * 60);
+      allowed = Math.min(allowed, energySec);
       if (allowed <= 0) {
-        await dbRun(`UPDATE hero_training SET status = 'STOPPED', last_tick_at = ? WHERE hero_id = ?`,
-          [new Date(last).toISOString(), t.hero_id]);
+        await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
         continue;
       }
 
-      let heroClass = null;
-      try { heroClass = JSON.parse(t.notes || '{}').heroClass; } catch {}
+      const newLast   = new Date(last + allowed*1000).toISOString();
+      const energyUse = K.ENERGY_PER_MIN_WHEN_TRAINING * (allowed/60);
+      const newEnergy = Math.max(0, (t.energy_current || 0) - energyUse);
 
-      await processTrainingSlice({
-        heroId: t.hero_id,
-        skillType: t.skill_type,
-        heroClass,
-        seconds: allowed
-      });
-
-      const newLast = new Date(last + allowed * 1000).toISOString();
       await dbRun(
         `UPDATE hero_training
-           SET last_tick_at = ?, session_seconds = COALESCE(session_seconds,0) + ?
-         WHERE hero_id = ?`,
-        [newLast, allowed, t.hero_id]
+            SET last_tick_at=?,
+                session_seconds=COALESCE(session_seconds,0)+?,
+                daily_seconds=COALESCE(daily_seconds,0)+?,
+                energy_current=?,
+                energy_spent=COALESCE(energy_spent,0)+?
+          WHERE hero_id=?`,
+        [newLast, allowed, allowed, newEnergy, energyUse, t.hero_id]
       );
+
+      if (newEnergy <= 0 || allowed < delta || allowed === sessLeft || allowed === dayLeft) {
+        await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
+      }
     }
   } catch (err) {
-    console.error('[worker] erro no tick:', err.message);
+    console.error('[worker] tick error:', err.message);
   }
 }
 
 // ========= SPA fallback =========
-app.use((req, res, next) => {
+app.use((req,res,next)=>{
   if (req.path.startsWith('/api')) return next();
-  res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
+  res.sendFile(path.join(CLIENT_ROOT_DIR,'index.html'));
 });
 
 // ========= START =========
 (async () => {
-  await migrate(); // mantém sua migração
+  await migrate();
+
+  if (CONTENT_PIPELINE !== 'off') {
+    console.log(`[content] pipeline: ${CONTENT_PIPELINE}`);
+    await loadAll(db, path.join(__dirname, '..'));
+  }
+
   app.listen(PORT, () => {
     console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
     console.log(`[training] DB: ${DB_PATH}`);
   });
-  // inicia o worker após o servidor subir
+
   setInterval(trainingTick, WORKER_TICK_SECONDS * 1000);
 })();

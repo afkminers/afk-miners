@@ -1,0 +1,18 @@
+key: goblin
+name: Goblin
+xp: 50
+health:
+  max: 70
+speed: 80
+look:
+  spriteKey: goblin
+attacks:
+- type: melee
+  intervalMs: 1800
+  min: 3
+  max: 9
+loot:
+- item: gold_coin
+  min: 1
+  max: 8
+  chance: 80000
