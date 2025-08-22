@@ -1,0 +1,33 @@
+key: knight
+image: "sprites/characters/knight.png"
+frame:
+  width: 64
+  height: 64
+grid:
+  cols: 8
+  rows: 4
+directions: [ south, west, east, north ]
+anims:
+  walk:
+    fps: 10
+    frames: 8
+    rowByDir: { south: 0, west: 1, east: 2, north: 3 }
+    startCol: 0
+  idle:
+    fps: 2
+    frames: 2
+    rowByDir: { south: 0, west: 1, east: 2, north: 3 }
+    startCol: 0
+  attack:
+    fps: 6
+    frames: 4
+    rowByDir: { south: 0, west: 1, east: 2, north: 3 }
+    startCol: 0
+  death:
+    fps: 4
+    frames: 3
+    row: 3
+    startCol: 0
+anchor:
+  x: 0.5
+  y: 0.9

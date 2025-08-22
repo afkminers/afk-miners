@@ -1,0 +1,6 @@
+rates:
+  xp: 1.0
+  loot: 1.0
+  skill: 1.0
+respawn:
+  defaultSeconds: 60

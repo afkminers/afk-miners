@@ -1,0 +1,11 @@
+key: bronze_sword
+name: Bronze Sword
+slot: weapon
+type: sword
+attack: 15
+defense: 5
+weightOz: 35
+rarity: common
+icon: "sprites/items/icons32.png#sword_bronze"
+value:
+  gold: 250

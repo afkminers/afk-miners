@@ -1,0 +1,3 @@
+monsters:
+  balor: "./balor.yml"
+  goblin: "./goblin.yml"

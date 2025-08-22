@@ -7,12 +7,10 @@
     "start": "nodemon index.js",
     "dev": "nodemon index.js",
     "serve": "node index.js",
-
     "git:add": "git add -A",
     "git:commit": "git commit -m \"update\"",
     "git:push": "git push origin main",
     "deploy": "npm run git:add && npm run git:commit && npm run git:push",
-
     "db:drop": "if exist db\\database.sqlite del /Q db\\database.sqlite",
     "db:migrate": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/000_core_auth.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001_skills.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001a_hero_training.sql\"",
     "db:seed": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/001_skill_maps.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/002_skill_curves.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/003_class_skill_rates.sql\"",
@@ -27,12 +25,15 @@
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
+    "chokidar": "^4.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "yaml": "^2.8.1",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

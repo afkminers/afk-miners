@@ -1,0 +1,9 @@
+key: potion_small
+name: Small Health Potion
+type: consumable
+icon: "sprites/items/icons32.png#potion_red_small"
+use:
+  healHp: 60
+stackMax: 100
+value:
+  gold: 25
