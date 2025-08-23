@@ -1,74 +1,34 @@
 // server/scripts/verify-context.mjs
-// Verifica se a v6 gerou tudo corretamente, sem alterar nada.
-// Uso: node server/scripts/verify-context.mjs
-
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const ROOT = path.resolve(path.join(process.cwd()));
-const CTX  = path.join(ROOT, 'docs', 'context');
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(SCRIPT_DIR, '..', '..');        // <repo raiz>
+const CTX_DIR = path.join(ROOT, 'docs', 'context');       // artefatos ficam em RAIZ/docs/context
 
-const expected = [
-  'context-pack.txt',
-  'API.md',
-  'data-summary.json',
-  'changes-since.txt',
-  'endpoints-contracts.json',
-  'env-usage.json',
-  'error-map.json',
-  'function-signatures.json',
-  'responses-sample.json',
-  'deps-graph.json',
-  'route-history.json',
-  'todos.json',
-  'openapi.json',
-  // opcionais
-  'symbol-index.json', // se CTX_SYMBOLS=1
-  'deps.txt'           // se CTX_IMPORTS=1
-];
-
-function ok(msg){ console.log('✅ ' + msg); }
-function warn(msg){ console.warn('⚠️  ' + msg); }
-function err(msg){ console.error('❌ ' + msg); }
-
-function mustExist(file){
-  const p = path.join(CTX, file);
-  return fs.existsSync(p) ? (ok(`${file} existe`), true) : (err(`${file} NÃO encontrado`), false);
+function mustExist(p) {
+  if (!fs.existsSync(p)) throw new Error(`Arquivo obrigatório ausente: ${path.relative(ROOT, p)}`);
+}
+function mustBeJsonParseable(p) {
+  const txt = fs.readFileSync(p, 'utf8');
+  try { JSON.parse(txt); }
+  catch (e) { throw new Error(`JSON inválido: ${path.relative(ROOT, p)} :: ${e.message}`); }
 }
 
-function tryParseJSON(file){
-  const p = path.join(CTX, file);
-  if(!fs.existsSync(p)) return;
-  try{
-    JSON.parse(fs.readFileSync(p,'utf8'));
-    ok(`${file} JSON OK`);
-  }catch(e){
-    err(`${file} JSON inválido: ${e.message}`);
-  }
-}
-
-function run(){
-  if(!fs.existsSync(CTX)){
-    err(`Pasta não existe: ${CTX}`);
+function main() {
+  if (!fs.existsSync(CTX_DIR)) {
+    console.error(`❌ Pasta não existe: ${CTX_DIR}\nDica: rode primeiro "npm run ctx:pack" (em server/)`);
     process.exit(1);
   }
 
-  console.log('--- Verificando artefatos docs/context ---');
-
-  // Base obrigatória
-  const required = expected.slice(0, expected.indexOf('symbol-index.json'));
-  let allOk = true;
-  for(const f of required) allOk &= mustExist(f);
-
-  // Opcionais: avisa se ausente, mas não falha
-  const opt = ['symbol-index.json','deps.txt'];
-  for(const f of opt){
-    const p = path.join(CTX,f);
-    if(fs.existsSync(p)) ok(`${f} presente (opcional)`); else warn(`${f} ausente (ok se não habilitado)`);
-  }
-
-  // Sanidade de JSON
-  [
+  // Obrigatórios
+  const requiredText = [
+    'context-pack.txt',
+    'API.md',
+    'changes-since.txt',
+  ];
+  const requiredJson = [
     'data-summary.json',
     'endpoints-contracts.json',
     'env-usage.json',
@@ -79,19 +39,37 @@ function run(){
     'route-history.json',
     'todos.json',
     'openapi.json'
-  ].forEach(tryParseJSON);
+  ];
 
-  // Info útil
-  try {
-    const routes = JSON.parse(fs.readFileSync(path.join(CTX,'endpoints-contracts.json'),'utf8'));
-    console.log(`\n📚 Rotas detectadas: ${routes.length}`);
-    const envs = JSON.parse(fs.readFileSync(path.join(CTX,'env-usage.json'),'utf8'));
-    console.log(`🔑 Variáveis de ambiente detectadas: ${envs.length}`);
-  } catch { /* ignore */ }
+  // Opcionais
+  const optional = [
+    'symbol-index.json',
+    'deps.txt',
+    'db-schema.sql',
+    'db-tables.txt',
+    'db-counts.txt',
+    'db-tables.json'
+  ];
 
-  console.log('\n--- Resultado ---');
-  if(allOk) ok('Tudo certo com a saída v6.');
-  else err('Faltam arquivos obrigatórios. Rode `npm run ctx:pack` e/ou `npm run ctx:zip` novamente.');
+  // Checks
+  for (const f of requiredText)  mustExist(path.join(CTX_DIR, f));
+  for (const f of requiredJson)  { const p = path.join(CTX_DIR, f); mustExist(p); mustBeJsonParseable(p); }
+
+  // Opcionais (se existirem e forem JSON, validar)
+  for (const f of optional) {
+    const p = path.join(CTX_DIR, f);
+    if (fs.existsSync(p) && p.endsWith('.json')) mustBeJsonParseable(p);
+  }
+
+  console.log('✅ Context verificado com sucesso.');
+  console.log(`Dir: ${path.relative(ROOT, CTX_DIR)}`);
+  console.log(`- OK textos: ${requiredText.length}`);
+  console.log(`- OK JSONs : ${requiredJson.length} + opcionais válidos (se presentes)`);
 }
 
-run();
+try {
+  main();
+} catch (e) {
+  console.error('❌ Falha na verificação:', e.message);
+  process.exit(1);
+}

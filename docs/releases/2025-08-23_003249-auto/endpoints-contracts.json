@@ -1,0 +1,611 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/admin/content/map/:key/objects",
+    "file": "server\\index.js",
+    "line": 294,
+    "sample": {
+      "params": {
+        "key": "value"
+      },
+      "query": {
+        "map": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:e.message }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,reloaded:mapKey }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/admin/content/map/:key/spawns",
+    "file": "server\\index.js",
+    "line": 305,
+    "sample": {
+      "params": {
+        "key": "value"
+      },
+      "query": {
+        "map": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:e.message }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,reloaded:mapKey }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/admin/content/maps",
+    "file": "server\\index.js",
+    "line": 287,
+    "sample": {
+      "query": {
+        "map": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:e.message }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,reloaded:mapKey }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/admin/content/monsters",
+    "file": "server\\index.js",
+    "line": 265,
+    "sample": {
+      "query": {
+        "map": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:e.message }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,reloaded:mapKey }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/admin/content/reload-map",
+    "file": "server\\index.js",
+    "line": 317,
+    "sample": {
+      "query": {
+        "map": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:e.message }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,reloaded:mapKey }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/assets/items",
+    "file": "server\\index.js",
+    "line": 272,
+    "sample": {
+      "query": {
+        "map": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:e.message }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,reloaded:mapKey }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/assets/sprites",
+    "file": "server\\index.js",
+    "line": 279,
+    "sample": {
+      "query": {
+        "map": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:e.message }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,reloaded:mapKey }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/csrf",
+    "file": "server\\index.js",
+    "line": 37,
+    "sample": {
+      "body": {
+        "try {\n    const { heroId": 1,
+        "weaponOrSkill": "value",
+        "heroClass": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'weaponOrSkill inválido' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'erro ao iniciar treino' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'heroId é obrigatório' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,message:'Training started',heroId,skillType }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,message:'No active session' }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/assets/items",
+    "file": "server\\routes\\assets.js",
+    "line": 12,
+    "sample": {},
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:e.message }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/assets/sprites",
+    "file": "server\\routes\\assets.js",
+    "line": 5,
+    "sample": {},
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:e.message }"
+      },
+      {
+        "status": 500,
+        "body": "{error:e.message }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/class-rates",
+    "file": "server\\skills\\routes.js",
+    "line": 26,
+    "sample": {
+      "query": {
+        "heroId": 1
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'Falha ao listar rates' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'heroId é obrigatório' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'Herói não encontrado' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao listar skills do herói' }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/curves",
+    "file": "server\\skills\\routes.js",
+    "line": 10,
+    "sample": {
+      "query": {
+        "skill": "value",
+        "heroId": 1
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao listar curvas' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao listar rates' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'heroId é obrigatório' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'Herói não encontrado' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao listar skills do herói' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{skill_type:skill,rows }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/heroes/master",
+    "file": "server\\routes\\catalog.js",
+    "line": 8,
+    "sample": {},
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'Falha ao listar heróis' }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/login",
+    "file": "server\\auth\\routes.js",
+    "line": 78,
+    "sample": {},
+    "errors": [
+      {
+        "status": 401,
+        "body": "{error:'Credenciais inválidas' }"
+      },
+      {
+        "status": 401,
+        "body": "{error:'Credenciais inválidas' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao autenticar' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{id:user.id,name:user.name,coins:user.coins,gems:user.gems }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{profile:req.user }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/logout",
+    "file": "server\\auth\\routes.js",
+    "line": 101,
+    "sample": {},
+    "errors": [],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{profile:req.user }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/me",
+    "file": "server\\skills\\routes.js",
+    "line": 37,
+    "sample": {
+      "query": {
+        "heroId": 1
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:'heroId é obrigatório' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'Herói não encontrado' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao listar skills do herói' }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/me",
+    "file": "server\\player\\routes.js",
+    "line": 21,
+    "sample": {},
+    "errors": [
+      {
+        "status": 404,
+        "body": "{error:'Jogador não encontrado' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao obter dados do jogador' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{profile,heroes }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/me",
+    "file": "server\\auth\\routes.js",
+    "line": 108,
+    "sample": {},
+    "errors": [],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{profile:req.user }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/",
+    "file": "server\\gacha\\routes.js",
+    "line": 148,
+    "sample": {
+      "query": {
+        "count": 1
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:result.error,cost:SUMMON_COST_COINS }"
+      },
+      {
+        "status": 400,
+        "body": "{error:r.error,cost:SUMMON_COST_COINS,pulls }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao girar gacha' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{cost:SUMMON_COST_COINS,pulls,newBalance:updated }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/register",
+    "file": "server\\auth\\routes.js",
+    "line": 45,
+    "sample": {},
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:v.msg }"
+      },
+      {
+        "status": 400,
+        "body": "{error:vp.msg }"
+      },
+      {
+        "status": 409,
+        "body": "{error:'Nome já está em uso.' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao registrar' }"
+      },
+      {
+        "status": 401,
+        "body": "{error:'Credenciais inválidas' }"
+      },
+      {
+        "status": 401,
+        "body": "{error:'Credenciais inválidas' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao autenticar' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{id,name:v.name,coins:500,gems:0,createdAt }"
+      },
+      {
+        "status": 200,
+        "body": "{id:user.id,name:user.name,coins:user.coins,gems:user.gems }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{profile:req.user }"
+      }
+    ]
+  }
+]

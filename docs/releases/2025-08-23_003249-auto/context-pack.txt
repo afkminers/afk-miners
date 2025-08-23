@@ -359,28 +359,6 @@ docs\releases\2025-08-23_003235-auto\route-history.json
 docs\releases\2025-08-23_003235-auto\symbol-index.json
 docs\releases\2025-08-23_003235-auto\todos.json
 docs\releases\2025-08-23_003249-auto
-docs\releases\2025-08-23_003249-auto.zip
-docs\releases\2025-08-23_003249-auto\API.md
-docs\releases\2025-08-23_003249-auto\README.txt
-docs\releases\2025-08-23_003249-auto\changes-since.txt
-docs\releases\2025-08-23_003249-auto\context-pack.txt
-docs\releases\2025-08-23_003249-auto\data-summary.json
-docs\releases\2025-08-23_003249-auto\db-counts.txt
-docs\releases\2025-08-23_003249-auto\db-schema.sql
-docs\releases\2025-08-23_003249-auto\db-tables.json
-docs\releases\2025-08-23_003249-auto\db-tables.txt
-docs\releases\2025-08-23_003249-auto\deps-graph.json
-docs\releases\2025-08-23_003249-auto\deps.txt
-docs\releases\2025-08-23_003249-auto\endpoints-contracts.json
-docs\releases\2025-08-23_003249-auto\env-usage.json
-docs\releases\2025-08-23_003249-auto\error-map.json
-docs\releases\2025-08-23_003249-auto\function-signatures.json
-docs\releases\2025-08-23_003249-auto\openapi.json
-docs\releases\2025-08-23_003249-auto\package.json
-docs\releases\2025-08-23_003249-auto\responses-sample.json
-docs\releases\2025-08-23_003249-auto\route-history.json
-docs\releases\2025-08-23_003249-auto\symbol-index.json
-docs\releases\2025-08-23_003249-auto\todos.json
 map.tmx
 package.json
 scripts
@@ -443,14 +421,14 @@ map.tmx
 package.json
 
 == Inventário por extensão ==
-.json : 130
-.txt : 87
+.json : 117
+.txt : 81
 .png : 38
 .js : 27
-.sql : 21
-.zip : 14
-.md : 11
+.sql : 20
+.zip : 13
 .yml : 11
+.md : 10
 .html : 10
 .mp3 : 7
 .css : 6
@@ -549,21 +527,8 @@ data\config\index.yml :: 1 chaves | keys: configs
 
 == JSON — sumário (repo inteiro) ==
 package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
-server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2749 bytes
+server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2756 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 119321 bytes
-docs\releases\2025-08-23_003249-auto\todos.json :: 13 itens | 1882 bytes
-docs\releases\2025-08-23_003249-auto\symbol-index.json :: 20 itens | 5004 bytes
-docs\releases\2025-08-23_003249-auto\route-history.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 647 bytes
-docs\releases\2025-08-23_003249-auto\responses-sample.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 1353 bytes
-docs\releases\2025-08-23_003249-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
-docs\releases\2025-08-23_003249-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 16426 bytes
-docs\releases\2025-08-23_003249-auto\function-signatures.json :: 210 itens | 31625 bytes
-docs\releases\2025-08-23_003249-auto\error-map.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 5598 bytes
-docs\releases\2025-08-23_003249-auto\env-usage.json :: 13 itens | 2648 bytes
-docs\releases\2025-08-23_003249-auto\endpoints-contracts.json :: 20 itens | 11621 bytes
-docs\releases\2025-08-23_003249-auto\deps-graph.json :: 8 itens | 552 bytes
-docs\releases\2025-08-23_003249-auto\db-tables.json :: 16 itens | 5287 bytes
-docs\releases\2025-08-23_003249-auto\data-summary.json :: 11 itens | 2153 bytes
 docs\releases\2025-08-23_003235-auto\todos.json :: 13 itens | 1882 bytes
 docs\releases\2025-08-23_003235-auto\symbol-index.json :: 20 itens | 5004 bytes
 docs\releases\2025-08-23_003235-auto\route-history.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 647 bytes
@@ -678,6 +643,38 @@ docs\context\deps-graph.json :: 8 itens | 552 bytes
 docs\context\data-summary.json :: 11 itens | 2153 bytes
 data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 5569 bytes
 client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1800 bytes
+
+== Symbol Index (amostra) ==
+client\js\api.js :: API
+client\js\auth.js :: checkAuth
+client\js\boot.js :: closeMobileMenu, handleLogout, setLoggedOutGlow, setLogoutVisibility, showApp, showLanding, trySession, updateHud
+client\js\gacha.js :: bindGachaUI, cap, closeOverlay, doSummonAPI, done, fillPanel, flash, getHeroes, getInventory, hardCloseOverlay, heroCardMarkup, init, inlineHint, keySkip, lockButtons, loopPix, openOverlay, playChestSequence, playClick, playMultiSummon, playOneSummonAndReveal, playSfx, refreshFromServer, renderHeroes, resizePix, setAgainState, setRarityBg, showErrorInOverlay, skipOnce, spawnPix, spawnSparks, startPix, startSummon, stopPix, toast, wait
+client\js\house.js :: clear, drawGrid, drawSpawnRect, drawStart, jget, jpost, main, reloadMapOnServer, setStatus
+client\js\landing_fx.js :: addSpark, drawLightning, glow, imgRect, loop, resize, seed, sel, start, stop, sync
+client\js\login_fx.js :: celebrate, drawDebugCross, initLoginFx, loop, px, resize, sel, spawnBurst, spawnTick, start, stop, toCanvasXYFromChar
+client\js\player_profile.js :: animateProgressBars, bindProfileModal, close, fetchEquip, fetchPlayerMeOnce, fillEquip, fillHeader, fillSkillsArea, loadHeroSkills, open, paintEquipGrid, refreshAll, refreshEquip, renderHeroSkills, renderTrainBars, resolveCard
+client\js\sprites.js :: drawSprite, loadImg
+client\js\ui.js :: cap
+server\auth\middleware.js :: clearAuthCookie, cookieOpts, csrfRoute, requireAuth, requireCsrf, setAuthCookie
+server\auth\routes.js :: noStore, validateName, validatePassword
+server\content\loader.js :: get, list, loadAll, loadItems, loadMap, loadMonsters, loadSprites, read, sha1, upsert
+server\gacha\routes.js :: chooseHeroFromPool, doSingleSummon, pickRarity
+server\index.js :: resolveSkillType, safeParse, trainingTick
+server\models\heroes.js :: ensureHeroesSchema, seedHeroesIfEmpty
+server\models\migrate.js :: migrate
+server\player\routes.js :: noStore
+server\scripts\gen-context.js :: buildAPIMarkdown, buildEndpointContracts, buildEnvUsage, buildErrorMap, buildFunctionSignatures, buildImportGraph, buildOpenAPI, buildRouteHistory, buildSymbolIndex, cleanDefault, compactJsonLike, dirTree, ensureDir, exampleForKey, genCtxYmlIfMissing, gitInfo, inferErrors, inferKeys, inferOkResponses, inferParamsFromPath, inventoryByExt, largestFiles, listMigSeed, listRootFiles, main, objFromKeys, prettyJsonLike, scanRoutes, scanTodos, schemaFromJsonLike, schemaFromSample, schemaType, sh, splitParams, summarizeHTML, summarizeJSON, summarizeYAML, walkDir, writeJSON
+server\skills\engine.js :: _ctxMul, _trainingGate, _tryFrom, applyTries, ensureSkillRow, gainFromBlock, gainFromCast, gainFromHit, gainFromShot, getClassRate, triesNeeded
+
+== Import Graph (amostra) ==
+client\js\player_profile.js -> ./api.js
+client\js\gacha.js -> ./api.js
+client\js\boot.js -> ./api.js
+client\js\boot.js -> ./auth.js
+client\js\boot.js -> ./gacha.js
+client\js\boot.js -> ./login_fx.js
+client\js\boot.js -> ./player_profile.js
+client\js\auth.js -> ./api.js
 
 == Changes since last tag ==
 (sem tag anterior)

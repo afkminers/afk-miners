@@ -1,0 +1,55 @@
+{
+  "GET /api/admin/content/map/:key/objects": [
+    "{ok:true,reloaded:mapKey }"
+  ],
+  "GET /api/admin/content/map/:key/spawns": [
+    "{ok:true,reloaded:mapKey }"
+  ],
+  "GET /api/admin/content/maps": [
+    "{ok:true,reloaded:mapKey }"
+  ],
+  "GET /api/admin/content/monsters": [
+    "{ok:true,reloaded:mapKey }"
+  ],
+  "POST /api/admin/content/reload-map": [
+    "{ok:true,reloaded:mapKey }"
+  ],
+  "GET /api/assets/items": [
+    "{ok:true,reloaded:mapKey }"
+  ],
+  "GET /api/assets/sprites": [
+    "{ok:true,reloaded:mapKey }"
+  ],
+  "GET /api/csrf": [
+    "{ok:true,message:'Training started',heroId,skillType }",
+    "{ok:true,message:'No active session' }"
+  ],
+  "GET /assets/items": [],
+  "GET /assets/sprites": [],
+  "GET /class-rates": [],
+  "GET /curves": [
+    "{skill_type:skill,rows }"
+  ],
+  "GET /heroes/master": [],
+  "POST /login": [
+    "{id:user.id,name:user.name,coins:user.coins,gems:user.gems }",
+    "{ok:true }",
+    "{profile:req.user }"
+  ],
+  "POST /logout": [
+    "{ok:true }",
+    "{profile:req.user }"
+  ],
+  "GET /me": [
+    "{profile:req.user }"
+  ],
+  "POST /": [
+    "{cost:SUMMON_COST_COINS,pulls,newBalance:updated }"
+  ],
+  "POST /register": [
+    "{id,name:v.name,coins:500,gems:0,createdAt }",
+    "{id:user.id,name:user.name,coins:user.coins,gems:user.gems }",
+    "{ok:true }",
+    "{profile:req.user }"
+  ]
+}
