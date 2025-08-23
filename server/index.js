@@ -14,10 +14,10 @@ const playerRoutes  = require('./player/routes');
 const gachaRoutes   = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 
-const K = require('./balance/config'); // knobs
+const K = require('./balance/config');
 
 // ======== Pipeline de Conteúdo (YAML/Tiled) ========
-const { loadAll, loadMap } = require('./content/loader'); // <- agora exporta loadMap tb
+const { loadAll, loadMap } = require('./content/loader');
 const CONTENT_PIPELINE = process.env.CONTENT_PIPELINE || 'off'; // off | shadow | on
 // ===================================================
 
@@ -261,7 +261,7 @@ trainingRouter.get('/status', requireAuth, async (req, res) => {
 
 app.use('/api/training', trainingRouter);
 
-// ========= ROTAS UTILITÁRIAS (pipeline YAML) =========
+// ========= ROTAS UTILITÁRIAS (pipeline YAML/Tiled) =========
 app.get('/api/admin/content/monsters', async (req, res) => {
   db.all('SELECT key,name,xp FROM monsters_master ORDER BY key', (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -311,6 +311,19 @@ app.get('/api/admin/content/map/:key/spawns', (req, res) => {
       res.json(rows);
     }
   );
+});
+
+// >>> ROTA QUE FALTAVA: JSON bruto do mapa para o debug renderizar os tiles <<<
+app.get('/api/admin/content/map/:key/data', (req, res) => {
+  db.get('SELECT dataJSON FROM maps WHERE key=?', [req.params.key], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row)   return res.status(404).json({ error: 'map not found' });
+    try {
+      return res.json(JSON.parse(row.dataJSON || '{}'));
+    } catch (e) {
+      return res.status(500).json({ error: 'invalid map json' });
+    }
+  });
 });
 
 // reload de mapa sem reiniciar

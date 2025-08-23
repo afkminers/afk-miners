@@ -1,3 +1,4 @@
+// server/content/loader.js  (exemplo de caminho)
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
@@ -7,9 +8,11 @@ const { MonsterYAML, ItemYAML, SpriteYAML, TiledMapJSON } = require("./schemas")
 function sha1(buf) { return crypto.createHash("sha1").update(buf).digest("hex"); }
 function read(file) { return fs.readFileSync(file, "utf-8"); }
 function list(dir, ext) {
-  return fs.existsSync(dir) ? fs.readdirSync(dir)
-    .filter(f => f.toLowerCase().endsWith(ext))
-    .map(f => path.join(dir, f)) : [];
+  return fs.existsSync(dir)
+    ? fs.readdirSync(dir)
+        .filter(f => f.toLowerCase().endsWith(ext))
+        .map(f => path.join(dir, f))
+    : [];
 }
 
 function upsert(db, sql, params) {
@@ -115,14 +118,22 @@ async function loadMap(db, root, mapKey) {
     ON CONFLICT(key) DO UPDATE SET dataJSON=excluded.dataJSON, updated_at=CURRENT_TIMESTAMP
   `, [mapKey, JSON.stringify(json)]);
 
+  // reset objetos/spawns do mapa
   await upsert(db, `DELETE FROM map_objects WHERE mapKey=?`, [mapKey]);
   await upsert(db, `DELETE FROM spawns WHERE mapKey=?`, [mapKey]);
 
   for (const layer of (json.layers || [])) {
     if (layer.type !== "objectgroup" || !layer.objects) continue;
 
-    if (layer.name.toLowerCase() === "spawns") {
+    const lname = (layer.name || "").toLowerCase();
+    const isSpawnLayer = (lname === "spawn" || lname === "spawns");
+
+    if (isSpawnLayer) {
+      // grava somente objetos de spawn (type/class "spawn")
       for (const o of layer.objects) {
+        const otype = ((o.class || o.type || "") + "").toLowerCase();
+        if (otype && otype !== "spawn") continue;
+
         const props = Object.fromEntries((o.properties || []).map(p => [p.name, p.value]));
         await upsert(db, `
           INSERT INTO spawns(mapKey,monsterKey,x,y,w,h,count,respawnSec,levelMin,levelMax)
@@ -130,19 +141,20 @@ async function loadMap(db, root, mapKey) {
         `, [
           mapKey, props.monsterKey || "",
           Math.round(o.x || 0), Math.round(o.y || 0),
-          Math.round(o.width || 0), Math.round(o.height || 0),
+          Math.round(o.width  || 0), Math.round(o.height || 0),
           Number(props.count || 1), Number(props.respawnSec || 60),
           Number(props.levelMin || 1), Number(props.levelMax || 999)
         ]);
       }
     } else {
+      // demais objetos (ex.: start)
       for (const o of layer.objects) {
         const props = Object.fromEntries((o.properties || []).map(p => [p.name, p.value]));
         await upsert(db, `
           INSERT INTO map_objects(mapKey,type,x,y,w,h,propsJSON)
           VALUES(?,?,?,?,?,?,?)
         `, [
-          mapKey, layer.name.toLowerCase(),
+          mapKey, lname, // usamos o nome da camada como "type" (ex.: "start")
           Math.round(o.x || 0), Math.round(o.y || 0),
           Math.round(o.width || 0), Math.round(o.height || 0),
           JSON.stringify(props)
@@ -163,7 +175,7 @@ async function loadAll(db, root) {
   await loadSprites(db, root);
   await loadMap(db, root, "house"); // carrega house.json se existir
 
-  // ===== TESTE RÁPIDO: logs para confirmar carregamento =====
+  // Logs rápidos (opcional)
   console.log("[content] Finished loadAll()");
   db.all("SELECT key,name,xp FROM monsters_master", (err, rows) => {
     if (err) console.error("[content] query error (monsters):", err.message);
@@ -177,7 +189,6 @@ async function loadAll(db, root) {
     if (err) console.error("[content] query error (sprites):", err.message);
     else console.log("[content] sprites:", rows);
   });
-  // ==========================================================
 }
 
 module.exports = { loadAll, loadMap };

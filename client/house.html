@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>House</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html, body { height:100%; margin:0; background:#0b1220; color:#e5e7eb; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    #hud { position:absolute; top:10px; left:10px; background:#0f172a; border:1px solid #1f2937; padding:6px 10px; border-radius:8px; font-size:12px; }
+    #wrap { display:flex; align-items:center; justify-content:center; height:100%; }
+    canvas { image-rendering: pixelated; background:#0b1220; border:1px solid #1f2937; }
+    a { color:#93c5fd; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div>map: <code>house</code></div>
+    <div>Move: WASD / Setas</div>
+    <div id="pos"></div>
+  </div>
+  <div id="wrap">
+    <canvas id="view" width="800" height="600"></canvas>
+  </div>
+  <!-- só o módulo do jogo -->
+  <script type="module" src="/js/house_play.js"></script>
+</body>
+</html>
