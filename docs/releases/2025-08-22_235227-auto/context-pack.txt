@@ -238,23 +238,6 @@ docs\releases\2025-08-22_234037-auto\function-signatures.json
 docs\releases\2025-08-22_234037-auto\package.json
 docs\releases\2025-08-22_234037-auto\symbol-index.json
 docs\releases\2025-08-22_235227-auto
-docs\releases\2025-08-22_235227-auto.zip
-docs\releases\2025-08-22_235227-auto\API.md
-docs\releases\2025-08-22_235227-auto\README.txt
-docs\releases\2025-08-22_235227-auto\changes-since.txt
-docs\releases\2025-08-22_235227-auto\context-pack.txt
-docs\releases\2025-08-22_235227-auto\data-summary.json
-docs\releases\2025-08-22_235227-auto\db-counts.txt
-docs\releases\2025-08-22_235227-auto\db-schema.sql
-docs\releases\2025-08-22_235227-auto\db-tables.txt
-docs\releases\2025-08-22_235227-auto\deps.txt
-docs\releases\2025-08-22_235227-auto\endpoints-contracts.json
-docs\releases\2025-08-22_235227-auto\env-usage.json
-docs\releases\2025-08-22_235227-auto\error-map.json
-docs\releases\2025-08-22_235227-auto\function-signatures.json
-docs\releases\2025-08-22_235227-auto\package.json
-docs\releases\2025-08-22_235227-auto\symbol-index.json
-docs\releases\2025-08-23_000340-auto
 map.tmx
 package.json
 scripts
@@ -316,17 +299,17 @@ map.tmx
 package.json
 
 == Inventário por extensão ==
-.json : 63
-.txt : 51
+.json : 56
+.txt : 45
 .png : 38
 .js : 27
-.sql : 15
+.sql : 14
 .yml : 11
 .html : 10
-.zip : 8
+.zip : 7
 .mp3 : 7
 .css : 6
-.md : 5
+.md : 4
 .ps1 : 3
 <noext> : 3
 .sqlite : 2
@@ -423,13 +406,6 @@ data\config\index.yml :: 1 chaves | keys: configs
 package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2695 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 119321 bytes
-docs\releases\2025-08-22_235227-auto\symbol-index.json :: 20 itens | 4832 bytes
-docs\releases\2025-08-22_235227-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
-docs\releases\2025-08-22_235227-auto\function-signatures.json :: 203 itens | 30455 bytes
-docs\releases\2025-08-22_235227-auto\error-map.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 5430 bytes
-docs\releases\2025-08-22_235227-auto\env-usage.json :: 14 itens | 2827 bytes
-docs\releases\2025-08-22_235227-auto\endpoints-contracts.json :: 20 itens | 9234 bytes
-docs\releases\2025-08-22_235227-auto\data-summary.json :: 11 itens | 2153 bytes
 docs\releases\2025-08-22_234037-auto\symbol-index.json :: 20 itens | 4832 bytes
 docs\releases\2025-08-22_234037-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 docs\releases\2025-08-22_234037-auto\function-signatures.json :: 203 itens | 30455 bytes
@@ -476,7 +452,7 @@ docs\releases\2025-08-22_225607-auto\symbol-index.json :: 20 itens | 4494 bytes
 docs\releases\2025-08-22_225607-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 docs\releases\2025-08-22_225607-auto\data-summary.json :: 16 itens | 3803 bytes
 docs\context\symbol-index.json :: 20 itens | 4832 bytes
-docs\context\function-signatures.json :: 203 itens | 30456 bytes
+docs\context\function-signatures.json :: 203 itens | 30455 bytes
 docs\context\error-map.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 5430 bytes
 docs\context\env-usage.json :: 14 itens | 2827 bytes
 docs\context\endpoints-contracts.json :: 20 itens | 9234 bytes

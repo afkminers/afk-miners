@@ -1,4 +1,4 @@
-# server/scripts/make-context-pack.ps1 (v4)
+# server/scripts/make-context-pack.ps1 (v5)
 # Gera um Context Pack completo + ZIP
 # Uso:
 #   pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/make-context-pack.ps1 `

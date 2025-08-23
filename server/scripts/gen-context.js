@@ -1,4 +1,4 @@
-// server/scripts/gen-context.js (v4)
+// server/scripts/gen-context.js (v5)
 // Gera (em docs/context/):
 // - context-pack.txt
 // - data-summary.json
@@ -19,7 +19,7 @@
 const fs = require('fs');
 const path = require('path');
 const cp = require('child_process');
-const glob = require('glob');
+const { globSync } = require('glob');         // ✅ compatível com glob v11 (ESM)
 const yaml = require('js-yaml');
 
 const SCRIPT_DIR = __dirname;
@@ -39,7 +39,10 @@ const GLOB_IGNORE = [
   '**/tmp/**','**/temp/**','**/.cache/**','**/.vercel/**','**/.turbo/**','**/.vscode/**','**/.idea/**'
 ];
 
-function sh(cmd){ try { return cp.execSync(cmd,{encoding:'utf8'}).trim(); } catch { return ''; } }
+function sh(cmd){
+  try { return cp.execSync(cmd,{encoding:'utf8'}).trim(); }
+  catch { return ''; }
+}
 function ensureDir(p){ if(!fs.existsSync(p)) fs.mkdirSync(p,{recursive:true}); }
 
 function gitInfo(){
@@ -77,7 +80,7 @@ function listRootFiles(){
 }
 
 function inventoryByExt(){
-  const all = glob.sync('**/*', { nodir:true, ignore: GLOB_IGNORE });
+  const all = globSync('**/*', { nodir:true, ignore: GLOB_IGNORE });
   const counts = new Map();
   for(const f of all){
     const ext = (path.extname(f) || '').toLowerCase() || '<noext>';
@@ -88,7 +91,7 @@ function inventoryByExt(){
 }
 
 function largestFiles(n = SHOW_TOP_LARGEST){
-  const all = glob.sync('**/*', { nodir:true, ignore: GLOB_IGNORE });
+  const all = globSync('**/*', { nodir:true, ignore: GLOB_IGNORE });
   const sizes = [];
   for(const f of all){ try { const st = fs.statSync(f); sizes.push({f, b: st.size}); } catch {} }
   sizes.sort((a,b)=> b.b - a.b);
@@ -96,7 +99,7 @@ function largestFiles(n = SHOW_TOP_LARGEST){
 }
 
 function scanRoutes(){
-  const files = glob.sync('server/**/*.{js,ts}', { nodir:true, ignore: GLOB_IGNORE });
+  const files = globSync('server/**/*.{js,ts}', { nodir:true, ignore: GLOB_IGNORE });
   const routes = [];
   const rx = /\b(router|app)\.(get|post|put|delete|patch|options|head)\s*\(\s*([`'"])(.*?)\3/ig;
   for(const file of files){
@@ -113,13 +116,13 @@ function scanRoutes(){
 }
 
 function listMigSeed(){
-  const mig = glob.sync('server/**/*{migrat*,schema*}*', { nodir:true, ignore: GLOB_IGNORE });
-  const seed = glob.sync('server/**/*seed*', { nodir:true, ignore: GLOB_IGNORE });
+  const mig = globSync('server/**/*{migrat*,schema*}*', { nodir:true, ignore: GLOB_IGNORE });
+  const seed = globSync('server/**/*seed*', { nodir:true, ignore: GLOB_IGNORE });
   return { migrations: mig.sort(), seeds: seed.sort() };
 }
 
 function summarizeYAML(){
-  const files = glob.sync('**/*.{yml,yaml}', { nodir:true, ignore: GLOB_IGNORE });
+  const files = globSync('**/*.{yml,yaml}', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
   for(const f of files){
     try{
@@ -135,7 +138,7 @@ function summarizeYAML(){
 }
 
 function summarizeJSON(){
-  const files = glob.sync('**/*.json', { nodir:true, ignore: GLOB_IGNORE });
+  const files = globSync('**/*.json', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
   for(const f of files){
     try{
@@ -156,7 +159,7 @@ function summarizeJSON(){
 }
 
 function summarizeHTML(){
-  const files = glob.sync('**/*.html', { nodir:true, ignore: GLOB_IGNORE });
+  const files = globSync('**/*.html', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
   const titleRx=/<title>([^<]*)<\/title>/i;
   const scrRx=/<script\b[^>]*src=/gi;
@@ -175,9 +178,9 @@ function summarizeHTML(){
   return out;
 }
 
-// === v4: Índice de símbolos, imports, assinaturas de funções, ENV, contratos, erros ===
+// === v5: Índice de símbolos, imports, assinaturas de funções, ENV, contratos, erros ===
 function buildSymbolIndex(){
-  const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
+  const files = globSync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const idx = [];
   const rxExport = /^\s*export\s+(?:default\s+)?(class|function|const|let|var|async function)\s+([A-Za-z0-9_$]+)/m;
   const rxNamed  = /^\s*(?:async\s+)?function\s+([A-Za-z0-9_$]+)\s*\(|^\s*class\s+([A-Za-z0-9_$]+)/m;
@@ -206,7 +209,7 @@ function buildSymbolIndex(){
 }
 
 function buildImportGraph(){
-  const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
+  const files = globSync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const edges = [];
   const rxImport1 = /^\s*import\s+.*?\s+from\s+['"]([^'"]+)['"]/;
   const rxImport2 = /^\s*import\s+['"]([^'"]+)['"]/;
@@ -222,7 +225,7 @@ function buildImportGraph(){
 }
 
 function buildFunctionSignatures(){
-  const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
+  const files = globSync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
   const rxFnDecl   = /^\s*(?:export\s+)?(?:async\s+)?function\s+([A-Za-z0-9_$]+)\s*\(([^)]*)\)/;
   const rxArrow    = /^\s*(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\(([^)]*)\)\s*=>/;
@@ -245,7 +248,6 @@ function buildFunctionSignatures(){
       } else if(currentClass && (m=ln.match(rxMethod))){
         out.push({ file:f, line:i+1, kind:'method', class: currentClass, name:m[1], params: splitParams(m[2]) });
       }
-      if(ln.includes('}')) currentClass = currentClass; // simplista
     }
   }
   return out;
@@ -254,7 +256,7 @@ function splitParams(s){ return s.split(',').map(x=>x.trim()).filter(Boolean); }
 
 // ENV usage + defaults
 function buildEnvUsage(){
-  const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
+  const files = globSync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const all = {};
   const rxEnv     = /process\.env\.([A-Z0-9_]+)/g;
   // defaults mais comuns:   process.env.X || 'foo'   |   ?? 'foo'   |   ?? 123   |  || 0
@@ -277,7 +279,6 @@ function buildEnvUsage(){
   return Object.values(all).sort((a,b)=> a.key.localeCompare(b.key));
 }
 function cleanDefault(t){
-  // tira aspas, vírgulas, parentêses simples
   const s = String(t).replace(/[,;)]$/,'').trim();
   if(/^['"].*['"]$/.test(s)) return s.slice(1,-1);
   return s;
@@ -285,8 +286,7 @@ function cleanDefault(t){
 
 // Rota -> payload inferido + erros
 function buildEndpointContracts(routes){
-  // Vamos ler o arquivo das rotas e inspecionar um "trecho" ao redor da linha encontrada
-  const CONTRACT_LINES_LOOKAHEAD = 120; // número de linhas após a definição onde geralmente está o handler
+  const CONTRACT_LINES_LOOKAHEAD = 120;
   const out = [];
 
   for(const r of routes){
@@ -299,7 +299,6 @@ function buildEndpointContracts(routes){
     const params = inferParamsFromPath(r.path);
     const query  = inferQuery(slice);
     const body   = inferBody(slice);
-
     const errors = inferErrors(slice);
 
     out.push({
@@ -325,7 +324,6 @@ function inferParamsFromPath(p){
   return out;
 }
 function inferQuery(text){
-  // captura req.query.x e destructuring: const { a, b } = req.query
   const keys = new Set();
   const rxDot = /req\.query\.([A-Za-z0-9_]+)/g;
   let m; while((m=rxDot.exec(text))!==null) keys.add(m[1]);
@@ -337,7 +335,6 @@ function inferQuery(text){
   return Array.from(keys);
 }
 function inferBody(text){
-  // captura req.body.x e destructuring: const { a, b } = req.body
   const keys = new Set();
   const rxDot = /req\.body\.([A-Za-z0-9_]+)/g;
   let m; while((m=rxDot.exec(text))!==null) keys.add(m[1]);
@@ -349,7 +346,6 @@ function inferBody(text){
   return Array.from(keys);
 }
 function inferErrors(text){
-  // captura res.status(XXX).json({ ... }) e também throw new Error / return res.status(...)
   const out = [];
   const rx = /res\.status\(\s*(\d{3})\s*\)\s*\.json\(\s*({[\s\S]*?})\s*\)/g;
   let m;
@@ -358,7 +354,6 @@ function inferErrors(text){
     const body = compactJsonLike(m[2]);
     out.push({ status: code, body });
   }
-  // mensagens via throw
   const rxThrow = /throw\s+new\s+Error\(\s*(['"`])([\s\S]*?)\1\s*\)/g;
   while((m=rxThrow.exec(text))!==null){
     out.push({ throw: true, message: m[2] });
@@ -424,7 +419,7 @@ notes:
   fs.writeFileSync(p, y, 'utf8');
 }
 
-// API.md bonitão
+// API.md legível
 function buildAPIMarkdown(contracts, errorMap, envUsage){
   const lines = [];
   lines.push('# AFK Miners — API');
@@ -465,7 +460,6 @@ function buildAPIMarkdown(contracts, errorMap, envUsage){
       lines.push('_Sem payload inferido_');
     }
 
-    // erros
     const errs = (any.errors||[]);
     if(errs.length){
       lines.push('');
@@ -481,7 +475,6 @@ function buildAPIMarkdown(contracts, errorMap, envUsage){
     lines.push('');
   }
 
-  // Resumo de erros
   lines.push('## Tabela sintética de erros por rota');
   lines.push('');
   if(Object.keys(errorMap).length){
@@ -525,7 +518,7 @@ function main(){
   const jsn = summarizeJSON();
   const htm = summarizeHTML();
 
-  // v4 extras
+  // v5 extras
   const fnSigs = buildFunctionSignatures();
   const envUsage = buildEnvUsage();
   const contracts = buildEndpointContracts(routes);
@@ -598,7 +591,7 @@ function main(){
   fs.writeFileSync(path.join(CTX_DIR,'API.md'), apiMd, 'utf8');
 
   genCtxYmlIfMissing(info, routes);
-  console.log('OK: v4 — context + api + contracts + env + errors + signatures');
+  console.log('OK: v5 — context + api + contracts + env + errors + signatures');
 }
 
 main();
