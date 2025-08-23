@@ -1,4 +1,4 @@
-# server/scripts/make-context-pack.ps1 (v5)
+# server/scripts/make-context-pack.ps1 (v6)
 # Gera um Context Pack completo + ZIP
 # Uso:
 #   pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/make-context-pack.ps1 `
@@ -34,7 +34,6 @@ node "scripts\gen-context.js" --full | Out-Null
 
 # --- Copiar principais artefatos para o release
 $CtxDir = Join-Path $RootDir "docs\context"
-
 $filesToCopy = @(
   "context-pack.txt",
   "API.md",
@@ -45,23 +44,22 @@ $filesToCopy = @(
   "endpoints-contracts.json",
   "env-usage.json",
   "error-map.json",
-  "function-signatures.json"
+  "function-signatures.json",
+  "responses-sample.json",
+  "deps-graph.json",
+  "route-history.json",
+  "todos.json",
+  "openapi.json"
 ) | ForEach-Object { Join-Path $CtxDir $_ } | Where-Object { Test-Path $_ }
-
-foreach ($f in $filesToCopy) {
-  Copy-Item $f $ReleaseDir -Force
-}
+foreach ($f in $filesToCopy) { Copy-Item $f $ReleaseDir -Force }
 
 # --- Incluir metadados úteis do repo
 $extra = @(".gitattributes", ".gitignore", "package.json") `
   | ForEach-Object { Join-Path $RootDir $_ } `
   | Where-Object { Test-Path $_ }
+foreach ($f in $extra) { Copy-Item $f $ReleaseDir -Force }
 
-foreach ($f in $extra) {
-  Copy-Item $f $ReleaseDir -Force
-}
-
-# --- DB: dumps (schema / tables / counts)
+# --- DB: dumps (schema / tables / counts + JSON rico)
 $Sqlite = "C:\sqlite\sqlite3.exe"
 $DbPath = Join-Path $ServerDir "db\database.sqlite"
 
@@ -71,18 +69,18 @@ if ( (Test-Path $Sqlite) -and (Test-Path $DbPath) ) {
   $schemaOut = Join-Path $ReleaseDir "db-schema.sql"
   $tablesOut = Join-Path $ReleaseDir "db-tables.txt"
   $countsOut = Join-Path $ReleaseDir "db-counts.txt"
+  $tablesJson = Join-Path $ReleaseDir "db-tables.json"
 
   & $Sqlite $DbPath ".schema"  | Out-File -Encoding utf8 $schemaOut
   & $Sqlite $DbPath ".tables"  | Out-File -Encoding utf8 $tablesOut
 
-  # .tables pode vir em várias colunas/linhas; junta tudo e filtra nomes válidos
   $tablesRaw = & $Sqlite $DbPath ".tables"
   $tables = @()
-  if ($tablesRaw) {
-    $tables = ($tablesRaw -join ' ') -split '\s+' | Where-Object { $_ -match '^\w+$' }
-  }
+  if ($tablesRaw) { $tables = ($tablesRaw -join ' ') -split '\s+' | Where-Object { $_ -match '^\w+$' } }
 
   $counts = New-Object System.Collections.Generic.List[string]
+  $tablesInfo = @()
+
   foreach ($t in $tables) {
     try {
       $n = & $Sqlite $DbPath "SELECT COUNT(*) FROM [$t];"
@@ -90,10 +88,23 @@ if ( (Test-Path $Sqlite) -and (Test-Path $DbPath) ) {
     } catch {
       $pad  = ' ' * ([Math]::Max(1, 30 - $t.Length))
       $line = "$t$pad (erro ao contar)"
+      $n = $null
     }
     $counts.Add($line)
+
+    # PRAGMA table_info + foreign_key_list
+    $cols = & $Sqlite $DbPath "PRAGMA table_info([$t]);"
+    $fks  = & $Sqlite $DbPath "PRAGMA foreign_key_list([$t]);"
+
+    $tablesInfo += [pscustomobject]@{
+      table = $t
+      count = $n
+      columns = $cols
+      foreign_keys = $fks
+    }
   }
   $counts | Out-File -Encoding utf8 $countsOut
+  $tablesInfo | ConvertTo-Json -Depth 6 | Out-File -Encoding utf8 $tablesJson
 } else {
   Write-Host "⚠️  SQLite não encontrado em C:\sqlite\sqlite3.exe ou DB ausente. Pulando dumps." -ForegroundColor Yellow
 }
@@ -110,17 +121,21 @@ $Readme += "2) Cole as 10–30 primeiras linhas de context-pack.txt (ou anexe o 
 $Readme += "3) Se mudar data/, cite data-summary.json."
 $Readme += ""
 $Readme += "Arquivos principais neste pacote:"
-$Readme += " - API.md                  → documentação legível (payloads, erros, env)"
-$Readme += " - context-pack.txt        → estrutura, rotas, inventário, maiores arquivos, HTML/YAML/JSON"
-$Readme += " - endpoints-contracts.json→ rotas com exemplos de params/query/body"
-$Readme += " - error-map.json          → mapa de status/mensagens por rota"
-$Readme += " - env-usage.json          → todas as process.env + defaults detectados"
-$Readme += " - function-signatures.json→ assinaturas (nome/params/arquivo/linha)"
-$Readme += " - symbol-index.json       → símbolos (se CTX_SYMBOLS=1)"
-$Readme += " - deps.txt                → import graph (se CTX_IMPORTS=1)"
-$Readme += " - data-summary.json       → resumo YAML/JSON"
-$Readme += " - changes-since.txt       → diff desde a última tag (se houver)"
-$Readme += " - db-schema.sql / db-tables.txt / db-counts.txt (se SQLite disponível)"
+$Readme += " - API.md                   → documentação legível (payloads, erros, env, respostas)"
+$Readme += " - context-pack.txt         → estrutura, rotas, inventário, maiores arquivos, HTML/YAML/JSON"
+$Readme += " - endpoints-contracts.json → rotas com exemplos de params/query/body"
+$Readme += " - responses-sample.json    → exemplos de sucesso por rota"
+$Readme += " - error-map.json           → mapa de status/mensagens por rota"
+$Readme += " - env-usage.json           → todas as process.env + defaults detectados"
+$Readme += " - function-signatures.json → assinaturas (nome/params/arquivo/linha)"
+$Readme += " - deps-graph.json          → grafo de imports (JSON)"
+$Readme += " - route-history.json       → rotas alteradas desde a última tag"
+$Readme += " - openapi.json             → OpenAPI inferido (importável em Postman/Insomnia)"
+$Readme += " - symbol-index.json        → símbolos (se CTX_SYMBOLS=1)"
+$Readme += " - deps.txt                 → import graph (se CTX_IMPORTS=1)"
+$Readme += " - data-summary.json        → resumo YAML/JSON"
+$Readme += " - changes-since.txt        → diff desde a última tag (se houver)"
+$Readme += " - db-schema.sql / db-tables.txt / db-counts.txt / db-tables.json"
 $Readme += " - .gitattributes / .gitignore / package.json (root)"
 $Readme += ""
 $Readme += "Gerado por: scripts/make-context-pack.ps1"

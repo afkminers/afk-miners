@@ -317,25 +317,6 @@ docs\releases\2025-08-23_001419-auto\route-history.json
 docs\releases\2025-08-23_001419-auto\symbol-index.json
 docs\releases\2025-08-23_001419-auto\todos.json
 docs\releases\2025-08-23_001936-auto
-docs\releases\2025-08-23_001936-auto.zip
-docs\releases\2025-08-23_001936-auto\API.md
-docs\releases\2025-08-23_001936-auto\README.txt
-docs\releases\2025-08-23_001936-auto\changes-since.txt
-docs\releases\2025-08-23_001936-auto\context-pack.txt
-docs\releases\2025-08-23_001936-auto\data-summary.json
-docs\releases\2025-08-23_001936-auto\db-counts.txt
-docs\releases\2025-08-23_001936-auto\db-schema.sql
-docs\releases\2025-08-23_001936-auto\db-tables.txt
-docs\releases\2025-08-23_001936-auto\deps.txt
-docs\releases\2025-08-23_001936-auto\endpoints-contracts.json
-docs\releases\2025-08-23_001936-auto\env-usage.json
-docs\releases\2025-08-23_001936-auto\error-map.json
-docs\releases\2025-08-23_001936-auto\function-signatures.json
-docs\releases\2025-08-23_001936-auto\package.json
-docs\releases\2025-08-23_001936-auto\route-history.json
-docs\releases\2025-08-23_001936-auto\symbol-index.json
-docs\releases\2025-08-23_001936-auto\todos.json
-docs\releases\2025-08-23_003235-auto
 map.tmx
 package.json
 scripts
@@ -386,7 +367,6 @@ server\scripts\make-context-pack.ps1
 server\scripts\print-context-full.ps1
 server\scripts\print-context.ps1
 server\scripts\snapshot.bat
-server\scripts\verify-context.mjs
 server\skills
 server\skills\engine.js
 server\skills\routes.js
@@ -398,22 +378,21 @@ map.tmx
 package.json
 
 == Inventário por extensão ==
-.json : 104
-.txt : 75
+.json : 95
+.txt : 69
 .png : 38
 .js : 27
-.sql : 19
-.zip : 12
+.sql : 18
+.zip : 11
 .yml : 11
 .html : 10
-.md : 9
+.md : 8
 .mp3 : 7
 .css : 6
 .ps1 : 3
 <noext> : 3
 .sqlite : 2
 .tmx : 1
-.mjs : 1
 .bat : 1
 .csv : 1
 .tsx : 1
@@ -504,17 +483,8 @@ data\config\index.yml :: 1 chaves | keys: configs
 
 == JSON — sumário (repo inteiro) ==
 package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
-server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2756 bytes
+server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2695 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 119321 bytes
-docs\releases\2025-08-23_001936-auto\todos.json :: 3 itens | 356 bytes
-docs\releases\2025-08-23_001936-auto\symbol-index.json :: 20 itens | 4879 bytes
-docs\releases\2025-08-23_001936-auto\route-history.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 647 bytes
-docs\releases\2025-08-23_001936-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
-docs\releases\2025-08-23_001936-auto\function-signatures.json :: 205 itens | 30816 bytes
-docs\releases\2025-08-23_001936-auto\error-map.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 539 bytes
-docs\releases\2025-08-23_001936-auto\env-usage.json :: 13 itens | 2648 bytes
-docs\releases\2025-08-23_001936-auto\endpoints-contracts.json :: 20 itens | 3089 bytes
-docs\releases\2025-08-23_001936-auto\data-summary.json :: 11 itens | 2153 bytes
 docs\releases\2025-08-23_001419-auto\todos.json :: 9 itens | 1281 bytes
 docs\releases\2025-08-23_001419-auto\symbol-index.json :: 20 itens | 5004 bytes
 docs\releases\2025-08-23_001419-auto\route-history.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 647 bytes
@@ -594,15 +564,15 @@ docs\releases\2025-08-22_231259-auto\data-summary.json :: 11 itens | 2153 bytes
 docs\releases\2025-08-22_225607-auto\symbol-index.json :: 20 itens | 4494 bytes
 docs\releases\2025-08-22_225607-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 docs\releases\2025-08-22_225607-auto\data-summary.json :: 16 itens | 3803 bytes
-docs\context\todos.json :: 17 itens | 2383 bytes
-docs\context\symbol-index.json :: 20 itens | 4879 bytes
+docs\context\todos.json :: 3 itens | 356 bytes
+docs\context\symbol-index.json :: 20 itens | 5004 bytes
 docs\context\route-history.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 647 bytes
 docs\context\responses-sample.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 1353 bytes
 docs\context\openapi.json :: 3 chaves | keys: openapi, info, paths | 16426 bytes
-docs\context\function-signatures.json :: 210 itens | 31625 bytes
-docs\context\error-map.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 5598 bytes
+docs\context\function-signatures.json :: 205 itens | 30816 bytes
+docs\context\error-map.json :: 18 chaves | keys: GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /heroes/master, POST /login, POST /logout, GET /me, POST /, POST /register | 539 bytes
 docs\context\env-usage.json :: 13 itens | 2648 bytes
-docs\context\endpoints-contracts.json :: 20 itens | 11621 bytes
+docs\context\endpoints-contracts.json :: 20 itens | 3089 bytes
 docs\context\deps-graph.json :: 8 itens | 552 bytes
 docs\context\data-summary.json :: 11 itens | 2153 bytes
 data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 5569 bytes
@@ -627,7 +597,7 @@ server\index.js :: resolveSkillType, safeParse, trainingTick
 server\models\heroes.js :: ensureHeroesSchema, seedHeroesIfEmpty
 server\models\migrate.js :: migrate
 server\player\routes.js :: noStore
-server\scripts\gen-context.js :: buildAPIMarkdown, buildEndpointContracts, buildEnvUsage, buildErrorMap, buildFunctionSignatures, buildImportGraph, buildOpenAPI, buildRouteHistory, buildSymbolIndex, cleanDefault, compactJsonLike, dirTree, ensureDir, exampleForKey, genCtxYmlIfMissing, gitInfo, inferErrors, inferKeys, inferOkResponses, inferParamsFromPath, inventoryByExt, largestFiles, listMigSeed, listRootFiles, main, objFromKeys, prettyJsonLike, scanRoutes, scanTodos, schemaFromJsonLike, schemaFromSample, schemaType, sh, splitParams, summarizeHTML, summarizeJSON, summarizeYAML, walkDir, writeJSON
+server\scripts\gen-context.js :: buildAPIMarkdown, buildEndpointContracts, buildEnvUsage, buildErrorMap, buildFunctionSignatures, buildImportGraph, buildRouteHistory, buildSymbolIndex, buildTodos, cleanDefault, compactJsonLike, dirTree, ensureDir, exampleForKey, genCtxYmlIfMissing, gitInfo, inferBody, inferErrors, inferParamsFromPath, inferQuery, inventoryByExt, largestFiles, listMigSeed, listRootFiles, main, objFromKeys, scanRoutes, sh, splitParams, summarizeHTML, summarizeJSON, summarizeYAML, walkDir, writeJSON
 server\skills\engine.js :: _ctxMul, _trainingGate, _tryFrom, applyTries, ensureSkillRow, gainFromBlock, gainFromCast, gainFromHit, gainFromShot, getClassRate, triesNeeded
 
 == Import Graph (amostra) ==

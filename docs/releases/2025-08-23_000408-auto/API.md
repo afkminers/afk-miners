@@ -15,6 +15,7 @@
 - `NODE_ENV` (defaults: development)
 - `PORT` (defaults: 3000)
 - `WORKER_TICK_SECONDS` (defaults: 3)
+- `X` (defaults: foo)
 
 ## Endpoints
 
@@ -34,11 +35,6 @@ Arquivo: `server\index.js:294`
 {
   "map": "value"
 }
-```
-
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,reloaded:mapKey }
 ```
 
 **Erros conhecidos:**
@@ -64,11 +60,6 @@ Arquivo: `server\index.js:305`
 }
 ```
 
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,reloaded:mapKey }
-```
-
 **Erros conhecidos:**
 - `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:e.message }
@@ -83,11 +74,6 @@ Arquivo: `server\index.js:287`
 {
   "map": "value"
 }
-```
-
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,reloaded:mapKey }
 ```
 
 **Erros conhecidos:**
@@ -106,11 +92,6 @@ Arquivo: `server\index.js:265`
 {
   "map": "value"
 }
-```
-
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,reloaded:mapKey }
 ```
 
 **Erros conhecidos:**
@@ -134,11 +115,6 @@ Arquivo: `server\index.js:272`
 }
 ```
 
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,reloaded:mapKey }
-```
-
 **Erros conhecidos:**
 - `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:err.message }
@@ -157,11 +133,6 @@ Arquivo: `server\index.js:279`
 {
   "map": "value"
 }
-```
-
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,reloaded:mapKey }
 ```
 
 **Erros conhecidos:**
@@ -185,16 +156,9 @@ Arquivo: `server\index.js:37`
 }
 ```
 
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,message:'Training started',heroId,skillType }
-```
-
 **Erros conhecidos:**
 - `HTTP 400` → {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
 - `HTTP 400` → {error:'weaponOrSkill inválido' }
-- `HTTP 500` → {error:'erro ao iniciar treino' }
-- `HTTP 400` → {error:'heroId é obrigatório' }
 
 ### GET /assets/items
 
@@ -246,11 +210,6 @@ Arquivo: `server\skills\routes.js:10`
 }
 ```
 
-**Resposta de sucesso (amostra):**
-```json
-{skill_type:skill,rows }
-```
-
 **Erros conhecidos:**
 - `HTTP 400` → {error:'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC' }
 - `HTTP 500` → {error:'Falha ao listar curvas' }
@@ -297,11 +256,6 @@ Arquivo: `server\gacha\routes.js:148`
 }
 ```
 
-**Resposta de sucesso (amostra):**
-```json
-{cost:SUMMON_COST_COINS,pulls,newBalance:updated }
-```
-
 **Erros conhecidos:**
 - `HTTP 400` → {error:result.error,cost:SUMMON_COST_COINS }
 - `HTTP 400` → {error:r.error,cost:SUMMON_COST_COINS,pulls }
@@ -319,11 +273,6 @@ Arquivo: `server\index.js:317`
 }
 ```
 
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,reloaded:mapKey }
-```
-
 **Erros conhecidos:**
 - `HTTP 500` → {error:e.message }
 
@@ -332,11 +281,6 @@ Arquivo: `server\index.js:317`
 Arquivo: `server\auth\routes.js:78`
 
 _Sem payload inferido_
-
-**Resposta de sucesso (amostra):**
-```json
-{id:user.id,name:user.name,coins:user.coins,gems:user.gems }
-```
 
 **Erros conhecidos:**
 - `HTTP 401` → {error:'Credenciais inválidas' }
@@ -349,23 +293,11 @@ Arquivo: `server\auth\routes.js:101`
 
 _Sem payload inferido_
 
-**Resposta de sucesso (amostra):**
-```json
-{
-  "ok": true
-}
-```
-
 ### POST /register
 
 Arquivo: `server\auth\routes.js:45`
 
 _Sem payload inferido_
-
-**Resposta de sucesso (amostra):**
-```json
-{id,name:v.name,coins:500,gems:0,createdAt }
-```
 
 **Erros conhecidos:**
 - `HTTP 400` → {error:v.msg }
@@ -414,8 +346,6 @@ _Sem payload inferido_
 - **GET /api/csrf**
   - HTTP 400: {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
   - HTTP 400: {error:'weaponOrSkill inválido' }
-  - HTTP 500: {error:'erro ao iniciar treino' }
-  - HTTP 400: {error:'heroId é obrigatório' }
 - **GET /assets/items**
   - HTTP 500: {error:e.message }
 - **GET /assets/sprites**

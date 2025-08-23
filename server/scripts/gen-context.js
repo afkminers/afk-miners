@@ -1,25 +1,27 @@
-// server/scripts/gen-context.js (v5)
+// server/scripts/gen-context.js (v6)
 // Gera (em docs/context/):
 // - context-pack.txt
+// - API.md
 // - data-summary.json
 // - changes-since.txt
-// - symbol-index.json              (se CTX_SYMBOLS=1)
-// - deps.txt                       (se CTX_IMPORTS=1)
-// - endpoints-contracts.json       (rotas + payload inferido)
-// - env-usage.json                 (todas as process.env, com possíveis defaults)
-// - error-map.json                 (status/mensagens associados a rotas)
-// - function-signatures.json       (assinaturas estáticas simples)
-// - API.md                         (documento legível das rotas)
+// - endpoints-contracts.json
+// - env-usage.json
+// - error-map.json
+// - function-signatures.json
+// - responses-sample.json         (NOVO)
+// - deps-graph.json               (NOVO)
+// - route-history.json            (NOVO)
+// - todos.json                    (NOVO)
+// - openapi.json                  (NOVO)
+// - symbol-index.json             (se CTX_SYMBOLS=1)
+// - deps.txt                      (se CTX_IMPORTS=1)
 //
-// Execução: npm run ctx:pack  (de dentro de /server)
-//
-// Observação: este scanner é "best effort" (regex/heurísticas) – cobre 90% dos casos comuns.
-// Não executa o código, apenas lê arquivos.
+// Execução: npm run ctx:pack (de /server)
 
 const fs = require('fs');
 const path = require('path');
 const cp = require('child_process');
-const { globSync } = require('glob');         // ✅ compatível com glob v11 (ESM)
+const glob = require('glob');
 const yaml = require('js-yaml');
 
 const SCRIPT_DIR = __dirname;
@@ -27,7 +29,7 @@ const ROOT = path.resolve(SCRIPT_DIR, '..', '..'); // repo raiz
 process.chdir(ROOT);
 
 const DOCS_DIR = path.join(ROOT, 'docs');
-const CTX_DIR = path.join(DOCS_DIR, 'context');
+const CTX_DIR  = path.join(DOCS_DIR, 'context');
 
 const CTX_DEPTH = parseInt(process.env.CTX_DEPTH || '4', 10);
 const MAX_JSON_BYTES_TO_PARSE = 1024 * 300;
@@ -39,10 +41,7 @@ const GLOB_IGNORE = [
   '**/tmp/**','**/temp/**','**/.cache/**','**/.vercel/**','**/.turbo/**','**/.vscode/**','**/.idea/**'
 ];
 
-function sh(cmd){
-  try { return cp.execSync(cmd,{encoding:'utf8'}).trim(); }
-  catch { return ''; }
-}
+function sh(cmd){ try { return cp.execSync(cmd,{encoding:'utf8'}).trim(); } catch { return ''; } }
 function ensureDir(p){ if(!fs.existsSync(p)) fs.mkdirSync(p,{recursive:true}); }
 
 function gitInfo(){
@@ -74,24 +73,22 @@ function dirTree(depth = CTX_DEPTH){
 function listRootFiles(){
   try {
     return fs.readdirSync(ROOT,{withFileTypes:true})
-      .filter(e=>e.isFile())
-      .map(e=>e.name).sort();
+      .filter(e=>e.isFile()).map(e=>e.name).sort();
   } catch { return []; }
 }
 
 function inventoryByExt(){
-  const all = globSync('**/*', { nodir:true, ignore: GLOB_IGNORE });
+  const all = glob.sync('**/*', { nodir:true, ignore: GLOB_IGNORE });
   const counts = new Map();
   for(const f of all){
     const ext = (path.extname(f) || '').toLowerCase() || '<noext>';
     counts.set(ext, (counts.get(ext)||0)+1);
   }
-  return Array.from(counts.entries()).sort((a,b)=> b[1]-a[1])
-    .map(([ext,n])=>`${ext} : ${n}`);
+  return Array.from(counts.entries()).sort((a,b)=> b[1]-a[1]).map(([ext,n])=>`${ext} : ${n}`);
 }
 
 function largestFiles(n = SHOW_TOP_LARGEST){
-  const all = globSync('**/*', { nodir:true, ignore: GLOB_IGNORE });
+  const all = glob.sync('**/*', { nodir:true, ignore: GLOB_IGNORE });
   const sizes = [];
   for(const f of all){ try { const st = fs.statSync(f); sizes.push({f, b: st.size}); } catch {} }
   sizes.sort((a,b)=> b.b - a.b);
@@ -99,7 +96,7 @@ function largestFiles(n = SHOW_TOP_LARGEST){
 }
 
 function scanRoutes(){
-  const files = globSync('server/**/*.{js,ts}', { nodir:true, ignore: GLOB_IGNORE });
+  const files = glob.sync('server/**/*.{js,ts}', { nodir:true, ignore: GLOB_IGNORE });
   const routes = [];
   const rx = /\b(router|app)\.(get|post|put|delete|patch|options|head)\s*\(\s*([`'"])(.*?)\3/ig;
   for(const file of files){
@@ -116,13 +113,13 @@ function scanRoutes(){
 }
 
 function listMigSeed(){
-  const mig = globSync('server/**/*{migrat*,schema*}*', { nodir:true, ignore: GLOB_IGNORE });
-  const seed = globSync('server/**/*seed*', { nodir:true, ignore: GLOB_IGNORE });
-  return { migrations: mig.sort(), seeds: seed.sort() };
+  const mig  = glob.sync('server/**/*{migrat*,schema*}*', { nodir:true, ignore: GLOB_IGNORE }).sort();
+  const seed = glob.sync('server/**/*seed*',             { nodir:true, ignore: GLOB_IGNORE }).sort();
+  return { migrations: mig, seeds: seed };
 }
 
 function summarizeYAML(){
-  const files = globSync('**/*.{yml,yaml}', { nodir:true, ignore: GLOB_IGNORE });
+  const files = glob.sync('**/*.{yml,yaml}', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
   for(const f of files){
     try{
@@ -138,15 +135,12 @@ function summarizeYAML(){
 }
 
 function summarizeJSON(){
-  const files = globSync('**/*.json', { nodir:true, ignore: GLOB_IGNORE });
+  const files = glob.sync('**/*.json', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
   for(const f of files){
     try{
       const st = fs.statSync(f);
-      if(st.size > MAX_JSON_BYTES_TO_PARSE){
-        out.push({ file:f, bytes:st.size, note:'too-large' });
-        continue;
-      }
+      if(st.size > MAX_JSON_BYTES_TO_PARSE){ out.push({ file:f, bytes:st.size, note:'too-large' }); continue; }
       const raw = fs.readFileSync(f,'utf8');
       const doc = JSON.parse(raw);
       let kind = typeof doc, size=0, topKeys=[];
@@ -159,7 +153,7 @@ function summarizeJSON(){
 }
 
 function summarizeHTML(){
-  const files = globSync('**/*.html', { nodir:true, ignore: GLOB_IGNORE });
+  const files = glob.sync('**/*.html', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
   const titleRx=/<title>([^<]*)<\/title>/i;
   const scrRx=/<script\b[^>]*src=/gi;
@@ -178,38 +172,30 @@ function summarizeHTML(){
   return out;
 }
 
-// === v5: Índice de símbolos, imports, assinaturas de funções, ENV, contratos, erros ===
+// ===== v6 extras =====
+
+// Symbols (opcional)
 function buildSymbolIndex(){
-  const files = globSync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
+  const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const idx = [];
   const rxExport = /^\s*export\s+(?:default\s+)?(class|function|const|let|var|async function)\s+([A-Za-z0-9_$]+)/m;
   const rxNamed  = /^\s*(?:async\s+)?function\s+([A-Za-z0-9_$]+)\s*\(|^\s*class\s+([A-Za-z0-9_$]+)/m;
   for(const f of files){
     let src=''; try{ src = fs.readFileSync(f,'utf8'); }catch{ continue; }
     const symbols = new Set();
-    const m1 = src.match(rxExport);
-    if(m1 && m1[2]) symbols.add(m1[2]);
+    const m1 = src.match(rxExport); if(m1 && m1[2]) symbols.add(m1[2]);
     const lines = src.split(/\r?\n/);
-    for(const line of lines){
-      const m2 = line.match(rxNamed);
-      if(m2){
-        const name = m2[1] || m2[2];
-        if(name) symbols.add(name);
-      }
-    }
-    const rxReExport = /export\s*{\s*([^}]+)\s*}/g;
-    let r;
-    while((r = rxReExport.exec(src)) !== null){
-      r[1].split(',').map(s => s.trim().split(/\s+as\s+/i)[1] || s.trim().split(/\s+as\s+/i)[0])
-        .forEach(n => n && symbols.add(n));
-    }
+    for(const line of lines){ const m2=line.match(rxNamed); if(m2){ const name=m2[1]||m2[2]; if(name) symbols.add(name); } }
+    const rxReExport = /export\s*{\s*([^}]+)\s*}/g; let r;
+    while((r=rxReExport.exec(src))!==null){ r[1].split(',').map(s=>s.trim().split(/\s+as\s+/i)[1]||s.trim().split(/\s+as\s+/i)[0]).forEach(n=>n && symbols.add(n)); }
     if(symbols.size) idx.push({ file:f, symbols: Array.from(symbols).sort() });
   }
   return idx.sort((a,b)=> a.file.localeCompare(b.file));
 }
 
+// Imports (texto) + grafo JSON
 function buildImportGraph(){
-  const files = globSync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
+  const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const edges = [];
   const rxImport1 = /^\s*import\s+.*?\s+from\s+['"]([^'"]+)['"]/;
   const rxImport2 = /^\s*import\s+['"]([^'"]+)['"]/;
@@ -224,151 +210,118 @@ function buildImportGraph(){
   return edges;
 }
 
+// Assinaturas
 function buildFunctionSignatures(){
-  const files = globSync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
+  const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
-  const rxFnDecl   = /^\s*(?:export\s+)?(?:async\s+)?function\s+([A-Za-z0-9_$]+)\s*\(([^)]*)\)/;
-  const rxArrow    = /^\s*(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\(([^)]*)\)\s*=>/;
-  const rxClass    = /^\s*(?:export\s+)?class\s+([A-Za-z0-9_$]+)/;
-  const rxMethod   = /^\s*(?:async\s+)?([A-Za-z0-9_$]+)\s*\(([^)]*)\)\s*{/;
+  const rxFnDecl = /^\s*(?:export\s+)?(?:async\s+)?function\s+([A-Za-z0-9_$]+)\s*\(([^)]*)\)/;
+  const rxArrow  = /^\s*(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\(([^)]*)\)\s*=>/;
+  const rxClass  = /^\s*(?:export\s+)?class\s+([A-Za-z0-9_$]+)/;
+  const rxMethod = /^\s*(?:async\s+)?([A-Za-z0-9_$]+)\s*\(([^)]*)\)\s*{/;
 
   for(const f of files){
     let src=''; try{ src = fs.readFileSync(f,'utf8'); }catch{ continue; }
     const lines = src.split(/\r?\n/);
     let currentClass=null;
     for(let i=0;i<lines.length;i++){
-      let ln = lines[i];
+      const ln = lines[i];
       let m;
-      if((m=ln.match(rxFnDecl))){
-        out.push({ file:f, line:i+1, kind:'function', name:m[1], params: splitParams(m[2]) });
-      } else if((m=ln.match(rxArrow))){
-        out.push({ file:f, line:i+1, kind:'arrow', name:m[1], params: splitParams(m[2]) });
-      } else if((m=ln.match(rxClass))){
-        currentClass = m[1];
-      } else if(currentClass && (m=ln.match(rxMethod))){
-        out.push({ file:f, line:i+1, kind:'method', class: currentClass, name:m[1], params: splitParams(m[2]) });
-      }
+      if((m=ln.match(rxFnDecl))) out.push({ file:f, line:i+1, kind:'function', name:m[1], params: splitParams(m[2]) });
+      else if((m=ln.match(rxArrow))) out.push({ file:f, line:i+1, kind:'arrow', name:m[1], params: splitParams(m[2]) });
+      else if((m=ln.match(rxClass))) currentClass = m[1];
+      else if(currentClass && (m=ln.match(rxMethod))) out.push({ file:f, line:i+1, kind:'method', class:currentClass, name:m[1], params: splitParams(m[2]) });
     }
   }
   return out;
 }
-function splitParams(s){ return s.split(',').map(x=>x.trim()).filter(Boolean); }
+function splitParams(s){ return (s||'').split(',').map(x=>x.trim()).filter(Boolean); }
 
-// ENV usage + defaults
+// ENV + defaults
 function buildEnvUsage(){
-  const files = globSync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
+  const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const all = {};
   const rxEnv     = /process\.env\.([A-Z0-9_]+)/g;
-  // defaults mais comuns:   process.env.X || 'foo'   |   ?? 'foo'   |   ?? 123   |  || 0
   const rxDefault = /process\.env\.([A-Z0-9_]+)\s*(?:\|\||\?\?)\s*([^\s);]+)/g;
 
   for(const f of files){
     let src=''; try{ src = fs.readFileSync(f,'utf8'); }catch{ continue; }
     let m;
     while((m=rxEnv.exec(src))!==null){
-      const key = m[1];
-      all[key] = all[key] || { key, occurrences: [] , defaults: []};
-      all[key].occurrences.push({ file:f, index: m.index });
+      const key=m[1]; all[key]=all[key]||{ key, occurrences:[], defaults:[] }; all[key].occurrences.push({ file:f, index:m.index });
     }
     while((m=rxDefault.exec(src))!==null){
-      const key = m[1], defRaw = m[2];
-      all[key] = all[key] || { key, occurrences: [] , defaults: []};
-      all[key].defaults.push(cleanDefault(defRaw));
+      const key=m[1], defRaw=m[2]; all[key]=all[key]||{ key, occurrences:[], defaults:[] }; all[key].defaults.push(cleanDefault(defRaw));
     }
   }
   return Object.values(all).sort((a,b)=> a.key.localeCompare(b.key));
 }
 function cleanDefault(t){
-  const s = String(t).replace(/[,;)]$/,'').trim();
+  const s=String(t).replace(/[,;)]$/,'').trim();
   if(/^['"].*['"]$/.test(s)) return s.slice(1,-1);
   return s;
 }
 
-// Rota -> payload inferido + erros
+// Contratos por rota (params/query/body) + erros + respostas OK
 function buildEndpointContracts(routes){
-  const CONTRACT_LINES_LOOKAHEAD = 120;
+  const LOOK = 160; // linhas após a definição
   const out = [];
-
   for(const r of routes){
     let src=''; try{ src = fs.readFileSync(r.file,'utf8'); }catch{ continue; }
     const lines = src.split(/\r?\n/);
     const start = Math.max(0, r.line-1);
-    const end   = Math.min(lines.length-1, start + CONTRACT_LINES_LOOKAHEAD);
+    const end   = Math.min(lines.length-1, start + LOOK);
     const slice = lines.slice(start, end+1).join('\n');
 
     const params = inferParamsFromPath(r.path);
-    const query  = inferQuery(slice);
-    const body   = inferBody(slice);
+    const query  = inferKeys(slice, 'query');
+    const body   = inferKeys(slice, 'body');
+
     const errors = inferErrors(slice);
+    const okResp = inferOkResponses(slice); // NOVO
 
     out.push({
-      method: r.method,
-      path: r.path,
-      file: r.file,
-      line: r.line,
+      method: r.method, path: r.path, file: r.file, line: r.line,
       sample: {
         params: params.length ? objFromKeys(params) : undefined,
         query:  query.length  ? objFromKeys(query)  : undefined,
         body:   body.length   ? objFromKeys(body)   : undefined
       },
-      errors
+      errors,
+      ok: okResp.length ? okResp : undefined
     });
   }
-
   return out;
 }
 
-function inferParamsFromPath(p){
-  const rx = /:([A-Za-z0-9_]+)/g; const out=[];
-  let m; while((m=rx.exec(p))!==null) out.push(m[1]);
-  return out;
-}
-function inferQuery(text){
+function inferParamsFromPath(p){ const rx=/:([A-Za-z0-9_]+)/g; const out=[]; let m; while((m=rx.exec(p))!==null) out.push(m[1]); return out; }
+function inferKeys(text, which){
   const keys = new Set();
-  const rxDot = /req\.query\.([A-Za-z0-9_]+)/g;
+  const rxDot = new RegExp(`req\\.${which}\\.([A-Za-z0-9_]+)`,'g');
   let m; while((m=rxDot.exec(text))!==null) keys.add(m[1]);
-
-  const rxDestr = /{([^}]+)}\s*=\s*req\.query/g;
-  while((m=rxDestr.exec(text))!==null){
-    m[1].split(',').map(s=>s.split(':')[0].trim()).forEach(k => k && keys.add(k));
-  }
-  return Array.from(keys);
-}
-function inferBody(text){
-  const keys = new Set();
-  const rxDot = /req\.body\.([A-Za-z0-9_]+)/g;
-  let m; while((m=rxDot.exec(text))!==null) keys.add(m[1]);
-
-  const rxDestr = /{([^}]+)}\s*=\s*req\.body/g;
-  while((m=rxDestr.exec(text))!==null){
-    m[1].split(',').map(s=>s.split(':')[0].trim()).forEach(k => k && keys.add(k));
-  }
+  const rxDestr = new RegExp(`{([^}]+)}\\s*=\\s*req\\.${which}`,'g');
+  while((m=rxDestr.exec(text))!==null){ m[1].split(',').map(s=>s.split(':')[0].trim()).forEach(k=>k && keys.add(k)); }
   return Array.from(keys);
 }
 function inferErrors(text){
-  const out = [];
+  const out=[]; let m;
   const rx = /res\.status\(\s*(\d{3})\s*\)\s*\.json\(\s*({[\s\S]*?})\s*\)/g;
-  let m;
-  while((m=rx.exec(text))!==null){
-    const code = parseInt(m[1],10);
-    const body = compactJsonLike(m[2]);
-    out.push({ status: code, body });
-  }
+  while((m=rx.exec(text))!==null){ out.push({ status: parseInt(m[1],10), body: compactJsonLike(m[2]) }); }
   const rxThrow = /throw\s+new\s+Error\(\s*(['"`])([\s\S]*?)\1\s*\)/g;
-  while((m=rxThrow.exec(text))!==null){
-    out.push({ throw: true, message: m[2] });
-  }
+  while((m=rxThrow.exec(text))!==null){ out.push({ throw:true, message:m[2] }); }
   return out;
 }
-function compactJsonLike(s){
-  return s
-    .replace(/\s+/g,' ')
-    .replace(/\s*([{:,\[\]])\s*/g,'$1')
-    .trim();
+function inferOkResponses(text){
+  const out=[]; let m;
+  // res.json({...}) | return res.json({...})
+  const rxJson = /(?:return\s+)?res\.json\(\s*({[\s\S]*?})\s*\)/g;
+  while((m=rxJson.exec(text))!==null){ out.push({ status:200, body: compactJsonLike(m[1]) }); }
+  // res.send({...}) string/number — capturamos objeto json-like
+  const rxSend = /(?:return\s+)?res\.send\(\s*({[\s\S]*?})\s*\)/g;
+  while((m=rxSend.exec(text))!==null){ out.push({ status:200, body: compactJsonLike(m[1]) }); }
+  return out;
 }
-function objFromKeys(keys){
-  const o={}; for(const k of keys){ o[k] = exampleForKey(k); } return o;
-}
+function compactJsonLike(s){ return s.replace(/\s+/g,' ').replace(/\s*([{:,\[\]])\s*/g,'$1').trim(); }
+function objFromKeys(keys){ const o={}; for(const k of keys){ o[k]=exampleForKey(k); } return o; }
 function exampleForKey(k){
   if(/id|count|page|limit|offset|qty|amount|price/i.test(k)) return 1;
   if(/email/i.test(k)) return "user@example.com";
@@ -378,10 +331,116 @@ function exampleForKey(k){
   return "value";
 }
 
-// Escreve JSON helper
+// TODO/FIXME
+function scanTodos(){
+  const files = glob.sync('**/*.{js,ts,jsx,tsx,md}', { nodir:true, ignore: GLOB_IGNORE });
+  const out=[];
+  for(const f of files){
+    let src=''; try{ src = fs.readFileSync(f,'utf8'); }catch{ continue; }
+    const lines = src.split(/\r?\n/);
+    lines.forEach((ln,i)=>{
+      if(/TODO|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });
+    });
+  }
+  return out;
+}
+
+// Histórico por rota (alterado desde a última tag?)
+function buildRouteHistory(routes, lastTag){
+  const map={};
+  for(const r of routes){
+    let status = 'no-tag';
+    if(lastTag){
+      const diff = sh(`git diff --name-only ${lastTag}..HEAD -- "${r.file.replace(/"/g,'\\"')}"`);
+      status = diff ? 'modified' : 'unchanged';
+    }
+    const key = `${r.method} ${r.path}`;
+    map[key] = status;
+  }
+  return map;
+}
+
+// OpenAPI mínimo a partir de contracts/erros/ok
+function buildOpenAPI(contracts){
+  const doc = {
+    openapi: "3.0.3",
+    info: { title: "AFK Miners API (inferred)", version: "0.0.1" },
+    paths: {}
+  };
+  for(const c of contracts){
+    const p = doc.paths[c.path] = doc.paths[c.path] || {};
+    const mm = c.method.toLowerCase();
+    const item = p[mm] = p[mm] || { responses: {} };
+
+    // requestBody (se body inferido)
+    if(c.sample?.body){
+      item.requestBody = {
+        required: true,
+        content: {
+          "application/json": { schema: schemaFromSample(c.sample.body) }
+        }
+      };
+    }
+
+    // parâmetros (params+query)
+    const params = [];
+    if(c.sample?.params){
+      for(const k of Object.keys(c.sample.params)){
+        params.push({ name:k, in:"path", required:true, schema: schemaType(c.sample.params[k]) });
+      }
+    }
+    if(c.sample?.query){
+      for(const k of Object.keys(c.sample.query)){
+        params.push({ name:k, in:"query", required:false, schema: schemaType(c.sample.query[k]) });
+      }
+    }
+    if(params.length) item.parameters = params;
+
+    // respostas sucesso (ok) e erros
+    if(c.ok?.length){
+      // pega a primeira
+      const ok = c.ok[0];
+      item.responses["200"] = {
+        description: "OK (inferred)",
+        content: { "application/json": { schema: schemaFromJsonLike(ok.body) } }
+      };
+    } else {
+      item.responses["200"] = { description: "OK" };
+    }
+    if(c.errors?.length){
+      for(const e of c.errors){
+        if(e.status){
+          item.responses[String(e.status)] = {
+            description: `Error ${e.status} (inferred)`,
+            content: { "application/json": { schema: schemaFromJsonLike(e.body) } }
+          };
+        }
+      }
+    }
+  }
+  return doc;
+}
+
+function schemaType(v){
+  if(typeof v === 'number') return { type: 'number' };
+  if(typeof v === 'boolean') return { type: 'boolean' };
+  return { type: 'string' };
+}
+function schemaFromSample(obj){
+  return { type:'object', properties: Object.fromEntries(Object.entries(obj).map(([k,v])=> [k, schemaType(v)])) };
+}
+function schemaFromJsonLike(str){
+  try{
+    // tenta parsear json-like simples
+    const fixed = str.replace(/([{,])(\s*)([A-Za-z0-9_]+)\s*:/g, '$1"$3":'); // chaves sem aspas → aspas
+    return schemaFromSample(JSON.parse(fixed));
+  }catch{ return { type:'object' }; }
+}
+
+// helpers
 function writeJSON(p,obj){ fs.writeFileSync(p, JSON.stringify(obj,null,2)); }
 
-// ctx.yml auto-semente
+// ctx.yml auto
 function genCtxYmlIfMissing(info, routes){
   const p = path.join(CTX_DIR,'ctx.yml');
   if(fs.existsSync(p)) return;
@@ -420,10 +479,11 @@ notes:
 }
 
 // API.md legível
-function buildAPIMarkdown(contracts, errorMap, envUsage){
+function buildAPIMarkdown(contracts, errorMap, envUsage, responses){
   const lines = [];
   lines.push('# AFK Miners — API');
   lines.push('');
+
   lines.push('## Variáveis de ambiente');
   lines.push('');
   if(envUsage.length){
@@ -436,40 +496,42 @@ function buildAPIMarkdown(contracts, errorMap, envUsage){
 
   lines.push('## Endpoints');
   lines.push('');
-  const group = {};
+  const byKey={};
   for(const c of contracts){
     const k = `${c.method} ${c.path}`;
-    group[k] = group[k] || [];
-    group[k].push(c);
+    byKey[k] = byKey[k] || c;
   }
-  const keys = Object.keys(group).sort();
-  for(const k of keys){
-    const samples = group[k];
-    const any = samples[0];
+  for(const k of Object.keys(byKey).sort()){
+    const c = byKey[k];
     lines.push(`### ${k}`);
     lines.push('');
-    lines.push(`Arquivo: \`${any.file}:${any.line}\``);
-    if(any.sample && (any.sample.params || any.sample.query || any.sample.body)){
+    lines.push(`Arquivo: \`${c.file}:${c.line}\``);
+
+    if(c.sample?.params || c.sample?.query || c.sample?.body){
       lines.push('');
       lines.push('**Payloads (exemplos inferidos):**');
-      if(any.sample.params){ lines.push('- params:'); lines.push('```json'); lines.push(JSON.stringify(any.sample.params, null, 2)); lines.push('```'); }
-      if(any.sample.query){  lines.push('- query:');  lines.push('```json'); lines.push(JSON.stringify(any.sample.query,  null, 2)); lines.push('```'); }
-      if(any.sample.body){   lines.push('- body:');   lines.push('```json'); lines.push(JSON.stringify(any.sample.body,   null, 2)); lines.push('```'); }
+      if(c.sample.params){ lines.push('- params:'); lines.push('```json'); lines.push(JSON.stringify(c.sample.params,null,2)); lines.push('```'); }
+      if(c.sample.query){  lines.push('- query:');  lines.push('```json'); lines.push(JSON.stringify(c.sample.query, null,2)); lines.push('```'); }
+      if(c.sample.body){   lines.push('- body:');   lines.push('```json'); lines.push(JSON.stringify(c.sample.body,  null,2)); lines.push('```'); }
     } else {
       lines.push('');
       lines.push('_Sem payload inferido_');
     }
 
-    const errs = (any.errors||[]);
+    const ok = (c.ok||[])[0];
+    if(ok){
+      lines.push('');
+      lines.push('**Resposta de sucesso (amostra):**');
+      lines.push('```json'); lines.push(prettyJsonLike(ok.body)); lines.push('```');
+    }
+
+    const errs = (c.errors||[]);
     if(errs.length){
       lines.push('');
       lines.push('**Erros conhecidos:**');
       for(const e of errs){
-        if(e.status){
-          lines.push(`- \`HTTP ${e.status}\` → ${e.body}`);
-        } else if(e.throw){
-          lines.push(`- throw Error("${e.message}")`);
-        }
+        if(e.status) lines.push(`- \`HTTP ${e.status}\` → ${e.body}`);
+        else if(e.throw) lines.push(`- throw Error("${e.message}")`);
       }
     }
     lines.push('');
@@ -485,15 +547,19 @@ function buildAPIMarkdown(contracts, errorMap, envUsage){
         else if(e.throw) lines.push(`  - throw: ${e.message}`);
       }
     }
-  } else {
-    lines.push('- (nenhum erro mapeado)');
-  }
+  } else lines.push('- (nenhum erro mapeado)');
   lines.push('');
   return lines.join('\n');
 }
+function prettyJsonLike(s){
+  try{
+    const fixed = s.replace(/([{,])(\s*)([A-Za-z0-9_]+)\s*:/g, '$1"$3":');
+    return JSON.stringify(JSON.parse(fixed), null, 2);
+  }catch{ return s; }
+}
 
 function buildErrorMap(contracts){
-  const map = {};
+  const map={};
   for(const c of contracts){
     const k = `${c.method} ${c.path}`;
     map[k] = map[k] || [];
@@ -502,80 +568,92 @@ function buildErrorMap(contracts){
   return map;
 }
 
-// MAIN
 function main(){
   ensureDir(DOCS_DIR); ensureDir(CTX_DIR);
   const info = gitInfo();
 
-  // Resumo do repo
   const tree = dirTree(CTX_DEPTH);
   const rootFiles = listRootFiles();
-  const inv = inventoryByExt();
-  const big = largestFiles(SHOW_TOP_LARGEST);
+  const inv  = inventoryByExt();
+  const big  = largestFiles(SHOW_TOP_LARGEST);
   const routes = scanRoutes();
   const migseed = listMigSeed();
   const yml = summarizeYAML();
   const jsn = summarizeJSON();
   const htm = summarizeHTML();
 
-  // v5 extras
   const fnSigs = buildFunctionSignatures();
   const envUsage = buildEnvUsage();
   const contracts = buildEndpointContracts(routes);
-  const errorMap = buildErrorMap(contracts);
+  const errorMap  = buildErrorMap(contracts);
+
+  // NEW: responses (consolidado) — além de já vir em contracts.ok
+  const responses = {};
+  for(const c of contracts){
+    const k = `${c.method} ${c.path}`;
+    responses[k] = (c.ok||[]).map(o => o.body);
+  }
+
+  // Grafo de deps (sempre geramos JSON); deps.txt só com CTX_IMPORTS=1
+  const depsGraph = buildImportGraph();
+
+  // TODOs
+  const todos = scanTodos();
+
+  // Histórico por rota
+  const routeHistory = buildRouteHistory(routes, info.lastTag);
+
+  // OpenAPI
+  const openapi = buildOpenAPI(contracts);
 
   // opcionais
-  let sym = []; let deps = [];
-  if(process.env.CTX_SYMBOLS === '1'){
-    sym = buildSymbolIndex();
-    writeJSON(path.join(CTX_DIR,'symbol-index.json'), sym);
-  }
-  if(process.env.CTX_IMPORTS === '1'){
-    deps = buildImportGraph();
-    fs.writeFileSync(
-      path.join(CTX_DIR,'deps.txt'),
-      deps.map(e=> `${e.from} -> ${e.to}`).join('\n') || '(sem imports)'
-    );
-  }
+  let sym = []; let depsTxtEdges = [];
+  if(process.env.CTX_SYMBOLS === '1'){ sym = buildSymbolIndex(); fs.writeFileSync(path.join(CTX_DIR,'symbol-index.json'), JSON.stringify(sym,null,2)); }
+  if(process.env.CTX_IMPORTS === '1'){ depsTxtEdges = depsGraph; fs.writeFileSync(path.join(CTX_DIR,'deps.txt'), depsTxtEdges.map(e=> `${e.from} -> ${e.to}`).join('\n') || '(sem imports)'); }
 
   // grava JSONs principais
-  writeJSON(path.join(CTX_DIR,'data-summary.json'), yml);
-  writeJSON(path.join(CTX_DIR,'function-signatures.json'), fnSigs);
-  writeJSON(path.join(CTX_DIR,'env-usage.json'), envUsage);
-  writeJSON(path.join(CTX_DIR,'endpoints-contracts.json'), contracts);
-  writeJSON(path.join(CTX_DIR,'error-map.json'), errorMap);
+  fs.writeFileSync(path.join(CTX_DIR,'data-summary.json'),        JSON.stringify(yml,null,2));
+  fs.writeFileSync(path.join(CTX_DIR,'function-signatures.json'), JSON.stringify(fnSigs,null,2));
+  fs.writeFileSync(path.join(CTX_DIR,'env-usage.json'),           JSON.stringify(envUsage,null,2));
+  fs.writeFileSync(path.join(CTX_DIR,'endpoints-contracts.json'), JSON.stringify(contracts,null,2));
+  fs.writeFileSync(path.join(CTX_DIR,'error-map.json'),           JSON.stringify(errorMap,null,2));
+  fs.writeFileSync(path.join(CTX_DIR,'responses-sample.json'),    JSON.stringify(responses,null,2));
+  fs.writeFileSync(path.join(CTX_DIR,'deps-graph.json'),          JSON.stringify(depsGraph,null,2));
+  fs.writeFileSync(path.join(CTX_DIR,'route-history.json'),       JSON.stringify(routeHistory,null,2));
+  fs.writeFileSync(path.join(CTX_DIR,'todos.json'),               JSON.stringify(todos,null,2));
+  fs.writeFileSync(path.join(CTX_DIR,'openapi.json'),             JSON.stringify(openapi,null,2));
 
   const changes = info.lastTag ? sh(`git diff --name-status ${info.lastTag}..HEAD`) : '(sem tag anterior)';
   fs.writeFileSync(path.join(CTX_DIR,'changes-since.txt'), changes || '(sem mudanças)');
 
-  // context-pack.txt
   const lines = [];
   lines.push('AFK Miners — Context Pack');
   lines.push(`Commit: ${info.hash} | Branch: ${info.branch} | Last Tag: ${info.lastTag || 'n/a'}`);
   lines.push('');
   lines.push(`== Estrutura (nível ${CTX_DEPTH}) ==`); lines.push(...tree); lines.push('');
-  lines.push('== Arquivos na raiz =='); lines.push(...(rootFiles.length? rootFiles : ['(nenhum arquivo na raiz)'])); lines.push('');
-  lines.push('== Inventário por extensão =='); lines.push(...inv); lines.push('');
+  lines.push('== Arquivos na raiz ==');               lines.push(...(rootFiles.length? rootFiles : ['(nenhum arquivo na raiz)'])); lines.push('');
+  lines.push('== Inventário por extensão ==');        lines.push(...inv); lines.push('');
   lines.push(`== Top ${SHOW_TOP_LARGEST} maiores arquivos ==`); lines.push(...big); lines.push('');
-  lines.push('== Rotas detectadas (server) =='); lines.push(...routes.map(r=>`[${r.method}] ${r.path}  (${r.file}:${r.line})`)); lines.push('');
+  lines.push('== Rotas detectadas (server) ==');      lines.push(...routes.map(r=>`[${r.method}] ${r.path}  (${r.file}:${r.line})`)); lines.push('');
   lines.push('== Migrations/Seeds ==');
   lines.push('Migrations:'); lines.push(...(migseed.migrations.length? migseed.migrations.map(m=>`  - ${m}`):['  - (nenhuma)']));
-  lines.push('Seeds:'); lines.push(...(migseed.seeds.length? migseed.seeds.map(s=>`  - ${s}`):['  - (nenhuma)'])); lines.push('');
+  lines.push('Seeds:');      lines.push(...(migseed.seeds.length?      migseed.seeds.map(s=>`  - ${s}`):['  - (nenhuma)'])); lines.push('');
   lines.push('== HTML (title/scripts/styles) ==');
   lines.push(...(htm.length? htm.map(h=> h.error? `ERR ${h.file} :: ${h.error}` : `${h.file} :: title="${h.title}" | scripts=${h.scripts} | styles=${h.styles} | ${h.bytes} bytes`):['(nenhum .html)'])); lines.push('');
   lines.push('== YAML — sumário (repo inteiro) ==');
   lines.push(...(yml.length? yml.map(e=> e.error? `ERR ${e.file} :: ${e.error}` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')}`):['(nenhum .yml/.yaml)'])); lines.push('');
   lines.push('== JSON — sumário (repo inteiro) ==');
-  lines.push(...(jsn.length? jsn.map(e=> e.error? `ERR ${e.file} :: ${e.error}` : (e.note==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)']));
-  lines.push('');
+  lines.push(...(jsn.length? jsn.map(e=> e.error? `ERR ${e.file} :: ${e.error}` : (e.note==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)'])); lines.push('');
   if(process.env.CTX_SYMBOLS === '1'){
     lines.push('== Symbol Index (amostra) ==');
+    const sym = JSON.parse(fs.readFileSync(path.join(CTX_DIR,'symbol-index.json'),'utf8'));
     lines.push(...(sym.slice(0,30).map(s=> `${s.file} :: ${s.symbols.join(', ')}`)));
     if(sym.length>30) lines.push(`(+${sym.length-30} arquivos em symbol-index.json)`);
     lines.push('');
   }
   if(process.env.CTX_IMPORTS === '1'){
     lines.push('== Import Graph (amostra) ==');
+    const deps = depsTxtEdges.length ? depsTxtEdges : depsGraph;
     const sample = deps.slice(0,50).map(d=> `${d.from} -> ${d.to}`);
     lines.push(...(sample.length? sample : ['(sem imports)']));
     if(deps.length>50) lines.push(`(+${deps.length-50} arestas em docs/context/deps.txt)`);
@@ -586,12 +664,11 @@ function main(){
   ensureDir(DOCS_DIR); ensureDir(CTX_DIR);
   fs.writeFileSync(path.join(CTX_DIR,'context-pack.txt'), lines.join('\n'), 'utf8');
 
-  // API.md
   const apiMd = buildAPIMarkdown(contracts, errorMap, envUsage);
   fs.writeFileSync(path.join(CTX_DIR,'API.md'), apiMd, 'utf8');
 
   genCtxYmlIfMissing(info, routes);
-  console.log('OK: v5 — context + api + contracts + env + errors + signatures');
+  console.log('OK: v6 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi');
 }
 
 main();

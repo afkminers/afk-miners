@@ -170,7 +170,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 44,
+    "line": 42,
     "kind": "function",
     "name": "sh",
     "params": [
@@ -179,7 +179,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 45,
+    "line": 43,
     "kind": "function",
     "name": "ensureDir",
     "params": [
@@ -188,14 +188,14 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 47,
+    "line": 45,
     "kind": "function",
     "name": "gitInfo",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 54,
+    "line": 52,
     "kind": "function",
     "name": "walkDir",
     "params": [
@@ -206,7 +206,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 68,
+    "line": 66,
     "kind": "function",
     "name": "dirTree",
     "params": [
@@ -215,14 +215,14 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 73,
+    "line": 71,
     "kind": "function",
     "name": "listRootFiles",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 80,
+    "line": 79,
     "kind": "function",
     "name": "inventoryByExt",
     "params": []
@@ -266,35 +266,35 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 155,
+    "line": 158,
     "kind": "function",
     "name": "summarizeHTML",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 178,
+    "line": 179,
     "kind": "function",
     "name": "buildSymbolIndex",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 197,
+    "line": 208,
     "kind": "function",
     "name": "buildImportGraph",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 214,
+    "line": 224,
     "kind": "function",
     "name": "buildFunctionSignatures",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 237,
+    "line": 252,
     "kind": "function",
     "name": "splitParams",
     "params": [
@@ -303,14 +303,14 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 240,
+    "line": 255,
     "kind": "function",
     "name": "buildEnvUsage",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 258,
+    "line": 277,
     "kind": "function",
     "name": "cleanDefault",
     "params": [
@@ -319,7 +319,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 265,
+    "line": 284,
     "kind": "function",
     "name": "buildEndpointContracts",
     "params": [
@@ -328,7 +328,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 296,
+    "line": 315,
     "kind": "function",
     "name": "inferParamsFromPath",
     "params": [
@@ -337,28 +337,9 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 297,
+    "line": 316,
     "kind": "function",
-    "name": "inferKeys",
-    "params": [
-      "text",
-      "which"
-    ]
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 305,
-    "kind": "function",
-    "name": "inferErrors",
-    "params": [
-      "text"
-    ]
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 313,
-    "kind": "function",
-    "name": "inferOkResponses",
+    "name": "inferQuery",
     "params": [
       "text"
     ]
@@ -367,6 +348,24 @@
     "file": "server\\scripts\\gen-context.js",
     "line": 323,
     "kind": "function",
+    "name": "inferBody",
+    "params": [
+      "text"
+    ]
+  },
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "line": 330,
+    "kind": "function",
+    "name": "inferErrors",
+    "params": [
+      "text"
+    ]
+  },
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "line": 338,
+    "kind": "function",
     "name": "compactJsonLike",
     "params": [
       "s"
@@ -374,7 +373,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 324,
+    "line": 339,
     "kind": "function",
     "name": "objFromKeys",
     "params": [
@@ -383,7 +382,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 325,
+    "line": 340,
     "kind": "function",
     "name": "exampleForKey",
     "params": [
@@ -392,14 +391,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 335,
-    "kind": "function",
-    "name": "scanTodos",
-    "params": []
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 349,
+    "line": 350,
     "kind": "function",
     "name": "buildRouteHistory",
     "params": [
@@ -409,43 +401,14 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 364,
+    "line": 367,
     "kind": "function",
-    "name": "buildOpenAPI",
-    "params": [
-      "contracts"
-    ]
+    "name": "buildTodos",
+    "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 424,
-    "kind": "function",
-    "name": "schemaType",
-    "params": [
-      "v"
-    ]
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 429,
-    "kind": "function",
-    "name": "schemaFromSample",
-    "params": [
-      "obj"
-    ]
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 432,
-    "kind": "function",
-    "name": "schemaFromJsonLike",
-    "params": [
-      "str"
-    ]
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 441,
+    "line": 387,
     "kind": "function",
     "name": "writeJSON",
     "params": [
@@ -455,7 +418,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 444,
+    "line": 390,
     "kind": "function",
     "name": "genCtxYmlIfMissing",
     "params": [
@@ -465,28 +428,20 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 482,
+    "line": 428,
     "kind": "function",
     "name": "buildAPIMarkdown",
     "params": [
       "contracts",
       "errorMap",
       "envUsage",
-      "responses"
+      "routeHistory",
+      "todos"
     ]
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 554,
-    "kind": "function",
-    "name": "prettyJsonLike",
-    "params": [
-      "s"
-    ]
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 561,
+    "line": 523,
     "kind": "function",
     "name": "buildErrorMap",
     "params": [
@@ -495,7 +450,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 571,
+    "line": 534,
     "kind": "function",
     "name": "main",
     "params": []

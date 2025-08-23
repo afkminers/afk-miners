@@ -25,12 +25,6 @@
         "status": 500,
         "body": "{error:e.message }"
       }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
-      }
     ]
   },
   {
@@ -54,12 +48,6 @@
       {
         "status": 500,
         "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
       }
     ]
   },
@@ -89,12 +77,6 @@
       {
         "status": 500,
         "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
       }
     ]
   },
@@ -137,12 +119,6 @@
         "status": 500,
         "body": "{error:e.message }"
       }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
-      }
     ]
   },
   {
@@ -159,12 +135,6 @@
       {
         "status": 500,
         "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
       }
     ]
   },
@@ -203,12 +173,6 @@
         "status": 500,
         "body": "{error:e.message }"
       }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
-      }
     ]
   },
   {
@@ -242,12 +206,6 @@
         "status": 500,
         "body": "{error:e.message }"
       }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
-      }
     ]
   },
   {
@@ -270,24 +228,6 @@
       {
         "status": 400,
         "body": "{error:'weaponOrSkill inválido' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'erro ao iniciar treino' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'heroId é obrigatório' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,message:'Training started',heroId,skillType }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,message:'No active session' }"
       }
     ]
   },
@@ -386,12 +326,6 @@
         "status": 500,
         "body": "{error:'Falha ao listar skills do herói' }"
       }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{skill_type:skill,rows }"
-      }
     ]
   },
   {
@@ -426,20 +360,6 @@
         "status": 500,
         "body": "{error:'Falha ao autenticar' }"
       }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{id:user.id,name:user.name,coins:user.coins,gems:user.gems }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{profile:req.user }"
-      }
     ]
   },
   {
@@ -448,17 +368,7 @@
     "file": "server\\auth\\routes.js",
     "line": 101,
     "sample": {},
-    "errors": [],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{profile:req.user }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "GET",
@@ -500,12 +410,6 @@
         "status": 500,
         "body": "{error:'Falha ao obter dados do jogador' }"
       }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{profile,heroes }"
-      }
     ]
   },
   {
@@ -514,13 +418,7 @@
     "file": "server\\auth\\routes.js",
     "line": 108,
     "sample": {},
-    "errors": [],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{profile:req.user }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "POST",
@@ -544,12 +442,6 @@
       {
         "status": 500,
         "body": "{error:'Falha ao girar gacha' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{cost:SUMMON_COST_COINS,pulls,newBalance:updated }"
       }
     ]
   },
@@ -587,24 +479,6 @@
       {
         "status": 500,
         "body": "{error:'Falha ao autenticar' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{id,name:v.name,coins:500,gems:0,createdAt }"
-      },
-      {
-        "status": 200,
-        "body": "{id:user.id,name:user.name,coins:user.coins,gems:user.gems }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{profile:req.user }"
       }
     ]
   }

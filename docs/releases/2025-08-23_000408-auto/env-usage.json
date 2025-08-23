@@ -76,7 +76,7 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 1036
+        "index": 1271
       }
     ],
     "defaults": [
@@ -88,11 +88,11 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 22539
+        "index": 18839
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 26458
+        "index": 21998
       }
     ],
     "defaults": []
@@ -102,11 +102,11 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 22385
+        "index": 18702
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 26075
+        "index": 21708
       }
     ],
     "defaults": []
@@ -162,6 +162,18 @@
     ],
     "defaults": [
       "3"
+    ]
+  },
+  {
+    "key": "X",
+    "occurrences": [
+      {
+        "file": "server\\scripts\\gen-context.js",
+        "index": 10356
+      }
+    ],
+    "defaults": [
+      "foo"
     ]
   }
 ]
