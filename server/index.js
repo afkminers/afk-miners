@@ -15,6 +15,7 @@ const gachaRoutes   = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 
 const K = require('./balance/config');
+const buildStarterRouter = require('./starter/routes');
 
 // ======== Pipeline de Conteúdo (YAML/Tiled) ========
 const { loadAll, loadMap } = require('./content/loader');
@@ -36,15 +37,11 @@ app.use(requireCsrf);
 app.use(express.static(CLIENT_ROOT_DIR));
 app.get('/api/csrf', csrfRoute);
 
-app.use('/api/auth',   authRoutes);
-app.use('/api',        catalogRoutes);
-app.use('/api/player', requireAuth, playerRoutes);
-app.use('/api/gacha',  requireAuth, gachaRoutes);
-app.use('/api/skills', require('./skills/routes'));
-
 // ========= DB =========
 const DB_PATH = path.join(__dirname, 'db', 'database.sqlite');
 const db = new sqlite3.Database(DB_PATH);
+
+// helpers DB (promises)
 const dbGet = (sql, params=[]) => new Promise((res,rej)=>db.get(sql, params,(e,r)=>e?rej(e):res(r)));
 const dbAll = (sql, params=[]) => new Promise((res,rej)=>db.all(sql, params,(e,r)=>e?rej(e):res(r)));
 const dbRun = (sql, params=[]) => new Promise((res,rej)=>db.run(sql, params,function(e){e?rej(e):res(this)}));
@@ -113,6 +110,13 @@ CREATE TABLE IF NOT EXISTS spawns (
 });
 // ---------------------------------------------------------------------------
 
+// ========= ROTAS QUE NÃO PRECISAM DO DB PASSADO =========
+app.use('/api/auth',   authRoutes);
+app.use('/api',        catalogRoutes);
+app.use('/api/player', requireAuth, playerRoutes);
+app.use('/api/gacha',  requireAuth, gachaRoutes);
+app.use('/api/skills', require('./skills/routes'));
+
 // ========= Helpers =========
 const SKILLS = new Set(['SWORD','AXE','CLUB','DISTANCE','SHIELD','MAGIC']);
 
@@ -164,7 +168,7 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
         `INSERT INTO hero_training
            (hero_id, skill_type, status, started_at, last_tick_at,
             energy_current, energy_max, energy_spent, session_seconds, daily_seconds, daily_reset_at, notes)
-         VALUES (?, ?, 'RUNNING', ?, ?, 100, 100, 0, 0, 0, datetime('now','start of day','+1 day'), ?)`,
+         VALUES (?, ?, 'RUNNING', ?, ?, 100, 100, 0, 0, 0, datetime('now','start of day','+1 day'), ?)` ,
         [heroId, skillType, nowIso, nowIso, notes]
       );
     }
@@ -261,7 +265,9 @@ trainingRouter.get('/status', requireAuth, async (req, res) => {
 
 app.use('/api/training', trainingRouter);
 
-// ========= ROTAS UTILITÁRIAS (pipeline YAML/Tiled) =========
+// ========= ROTAS QUE USAM DB (admin/content + starter) =========
+
+// utilitários (pipeline YAML/Tiled)
 app.get('/api/admin/content/monsters', async (req, res) => {
   db.all('SELECT key,name,xp FROM monsters_master ORDER BY key', (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -283,7 +289,7 @@ app.get('/api/assets/sprites', (req, res) => {
   });
 });
 
-// ===== DEBUG MAPS =====
+// DEBUG MAPS
 app.get('/api/admin/content/maps', (req, res) => {
   db.all('SELECT key, length(dataJSON) AS bytes, updated_at FROM maps ORDER BY key', (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -313,7 +319,7 @@ app.get('/api/admin/content/map/:key/spawns', (req, res) => {
   );
 });
 
-// >>> ROTA QUE FALTAVA: JSON bruto do mapa para o debug renderizar os tiles <<<
+// JSON bruto do mapa para o debug renderizar os tiles
 app.get('/api/admin/content/map/:key/data', (req, res) => {
   db.get('SELECT dataJSON FROM maps WHERE key=?', [req.params.key], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -340,65 +346,8 @@ app.post('/api/admin/content/reload-map', async (req, res) => {
 
 function safeParse(s) { try { return JSON.parse(s || '{}'); } catch { return {}; } }
 
-// ========= WORKER (stamina/limites; NÃO dá tries) =========
-async function trainingTick() {
-  try {
-    await dbRun(`
-      UPDATE hero_training
-         SET daily_seconds=CASE
-               WHEN daily_reset_at IS NULL THEN daily_seconds
-               WHEN datetime('now') >= daily_reset_at THEN 0
-               ELSE daily_seconds
-             END,
-             daily_reset_at=CASE
-               WHEN daily_reset_at IS NULL THEN datetime('now','start of day','+1 day')
-               WHEN datetime('now') >= daily_reset_at THEN datetime('now','start of day','+1 day')
-               ELSE daily_reset_at
-             END
-    `, []);
-
-    const running = await dbAll(`SELECT * FROM hero_training WHERE status='RUNNING'`, []);
-    const now = Date.now();
-
-    for (const t of running) {
-      const last  = Date.parse(t.last_tick_at || t.started_at || new Date().toISOString());
-      let delta   = Math.max(0, Math.floor((now - last)/1000));
-      if (delta <= 0) continue;
-
-      const sessLeft = Math.max(0, K.MAX_SESSION_SECONDS     - (t.session_seconds || 0));
-      const dayLeft  = Math.max(0, K.DAILY_TRAIN_CAP_SECONDS - (t.daily_seconds   || 0));
-      let allowed    = Math.min(delta, sessLeft, dayLeft);
-
-      const energySec = Math.floor(((t.energy_current || 0) / K.ENERGY_PER_MIN_WHEN_TRAINING) * 60);
-      allowed = Math.min(allowed, energySec);
-      if (allowed <= 0) {
-        await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
-        continue;
-      }
-
-      const newLast   = new Date(last + allowed*1000).toISOString();
-      const energyUse = K.ENERGY_PER_MIN_WHEN_TRAINING * (allowed/60);
-      const newEnergy = Math.max(0, (t.energy_current || 0) - energyUse);
-
-      await dbRun(
-        `UPDATE hero_training
-            SET last_tick_at=?,
-                session_seconds=COALESCE(session_seconds,0)+?,
-                daily_seconds=COALESCE(daily_seconds,0)+?,
-                energy_current=?,
-                energy_spent=COALESCE(energy_spent,0)+?
-          WHERE hero_id=?`,
-        [newLast, allowed, allowed, newEnergy, energyUse, t.hero_id]
-      );
-
-      if (newEnergy <= 0 || allowed < delta || allowed === sessLeft || allowed === dayLeft) {
-        await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
-      }
-    }
-  } catch (err) {
-    console.error('[worker] tick error:', err.message);
-  }
-}
+// >>> ROTA STARTER (agora que db já existe)
+app.use('/api/starter', requireAuth, buildStarterRouter(db));
 
 // ========= SPA fallback =========
 app.use((req,res,next)=>{
@@ -419,6 +368,66 @@ app.use((req,res,next)=>{
     console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
     console.log(`[training] DB: ${DB_PATH}`);
   });
+
+  // ========= WORKER (stamina/limites; NÃO dá tries) =========
+  async function trainingTick() {
+    try {
+      await dbRun(`
+        UPDATE hero_training
+           SET daily_seconds=CASE
+                 WHEN daily_reset_at IS NULL THEN daily_seconds
+                 WHEN datetime('now') >= daily_reset_at THEN 0
+                 ELSE daily_seconds
+               END,
+               daily_reset_at=CASE
+                 WHEN daily_reset_at IS NULL THEN datetime('now','start of day','+1 day')
+                 WHEN datetime('now') >= daily_reset_at THEN datetime('now','start of day','+1 day')
+                 ELSE daily_reset_at
+               END
+      `, []);
+
+      const running = await dbAll(`SELECT * FROM hero_training WHERE status='RUNNING'`, []);
+      const now = Date.now();
+
+      for (const t of running) {
+        const last  = Date.parse(t.last_tick_at || t.started_at || new Date().toISOString());
+        let delta   = Math.max(0, Math.floor((now - last)/1000));
+        if (delta <= 0) continue;
+
+        const sessLeft = Math.max(0, K.MAX_SESSION_SECONDS     - (t.session_seconds || 0));
+        const dayLeft  = Math.max(0, K.DAILY_TRAIN_CAP_SECONDS - (t.daily_seconds   || 0));
+        let allowed    = Math.min(delta, sessLeft, dayLeft);
+
+        const energySec = Math.floor(((t.energy_current || 0) / K.ENERGY_PER_MIN_WHEN_TRAINING) * 60);
+        allowed = Math.min(allowed, energySec);
+        if (allowed <= 0) {
+          await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
+          continue;
+        }
+
+        const newLast   = new Date(last + allowed*1000).toISOString();
+        const energyUse = K.ENERGY_PER_MIN_WHEN_TRAINING * (allowed/60);
+        const newEnergy = Math.max(0, (t.energy_current || 0) - energyUse);
+
+        await dbRun(
+          `UPDATE hero_training
+              SET last_tick_at=?,
+                  session_seconds=COALESCE(session_seconds,0)+?,
+                  daily_seconds=COALESCE(daily_seconds,0)+?,
+                  energy_current=?,
+                  energy_spent=COALESCE(energy_spent,0)+?
+            WHERE hero_id=?`,
+          [newLast, allowed, allowed, newEnergy, energyUse, t.hero_id]
+        );
+
+        if (newEnergy <= 0 || allowed < delta || allowed === sessLeft || allowed === dayLeft) {
+          await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
+        }
+      }
+    } catch (err) {
+      console.error('[worker] tick error:', err.message);
+    }
+  }
 
   setInterval(trainingTick, WORKER_TICK_SECONDS * 1000);
 })();
