@@ -115,10 +115,6 @@ docs\context\context-pack.txt
 docs\context\ctx.yml
 docs\context\data-summary.json
 docs\context\deps.txt
-docs\context\endpoints-contracts.json
-docs\context\env-usage.json
-docs\context\error-map.json
-docs\context\function-signatures.json
 docs\context\symbol-index.json
 docs\releases
 docs\releases\2025-08-22_225607-auto
@@ -134,22 +130,6 @@ docs\releases\2025-08-22_225607-auto\deps.txt
 docs\releases\2025-08-22_225607-auto\package.json
 docs\releases\2025-08-22_225607-auto\symbol-index.json
 docs\releases\2025-08-22_231259-auto
-docs\releases\2025-08-22_231259-auto.zip
-docs\releases\2025-08-22_231259-auto\README.txt
-docs\releases\2025-08-22_231259-auto\changes-since.txt
-docs\releases\2025-08-22_231259-auto\context-pack.txt
-docs\releases\2025-08-22_231259-auto\data-summary.json
-docs\releases\2025-08-22_231259-auto\db-counts.txt
-docs\releases\2025-08-22_231259-auto\db-schema.sql
-docs\releases\2025-08-22_231259-auto\db-tables.txt
-docs\releases\2025-08-22_231259-auto\deps.txt
-docs\releases\2025-08-22_231259-auto\endpoints-contracts.json
-docs\releases\2025-08-22_231259-auto\env-usage.json
-docs\releases\2025-08-22_231259-auto\error-map.json
-docs\releases\2025-08-22_231259-auto\function-signatures.json
-docs\releases\2025-08-22_231259-auto\package.json
-docs\releases\2025-08-22_231259-auto\symbol-index.json
-docs\releases\2025-08-22_231303-auto
 map.tmx
 package.json
 scripts
@@ -213,20 +193,20 @@ package.json
 == Inventário por extensão ==
 .png : 37
 .js : 27
-.json : 21
-.txt : 15
 .yml : 11
+.json : 10
 .html : 10
-.sql : 9
+.txt : 9
+.sql : 8
 .mp3 : 7
 .css : 6
 .ps1 : 3
 <noext> : 3
 .sqlite : 2
-.zip : 2
 .tmx : 1
 .bat : 1
 .csv : 1
+.zip : 1
 
 == Top 20 maiores arquivos ==
 2997.9 KB	client\img\heroes\arkan.png
@@ -316,22 +296,11 @@ data\config\index.yml :: 1 chaves | keys: configs
 package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2695 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 119321 bytes
-docs\releases\2025-08-22_231259-auto\symbol-index.json :: 20 itens | 4610 bytes
-docs\releases\2025-08-22_231259-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
-docs\releases\2025-08-22_231259-auto\function-signatures.json :: 1052 itens | 159965 bytes
-docs\releases\2025-08-22_231259-auto\error-map.json :: 17 itens | 8888 bytes
-docs\releases\2025-08-22_231259-auto\env-usage.json :: 11 itens | 3052 bytes
-docs\releases\2025-08-22_231259-auto\endpoints-contracts.json :: 20 itens | 3579 bytes
-docs\releases\2025-08-22_231259-auto\data-summary.json :: 11 itens | 2153 bytes
 docs\releases\2025-08-22_225607-auto\symbol-index.json :: 20 itens | 4494 bytes
 docs\releases\2025-08-22_225607-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 docs\releases\2025-08-22_225607-auto\data-summary.json :: 16 itens | 3803 bytes
-docs\context\symbol-index.json :: 20 itens | 4610 bytes
-docs\context\function-signatures.json :: 1052 itens | 159965 bytes
-docs\context\error-map.json :: 17 itens | 8888 bytes
-docs\context\env-usage.json :: 11 itens | 3052 bytes
-docs\context\endpoints-contracts.json :: 20 itens | 3579 bytes
-docs\context\data-summary.json :: 11 itens | 2153 bytes
+docs\context\symbol-index.json :: 20 itens | 4494 bytes
+docs\context\data-summary.json :: 16 itens | 3803 bytes
 data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 5569 bytes
 client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1800 bytes
 

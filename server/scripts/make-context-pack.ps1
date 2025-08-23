@@ -19,7 +19,7 @@ $RootDir   = Split-Path -Parent $ServerDir                              # repo r
 Set-Location $ServerDir
 
 # --- Timestamp + release dir
-$ts = Get-Date -Format "yyyy-MM-dd_HHmmss"
+$ts         = Get-Date -Format "yyyy-MM-dd_HHmmss"
 $RelName    = "${ts}-${Name}"
 $OutRoot    = Join-Path $RootDir "docs\releases"
 $ReleaseDir = Join-Path $OutRoot $RelName
@@ -33,11 +33,17 @@ node "scripts\gen-context.js" --full | Out-Null
 $CtxDir = Join-Path $RootDir "docs\context"
 
 $filesToCopy = @(
+  # v2
   "context-pack.txt",
   "data-summary.json",
   "symbol-index.json",
   "deps.txt",
-  "changes-since.txt"
+  "changes-since.txt",
+  # v3 extras
+  "function-signatures.json",
+  "env-usage.json",
+  "endpoints-contracts.json",
+  "error-map.json"
 ) | ForEach-Object { Join-Path $CtxDir $_ } | Where-Object { Test-Path $_ }
 
 foreach ($f in $filesToCopy) {
@@ -104,11 +110,15 @@ $Readme += "2) Cole as 10–30 primeiras linhas de context-pack.txt (ou anexe o 
 $Readme += "3) Se mudar data/, cite data-summary.json."
 $Readme += ""
 $Readme += "Arquivos principais neste pacote:"
-$Readme += " - context-pack.txt        → estrutura, rotas, inventário, maiores arquivos, HTML/YAML/JSON"
-$Readme += " - symbol-index.json       → por arquivo: exports/imports/requires, funções, classes/métodos, variáveis, process.env, TODO/FIXME"
-$Readme += " - data-summary.json       → chaves/top-keys dos YAML/JSON do repo"
-$Readme += " - deps.txt                → dependências por package.json (root/server/client)"
-$Readme += " - changes-since.txt       → diff do último tag até HEAD (se existir tag)"
+$Readme += " - context-pack.txt            → estrutura, rotas, inventário, maiores arquivos, HTML/YAML/JSON"
+$Readme += " - symbol-index.json           → símbolos por arquivo (funções/classes exportadas e nomeadas)"
+$Readme += " - data-summary.json           → chaves/top-keys dos YAML/JSON do repo"
+$Readme += " - deps.txt                    → arestas de import entre arquivos JS/TS"
+$Readme += " - changes-since.txt           → diff do último tag até HEAD (se existir tag)"
+$Readme += " - function-signatures.json    → (v3) assinaturas estáticas (nome, params, local)"
+$Readme += " - env-usage.json              → (v3) variáveis process.env usadas + defaults inferidos"
+$Readme += " - endpoints-contracts.json    → (v3) contrato inferido de params/query/body por endpoint"
+$Readme += " - error-map.json              → (v3) status/mensagens/throws por endpoint"
 $Readme += " - db-schema.sql / db-tables.txt / db-counts.txt (se SQLite disponível)"
 $Readme += " - .gitattributes / .gitignore / package.json (root)"
 $Readme += ""
