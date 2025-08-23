@@ -22,17 +22,13 @@
     "db:reset": "npm run db:drop && npm run db:migrate && npm run db:seed",
 
     "ctx:pack": "node scripts/gen-context.js",
+    "ctx:pack:full": "node scripts/gen-context.js --full",
     "ctx:print:win": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/print-context.ps1",
     "ctx:snapshot:win": "scripts\\snapshot.bat",
     "ctx:bundle:win": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/make-context-pack.ps1",
     "ctx:zip": "npm run ctx:bundle:win -- -Name auto -Symbols -Imports -Depth 4 -Zip",
-    "ctx:tag": "git tag -a v-am-%npm_config_name% -m \"snapshot: %npm_config_name%\" && git push origin --tags",
-    "ctx:verify": "node scripts/verify-context.mjs",
 
-    "backup:pre": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/backup-repo.ps1 -Label pre",
-    "backup:post": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/backup-repo.ps1 -Label post",
-
-    "save": "node -e \"console.log('🚀 Salvando alterações no GitHub...')\" && npm run backup:pre && npm run deploy && npm run backup:post && node -e \"console.log('📦 Gerando snapshot zipado...')\" && npm run ctx:zip"
+    "test": "echo \"No tests yet\" && exit 0"
   },
   "keywords": [],
   "author": "",
@@ -46,15 +42,15 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "sqlite3": "^5.1.7",
-    "yaml": "^2.8.1"
+    "yaml": "^2.8.1",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
-    "acorn": "^8.15.0",
-    "acorn-walk": "^8.3.4",
-    "chokidar": "^4.0.3",
+    "nodemon": "^3.1.0",
     "glob": "^11.0.3",
     "js-yaml": "^4.1.0",
-    "nodemon": "^3.1.0",
-    "zod": "^4.0.17"
+    "chokidar": "^4.0.3",
+    "acorn": "^8.11.3",
+    "acorn-walk": "^8.3.2"
   }
 }
