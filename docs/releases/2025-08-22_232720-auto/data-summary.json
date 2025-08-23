@@ -1,0 +1,125 @@
+[
+  {
+    "file": "docs\\context\\ctx.yml",
+    "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
+  },
+  {
+    "file": "data\\sprites\\index.yml",
+    "kind": "object",
+    "size": 1,
+    "topKeys": [
+      "sprites"
+    ]
+  },
+  {
+    "file": "data\\sprites\\characters\\knight.yml",
+    "kind": "object",
+    "size": 7,
+    "topKeys": [
+      "key",
+      "image",
+      "frame",
+      "grid",
+      "directions",
+      "anims",
+      "anchor"
+    ]
+  },
+  {
+    "file": "data\\monsters\\index.yml",
+    "kind": "object",
+    "size": 1,
+    "topKeys": [
+      "monsters"
+    ]
+  },
+  {
+    "file": "data\\monsters\\goblin.yml",
+    "kind": "object",
+    "size": 8,
+    "topKeys": [
+      "key",
+      "name",
+      "xp",
+      "health",
+      "speed",
+      "look",
+      "attacks",
+      "loot"
+    ]
+  },
+  {
+    "file": "data\\monsters\\balor.yml",
+    "kind": "object",
+    "size": 11,
+    "topKeys": [
+      "key",
+      "name",
+      "xp",
+      "health",
+      "speed",
+      "look",
+      "flags",
+      "elements",
+      "attacks",
+      "defenses",
+      "loot"
+    ]
+  },
+  {
+    "file": "data\\items\\potion_small.yml",
+    "kind": "object",
+    "size": 7,
+    "topKeys": [
+      "key",
+      "name",
+      "type",
+      "icon",
+      "use",
+      "stackMax",
+      "value"
+    ]
+  },
+  {
+    "file": "data\\items\\index.yml",
+    "kind": "object",
+    "size": 1,
+    "topKeys": [
+      "items"
+    ]
+  },
+  {
+    "file": "data\\items\\bronze_sword.yml",
+    "kind": "object",
+    "size": 10,
+    "topKeys": [
+      "key",
+      "name",
+      "slot",
+      "type",
+      "attack",
+      "defense",
+      "weightOz",
+      "rarity",
+      "icon",
+      "value"
+    ]
+  },
+  {
+    "file": "data\\config\\server.yml",
+    "kind": "object",
+    "size": 2,
+    "topKeys": [
+      "rates",
+      "respawn"
+    ]
+  },
+  {
+    "file": "data\\config\\index.yml",
+    "kind": "object",
+    "size": 1,
+    "topKeys": [
+      "configs"
+    ]
+  }
+]
