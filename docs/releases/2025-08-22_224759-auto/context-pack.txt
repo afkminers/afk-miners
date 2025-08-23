@@ -1,7 +1,7 @@
 AFK Miners — Context Pack
-Commit: f13704a | Branch: main | Last Tag: f13704abc905f295307c6daa349fad9909289557
+Commit: f13704a | Branch: main | Last Tag: n/a
 
-== Estrutura (nível 4) ==
+== Estrutura (nível 3) ==
 client
 client\.touch
 client\css
@@ -185,41 +185,6 @@ docs\releases\2025-08-22_224608-auto\deps.txt
 docs\releases\2025-08-22_224608-auto\package.json
 docs\releases\2025-08-22_224608-auto\symbol-index.json
 docs\releases\2025-08-22_224759-auto
-docs\releases\2025-08-22_224759-auto.zip
-docs\releases\2025-08-22_224759-auto\README.txt
-docs\releases\2025-08-22_224759-auto\changes-since.txt
-docs\releases\2025-08-22_224759-auto\context-pack.txt
-docs\releases\2025-08-22_224759-auto\data-summary.json
-docs\releases\2025-08-22_224759-auto\db-counts.txt
-docs\releases\2025-08-22_224759-auto\db-schema.sql
-docs\releases\2025-08-22_224759-auto\db-tables.txt
-docs\releases\2025-08-22_224759-auto\deps.txt
-docs\releases\2025-08-22_224759-auto\package.json
-docs\releases\2025-08-22_224759-auto\symbol-index.json
-docs\releases\2025-08-22_225234-auto
-docs\releases\2025-08-22_225234-auto.zip
-docs\releases\2025-08-22_225234-auto\README.txt
-docs\releases\2025-08-22_225234-auto\changes-since.txt
-docs\releases\2025-08-22_225234-auto\context-pack.txt
-docs\releases\2025-08-22_225234-auto\data-summary.json
-docs\releases\2025-08-22_225234-auto\db-counts.txt
-docs\releases\2025-08-22_225234-auto\db-schema.sql
-docs\releases\2025-08-22_225234-auto\db-tables.txt
-docs\releases\2025-08-22_225234-auto\deps.txt
-docs\releases\2025-08-22_225234-auto\package.json
-docs\releases\2025-08-22_225234-auto\symbol-index.json
-docs\releases\2025-08-22_225435-auto
-docs\releases\2025-08-22_225435-auto.zip
-docs\releases\2025-08-22_225435-auto\README.txt
-docs\releases\2025-08-22_225435-auto\changes-since.txt
-docs\releases\2025-08-22_225435-auto\context-pack.txt
-docs\releases\2025-08-22_225435-auto\data-summary.json
-docs\releases\2025-08-22_225435-auto\db-counts.txt
-docs\releases\2025-08-22_225435-auto\db-schema.sql
-docs\releases\2025-08-22_225435-auto\db-tables.txt
-docs\releases\2025-08-22_225435-auto\deps.txt
-docs\releases\2025-08-22_225435-auto\package.json
-docs\releases\2025-08-22_225435-auto\symbol-index.json
 map.tmx
 package.json
 scripts
@@ -281,14 +246,14 @@ map.tmx
 package.json
 
 == Inventário por extensão ==
-.txt : 51
 .png : 37
-.json : 32
+.txt : 33
 .js : 27
+.json : 23
 .yml : 16
-.sql : 11
-.zip : 11
 .html : 10
+.sql : 8
+.zip : 8
 .mp3 : 7
 .css : 6
 .ps1 : 3
@@ -431,15 +396,6 @@ data\config\index.yml :: 1 chaves | keys: configs
 package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2695 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 119321 bytes
-docs\releases\2025-08-22_225435-auto\symbol-index.json :: 20 itens | 4494 bytes
-docs\releases\2025-08-22_225435-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
-docs\releases\2025-08-22_225435-auto\data-summary.json :: 16 itens | 3803 bytes
-docs\releases\2025-08-22_225234-auto\symbol-index.json :: 20 itens | 4494 bytes
-docs\releases\2025-08-22_225234-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
-docs\releases\2025-08-22_225234-auto\data-summary.json :: 16 itens | 3803 bytes
-docs\releases\2025-08-22_224759-auto\symbol-index.json :: 20 itens | 4494 bytes
-docs\releases\2025-08-22_224759-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
-docs\releases\2025-08-22_224759-auto\data-summary.json :: 16 itens | 3803 bytes
 docs\releases\2025-08-22_224608-auto\symbol-index.json :: 20 itens | 4494 bytes
 docs\releases\2025-08-22_224608-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 docs\releases\2025-08-22_224608-auto\data-summary.json :: 16 itens | 3803 bytes
@@ -461,37 +417,5 @@ docs\context\data-summary.json :: 16 itens | 3803 bytes
 data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 5569 bytes
 client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1800 bytes
 
-== Symbol Index (amostra) ==
-client\js\api.js :: API
-client\js\auth.js :: checkAuth
-client\js\boot.js :: closeMobileMenu, handleLogout, setLoggedOutGlow, setLogoutVisibility, showApp, showLanding, trySession, updateHud
-client\js\gacha.js :: bindGachaUI, cap, closeOverlay, doSummonAPI, done, fillPanel, flash, getHeroes, getInventory, hardCloseOverlay, heroCardMarkup, init, inlineHint, keySkip, lockButtons, loopPix, openOverlay, playChestSequence, playClick, playMultiSummon, playOneSummonAndReveal, playSfx, refreshFromServer, renderHeroes, resizePix, setAgainState, setRarityBg, showErrorInOverlay, skipOnce, spawnPix, spawnSparks, startPix, startSummon, stopPix, toast, wait
-client\js\house.js :: clear, drawGrid, drawSpawnRect, drawStart, jget, jpost, main, reloadMapOnServer, setStatus
-client\js\landing_fx.js :: addSpark, drawLightning, glow, imgRect, loop, resize, seed, sel, start, stop, sync
-client\js\login_fx.js :: celebrate, drawDebugCross, initLoginFx, loop, px, resize, sel, spawnBurst, spawnTick, start, stop, toCanvasXYFromChar
-client\js\player_profile.js :: animateProgressBars, bindProfileModal, close, fetchEquip, fetchPlayerMeOnce, fillEquip, fillHeader, fillSkillsArea, loadHeroSkills, open, paintEquipGrid, refreshAll, refreshEquip, renderHeroSkills, renderTrainBars, resolveCard
-client\js\sprites.js :: drawSprite, loadImg
-client\js\ui.js :: cap
-server\auth\middleware.js :: clearAuthCookie, cookieOpts, csrfRoute, requireAuth, requireCsrf, setAuthCookie
-server\auth\routes.js :: noStore, validateName, validatePassword
-server\content\loader.js :: get, list, loadAll, loadItems, loadMap, loadMonsters, loadSprites, read, sha1, upsert
-server\gacha\routes.js :: chooseHeroFromPool, doSingleSummon, pickRarity
-server\index.js :: resolveSkillType, safeParse, trainingTick
-server\models\heroes.js :: ensureHeroesSchema, seedHeroesIfEmpty
-server\models\migrate.js :: migrate
-server\player\routes.js :: noStore
-server\scripts\gen-context.js :: buildImportGraph, buildSymbolIndex, dirTree, ensureDir, genCtxYmlIfMissing, gitInfo, inventoryByExt, largestFiles, listMigSeed, listRootFiles, main, scanRoutes, sh, summarizeHTML, summarizeJSON, summarizeYAML, walkDir, writeJSON
-server\skills\engine.js :: _ctxMul, _trainingGate, _tryFrom, applyTries, ensureSkillRow, gainFromBlock, gainFromCast, gainFromHit, gainFromShot, getClassRate, triesNeeded
-
-== Import Graph (amostra) ==
-client\js\player_profile.js -> ./api.js
-client\js\gacha.js -> ./api.js
-client\js\boot.js -> ./api.js
-client\js\boot.js -> ./auth.js
-client\js\boot.js -> ./gacha.js
-client\js\boot.js -> ./login_fx.js
-client\js\boot.js -> ./player_profile.js
-client\js\auth.js -> ./api.js
-
 == Changes since last tag ==
-(n/a)
+(sem tag anterior)

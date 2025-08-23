@@ -1,102 +1,133 @@
+# server/scripts/make-context-pack.ps1
+# Gera um Context Pack completo + ZIP
+# Uso:
+#   pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/make-context-pack.ps1 `
+#        -Name lobby-alpha -Depth 4 -Symbols -Imports -Zip
+
 param(
-  [Parameter(Mandatory=$true)][string]$Name,
-  [int]$Depth = 3,
-  [switch]$Symbols,
-  [switch]$Imports,
-  [switch]$Zip
+  [string] $Name   = "auto",
+  [int]    $Depth  = 3,
+  [switch] $Symbols,
+  [switch] $Imports,
+  [switch] $Zip
 )
 
-# Descobre caminhos (repo root = dois níveis acima deste script)
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ServerDir = Split-Path -Parent $ScriptDir
-$Root = Split-Path -Parent $ServerDir
-$Docs = Join-Path $Root 'docs'
-$Ctx = Join-Path $Docs 'context'
-$Releases = Join-Path $Docs 'releases'
+# --- Preparação de caminhos
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path            # ...\server\scripts
+$ServerDir = Split-Path -Parent $ScriptDir                              # ...\server
+$RootDir   = Split-Path -Parent $ServerDir                              # repo raiz
+Set-Location $ServerDir
 
-# Garante pastas
-New-Item -ItemType Directory -Force -Path $Docs | Out-Null
-New-Item -ItemType Directory -Force -Path $Ctx  | Out-Null
-New-Item -ItemType Directory -Force -Path $Releases | Out-Null
+# --- Timestamp + release dir
+$ts = Get-Date -Format "yyyy-MM-dd_HHmmss"
+$RelName    = "${ts}-${Name}"
+$OutRoot    = Join-Path $RootDir "docs\releases"
+$ReleaseDir = Join-Path $OutRoot $RelName
+New-Item -ItemType Directory -Force -Path $ReleaseDir | Out-Null
 
-# Configura ENV para o gerador
-$env:CTX_DEPTH = [string]$Depth
-if ($Symbols) { $env:CTX_SYMBOLS = '1' } else { Remove-Item Env:CTX_SYMBOLS -ErrorAction SilentlyContinue }
-if ($Imports) { $env:CTX_IMPORTS = '1' } else { Remove-Item Env:CTX_IMPORTS -ErrorAction SilentlyContinue }
+# --- Gerar contextos (robusto) -> escreve em docs/context/* na RAIZ
+Write-Host "➡️  Gerando contextos (full)..." -ForegroundColor Cyan
+node "scripts\gen-context.js" --full | Out-Null
 
-# Gera os artefatos principais
-Push-Location $ServerDir
-try {
-  node scripts/gen-context.js | Out-Null
+# --- Copiar principais artefatos para o release
+$CtxDir = Join-Path $RootDir "docs\context"
+
+$filesToCopy = @(
+  "context-pack.txt",
+  "data-summary.json",
+  "symbol-index.json",
+  "deps.txt",
+  "changes-since.txt"
+) | ForEach-Object { Join-Path $CtxDir $_ } | Where-Object { Test-Path $_ }
+
+foreach ($f in $filesToCopy) {
+  Copy-Item $f $ReleaseDir -Force
 }
-finally {
-  Pop-Location
+
+# --- Incluir metadados úteis do repo
+$extra = @(".gitattributes", ".gitignore", "package.json") `
+  | ForEach-Object { Join-Path $RootDir $_ } `
+  | Where-Object { Test-Path $_ }
+
+foreach ($f in $extra) {
+  Copy-Item $f $ReleaseDir -Force
 }
 
-# Coleta metadados do git
-$Commit = (git rev-parse --short HEAD) 2>$null
-if (-not $Commit) { $Commit = 'n/a' }
-$Branch = (git rev-parse --abbrev-ref HEAD) 2>$null
-if (-not $Branch) { $Branch = 'n/a' }
-$LastTag = (git describe --tags --abbrev=0) 2>$null
-if (-not $LastTag) { $LastTag = 'n/a' }
+# --- DB: dumps (schema / tables / counts)
+$Sqlite = "C:\sqlite\sqlite3.exe"
+$DbPath = Join-Path $ServerDir "db\database.sqlite"
 
-# Normaliza nome e cria pasta de versao com timestamp
-$SafeName = ($Name -replace '[^A-Za-z0-9_-]','-')
-$Stamp = Get-Date -Format 'yyyy-MM-dd_HHmmss'
-$OutDir = Join-Path $Releases ("$Stamp-$SafeName")
-New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+if ( (Test-Path $Sqlite) -and (Test-Path $DbPath) ) {
+  Write-Host "📄 Extraindo schema/tables/counts do SQLite..." -ForegroundColor DarkCyan
 
-# Copia os arquivos necessarios
-$files = @(
-  'context-pack.txt',
-  'data-summary.json',
-  'changes-since.txt',
-  'ctx.yml'
-)
-foreach ($f in $files) {
-  $src = Join-Path $Ctx $f
-  if (Test-Path $src) {
-    Copy-Item $src -Destination (Join-Path $OutDir $f) -Force
+  $schemaOut = Join-Path $ReleaseDir "db-schema.sql"
+  $tablesOut = Join-Path $ReleaseDir "db-tables.txt"
+  $countsOut = Join-Path $ReleaseDir "db-counts.txt"
+
+  & $Sqlite $DbPath ".schema"  | Out-File -Encoding utf8 $schemaOut
+  & $Sqlite $DbPath ".tables"  | Out-File -Encoding utf8 $tablesOut
+
+  # .tables pode vir em várias colunas/linhas; junta tudo e filtra nomes válidos
+  $tablesRaw = & $Sqlite $DbPath ".tables"
+  $tables = @()
+  if ($tablesRaw) {
+    $tables = ($tablesRaw -join ' ') -split '\s+' | Where-Object { $_ -match '^\w+$' }
   }
-}
 
-# Opcionais: symbol-index.json e deps.txt
-$opt = @('symbol-index.json','deps.txt')
-foreach ($f in $opt) {
-  $src = Join-Path $Ctx $f
-  if (Test-Path $src) {
-    Copy-Item $src -Destination (Join-Path $OutDir $f) -Force
+  $counts = New-Object System.Collections.Generic.List[string]
+  foreach ($t in $tables) {
+    try {
+      $n = & $Sqlite $DbPath "SELECT COUNT(*) FROM [$t];"
+      # formato alinhado quando OK
+      $line = "{0,-30} {1,12}" -f $t, $n
+    } catch {
+      # evita -f no catch (alguns nomes/ruídos quebram o format)
+      $pad  = ' ' * ([Math]::Max(1, 30 - $t.Length))
+      $line = "$t$pad (erro ao contar)"
+    }
+    $counts.Add($line)
   }
+  $counts | Out-File -Encoding utf8 $countsOut
+} else {
+  Write-Host "⚠️  SQLite não encontrado em C:\sqlite\sqlite3.exe ou DB ausente. Pulando dumps." -ForegroundColor Yellow
 }
 
-# Tambem util: marcador atual, caso exista
-$SnapMarker = Join-Path $Docs 'SNAPSHOT_CURRENT.md'
-if (Test-Path $SnapMarker) {
-  Copy-Item $SnapMarker -Destination (Join-Path $OutDir 'SNAPSHOT_CURRENT.md') -Force
-}
+# --- README com instruções
+$Readme = @()
+$Readme += "AFK Miners — Release Context Pack"
+$Readme += "--------------------------------"
+$Readme += "Pasta: docs/releases/$RelName"
+$Readme += ""
+$Readme += "Como usar em uma conversa nova:"
+$Readme += "1) Informe: Commit curto (git rev-parse --short HEAD) e Tag (se houver)."
+$Readme += "2) Cole as 10–30 primeiras linhas de context-pack.txt (ou anexe o arquivo)."
+$Readme += "3) Se mudar data/, cite data-summary.json."
+$Readme += ""
+$Readme += "Arquivos principais neste pacote:"
+$Readme += " - context-pack.txt        → estrutura, rotas, inventário, maiores arquivos, HTML/YAML/JSON"
+$Readme += " - symbol-index.json       → por arquivo: exports/imports/requires, funções, classes/métodos, variáveis, process.env, TODO/FIXME"
+$Readme += " - data-summary.json       → chaves/top-keys dos YAML/JSON do repo"
+$Readme += " - deps.txt                → dependências por package.json (root/server/client)"
+$Readme += " - changes-since.txt       → diff do último tag até HEAD (se existir tag)"
+$Readme += " - db-schema.sql / db-tables.txt / db-counts.txt (se SQLite disponível)"
+$Readme += " - .gitattributes / .gitignore / package.json (root)"
+$Readme += ""
+$Readme += "Gerado por: scripts/make-context-pack.ps1"
+$Readme | Out-File -Encoding utf8 (Join-Path $ReleaseDir "README.txt")
 
-# Cria um README com metadados (usar somente ASCII)
-$readmeLines = @()
-$readmeLines += 'AFK Miners - Release Context Pack'
-$readmeLines += ('Timestamp: ' + $Stamp)
-$readmeLines += ('Name: ' + $Name)
-$readmeLines += ('Commit: ' + $Commit + ' | Branch: ' + $Branch + ' | LastTag: ' + $LastTag)
-$readmeLines += ('Depth: ' + $Depth + ' | Symbols: ' + $Symbols.IsPresent + ' | Imports: ' + $Imports.IsPresent)
-$readmeLines += ''
-$readmeLines += 'Arquivos incluidos:'
-Get-ChildItem $OutDir | ForEach-Object { $readmeLines += (' - ' + $_.Name) }
-$readmePath = Join-Path $OutDir 'README.txt'
-$readmeLines | Out-File -Encoding UTF8 $readmePath
-
-# (Opcional) Compacta para .zip
+# --- Zipar se pedido
 if ($Zip) {
-  $ZipPath = "$OutDir.zip"
-  if (Test-Path $ZipPath) { Remove-Item $ZipPath -Force }
-  Compress-Archive -Path (Join-Path $OutDir '*') -DestinationPath $ZipPath
+  $zipPath = "$ReleaseDir.zip"
+  if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+  Write-Host "🧩 Compactando ZIP..." -ForegroundColor Cyan
+  Compress-Archive -Path (Join-Path $ReleaseDir "*") -DestinationPath $zipPath
+  Write-Host "ZIP: $zipPath"
 }
 
-Write-Host ('OK: pacote gerado em ' + $OutDir)
-if ($Zip) {
-  Write-Host ('ZIP: ' + $OutDir + '.zip')
-}
+# --- Info final
+# Tentar descrever o commit atual (silencioso mesmo sem tag)
+$describe = (git -C $RootDir describe --tags --abbrev=7 --always) 2>$null
+if (-not $describe) { $describe = (git -C $RootDir rev-parse --short HEAD) }
+
+Write-Host "OK: pacote gerado em $ReleaseDir" -ForegroundColor Green
+Write-Host "Commit: $describe"

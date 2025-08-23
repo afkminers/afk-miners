@@ -209,17 +209,6 @@ docs\releases\2025-08-22_225234-auto\deps.txt
 docs\releases\2025-08-22_225234-auto\package.json
 docs\releases\2025-08-22_225234-auto\symbol-index.json
 docs\releases\2025-08-22_225435-auto
-docs\releases\2025-08-22_225435-auto.zip
-docs\releases\2025-08-22_225435-auto\README.txt
-docs\releases\2025-08-22_225435-auto\changes-since.txt
-docs\releases\2025-08-22_225435-auto\context-pack.txt
-docs\releases\2025-08-22_225435-auto\data-summary.json
-docs\releases\2025-08-22_225435-auto\db-counts.txt
-docs\releases\2025-08-22_225435-auto\db-schema.sql
-docs\releases\2025-08-22_225435-auto\db-tables.txt
-docs\releases\2025-08-22_225435-auto\deps.txt
-docs\releases\2025-08-22_225435-auto\package.json
-docs\releases\2025-08-22_225435-auto\symbol-index.json
 map.tmx
 package.json
 scripts
@@ -281,13 +270,13 @@ map.tmx
 package.json
 
 == Inventário por extensão ==
-.txt : 51
+.txt : 45
 .png : 37
-.json : 32
+.json : 29
 .js : 27
 .yml : 16
-.sql : 11
-.zip : 11
+.sql : 10
+.zip : 10
 .html : 10
 .mp3 : 7
 .css : 6
@@ -431,9 +420,6 @@ data\config\index.yml :: 1 chaves | keys: configs
 package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2695 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 119321 bytes
-docs\releases\2025-08-22_225435-auto\symbol-index.json :: 20 itens | 4494 bytes
-docs\releases\2025-08-22_225435-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
-docs\releases\2025-08-22_225435-auto\data-summary.json :: 16 itens | 3803 bytes
 docs\releases\2025-08-22_225234-auto\symbol-index.json :: 20 itens | 4494 bytes
 docs\releases\2025-08-22_225234-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 docs\releases\2025-08-22_225234-auto\data-summary.json :: 16 itens | 3803 bytes
