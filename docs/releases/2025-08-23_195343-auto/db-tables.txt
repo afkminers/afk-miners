@@ -1,0 +1,5 @@
+class_skill_rates   items_master        player_heroes       starters_pool     
+content_files       map_objects         players             weapon_skill_map  
+hero_training       maps                skill_curves      
+heroes_master       monsters_master     spawns            
+inventory           player_hero_skills  sprites_master    

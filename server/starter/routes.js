@@ -126,4 +126,4 @@ function buildStarterRouter(db) {
   return router;
 }
 
-module.exports = { buildStarterRouter };
+module.exports =  buildStarterRouter ;
