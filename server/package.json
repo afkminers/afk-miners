@@ -25,7 +25,9 @@
     "ctx:print:win": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/print-context.ps1",
     "ctx:snapshot:win": "scripts\\snapshot.bat",
     "ctx:bundle:win": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/make-context-pack.ps1",
-    "ctx:zip": "npm run ctx:bundle:win -- -Name auto -Symbols -Imports -Depth 4 -Zip"
+    "ctx:zip": "npm run ctx:bundle:win -- -Name auto -Symbols -Imports -Depth 4 -Zip",
+    "ctx:tag": "git tag -a v-am-%npm_config_name% -m \"snapshot: %npm_config_name%\" && git push origin --tags"
+
   },
   "keywords": [],
   "author": "",

@@ -1,0 +1,1 @@
+client\js\player_profile.js -> ./api.js\nclient\js\gacha.js -> ./api.js\nclient\js\boot.js -> ./api.js\nclient\js\boot.js -> ./auth.js\nclient\js\boot.js -> ./gacha.js\nclient\js\boot.js -> ./login_fx.js\nclient\js\boot.js -> ./player_profile.js\nclient\js\auth.js -> ./api.js
