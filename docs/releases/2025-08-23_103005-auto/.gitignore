@@ -21,5 +21,3 @@ build/
 Thumbs.db
 .vscode/
 
-# backups
-docs/backups/

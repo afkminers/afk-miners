@@ -1,0 +1,20 @@
+{
+  "GET /api/admin/content/map/:key/objects": "no-tag",
+  "GET /api/admin/content/map/:key/spawns": "no-tag",
+  "GET /api/admin/content/maps": "no-tag",
+  "GET /api/admin/content/monsters": "no-tag",
+  "POST /api/admin/content/reload-map": "no-tag",
+  "GET /api/assets/items": "no-tag",
+  "GET /api/assets/sprites": "no-tag",
+  "GET /api/csrf": "no-tag",
+  "GET /assets/items": "no-tag",
+  "GET /assets/sprites": "no-tag",
+  "GET /class-rates": "no-tag",
+  "GET /curves": "no-tag",
+  "GET /heroes/master": "no-tag",
+  "POST /login": "no-tag",
+  "POST /logout": "no-tag",
+  "GET /me": "no-tag",
+  "POST /": "no-tag",
+  "POST /register": "no-tag"
+}
