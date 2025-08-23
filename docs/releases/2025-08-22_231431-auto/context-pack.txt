@@ -1,5 +1,5 @@
 AFK Miners — Context Pack
-Commit: 1d87c4f | Branch: main | Last Tag: n/a
+Commit: 1d87c4f | Branch: main | Last Tag: 1d87c4f
 
 == Estrutura (nível 4) ==
 client
@@ -166,22 +166,6 @@ docs\releases\2025-08-22_231303-auto\function-signatures.json
 docs\releases\2025-08-22_231303-auto\package.json
 docs\releases\2025-08-22_231303-auto\symbol-index.json
 docs\releases\2025-08-22_231431-auto
-docs\releases\2025-08-22_231431-auto.zip
-docs\releases\2025-08-22_231431-auto\README.txt
-docs\releases\2025-08-22_231431-auto\changes-since.txt
-docs\releases\2025-08-22_231431-auto\context-pack.txt
-docs\releases\2025-08-22_231431-auto\data-summary.json
-docs\releases\2025-08-22_231431-auto\db-counts.txt
-docs\releases\2025-08-22_231431-auto\db-schema.sql
-docs\releases\2025-08-22_231431-auto\db-tables.txt
-docs\releases\2025-08-22_231431-auto\deps.txt
-docs\releases\2025-08-22_231431-auto\endpoints-contracts.json
-docs\releases\2025-08-22_231431-auto\env-usage.json
-docs\releases\2025-08-22_231431-auto\error-map.json
-docs\releases\2025-08-22_231431-auto\function-signatures.json
-docs\releases\2025-08-22_231431-auto\package.json
-docs\releases\2025-08-22_231431-auto\symbol-index.json
-docs\releases\2025-08-22_232659-auto
 map.tmx
 package.json
 scripts
@@ -244,16 +228,16 @@ package.json
 
 == Inventário por extensão ==
 .png : 37
-.json : 35
+.json : 28
 .js : 27
-.txt : 27
-.sql : 11
+.txt : 21
 .yml : 11
+.sql : 10
 .html : 10
 .mp3 : 7
 .css : 6
-.zip : 4
 .ps1 : 3
+.zip : 3
 <noext> : 3
 .sqlite : 2
 .tmx : 1
@@ -348,13 +332,6 @@ data\config\index.yml :: 1 chaves | keys: configs
 package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2695 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 119321 bytes
-docs\releases\2025-08-22_231431-auto\symbol-index.json :: 20 itens | 4610 bytes
-docs\releases\2025-08-22_231431-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
-docs\releases\2025-08-22_231431-auto\function-signatures.json :: 1052 itens | 159965 bytes
-docs\releases\2025-08-22_231431-auto\error-map.json :: 17 itens | 8888 bytes
-docs\releases\2025-08-22_231431-auto\env-usage.json :: 11 itens | 3052 bytes
-docs\releases\2025-08-22_231431-auto\endpoints-contracts.json :: 20 itens | 3579 bytes
-docs\releases\2025-08-22_231431-auto\data-summary.json :: 11 itens | 2153 bytes
 docs\releases\2025-08-22_231303-auto\symbol-index.json :: 20 itens | 4610 bytes
 docs\releases\2025-08-22_231303-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 docs\releases\2025-08-22_231303-auto\function-signatures.json :: 1052 itens | 159965 bytes
@@ -381,37 +358,82 @@ docs\context\data-summary.json :: 11 itens | 2153 bytes
 data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 5569 bytes
 client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1800 bytes
 
-== Symbol Index (amostra) ==
-client\js\api.js :: API
-client\js\auth.js :: checkAuth
-client\js\boot.js :: closeMobileMenu, handleLogout, setLoggedOutGlow, setLogoutVisibility, showApp, showLanding, trySession, updateHud
-client\js\gacha.js :: bindGachaUI, cap, closeOverlay, doSummonAPI, done, fillPanel, flash, getHeroes, getInventory, hardCloseOverlay, heroCardMarkup, init, inlineHint, keySkip, lockButtons, loopPix, openOverlay, playChestSequence, playClick, playMultiSummon, playOneSummonAndReveal, playSfx, refreshFromServer, renderHeroes, resizePix, setAgainState, setRarityBg, showErrorInOverlay, skipOnce, spawnPix, spawnSparks, startPix, startSummon, stopPix, toast, wait
-client\js\house.js :: clear, drawGrid, drawSpawnRect, drawStart, jget, jpost, main, reloadMapOnServer, setStatus
-client\js\landing_fx.js :: addSpark, drawLightning, glow, imgRect, loop, resize, seed, sel, start, stop, sync
-client\js\login_fx.js :: celebrate, drawDebugCross, initLoginFx, loop, px, resize, sel, spawnBurst, spawnTick, start, stop, toCanvasXYFromChar
-client\js\player_profile.js :: animateProgressBars, bindProfileModal, close, fetchEquip, fetchPlayerMeOnce, fillEquip, fillHeader, fillSkillsArea, loadHeroSkills, open, paintEquipGrid, refreshAll, refreshEquip, renderHeroSkills, renderTrainBars, resolveCard
-client\js\sprites.js :: drawSprite, loadImg
-client\js\ui.js :: cap
-server\auth\middleware.js :: clearAuthCookie, cookieOpts, csrfRoute, requireAuth, requireCsrf, setAuthCookie
-server\auth\routes.js :: noStore, validateName, validatePassword
-server\content\loader.js :: get, list, loadAll, loadItems, loadMap, loadMonsters, loadSprites, read, sha1, upsert
-server\gacha\routes.js :: chooseHeroFromPool, doSingleSummon, pickRarity
-server\index.js :: resolveSkillType, safeParse, trainingTick
-server\models\heroes.js :: ensureHeroesSchema, seedHeroesIfEmpty
-server\models\migrate.js :: migrate
-server\player\routes.js :: noStore
-server\scripts\gen-context.js :: buildAPIMarkdown, buildEndpointContracts, buildEnvUsage, buildErrorMap, buildFunctionSignatures, buildImportGraph, buildSymbolIndex, cleanDefault, compactJsonLike, dirTree, ensureDir, exampleForKey, genCtxYmlIfMissing, gitInfo, inferBody, inferErrors, inferParamsFromPath, inferQuery, inventoryByExt, largestFiles, listMigSeed, listRootFiles, main, objFromKeys, scanRoutes, sh, splitParams, summarizeHTML, summarizeJSON, summarizeYAML, walkDir, writeJSON
-server\skills\engine.js :: _ctxMul, _trainingGate, _tryFrom, applyTries, ensureSkillRow, gainFromBlock, gainFromCast, gainFromHit, gainFromShot, getClassRate, triesNeeded
+== Assinaturas (amostra) ==
+- function getCsrf()  @ client\js\api.js:1
+- function getCsrf()  @ client\js\api.js:2
+- function getCsrf()  @ client\js\api.js:3
+- function getCsrf()  @ client\js\api.js:4
+- function apiGet(url)  @ client\js\api.js:7
+- function apiGet(url)  @ client\js\api.js:8
+- function apiGet(url)  @ client\js\api.js:9
+- function apiGet(url)  @ client\js\api.js:10
+- function apiPost(url, body = {})  @ client\js\api.js:12
+- function apiPost(url, body = {})  @ client\js\api.js:13
+- function apiPost(url, body = {})  @ client\js\api.js:14
+- function apiPost(url, body = {})  @ client\js\api.js:15
+- function checkAuth()  @ client\js\auth.js:1
+- function checkAuth()  @ client\js\auth.js:2
+- function checkAuth()  @ client\js\auth.js:3
+- function doLogin(name, password)  @ client\js\auth.js:8
+- function doLogin(name, password)  @ client\js\auth.js:9
+- function doLogin(name, password)  @ client\js\auth.js:10
+- function doLogin(name, password)  @ client\js\auth.js:11
+- function doRegister(name, password)  @ client\js\auth.js:13
+(+1032 em docs/context/function-signatures.json)
 
-== Import Graph (amostra) ==
-client\js\player_profile.js -> ./api.js
-client\js\gacha.js -> ./api.js
-client\js\boot.js -> ./api.js
-client\js\boot.js -> ./auth.js
-client\js\boot.js -> ./gacha.js
-client\js\boot.js -> ./login_fx.js
-client\js\boot.js -> ./player_profile.js
-client\js\auth.js -> ./api.js
+== Variáveis de ambiente (amostra) ==
+- CONTENT_PIPELINE  (usos: 1) | defaults: off
+- COOKIE_DOMAIN  (usos: 1) | defaults: undefined;
+- COOKIE_NAME  (usos: 1) | defaults: sid
+- COOKIE_SAME_SITE  (usos: 1) | defaults: Lax
+- COOKIE_SECURE  (usos: 1) | defaults: false
+- CSRF_COOKIE  (usos: 1) | defaults: csrf
+- JWT_SECRET  (usos: 1) | defaults: CHANGE_ME_DEV_ONLY
+- KEY  (usos: 1)
+- NODE_ENV  (usos: 2) | defaults: development
+- PORT  (usos: 1) | defaults: 3000
+- WORKER_TICK_SECONDS  (usos: 1) | defaults: 3
+
+== Contratos de endpoints (amostra) ==
+- [GET] /api/admin/content/map/:key/objects | params: key |  query: map
+- [GET] /api/admin/content/map/:key/spawns | params: key |  query: map
+- [GET] /api/admin/content/maps | params: key |  query: map
+- [GET] /api/admin/content/monsters | params: key
+- [POST] /api/admin/content/reload-map | query: map
+- [GET] /api/assets/items | params: key |  query: map
+- [GET] /api/assets/sprites | params: key |  query: map
+- [GET] /api/csrf
+- [GET] /assets/items
+- [GET] /assets/sprites
+- [GET] /class-rates | query: heroId
+- [GET] /curves | query: heroId,skill
+- [GET] /heroes/master
+- [POST] /login
+- [POST] /logout
+- [GET] /me | query: heroId
+- [GET] /me
+- [GET] /me
+- [POST] / | query: count
+- [POST] /register
+
+== Mapa de erros (amostra) ==
+- [GET] /api/admin/content/map/:key/objects -> res.json:500, res.json:500, res.json:500
+- [GET] /api/admin/content/map/:key/spawns -> res.json:500, res.json:500
+- [GET] /api/admin/content/maps -> res.json:500, res.json:500, res.json:500, res.json:500
+- [GET] /api/admin/content/monsters -> res.json:500, res.json:500, res.json:500, res.json:500, res.json:500, res.json:500
+- [POST] /api/admin/content/reload-map -> res.json:500
+- [GET] /api/assets/items -> res.json:500, res.json:500, res.json:500, res.json:500, res.json:500
+- [GET] /api/assets/sprites -> res.json:500, res.json:500, res.json:500, res.json:500, res.json:500
+- [GET] /assets/items -> res.json:500
+- [GET] /assets/sprites -> res.json:500, res.json:500
+- [GET] /class-rates -> res.json:500, res.json:400, res.json:404, res.json:500
+- [GET] /curves -> res.json:400, res.json:500, res.json:500, res.json:400, res.json:404
+- [GET] /heroes/master -> res.json:500
+- [POST] /login -> res.json:401, res.json:401, res.json:500
+- [GET] /me -> res.json:400, res.json:404, res.json:500
+- [GET] /me -> res.json:404
+- [POST] / -> res.json:400, res.json:400, res.json:500
+- [POST] /register -> res.json:400, res.json:400, res.json:409, res.json:500, res.json:401, res.json:401
 
 == Changes since last tag ==
 (sem tag anterior)

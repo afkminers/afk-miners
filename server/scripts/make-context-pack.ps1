@@ -1,4 +1,4 @@
-# server/scripts/make-context-pack.ps1
+# server/scripts/make-context-pack.ps1 (v4)
 # Gera um Context Pack completo + ZIP
 # Uso:
 #   pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/make-context-pack.ps1 `
@@ -6,20 +6,20 @@
 
 param(
   [string] $Name   = "auto",
-  [int]    $Depth  = 3,
+  [int]    $Depth  = 4,
   [switch] $Symbols,
   [switch] $Imports,
   [switch] $Zip
 )
 
 # --- Preparação de caminhos
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path            # ...\server\scripts
-$ServerDir = Split-Path -Parent $ScriptDir                              # ...\server
-$RootDir   = Split-Path -Parent $ServerDir                              # repo raiz
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path      # ...\server\scripts
+$ServerDir = Split-Path -Parent $ScriptDir                        # ...\server
+$RootDir   = Split-Path -Parent $ServerDir                        # repo raiz
 Set-Location $ServerDir
 
 # --- Timestamp + release dir
-$ts         = Get-Date -Format "yyyy-MM-dd_HHmmss"
+$ts = Get-Date -Format "yyyy-MM-dd_HHmmss"
 $RelName    = "${ts}-${Name}"
 $OutRoot    = Join-Path $RootDir "docs\releases"
 $ReleaseDir = Join-Path $OutRoot $RelName
@@ -27,23 +27,25 @@ New-Item -ItemType Directory -Force -Path $ReleaseDir | Out-Null
 
 # --- Gerar contextos (robusto) -> escreve em docs/context/* na RAIZ
 Write-Host "➡️  Gerando contextos (full)..." -ForegroundColor Cyan
+$env:CTX_DEPTH   = $Depth
+$env:CTX_SYMBOLS = ($Symbols.IsPresent ? "1" : "0")
+$env:CTX_IMPORTS = ($Imports.IsPresent ? "1" : "0")
 node "scripts\gen-context.js" --full | Out-Null
 
 # --- Copiar principais artefatos para o release
 $CtxDir = Join-Path $RootDir "docs\context"
 
 $filesToCopy = @(
-  # v2
   "context-pack.txt",
+  "API.md",
   "data-summary.json",
   "symbol-index.json",
   "deps.txt",
   "changes-since.txt",
-  # v3 extras
-  "function-signatures.json",
-  "env-usage.json",
   "endpoints-contracts.json",
-  "error-map.json"
+  "env-usage.json",
+  "error-map.json",
+  "function-signatures.json"
 ) | ForEach-Object { Join-Path $CtxDir $_ } | Where-Object { Test-Path $_ }
 
 foreach ($f in $filesToCopy) {
@@ -84,10 +86,8 @@ if ( (Test-Path $Sqlite) -and (Test-Path $DbPath) ) {
   foreach ($t in $tables) {
     try {
       $n = & $Sqlite $DbPath "SELECT COUNT(*) FROM [$t];"
-      # formato alinhado quando OK
       $line = "{0,-30} {1,12}" -f $t, $n
     } catch {
-      # evita -f no catch (alguns nomes/ruídos quebram o format)
       $pad  = ' ' * ([Math]::Max(1, 30 - $t.Length))
       $line = "$t$pad (erro ao contar)"
     }
@@ -110,15 +110,16 @@ $Readme += "2) Cole as 10–30 primeiras linhas de context-pack.txt (ou anexe o 
 $Readme += "3) Se mudar data/, cite data-summary.json."
 $Readme += ""
 $Readme += "Arquivos principais neste pacote:"
-$Readme += " - context-pack.txt            → estrutura, rotas, inventário, maiores arquivos, HTML/YAML/JSON"
-$Readme += " - symbol-index.json           → símbolos por arquivo (funções/classes exportadas e nomeadas)"
-$Readme += " - data-summary.json           → chaves/top-keys dos YAML/JSON do repo"
-$Readme += " - deps.txt                    → arestas de import entre arquivos JS/TS"
-$Readme += " - changes-since.txt           → diff do último tag até HEAD (se existir tag)"
-$Readme += " - function-signatures.json    → (v3) assinaturas estáticas (nome, params, local)"
-$Readme += " - env-usage.json              → (v3) variáveis process.env usadas + defaults inferidos"
-$Readme += " - endpoints-contracts.json    → (v3) contrato inferido de params/query/body por endpoint"
-$Readme += " - error-map.json              → (v3) status/mensagens/throws por endpoint"
+$Readme += " - API.md                  → documentação legível (payloads, erros, env)"
+$Readme += " - context-pack.txt        → estrutura, rotas, inventário, maiores arquivos, HTML/YAML/JSON"
+$Readme += " - endpoints-contracts.json→ rotas com exemplos de params/query/body"
+$Readme += " - error-map.json          → mapa de status/mensagens por rota"
+$Readme += " - env-usage.json          → todas as process.env + defaults detectados"
+$Readme += " - function-signatures.json→ assinaturas (nome/params/arquivo/linha)"
+$Readme += " - symbol-index.json       → símbolos (se CTX_SYMBOLS=1)"
+$Readme += " - deps.txt                → import graph (se CTX_IMPORTS=1)"
+$Readme += " - data-summary.json       → resumo YAML/JSON"
+$Readme += " - changes-since.txt       → diff desde a última tag (se houver)"
 $Readme += " - db-schema.sql / db-tables.txt / db-counts.txt (se SQLite disponível)"
 $Readme += " - .gitattributes / .gitignore / package.json (root)"
 $Readme += ""
@@ -135,7 +136,6 @@ if ($Zip) {
 }
 
 # --- Info final
-# Tentar descrever o commit atual (silencioso mesmo sem tag)
 $describe = (git -C $RootDir describe --tags --abbrev=7 --always) 2>$null
 if (-not $describe) { $describe = (git -C $RootDir rev-parse --short HEAD) }
 
