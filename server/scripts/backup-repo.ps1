@@ -2,10 +2,13 @@
 # Cria um .zip completo do repositório (raiz), excluindo junk (node_modules, .git, dist, etc.)
 # Uso:
 #   pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/backup-repo.ps1 -Label pre
-#   pwsh ... -File scripts/backup-repo.ps1 -Label post
+#   pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/backup-repo.ps1 -Label post
+
 param(
-  [Parameter(Mandatory=$true)][ValidateSet("pre","post")]
+  [Parameter(Mandatory = $true)]
+  [ValidateSet("pre","post")]
   [string] $Label,
+
   [string] $OutDir = ""
 )
 
@@ -20,10 +23,12 @@ if (-not $OutDir -or $OutDir -eq "") {
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
 # --- git meta
-function _sh($cmd) { try { (& git -C $RootDir $cmd) 2>$null } catch { "" } }
-$hash    = (_sh "rev-parse --short HEAD"); if (-not $hash) { $hash = "nohash" }
+function _sh($args) {
+  try { (& git -C $RootDir $args) 2>$null } catch { "" }
+}
+$hash    = (_sh "rev-parse --short HEAD"); if (-not $hash)   { $hash = "nohash" }
 $branch  = (_sh "rev-parse --abbrev-ref HEAD"); if (-not $branch) { $branch = "unknown" }
-$remote  = (_sh "remote get-url origin"); if (-not $remote) { $remote = "none" }
+$remote  = (_sh "remote get-url origin"); if (-not $remote)  { $remote = "none" }
 $status  = (_sh "status -sb")
 $ts      = Get-Date -Format "yyyy-MM-dd_HHmmss"
 
@@ -32,7 +37,7 @@ $TmpRoot = Join-Path $env:TEMP "afkminers-backup-$ts-$Label"
 $Stage   = Join-Path $TmpRoot "repo"
 New-Item -ItemType Directory -Force -Path $Stage | Out-Null
 
-# --- copiar árvore (excluindo grandes/pastas transitórias)
+# --- copiar árvore (excluindo pastas transitórias)
 # robocopy códigos 0..7 = sucesso
 $xd = @(
   ".git",".github","node_modules",".next","dist","build","coverage",
@@ -41,17 +46,18 @@ $xd = @(
 )
 $xo = @("*.zip","*.log")
 
-# Cria destino base
-New-Item -ItemType Directory -Force -Path $Stage | Out-Null
-
-# Robocopy precisa de subpasta destino
-$rcArgs = @("$RootDir", "$Stage", "/MIR", "/NFL", "/NDL", "/NJH", "/NJS", "/NP", "/R:1", "/W:1")
-foreach ($x in $xd) { $rcArgs += @("/XD", (Join-Path $RootDir $x)) }
+# Robocopy exige destino como subpasta
+$rcArgs = @(
+  "`"$RootDir`"", "`"$Stage`"", "/MIR",
+  "/NFL","/NDL","/NJH","/NJS","/NP", "/R:1","/W:1"
+)
+foreach ($x in $xd) { $rcArgs += @("/XD", "`"$(Join-Path $RootDir $x)`"") }
 foreach ($x in $xo) { $rcArgs += @("/XF", $x) }
 
-$rob = Start-Process -FilePath "robocopy.exe" -ArgumentList $rcArgs -PassThru -Wait
+$rob = Start-Process -FilePath "robocopy.exe" -ArgumentList $rcArgs -PassThru -Wait -NoNewWindow
 if ($rob.ExitCode -gt 7) {
   Write-Host "❌ Falha no robocopy (exit=$($rob.ExitCode))." -ForegroundColor Red
+  Remove-Item $TmpRoot -Recurse -Force -ErrorAction SilentlyContinue
   exit 1
 }
 
@@ -72,9 +78,16 @@ $meta | Out-File -Encoding utf8 $metaPath
 $zipName = "${ts}-${Label}-${branch}-${hash}.zip"
 $zipPath = Join-Path $OutDir $zipName
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
-Compress-Archive -Path (Join-Path $Stage "*") -DestinationPath $zipPath
+
+try {
+  Compress-Archive -Path (Join-Path $Stage "*") -DestinationPath $zipPath -Force
+} catch {
+  Write-Host "❌ Erro ao compactar: $($_.Exception.Message)" -ForegroundColor Red
+  Remove-Item $TmpRoot -Recurse -Force -ErrorAction SilentlyContinue
+  exit 1
+}
 
 # --- limpar temp
-Remove-Item $TmpRoot -Recurse -Force
+Remove-Item $TmpRoot -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host "✅ Backup criado: $zipPath" -ForegroundColor Green
