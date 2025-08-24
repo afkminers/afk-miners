@@ -1,0 +1,62 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>AFK Miners — Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="/css/app.css">
+
+<body>
+  <div id="ui">
+    <header class="topbar">
+      <div class="brand">AFK MINERS</div>
+      <nav class="actions">
+        <button data-panel="skills">Skills</button>
+        <button data-panel="heroes">Heroes</button>
+        <button data-panel="inventory">Inventory</button>
+        <button data-panel="summon">Summon</button>
+        <button id="btnLogout" class="danger">Logout</button>
+      </nav>
+    </header>
+
+    <main class="game">
+      <aside class="sidebar">
+        <div class="stat">⚔ ATK <span id="statAtk">—</span></div>
+        <div class="stat">🛡 DEF <span id="statDef">—</span></div>
+        <div class="stat">💨 SPD <span id="statSpd">—</span></div>
+        <div class="spacer"></div>
+
+        <!-- rotas do shell -->
+        <button data-route="#/house">🏠 House</button>
+        <button data-route="#/training">🎯 Training</button>
+        <button data-route="#/pvp">⚔ PvP</button>
+        <button data-route="#/dungeon">🕳 Dungeon</button>
+      </aside>
+
+      <section class="stage">
+        <canvas id="scene" width="960" height="540"></canvas>
+        <div id="hud" class="hud"></div>
+      </section>
+
+      <aside class="rightbar">
+        <div class="panel-title">Mini-Map</div>
+        <div class="minimap"></div>
+      </aside>
+    </main>
+
+    <footer class="chat">
+      <div class="tabs">
+        <button data-chat="default" class="active">Default</button>
+        <button data-chat="global">Global</button>
+      </div>
+      <div id="chatLog" class="log"></div>
+      <form id="chatForm" autocomplete="off">
+        <input id="chatInput" placeholder="Digite uma mensagem…" />
+      </form>
+    </footer>
+  </div>
+
+  <!-- overlays dos painéis -->
+  <div id="overlays"></div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>

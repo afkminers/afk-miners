@@ -160,7 +160,6 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
                 last_tick_at=?,
                 notes=?,
                 daily_reset_at = COALESCE(daily_reset_at, datetime('now','start of day','+1 day')),
-//                 energy_current = COALESCE(energy_current, energy_max)
                 energy_current = COALESCE(energy_current, energy_max)
           WHERE hero_id=?`,
         [skillType, nowIso, nowIso, notes, heroId]
@@ -349,16 +348,27 @@ function safeParse(s) { try { return JSON.parse(s || '{}'); } catch { return {};
 // >>> ROTA STARTER (agora que db já existe)
 app.use('/api/starter', requireAuth, buildStarterRouter(db));
 
-// ---- Redireciona raiz e /index.html para o fluxo novo
-app.get(['/', '/index.html'], (_req, res) => res.redirect(302, '/starter.html'));
+/* ========= PÁGINAS PÚBLICAS =========
+   Deixe /, /index.html, /starter.html, /app.html, /house.html acessíveis
+   sem exigir auth — a lógica de redirecionamento fica no client (boot.js).
+*/
+const PUBLIC_PAGES = [
+  '/', '/index.html', '/starter.html', '/app.html', '/house.html'
+];
+
+app.get(PUBLIC_PAGES, (req, res) => {
+  // normaliza para o arquivo dentro de /client
+  const file = req.path === '/' ? 'index.html' : req.path.replace(/^\//, '');
+  res.sendFile(path.join(CLIENT_ROOT_DIR, file));
+});
 
 // ========= SERVE CLIENTE (estático)
 app.use(express.static(CLIENT_ROOT_DIR));
 
-// ========= SPA fallback (não intercepta assets)
+// ========= SPA fallback (não intercepta assets nem /api)
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next();
-  if (/\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|map)$/i.test(req.path)) return next();
+  if (/\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|map|mp3|wav)$/i.test(req.path)) return next();
   res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
 });
 

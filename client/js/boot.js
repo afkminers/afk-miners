@@ -36,7 +36,7 @@ const mobMenu   = document.getElementById('mobileMenu');
 // Referências gacha
 const ctx = {
   elGacha:    document.getElementById('btnGacha'),
-  elGacha10:  document.getElementById('btnGacha10'), // NOVO: botão x10 no menu
+  elGacha10:  document.getElementById('btnGacha10'),
   elBalance:  document.getElementById('balance'),
   elResult:   document.getElementById('result'),
   elInv:      document.getElementById('inventory'),
@@ -167,12 +167,28 @@ async function showApp(profile) {
   }
 }
 
+/* ========= Decisão de fluxo pós-sessão ========= */
+async function goToRightPlace(profile){
+  // Checa se precisa escolher starter
+  const st = await apiGet(`${API}/api/starter/status`).catch(()=>null);
+  if (st?.canSelect) {
+    // precisa escolher → manda para página de starter
+    location.href = '/starter.html';
+    return;
+  }
+  // já tem starter → abre app dentro do index.html
+  await showApp(profile);
+}
+
 /* ========= Sessão ========= */
 async function trySession() {
   await getCsrf();
-  const me = await apiGet(`${API}/api/auth/me`);
-  if (me?.profile) showApp(me.profile);
-  else showLanding();
+  const me = await apiGet(`${API}/api/auth/me`).catch(()=>null);
+  if (me?.profile) {
+    await goToRightPlace(me.profile);
+  } else {
+    showLanding();
+  }
 }
 trySession();
 
@@ -198,7 +214,7 @@ btnLogin.onclick = async () => {
   const data = await doLogin(loginName.value.trim(), loginPass.value);
   if (data?.error) { loginMsg.textContent = data.error; return; }
   celebrate();
-  await trySession();
+  await trySession(); // isso decide starter vs app
 };
 
 btnRegister.onclick = async () => {
@@ -206,7 +222,7 @@ btnRegister.onclick = async () => {
   const data = await doRegister(regName.value.trim(), regPass.value);
   if (data?.error) { regMsg.textContent = data.error; return; }
   celebrate();
-  await trySession();
+  await trySession(); // isso decide starter vs app
 };
 
 async function handleLogout(){
