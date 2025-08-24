@@ -32,6 +32,7 @@ async function jget(url) {
     cache: 'no-store',
   });
   if (r.status === 401) {
+    // Não autenticado -> manda para login
     location.href = '/index.html';
     throw new Error('Não autenticado');
   }
@@ -58,6 +59,7 @@ async function jpost(url, body, _retry) {
     throw new Error('Não autenticado');
   }
   if (r.status === 403 && !_retry) {
+    // Tenta renovar o CSRF uma vez
     CSRF_TOKEN = null;
     await fetchCsrf().catch(() => null);
     return jpost(url, body, true);
@@ -81,18 +83,20 @@ function spriteUrlFrom(h) {
 /* ===================== Fluxo principal ===================== */
 async function main() {
   try {
-    // exige sessão
+    // Garante sessão (se 401, jget já redireciona para /index.html)
     await jget('/api/auth/me');
 
+    // Opcional: já busca CSRF para futuros POSTs
     await fetchCsrf().catch(() => null);
 
-    // se já escolheu starter, pula esta tela
+    // Se já escolheu starter, pula para o lobby/house
     const status = await jget('/api/starter/status'); // { canSelect: boolean }
     if (!status?.canSelect) {
-      location.href = '/app.html';
+      location.replace('/app.html#/house');
       return;
     }
 
+    // Monta as opções para escolher o starter
     const list = await jget('/api/starter/list');
     grid.innerHTML = '';
 
@@ -112,22 +116,32 @@ async function main() {
       img.onerror = () => { img.src = '/img/placeholder.png'; };
 
       const btn = card.querySelector('button');
+      let busy = false;
       btn.onclick = async () => {
+        if (busy) return;
+        busy = true;
+        btn.disabled = true;
+        btn.textContent = 'Selecionando...';
         try {
           await jpost('/api/starter/select', { heroKey: h.heroKey });
-          location.href = '/app.html';
+          // Vai direto para a interface com HUD + cena House
+          location.replace('/app.html#/house');
         } catch (e) {
           console.error(e);
           let msg = e?.message || 'falha ao selecionar';
           try { msg = JSON.parse(msg).error || msg; } catch {}
           errBox.textContent = 'Erro: ' + msg;
+        } finally {
+          busy = false;
+          btn.disabled = false;
+          btn.textContent = 'Escolher';
         }
       };
 
       grid.appendChild(card);
     }
 
-    if (btnSkip) btnSkip.onclick = () => { location.href = '/app.html'; };
+    if (btnSkip) btnSkip.onclick = () => { location.replace('/app.html#/house'); };
 
   } catch (e) {
     console.error(e);
