@@ -1,12 +1,16 @@
 // client/js/starter.js  (substitua TUDO por este conteúdo)
 
-// --- CSRF ---------------------------------------------------
+/* ===================== CSRF ===================== */
 let CSRF_TOKEN = null;
 
 async function fetchCsrf() {
   if (CSRF_TOKEN) return CSRF_TOKEN;
 
-  const r = await fetch('/api/csrf', { credentials: 'include' });
+  const r = await fetch('/api/csrf', {
+    credentials: 'include',
+    headers: { 'Accept': 'application/json' },
+    cache: 'no-store',
+  });
 
   const headerTok =
     r.headers.get('x-csrf-token') ||
@@ -23,29 +27,51 @@ async function fetchCsrf() {
   return CSRF_TOKEN;
 }
 
-// --- helpers HTTP -------------------------------------------
+/* ===================== HTTP helpers ===================== */
 async function jget(url) {
-  const r = await fetch(url, { credentials: 'include' });
+  const r = await fetch(url, {
+    credentials: 'include',
+    headers: { 'Accept': 'application/json' },
+    cache: 'no-store',
+  });
+  if (r.status === 401) {
+    // Não autenticado → volta para login
+    location.href = '/index.html';
+    throw new Error('Não autenticado');
+  }
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
-async function jpost(url, body) {
+async function jpost(url, body, _retry) {
   const token = await fetchCsrf();
   const r = await fetch(url, {
     method: 'POST',
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      'x-csrf-token': token, // nome que seu middleware aceita
+      'Accept': 'application/json',
+      'x-csrf-token': token, // mesmo header aceito no middleware
     },
-    body: JSON.stringify(body || {})
+    body: JSON.stringify(body || {}),
   });
+
+  if (r.status === 401) {
+    location.href = '/index.html';
+    throw new Error('Não autenticado');
+  }
+  if (r.status === 403 && !_retry) {
+    // CSRF inválido/expirado: refaz handshake e tenta mais 1 vez
+    CSRF_TOKEN = null;
+    await fetchCsrf();
+    return jpost(url, body, true);
+  }
+
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
-// --- UI -----------------------------------------------------
+/* ===================== UI ===================== */
 const grid    = document.getElementById('grid');
 const errBox  = document.getElementById('err');
 const btnSkip = document.getElementById('btnSkip');
@@ -53,17 +79,18 @@ const btnSkip = document.getElementById('btnSkip');
 function spriteUrlFrom(h) {
   // PRIORIDADE: caminho do YAML vindo do servidor (ex.: "sprites/characters/knight.png")
   if (h.image) return '/' + String(h.image).replace(/^\/+/, '');
-  // ALTERNATIVA: spriteKey (ex.: "knight_v1" -> /sprites/characters/knight_v1.png)
+  // ALTERNATIVA: spriteKey (ex.: "knight" -> /sprites/characters/knight.png)
   if (h.spriteKey) return `/sprites/characters/${h.spriteKey}.png`;
-  // FALLBACK: placeholder genérico (certifique-se que existe em client/img/placeholder.png)
+  // FALLBACK: placeholder genérico (certifique-se de ter esse arquivo)
   return '/img/placeholder.png';
 }
 
 async function main() {
   try {
-    // garante cookie + csrf prontos antes dos POSTs
+    // Garante cookie + token CSRF antes de qualquer POST
     await fetchCsrf();
 
+    // Se não estiver autenticado, jget redireciona para /index.html
     const status    = await jget('/api/starter/status');
     const canSelect = !!status.canSelect;
 
@@ -94,6 +121,7 @@ async function main() {
         if (!canSelect) return;
         try {
           await jpost('/api/starter/select', { heroKey: h.heroKey });
+          // levou o starter → vai para a casa (ou lobby.html se preferir)
           window.location.href = '/house.html';
         } catch (e) {
           console.error(e);
@@ -111,7 +139,9 @@ async function main() {
     }
   } catch (e) {
     console.error(e);
-    errBox.textContent = 'Erro ao carregar: ' + (e.message || 'falha');
+    let msg = e.message || 'falha';
+    try { msg = JSON.parse(msg).error || msg; } catch {}
+    errBox.textContent = 'Erro ao carregar: ' + msg;
   }
 }
 

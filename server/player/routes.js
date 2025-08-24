@@ -1,6 +1,6 @@
 // server/player/routes.js
 const express = require('express');
-const { all, get } = require('../models/db');
+const { all, get, run } = require('../models/db');
 const { requireAuth } = require('../auth/middleware');
 
 const router = express.Router();
@@ -16,23 +16,26 @@ router.use(requireAuth);
 
 /**
  * GET /api/player/me
- * Retorna perfil + heróis do jogador autenticado (sem skills/level global).
+ * Retorna perfil + heróis do jogador autenticado.
+ * - imageUrl agora aponta para /sprites/characters/<heroKey>.png
  */
 router.get('/me', async (req, res) => {
   try {
     noStore(res);
     const playerId = req.user.id;
 
-    // perfil
+    // perfil do jogador
     const profile = await get(
       `SELECT id, name, coins, gems, createdAt
          FROM players
         WHERE id = ?`,
       [playerId]
     );
-    if (!profile) return res.status(404).json({ error: 'Jogador não encontrado' });
+    if (!profile) {
+      return res.status(404).json({ error: 'Jogador não encontrado' });
+    }
 
-    // heróis (join com o catálogo atual: attack_type/weapon_pref)
+    // heróis do jogador + catálogo (se existir)
     const rows = await all(`
       SELECT
         ph.id,
@@ -42,7 +45,9 @@ router.get('/me', async (req, res) => {
         ph.attack,
         ph.defense,
         ph.speed,
+        ph.level,
         ph.createdAt,
+        ph.isStarter,
         hm.class,
         hm.role,
         hm.attack_type,
@@ -63,13 +68,81 @@ router.get('/me', async (req, res) => {
         ph.createdAt DESC
     `, [playerId]);
 
-    const imageUrlFor = (heroKey) => `/img/heroes/${heroKey}.png`;
-    const heroes = rows.map(h => ({ ...h, imageUrl: imageUrlFor(h.heroKey) }));
+    // aponta para sprites do seu pipeline (data/sprites/characters/*.yml -> image: sprites/characters/<key>.png)
+    const imageUrlFor = (heroKey) => `/sprites/characters/${heroKey}.png`;
+
+    const heroes = rows.map(h => ({
+      ...h,
+      imageUrl: imageUrlFor(h.heroKey)
+    }));
 
     return res.json({ profile, heroes });
   } catch (e) {
-    console.error(e);
+    console.error('[player/me] error:', e);
     res.status(500).json({ error: 'Falha ao obter dados do jogador' });
+  }
+});
+
+/**
+ * GET /api/player/pos?map=<mapKey>
+ * Retorna a posição salva do jogador nesse mapa.
+ * Se não existir, cai no start do mapa (camada "start" do Tiled) ou (64,64).
+ */
+router.get('/pos', async (req, res) => {
+  try {
+    noStore(res);
+    const playerId = req.user.id;
+    const mapKey = String(req.query.map || 'house');
+
+    const row = await get(
+      `SELECT x, y
+         FROM player_positions
+        WHERE playerId=? AND mapKey=?`,
+      [playerId, mapKey]
+    ).catch(() => null);
+
+    if (row) return res.json(row);
+
+    // fallback: primeiro objeto "start" do mapa (gravado por seu content loader)
+    const start = await get(
+      `SELECT x, y
+         FROM map_objects
+        WHERE mapKey=? AND type='start'
+        LIMIT 1`,
+      [mapKey]
+    ).catch(() => null);
+
+    return res.json(start || { x: 64, y: 64 });
+  } catch (e) {
+    console.error('[player/pos GET] error:', e);
+    res.status(500).json({ error: 'Falha ao obter posição' });
+  }
+});
+
+/**
+ * POST /api/player/pos
+ * Body: { mapKey, x, y }
+ * Salva/atualiza a posição do jogador no mapa.
+ * Requer índice único (playerId, mapKey) em player_positions.
+ */
+router.post('/pos', async (req, res) => {
+  try {
+    const playerId = req.user.id;
+    const mapKey = String((req.body?.mapKey) || 'house');
+    const x = Math.round(req.body?.x || 0);
+    const y = Math.round(req.body?.y || 0);
+
+    await run(`
+      INSERT INTO player_positions(playerId,mapKey,x,y,updated_at)
+      VALUES(?,?,?,?,CURRENT_TIMESTAMP)
+      ON CONFLICT(playerId,mapKey) DO UPDATE
+        SET x=excluded.x, y=excluded.y, updated_at=CURRENT_TIMESTAMP
+    `, [playerId, mapKey, x, y]);
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[player/pos POST] error:', e);
+    res.status(500).json({ error: 'Falha ao salvar posição' });
   }
 });
 

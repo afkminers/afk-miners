@@ -15,7 +15,7 @@ const gachaRoutes   = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 
 const K = require('./balance/config');
-const buildStarterRouter = require('./starter/routes');
+const buildStarterRouter = require('./starter/routes'); // exporta a função
 
 // ======== Pipeline de Conteúdo (YAML/Tiled) ========
 const { loadAll, loadMap } = require('./content/loader');
@@ -34,7 +34,8 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
 app.use(requireCsrf);
-app.use(express.static(CLIENT_ROOT_DIR));
+
+// CSRF token (sempre antes de outras rotas que o cliente precisa)
 app.get('/api/csrf', csrfRoute);
 
 // ========= DB =========
@@ -348,6 +349,13 @@ function safeParse(s) { try { return JSON.parse(s || '{}'); } catch { return {};
 
 // >>> ROTA STARTER (agora que db já existe)
 app.use('/api/starter', requireAuth, buildStarterRouter(db));
+
+// ----- Redireciona a raiz para o fluxo novo (troque para /index.html se quiser ir ao login)
+app.get('/', (req, res) => res.redirect('/index.html'));
+
+
+// ========= SERVE CLIENTE (depois de todas as rotas) =========
+app.use(express.static(CLIENT_ROOT_DIR));
 
 // ========= SPA fallback =========
 app.use((req,res,next)=>{

@@ -27,6 +27,7 @@ function validateName(raw) {
   }
   return { ok: true, name };
 }
+
 function validatePassword(raw) {
   const p = raw || '';
   if (p.length < 6) return { ok: false, msg: 'Senha deve ter pelo menos 6 caracteres.' };
@@ -52,14 +53,17 @@ router.post('/register', async (req, res) => {
     const vp = validatePassword(req.body?.password);
     if (!vp.ok) return res.status(400).json({ error: vp.msg });
 
-    const exist = await get(`SELECT id FROM players WHERE name=?`, [v.name]);
+    // checa nome já usado (case-insensitive)
+    const exist = await get(
+      `SELECT id FROM players WHERE lower(name) = lower(?)`,
+      [v.name]
+    );
     if (exist) return res.status(409).json({ error: 'Nome já está em uso.' });
 
     const id = randomUUID();
     const createdAt = Date.now();
     const hash = await bcrypt.hash(vp.p, 10);
 
-    // cria somente o jogador; sem herói inicial
     await run(
       `INSERT INTO players (id, name, password_hash, coins, gems, createdAt)
        VALUES (?, ?, ?, ?, ?, ?)`,
@@ -69,7 +73,7 @@ router.post('/register', async (req, res) => {
     setAuthCookie(res, { id, name: v.name });
     return res.json({ id, name: v.name, coins: 500, gems: 0, createdAt });
   } catch (e) {
-    console.error(e);
+    console.error('[auth/register] error:', e);
     return res.status(500).json({ error: 'Falha ao registrar' });
   }
 });
@@ -81,7 +85,12 @@ router.post('/login', async (req, res) => {
 
     const name = (req.body?.name || '').trim();
     const pass = req.body?.password || '';
-    const user = await get(`SELECT * FROM players WHERE name=?`, [name]);
+
+    // busca case-insensitive
+    const user = await get(
+      `SELECT * FROM players WHERE lower(name) = lower(?)`,
+      [name]
+    );
     if (!user || !user.password_hash) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
@@ -90,9 +99,15 @@ router.post('/login', async (req, res) => {
     if (!ok) return res.status(401).json({ error: 'Credenciais inválidas' });
 
     setAuthCookie(res, { id: user.id, name: user.name });
-    return res.json({ id: user.id, name: user.name, coins: user.coins, gems: user.gems });
+    return res.json({
+      id: user.id,
+      name: user.name,
+      coins: user.coins,
+      gems: user.gems,
+      createdAt: user.createdAt
+    });
   } catch (e) {
-    console.error(e);
+    console.error('[auth/login] error:', e);
     return res.status(500).json({ error: 'Falha ao autenticar' });
   }
 });
@@ -105,9 +120,22 @@ router.post('/logout', (_req, res) => {
 });
 
 // GET /api/auth/me  (protegido)
-router.get('/me', requireAuth, (req, res) => {
-  noStore(res);
-  return res.json({ profile: req.user });
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    noStore(res);
+    // retorna perfil atualizado do DB (evita dados “velhos” do cookie)
+    const profile = await get(
+      `SELECT id, name, coins, gems, createdAt
+         FROM players
+        WHERE id = ?`,
+      [req.user.id]
+    );
+    if (!profile) return res.status(404).json({ error: 'Jogador não encontrado' });
+    return res.json({ profile });
+  } catch (e) {
+    console.error('[auth/me] error:', e);
+    return res.status(500).json({ error: 'Falha ao obter perfil' });
+  }
 });
 
 module.exports = router;

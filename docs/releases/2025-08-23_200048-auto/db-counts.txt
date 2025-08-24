@@ -1,0 +1,17 @@
+class_skill_rates                        18
+items_master                              2
+player_heroes                            26
+starters_pool                             3
+content_files                             6
+map_objects                               1
+players                                   9
+weapon_skill_map                          8
+hero_training                             1
+maps                                      1
+skill_curves                            600
+heroes_master                            15
+monsters_master                           2
+spawns                                    1
+inventory                                 0
+player_hero_skills                      654
+sprites_master                            1

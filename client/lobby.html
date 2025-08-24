@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><title>Lobby</title>
+<div id="info"></div>
+<button id="go">Entrar no mapa</button>
+<script>
+  async function jget(u){const r=await fetch(u,{credentials:'include'}); if(!r.ok) throw new Error(await r.text()); return r.json();}
+  (async()=>{
+    const s = await jget('/api/starter/status');
+    document.getElementById('info').textContent = s.canSelect
+      ? 'Você ainda não escolheu seu herói. Clique aqui: /starter.html'
+      : 'Starter selecionado. Pronto para jogar.';
+    document.getElementById('go').onclick = ()=>location.href='/play.html?map=house';
+  })().catch(e=>{document.getElementById('info').textContent='Erro: '+e.message});
+</script>

@@ -1,8 +1,9 @@
-// client/js/house_play.js
-// Cena jogável: carrega mapa "house", segue o player e instancia mobs.
+// client/js/play.js
+// Cena jogável genérica: usa ?map=<key> (padrão house), segue o player e instancia mobs.
+// Lê posição salva do jogador (GET /api/player/pos?map=...) e salva periodicamente (POST /api/player/pos).
 // Se /spawns vier vazio, faz fallback lendo a camada "spawn" direto do JSON do Tiled.
 
-const MAP_KEY = "house";
+const MAP_KEY = new URLSearchParams(location.search).get('map') || 'house';
 const TILE = 32;
 
 // DOM
@@ -11,9 +12,35 @@ const canvas = $("#view");
 const ctx = canvas.getContext("2d");
 const hud = $("#hud");
 
-// HTTP helper
+// --- CSRF para POSTs protegidos ---
+let CSRF_TOKEN = null;
+async function fetchCsrf() {
+  if (CSRF_TOKEN) return CSRF_TOKEN;
+  const r = await fetch('/api/csrf', { credentials: 'include' });
+  const headerTok = r.headers.get('x-csrf-token') || r.headers.get('X-CSRF-Token');
+  let bodyTok = null;
+  try { const j = await r.json(); bodyTok = j.token || j.csrf || j.csrfToken || null; } catch {}
+  CSRF_TOKEN = headerTok || bodyTok;
+  return CSRF_TOKEN;
+}
+
+// HTTP helpers
 async function jget(url) {
   const r = await fetch(url, { credentials: "include" });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
+  return r.json();
+}
+async function jpost(url, body) {
+  const tok = await fetchCsrf().catch(()=>null);
+  const r = await fetch(url, {
+    method: 'POST',
+    credentials: 'include',
+    headers: Object.assign(
+      { 'Content-Type': 'application/json' },
+      tok ? { 'x-csrf-token': tok } : {}
+    ),
+    body: JSON.stringify(body || {})
+  });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
   return r.json();
 }
@@ -32,8 +59,7 @@ function imgReady(img) {
 }
 async function ensureImgLoaded(img) {
   if (imgReady(img)) return;
-  // decode() evita "broken image state"
-  try { await img.decode(); } catch { /* ignora, draw checa depois */ }
+  try { await img.decode(); } catch {}
 }
 
 // Estado
@@ -45,7 +71,7 @@ let groundLayer = null;
 let starts = [];
 let spawns = [];
 
-const player = { x: 100, y: 100, w: 32, h: 32, speed: 140, img: null };
+const player = { x: 100, y: 100, w: 32, h: 32, speed: 140, img: null, heroKey: null };
 const mobs = [];
 
 // Câmera
@@ -114,6 +140,31 @@ function drawMob(m) {
 }
 
 // Lógica
+let lastSentAt = 0;
+let lastSentX = 0, lastSentY = 0;
+
+function shouldSyncPos(now) {
+  const moved = Math.hypot(player.x - lastSentX, player.y - lastSentY) >= 2;
+  const elapsed = (now - lastSentAt) >= 1000; // 1s
+  return moved && elapsed;
+}
+
+async function syncPos(now) {
+  try {
+    await jpost('/api/player/pos', {
+      mapKey: MAP_KEY,
+      x: Math.round(player.x),
+      y: Math.round(player.y)
+    });
+    lastSentAt = now;
+    lastSentX = player.x;
+    lastSentY = player.y;
+  } catch (e) {
+    // silencioso para não poluir HUD, só log
+    console.warn('pos sync failed:', e.message);
+  }
+}
+
 function update(dt) {
   let dx = 0, dy = 0;
   if (keys["w"] || keys["arrowup"]) dy -= 1;
@@ -164,6 +215,9 @@ function update(dt) {
     cam.y = Math.max(0, Math.min(maxCamY, cam.y));
   }
 
+  // sync pos (debounced)
+  if (shouldSyncPos(now)) syncPos(now);
+
   if (hud) {
     hud.innerHTML = `
       <div>map: ${MAP_KEY}</div>
@@ -213,17 +267,64 @@ function mapSpawnsFromTiledJSON(json) {
     });
 }
 
+// Resolve sprite do player com base no herói (starter ou primeiro da lista)
+async function resolvePlayerSprite() {
+  try {
+    const me = await jget('/api/player/me');
+    const heroes = Array.isArray(me.heroes) ? me.heroes : [];
+    // prioriza isStarter=1 se existir; senão pega o primeiro
+    const starter = heroes.find(h => h.isStarter === 1 || h.isStarter === true) || heroes[0];
+    if (starter) {
+      player.heroKey = starter.heroKey || starter.key || null;
+      // tenta sprites/characters/<heroKey>.png; fallback para imageUrl do /me; fallback final para player.png
+      const candidate = player.heroKey ? `/sprites/characters/${player.heroKey}.png` : null;
+      if (candidate) {
+        player.img = loadImg(candidate);
+        await ensureImgLoaded(player.img).catch(()=>{});
+        if (imgReady(player.img)) return;
+      }
+      if (starter.imageUrl) {
+        player.img = loadImg(starter.imageUrl);
+        await ensureImgLoaded(player.img).catch(()=>{});
+        if (imgReady(player.img)) return;
+      }
+    }
+  } catch (e) {
+    console.warn('resolvePlayerSprite:', e.message);
+  }
+  // fallback
+  player.img = loadImg("/sprites/characters/player.png");
+  ensureImgLoaded(player.img).catch(()=>{});
+}
+
 // Bootstrap
 async function main() {
   cam.w = canvas.width;
   cam.h = canvas.height;
+
+  // Garante CSRF para futuros POSTs
+  await fetchCsrf().catch(()=>{});
 
   const maps = await jget("/api/admin/content/maps");
   if (!maps.some((m) => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
 
   const objs = await jget(`/api/admin/content/map/${MAP_KEY}/objects`);
   starts = objs.filter((o) => (o.type || "").toLowerCase() === "start");
-  if (starts[0]) { player.x = starts[0].x; player.y = starts[0].y; }
+
+  // tenta carregar posição salva do jogador
+  let posLoaded = false;
+  try {
+    const p = await jget(`/api/player/pos?map=${encodeURIComponent(MAP_KEY)}`);
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
+      player.x = p.x; player.y = p.y;
+      posLoaded = true;
+    }
+  } catch {
+    // se rota não existir, segue para fallback
+  }
+  if (!posLoaded && starts[0]) {
+    player.x = starts[0].x; player.y = starts[0].y;
+  }
 
   mapData = await jget(`/api/admin/content/map/${MAP_KEY}/data`);
   tileset = (mapData.tilesets && mapData.tilesets[0]) || null;
@@ -231,10 +332,9 @@ async function main() {
   if (!tileset || !tileset.image) {
     console.warn("Tileset não embedado. No Tiled: 'Embed Tileset' e exporte novamente o JSON.");
   } else {
-    // normaliza caminhos tipo "../../client/..."
+    // normaliza caminhos tipo "../../client/..." → "/" (servido estático)
     let imgPath = tileset.image.replace(/^(\.\.\/)+/, "/");
     if (!imgPath.startsWith("/")) imgPath = "/" + imgPath;
-    // se começar com /client/, servimos a partir da raiz estática (/)
     imgPath = imgPath.replace(/^\/client\//, "/");
     tilesetImg = loadImg(imgPath);
     await ensureImgLoaded(tilesetImg);
@@ -244,8 +344,8 @@ async function main() {
     (l) => l.type === "tilelayer" && l.name && l.name.toLowerCase() === "ground"
   );
 
-  player.img = loadImg("/sprites/characters/player.png"); // opcional
-  ensureImgLoaded(player.img).catch(()=>{});
+  // sprite do jogador baseada no herói
+  await resolvePlayerSprite();
 
   // tenta do servidor
   try {
