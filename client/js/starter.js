@@ -20,7 +20,7 @@ async function fetchCsrf() {
   try {
     const data = await r.json();
     bodyTok = data.token || data.csrf || data.csrfToken || null;
-  } catch { /* pode não ser JSON */ }
+  } catch {}
 
   CSRF_TOKEN = headerTok || bodyTok;
   if (!CSRF_TOKEN) throw new Error('Não foi possível obter CSRF');
@@ -75,18 +75,22 @@ const errBox  = document.getElementById('err');
 const btnSkip = document.getElementById('btnSkip');
 
 function spriteUrlFrom(h) {
-  if (h.image)    return '/' + String(h.image).replace(/^\/+/, '');
+  if (h.image)     return '/' + String(h.image).replace(/^\/+/, '');
   if (h.spriteKey) return `/sprites/characters/${h.spriteKey}.png`;
   return '/img/placeholder.png';
 }
 
 async function main() {
   try {
-    // Garante cookie + token CSRF
     await fetchCsrf();
 
-    const status    = await jget('/api/starter/status');
-    const canSelect = !!status.canSelect;
+    const status = await jget('/api/starter/status');
+
+    // 🔥 Se já escolheu starter, pula esta tela
+    if (!status.canSelect) {
+      location.href = '/house.html';
+      return;
+    }
 
     const list = await jget('/api/starter/list');
     grid.innerHTML = '';
@@ -101,7 +105,7 @@ async function main() {
         '<div class="sprite"><img alt=""></div>',
         `<h3>${h.name || h.heroKey}</h3>`,
         `<div class="meta">${(h.rarity||'').toUpperCase()} • ${(h.class||'').toUpperCase()} • ${(h.role||'').toUpperCase()}</div>`,
-        `<button class="btn" ${canSelect ? '' : 'disabled'}>Escolher</button>`
+        `<button class="btn">Escolher</button>`
       ].join('');
 
       const img = card.querySelector('img');
@@ -110,10 +114,9 @@ async function main() {
 
       const btn = card.querySelector('button');
       btn.onclick = async () => {
-        if (!canSelect) return;
         try {
           await jpost('/api/starter/select', { heroKey: h.heroKey });
-          window.location.href = '/house.html';
+          location.href = '/house.html';
         } catch (e) {
           console.error(e);
           let msg = e.message || 'falha ao selecionar';
@@ -125,7 +128,7 @@ async function main() {
       grid.appendChild(card);
     }
 
-    if (btnSkip) btnSkip.onclick = () => { window.location.href = '/house.html'; };
+    if (btnSkip) btnSkip.onclick = () => { location.href = '/house.html'; };
 
   } catch (e) {
     console.error(e);
