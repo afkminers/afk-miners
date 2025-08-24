@@ -270,6 +270,22 @@ function safeAddListener(selectorOrNode, event, handler) {
     const pendingMap = new Map();
 
     function appendChatRow(msg){
+      // dedupe: se já existe uma mensagem com o mesmo id ou pendingId, não re-adicionar
+      try {
+        if (msg.id) {
+          if (chatBox.querySelector(`[data-msg-id="${msg.id}"]`)) return;
+        } else if (msg._pendingId) {
+          if (chatBox.querySelector(`[data-pending-id="${msg._pendingId}"]`)) return;
+        } else {
+          // fallback: evita duplicates triviais comparando com última linha
+          const last = chatBox.lastElementChild;
+          if (last) {
+            const lastText = last.textContent || '';
+            const lastName = (last.querySelector && last.querySelector('.name') && last.querySelector('.name').textContent) || '';
+            if (lastName === (msg.fromName || '') && lastText.includes((msg.text||'').trim())) return;
+          }
+        }
+      } catch (e) {}
       const d = document.createElement('div');
       d.className='chat-row';
       const time = new Date(msg.ts||Date.now()).toLocaleTimeString();
@@ -441,3 +457,112 @@ function escapeHtml(input) {
 }
 // expõe globalmente caso outras partes do client chamem como window.escapeHtml
 window.escapeHtml = escapeHtml;
+
+// --- Mini-map renderer ---
+// procura canvas #miniMap e desenha snapshot do currentScene (se disponível)
+(function initMiniMap() {
+  const el = document.getElementById('miniMap');
+  if (!el) return;
+  const ctx = el.getContext('2d');
+  const W = el.width, H = el.height;
+
+  // tenta várias formas de pedir um snapshot ao scene
+  function getSceneSnapshot() {
+    try {
+      // preferência: função explícita exposta pelo scene
+      if (currentScene && typeof currentScene.getSnapshot === 'function') {
+        return currentScene.getSnapshot();
+      }
+      // alternativa: propriedades comuns
+      if (currentScene && currentScene.player) {
+        return {
+          mapW: currentScene.mapWidth || 1024,
+          mapH: currentScene.mapHeight || 1024,
+          player: { x: currentScene.player.x || 0, y: currentScene.player.y || 0 },
+          entities: currentScene.entities || []
+        };
+      }
+      // fallback: estado global (se você expuser window._playerPos em scenes)
+      if (window._mini_map_state) return window._mini_map_state;
+    } catch (e) {}
+    return null;
+  }
+
+  function drawPlaceholder() {
+    ctx.fillStyle = '#07121a';
+    ctx.fillRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+    ctx.lineWidth = 1;
+    const step = 16;
+    for (let x=0;x<W;x+=step){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for (let y=0;y<H;y+=step){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+    // center dot
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath(); ctx.arc(W/2, H/2, 4, 0, Math.PI*2); ctx.fill();
+  }
+
+  function draw(snapshot) {
+    ctx.clearRect(0,0,W,H);
+    if (!snapshot) { drawPlaceholder(); return; }
+
+    const mapW = snapshot.mapW || 1024;
+    const mapH = snapshot.mapH || 1024;
+    // scale to fit
+    const scale = Math.min(W / mapW, H / mapH);
+    const ox = (W - mapW*scale)/2;
+    const oy = (H - mapH*scale)/2;
+
+    // background (simple tiling color)
+    ctx.fillStyle = '#0b2a2a';
+    ctx.fillRect(0,0,W,H);
+
+    // optionally draw a simple tile grid or minimap texture if snapshot.tiles exists
+    if (Array.isArray(snapshot.tiles) && snapshot.tiles.length) {
+      // tiles: expect array of {x,y,color} or numeric ids; keep simple
+      for (const t of snapshot.tiles) {
+        ctx.fillStyle = t.color || '#083';
+        ctx.fillRect(ox + t.x*scale, oy + t.y*scale, Math.max(1, scale), Math.max(1, scale));
+      }
+    } else {
+      // draw coarse grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+      ctx.lineWidth = 1;
+      const g = 32;
+      for (let x=0;x<=mapW;x+=g) {
+        ctx.beginPath(); ctx.moveTo(ox + x*scale, oy); ctx.lineTo(ox + x*scale, oy + mapH*scale); ctx.stroke();
+      }
+      for (let y=0;y<=mapH;y+=g) {
+        ctx.beginPath(); ctx.moveTo(ox, oy + y*scale); ctx.lineTo(ox + mapW*scale, oy + y*scale); ctx.stroke();
+      }
+    }
+
+    // draw entities
+    (snapshot.entities || []).forEach(ent => {
+      const ex = ox + (ent.x || 0) * scale;
+      const ey = oy + (ent.y || 0) * scale;
+      ctx.fillStyle = ent.color || '#ff4d4d';
+      ctx.beginPath(); ctx.arc(ex, ey, Math.max(1, 3*scale), 0, Math.PI*2); ctx.fill();
+    });
+
+    // draw player
+    if (snapshot.player) {
+      const px = ox + (snapshot.player.x||0) * scale;
+      const py = oy + (snapshot.player.y||0) * scale;
+      ctx.fillStyle = '#ffd166';
+      ctx.beginPath(); ctx.arc(px, py, Math.max(2, 4*scale), 0, Math.PI*2); ctx.fill();
+      // add a small halo
+      ctx.strokeStyle = 'rgba(255,209,102,0.6)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(px, py, Math.max(4, 6*scale), 0, Math.PI*2); ctx.stroke();
+    }
+  }
+
+  // loop de atualização
+  function tick() {
+    const snap = getSceneSnapshot();
+    draw(snap);
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
