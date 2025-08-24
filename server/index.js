@@ -388,49 +388,116 @@ const http = require('http').createServer(app);
 
 // try to load ws optionally so server won't crash if it's not installed
 let WebSocketLib = null;
+let useWebSocket = false;
 try {
   WebSocketLib = require('ws');
+  useWebSocket = !!WebSocketLib && !!WebSocketLib.Server;
+  if (!useWebSocket) console.warn('[ws] package loaded but Server not available');
 } catch (err) {
-  console.warn('[ws] optional dependency not installed — WebSocket disabled. Run `npm install ws` to enable.');
+  console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run `npm install ws` to enable.');
+  WebSocketLib = null;
+  useWebSocket = false;
 }
 
-const useWebSocket = Boolean(WebSocketLib);
+// Consolidated: jwt, redis, crypto and Redis helpers (single declaration)
+const jwt = require('jsonwebtoken');
+const { createClient } = require('redis');
+const crypto = require('crypto');
+
+const REDIS_URL = process.env.REDIS_URL || null; // ex: redis://127.0.0.1:6379
+const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
+const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'token'; // ajuste se seu cookie tiver outro nome
+
+let redisPub = null;
+let redisSub = null;
+
+async function setupRedis(wss) {
+  if (!REDIS_URL) {
+    console.log('[redis] REDIS_URL not set — running without Redis pub/sub (single-instance)');
+    return;
+  }
+  try {
+    redisPub = createClient({ url: REDIS_URL });
+    redisSub = redisPub.duplicate();
+    await redisPub.connect();
+    await redisSub.connect();
+    await redisSub.subscribe('chat:global', (message) => {
+      try {
+        const obj = JSON.parse(message);
+        const out = JSON.stringify(obj);
+        wss.clients.forEach(c => {
+          if (c && c.readyState === WebSocket.OPEN) {
+            try { c.send(out); } catch (e) { /* ignore */ }
+          }
+        });
+      } catch (e) { console.warn('[redis] bad pubsub message', e?.message); }
+    });
+    console.log('[redis] connected and subscribed to chat:global');
+  } catch (e) {
+    console.warn('[redis] failed to connect — continuing without Redis', e?.message);
+    redisPub = null; redisSub = null;
+  }
+}
+
+// helper: parse cookies from header
+function parseCookies(cookieHeader = '') {
+  return Object.fromEntries(
+    (cookieHeader || '').split(';').map(s => {
+      const idx = s.indexOf('=');
+      if (idx === -1) return [];
+      const k = s.slice(0, idx).trim();
+      const v = s.slice(idx + 1).trim();
+      return [k, decodeURIComponent(v)];
+    }).filter(Boolean)
+  );
+}
+
 if (useWebSocket) {
   const wss = new WebSocketLib.Server({ server: http, path: '/ws' });
 
-  // simple cookie parser (reuse if you already have one)
-  function parseCookies(cookieHeader = '') {
-    return Object.fromEntries(
-      (cookieHeader || '').split(';').map(s => {
-        const [k, v] = s.split('=').map(x => x && x.trim());
-        return k ? [k, decodeURIComponent(v || '')] : [];
-      }).filter(Boolean)
-    );
-  }
+  // inicializa redis (se configurado)
+  setupRedis(wss).catch(() => { /* ignore */ });
+
+  const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
 
   wss.on('connection', (ws, req) => {
     const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
     console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
 
+    // DEBUG: log cookies header (remova em produção se preferir)
+    console.log('[ws] cookies header:', req.headers && req.headers.cookie);
+
     ws._connectedAt = Date.now();
     ws._player = null;
 
+    // try validate JWT from cookie immediately (so explicit handshake not required)
+    try {
+      const cookies = parseCookies(req.headers.cookie || '');
+      const token = cookies[COOKIE_NAME] || null;
+      if (token) {
+        try {
+          const payload = jwt.verify(token, JWT_SECRET);
+          ws._player = { id: String(payload.id || payload.playerId || ''), name: String(payload.name || payload.username || payload.displayName || 'Anon') };
+          console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
+        } catch (err) {
+          console.log('[ws] jwt verify failed', err && err.message);
+        }
+      }
+    } catch (e) {
+      console.warn('[ws] cookie parse error', e && e.message);
+    }
+
     ws.on('message', async (msg) => {
       let data;
-      try { data = JSON.parse(msg.toString()); } catch (err) {
-        console.warn('[ws] malformed json from', addr); return;
-      }
+      try { data = JSON.parse(msg.toString()); } catch (err) { console.warn('[ws] malformed json from', addr); return; }
 
-      // auth handshake: client must send { type:'auth', id, name }
       if (data.type === 'auth') {
-        ws._player = { id: String(data.id||''), name: String(data.name||'Anonymous') };
+        ws._player = { id: String(data.id || ''), name: String(data.name || 'Anonymous') };
         console.log(`[ws] auth from ${addr} => id=${ws._player.id} name=${ws._player.name}`);
-        // optionally reply ack
         try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
         return;
       }
 
-      // chat message handling
       if (data.type === 'chat') {
         if (!ws._player) {
           console.warn('[ws] received chat from unauthenticated socket — ignoring');
@@ -443,14 +510,14 @@ if (useWebSocket) {
 
         console.log(`[chat] from=${ws._player.id} scope=${scope} text="${raw}"`);
 
-        // persist global messages
-        if (scope === 'global') {
-          db.run(
-            'INSERT INTO chat_messages(scope, fromId, fromName, text) VALUES (?,?,?,?)',
-            ['global', ws._player.id, ws._player.name, raw],
-            function (err) { if (err) console.warn('[chat] persist error', err?.message); }
-          );
-        }
+        // persist if db available
+        try {
+          if (scope === 'global' && typeof db !== 'undefined' && db && db.run) {
+            db.run('INSERT INTO chat_messages(scope, fromId, fromName, text) VALUES (?,?,?,?)', ['global', ws._player.id, ws._player.name, raw], function (err) {
+              if (err) console.warn('[chat] persist error', err && err.message);
+            });
+          }
+        } catch (e) { /* ignore db errors */ }
 
         const out = {
           type: 'chat',
@@ -458,23 +525,38 @@ if (useWebSocket) {
           fromId: ws._player.id,
           fromName: ws._player.name,
           text: raw,
-          ts: Date.now()
+          ts: Date.now(),
+          origin: instanceId
         };
 
-        // broadcast to all connected clients
-        wss.clients.forEach(c => {
-          if (c && c.readyState === WebSocketLib.OPEN) {
-            try { c.send(JSON.stringify(out)); } catch (e) { /* ignore send errors */ }
+        if (redisPub) {
+          try {
+            await redisPub.publish('chat:global', JSON.stringify(out));
+          } catch (e) {
+            console.warn('[redis] publish failed', e && e.message);
+            const outStr = JSON.stringify(out);
+            wss.clients.forEach(c => {
+              if (c && c.readyState === WebSocket.OPEN) {
+                try { c.send(outStr); } catch (e) {}
+              }
+            });
           }
-        });
+        } else {
+          const outStr = JSON.stringify(out);
+          wss.clients.forEach(c => {
+            if (c && c.readyState === WebSocket.OPEN) {
+              try { c.send(outStr); } catch (e) {}
+            }
+          });
+        }
         return;
       }
 
-      // position broadcast (kept)
+      // pos handling (se já existir)
       if (data.type === 'pos') {
         const out = { type:'pos', id:String(data.id||''), x:Number(data.x||0), y:Number(data.y||0), name:String(data.name||'') };
         wss.clients.forEach(c => {
-          if (c !== ws && c.readyState === WebSocketLib.OPEN) {
+          if (c !== ws && c.readyState === WebSocket.OPEN) {
             try { c.send(JSON.stringify(out)); } catch(e) {}
           }
         });
@@ -490,6 +572,8 @@ if (useWebSocket) {
     });
   });
 }
+
+// ...existing code...
 
 http.listen(PORT, () => console.log(`server listening on ${PORT} ${useWebSocket ? '(ws enabled)' : '(ws disabled)'}`));
 

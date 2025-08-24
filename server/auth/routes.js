@@ -2,6 +2,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { randomUUID } = require('crypto');
+const jwt = require('jsonwebtoken');
 
 const { get, run } = require('../models/db');
 const {
@@ -98,14 +99,18 @@ router.post('/login', async (req, res) => {
     const ok = await bcrypt.compare(pass, user.password_hash);
     if (!ok) return res.status(401).json({ error: 'Credenciais inválidas' });
 
-    setAuthCookie(res, { id: user.id, name: user.name });
-    return res.json({
-      id: user.id,
-      name: user.name,
-      coins: user.coins,
-      gems: user.gems,
-      createdAt: user.createdAt
+    const token = jwt.sign({ id: user.id, name: user.name }, process.env.JWT_SECRET, {
+      expiresIn: '30d' // expira em 30 dias
     });
+
+    // depois de criar token (jwt.sign(...))
+    res.cookie(process.env.SESSION_COOKIE_NAME || 'token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // true em prod (https)
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // permitir envio em cross-site em prod
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 dias (ajuste)
+    });
+    res.json({ ok: true });
   } catch (e) {
     console.error('[auth/login] error:', e);
     return res.status(500).json({ error: 'Falha ao autenticar' });
