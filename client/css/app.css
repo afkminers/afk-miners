@@ -110,6 +110,17 @@ html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-
 #chatDock form{ margin-top:6px; }
 #chatDock input{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:#0a1326; color:#e6ebf4; }
 
+/* Chat styling */
+#chatBox .chat-row { padding:6px 8px; border-radius:4px; margin-bottom:6px; background:transparent; transition:background .12s; }
+#chatBox .chat-row.other { color:#ffffff; }
+#chatBox .chat-row.me { color:#ffd166; background: rgba(255,209,102,0.03); border:1px solid rgba(255,209,102,0.06); }
+#chatBox .chat-row .name { font-weight:600; margin-right:6px; }
+#chatBox .chat-row.me .name { color:inherit; }
+#chatBox .chat-row .you-tag { font-weight:400; color:rgba(255,255,255,0.6); margin-left:6px; font-size:11px; }
+
+/* muted small timestamp */
+#chatBox .chat-row .muted { opacity:.6; font-size:11px; }
+
 /* MODAL (SUMMON) */
 .modal{ position:fixed; inset:0; display:grid; place-items:center; background:rgba(0,0,0,.55); z-index:60; }
 .modal[hidden]{ display:none; }

@@ -169,6 +169,9 @@ btnLogout?.addEventListener('click', async ()=>{
     }
 
     let ws = null;
+    let myId = '';
+    let myName = 'Você';
+
     function log(...args){ try{ console.log('[chat]', ...args); }catch{} }
 
     function connectWS() {
@@ -179,26 +182,27 @@ btnLogout?.addEventListener('click', async ()=>{
         ws = null; return;
       }
 
-      // expõe no console pra facilitar testes manuais
       try { window._game_ws = ws; } catch (e) {}
 
       ws.addEventListener('open', async () => {
         log('ws aberto');
-        // auto-select Global so messages go to global by default while connected
         try { btnGlobal.classList.add('active'); btnDefault.classList.remove('active'); } catch(e){}
 
-        // handshake auth
+        // handshake auth — extrae /api/player/me (note: endpoint retorna { profile: {...} })
         try {
-          const me = await fetch('/api/player/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
-          const myId = String((me && (me.id || me.playerId)) || '');
-          const myName = (me && (me.name || me.username || me.displayName)) || 'Você';
+          const raw = await fetch('/api/player/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+          const me = (raw && raw.profile) ? raw.profile : raw;
+          myId = String((me && (me.id || me.playerId)) || '');
+          myName = (me && (me.name || me.username || me.displayName)) || myName;
+          // expose for debugging
+          try { window._chat_me = { id: myId, name: myName }; } catch (e) {}
           if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'auth', id: myId, name: myName }));
             log('sent auth handshake', { id: myId, name: myName });
           }
           // load history
           const hist = await fetch('/api/chat/global?limit=200', { credentials: 'include' }).then(r => r.ok ? r.json() : []);
-          for (const m of hist) appendChatRow({ fromName: m.fromName||'Anon', text: m.text, ts: (new Date(m.created_at)).getTime() });
+          for (const m of hist) appendChatRow({ fromId: m.fromId, fromName: m.fromName||m.from, text: m.text, ts: (new Date(m.created_at)).getTime() });
         } catch (e) { log('auth/history failed', e && e.message); }
       });
 
@@ -207,7 +211,7 @@ btnLogout?.addEventListener('click', async ()=>{
           const d = JSON.parse(evt.data);
           log('ws message', d);
           if (d.type === 'chat' && d.scope === 'global') {
-            appendChatRow({ fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
+            appendChatRow({ fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
           }
         } catch (e) { log('bad ws message', e); }
       });
@@ -221,8 +225,14 @@ btnLogout?.addEventListener('click', async ()=>{
       const d = document.createElement('div');
       d.className='chat-row';
       const time = new Date(msg.ts||Date.now()).toLocaleTimeString();
-      d.innerHTML = `<strong>${escapeHtml(msg.fromName||'Anon')}</strong>: ${escapeHtml(msg.text)} <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${time})</span>`;
-      chatBox.appendChild(d); chatBox.scrollTop = chatBox.scrollHeight;
+      // determine if message is mine (prefer fromId, fallback to name)
+      const isMe = (msg.fromId && myId && String(msg.fromId) === String(myId)) || (!msg.fromId && msg.fromName && myName && String(msg.fromName) === String(myName));
+      d.classList.add(isMe ? 'me' : 'other');
+      const displayName = escapeHtml(msg.fromName || (isMe ? myName : 'Anon'));
+      const extraYou = isMe ? ' <span class="you-tag">(Você)</span>' : '';
+      d.innerHTML = `<strong class="name">${displayName}</strong>${extraYou}: ${escapeHtml(msg.text)} <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${time})</span>`;
+      chatBox.appendChild(d);
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     connectWS();
