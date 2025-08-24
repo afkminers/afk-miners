@@ -105,6 +105,14 @@ CREATE TABLE IF NOT EXISTS spawns (
   levelMin INTEGER, levelMax INTEGER,
   FOREIGN KEY(mapKey) REFERENCES maps(key)
 );
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  scope TEXT NOT NULL,
+  fromId TEXT,
+  fromName TEXT,
+  text TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
 `, (e) => {
   if (e) console.error("[content] bootstrap error:", e.message);
   else console.log("[content] tables ready (bootstrap)");
@@ -389,16 +397,96 @@ try {
 const useWebSocket = Boolean(WebSocketLib);
 if (useWebSocket) {
   const wss = new WebSocketLib.Server({ server: http, path: '/ws' });
-  wss.on('connection', (ws) => {
-    ws.on('message', (msg) => {
-      try {
-        const data = JSON.parse(msg.toString());
-        if (data.type === 'pos') {
-          wss.clients.forEach(c => {
-            if (c !== ws && c.readyState === WebSocketLib.OPEN) c.send(JSON.stringify(data));
-          });
+
+  // simple cookie parser (reuse if you already have one)
+  function parseCookies(cookieHeader = '') {
+    return Object.fromEntries(
+      (cookieHeader || '').split(';').map(s => {
+        const [k, v] = s.split('=').map(x => x && x.trim());
+        return k ? [k, decodeURIComponent(v || '')] : [];
+      }).filter(Boolean)
+    );
+  }
+
+  wss.on('connection', (ws, req) => {
+    const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+    console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
+
+    ws._connectedAt = Date.now();
+    ws._player = null;
+
+    ws.on('message', async (msg) => {
+      let data;
+      try { data = JSON.parse(msg.toString()); } catch (err) {
+        console.warn('[ws] malformed json from', addr); return;
+      }
+
+      // auth handshake: client must send { type:'auth', id, name }
+      if (data.type === 'auth') {
+        ws._player = { id: String(data.id||''), name: String(data.name||'Anonymous') };
+        console.log(`[ws] auth from ${addr} => id=${ws._player.id} name=${ws._player.name}`);
+        // optionally reply ack
+        try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
+        return;
+      }
+
+      // chat message handling
+      if (data.type === 'chat') {
+        if (!ws._player) {
+          console.warn('[ws] received chat from unauthenticated socket — ignoring');
+          try { ws.send(JSON.stringify({ type:'error', message:'not-authenticated' })); } catch {}
+          return;
         }
-      } catch (e) { /* ignore malformed */ }
+        const scope = String(data.scope || 'global').toLowerCase();
+        const raw = String(data.text || '').trim().slice(0, 800);
+        if (!raw) return;
+
+        console.log(`[chat] from=${ws._player.id} scope=${scope} text="${raw}"`);
+
+        // persist global messages
+        if (scope === 'global') {
+          db.run(
+            'INSERT INTO chat_messages(scope, fromId, fromName, text) VALUES (?,?,?,?)',
+            ['global', ws._player.id, ws._player.name, raw],
+            function (err) { if (err) console.warn('[chat] persist error', err?.message); }
+          );
+        }
+
+        const out = {
+          type: 'chat',
+          scope,
+          fromId: ws._player.id,
+          fromName: ws._player.name,
+          text: raw,
+          ts: Date.now()
+        };
+
+        // broadcast to all connected clients
+        wss.clients.forEach(c => {
+          if (c && c.readyState === WebSocketLib.OPEN) {
+            try { c.send(JSON.stringify(out)); } catch (e) { /* ignore send errors */ }
+          }
+        });
+        return;
+      }
+
+      // position broadcast (kept)
+      if (data.type === 'pos') {
+        const out = { type:'pos', id:String(data.id||''), x:Number(data.x||0), y:Number(data.y||0), name:String(data.name||'') };
+        wss.clients.forEach(c => {
+          if (c !== ws && c.readyState === WebSocketLib.OPEN) {
+            try { c.send(JSON.stringify(out)); } catch(e) {}
+          }
+        });
+      }
+    });
+
+    ws.on('close', () => {
+      console.log(`[ws] close from ${addr} — clients=${wss.clients.size}`);
+    });
+
+    ws.on('error', (err) => {
+      console.warn('[ws] socket error', err && err.message);
     });
   });
 }
@@ -480,3 +568,21 @@ http.listen(PORT, () => console.log(`server listening on ${PORT} ${useWebSocket 
 
   setInterval(trainingTick, WORKER_TICK_SECONDS * 1000);
 })();
+
+// rota para obter histórico global (últimas N mensagens)
+app.get('/api/chat/global', requireAuth, async (req, res) => {
+  try {
+    const limit = Math.min(200, Number(req.query.limit || 100));
+    db.all(
+      'SELECT id, scope, fromId, fromName, text, created_at FROM chat_messages WHERE scope=? ORDER BY id DESC LIMIT ?',
+      ['global', limit],
+      (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        // retornar em ordem cronológica asc
+        res.json(rows.reverse());
+      }
+    );
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});

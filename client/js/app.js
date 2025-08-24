@@ -50,13 +50,6 @@ const btnLogout    = document.getElementById('btnLogout');
 const summonModal  = document.getElementById('summonModal');
 const summonClose  = summonModal?.querySelector('.close');
 
-/* ---------- Chat básico ---------- */
-const chatLog   = document.getElementById('chatLog');
-const chatForm  = document.getElementById('chatForm');
-const chatInput = document.getElementById('chatInput');
-function chatPush(who,msg){ const line=document.createElement('div'); line.textContent=`${who}: ${msg}`; chatLog.appendChild(line); chatLog.scrollTop=chatLog.scrollHeight; }
-chatForm?.addEventListener('submit',(e)=>{ e.preventDefault(); const v=chatInput.value.trim(); if(!v) return; chatPush('Você',v); chatInput.value=''; });
-
 /* ---------- Cena House ---------- */
 let currentScene = null;
 async function mountSceneHouse(){
@@ -152,4 +145,108 @@ btnLogout?.addEventListener('click', async ()=>{
 
   await mountSceneHouse();
   applyViewport();
+})();
+
+// Chat global — init seguro e tolerante (connect WS, load history, bind UI)
+(function initGlobalChat() {
+  // aguarda DOM por segurança
+  function onReady(fn) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
+  }
+
+  onReady(() => {
+    const btnDefault = document.getElementById('btnDefault');
+    const btnGlobal  = document.getElementById('btnGlobal');
+    const chatBox    = document.getElementById('chatBox');
+    const chatInput  = document.getElementById('chatInput');
+    const chatSend   = document.getElementById('chatSend');
+    const chatForm   = document.getElementById('chatForm');
+
+    if (!chatBox || !chatInput || !chatSend || !btnDefault || !btnGlobal || !chatForm) {
+      console.warn('[chat] elementos do DOM ausentes — verifique client/app.html');
+      return;
+    }
+
+    let ws = null;
+    function log(...args){ try{ console.log('[chat]', ...args); }catch{} }
+
+    function connectWS() {
+      try {
+        ws = new WebSocket((location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws');
+      } catch (e) {
+        log('erro ao criar WebSocket', e);
+        ws = null; return;
+      }
+
+      // expõe no console pra facilitar testes manuais
+      try { window._game_ws = ws; } catch (e) {}
+
+      ws.addEventListener('open', async () => {
+        log('ws aberto');
+        // auto-select Global so messages go to global by default while connected
+        try { btnGlobal.classList.add('active'); btnDefault.classList.remove('active'); } catch(e){}
+
+        // handshake auth
+        try {
+          const me = await fetch('/api/player/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+          const myId = String((me && (me.id || me.playerId)) || '');
+          const myName = (me && (me.name || me.username || me.displayName)) || 'Você';
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'auth', id: myId, name: myName }));
+            log('sent auth handshake', { id: myId, name: myName });
+          }
+          // load history
+          const hist = await fetch('/api/chat/global?limit=200', { credentials: 'include' }).then(r => r.ok ? r.json() : []);
+          for (const m of hist) appendChatRow({ fromName: m.fromName||'Anon', text: m.text, ts: (new Date(m.created_at)).getTime() });
+        } catch (e) { log('auth/history failed', e && e.message); }
+      });
+
+      ws.addEventListener('message', (evt) => {
+        try {
+          const d = JSON.parse(evt.data);
+          log('ws message', d);
+          if (d.type === 'chat' && d.scope === 'global') {
+            appendChatRow({ fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
+          }
+        } catch (e) { log('bad ws message', e); }
+      });
+
+      ws.addEventListener('close', () => log('ws fechado'));
+      ws.addEventListener('error', (e) => log('ws erro', e && e.message));
+    }
+
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    function appendChatRow(msg){
+      const d = document.createElement('div');
+      d.className='chat-row';
+      const time = new Date(msg.ts||Date.now()).toLocaleTimeString();
+      d.innerHTML = `<strong>${escapeHtml(msg.fromName||'Anon')}</strong>: ${escapeHtml(msg.text)} <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${time})</span>`;
+      chatBox.appendChild(d); chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    connectWS();
+
+    async function sendChat(){
+      const text = (chatInput.value||'').trim(); if(!text) return;
+      if (btnGlobal.classList.contains('active')) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type:'chat', scope:'global', text }));
+          log('sent chat', text);
+          chatInput.value='';
+        } else {
+          alert('Conexão real-time indisponível.');
+        }
+      } else {
+        appendChatRow({ fromName: 'Você', text, ts: Date.now() }); chatInput.value='';
+      }
+    }
+
+    btnDefault.addEventListener('click', ()=>{ btnDefault.classList.add('active'); btnGlobal.classList.remove('active'); });
+    btnGlobal.addEventListener('click', ()=>{ btnGlobal.classList.add('active'); btnDefault.classList.remove('active'); });
+
+    chatSend.addEventListener('click', sendChat);
+    chatForm.addEventListener('submit', (e)=>{ e.preventDefault(); sendChat(); });
+    chatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
+  });
 })();

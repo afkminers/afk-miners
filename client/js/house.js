@@ -300,4 +300,91 @@ if (btnReload) btnReload.addEventListener('click', async () => {
   }
 });
 
+// --- chat UI wiring (global) ---
+const btnDefault = document.getElementById('btnDefault');
+const btnGlobal  = document.getElementById('btnGlobal');
+const chatBox    = document.getElementById('chatBox');
+const chatInput  = document.getElementById('chatInput');
+const chatSend   = document.getElementById('chatSend');
+
+let chatScope = 'default';
+if (btnDefault) btnDefault.addEventListener('click', () => { chatScope = 'default'; btnDefault.classList.add('active'); btnGlobal?.classList.remove('active'); });
+if (btnGlobal)  btnGlobal.addEventListener('click',  () => { chatScope = 'global';  btnGlobal.classList.add('active');  btnDefault?.classList.remove('active'); });
+
+// append message to chatBox
+function appendChatRow(msg) {
+  if (!chatBox) return;
+  const d = document.createElement('div');
+  d.className = 'chat-row';
+  const time = new Date(msg.ts || Date.now()).toLocaleTimeString();
+  d.innerHTML = `<strong>${escapeHtml(msg.fromName||'Anon')}</strong>: ${escapeHtml(msg.text)} <span class="muted">(${time})</span>`;
+  chatBox.appendChild(d);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function escapeHtml(s) {
+  return (s||'').toString().replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// when WS opens, send auth handshake (use /api/player/me)
+async function wsAuthAndLoadHistory() {
+  try {
+    // get my player info (requires session cookie)
+    const me = await jget('/api/player/me');
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type:'auth', id: String(me.id||me.playerId||''), name: me.name || me.username || me.displayName || 'You' }));
+    }
+
+    // load recent global chat history
+    const hist = await jget('/api/chat/global?limit=200');
+    for (const m of hist) {
+      appendChatRow({ fromName: m.fromName || 'Anon', text: m.text, ts: (new Date(m.created_at)).getTime() });
+    }
+  } catch (e) {
+    console.warn('chat init failed', e.message);
+  }
+}
+
+// send chat (global via ws, default local via fallback)
+function sendChat() {
+  const text = (chatInput && chatInput.value || '').trim();
+  if (!text) return;
+  if (chatScope === 'global') {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type:'chat', scope:'global', text }));
+      chatInput.value = '';
+    } else {
+      // try POST fallback: save to DB via HTTP (optional endpoint not implemented)
+      alert('Conexão real-time ausente. Tente novamente.');
+    }
+  } else {
+    // default: local NPC chat handling (existing logic) — placeholder:
+    appendChatRow({ fromName: 'Você', text: text, ts: Date.now() });
+    chatInput.value = '';
+  }
+}
+
+if (chatSend) chatSend.addEventListener('click', sendChat);
+if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendChat(); } });
+
+// extend existing WS handler to process chat messages
+if (typeof ws !== 'undefined' && ws) {
+  ws.addEventListener('open', () => { wsAuthAndLoadHistory(); });
+  ws.addEventListener('message', (evt) => {
+    try {
+      const d = JSON.parse(evt.data);
+      if (d.type === 'chat' && d.scope === 'global') {
+        appendChatRow({ fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
+      }
+      // existing pos handler kept
+    } catch (e) {}
+  });
+}
+
+// helpers to ensure ws is defined (in case you used different variable)
+function ensureWsAuthOnConnect() {
+  if (typeof ws !== 'undefined' && ws && ws.readyState === WebSocket.OPEN) wsAuthAndLoadHistory();
+}
+ensureWsAuthOnConnect();
+
 startHub();

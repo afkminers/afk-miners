@@ -46,14 +46,22 @@
 
     <!-- CHAT FIXO EMBAIXO -->
     <footer id="chatDock">
-      <div class="tabs">
-        <button data-chat="default" class="active">Default</button>
-        <button data-chat="global">Global</button>
+      <!-- chat controls: substitui o bloco antigo #chatLog + #chatForm -->
+      <div class="chat-controls" style="padding:12px;">
+        <div class="chat-tabs" style="display:flex; gap:8px; margin-bottom:8px;">
+          <button id="btnDefault" class="chat-tab active" type="button" style="padding:4px 8px">Default</button>
+          <button id="btnGlobal"  class="chat-tab"         type="button" style="padding:4px 8px">Global</button>
+        </div>
+
+        <div id="chatBox" class="chat-box" style="height:180px; overflow:auto; background:#07101a; padding:8px; color:#e6eef6; border-radius:4px; border:1px solid rgba(255,255,255,0.03);">
+          <!-- mensagens carregadas aqui -->
+        </div>
+
+        <form id="chatForm" autocomplete="off" style="display:flex; gap:8px; margin-top:8px;">
+          <input id="chatInput" name="chat" placeholder="Digite uma mensagem…" style="flex:1; padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.04); background:#07121a; color:#fff;" />
+          <button id="chatSend" type="button" style="padding:8px 12px; border-radius:4px; background:#2563eb; color:#fff; border:0;">Enviar</button>
+        </form>
       </div>
-      <div id="chatLog" class="log"></div>
-      <form id="chatForm" autocomplete="off">
-        <input id="chatInput" placeholder="Digite uma mensagem…" />
-      </form>
     </footer>
   </main>
 
