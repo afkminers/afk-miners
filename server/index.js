@@ -27,6 +27,47 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const PORT = Number(process.env.PORT || 3000);
 const CLIENT_ROOT_DIR = path.join(__dirname, '..', 'client');
 const WORKER_TICK_SECONDS = Number(process.env.WORKER_TICK_SECONDS || 3);
+const { randomUUID } = require('crypto');
+const { get, run, all } = require('./models/db'); // usa os mesmos helpers do routes.js
+// Chat moderation / rate-limit config
+const RATE_TOKENS_PER_SEC = Number(process.env.CHAT_TOKENS_PER_SEC || 2);
+const RATE_BURST = Number(process.env.CHAT_RATE_BURST || 4);
+const BANNED_WORDS = (process.env.BANNED_WORDS || 'badword1,badword2').split(',').map(s=>s.trim()).filter(Boolean);
+
+// in-memory fallback (mantido apenas como cache)
+const mutedCache = new Map();
+
+// simple filter
+function filterText(s) {
+  if (!s) return s;
+  let out = String(s);
+  for (const w of BANNED_WORDS) {
+    if (!w) continue;
+    const re = new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b', 'ig');
+    out = out.replace(re, '***');
+  }
+  return out;
+}
+
+// token-bucket helpers
+function ensureTokenBucket(ws) {
+  if (!ws._tokens) {
+    ws._tokens = RATE_BURST;
+    ws._lastRefill = Date.now();
+  } else {
+    const now = Date.now();
+    const delta = (now - (ws._lastRefill || now))/1000;
+    if (delta > 0) {
+      ws._tokens = Math.min(RATE_BURST, (ws._tokens || 0) + delta * RATE_TOKENS_PER_SEC);
+      ws._lastRefill = now;
+    }
+  }
+}
+function consumeToken(ws) {
+  ensureTokenBucket(ws);
+  if ((ws._tokens || 0) >= 1) { ws._tokens -= 1; return true; }
+  return false;
+}
 
 // ========= APP =========
 const app = express();
@@ -488,6 +529,12 @@ if (useWebSocket) {
     }
 
     ws.on('message', async (msg) => {
+      // ADICIONE: log curto para ver mensagens recebidas (limita comprimento)
+      try {
+        const preview = typeof msg === 'string' ? msg : msg.toString();
+        console.log(`[ws recv] ${addr} <- ${preview.slice(0,200).replace(/\n/g,' ')}${preview.length>200 ? '…' : ''}`);
+      } catch (e) {}
+
       let data;
       try { data = JSON.parse(msg.toString()); } catch (err) { console.warn('[ws] malformed json from', addr); return; }
 
@@ -498,27 +545,46 @@ if (useWebSocket) {
         return;
       }
 
+      /* ---------- CHAT / TYPING / RATE-LIMIT patch ---------- */
+      if (data.type === 'typing') {
+        const state = !!data.state;
+        const outType = { type:'typing', fromId: ws._player?.id || null, fromName: ws._player?.name || 'Anon', state };
+        const outStr = JSON.stringify(outType);
+        wss.clients.forEach(c => {
+          if (c !== ws && c.readyState === WebSocket.OPEN) {
+            try { c.send(outStr); } catch (e) {}
+          }
+        });
+        return;
+      }
+
       if (data.type === 'chat') {
-        if (!ws._player) {
-          console.warn('[ws] received chat from unauthenticated socket — ignoring');
-          try { ws.send(JSON.stringify({ type:'error', message:'not-authenticated' })); } catch {}
-          return;
-        }
+        if (!ws._player) { try { ws.send(JSON.stringify({ type:'error', message:'not-authenticated' })); } catch {} return; }
+        if (!consumeToken(ws)) { try { ws.send(JSON.stringify({ type:'error', code:'rate_limited', message:'Too many messages' })); } catch {} return; }
+
         const scope = String(data.scope || 'global').toLowerCase();
-        const raw = String(data.text || '').trim().slice(0, 800);
+        let raw = String(data.text || '').trim().slice(0, 800);
         if (!raw) return;
 
-        console.log(`[chat] from=${ws._player.id} scope=${scope} text="${raw}"`);
+        // mute check (DB)
+        try {
+          const m = await get('SELECT until FROM chat_mutes WHERE targetId = ? ORDER BY until DESC LIMIT 1', [ws._player.id]);
+          const muteUntil = m && m.until ? Number(m.until) : mutedCache.get(ws._player.id) || null;
+          if (muteUntil && muteUntil > Date.now()) { try { ws.send(JSON.stringify({ type:'error', code:'muted', until:muteUntil })); } catch {} return; }
+          if (muteUntil && muteUntil <= Date.now()) { await run('DELETE FROM chat_mutes WHERE targetId = ?', [ws._player.id]); mutedCache.delete(ws._player.id); }
+        } catch (e) { console.warn('[chat] mute-check error', e?.message); }
 
-        // persist if db available
+        raw = filterText(raw);
+
         try {
           if (scope === 'global' && typeof db !== 'undefined' && db && db.run) {
             db.run('INSERT INTO chat_messages(scope, fromId, fromName, text) VALUES (?,?,?,?)', ['global', ws._player.id, ws._player.name, raw], function (err) {
               if (err) console.warn('[chat] persist error', err && err.message);
             });
           }
-        } catch (e) { /* ignore db errors */ }
+        } catch (e) {}
 
+        const msgId = randomUUID();
         const out = {
           type: 'chat',
           scope,
@@ -526,31 +592,23 @@ if (useWebSocket) {
           fromName: ws._player.name,
           text: raw,
           ts: Date.now(),
+          id: msgId,
           origin: instanceId
         };
+        if (data._clientId) out._clientId = String(data._clientId);
 
+        const outStr = JSON.stringify(out);
         if (redisPub) {
-          try {
-            await redisPub.publish('chat:global', JSON.stringify(out));
-          } catch (e) {
-            console.warn('[redis] publish failed', e && e.message);
-            const outStr = JSON.stringify(out);
-            wss.clients.forEach(c => {
-              if (c && c.readyState === WebSocket.OPEN) {
-                try { c.send(outStr); } catch (e) {}
-              }
-            });
-          }
+          try { await redisPub.publish('chat:global', outStr); } catch (e) { console.warn('[redis] publish failed', e && e.message); wss.clients.forEach(c => { if (c && c.readyState === WebSocket.OPEN) try{ c.send(outStr); }catch{} }); }
         } else {
-          const outStr = JSON.stringify(out);
-          wss.clients.forEach(c => {
-            if (c && c.readyState === WebSocket.OPEN) {
-              try { c.send(outStr); } catch (e) {}
-            }
-          });
+          wss.clients.forEach(c => { if (c && c.readyState === WebSocket.OPEN) try{ c.send(outStr); }catch{} });
         }
+
+        // ack to sender
+        try { ws.send(JSON.stringify({ type:'chat_ack', id: msgId, _clientId: data._clientId || null, ts: Date.now() })); } catch (e) {}
         return;
       }
+      /* ---------- END PATCH ---------- */
 
       // pos handling (se já existir)
       if (data.type === 'pos') {
@@ -573,8 +631,7 @@ if (useWebSocket) {
   });
 }
 
-// ...existing code...
-
+// ensure DB helpers available
 http.listen(PORT, () => console.log(`server listening on ${PORT} ${useWebSocket ? '(ws enabled)' : '(ws disabled)'}`));
 
 // ========= START =========
@@ -657,16 +714,84 @@ http.listen(PORT, () => console.log(`server listening on ${PORT} ${useWebSocket 
 app.get('/api/chat/global', requireAuth, async (req, res) => {
   try {
     const limit = Math.min(200, Number(req.query.limit || 100));
-    db.all(
-      'SELECT id, scope, fromId, fromName, text, created_at FROM chat_messages WHERE scope=? ORDER BY id DESC LIMIT ?',
-      ['global', limit],
-      (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        // retornar em ordem cronológica asc
-        res.json(rows.reverse());
-      }
-    );
+    const before = req.query.before ? Number(req.query.before) : null; // id before
+    if (before) {
+      db.all(
+        'SELECT id, scope, fromId, fromName, text, created_at FROM chat_messages WHERE scope=? AND id < ? ORDER BY id DESC LIMIT ?',
+        ['global', before, limit],
+        (err, rows) => {
+          if (err) return res.status(500).json({ error: err.message });
+          res.json(rows.reverse());
+        }
+      );
+    } else {
+      db.all(
+        'SELECT id, scope, fromId, fromName, text, created_at FROM chat_messages WHERE scope=? ORDER BY id DESC LIMIT ?',
+        ['global', limit],
+        (err, rows) => {
+          if (err) return res.status(500).json({ error: err.message });
+          res.json(rows.reverse());
+        }
+      );
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+// mute endpoints (in-memory). Adjust protection as needed (requireAuth present)
+app.post('/api/chat/mute', requireAuth, async (req, res) => {
+  try {
+    const byId = String(req.user?.id || '');
+    const me = await get('SELECT role FROM players WHERE id = ?', [byId]);
+    if (!me || me.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
+
+    const targetId = String(req.body?.targetId || '');
+    const seconds = Number(req.body?.seconds || 0);
+    const reason = String(req.body?.reason || '');
+    if (!targetId || !seconds) return res.status(400).json({ error:'targetId and seconds required' });
+
+    const until = Date.now() + Math.max(0, seconds)*1000;
+    await run('INSERT INTO chat_mutes(targetId, byId, until, reason, created_at) VALUES (?,?,?,?,?)',
+      [targetId, byId, until, reason || null, Date.now()]);
+    // update cache
+    mutedCache.set(targetId, until);
+    return res.json({ ok: true, targetId, until });
+  } catch (e) {
+    console.error('[api/chat/mute] ', e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/chat/unmute', requireAuth, async (req, res) => {
+  try {
+    const byId = String(req.user?.id || '');
+    const me = await get('SELECT role FROM players WHERE id = ?', [byId]);
+    if (!me || me.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
+
+    const targetId = String(req.body?.targetId || '');
+    if (!targetId) return res.status(400).json({ error:'targetId required' });
+    await run('DELETE FROM chat_mutes WHERE targetId = ?', [targetId]);
+    mutedCache.delete(targetId);
+    return res.json({ ok: true, targetId });
+  } catch (e) {
+    console.error('[api/chat/unmute] ', e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/chat/mutes', requireAuth, async (req, res) => {
+  try {
+    const byId = String(req.user?.id || '');
+    const me = await get('SELECT role FROM players WHERE id = ?', [byId]);
+    if (!me || me.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
+    const rows = await all('SELECT id, targetId, byId, until, reason, created_at FROM chat_mutes ORDER BY created_at DESC');
+    return res.json(rows || []);
+  } catch (e) {
+    console.error('[api/chat/mutes] ', e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+
+

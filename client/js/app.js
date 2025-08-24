@@ -114,8 +114,8 @@ function makeVSplitter(splitEl, side){
   window.addEventListener('mousemove', onMove);
   window.addEventListener('mouseup', onUp);
 }
-makeVSplitter(splitL,'left');
-makeVSplitter(splitR,'right');
+if (splitL) makeVSplitter(splitL,'left');
+if (splitR) makeVSplitter(splitR,'right');
 
 /* ---------- Abrir painéis (sempre dockados) ---------- */
 btnSkills   ?.addEventListener('click', ()=> openSkills(rightS));
@@ -146,6 +146,29 @@ btnLogout?.addEventListener('click', async ()=>{
   await mountSceneHouse();
   applyViewport();
 })();
+
+// Garantir que a inicialização ocorra somente depois do DOM estar pronto
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    // se existir função global de inicialização (onReady / initGlobalChat) execute-a com segurança
+    if (typeof onReady === 'function') onReady();
+    if (typeof initGlobalChat === 'function') initGlobalChat();
+  } catch (err) {
+    console.warn('client init failed:', err);
+  }
+});
+
+// Função utilitária segura para ligar eventos (use onde precisar ligar listeners)
+function safeAddListener(selectorOrNode, event, handler) {
+  try {
+    const node = typeof selectorOrNode === 'string' ? document.querySelector(selectorOrNode) : selectorOrNode;
+    if (!node) return false;
+    node.addEventListener(event, handler);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
 // Chat global — init seguro e tolerante (connect WS, load history, bind UI)
 (function initGlobalChat() {
@@ -220,28 +243,70 @@ btnLogout?.addEventListener('click', async ()=>{
       ws.addEventListener('error', (e) => log('ws erro', e && e.message));
     }
 
-    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    const typingIndicator = document.createElement('div');
+    typingIndicator.id = 'typingIndicator';
+    typingIndicator.style.padding = '6px 8px';
+    typingIndicator.style.fontSize = '13px';
+    typingIndicator.style.opacity = '.9';
+    chatBox.parentNode.insertBefore(typingIndicator, chatBox.nextSibling);
+
+    let typingSet = new Set();
+    function updateTypingUI() {
+      if (!typingIndicator) return;
+      const names = Array.from(typingSet);
+      typingIndicator.textContent = names.length ? (names.join(', ') + (names.length===1 ? ' está digitando…' : ' estão digitindo…')) : '';
+    }
+
+    // deterministic color from id (HSL)
+    function colorFromId(id) {
+      if (!id) return '#ffffff';
+      let h = 0;
+      for (let i=0;i<id.length;i++) h = (h*31 + id.charCodeAt(i)) >>> 0;
+      const hue = h % 360;
+      return `hsl(${hue} 90% 60%)`;
+    }
+
+    // store pending messages until ack
+    const pendingMap = new Map();
+
     function appendChatRow(msg){
       const d = document.createElement('div');
       d.className='chat-row';
       const time = new Date(msg.ts||Date.now()).toLocaleTimeString();
-      // determine if message is mine (prefer fromId, fallback to name)
       const isMe = (msg.fromId && myId && String(msg.fromId) === String(myId)) || (!msg.fromId && msg.fromName && myName && String(msg.fromName) === String(myName));
       d.classList.add(isMe ? 'me' : 'other');
       const displayName = escapeHtml(msg.fromName || (isMe ? myName : 'Anon'));
-      const extraYou = isMe ? ' <span class="you-tag">(Você)</span>' : '';
-      d.innerHTML = `<strong class="name">${displayName}</strong>${extraYou}: ${escapeHtml(msg.text)} <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${time})</span>`;
+      d.innerHTML = `<strong class="name">${displayName}</strong>: ${escapeHtml(msg.text)} <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${time})</span>`;
+      // apply color
+      const nameEl = d.querySelector('.name');
+      const color = colorFromId(msg.fromId || msg.fromName);
+      if (nameEl) nameEl.style.color = isMe ? '#ffd166' : color;
+      // if pending (no id yet) create pending marker
+      if (msg._pendingId) {
+        d.dataset.pendingId = msg._pendingId;
+        const mark = document.createElement('span');
+        mark.className = 'pending';
+        mark.textContent = ' ⏳';
+        nameEl.insertAdjacentElement('afterend', mark);
+      }
+      if (msg.id) d.dataset.msgId = msg.id;
       chatBox.appendChild(d);
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    connectWS();
-
+    // sendChat: attach client side id and mark pending
     async function sendChat(){
       const text = (chatInput.value||'').trim(); if(!text) return;
       if (btnGlobal.classList.contains('active')) {
         if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type:'chat', scope:'global', text }));
+          const localId = (Date.now().toString(36) + Math.random().toString(36).slice(2,8));
+          // render as pending using clientId
+          appendChatRow({ fromId: myId, fromName: myName, text, ts: Date.now(), _pendingId: localId, id: null });
+          pendingMap.set(localId, { text, ts: Date.now() });
+          // log ao enviar chat
+          console.log('[client] sending chat', { text, scope: 'global', _clientId: localId });
+          // envio correto com variáveis definidas
+          ws.send(JSON.stringify({ type:'chat', text: text, scope: 'global', _clientId: localId }));
           log('sent chat', text);
           chatInput.value='';
         } else {
@@ -258,5 +323,121 @@ btnLogout?.addEventListener('click', async ()=>{
     chatSend.addEventListener('click', sendChat);
     chatForm.addEventListener('submit', (e)=>{ e.preventDefault(); sendChat(); });
     chatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
+
+    // iniciar conexão WebSocket (garante ws não ser null antes de registrar handlers adicionais)
+    try { connectWS(); } catch (e) { console.warn('connectWS failed', e); }
+
+    // handle incoming messages and acks and typing
+    ws.addEventListener('message', (evt) => {
+      try {
+        const d = JSON.parse(evt.data);
+        log('ws message', d);
+        if (d.type === 'chat' && d.scope === 'global') {
+          // if server echoed _clientId, try to match and mark pending -> delivered
+          if (d._clientId) {
+            const pendingEl = chatBox.querySelector(`[data-pending-id="${d._clientId}"]`);
+            if (pendingEl) {
+              // replace pending entry with authoritative message (set data-msgid)
+              pendingEl.dataset.msgId = d.id;
+              const mark = pendingEl.querySelector('.pending');
+              if (mark) { mark.textContent = ' ✓'; mark.style.opacity = '.9'; }
+              pendingEl.removeAttribute('data-pending-id');
+              // update content to server text (filtered)
+              const textNode = pendingEl.querySelector('.muted') ? pendingEl.querySelector('.muted').previousSibling : null;
+            } else {
+              // no pending match — append normalmente
+              appendChatRow({ id: d.id, fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
+            }
+          } else {
+            appendChatRow({ id: d.id, fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
+          }
+        } else if (d.type === 'chat_ack') {
+          // robust fallback: if ack returns _clientId, mark pending
+          if (d._clientId) {
+            const p = chatBox.querySelector(`[data-pending-id="${d._clientId}"]`);
+            if (p) {
+              const mark = p.querySelector('.pending');
+              if (mark) { mark.textContent = ' ✓'; mark.style.opacity = '.9'; }
+              p.removeAttribute('data-pending-id');
+              p.dataset.msgId = d.id || '';
+            }
+          } else if (d.id) {
+            // if server ack only with id, try match by content/time (best-effort) — leaving minimal behavior
+          }
+        } else if (d.type === 'typing') {
+          if (!d.fromId) return;
+          if (d.state) typingSet.add(d.fromName || 'Anon');
+          else typingSet.delete(d.fromName || 'Anon');
+          updateTypingUI();
+        } else if (d.type === 'error') {
+          console.warn('chat error', d);
+          if (d.code === 'rate_limited') alert('Você está enviando mensagens rápido demais. Aguarde.');
+          if (d.code === 'muted') alert('Você está silenciado até ' + new Date(d.until).toLocaleString());
+        }
+      } catch (e) { log('bad ws message', e); }
+    });
+
+    // send typing events (debounced)
+    let typingTimer = null;
+    let lastTypingState = false;
+    chatInput.addEventListener('input', () => {
+      const isTyping = chatInput.value.trim().length > 0;
+      if (isTyping !== lastTypingState) {
+        lastTypingState = isTyping;
+        if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'typing', state: isTyping }));
+      }
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        if (lastTypingState) {
+          lastTypingState = false;
+          if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'typing', state: false }));
+        }
+      }, 2500);
+    });
+
+    // lazy-load: add a button at top to load earlier messages
+    const loadMoreBtn = document.createElement('button');
+    loadMoreBtn.textContent = 'Carregar mensagens anteriores';
+    loadMoreBtn.style.display = 'block';
+    loadMoreBtn.style.width = '100%';
+    loadMoreBtn.style.margin = '6px 0';
+    chatBox.parentNode.insertBefore(loadMoreBtn, chatBox);
+    let earliestMessageId = null;
+    loadMoreBtn.addEventListener('click', async () => {
+      try {
+        // determine earliest id visible (assume first child corresponds to earliest)
+        const first = chatBox.querySelector('.chat-row');
+        const id = first && first.dataset && first.dataset.msgId ? Number(first.dataset.msgId) : earliestMessageId;
+        const url = '/api/chat/global?limit=50' + (id ? '&before=' + id : '');
+        const hist = await fetch(url, { credentials: 'include' }).then(r => r.ok ? r.json() : []);
+        if (hist && hist.length) {
+          // prepend messages
+          for (const m of hist) {
+            const d = document.createElement('div');
+            d.className = 'chat-row';
+            d.dataset.msgId = m.id;
+            const isMe = (m.fromId && myId && String(m.fromId) === String(myId));
+            d.classList.add(isMe ? 'me' : 'other');
+            d.innerHTML = `<strong class="name" style="color:${colorFromId(m.fromId)}">${escapeHtml(m.fromName||'Anon')}</strong>: ${escapeHtml(m.text)} <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${new Date(m.created_at).toLocaleTimeString()})</span>`;
+            chatBox.insertBefore(d, chatBox.firstChild);
+          }
+        } else {
+          loadMoreBtn.disabled = true;
+          loadMoreBtn.textContent = 'Sem mais mensagens';
+        }
+      } catch (e) { console.warn('load more failed', e); }
+    });
   });
 })();
+
+function escapeHtml(input) {
+  if (input === null || input === undefined) return '';
+  return String(input)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+// expõe globalmente caso outras partes do client chamem como window.escapeHtml
+window.escapeHtml = escapeHtml;
