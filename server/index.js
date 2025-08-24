@@ -793,14 +793,35 @@ app.get('/api/chat/mutes', requireAuth, async (req, res) => {
   }
 });
 
+// dedupe global de broadcasts (evita reenviar acidentalmente a mesma id várias vezes)
 const recentBroadcastIds = new Set();
-function broadcastWithMsgId(msg) {
-  if (msg.id && recentBroadcastIds.has(msg.id)) return;
-  if (msg.id) {
-    recentBroadcastIds.add(msg.id);
-    setTimeout(()=>recentBroadcastIds.delete(msg.id), 30_000); // mantém por 30s
+
+function broadcast(msg) {
+  try {
+    // se a mensagem tiver id e já foi broadcastada recentemente, ignora
+    if (msg && msg.id && recentBroadcastIds.has(String(msg.id))) {
+      console.log('[ws] skip broadcast (recent id)', String(msg.id));
+      return;
+    }
+
+    // registra id para evitar re-broadcasts na janela de tempo
+    if (msg && msg.id) {
+      recentBroadcastIds.add(String(msg.id));
+      setTimeout(() => recentBroadcastIds.delete(String(msg.id)), 30_000); // keep 30s
+    }
+
+    // compila lista de targets abertos
+    const targets = [];
+    wss.clients.forEach(c => { if (c && c.readyState === WebSocket.OPEN) targets.push(c); });
+    console.log('[ws] broadcasting message to', targets.length, 'clients', msg?.type || '');
+
+    // envia para cada socket (uma vez)
+    for (const c of targets) {
+      try { c.send(JSON.stringify(msg)); } catch (e) { console.warn('[ws] send failed', e); }
+    }
+  } catch (e) {
+    console.warn('[ws] broadcast error', e);
   }
-  // enviar para clients...
 }
 
 
