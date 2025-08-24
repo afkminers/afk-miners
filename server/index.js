@@ -793,5 +793,15 @@ app.get('/api/chat/mutes', requireAuth, async (req, res) => {
   }
 });
 
+const recentBroadcastIds = new Set();
+function broadcastWithMsgId(msg) {
+  if (msg.id && recentBroadcastIds.has(msg.id)) return;
+  if (msg.id) {
+    recentBroadcastIds.add(msg.id);
+    setTimeout(()=>recentBroadcastIds.delete(msg.id), 30_000); // mantém por 30s
+  }
+  // enviar para clients...
+}
+
 
 
