@@ -15,7 +15,6 @@ const gachaRoutes   = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 
 const K = require('./balance/config');
-// starter router exporta a função diretamente
 const buildStarterRouter = require('./starter/routes');
 
 // ======== Pipeline de Conteúdo (YAML/Tiled) ========
@@ -36,7 +35,7 @@ app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
 app.use(requireCsrf);
 
-// CSRF token (antes das outras rotas usadas pelo cliente)
+// CSRF token
 app.get('/api/csrf', csrfRoute);
 
 // ========= DB =========
@@ -110,7 +109,6 @@ CREATE TABLE IF NOT EXISTS spawns (
   if (e) console.error("[content] bootstrap error:", e.message);
   else console.log("[content] tables ready (bootstrap)");
 });
-// ---------------------------------------------------------------------------
 
 // ========= ROTAS QUE NÃO PRECISAM DO DB PASSADO =========
 app.use('/api/auth',   authRoutes);
@@ -138,6 +136,7 @@ async function resolveSkillType(weaponOrSkill) {
 // ========= Rotas de Treino =========
 const trainingRouter = express.Router();
 
+// START
 trainingRouter.post('/start', requireAuth, async (req, res) => {
   try {
     const { heroId, weaponOrSkill, heroClass } = req.body || {};
@@ -181,6 +180,7 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
   }
 });
 
+// STOP
 trainingRouter.post('/stop', requireAuth, async (req, res) => {
   try {
     const { heroId } = req.body || {};
@@ -215,6 +215,7 @@ trainingRouter.post('/stop', requireAuth, async (req, res) => {
   }
 });
 
+// STATUS
 trainingRouter.get('/status', requireAuth, async (req, res) => {
   try {
     const heroId = req.query.heroId;
@@ -318,7 +319,7 @@ app.get('/api/admin/content/map/:key/spawns', (req, res) => {
   );
 });
 
-// JSON bruto do mapa (para o render client-side)
+// JSON bruto do mapa
 app.get('/api/admin/content/map/:key/data', (req, res) => {
   db.get('SELECT dataJSON FROM maps WHERE key=?', [req.params.key], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -345,30 +346,21 @@ app.post('/api/admin/content/reload-map', async (req, res) => {
 
 function safeParse(s) { try { return JSON.parse(s || '{}'); } catch { return {}; } }
 
-// >>> ROTA STARTER (agora que db já existe)
+// >>> ROTA STARTER
 app.use('/api/starter', requireAuth, buildStarterRouter(db));
 
-/* ========= PÁGINAS PÚBLICAS =========
-   Deixe /, /index.html, /starter.html, /app.html, /house.html acessíveis
-   sem exigir auth — a lógica de redirecionamento fica no client (boot.js).
-*/
-const PUBLIC_PAGES = [
-  '/', '/index.html', '/starter.html', '/app.html', '/house.html'
-];
-
-app.get(PUBLIC_PAGES, (req, res) => {
-  // normaliza para o arquivo dentro de /client
-  const file = req.path === '/' ? 'index.html' : req.path.replace(/^\//, '');
-  res.sendFile(path.join(CLIENT_ROOT_DIR, file));
+// ---- Raiz pública: entrega index.html (landing + login)
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
 });
 
 // ========= SERVE CLIENTE (estático)
 app.use(express.static(CLIENT_ROOT_DIR));
 
-// ========= SPA fallback (não intercepta assets nem /api)
+// ========= SPA fallback (não intercepta assets)
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next();
-  if (/\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|map|mp3|wav)$/i.test(req.path)) return next();
+  if (/\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|map)$/i.test(req.path)) return next();
   res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
 });
 

@@ -3,7 +3,7 @@ import { API, getCsrf, apiGet } from './api.js';
 import { doLogin, doRegister, doLogout } from './auth.js';
 import { bindGachaUI } from './gacha.js';
 import { initLoginFx, stopLoginFx, celebrate } from './login_fx.js';
-import { bindProfileModal, setupInventoryOpen } from './player_profile.js'; // PERFIL
+import { bindProfileModal, setupInventoryOpen } from './player_profile.js';
 
 // UI base
 const authScreen = document.getElementById('authScreen');
@@ -33,7 +33,7 @@ const authClose = document.getElementById('authClose');
 const btnHamb   = document.getElementById('btnHamb');
 const mobMenu   = document.getElementById('mobileMenu');
 
-// Referências gacha
+// Referências gacha (seguem existentes no index; não serão usadas após o redirect)
 const ctx = {
   elGacha:    document.getElementById('btnGacha'),
   elGacha10:  document.getElementById('btnGacha10'),
@@ -108,7 +108,7 @@ function updateHud(profileOrCoins) {
   } catch {}
 }
 
-// liga gacha com callback de HUD
+// Mantido por compatibilidade, mas o fluxo agora redireciona para /app.html
 const gacha = bindGachaUI(ctx, { onHudUpdate: updateHud });
 
 /* ========= helpers visual ========= */
@@ -136,57 +136,45 @@ function showLanding(){
   initLoginFx();
 }
 
-let __profileModalBound = false;
-
-async function showApp(profile) {
-  stopLoginFx();
-  authScreen.classList.add('hidden');
-  appMain.classList.remove('hidden');
-  setLogoutVisibility(true);
-  setLoggedOutGlow(false);
-  closeMobileMenu();
-
-  __profile = profile;
-  window.__isAuth = true;
-
-  updateHud(profile);
-  await gacha.init(profile);
-
-  // === Bind do modal de perfil (uma única vez)
-  if (!__profileModalBound) {
-    __profileModalBound = true;
-    const modal = bindProfileModal();
-    const invEl = document.getElementById('inventory');
-    const getInv = () => (gacha.getInventory ? gacha.getInventory() : (window.AFK_INVENTORY || []));
-    if (invEl) {
-      setupInventoryOpen(invEl, getInv, modal.open);
-      document.addEventListener('inventory:rendered', () => {
-        setupInventoryOpen(invEl, getInv, modal.open);
-      });
+async function goToGameAccordingToStarter() {
+  try {
+    const st = await apiGet(`${API}/api/starter/status`); // { canSelect: boolean }
+    if (st?.canSelect) {
+      // ainda não escolheu
+      location.href = '/starter.html';
+    } else {
+      // já tem starter → shell do jogo
+      location.href = '/app.html';
     }
+  } catch {
+    // fallback conservador
+    location.href = '/app.html';
   }
 }
 
-/* ========= Decisão de fluxo pós-sessão ========= */
-async function goToRightPlace(profile){
-  // Checa se precisa escolher starter
-  const st = await apiGet(`${API}/api/starter/status`).catch(()=>null);
-  if (st?.canSelect) {
-    // precisa escolher → manda para página de starter
-    location.href = '/starter.html';
-    return;
-  }
-  // já tem starter → abre app dentro do index.html
-  await showApp(profile);
+async function showApp(profile) {
+  // Não exibiremos mais o “hub” do index. Assim que tiver perfil válido, vamos
+  // direto para a rota certa (starter/app). Manter stopLoginFx evita visual sujo.
+  stopLoginFx();
+  __profile = profile;
+  window.__isAuth = true;
+  updateHud(profile);
+  await gacha.init?.(profile);
+  // redireciona
+  goToGameAccordingToStarter();
 }
 
 /* ========= Sessão ========= */
 async function trySession() {
   await getCsrf();
-  const me = await apiGet(`${API}/api/auth/me`).catch(()=>null);
-  if (me?.profile) {
-    await goToRightPlace(me.profile);
-  } else {
+  try {
+    const me = await apiGet(`${API}/api/auth/me`);
+    if (me?.profile) {
+      await showApp(me.profile);
+    } else {
+      showLanding();
+    }
+  } catch {
     showLanding();
   }
 }
@@ -194,9 +182,9 @@ trySession();
 
 /* ========= PLAY ========= */
 if (btnPlay) {
-  btnPlay.onclick = () => {
+  btnPlay.onclick = async () => {
     if (window.__isAuth && __profile) {
-      showApp(__profile);
+      goToGameAccordingToStarter();
     } else {
       authScreen.classList.remove('hidden');
     }
@@ -214,7 +202,8 @@ btnLogin.onclick = async () => {
   const data = await doLogin(loginName.value.trim(), loginPass.value);
   if (data?.error) { loginMsg.textContent = data.error; return; }
   celebrate();
-  await trySession(); // isso decide starter vs app
+  // após login, manda direto conforme starter
+  await goToGameAccordingToStarter();
 };
 
 btnRegister.onclick = async () => {
@@ -222,7 +211,7 @@ btnRegister.onclick = async () => {
   const data = await doRegister(regName.value.trim(), regPass.value);
   if (data?.error) { regMsg.textContent = data.error; return; }
   celebrate();
-  await trySession(); // isso decide starter vs app
+  await goToGameAccordingToStarter();
 };
 
 async function handleLogout(){

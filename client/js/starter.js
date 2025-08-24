@@ -18,7 +18,7 @@ async function fetchCsrf() {
   try {
     const data = await r.json();
     bodyTok = data?.token || data?.csrf || data?.csrfToken || null;
-  } catch { /* ok se não for json */ }
+  } catch {}
 
   CSRF_TOKEN = headerTok || bodyTok || null;
   return CSRF_TOKEN;
@@ -32,7 +32,6 @@ async function jget(url) {
     cache: 'no-store',
   });
   if (r.status === 401) {
-    // não logado -> volta para login
     location.href = '/index.html';
     throw new Error('Não autenticado');
   }
@@ -59,7 +58,6 @@ async function jpost(url, body, _retry) {
     throw new Error('Não autenticado');
   }
   if (r.status === 403 && !_retry) {
-    // token inválido/expirado? tenta renovar uma vez
     CSRF_TOKEN = null;
     await fetchCsrf().catch(() => null);
     return jpost(url, body, true);
@@ -83,20 +81,18 @@ function spriteUrlFrom(h) {
 /* ===================== Fluxo principal ===================== */
 async function main() {
   try {
-    // 1) Confere sessão; se não estiver logado, jget redireciona
+    // exige sessão
     await jget('/api/auth/me');
 
-    // 2) opcional: pega CSRF pra próximos POSTs
     await fetchCsrf().catch(() => null);
 
-    // 3) Já tem starter? vai direto para a UI (index)
+    // se já escolheu starter, pula esta tela
     const status = await jget('/api/starter/status'); // { canSelect: boolean }
     if (!status?.canSelect) {
-      location.href = '/'; // index.html (shell com UI)
+      location.href = '/app.html';
       return;
     }
 
-    // 4) Monta a lista para escolher
     const list = await jget('/api/starter/list');
     grid.innerHTML = '';
 
@@ -119,8 +115,7 @@ async function main() {
       btn.onclick = async () => {
         try {
           await jpost('/api/starter/select', { heroKey: h.heroKey });
-          // Depois de escolher, abre a UI; House pode ser aberta pelo card/lobby
-          location.href = '/';
+          location.href = '/app.html';
         } catch (e) {
           console.error(e);
           let msg = e?.message || 'falha ao selecionar';
@@ -132,8 +127,7 @@ async function main() {
       grid.appendChild(card);
     }
 
-    // Botão "Ir para o Lobby" (pular)
-    if (btnSkip) btnSkip.onclick = () => { location.href = '/'; };
+    if (btnSkip) btnSkip.onclick = () => { location.href = '/app.html'; };
 
   } catch (e) {
     console.error(e);

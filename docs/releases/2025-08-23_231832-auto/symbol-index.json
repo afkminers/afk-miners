@@ -1,0 +1,341 @@
+[
+  {
+    "file": "client\\js\\api.js",
+    "symbols": [
+      "API"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "symbols": [
+      "chatPush",
+      "getCsrf",
+      "jget",
+      "jpost",
+      "mount",
+      "mountScene",
+      "onRouteChange",
+      "parseHash",
+      "unmount"
+    ]
+  },
+  {
+    "file": "client\\js\\auth.js",
+    "symbols": [
+      "checkAuth"
+    ]
+  },
+  {
+    "file": "client\\js\\boot.js",
+    "symbols": [
+      "closeMobileMenu",
+      "goToRightPlace",
+      "handleLogout",
+      "setLoggedOutGlow",
+      "setLogoutVisibility",
+      "showApp",
+      "showLanding",
+      "trySession",
+      "updateHud"
+    ]
+  },
+  {
+    "file": "client\\js\\gacha.js",
+    "symbols": [
+      "bindGachaUI",
+      "cap",
+      "closeOverlay",
+      "doSummonAPI",
+      "done",
+      "fillPanel",
+      "flash",
+      "getHeroes",
+      "getInventory",
+      "hardCloseOverlay",
+      "heroCardMarkup",
+      "init",
+      "inlineHint",
+      "keySkip",
+      "lockButtons",
+      "loopPix",
+      "openOverlay",
+      "playChestSequence",
+      "playClick",
+      "playMultiSummon",
+      "playOneSummonAndReveal",
+      "playSfx",
+      "refreshFromServer",
+      "renderHeroes",
+      "resizePix",
+      "setAgainState",
+      "setRarityBg",
+      "showErrorInOverlay",
+      "skipOnce",
+      "spawnPix",
+      "spawnSparks",
+      "startPix",
+      "startSummon",
+      "stopPix",
+      "toast",
+      "wait"
+    ]
+  },
+  {
+    "file": "client\\js\\house.js",
+    "symbols": [
+      "clear",
+      "drawGrid",
+      "drawGround",
+      "drawSpawnRect",
+      "drawStart",
+      "jget",
+      "loadImg",
+      "main",
+      "normalizeTilesetPath",
+      "postWithCsrf",
+      "reloadMapOnServer",
+      "setStatus"
+    ]
+  },
+  {
+    "file": "client\\js\\landing_fx.js",
+    "symbols": [
+      "addSpark",
+      "drawLightning",
+      "glow",
+      "imgRect",
+      "loop",
+      "resize",
+      "seed",
+      "sel",
+      "start",
+      "stop",
+      "sync"
+    ]
+  },
+  {
+    "file": "client\\js\\login_fx.js",
+    "symbols": [
+      "celebrate",
+      "drawDebugCross",
+      "initLoginFx",
+      "loop",
+      "px",
+      "resize",
+      "sel",
+      "spawnBurst",
+      "spawnTick",
+      "start",
+      "stop",
+      "toCanvasXYFromChar"
+    ]
+  },
+  {
+    "file": "client\\js\\play.js",
+    "symbols": [
+      "clear",
+      "drawGround",
+      "drawMob",
+      "drawPlayer",
+      "ensureImgLoaded",
+      "fetchCsrf",
+      "frame",
+      "imgReady",
+      "jget",
+      "jpost",
+      "loadImg",
+      "main",
+      "mapSpawnsFromTiledJSON",
+      "render",
+      "resolvePlayerSprite",
+      "shouldSyncPos",
+      "syncPos",
+      "update"
+    ]
+  },
+  {
+    "file": "client\\js\\player_profile.js",
+    "symbols": [
+      "animateProgressBars",
+      "bindProfileModal",
+      "close",
+      "fetchEquip",
+      "fetchPlayerMeOnce",
+      "fillEquip",
+      "fillHeader",
+      "fillSkillsArea",
+      "loadHeroSkills",
+      "open",
+      "paintEquipGrid",
+      "refreshAll",
+      "refreshEquip",
+      "renderHeroSkills",
+      "renderTrainBars",
+      "resolveCard"
+    ]
+  },
+  {
+    "file": "client\\js\\scenes\\house.js",
+    "symbols": [
+      "mount"
+    ]
+  },
+  {
+    "file": "client\\js\\sprites.js",
+    "symbols": [
+      "drawSprite",
+      "loadImg"
+    ]
+  },
+  {
+    "file": "client\\js\\starter.js",
+    "symbols": [
+      "fetchCsrf",
+      "jget",
+      "jpost",
+      "main",
+      "spriteUrlFrom"
+    ]
+  },
+  {
+    "file": "client\\js\\ui.js",
+    "symbols": [
+      "cap"
+    ]
+  },
+  {
+    "file": "server\\auth\\middleware.js",
+    "symbols": [
+      "clearAuthCookie",
+      "cookieOpts",
+      "csrfRoute",
+      "requireAuth",
+      "requireCsrf",
+      "setAuthCookie"
+    ]
+  },
+  {
+    "file": "server\\auth\\routes.js",
+    "symbols": [
+      "noStore",
+      "validateName",
+      "validatePassword"
+    ]
+  },
+  {
+    "file": "server\\content\\loader.js",
+    "symbols": [
+      "get",
+      "list",
+      "loadAll",
+      "loadItems",
+      "loadMap",
+      "loadMonsters",
+      "loadSprites",
+      "read",
+      "sha1",
+      "upsert"
+    ]
+  },
+  {
+    "file": "server\\gacha\\routes.js",
+    "symbols": [
+      "chooseHeroFromPool",
+      "doSingleSummon",
+      "pickRarity"
+    ]
+  },
+  {
+    "file": "server\\index.js",
+    "symbols": [
+      "resolveSkillType",
+      "safeParse",
+      "trainingTick"
+    ]
+  },
+  {
+    "file": "server\\models\\heroes.js",
+    "symbols": [
+      "ensureHeroesSchema",
+      "seedHeroesIfEmpty"
+    ]
+  },
+  {
+    "file": "server\\models\\migrate.js",
+    "symbols": [
+      "migrate"
+    ]
+  },
+  {
+    "file": "server\\player\\routes.js",
+    "symbols": [
+      "noStore"
+    ]
+  },
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "symbols": [
+      "buildAPIMarkdown",
+      "buildEndpointContracts",
+      "buildEnvUsage",
+      "buildErrorMap",
+      "buildFunctionSignatures",
+      "buildImportGraph",
+      "buildOpenAPI",
+      "buildRouteHistory",
+      "buildSymbolIndex",
+      "cleanDefault",
+      "compactJsonLike",
+      "dirTree",
+      "ensureDir",
+      "exampleForKey",
+      "genCtxYmlIfMissing",
+      "gitInfo",
+      "inferErrors",
+      "inferKeys",
+      "inferOkResponses",
+      "inferParamsFromPath",
+      "inventoryByExt",
+      "largestFiles",
+      "listMigSeed",
+      "listRootFiles",
+      "main",
+      "objFromKeys",
+      "prettyJsonLike",
+      "scanRoutes",
+      "scanTodos",
+      "schemaFromJsonLike",
+      "schemaFromSample",
+      "schemaType",
+      "sh",
+      "splitParams",
+      "summarizeHTML",
+      "summarizeJSON",
+      "summarizeYAML",
+      "walkDir",
+      "writeJSON"
+    ]
+  },
+  {
+    "file": "server\\skills\\engine.js",
+    "symbols": [
+      "_ctxMul",
+      "_trainingGate",
+      "_tryFrom",
+      "applyTries",
+      "ensureSkillRow",
+      "gainFromBlock",
+      "gainFromCast",
+      "gainFromHit",
+      "gainFromShot",
+      "getClassRate",
+      "triesNeeded"
+    ]
+  },
+  {
+    "file": "server\\starter\\routes.js",
+    "symbols": [
+      "buildStarterRouter"
+    ]
+  }
+]
