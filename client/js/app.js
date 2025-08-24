@@ -194,11 +194,15 @@ function safeAddListener(selectorOrNode, event, handler) {
     let ws = null;
     let myId = '';
     let myName = 'Você';
+    // seen message ids to avoid duplicates from multiple sockets / server echoes
+    const seenMsgIds = new Set();
 
     function log(...args){ try{ console.log('[chat]', ...args); }catch{} }
 
     function connectWS() {
       try {
+        // close previous socket if exists (avoid double connections)
+        try { if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) ws.close(); } catch {}
         ws = new WebSocket((location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws');
       } catch (e) {
         log('erro ao criar WebSocket', e);
@@ -234,7 +238,12 @@ function safeAddListener(selectorOrNode, event, handler) {
           const d = JSON.parse(evt.data);
           log('ws message', d);
           if (d.type === 'chat' && d.scope === 'global') {
-            appendChatRow({ fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
+            // dedupe by server id (if present)
+            if (d.id) {
+              if (seenMsgIds.has(String(d.id))) return;
+              seenMsgIds.add(String(d.id));
+            }
+            appendChatRow({ id: d.id, fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now(), _clientId: d._clientId || null });
           }
         } catch (e) { log('bad ws message', e); }
       });
@@ -273,11 +282,12 @@ function safeAddListener(selectorOrNode, event, handler) {
       // dedupe: se já existe uma mensagem com o mesmo id ou pendingId, não re-adicionar
       try {
         if (msg.id) {
-          if (chatBox.querySelector(`[data-msg-id="${msg.id}"]`)) return;
+          if (seenMsgIds.has(String(msg.id))) return;
+          // also check DOM just in case
+          if (chatBox.querySelector(`[data-msg-id="${msg.id}"]`)) { seenMsgIds.add(String(msg.id)); return; }
         } else if (msg._pendingId) {
           if (chatBox.querySelector(`[data-pending-id="${msg._pendingId}"]`)) return;
         } else {
-          // fallback: evita duplicates triviais comparando com última linha
           const last = chatBox.lastElementChild;
           if (last) {
             const lastText = last.textContent || '';
@@ -286,6 +296,7 @@ function safeAddListener(selectorOrNode, event, handler) {
           }
         }
       } catch (e) {}
+
       const d = document.createElement('div');
       d.className='chat-row';
       const time = new Date(msg.ts||Date.now()).toLocaleTimeString();
@@ -305,7 +316,7 @@ function safeAddListener(selectorOrNode, event, handler) {
         mark.textContent = ' ⏳';
         nameEl.insertAdjacentElement('afterend', mark);
       }
-      if (msg.id) d.dataset.msgId = msg.id;
+      if (msg.id) { d.dataset.msgId = msg.id; seenMsgIds.add(String(msg.id)); }
       chatBox.appendChild(d);
       chatBox.scrollTop = chatBox.scrollHeight;
     }
