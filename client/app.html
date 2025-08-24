@@ -1,39 +1,51 @@
 <!doctype html>
-<meta charset="utf-8">
+<html lang="pt-BR">
+<meta charset="utf-8" />
 <title>AFK Miners — Game</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<link rel="stylesheet" href="/css/app.css">
+<link rel="stylesheet" href="/css/app.css" />
 
 <body>
-  <div id="ui">
-    <header class="topbar">
-      <div class="brand">AFK MINERS</div>
-      <nav class="actions">
-        <button id="btnSkills">Skills</button>
-        <button id="btnHeroes">Heroes</button>
-        <button id="btnInventory">Inventory</button>
-        <button id="btnSummon">Summon</button>
-        <button id="btnLogout" class="danger">Logout</button>
-      </nav>
-    </header>
+  <header class="topbar">
+    <div class="brand">AFK MINERS</div>
+    <nav class="actions">
+      <button id="btnSkills">Skills</button>
+      <button id="btnHeroes">Heroes</button>
+      <button id="btnInventory">Inventory</button>
+      <button id="btnSummon">Summon</button>
+      <button id="btnLogout" class="danger">Logout</button>
+    </nav>
+  </header>
 
-    <main class="game">
-      <section class="stage" style="margin-left:0">
-        <!-- IMPORTANTE: play.js espera id="view" -->
-        <canvas id="view" width="960" height="540"></canvas>
+  <!-- LAYOUT ESTILO TIBIA: esquerda / centro (viewport) / direita -->
+  <main id="tibiaLayout">
+    <!-- STACK ESQUERDO -->
+    <aside id="leftStack" class="stack" aria-label="Left stack"></aside>
+    <div id="splitLeft" class="splitter v"></div>
 
-        <!-- HUD compatível com play.js (usa #pos) -->
-        <div id="hud" class="hud">
-          <div>map: <code>house</code></div>
-          <div>Move: WASD / Setas</div>
-          <div id="pos"></div>
+    <!-- VIEWPORT CENTRAL (PRIORIDADE MÁXIMA) -->
+    <section id="centerStage">
+      <div id="clientShell">
+        <canvas id="scene" width="960" height="540"></canvas>
+        <div id="hud" class="hud"></div>
+      </div>
+    </section>
+
+    <div id="splitRight" class="splitter v"></div>
+    <!-- STACK DIREITO (minimapa no topo, painéis abaixo) -->
+    <aside id="rightStack" class="stack" aria-label="Right stack">
+      <div class="panel mini-map" data-fixed="1" aria-label="Mini map">
+        <header><h3>Mini-Map</h3></header>
+        <div class="body">
+          <canvas id="miniMap" width="140" height="140"></canvas>
         </div>
-      </section>
-    </main>
+      </div>
+      <!-- os demais painéis entram aqui via JS -->
+    </aside>
 
-    <!-- Chat (mantido) -->
-    <footer class="chat">
+    <!-- CHAT FIXO EMBAIXO -->
+    <footer id="chatDock">
       <div class="tabs">
         <button data-chat="default" class="active">Default</button>
         <button data-chat="global">Global</button>
@@ -43,41 +55,24 @@
         <input id="chatInput" placeholder="Digite uma mensagem…" />
       </form>
     </footer>
-  </div>
+  </main>
 
-  <!-- overlays/modals -->
-  <div id="overlays"></div>
+  <!-- MODAL SUMMON POP-UP -->
+  <div id="summonModal" class="modal" hidden>
+    <div class="window">
+      <header>
+        <h3>Summon</h3>
+        <button class="close" aria-label="Close">Close</button>
+      </header>
+      <iframe id="summonFrame" src="/index.html#summon?embed=1" allow="fullscreen"></iframe>
+    </div>
+  </div>
 
   <script type="module" src="/js/app.js"></script>
 
   <style>
-    /* escondemos possíveis sidebars herdadas por CSS global */
-    .sidebar, .rightbar { display: none !important; }
-    .game { grid-template-columns: 1fr !important; }
-
-    /* ===== Modal do shell (iframe) ===== */
-    .modal {
-      position: fixed; inset: 0; z-index: 60;
-      display: grid; place-items: center;
-      background: rgba(0,0,0,.55);
-    }
-    .modal .window {
-      width: min(1100px, 96vw);
-      height: min(680px, 88vh);
-      background: #0e1422; border: 2px solid #000; border-radius: 14px;
-      box-shadow: 0 18px 32px rgba(0,0,0,.6), inset 0 0 0 4px #141c2f;
-      display: grid; grid-template-rows: auto 1fr;
-      overflow: hidden;
-    }
-    .modal header {
-      display:flex; align-items:center; justify-content:space-between;
-      padding:10px 12px; background:#0b1220; border-bottom:1px solid #0f1930;
-    }
-    .modal header h3{ margin:0; font-weight:600; color:#e6eaf2; }
-    .modal header .close{
-      appearance:none; border:0; cursor:pointer; border-radius:10px;
-      padding:8px 12px; background:#b3453e; color:#fff; font-weight:600;
-    }
-    .modal iframe{ width:100%; height:100%; border:0; background:#0b1220; }
+    /* segurança: nada de sidebars legadas aparecendo */
+    .sidebar, .rightbar { display:none !important; }
   </style>
 </body>
+</html>

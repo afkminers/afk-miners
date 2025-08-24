@@ -1,27 +1,124 @@
-/* client/css/app.css */
-html,body{height:100%;margin:0;background:#0b1220;color:#e5e7eb;font:14px/1.2 system-ui,-apple-system,Segoe UI,Roboto,Arial}
-#ui{display:grid;grid-template-rows:auto 1fr auto;height:100%}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#0f1628;border-bottom:1px solid #1c2946}
-.topbar .brand{font-weight:700;letter-spacing:.5px}
-.topbar .actions button{margin-right:8px;padding:6px 10px;border:1px solid #223255;background:#0b1220;color:#e6eaf2;border-radius:8px;cursor:pointer}
-.topbar .actions button.danger{background:#8b2e2e;border-color:#611f1f;color:#fff}
-.game{position:relative;display:grid;grid-template-columns:1fr;grid-template-rows:1fr}
-.stage{position:relative;display:flex;align-items:center;justify-content:center;padding:12px}
-.stage canvas{display:block;background:#0b1220;border:1px solid #1c2946;border-radius:12px;z-index:4}
-.hud{position:absolute;left:0;top:0;right:0;bottom:0;pointer-events:none;z-index:4}
-.chat{display:grid;grid-template-rows:auto 1fr auto;gap:6px;padding:8px;border-top:1px solid #1c2946;background:#0f1628}
-.chat .tabs{display:flex;gap:8px}
-.chat .tabs button{padding:4px 8px;border:1px solid #223255;background:#0b1220;color:#e6eaf2;border-radius:8px}
-.chat .log{background:#0b1220;border:1px solid #1c2946;border-radius:8px;min-height:80px;max-height:160px;overflow:auto;padding:8px}
-.chat form input{width:100%;padding:8px;border:1px solid #1c2946;border-radius:8px;background:#0b1220;color:#e6eaf2}
+:root{
+  --bg:#0b1220;
+  --panel:#121a2b;
+  --panel-2:#0e1422;
+  --border:#101827;
+  --accent:#22314c;
+  --text:#e6ebf4;
+  --pill:#1e2a41;
+  --danger:#b3453e;
 
-/* painéis */
-.game-panel{user-select:none}
-.gp-head strong{font-weight:700}
-.gp-actions{display:flex;gap:6px}
+  --leftW: 300px;
+  --rightW: 320px;
+  --chatH: 170px;
+  --splitW: 10px;
+}
 
-/* coluna de dock à esquerda (não invade a cena) */
-#dockHost{z-index:5}
+*{ box-sizing:border-box }
+html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial; }
 
-/* garante que a CENA tem prioridade absoluta visual */
-.stage{z-index:4}
+.topbar{
+  position:sticky; top:0; z-index:50;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 12px; background:#0a1020; border-bottom:1px solid var(--border);
+}
+.topbar .brand{ font-weight:700; letter-spacing:.5px; }
+.topbar .actions button{
+  margin-left:8px; padding:8px 12px; border-radius:10px; border:1px solid var(--border);
+  background:var(--pill); color:var(--text); cursor:pointer;
+}
+.topbar .actions .danger{ background:var(--danger); border-color:#7a2a26; color:#fff; }
+
+/* GRID PRINCIPAL (TIBIA) */
+#tibiaLayout{
+  position:relative;
+  display:grid;
+  grid-template-columns: var(--leftW) var(--splitW) 1fr var(--splitW) var(--rightW);
+  grid-template-rows: 1fr var(--chatH);
+  gap:0;
+  height:calc(100vh - 48px);
+}
+
+#leftStack{ grid-column:1; grid-row:1; }
+#splitLeft { grid-column:2; grid-row:1; }
+#centerStage{ grid-column:3; grid-row:1; min-width: 480px; overflow:hidden; }
+#splitRight{ grid-column:4; grid-row:1; }
+#rightStack{ grid-column:5; grid-row:1; }
+#chatDock  { grid-column:1 / span 5; grid-row:2; }
+
+.stack{
+  background:var(--panel-2);
+  border-right:1px solid var(--border);
+  overflow:auto;
+  padding:8px;
+}
+#rightStack{ border-right:0; border-left:1px solid var(--border); }
+
+.splitter.v{
+  width:var(--splitW); cursor:col-resize;
+  background:linear-gradient(to right, transparent 0 4px, var(--border) 4px 6px, transparent 6px 100%);
+}
+.splitter.v:hover{ background:linear-gradient(to right, transparent 0 3px, #2a3a5a 3px 7px, transparent 7px 100%); }
+
+/* VIEWPORT CENTRAL */
+#clientShell{
+  position:relative; width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center;
+  background:#08101e; border-left:1px solid var(--border); border-right:1px solid var(--border);
+}
+#scene{
+  display:block; background:#0b1220; border:1px solid var(--border);
+  image-rendering: pixelated;
+}
+.hud{
+  position:absolute; left:10px; top:10px;
+  background:#0e1628; border:1px solid var(--border); padding:6px 10px; border-radius:8px; font-size:12px;
+}
+
+/* PAINÉIS DOCKADOS */
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:10px;
+  margin:8px 0;
+  overflow:hidden;
+}
+.panel header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 10px; background:#0d1628; border-bottom:1px solid var(--border);
+}
+.panel header h3{ margin:0; font-size:14px; }
+.panel header .btns{ display:flex; gap:6px; }
+.panel header .btns button{
+  padding:6px 10px; border:1px solid var(--border); border-radius:8px; background:#18233a; color:#dfe6f6; cursor:pointer;
+}
+.panel .body{ padding:10px; max-height:320px; overflow:auto; }
+
+/* mini-map */
+.mini-map .body{ padding:8px; display:flex; justify-content:center; }
+
+/* CHAT */
+#chatDock{
+  display:grid; grid-template-rows: auto 1fr auto;
+  background:#0c1426; border-top:1px solid var(--border);
+  padding:8px;
+}
+#chatDock .tabs{ display:flex; gap:8px; margin-bottom:6px; }
+#chatDock .tabs button{ padding:6px 10px; border:1px solid var(--border); border-radius:8px; background:#18233a; color:#dfe6f6; }
+#chatDock .tabs .active{ background:#203053; }
+#chatDock .log{ background:#0a1120; border:1px solid var(--border); border-radius:8px; overflow:auto; }
+#chatDock form{ margin-top:6px; }
+#chatDock input{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:#0a1326; color:#e6ebf4; }
+
+/* MODAL (SUMMON) */
+.modal{ position:fixed; inset:0; display:grid; place-items:center; background:rgba(0,0,0,.55); z-index:60; }
+.modal[hidden]{ display:none; }
+.modal .window{
+  width:min(1000px, 96vw); height:min(720px, 90vh);
+  background:#0e1422; border:2px solid #000; border-radius:14px;
+  box-shadow:0 18px 32px rgba(0,0,0,.6), inset 0 0 0 4px #141c2f;
+  display:grid; grid-template-rows:auto 1fr; overflow:hidden;
+}
+.modal header{ display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:#0b1220; border-bottom:1px solid #0f1930; }
+.modal header .close{ padding:8px 12px; background:#b3453e; color:#fff; border:0; border-radius:10px; cursor:pointer; }
+.modal iframe{ width:100%; height:100%; border:0; background:#0b1220; }

@@ -1,192 +1,124 @@
 // client/js/app_panels.js
-// Painéis dockáveis simples + chamadas com CSRF (para Summon).
+// Cria painéis dockados dentro de um "stack" (left/right). Não sobrepõem o viewport.
 
-/* ---------- HTTP + CSRF ---------- */
-let CSRF = null;
-async function getCsrf(){
-  if (CSRF) return CSRF;
-  try{
-    const r = await fetch('/api/csrf',{credentials:'include',headers:{'Accept':'application/json'},cache:'no-store'});
-    const hdr = r.headers.get('x-csrf-token')||r.headers.get('X-CSRF-Token');
-    let body=null; try{ body = await r.json(); }catch{}
-    CSRF = hdr || body?.token || body?.csrf || body?.csrfToken || null;
-  }catch{}
-  return CSRF;
-}
-async function apiJson(method, url, body){
-  const tok = await getCsrf().catch(()=>null);
-  const r = await fetch(url,{
-    method, credentials:'include',
-    headers:{ 'Accept':'application/json','Content-Type':'application/json', ...(tok?{'x-csrf-token':tok}:{}) },
-    body: body?JSON.stringify(body):undefined
-  });
-  if (r.status === 403) {
-    CSRF = null; await getCsrf().catch(()=>null);
-    const r2 = await fetch(url,{
-      method, credentials:'include',
-      headers:{ 'Accept':'application/json','Content-Type':'application/json', ...(CSRF?{'x-csrf-token':CSRF}:{}) },
-      body: body?JSON.stringify(body):undefined
-    });
-    if (!r2.ok) throw new Error(await r2.text());
-    return r2.json();
-  }
+async function jget(u){
+  const r = await fetch(u,{credentials:'include',headers:{'Accept':'application/json'},cache:'no-store'});
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
-const jget  = (u)=> apiJson('GET', u);
-const jpost = (u,b)=> apiJson('POST',u,b);
 
-/* ---------- infra de painel ---------- */
-const panelsRootId = 'dockArea';
-function ensureRoot(){
-  let root = document.getElementById(panelsRootId);
-  if (!root){
-    root = document.createElement('div');
-    root.id = panelsRootId;
-    root.style.position='relative';
-    root.style.padding='8px';
-    document.body.appendChild(root);
-  }
-  return root;
-}
-function makePanel(title){
-  const root = ensureRoot();
-  const wrap = document.createElement('div');
-  wrap.className = 'dock-panel';
-  wrap.style.background='#0f172a';
-  wrap.style.border='1px solid #0b1220';
-  wrap.style.borderRadius='10px';
-  wrap.style.padding='10px';
-  wrap.style.margin='8px';
-  wrap.style.minWidth='280px';
-  wrap.style.boxShadow='0 8px 18px rgba(0,0,0,.35)';
+function mkPanel({title, stack, key}){
+  // evita duplicar
+  const existing = stack.querySelector(`.panel[data-key="${key}"]`);
+  if (existing){ existing.scrollIntoView({block:'nearest'}); return existing; }
 
-  wrap.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <strong style="color:#e6eaf2">${title}</strong>
-      <div>
-        <button class="btnDock" style="margin-right:6px">Dock</button>
-        <button class="btnClose">Close</button>
+  const el = document.createElement('div');
+  el.className = 'panel';
+  el.dataset.key = key;
+  el.innerHTML = `
+    <header>
+      <h3>${title}</h3>
+      <div class="btns">
+        <button data-act="close">Close</button>
       </div>
-    </div>
-    <div class="content" style="color:#cdd6f4"></div>
+    </header>
+    <div class="body"></div>
   `;
+  stack.appendChild(el);
 
-  // fecha de verdade
-  wrap.querySelector('.btnClose').onclick = ()=> wrap.remove();
-
-  // dock/undock simples (troca position)
-  let undocked = false;
-  wrap.querySelector('.btnDock').onclick = ()=>{
-    undocked = !undocked;
-    if (undocked){
-      wrap.style.position='absolute';
-      wrap.style.right='12px';
-      wrap.style.bottom='12px';
-      wrap.style.zIndex='40';
-    } else {
-      wrap.style.position='static';
-    }
-  };
-
-  root.appendChild(wrap);
-  return {wrap, content: wrap.querySelector('.content')};
+  el.querySelector('[data-act="close"]').onclick = ()=> el.remove();
+  return el;
 }
 
-/* ---------- HEROES ---------- */
-export async function openHeroes(){
-  const {content} = makePanel('Heroes');
-  try{
-    // tenta alguns endpoints conhecidos no teu zip
-    let heroes=null;
-    try{ heroes = await jget('/api/player/heroes'); }catch{}
-    if (!heroes) try{ heroes = await jget('/api/hero/list'); }catch{}
-    if (!Array.isArray(heroes)) heroes = [];
+/* -------------------- Skills -------------------- */
+export function openSkills(stack){
+  const p = mkPanel({ title:'Skills', stack, key:'skills' });
+  const body = p.querySelector('.body');
+  body.innerHTML = `
+    <div>Em breve: árvore de skills e progresso.</div>
+  `;
+}
 
-    if (!heroes.length){
-      content.innerHTML = `
-        <div style="opacity:.8">Sem heróis</div>
-        <div style="opacity:.6">Faça summons para obter heróis.</div>
-        <div style="margin-top:8px;opacity:.6">Clique em um herói para abrir o perfil.</div>`;
+/* -------------------- Heroes -------------------- */
+export async function openHeroes(stack){
+  const p = mkPanel({ title:'Heroes', stack, key:'heroes' });
+  const body = p.querySelector('.body');
+  body.textContent = 'Carregando...';
+
+  try{
+    // Se você tiver endpoint: /api/player/heroes
+    let list = [];
+    try { list = await jget('/api/player/heroes'); } catch {}
+
+    if (!Array.isArray(list) || !list.length){
+      body.innerHTML = `
+        <div>Sem heróis</div>
+        <small>Faça summons para obter heróis.</small>
+        <p style="margin-top:8px">Clique em um herói para abrir o perfil.</p>
+      `;
       return;
     }
 
-    const ul = document.createElement('ul');
-    ul.style.listStyle='none'; ul.style.padding='0'; ul.style.margin='0';
-    for (const h of heroes){
-      const li = document.createElement('li');
-      li.textContent = (h.name||h.heroKey||'hero').toString();
-      li.style.padding='6px 0'; li.style.borderBottom='1px solid #0b1220';
-      ul.appendChild(li);
-    }
-    content.appendChild(ul);
+    const ul = document.createElement('div');
+    ul.style.display='grid';
+    ul.style.gap='8px';
+    list.forEach(h=>{
+      const row = document.createElement('div');
+      row.style.display='flex';
+      row.style.justifyContent='space-between';
+      row.style.alignItems='center';
+      row.style.padding='8px';
+      row.style.background='#0d1628';
+      row.style.border='1px solid #0f1a2e';
+      row.style.borderRadius='8px';
+      row.innerHTML = `<div>${h.name||h.heroKey}</div><small>${(h.rarity||'').toUpperCase()}</small>`;
+      ul.appendChild(row);
+    });
+    body.innerHTML='';
+    body.appendChild(ul);
   }catch(e){
-    content.textContent = 'Erro ao carregar heróis.';
-    console.error(e);
+    body.textContent='Erro ao carregar heroes';
   }
 }
 
-/* ---------- INVENTORY (itens) ---------- */
-export async function openInventory(){
-  const {content} = makePanel('Inventory');
-  try{
-    let inv=null;
-    try{ inv = await jget('/api/player/inventory'); }catch{}
-    if (!inv) try{ inv = await jget('/api/inventory'); }catch{}
-    if (!Array.isArray(inv)) inv = [];
+/* -------------------- Inventory (ITENS) -------------------- */
+export async function openInventory(stack){
+  const p = mkPanel({ title:'Inventory', stack, key:'inventory' });
+  const body = p.querySelector('.body');
+  body.textContent = 'Carregando...';
 
-    if (!inv.length){
-      content.innerHTML = `<div style="opacity:.7">Vazio. Em breve: itens, materiais e craft.</div>`;
+  try{
+    // Se existir: /api/player/inventory
+    let inv = null;
+    try { inv = await jget('/api/player/inventory'); } catch {}
+
+    if (!inv || !Array.isArray(inv.items) || !inv.items.length){
+      body.innerHTML = `<div>Inventário vazio.</div><small>Em breve: itens, materiais e craft.</small>`;
       return;
     }
 
-    const ul = document.createElement('ul');
-    ul.style.listStyle='none'; ul.style.padding='0'; ul.style.margin='0';
-    for (const it of inv){
-      const li = document.createElement('li');
-      li.textContent = (it.name||it.key||'item').toString();
-      li.style.padding='6px 0'; li.style.borderBottom='1px solid #0b1220';
-      ul.appendChild(li);
-    }
-    content.appendChild(ul);
+    const ul = document.createElement('div');
+    ul.style.display='grid'; ul.style.gap='8px';
+    inv.items.forEach(it=>{
+      const row=document.createElement('div');
+      row.style.display='flex'; row.style.justifyContent='space-between';
+      row.style.alignItems='center'; row.style.padding='8px';
+      row.style.background='#0d1628'; row.style.border='1px solid #0f1a2e'; row.style.borderRadius='8px';
+      row.innerHTML = `<div>${it.name}</div><small>x${it.qty||1}</small>`;
+      ul.appendChild(row);
+    });
+    body.innerHTML=''; body.appendChild(ul);
   }catch(e){
-    content.textContent = 'Erro ao carregar inventário.';
-    console.error(e);
+    body.textContent='Erro ao carregar inventory';
   }
 }
 
-/* ---------- SKILLS (placeholder) ---------- */
-export function openSkills(){
-  const {content} = makePanel('Skills');
-  content.innerHTML = `<div style="opacity:.8">Em breve: árvore de skills e progresso.</div>`;
-}
-
-/* ---------- SUMMON (com CSRF) ---------- */
-export async function openSummon(){
-  const {content} = makePanel('Summon');
-  const btn1 = document.createElement('button');
-  btn1.textContent = 'Summon ×1 (100)';
-  btn1.style.marginRight='8px';
-  const btn10 = document.createElement('button');
-  btn10.textContent = 'Summon ×10';
-
-  const result = document.createElement('div');
-  result.style.marginTop='10px';
-  result.style.whiteSpace='pre-wrap';
-
-  async function doPull(n=1){
-    result.textContent = 'Summoning...';
-    try{
-      const data = await jpost('/api/gacha/pull', { count:n });
-      result.textContent = JSON.stringify(data, null, 2);
-    }catch(e){
-      result.textContent = 'Erro: '+(e?.message||e);
-      console.error(e);
-    }
-  }
-
-  btn1.onclick  = ()=> doPull(1);
-  btn10.onclick = ()=> doPull(10);
-
-  content.append(btn1, btn10, result);
+/* -------------------- Summon (se quiser versão painel) -------------------- */
+export function openSummonPanel(stack){
+  const p = mkPanel({ title:'Summon', stack, key:'summon-panel' });
+  const body = p.querySelector('.body');
+  body.innerHTML = `
+    <div>Para uma experiência retrô caprichada, usamos o <b>modal</b> (botão no topo).<br>
+    Se preferir, posso embutir o banner e botões aqui também.</div>
+  `;
 }
