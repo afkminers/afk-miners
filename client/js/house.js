@@ -1,8 +1,17 @@
-// client/js/house.js
+/*
+  Substituição/versão ampliada de house.js
+  - WASD / setas para mover o player
+  - game loop (rAF)
+  - câmera que segue o player
+  - carrega spawns do endpoint /api/admin/content/map/:map/spawns
+  - carrega dados de monsters do endpoint /api/admin/content/monsters
+  - tenta conectar WebSocket para sincronizar posições (fallback polling)
+  - desenha sprites se spriteKey estiver disponível em monsters_master.lookJSON
+*/
+
 const MAP_KEY = 'house';
 const TILE = 32;
 const $ = (id) => document.getElementById(id);
-
 const canvas = $('view');
 const ctx = canvas.getContext('2d');
 const statusEl = $('status');
@@ -10,7 +19,20 @@ const startPosEl = $('startPos');
 const spawnListEl = $('spawnList');
 const btnReload = $('btnReload');
 
-// --- HTTP helpers ---
+function setStatus(t) { if (statusEl) statusEl.textContent = t; }
+function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+const IMG_CACHE = new Map();
+function loadImg(src) {
+  if (!src) return null;
+  if (IMG_CACHE.has(src)) return IMG_CACHE.get(src);
+  const img = new Image();
+  img.src = src;
+  IMG_CACHE.set(src, img);
+  return img;
+}
+
+// --- HTTP helpers (mantive fetch com credentials) ---
 async function jget(url) {
   const r = await fetch(url, { credentials: 'include' });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @GET ${url}`);
@@ -27,69 +49,35 @@ async function postWithCsrf(url) {
   return r.json();
 }
 
-// --- draw helpers ---
-function clear() { ctx.clearRect(0,0,canvas.width, canvas.height); }
-function setStatus(t) { if (statusEl) statusEl.textContent = t; }
+// --- world / camera / entities ---
+let mapData = null;
+let groundLayer = null;
+let tileset = null;
+let tilesetImg = null;
 
+const player = { id: 'me', type: 'player', x: 160, y: 160, w: 28, h: 40, speed: 140, name: 'Você', hp:100, maxHp:100 };
+let entities = []; // monsters + remote players
+let monstersByKey = {}; // data from monsters_master keyed by key
+
+const camera = { x:0, y:0, w: canvas.width, h: canvas.height, lerp: 0.2, follow: player };
+
+let keys = {};
+window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; });
+window.addEventListener('keyup',   e => { keys[e.key.toLowerCase()] = false; });
+
+// --- draw helpers (map + entities) ---
 function drawGrid(cols, rows) {
   ctx.save();
   ctx.strokeStyle = '#1f2937';
   ctx.lineWidth = 1;
-  for (let x=0; x<=cols; x++) {
-    ctx.beginPath(); ctx.moveTo(x*TILE + .5, 0); ctx.lineTo(x*TILE + .5, rows*TILE); ctx.stroke();
-  }
-  for (let y=0; y<=rows; y++) {
-    ctx.beginPath(); ctx.moveTo(0, y*TILE + .5); ctx.lineTo(cols*TILE, y*TILE + .5); ctx.stroke();
-  }
+  for (let x=0; x<=cols; x++) { ctx.beginPath(); ctx.moveTo(x*TILE + .5, 0); ctx.lineTo(x*TILE + .5, rows*TILE); ctx.stroke(); }
+  for (let y=0; y<=rows; y++) { ctx.beginPath(); ctx.moveTo(0, y*TILE + .5); ctx.lineTo(cols*TILE, y*TILE + .5); ctx.stroke(); }
   ctx.restore();
 }
 
-function drawStart(x, y) {
-  ctx.save();
-  ctx.fillStyle = '#3b82f6';
-  ctx.strokeStyle = '#93c5fd';
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = '#2563eb';
-  ctx.strokeRect(Math.floor(x/TILE)*TILE+0.5, Math.floor(y/TILE)*TILE+0.5, TILE, TILE);
-  ctx.restore();
+function worldToScreen(wx, wy) {
+  return { x: Math.round(wx - camera.x), y: Math.round(wy - camera.y) };
 }
-
-function drawSpawnRect(x, y, w, h, label='spawn') {
-  if (!w && !h) { w=TILE; h=TILE; x=Math.floor(x/TILE)*TILE; y=Math.floor(y/TILE)*TILE; }
-  ctx.save();
-  ctx.globalAlpha = .15;
-  ctx.fillStyle = '#22c55e';
-  ctx.fillRect(x,y,w,h);
-  ctx.globalAlpha = 1;
-  ctx.strokeStyle = '#16a34a';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x+.5,y+.5,w,h);
-  ctx.font = '12px ui-sans-serif,system-ui,Segoe UI,Arial';
-  ctx.fillStyle = '#e2e8f0';
-  ctx.fillText(label, x+4, y+14);
-  ctx.restore();
-}
-
-// --- tileset render (opcional) ---
-const IMG_CACHE = new Map();
-function loadImg(src) {
-  if (IMG_CACHE.has(src)) return IMG_CACHE.get(src);
-  const img = new Image();
-  img.src = src;
-  IMG_CACHE.set(src, img);
-  return img;
-}
-function normalizeTilesetPath(p) {
-  if (!p) return null;
-  // troca anti-slash, remove ../ e remove "client/" se existir em qualquer lugar
-  let s = p.replace(/\\/g,'/').replace(/^(\.\.\/)+/,'');
-  s = s.replace(/^client\//,'');
-  if (!s.startsWith('/')) s = '/' + s;
-  return s; // ex: "/sprites/tiles/kenney_map.png"
-}
-
-let mapData = null, tileset = null, tilesetImg = null, groundLayer = null;
 
 function drawGround() {
   if (!groundLayer || !tileset || !tilesetImg || !tilesetImg.complete) return;
@@ -98,9 +86,8 @@ function drawGround() {
   const first = tileset.firstgid || 1;
   const tw = tileset.tilewidth, th = tileset.tileheight;
   const columnsInImage = tileset.columns;
-
-  for (let y=0; y<rows; y++) {
-    for (let x=0; x<cols; x++) {
+  for (let y=0;y<rows;y++) {
+    for (let x=0;x<cols;x++) {
       const gid = data[y*cols + x];
       if (!gid || gid < first) continue;
       const id = gid - first;
@@ -111,87 +98,206 @@ function drawGround() {
   }
 }
 
-// --- reload no servidor ---
-async function reloadMapOnServer() {
-  try {
-    setStatus('Recarregando mapa no servidor…');
-    const j = await postWithCsrf(`/api/admin/content/reload-map?map=${MAP_KEY}`);
-    console.log('reload response:', j);
-    setStatus('OK');
-  } catch (e) {
-    console.error(e);
-    setStatus('Erro: ' + e.message);
+function drawEntity(e) {
+  const s = worldToScreen(e.x, e.y);
+  ctx.save();
+  // sprite if available
+  if (e._img && e._img.complete) {
+    const iw = e._img.width, ih = e._img.height;
+    // draw centered bottom aligned
+    const dw = e.w || 32, dh = e.h || 32;
+    ctx.drawImage(e._img, s.x - dw/2, s.y - dh, dw, dh);
+  } else {
+    ctx.fillStyle = e.type === 'player' ? '#3b82f6' : '#f97316';
+    ctx.fillRect(s.x - (e.w||28)/2, s.y - (e.h||36), e.w||28, e.h||36);
+  }
+  // name
+  ctx.fillStyle = '#fff'; ctx.font = '12px sans-serif';
+  ctx.fillText(e.name || '', s.x - (e.w||28)/2, s.y - (e.h||36) - 6);
+  // hp bar
+  const bw = Math.max(20, e.w||28), bh = 5;
+  const bx = s.x - bw/2, by = s.y - (e.h||36) - 18;
+  ctx.fillStyle = '#111'; ctx.fillRect(bx, by, bw, bh);
+  ctx.fillStyle = '#ef4444';
+  const perc = ((e.hp||0) / (e.maxHp||1));
+  ctx.fillRect(bx, by, Math.round(bw * Math.max(0, Math.min(1, perc))), bh);
+  ctx.restore();
+}
+
+// --- update loop ---
+function update(dt) {
+  // movement
+  let vx=0, vy=0;
+  if (keys['w']||keys['arrowup']) vy -=1;
+  if (keys['s']||keys['arrowdown']) vy +=1;
+  if (keys['a']||keys['arrowleft']) vx -=1;
+  if (keys['d']||keys['arrowright']) vx +=1;
+  if (vx !==0 || vy !==0) {
+    const mag = Math.hypot(vx, vy) || 1;
+    player.x += (vx/mag) * player.speed * dt;
+    player.y += (vy/mag) * player.speed * dt;
+    // send pos via ws (if open)
+    maybeSendPos();
+  }
+
+  // camera follow
+  camera.x += (player.x - camera.x - camera.w/2) * camera.lerp;
+  camera.y += (player.y - camera.y - camera.h/2) * camera.lerp;
+
+  // simple monsters idle (local)
+  for (const e of entities) {
+    if (e.type === 'monster') {
+      e._tick = (e._tick||0) + dt;
+      e.x += Math.sin(e._tick*0.5) * 0.4;
+    }
   }
 }
 
-// --- fluxo principal ---
-async function main() {
+// --- networking: load spawns + monsters; WS optional ---
+const USE_WS = true; // marque false se não quiser ws
+let ws = null;
+function connectWS() {
+  if (!USE_WS) return;
   try {
-    setStatus('Carregando…');
+    ws = new WebSocket((location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws');
+    ws.onopen = () => setStatus('WS conectado');
+    ws.onmessage = (evt) => {
+      try {
+        const d = JSON.parse(evt.data);
+        if (d.type === 'pos' && d.id !== player.id) {
+          // upsert remote player
+          let p = entities.find(x=>x.id===d.id && x.type==='player_remote');
+          if (!p) {
+            p = { id: d.id, type:'player_remote', x:d.x, y:d.y, w:28, h:40, name: d.name||'Player', hp:100, maxHp:100 };
+            entities.push(p);
+          } else { p.x = d.x; p.y = d.y; }
+        }
+      } catch(e) {}
+    };
+    ws.onclose = () => setStatus('WS desconectado (fallback polling)');
+    ws.onerror = () => {};
+  } catch(e) { console.warn('ws error', e); }
+}
+function maybeSendPos() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  const payload = { type:'pos', id: player.id, x: Math.round(player.x), y: Math.round(player.y), name: player.name };
+  ws.send(JSON.stringify(payload));
+}
 
-    // 1) confirma mapa existe
-    const maps = await jget('/api/admin/content/maps');
-    if (!maps.some(m => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
+// fallback polling to refresh spawns/remote players if no WS
+let pollInterval = null;
+function startPolling() {
+  if (USE_WS) return;
+  pollInterval = setInterval(async () => {
+    try {
+      const sp = await jget(`/api/admin/content/map/${MAP_KEY}/spawns`);
+      mergeSpawns(sp);
+    } catch(e) { console.warn('poll err', e); }
+  }, 1000);
+}
 
-    // 2) objetos e spawns
-    const objs   = await jget(`/api/admin/content/map/${MAP_KEY}/objects`);
-    const spawns = await jget(`/api/admin/content/map/${MAP_KEY}/spawns`);
+// --- merge helpers ---
+function mergeSpawns(spawnsRows) {
+  // convert DB spawn rows to entity list (do not duplicate existing monsters if id present)
+  const existing = new Map(entities.filter(e=>e.type==='monster').map(e=>[e._spawnId, e]));
+  for (const s of spawnsRows) {
+    const spawnId = s.id;
+    if (existing.has(spawnId)) continue;
+    const monsterKey = s.monsterKey || 'unknown';
+    const monData = monstersByKey[monsterKey] || {};
+    const e = {
+      id: `spawn-${spawnId}`,
+      _spawnId: spawnId,
+      type: 'monster',
+      x: (s.x || 0) + ((s.w||0)/2),
+      y: (s.y || 0) + ((s.h||0)/2),
+      w: monData.width || 28,
+      h: monData.height || 36,
+      name: monData.name || monsterKey,
+      hp: monData.healthMax || 50,
+      maxHp: monData.healthMax || 50
+    };
+    // try to attach sprite image if lookJSON.spriteKey exists
+    const look = monData.look || {};
+    if (look.spriteKey) {
+      e._img = loadImg(`/sprites/characters/${look.spriteKey}.png`);
+    } else if (look.image) {
+      e._img = loadImg(look.image);
+    }
+    entities.push(e);
+  }
+}
 
-    const starts = objs.filter(o => (o.type||'').toLowerCase() === 'start');
+// --- boot / start loop ---
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last)/1000);
+  last = now;
+  update(dt);
+  clearCanvas();
+  if (mapData) drawGround();
+  // optional draw grid if no tiles
+  else drawGrid(20,15);
+  // draw entities then player on top
+  for (const e of entities) drawEntity(e);
+  drawEntity(player);
+  requestAnimationFrame(loop);
+}
 
-    // 3) JSON bruto do mapa para desenhar tiles (se tiver embed)
+async function startHub() {
+  try {
+    setStatus('Carregando mapa e conteúdo…');
+    // load map JSON if present (used for tiles)
     try {
       mapData = await jget(`/api/admin/content/map/${MAP_KEY}/data`);
       tileset = (mapData.tilesets && mapData.tilesets[0]) || null;
       if (tileset && tileset.image) {
-        tilesetImg = loadImg(normalizeTilesetPath(tileset.image));
+        tilesetImg = loadImg(tileset.image.replace(/^(\.\.\/)+/, '/').replace(/^client\//,'')); // normalize similar to server
         groundLayer = (mapData.layers||[]).find(l => l.type==='tilelayer' && l.name.toLowerCase()==='ground');
-      } else {
-        console.warn('Tileset não embedado no JSON. No Tiled: clique no ícone "Embed Tileset" e exporte o .json.');
       }
-    } catch (e) {
-      // Se não existir a rota/registro, segue só com grid/shapes
-      console.warn('Falha ao carregar /data do mapa (seguindo sem tiles):', e.message);
-    }
+    } catch(e) { console.warn('map data not available', e.message); }
 
-    // UI lateral
-    if (starts[0]) {
-      if (startPosEl) startPosEl.textContent = `${Math.round(starts[0].x)}, ${Math.round(starts[0].y)}`;
-    } else {
-      if (startPosEl) startPosEl.textContent = '—';
-    }
-    if (spawnListEl) {
-      spawnListEl.innerHTML = '';
-      for (const s of spawns) {
-        const li = document.createElement('li');
-        li.textContent = `${s.monsterKey} ×${s.count} @ (${s.x}, ${s.y})`;
-        spawnListEl.appendChild(li);
+    // load monsters master
+    try {
+      const mons = await jget('/api/admin/content/monsters');
+      monstersByKey = {};
+      for (const m of mons) {
+        monstersByKey[m.key] = {
+          key: m.key, name: m.name, healthMax: m.healthMax, width: m.look && m.look.width || 28,
+          height: m.look && m.look.height || 36, look: m.look || {}
+        };
       }
-    }
+    } catch(e) { console.warn('failed to load monsters', e.message); }
 
-    // desenhar
-    clear();
-    // fundo
-    ctx.save(); ctx.fillStyle = '#0f172a'; ctx.fillRect(0,0,canvas.width, canvas.height); ctx.restore();
+    // load spawns from DB and merge
+    const sp = await jget(`/api/admin/content/map/${MAP_KEY}/spawns`);
+    mergeSpawns(sp);
 
-    // tiles do ground (se disponíveis)
-    if (groundLayer && tilesetImg && tilesetImg.complete) {
-      drawGround();
-    }
+    // connect WS if enabled
+    if (USE_WS) connectWS(); else startPolling();
 
-    // grid e shapes
-    const cols = (mapData?.width)  || Math.floor(canvas.width  / TILE);
-    const rows = (mapData?.height) || Math.floor(canvas.height / TILE);
-    drawGrid(cols, rows);
-    for (const s of spawns) drawSpawnRect(s.x, s.y, s.w, s.h, `${s.monsterKey}×${s.count}`);
-    if (starts[0]) drawStart(starts[0].x, starts[0].y);
+    // start loop
+    last = performance.now();
+    requestAnimationFrame(loop);
+    setStatus('Pronto');
+  } catch (err) {
+    console.error(err);
+    setStatus('Erro: ' + err.message);
+  }
+}
 
-    setStatus('OK');
+// btn reload on UI (keeps existing behaviour)
+if (btnReload) btnReload.addEventListener('click', async () => {
+  try {
+    setStatus('Recarregando mapa no servidor…');
+    const j = await postWithCsrf(`/api/admin/content/reload-map?map=${MAP_KEY}`);
+    console.log('reload response:', j);
+    // after reload, re-fetch map and spawns
+    await startHub();
   } catch (e) {
     console.error(e);
     setStatus('Erro: ' + e.message);
   }
-}
+});
 
-btnReload?.addEventListener('click', async () => { await reloadMapOnServer(); await main(); });
-main();
+startHub();

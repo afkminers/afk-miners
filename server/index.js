@@ -1,17 +1,17 @@
 // server/index.js
 require('dotenv').config();
 
-const express  = require('express');
-const path     = require('path');
-const cors     = require('cors');
-const sqlite3  = require('sqlite3').verbose();
+const express = require('express');
+const path = require('path');
+const cors = require('cors');
+const sqlite3 = require('sqlite3').verbose();
 
 const { migrate } = require('./models/migrate');
 const { cookieParser, requireAuth, requireCsrf, csrfRoute } = require('./auth/middleware');
 
-const authRoutes    = require('./auth/routes');
-const playerRoutes  = require('./player/routes');
-const gachaRoutes   = require('./gacha/routes');
+const authRoutes = require('./auth/routes');
+const playerRoutes = require('./player/routes');
+const gachaRoutes = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 
 const K = require('./balance/config');
@@ -23,9 +23,9 @@ const CONTENT_PIPELINE = process.env.CONTENT_PIPELINE || 'off'; // off | shadow 
 // ===================================================
 
 // ========= CONFIG =========
-const NODE_ENV            = process.env.NODE_ENV || 'development';
-const PORT                = Number(process.env.PORT || 3000);
-const CLIENT_ROOT_DIR     = path.join(__dirname, '..', 'client');
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = Number(process.env.PORT || 3000);
+const CLIENT_ROOT_DIR = path.join(__dirname, '..', 'client');
 const WORKER_TICK_SECONDS = Number(process.env.WORKER_TICK_SECONDS || 3);
 
 // ========= APP =========
@@ -43,9 +43,9 @@ const DB_PATH = path.join(__dirname, 'db', 'database.sqlite');
 const db = new sqlite3.Database(DB_PATH);
 
 // helpers DB (promises)
-const dbGet = (sql, params=[]) => new Promise((res,rej)=>db.get(sql, params,(e,r)=>e?rej(e):res(r)));
-const dbAll = (sql, params=[]) => new Promise((res,rej)=>db.all(sql, params,(e,r)=>e?rej(e):res(r)));
-const dbRun = (sql, params=[]) => new Promise((res,rej)=>db.run(sql, params,function(e){e?rej(e):res(this)}));
+const dbGet = (sql, params = []) => new Promise((res, rej) => db.get(sql, params, (e, r) => e ? rej(e) : res(r)));
+const dbAll = (sql, params = []) => new Promise((res, rej) => db.all(sql, params, (e, r) => e ? rej(e) : res(r)));
+const dbRun = (sql, params = []) => new Promise((res, rej) => db.run(sql, params, function (e) { e ? rej(e) : res(this) }));
 
 // --- bootstrap de segurança do pipeline ---
 db.exec(`
@@ -111,19 +111,19 @@ CREATE TABLE IF NOT EXISTS spawns (
 });
 
 // ========= ROTAS QUE NÃO PRECISAM DO DB PASSADO =========
-app.use('/api/auth',   authRoutes);
-app.use('/api',        catalogRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api', catalogRoutes);
 app.use('/api/player', requireAuth, playerRoutes);
-app.use('/api/gacha',  requireAuth, gachaRoutes);
+app.use('/api/gacha', requireAuth, gachaRoutes);
 app.use('/api/skills', require('./skills/routes'));
 
 // ========= Helpers =========
-const SKILLS = new Set(['SWORD','AXE','CLUB','DISTANCE','SHIELD','MAGIC']);
+const SKILLS = new Set(['SWORD', 'AXE', 'CLUB', 'DISTANCE', 'SHIELD', 'MAGIC']);
 
 async function resolveSkillType(weaponOrSkill) {
   if (!weaponOrSkill) return null;
   const raw = String(weaponOrSkill);
-  const up  = raw.toUpperCase();
+  const up = raw.toUpperCase();
   if (SKILLS.has(up)) return up;
 
   const row = await dbGet(
@@ -148,7 +148,7 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
     if (!skillType) return res.status(400).json({ error: 'weaponOrSkill inválido' });
 
     const nowIso = new Date().toISOString();
-    const notes  = JSON.stringify({ heroClass: String(heroClass).toUpperCase() });
+    const notes = JSON.stringify({ heroClass: String(heroClass).toUpperCase() });
 
     const t = await dbGet(`SELECT * FROM hero_training WHERE hero_id=?`, [heroId]);
     if (t) {
@@ -173,10 +173,10 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
       );
     }
 
-    res.json({ ok:true, message:'Training started', heroId, skillType });
+    res.json({ ok: true, message: 'Training started', heroId, skillType });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error:'erro ao iniciar treino' });
+    res.status(500).json({ error: 'erro ao iniciar treino' });
   }
 });
 
@@ -184,17 +184,17 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
 trainingRouter.post('/stop', requireAuth, async (req, res) => {
   try {
     const { heroId } = req.body || {};
-    if (!heroId) return res.status(400).json({ error:'heroId é obrigatório' });
+    if (!heroId) return res.status(400).json({ error: 'heroId é obrigatório' });
 
     const t = await dbGet(`SELECT * FROM hero_training WHERE hero_id=?`, [heroId]);
-    if (!t || t.status !== 'RUNNING') return res.json({ ok:true, message:'No active session' });
+    if (!t || t.status !== 'RUNNING') return res.json({ ok: true, message: 'No active session' });
 
-    const now   = Date.now();
-    const last  = Date.parse(t.last_tick_at || t.started_at || new Date(0).toISOString());
-    const delta = Math.max(0, Math.floor((now - last)/1000));
+    const now = Date.now();
+    const last = Date.parse(t.last_tick_at || t.started_at || new Date(0).toISOString());
+    const delta = Math.max(0, Math.floor((now - last) / 1000));
 
-    const energyCost = K.ENERGY_PER_MIN_WHEN_TRAINING * (delta/60);
-    const newEnergy  = Math.max(0, (t.energy_current || 0) - energyCost);
+    const energyCost = K.ENERGY_PER_MIN_WHEN_TRAINING * (delta / 60);
+    const newEnergy = Math.max(0, (t.energy_current || 0) - energyCost);
 
     await dbRun(
       `UPDATE hero_training
@@ -208,10 +208,10 @@ trainingRouter.post('/stop', requireAuth, async (req, res) => {
       [new Date(now).toISOString(), delta, delta, newEnergy, energyCost, heroId]
     );
 
-    res.json({ ok:true, message:'Training stopped', processed_seconds: delta });
+    res.json({ ok: true, message: 'Training stopped', processed_seconds: delta });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error:'erro ao parar treino' });
+    res.status(500).json({ error: 'erro ao parar treino' });
   }
 });
 
@@ -219,10 +219,10 @@ trainingRouter.post('/stop', requireAuth, async (req, res) => {
 trainingRouter.get('/status', requireAuth, async (req, res) => {
   try {
     const heroId = req.query.heroId;
-    if (!heroId) return res.status(400).json({ error:'heroId é obrigatório' });
+    if (!heroId) return res.status(400).json({ error: 'heroId é obrigatório' });
 
     const t = await dbGet(`SELECT * FROM hero_training WHERE hero_id=?`, [heroId]);
-    if (!t) return res.json({ status:'IDLE' });
+    if (!t) return res.json({ status: 'IDLE' });
 
     const skillRow = await dbGet(
       `SELECT level, tries_progress FROM player_hero_skills WHERE hero_id=? AND skill_type=?`,
@@ -236,8 +236,8 @@ trainingRouter.get('/status', requireAuth, async (req, res) => {
       );
       need = n?.tries_needed ?? null;
       if (need != null) {
-        remaining = Math.max(0, need - (skillRow.tries_progress||0));
-        pct = Math.floor((skillRow.tries_progress/need) * 100);
+        remaining = Math.max(0, need - (skillRow.tries_progress || 0));
+        pct = Math.floor((skillRow.tries_progress / need) * 100);
       }
     }
 
@@ -245,7 +245,7 @@ trainingRouter.get('/status', requireAuth, async (req, res) => {
       status: t.status,
       hero_id: t.hero_id,
       skill_type: t.skill_type,
-      class: (()=>{try{return JSON.parse(t.notes||'{}').heroClass}catch{return null}})(),
+      class: (() => { try { return JSON.parse(t.notes || '{}').heroClass } catch { return null } })(),
       energy_current: t.energy_current,
       energy_max: t.energy_max,
       session_seconds: t.session_seconds,
@@ -259,7 +259,7 @@ trainingRouter.get('/status', requireAuth, async (req, res) => {
     });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error:'erro ao consultar status' });
+    res.status(500).json({ error: 'erro ao consultar status' });
   }
 });
 
@@ -323,7 +323,7 @@ app.get('/api/admin/content/map/:key/spawns', (req, res) => {
 app.get('/api/admin/content/map/:key/data', (req, res) => {
   db.get('SELECT dataJSON FROM maps WHERE key=?', [req.params.key], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (!row)   return res.status(404).json({ error: 'map not found' });
+    if (!row) return res.status(404).json({ error: 'map not found' });
     try {
       return res.json(JSON.parse(row.dataJSON || '{}'));
     } catch (e) {
@@ -364,6 +364,47 @@ app.use((req, res, next) => {
   res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
 });
 
+// after app and middleware setup (localize this where app is configured)
+// add monsters endpoint (admin/content)
+app.get('/api/admin/content/monsters', requireAuth, (req, res) => {
+  db.all('SELECT key, name, xp, healthMax, speed, lookJSON FROM monsters_master', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    // parse lookJSON for convenience
+    const parsed = rows.map(r => ({ ...r, look: r.lookJSON ? JSON.parse(r.lookJSON) : {} }));
+    res.json(parsed);
+  });
+});
+
+// WebSocket minimal server (optional)
+const http = require('http').createServer(app);
+
+// try to load ws optionally so server won't crash if it's not installed
+let WebSocketLib = null;
+try {
+  WebSocketLib = require('ws');
+} catch (err) {
+  console.warn('[ws] optional dependency not installed — WebSocket disabled. Run `npm install ws` to enable.');
+}
+
+const useWebSocket = Boolean(WebSocketLib);
+if (useWebSocket) {
+  const wss = new WebSocketLib.Server({ server: http, path: '/ws' });
+  wss.on('connection', (ws) => {
+    ws.on('message', (msg) => {
+      try {
+        const data = JSON.parse(msg.toString());
+        if (data.type === 'pos') {
+          wss.clients.forEach(c => {
+            if (c !== ws && c.readyState === WebSocketLib.OPEN) c.send(JSON.stringify(data));
+          });
+        }
+      } catch (e) { /* ignore malformed */ }
+    });
+  });
+}
+
+http.listen(PORT, () => console.log(`server listening on ${PORT} ${useWebSocket ? '(ws enabled)' : '(ws disabled)'}`));
+
 // ========= START =========
 (async () => {
   await migrate();
@@ -373,10 +414,9 @@ app.use((req, res, next) => {
     await loadAll(db, path.join(__dirname, '..'));
   }
 
-  app.listen(PORT, () => {
-    console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
-    console.log(`[training] DB: ${DB_PATH}`);
-  });
+  // Removido app.listen duplicado — usamos o http server criado acima.
+  console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
+  console.log(`[training] DB: ${DB_PATH}`);
 
   // ========= WORKER (stamina/limites; NÃO dá tries) =========
   async function trainingTick() {
