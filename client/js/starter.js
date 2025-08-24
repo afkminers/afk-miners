@@ -12,10 +12,8 @@ async function fetchCsrf() {
     cache: 'no-store',
   });
 
-  // alguns servidores só mandam o token no header
   const headerTok = r.headers.get('x-csrf-token') || r.headers.get('X-CSRF-Token');
 
-  // tentar ler corpo (pode não ser JSON)
   let bodyTok = null;
   try {
     const data = await r.json();
@@ -43,7 +41,6 @@ async function jget(url) {
 }
 
 async function jpost(url, body, _retry) {
-  // garante csrf se existir (não é obrigatório para GETs)
   const token = await fetchCsrf().catch(() => null);
 
   const r = await fetch(url, {
@@ -86,17 +83,16 @@ function spriteUrlFrom(h) {
 /* ===================== Fluxo principal ===================== */
 async function main() {
   try {
-    // 1) Confere se está logado neste host/porta
-    //    (se não estiver, jget redireciona para /index.html)
-    const me = await jget('/api/auth/me');
+    // 1) Confere sessão; se não estiver logado, jget redireciona
+    await jget('/api/auth/me');
 
-    // 2) (Opcional) tenta obter CSRF para os próximos POSTs
+    // 2) opcional: pega CSRF pra próximos POSTs
     await fetchCsrf().catch(() => null);
 
-    // 3) Se já escolheu starter, pula direto para a House
+    // 3) Já tem starter? vai direto para a UI (index)
     const status = await jget('/api/starter/status'); // { canSelect: boolean }
     if (!status?.canSelect) {
-      location.href = '/house.html';
+      location.href = '/'; // index.html (shell com UI)
       return;
     }
 
@@ -123,7 +119,8 @@ async function main() {
       btn.onclick = async () => {
         try {
           await jpost('/api/starter/select', { heroKey: h.heroKey });
-          location.href = '/house.html';
+          // Depois de escolher, abre a UI; House pode ser aberta pelo card/lobby
+          location.href = '/';
         } catch (e) {
           console.error(e);
           let msg = e?.message || 'falha ao selecionar';
@@ -135,7 +132,8 @@ async function main() {
       grid.appendChild(card);
     }
 
-    if (btnSkip) btnSkip.onclick = () => { location.href = '/house.html'; };
+    // Botão "Ir para o Lobby" (pular)
+    if (btnSkip) btnSkip.onclick = () => { location.href = '/'; };
 
   } catch (e) {
     console.error(e);
