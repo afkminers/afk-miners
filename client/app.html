@@ -10,39 +10,29 @@
     <header class="topbar">
       <div class="brand">AFK MINERS</div>
       <nav class="actions">
-        <button data-panel="skills">Skills</button>
-        <button data-panel="heroes">Heroes</button>
-        <button data-panel="inventory">Inventory</button>
-        <button data-panel="summon">Summon</button>
+        <button id="btnSkills">Skills</button>
+        <button id="btnHeroes">Heroes</button>
+        <button id="btnInventory">Inventory</button>
+        <button id="btnSummon">Summon</button>
         <button id="btnLogout" class="danger">Logout</button>
       </nav>
     </header>
 
     <main class="game">
-      <aside class="sidebar">
-        <div class="stat">⚔ ATK <span id="statAtk">—</span></div>
-        <div class="stat">🛡 DEF <span id="statDef">—</span></div>
-        <div class="stat">💨 SPD <span id="statSpd">—</span></div>
-        <div class="spacer"></div>
+      <section class="stage" style="margin-left:0">
+        <!-- IMPORTANTE: play.js espera id="view" -->
+        <canvas id="view" width="960" height="540"></canvas>
 
-        <!-- rotas do shell -->
-        <button data-route="#/house">🏠 House</button>
-        <button data-route="#/training">🎯 Training</button>
-        <button data-route="#/pvp">⚔ PvP</button>
-        <button data-route="#/dungeon">🕳 Dungeon</button>
-      </aside>
-
-      <section class="stage">
-        <canvas id="scene" width="960" height="540"></canvas>
-        <div id="hud" class="hud"></div>
+        <!-- HUD compatível com play.js (usa #pos) -->
+        <div id="hud" class="hud">
+          <div>map: <code>house</code></div>
+          <div>Move: WASD / Setas</div>
+          <div id="pos"></div>
+        </div>
       </section>
-
-      <aside class="rightbar">
-        <div class="panel-title">Mini-Map</div>
-        <div class="minimap"></div>
-      </aside>
     </main>
 
+    <!-- Chat (mantido) -->
     <footer class="chat">
       <div class="tabs">
         <button data-chat="default" class="active">Default</button>
@@ -55,8 +45,39 @@
     </footer>
   </div>
 
-  <!-- overlays dos painéis -->
+  <!-- overlays/modals -->
   <div id="overlays"></div>
 
   <script type="module" src="/js/app.js"></script>
+
+  <style>
+    /* escondemos possíveis sidebars herdadas por CSS global */
+    .sidebar, .rightbar { display: none !important; }
+    .game { grid-template-columns: 1fr !important; }
+
+    /* ===== Modal do shell (iframe) ===== */
+    .modal {
+      position: fixed; inset: 0; z-index: 60;
+      display: grid; place-items: center;
+      background: rgba(0,0,0,.55);
+    }
+    .modal .window {
+      width: min(1100px, 96vw);
+      height: min(680px, 88vh);
+      background: #0e1422; border: 2px solid #000; border-radius: 14px;
+      box-shadow: 0 18px 32px rgba(0,0,0,.6), inset 0 0 0 4px #141c2f;
+      display: grid; grid-template-rows: auto 1fr;
+      overflow: hidden;
+    }
+    .modal header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 12px; background:#0b1220; border-bottom:1px solid #0f1930;
+    }
+    .modal header h3{ margin:0; font-weight:600; color:#e6eaf2; }
+    .modal header .close{
+      appearance:none; border:0; cursor:pointer; border-radius:10px;
+      padding:8px 12px; background:#b3453e; color:#fff; font-weight:600;
+    }
+    .modal iframe{ width:100%; height:100%; border:0; background:#0b1220; }
+  </style>
 </body>

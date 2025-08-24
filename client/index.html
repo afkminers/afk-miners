@@ -345,9 +345,15 @@
       box-shadow: 0 -6px 0 #000, 0 -14px 20px rgba(0,0,0,.45);
     }
     .site-footer small{ opacity:.85; }
-    /* Deixar fixo no rodapé? troque por:
-       .site-footer{ position:fixed; left:0; right:0; bottom:0; z-index:10; }
-       e adicione padding-bottom no body/main para não sobrepor conteúdo. */
+
+    /* ====== MODO EMBUTIDO (abre dentro do shell via ?embed=1#view) ====== */
+    body.embedded .site-header,
+    body.embedded #landingBg,
+    body.embedded #landingFx,
+    body.embedded #landingFxBack,
+    body.embedded .login-heroes,
+    body.embedded .retro-footer { display:none !important; }
+    body.embedded #appMain { display:block !important; }
   </style>
 </head>
 <body class="force-anim logged-out">
@@ -689,7 +695,6 @@
                 <li>RARE … 20%</li>
                 <li>SUPER RARE … 7%</li>
                 <li>LEGENDARY … 2%</li>
-                
               </ul>
             </div>
             <div class="g-hero-tease">
@@ -820,7 +825,7 @@
         views[k].style.display = (k === name) ? '' : 'none';
       }
 
-        // se não é a tela de summon, garante que o toast não fique visível
+      // se não é a tela de summon, garante que o toast não fique visível
       if (name !== 'summon') { try { window.hideSummonToast?.(); } catch {} }
 
       showHub(!name);
@@ -917,27 +922,24 @@
         if (vv != null) setHUDCoins(vv);
       }, 1500);
     })();
+
+    // expõe para o modo embed (shell usa window.showView)
+    window.showView = window.showView || showView;
   </script>
 
-  <!-- Profile / Equip Modal (layout compacto com skills à direita) -->
+  <!-- Profile / Equip Modal -->
   <div id="profileModal" class="pf-overlay" aria-hidden="true" style="display:none">
     <div class="pf-dialog" role="dialog" aria-modal="true">
       <button class="pf-close" aria-label="Close">✕</button>
 
-      <!-- HEADER: 3 colunas — retrato | equip | skills -->
       <div class="pf-header pf-header-3cols">
-        <!-- Coluna 1: Retrato + infos -->
         <div class="pf-leftcol">
           <div class="pf-portrait"><img id="pf-img" alt="hero portrait"></div>
-
           <div class="pf-info">
             <div id="pf-level"  class="pf-level">Lvl 1 (0%)</div>
             <div id="pf-rarity" class="pf-rarity">COMMON</div>
           </div>
-
           <div id="pf-mini-meta" class="pf-mini-meta">—</div>
-
-          <!-- Stats: “pílulas” verticais lado a lado -->
           <div class="pf-stats-row">
             <div class="pf-stat pill"><span>⚔</span><b id="pf-atk">0</b></div>
             <div class="pf-stat pill"><span>🛡</span><b id="pf-def">0</b></div>
@@ -945,7 +947,6 @@
           </div>
         </div>
 
-        <!-- Coluna 2: Grade de Equipamentos (sem belt) -->
         <div class="pf-equip">
           <div class="slot" data-slot="helmet"  title="Helmet"></div>
           <div class="slot" data-slot="amulet"  title="Amulet"></div>
@@ -962,7 +963,6 @@
           <div class="slot" data-slot="boots"   title="Boots"></div>
         </div>
 
-        <!-- Coluna 3: Skills (rolagem própria) -->
         <section class="pf-skill-side">
           <div id="pf-skills-placeholder" class="pf-skill-scroll"></div>
         </section>
@@ -988,7 +988,6 @@
   </footer>
 
   <script>
-    // Exponho uma função global para os módulos chamarem: window.showRetroToast(msg, type)
     (function(){
       const el = document.getElementById('retroToast');
       const box = el?.querySelector('.box');
@@ -1000,10 +999,9 @@
         else if (type==='warn') el.classList.add('warn');
         else el.classList.add('error');
         box.textContent = String(msg);
-        void el.offsetWidth; // restart animation
+        void el.offsetWidth;
         el.style.display = 'flex';
         el.classList.add('show');
-        // bip 8-bit (reusa sfx-click + safePlay)
         try{ safePlay(document.getElementById('sfx-click')); }catch{}
         clearTimeout(timer);
         timer = setTimeout(()=>{ el.classList.remove('show'); }, 2400);
@@ -1118,6 +1116,30 @@
       mobLogout?.classList.toggle('hidden', !!isHidden);
     });
     observer.observe(document.body, { subtree:true, attributes:true, attributeFilter:['class'] });
+  </script>
+
+  <!-- ===== Ativador do modo EMBED (deve ficar DEPOIS de showView) ===== -->
+  <script>
+    (function(){
+      const qs = new URLSearchParams(location.search);
+      if (qs.get('embed') === '1') {
+        document.body.classList.add('embedded');
+        document.getElementById('appMain')?.classList.remove('hidden');
+        // qual subview abrir (default heroes)
+        const name = (location.hash || '#heroes').replace('#','');
+        if (typeof window.showView === 'function') {
+          try { window.showView(name); } catch {}
+        } else {
+          // fallback bruto: liga a seção pela id
+          const el = document.getElementById('view-'+name);
+          if (el) {
+            document.querySelectorAll('.view').forEach(v=> v.style.display='none');
+            el.style.display='';
+            document.getElementById('view-hub')?.style?.setProperty('display','none');
+          }
+        }
+      }
+    })();
   </script>
 
 </body>

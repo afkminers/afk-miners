@@ -127,8 +127,8 @@ function closeMobileMenu(){
 
 /* ========= Estados de tela ========= */
 function showLanding(){
-  appMain.classList.add('hidden');
-  authScreen.classList.add('hidden');
+  appMain?.classList.add('hidden');
+  authScreen?.classList.add('hidden');
   setLogoutVisibility(false);
   setLoggedOutGlow(true);
   closeMobileMenu();
@@ -140,11 +140,9 @@ async function goToGameAccordingToStarter() {
   try {
     const st = await apiGet(`${API}/api/starter/status`); // { canSelect: boolean }
     if (st?.canSelect) {
-      // ainda não escolheu
-      location.href = '/starter.html';
+      location.href = '/starter.html'; // ainda não escolheu starter
     } else {
-      // já tem starter → shell do jogo
-      location.href = '/app.html';
+      location.href = '/app.html';     // já tem starter → client
     }
   } catch {
     // fallback conservador
@@ -153,14 +151,12 @@ async function goToGameAccordingToStarter() {
 }
 
 async function showApp(profile) {
-  // Não exibiremos mais o “hub” do index. Assim que tiver perfil válido, vamos
-  // direto para a rota certa (starter/app). Manter stopLoginFx evita visual sujo.
   stopLoginFx();
   __profile = profile;
   window.__isAuth = true;
   updateHud(profile);
   await gacha.init?.(profile);
-  // redireciona
+  // vai direto para a rota certa (starter/app)
   goToGameAccordingToStarter();
 }
 
@@ -186,33 +182,32 @@ if (btnPlay) {
     if (window.__isAuth && __profile) {
       goToGameAccordingToStarter();
     } else {
-      authScreen.classList.remove('hidden');
+      authScreen?.classList.remove('hidden');
     }
   };
 }
 
 /* ========= Close do modal de auth ========= */
 if (authClose) {
-  authClose.onclick = () => authScreen.classList.add('hidden');
+  authClose.onclick = () => authScreen?.classList.add('hidden');
 }
 
 /* ========= Auth handlers ========= */
-btnLogin.onclick = async () => {
+btnLogin?.addEventListener('click', async () => {
   loginMsg.textContent = '';
   const data = await doLogin(loginName.value.trim(), loginPass.value);
   if (data?.error) { loginMsg.textContent = data.error; return; }
   celebrate();
-  // após login, manda direto conforme starter
   await goToGameAccordingToStarter();
-};
+});
 
-btnRegister.onclick = async () => {
+btnRegister?.addEventListener('click', async () => {
   regMsg.textContent = '';
   const data = await doRegister(regName.value.trim(), regPass.value);
   if (data?.error) { regMsg.textContent = data.error; return; }
   celebrate();
   await goToGameAccordingToStarter();
-};
+});
 
 async function handleLogout(){
   await doLogout();
@@ -224,9 +219,9 @@ mobileLogout?.addEventListener('click', handleLogout);
 
 /* ========= Mobile menu ========= */
 btnHamb?.addEventListener('click', () => {
-  mobMenu.classList.toggle('open');
-  const open = mobMenu.classList.contains('open');
-  btnHamb.setAttribute('aria-expanded', open ? 'true' : 'false');
+  mobMenu?.classList.toggle('open');
+  const open = mobMenu?.classList.contains('open');
+  btnHamb?.setAttribute('aria-expanded', open ? 'true' : 'false');
 });
 window.addEventListener('resize', closeMobileMenu);
 document.addEventListener('click', (e)=>{

@@ -1,47 +1,27 @@
-:root{
-  --bg:#0b1220; --panel:#0f172a; --line:#1f2937; --text:#e5e7eb; --muted:#94a3b8;
-  --acc:#eab308; --btn:#1e293b; --btn-h:#334155; --danger:#ef4444;
-  font-family: ui-sans-serif, system-ui, Segoe UI, Arial;
-}
-*{box-sizing:border-box} body,html{margin:0;height:100%;background:var(--bg);color:var(--text)}
-#ui{display:flex;flex-direction:column;height:100%}
-.topbar{display:flex;align-items:center;justify-content:space-between;
-  padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line)}
-.topbar .brand{font-weight:800;letter-spacing:1px}
-.topbar .actions button{margin-left:8px;background:var(--btn);color:var(--text);
-  border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
-.topbar .actions button:hover{background:var(--btn-h)}
-.topbar .actions .danger{background:#7f1d1d;border-color:#991b1b}
+/* client/css/app.css */
+html,body{height:100%;margin:0;background:#0b1220;color:#e5e7eb;font:14px/1.2 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+#ui{display:grid;grid-template-rows:auto 1fr auto;height:100%}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#0f1628;border-bottom:1px solid #1c2946}
+.topbar .brand{font-weight:700;letter-spacing:.5px}
+.topbar .actions button{margin-right:8px;padding:6px 10px;border:1px solid #223255;background:#0b1220;color:#e6eaf2;border-radius:8px;cursor:pointer}
+.topbar .actions button.danger{background:#8b2e2e;border-color:#611f1f;color:#fff}
+.game{position:relative;display:grid;grid-template-columns:1fr;grid-template-rows:1fr}
+.stage{position:relative;display:flex;align-items:center;justify-content:center;padding:12px}
+.stage canvas{display:block;background:#0b1220;border:1px solid #1c2946;border-radius:12px;z-index:4}
+.hud{position:absolute;left:0;top:0;right:0;bottom:0;pointer-events:none;z-index:4}
+.chat{display:grid;grid-template-rows:auto 1fr auto;gap:6px;padding:8px;border-top:1px solid #1c2946;background:#0f1628}
+.chat .tabs{display:flex;gap:8px}
+.chat .tabs button{padding:4px 8px;border:1px solid #223255;background:#0b1220;color:#e6eaf2;border-radius:8px}
+.chat .log{background:#0b1220;border:1px solid #1c2946;border-radius:8px;min-height:80px;max-height:160px;overflow:auto;padding:8px}
+.chat form input{width:100%;padding:8px;border:1px solid #1c2946;border-radius:8px;background:#0b1220;color:#e6eaf2}
 
-.game{flex:1;display:grid;grid-template-columns:220px 1fr 220px;gap:10px;padding:10px}
-.sidebar,.rightbar{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
-.sidebar .stat{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
-.sidebar .spacer{flex:1}
-.sidebar button{background:var(--btn);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px;cursor:pointer}
-.sidebar button:hover{background:var(--btn-h)}
+/* painéis */
+.game-panel{user-select:none}
+.gp-head strong{font-weight:700}
+.gp-actions{display:flex;gap:6px}
 
-.stage{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;
-  display:flex;align-items:center;justify-content:center}
-canvas{image-rendering:pixelated;background:#08101c;border-radius:8px}
-.hud{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.45);border:1px solid var(--line);
-  color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;white-space:pre-line}
+/* coluna de dock à esquerda (não invade a cena) */
+#dockHost{z-index:5}
 
-.rightbar .panel-title{font-size:12px;color:var(--muted);margin-bottom:6px}
-.rightbar .minimap{flex:1;border:1px dashed var(--line);border-radius:6px}
-
-.chat{border-top:1px solid var(--line);background:var(--panel);padding:8px 10px}
-.chat .tabs{display:flex;gap:6px;margin-bottom:6px}
-.chat .tabs button{background:var(--btn);border:1px solid var(--line);color:var(--text);
-  padding:3px 8px;border-radius:8px;cursor:pointer}
-.chat .tabs .active{outline:2px solid var(--acc)}
-.chat .log{height:120px;overflow:auto;background:#0b1220;border:1px solid var(--line);
-  border-radius:8px;padding:6px;font-size:12px}
-#chatForm{margin-top:6px}
-#chatInput{width:100%;background:#0b1220;color:var(--text);border:1px solid var(--line);
-  border-radius:8px;padding:8px}
-#overlays{position:fixed;inset:0;pointer-events:none}
-.modal{pointer-events:auto;position:absolute;inset:auto 0 0 auto;margin:20px;right:20px;bottom:20px;
-  width:420px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
-.modal header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.modal header h3{margin:0;font-size:14px}
-.modal .close{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:6px;cursor:pointer;padding:2px 6px}
+/* garante que a CENA tem prioridade absoluta visual */
+.stage{z-index:4}
