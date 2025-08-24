@@ -1,4 +1,4 @@
-// index.js
+// server/index.js
 require('dotenv').config();
 
 const express  = require('express');
@@ -15,7 +15,8 @@ const gachaRoutes   = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 
 const K = require('./balance/config');
-const buildStarterRouter = require('./starter/routes'); // exporta a função
+// starter router exporta a função diretamente
+const buildStarterRouter = require('./starter/routes');
 
 // ======== Pipeline de Conteúdo (YAML/Tiled) ========
 const { loadAll, loadMap } = require('./content/loader');
@@ -35,7 +36,7 @@ app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
 app.use(requireCsrf);
 
-// CSRF token (sempre antes de outras rotas que o cliente precisa)
+// CSRF token (antes das outras rotas usadas pelo cliente)
 app.get('/api/csrf', csrfRoute);
 
 // ========= DB =========
@@ -47,7 +48,7 @@ const dbGet = (sql, params=[]) => new Promise((res,rej)=>db.get(sql, params,(e,r
 const dbAll = (sql, params=[]) => new Promise((res,rej)=>db.all(sql, params,(e,r)=>e?rej(e):res(r)));
 const dbRun = (sql, params=[]) => new Promise((res,rej)=>db.run(sql, params,function(e){e?rej(e):res(this)}));
 
-// --- bootstrap de segurança do pipeline (cria tabelas se faltarem) ---
+// --- bootstrap de segurança do pipeline ---
 db.exec(`
 PRAGMA foreign_keys=ON;
 CREATE TABLE IF NOT EXISTS content_files (
@@ -137,7 +138,6 @@ async function resolveSkillType(weaponOrSkill) {
 // ========= Rotas de Treino =========
 const trainingRouter = express.Router();
 
-// START
 trainingRouter.post('/start', requireAuth, async (req, res) => {
   try {
     const { heroId, weaponOrSkill, heroClass } = req.body || {};
@@ -160,6 +160,7 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
                 last_tick_at=?,
                 notes=?,
                 daily_reset_at = COALESCE(daily_reset_at, datetime('now','start of day','+1 day')),
+//                 energy_current = COALESCE(energy_current, energy_max)
                 energy_current = COALESCE(energy_current, energy_max)
           WHERE hero_id=?`,
         [skillType, nowIso, nowIso, notes, heroId]
@@ -169,7 +170,7 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
         `INSERT INTO hero_training
            (hero_id, skill_type, status, started_at, last_tick_at,
             energy_current, energy_max, energy_spent, session_seconds, daily_seconds, daily_reset_at, notes)
-         VALUES (?, ?, 'RUNNING', ?, ?, 100, 100, 0, 0, 0, datetime('now','start of day','+1 day'), ?)` ,
+         VALUES (?, ?, 'RUNNING', ?, ?, 100, 100, 0, 0, 0, datetime('now','start of day','+1 day'), ?)`,
         [heroId, skillType, nowIso, nowIso, notes]
       );
     }
@@ -181,7 +182,6 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
   }
 });
 
-// STOP
 trainingRouter.post('/stop', requireAuth, async (req, res) => {
   try {
     const { heroId } = req.body || {};
@@ -216,7 +216,6 @@ trainingRouter.post('/stop', requireAuth, async (req, res) => {
   }
 });
 
-// STATUS
 trainingRouter.get('/status', requireAuth, async (req, res) => {
   try {
     const heroId = req.query.heroId;
@@ -269,21 +268,21 @@ app.use('/api/training', trainingRouter);
 // ========= ROTAS QUE USAM DB (admin/content + starter) =========
 
 // utilitários (pipeline YAML/Tiled)
-app.get('/api/admin/content/monsters', async (req, res) => {
+app.get('/api/admin/content/monsters', async (_req, res) => {
   db.all('SELECT key,name,xp FROM monsters_master ORDER BY key', (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
 });
 
-app.get('/api/assets/items', (req, res) => {
+app.get('/api/assets/items', (_req, res) => {
   db.all('SELECT key, dataJSON FROM items_master ORDER BY key', (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows.map(r => ({ key: r.key, data: JSON.parse(r.dataJSON) })));
   });
 });
 
-app.get('/api/assets/sprites', (req, res) => {
+app.get('/api/assets/sprites', (_req, res) => {
   db.all('SELECT key, kind, dataJSON FROM sprites_master ORDER BY key', (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows.map(r => ({ key: r.key, kind: r.kind, data: JSON.parse(r.dataJSON) })));
@@ -291,7 +290,7 @@ app.get('/api/assets/sprites', (req, res) => {
 });
 
 // DEBUG MAPS
-app.get('/api/admin/content/maps', (req, res) => {
+app.get('/api/admin/content/maps', (_req, res) => {
   db.all('SELECT key, length(dataJSON) AS bytes, updated_at FROM maps ORDER BY key', (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
@@ -320,7 +319,7 @@ app.get('/api/admin/content/map/:key/spawns', (req, res) => {
   );
 });
 
-// JSON bruto do mapa para o debug renderizar os tiles
+// JSON bruto do mapa (para o render client-side)
 app.get('/api/admin/content/map/:key/data', (req, res) => {
   db.get('SELECT dataJSON FROM maps WHERE key=?', [req.params.key], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -350,17 +349,17 @@ function safeParse(s) { try { return JSON.parse(s || '{}'); } catch { return {};
 // >>> ROTA STARTER (agora que db já existe)
 app.use('/api/starter', requireAuth, buildStarterRouter(db));
 
-// ----- Redireciona a raiz para o fluxo novo (troque para /index.html se quiser ir ao login)
-app.get('/', (req, res) => res.redirect('/index.html'));
+// ---- Redireciona raiz e /index.html para o fluxo novo
+app.get(['/', '/index.html'], (_req, res) => res.redirect(302, '/starter.html'));
 
-
-// ========= SERVE CLIENTE (depois de todas as rotas) =========
+// ========= SERVE CLIENTE (estático)
 app.use(express.static(CLIENT_ROOT_DIR));
 
-// ========= SPA fallback =========
-app.use((req,res,next)=>{
+// ========= SPA fallback (não intercepta assets)
+app.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next();
-  res.sendFile(path.join(CLIENT_ROOT_DIR,'index.html'));
+  if (/\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|map)$/i.test(req.path)) return next();
+  res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
 });
 
 // ========= START =========
