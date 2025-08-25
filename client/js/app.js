@@ -170,457 +170,21 @@ function safeAddListener(selectorOrNode, event, handler) {
   }
 }
 
-// Chat global — init seguro e tolerante (connect WS, load history, bind UI)
-(function initGlobalChat() {
-  // aguarda DOM por segurança
-  function onReady(fn) {
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-    else fn();
-  }
-
-  onReady(() => {
-    const btnDefault = document.getElementById('btnDefault');
-    const btnGlobal  = document.getElementById('btnGlobal');
-    const chatBox    = document.getElementById('chatBox');
-    const chatInput  = document.getElementById('chatInput');
-    const chatSend   = document.getElementById('chatSend');
-    const chatForm   = document.getElementById('chatForm');
-
-    if (!chatBox || !chatInput || !chatSend || !btnDefault || !btnGlobal || !chatForm) {
-      console.warn('[chat] elementos do DOM ausentes — verifique client/app.html');
-      return;
-    }
-
-    let ws = null;
-    let myId = '';
-    let myName = 'Você';
-    // seen message ids to avoid duplicates from multiple sockets / server echoes
-    const seenMsgIds = new Set();
-
-    function log(...args){ try{ console.log('[chat]', ...args); }catch{} }
-
-    // replace existing connectWS and message handler setup inside initGlobalChat
-    function connectWS() {
-      try {
-        // close previous socket if exists (avoid double connections)
-        try { if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) ws.close(); } catch {}
-        // prefer shared singleton if exposed by other module
-        if (typeof window.connectGameWS === 'function') {
-          ws = window.connectGameWS();
-        } else {
-          ws = new WebSocket((location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws');
-        }
-      } catch (e) {
-        log('erro ao criar WebSocket', e);
-        ws = null;
-        return;
-      }
-
-      try { window._game_ws = ws; } catch (e) {}
-
-      // detach any previous handlers we added to avoid duplicates
-      try { ws.removeEventListener('message', __chat_onmessage); } catch {}
-      try { ws.removeEventListener('open', __chat_onopen); } catch {}
-      try { ws.removeEventListener('close', __chat_onclose); } catch {}
-      try { ws.removeEventListener('error', __chat_onerror); } catch {}
-
-      // named handlers so we can remove later
-      function __chat_onopen() {
-        log('ws aberto');
-        try { btnGlobal.classList.add('active'); btnDefault.classList.remove('active'); } catch(e){}
-        (async () => {
-          try {
-            const raw = await fetch('/api/player/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
-            const me = (raw && raw.profile) ? raw.profile : raw;
-            myId = String((me && (me.id || me.playerId)) || '');
-            myName = (me && (me.name || me.username || me.displayName)) || myName;
-            try { window._chat_me = { id: myId, name: myName }; } catch (e) {}
-            if (ws && ws.readyState === WebSocket.OPEN) {
-              ws.send(JSON.stringify({ type: 'auth', id: myId, name: myName }));
-              log('sent auth handshake', { id: myId, name: myName });
-            }
-            const hist = await fetch('/api/chat/global?limit=200', { credentials: 'include' }).then(r => r.ok ? r.json() : []);
-            for (const m of hist) appendChatRow({ fromId: m.fromId, fromName: m.fromName||m.from, text: m.text, ts: (new Date(m.created_at)).getTime() });
-          } catch (e) { log('auth/history failed', e && e.message); }
-        })();
-      }
-
-      function __chat_onmessage(evt) {
-        try {
-          const d = JSON.parse(evt.data);
-          log('ws message raw', d);
-          if (d.type === 'chat' && (d.scope === undefined || d.scope === 'global')) {
-            const msg = {
-              id: d.id || d.messageId || d._id || null,
-              fromId: d.fromId || d.senderId || d.senderConnId || null,
-              fromName: d.fromName || d.from || d.fromUser || null,
-              text: d.text || d.message || '',
-              ts: d.ts || d.timestamp || d.created_at || Date.now(),
-              _clientId: d._clientId || d._clientid || null,
-              _pendingId: d._pendingId || null
-            };
-            if (msg.id) {
-              if (seenMsgIds.has(String(msg.id))) { log('skip: seenMsgIds', msg.id); return; }
-              seenMsgIds.add(String(msg.id));
-            }
-            appendChatRow(msg);
-          } else if (d.type === 'typing') {
-            // normalize typing payload (use fromName/fromId)
-            const name = d.fromName || d.from || null;
-            const id = d.fromId || d.senderId || null;
-            if (!id && !name) return;
-            if (d.state) typingSet.add(name || 'Anon'); else typingSet.delete(name || 'Anon');
-            updateTypingUI();
-          } else if (d.type === 'chat_ack') {
-            // ack: try to match pending id or id
-            const clientId = d._clientId || d._clientid || null;
-            if (clientId) {
-              const p = chatBox.querySelector(`[data-pending-id="${clientId}"]`);
-              if (p) { const mark = p.querySelector('.pending'); if (mark) { mark.textContent = ' ✓'; mark.style.opacity = '.9'; } p.removeAttribute('data-pending-id'); p.dataset.msgId = d.id || ''; }
-            }
-          }
-        } catch (e) { log('bad ws message', e); }
-      }
-
-      function __chat_onclose() { log('ws fechado'); }
-      function __chat_onerror(e) { log('ws erro', e && e.message); }
-
-      ws.addEventListener('open', __chat_onopen);
-      ws.addEventListener('message', __chat_onmessage);
-      ws.addEventListener('close', __chat_onclose);
-      ws.addEventListener('error', __chat_onerror);
-    }
-    // call connectWS once (existing code already does this)
-    try { connectWS(); } catch (e) { console.warn('connectWS failed', e); }
-
-    const typingIndicator = document.createElement('div');
-    typingIndicator.id = 'typingIndicator';
-    typingIndicator.style.padding = '6px 8px';
-    typingIndicator.style.fontSize = '13px';
-    typingIndicator.style.opacity = '.9';
-    chatBox.parentNode.insertBefore(typingIndicator, chatBox.nextSibling);
-
-    let typingSet = new Set();
-    function updateTypingUI() {
-      if (!typingIndicator) return;
-      const names = Array.from(typingSet);
-      typingIndicator.textContent = names.length ? (names.join(', ') + (names.length===1 ? ' está digitando…' : ' estão digitindo…')) : '';
-    }
-
-    // deterministic color from id (HSL)
-    function colorFromId(id) {
-      if (!id) return '#ffffff';
-      let h = 0;
-      for (let i=0;i<id.length;i++) h = (h*31 + id.charCodeAt(i)) >>> 0;
-      const hue = h % 360;
-      return `hsl(${hue} 90% 60%)`;
-    }
-
-    // store pending messages until ack
-    const pendingMap = new Map();
-
-    function appendChatRow(msg){
-      // debug: log entrada
-      try { console.log('[chat] appendChatRow called', msg); } catch(e){}
-
-      // dedupe by explicit ids/pending ids only (avoid fragile lastText heuristic)
-      try {
-        if (msg.id) {
-          if (seenMsgIds.has(String(msg.id))) { console.log('[chat] skip: seenMsgIds', msg.id); return; }
-          if (chatBox.querySelector(`[data-msg-id="${msg.id}"]`)) { seenMsgIds.add(String(msg.id)); console.log('[chat] skip: already in DOM', msg.id); return; }
-        } else if (msg._pendingId) {
-          if (chatBox.querySelector(`[data-pending-id="${msg._pendingId}"]`)) { console.log('[chat] skip: already pending', msg._pendingId); return; }
-        }
-      } catch (e) { console.warn('[chat] dedupe check failed', e); }
-
-      const d = document.createElement('div');
-      d.className='chat-row';
-      const time = new Date(msg.ts||Date.now()).toLocaleTimeString();
-      const isMe = (msg.fromId && myId && String(msg.fromId) === String(myId)) || (!msg.fromId && msg.fromName && myName && String(msg.fromName) === String(myName));
-      d.classList.add(isMe ? 'me' : 'other');
-      const displayName = escapeHtml(msg.fromName || (isMe ? myName : 'Anon'));
-      d.innerHTML = `<strong class="name">${displayName}</strong>: ${escapeHtml(msg.text)} <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${time})</span>`;
-      // apply color
-      const nameEl = d.querySelector('.name');
-      const color = colorFromId(msg.fromId || msg.fromName);
-      if (nameEl) nameEl.style.color = isMe ? '#ffd166' : color;
-      // if pending (no id yet) create pending marker
-      if (msg._pendingId) {
-        d.dataset.pendingId = msg._pendingId;
-        const mark = document.createElement('span');
-        mark.className = 'pending';
-        mark.textContent = ' ⏳';
-        nameEl.insertAdjacentElement('afterend', mark);
-      }
-      if (msg.id) { d.dataset.msgId = msg.id; seenMsgIds.add(String(msg.id)); }
-      chatBox.appendChild(d);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    // sendChat: attach client side id and mark pending
-    async function sendChat(){
-      const text = (chatInput.value||'').trim(); if(!text) return;
-      if (btnGlobal.classList.contains('active')) {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          const localId = (Date.now().toString(36) + Math.random().toString(36).slice(2,8));
-          // render as pending using clientId
-          appendChatRow({ fromId: myId, fromName: myName, text, ts: Date.now(), _pendingId: localId, id: null });
-          pendingMap.set(localId, { text, ts: Date.now() });
-          // log ao enviar chat
-          console.log('[client] sending chat', { text, scope: 'global', _clientId: localId });
-          // envio correto com variáveis definidas
-          ws.send(JSON.stringify({ type:'chat', text: text, scope: 'global', _clientId: localId }));
-          log('sent chat', text);
-          chatInput.value='';
-        } else {
-          alert('Conexão real-time indisponível.');
-        }
-      } else {
-        appendChatRow({ fromName: 'Você', text, ts: Date.now() }); chatInput.value='';
-      }
-    }
-
-    btnDefault.addEventListener('click', ()=>{ btnDefault.classList.add('active'); btnGlobal.classList.remove('active'); });
-    btnGlobal.addEventListener('click', ()=>{ btnGlobal.classList.add('active'); btnDefault.classList.remove('active'); });
-
-    chatSend.addEventListener('click', sendChat);
-    chatForm.addEventListener('submit', (e)=>{ e.preventDefault(); sendChat(); });
-    chatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
-
-    // iniciar conexão WebSocket (garante ws não ser null antes de registrar handlers adicionais)
-    try { connectWS(); } catch (e) { console.warn('connectWS failed', e); }
-
-    // handle incoming messages and acks and typing
-    ws.addEventListener('message', (evt) => {
-      try {
-        const d = JSON.parse(evt.data);
-        log('ws message raw', d);
-        if (d.type === 'chat' && (d.scope === undefined || d.scope === 'global')) {
-          const msg = {
-            id: d.id || d.messageId || d._id || null,
-            fromId: d.fromId || d.senderId || d.senderConnId || null,
-            fromName: d.fromName || d.from || d.fromUser || null,
-            text: d.text || d.message || '',
-            ts: d.ts || d.timestamp || d.created_at || Date.now(),
-            _clientId: d._clientId || d._clientid || null,
-            _pendingId: d._pendingId || null
-          };
-          if (msg.id) {
-            if (seenMsgIds.has(String(msg.id))) { log('skip: seenMsgIds', msg.id); return; }
-            seenMsgIds.add(String(msg.id));
-          }
-          appendChatRow(msg);
-        } else if (d.type === 'typing') {
-          // normalize typing payload (use fromName/fromId)
-          const name = d.fromName || d.from || null;
-          const id = d.fromId || d.senderId || null;
-          if (!id && !name) return;
-          if (d.state) typingSet.add(name || 'Anon'); else typingSet.delete(name || 'Anon');
-          updateTypingUI();
-        } else if (d.type === 'chat_ack') {
-          // ack: try to match pending id or id
-          const clientId = d._clientId || d._clientid || null;
-          if (clientId) {
-            const p = chatBox.querySelector(`[data-pending-id="${clientId}"]`);
-            if (p) { const mark = p.querySelector('.pending'); if (mark) { mark.textContent = ' ✓'; mark.style.opacity = '.9'; } p.removeAttribute('data-pending-id'); p.dataset.msgId = d.id || ''; }
-          }
-        }
-      } catch (e) { log('bad ws message', e); }
-    });
-
-    // send typing events (debounced)
-    let typingTimer = null;
-    let lastTypingState = false;
-    chatInput.addEventListener('input', () => {
-      const isTyping = chatInput.value.trim().length > 0;
-      if (isTyping !== lastTypingState) {
-        lastTypingState = isTyping;
-        if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'typing', state: isTyping }));
-      }
-      clearTimeout(typingTimer);
-      typingTimer = setTimeout(() => {
-        if (lastTypingState) {
-          lastTypingState = false;
-          if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'typing', state: false }));
-        }
-      }, 2500);
-    });
-
-    // lazy-load: add a button at top to load earlier messages
-    const loadMoreBtn = document.createElement('button');
-    loadMoreBtn.textContent = 'Carregar mensagens anteriores';
-    loadMoreBtn.style.display = 'block';
-    loadMoreBtn.style.width = '100%';
-    loadMoreBtn.style.margin = '6px 0';
-    chatBox.parentNode.insertBefore(loadMoreBtn, chatBox);
-    let earliestMessageId = null;
-    loadMoreBtn.addEventListener('click', async () => {
-      try {
-        // determine earliest id visible (assume first child corresponds to earliest)
-        const first = chatBox.querySelector('.chat-row');
-        const id = first && first.dataset && first.dataset.msgId ? Number(first.dataset.msgId) : earliestMessageId;
-        const url = '/api/chat/global?limit=50' + (id ? '&before=' + id : '');
-        const hist = await fetch(url, { credentials: 'include' }).then(r => r.ok ? r.json() : []);
-        if (hist && hist.length) {
-          // prepend messages
-          for (const m of hist) {
-            const d = document.createElement('div');
-            d.className = 'chat-row';
-            d.dataset.msgId = m.id;
-            const isMe = (m.fromId && myId && String(m.fromId) === String(myId));
-            d.classList.add(isMe ? 'me' : 'other');
-            d.innerHTML = `<strong class="name" style="color:${colorFromId(m.fromId)}">${escapeHtml(m.fromName||'Anon')}</strong>: ${escapeHtml(m.text)} <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${new Date(m.created_at).toLocaleTimeString()})</span>`;
-            chatBox.insertBefore(d, chatBox.firstChild);
-          }
-        } else {
-          loadMoreBtn.disabled = true;
-          loadMoreBtn.textContent = 'Sem mais mensagens';
-        }
-      } catch (e) { console.warn('load more failed', e); }
-    });
-  });
-})();
-
-function escapeHtml(input) {
-  if (input === null || input === undefined) return '';
-  return String(input)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-// expõe globalmente caso outras partes do client chamem como window.escapeHtml
-window.escapeHtml = escapeHtml;
-
-// --- Mini-map renderer ---
-// procura canvas #miniMap e desenha snapshot do currentScene (se disponível)
-(function initMiniMap() {
-  const el = document.getElementById('miniMap');
-  if (!el) return;
-  const ctx = el.getContext('2d');
-  const W = el.width, H = el.height;
-
-  // tenta várias formas de pedir um snapshot ao scene
-  function getSceneSnapshot() {
-    try {
-      // preferência: função explícita exposta pelo scene
-      if (currentScene && typeof currentScene.getSnapshot === 'function') {
-        return currentScene.getSnapshot();
-      }
-      // alternativa: propriedades comuns
-      if (currentScene && currentScene.player) {
-        return {
-          mapW: currentScene.mapWidth || 1024,
-          mapH: currentScene.mapHeight || 1024,
-          player: { x: currentScene.player.x || 0, y: currentScene.player.y || 0 },
-          entities: currentScene.entities || []
-        };
-      }
-      // fallback: estado global (se você expuser window._playerPos em scenes)
-      if (window._mini_map_state) return window._mini_map_state;
-    } catch (e) {}
-    return null;
-  }
-
-  function drawPlaceholder() {
-    ctx.fillStyle = '#07121a';
-    ctx.fillRect(0,0,W,H);
-    // grid
-    ctx.strokeStyle = 'rgba(255,255,255,0.02)';
-    ctx.lineWidth = 1;
-    const step = 16;
-    for (let x=0;x<W;x+=step){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-    for (let y=0;y<H;y+=step){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
-    // center dot
-    ctx.fillStyle = '#ffd166';
-    ctx.beginPath(); ctx.arc(W/2, H/2, 4, 0, Math.PI*2); ctx.fill();
-  }
-
-  function draw(snapshot) {
-    ctx.clearRect(0,0,W,H);
-    if (!snapshot) { drawPlaceholder(); return; }
-
-    const mapW = snapshot.mapW || 1024;
-    const mapH = snapshot.mapH || 1024;
-    // scale to fit
-    const scale = Math.min(W / mapW, H / mapH);
-    const ox = (W - mapW*scale)/2;
-    const oy = (H - mapH*scale)/2;
-
-    // background (simple tiling color)
-    ctx.fillStyle = '#0b2a2a';
-    ctx.fillRect(0,0,W,H);
-
-    // optionally draw a simple tile grid or minimap texture if snapshot.tiles exists
-    if (Array.isArray(snapshot.tiles) && snapshot.tiles.length) {
-      // tiles: expect array of {x,y,color} or numeric ids; keep simple
-      for (const t of snapshot.tiles) {
-        ctx.fillStyle = t.color || '#083';
-        ctx.fillRect(ox + t.x*scale, oy + t.y*scale, Math.max(1, scale), Math.max(1, scale));
-      }
-    } else {
-      // draw coarse grid
-      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-      ctx.lineWidth = 1;
-      const g = 32;
-      for (let x=0;x<=mapW;x+=g) {
-        ctx.beginPath(); ctx.moveTo(ox + x*scale, oy); ctx.lineTo(ox + x*scale, oy + mapH*scale); ctx.stroke();
-      }
-      for (let y=0;y<=mapH;y+=g) {
-        ctx.beginPath(); ctx.moveTo(ox, oy + y*scale); ctx.lineTo(ox + mapW*scale, oy + y*scale); ctx.stroke();
-      }
-    }
-
-    // draw entities
-    (snapshot.entities || []).forEach(ent => {
-      const ex = ox + (ent.x || 0) * scale;
-      const ey = oy + (ent.y || 0) * scale;
-      ctx.fillStyle = ent.color || '#ff4d4d';
-      ctx.beginPath(); ctx.arc(ex, ey, Math.max(1, 3*scale), 0, Math.PI*2); ctx.fill();
-    });
-
-    // draw player
-    if (snapshot.player) {
-      const px = ox + (snapshot.player.x||0) * scale;
-      const py = oy + (snapshot.player.y||0) * scale;
-      ctx.fillStyle = '#ffd166';
-      ctx.beginPath(); ctx.arc(px, py, Math.max(2, 4*scale), 0, Math.PI*2); ctx.fill();
-      // add a small halo
-      ctx.strokeStyle = 'rgba(255,209,102,0.6)';
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(px, py, Math.max(4, 6*scale), 0, Math.PI*2); ctx.stroke();
-    }
-  }
-
-  // loop de atualização
-  function tick() {
-    const snap = getSceneSnapshot();
-    draw(snap);
-    requestAnimationFrame(tick);
-  }
-  tick();
-})();
-
-// --- WebSocket singleton / reconnect-safe (shared for whole page) ---
+/* --- singleton WS (initGameWS) --- */
 (function initGameWS() {
   const G = window;
   if (!G.__GAME_WS_STATE__) G.__GAME_WS_STATE__ = { ws: null };
   const state = G.__GAME_WS_STATE__;
 
-  // single onMessage defined up-front (avoids ReferenceError)
   function onMessage(evt) {
     try {
       const d = JSON.parse(evt.data);
-      // don't mutate or dedupe here — forward raw payload to UI handlers
       if (typeof window.handleIncomingChat === 'function') {
         try { window.handleIncomingChat(d); } catch (e) { console.warn('[ws] handleIncomingChat failed', e); }
       } else {
         console.log('[ws] recv', d);
       }
-    } catch (e) {
-      console.warn('[ws] bad msg', e && e.message);
-    }
+    } catch (e) { console.warn('[ws] bad msg', e && e.message); }
   }
 
   function closeOld() {
@@ -645,10 +209,7 @@ window.escapeHtml = escapeHtml;
       return null;
     }
 
-    state.ws.addEventListener('open', () => {
-      console.log('[ws] aberto');
-      // if you need to auto-auth, do it here (but don't add UI-level dedupe)
-    });
+    state.ws.addEventListener('open', () => console.log('[ws] aberto'));
     state.ws.addEventListener('close', () => console.log('[ws] fechado'));
     state.ws.addEventListener('error', (err) => console.warn('[ws] error', err));
     state.ws.addEventListener('message', onMessage);
@@ -656,25 +217,240 @@ window.escapeHtml = escapeHtml;
     return state.ws;
   }
 
-  // helper to send chat via singleton
-  function sendChat(text) {
+  function sendChatViaWS(payload) {
     const ws = connectGameWS();
     if (!ws || ws.readyState !== WebSocket.OPEN) return false;
-    const payload = {
-      type: 'chat',
-      id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('m_' + Date.now() + '_' + Math.random().toString(36).slice(2,8)),
-      text: String(text || ''),
-      timestamp: Date.now(),
-      from: (window.MyPlayerName || null),
-      senderId: (window.MyPlayerId || null)
-    };
     try { ws.send(JSON.stringify(payload)); } catch (e) { console.warn('[ws] send failed', e && e.message); return false; }
-    return payload;
+    return true;
   }
 
   window.connectGameWS = connectGameWS;
-  window.sendChatGlobal = sendChat;
+  window.sendChatViaWS = sendChatViaWS;
   window.closeGameWS = closeOld;
 
   if (!state.ws) connectGameWS();
 })();
+
+/* --- loadChatHistory com fallback --- */
+async function loadChatHistory(limit = 200){
+  const tries = [
+    `/api/chat/global?limit=${limit}`,
+    `/api/chat?scope=global&limit=${limit}`,
+    `/api/chat/messages/global?limit=${limit}`
+  ];
+  for (const url of tries) {
+    try {
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) { console.warn('[chat] history not found at', url, 'status', res.status); continue; }
+      const data = await res.json();
+      console.log('[chat] history loaded from', url, data);
+      return data;
+    } catch (err) {
+      console.warn('[chat] history fetch failed', url, err);
+    }
+  }
+  return [];
+}
+
+/* --- initGlobalChat / handler central (substitui lógica antiga) --- */
+onReady(() => {
+  // ...existing code...
+  const btnDefault = document.getElementById('btnDefault');
+  const btnGlobal  = document.getElementById('btnGlobal');
+  const chatBox    = document.getElementById('chatBox');
+  const chatInput  = document.getElementById('chatInput');
+  const chatSend   = document.getElementById('chatSend');
+  const chatForm   = document.getElementById('chatForm');
+
+  let myId = '';
+  let myName = 'Você';
+  const typingSet = new Set();
+
+  function log(...args){ try{ console.log('[chat]', ...args); }catch{} }
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+  function colorFromId(id){ if(!id) return '#fff'; let h=0; for(let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return `hsl(${h%360} 90% 60%)`; }
+
+  // appendChatRow — dedupe DESABILITADO (temporário)
+  function appendChatRow(msg){
+    try { console.log('[chat] appendChatRow called', msg); } catch(e){}
+    const d = document.createElement('div');
+    d.className='chat-row';
+    const time = new Date(msg.ts||Date.now()).toLocaleTimeString();
+    const isMe = (msg.fromId && myId && String(msg.fromId) === String(myId)) || (!msg.fromId && msg.fromName && String(msg.fromName) === String(myName));
+    d.classList.add(isMe ? 'me' : 'other');
+    const displayName = escapeHtml(msg.fromName || (isMe ? myName : 'Anon'));
+    d.innerHTML = `<strong class="name">${displayName}</strong>: ${escapeHtml(msg.text)} <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${time})</span>`;
+    const nameEl = d.querySelector('.name');
+    const color = colorFromId(msg.fromId || msg.fromName);
+    if (nameEl) nameEl.style.color = isMe ? '#ffd166' : color;
+    if (msg._pendingId) {
+      d.dataset.pendingId = msg._pendingId;
+      const mark = document.createElement('span');
+      mark.className = 'pending';
+      mark.textContent = ' ⏳';
+      nameEl.insertAdjacentElement('afterend', mark);
+    }
+    if (msg.id) { d.dataset.msgId = msg.id; /* dedupe DESABILITADO - não adicionando seenMsgIds */ }
+    chatBox.appendChild(d);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // normalizador e entrypoint (usado pelo singleton WS)
+  window.handleIncomingChat = function(d) {
+    try {
+      log('ws message raw', d);
+      if (d.type === 'chat') {
+        const msg = {
+          id: d.id || d._id || d.messageId || null,
+          fromId: d.fromId || d.senderId || d.senderConnId || null,
+          fromName: d.fromName || d.from || d.fromUser || d.sender || null,
+          text: d.text || d.message || '',
+          ts: d.ts || d.timestamp || d.created_at || Date.now(),
+          _clientId: d._clientId || d._clientid || null,
+          _pendingId: d._pendingId || null
+        };
+        // se servidor devuelve _clientId para confirmar pending, atualiza elemento pendente
+        if (msg._clientId || d._clientId) {
+          const pendingEl = chatBox.querySelector(`[data-pending-id="${msg._clientId || d._clientId}"]`);
+          if (pendingEl) {
+            pendingEl.dataset.msgId = msg.id || '';
+            const mark = pendingEl.querySelector('.pending');
+            if (mark) { mark.textContent = ' ✓'; mark.style.opacity = '.9'; }
+            pendingEl.removeAttribute('data-pending-id');
+            return;
+          }
+        }
+        appendChatRow(msg);
+      } else if (d.type === 'typing') {
+        const name = d.fromName || d.from || null;
+        if (!name) return;
+        if (d.state) typingSet.add(name); else typingSet.delete(name);
+        const names = Array.from(typingSet);
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (typingIndicator) typingIndicator.textContent = names.length ? (names.join(', ') + (names.length===1 ? ' está digitando…' : ' estão digitindo…')) : '';
+      } else if (d.type === 'chat_ack') {
+        const clientId = d._clientId || d._clientid || null;
+        if (clientId) {
+          const p = chatBox.querySelector(`[data-pending-id="${clientId}"]`);
+          if (p) { const mark = p.querySelector('.pending'); if (mark) { mark.textContent = ' ✓'; mark.style.opacity = '.9'; } p.removeAttribute('data-pending-id'); p.dataset.msgId = d.id || ''; }
+        }
+      }
+    } catch (e) { log('handleIncomingChat failed', e); }
+  };
+
+  // conectar singleton e registrar open handler para auth + history
+  const singleton = (typeof window.connectGameWS === 'function') ? window.connectGameWS() : (window.__GAME_WS__ || null);
+
+  async function __chat_onopen(){
+    log('ws aberto - auth & history');
+    try {
+      const raw = await fetch('/api/player/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+      const me = (raw && raw.profile) ? raw.profile : raw;
+      myId = String((me && (me.id || me.playerId)) || '');
+      myName = (me && (me.name || me.username || me.displayName)) || myName;
+      const ws = (window.__GAME_WS__ || singleton);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'auth', id: myId, name: myName }));
+        log('sent auth handshake', { id: myId, name: myName });
+      }
+      const hist = await loadChatHistory(200);
+      for (const m of hist) {
+        appendChatRow({ id: m.id, fromId: m.fromId, fromName: m.fromName||m.from, text: m.text, ts: (new Date(m.created_at)).getTime() });
+      }
+    } catch (e){ log('auth/history failed', e && e.message); }
+  }
+
+  try {
+    if (singleton) {
+      try { singleton.removeEventListener && singleton.removeEventListener('open', __chat_onopen); } catch(e){}
+      singleton.addEventListener && singleton.addEventListener('open', __chat_onopen);
+    } else {
+      try {
+        const ws = new WebSocket((location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws');
+        window._game_ws = ws;
+        ws.addEventListener('open', __chat_onopen);
+        ws.addEventListener('message', (evt)=>{ try{ window.handleIncomingChat(JSON.parse(evt.data)); }catch(e){} });
+      } catch (e) { log('fallback ws failed', e); }
+    }
+  } catch (e) { log('attach open failed', e); }
+
+  // enviar chat (usa singleton)
+  function sendChat(){
+    const text = (chatInput.value||'').trim(); if(!text) return;
+    if (btnGlobal.classList.contains('active')) {
+      const ws = (window.__GAME_WS__ || singleton);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        const localId = (Date.now().toString(36) + Math.random().toString(36).slice(2,8));
+        appendChatRow({ fromId: myId, fromName: myName, text, ts: Date.now(), _pendingId: localId, id: null });
+        try { ws.send(JSON.stringify({ type:'chat', text: text, scope: 'global', _clientId: localId })); } catch (e) { log('ws send failed', e); alert('Envio falhou'); }
+        chatInput.value='';
+      } else {
+        alert('Conexão real-time indisponível.');
+      }
+    } else {
+      appendChatRow({ fromName: 'Você', text, ts: Date.now() }); chatInput.value='';
+    }
+  }
+
+  // eventos UI (mantém comportamento)
+  btnDefault.addEventListener('click', ()=>{ btnDefault.classList.add('active'); btnGlobal.classList.remove('active'); });
+  btnGlobal.addEventListener('click', ()=>{ btnGlobal.classList.add('active'); btnDefault.classList.remove('active'); });
+
+  chatSend.addEventListener('click', sendChat);
+  chatForm.addEventListener('submit', (e)=>{ e.preventDefault(); sendChat(); });
+  chatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
+
+  // typing debounce
+  let typingTimer = null;
+  let lastTypingState = false;
+  chatInput.addEventListener('input', () => {
+    const isTyping = chatInput.value.trim().length > 0;
+    if (isTyping !== lastTypingState) {
+      lastTypingState = isTyping;
+      const ws = (window.__GAME_WS__ || singleton);
+      if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'typing', state: isTyping }));
+    }
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => {
+      if (lastTypingState) {
+        lastTypingState = false;
+        const ws = (window.__GAME_WS__ || singleton);
+        if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'typing', state: false }));
+      }
+    }, 2500);
+  });
+
+  // load more button (mantém comportamento)
+  const loadMoreBtn = document.createElement('button');
+  loadMoreBtn.textContent = 'Carregar mensagens anteriores';
+  loadMoreBtn.style.display = 'block';
+  loadMoreBtn.style.width = '100%';
+  loadMoreBtn.style.margin = '6px 0';
+  chatBox.parentNode.insertBefore(loadMoreBtn, chatBox);
+  loadMoreBtn.addEventListener('click', async () => {
+    try {
+      const first = chatBox.querySelector('.chat-row');
+      const id = first && first.dataset && first.dataset.msgId ? first.dataset.msgId : null;
+      const url = '/api/chat/global?limit=50' + (id ? '&before=' + id : '');
+      const hist = await loadChatHistory(50); // usa fallback
+      if (hist && hist.length) {
+        for (const m of hist) {
+          const d = document.createElement('div');
+          d.className = 'chat-row';
+          d.dataset.msgId = m.id;
+          const isMe = (m.fromId && myId && String(m.fromId) === String(myId));
+          d.classList.add(isMe ? 'me' : 'other');
+          d.innerHTML = `<strong class="name" style="color:${colorFromId(m.fromId)}">${escapeHtml(m.fromName||'Anon')}</strong>: ${escapeHtml(m.text)} <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${new Date(m.created_at).toLocaleTimeString()})</span>`;
+          chatBox.insertBefore(d, chatBox.firstChild);
+        }
+      } else {
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.textContent = 'Sem mais mensagens';
+      }
+    } catch (e) { console.warn('load more failed', e); }
+  });
+
+  // ...existing code...
+});
+
+// ...existing code...
