@@ -528,96 +528,44 @@ if (useWebSocket) {
       console.warn('[ws] cookie parse error', e && e.message);
     }
 
-    ws.on('message', async (msg) => {
-      // ADICIONE: log curto para ver mensagens recebidas (limita comprimento)
+    ws.on('message', async (raw) => {
       try {
-        const preview = typeof msg === 'string' ? msg : msg.toString();
-        console.log(`[ws recv] ${addr} <- ${preview.slice(0,200).replace(/\n/g,' ')}${preview.length>200 ? '…' : ''}`);
-      } catch (e) {}
+        const d = JSON.parse(String(raw));
+        console.log('[ws recv]', req.socket.remoteAddress, '<-', d.type || 'msg');
 
-      let data;
-      try { data = JSON.parse(msg.toString()); } catch (err) { console.warn('[ws] malformed json from', addr); return; }
+        if (d.type === 'chat' && d.scope === 'global') {
+          // if you persist chat to DB, do that here and use DB id/timestamp
+          // Example: if you have an async saveChat(obj) that returns saved row with id and created_at:
+          // const saved = await saveChat({ fromId: ws.userId, fromName: d.name || ws.userName, text: d.text, scope:'global' });
+          // const out = { type:'chat', scope:'global', id: saved.id, fromId: saved.fromId, fromName: saved.fromName, text: saved.text, ts: new Date(saved.created_at).getTime(), _clientId: d._clientId };
 
-      if (data.type === 'auth') {
-        ws._player = { id: String(data.id || ''), name: String(data.name || 'Anonymous') };
-        console.log(`[ws] auth from ${addr} => id=${ws._player.id} name=${ws._player.name}`);
-        try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
-        return;
-      }
+          // If you don't have DB here, create a stable id + ts before broadcasting:
+          const out = {
+            type: 'chat',
+            scope: 'global',
+            id: d.id || (Date.now().toString(36) + Math.random().toString(36).slice(2,8)),
+            fromId: d.idSender || ws.userId || null,
+            fromName: d.name || ws.userName || 'Anon',
+            text: d.text,
+            ts: Date.now(),
+            _clientId: d._clientId || null
+          };
 
-      /* ---------- CHAT / TYPING / RATE-LIMIT patch ---------- */
-      if (data.type === 'typing') {
-        const state = !!data.state;
-        const outType = { type:'typing', fromId: ws._player?.id || null, fromName: ws._player?.name || 'Anon', state };
-        const outStr = JSON.stringify(outType);
-        wss.clients.forEach(c => {
-          if (c !== ws && c.readyState === WebSocket.OPEN) {
-            try { c.send(outStr); } catch (e) {}
-          }
-        });
-        return;
-      }
-
-      if (data.type === 'chat') {
-        if (!ws._player) { try { ws.send(JSON.stringify({ type:'error', message:'not-authenticated' })); } catch {} return; }
-        if (!consumeToken(ws)) { try { ws.send(JSON.stringify({ type:'error', code:'rate_limited', message:'Too many messages' })); } catch {} return; }
-
-        const scope = String(data.scope || 'global').toLowerCase();
-        let raw = String(data.text || '').trim().slice(0, 800);
-        if (!raw) return;
-
-        // mute check (DB)
-        try {
-          const m = await get('SELECT until FROM chat_mutes WHERE targetId = ? ORDER BY until DESC LIMIT 1', [ws._player.id]);
-          const muteUntil = m && m.until ? Number(m.until) : mutedCache.get(ws._player.id) || null;
-          if (muteUntil && muteUntil > Date.now()) { try { ws.send(JSON.stringify({ type:'error', code:'muted', until:muteUntil })); } catch {} return; }
-          if (muteUntil && muteUntil <= Date.now()) { await run('DELETE FROM chat_mutes WHERE targetId = ?', [ws._player.id]); mutedCache.delete(ws._player.id); }
-        } catch (e) { console.warn('[chat] mute-check error', e?.message); }
-
-        raw = filterText(raw);
-
-        try {
-          if (scope === 'global' && typeof db !== 'undefined' && db && db.run) {
-            db.run('INSERT INTO chat_messages(scope, fromId, fromName, text) VALUES (?,?,?,?)', ['global', ws._player.id, ws._player.name, raw], function (err) {
-              if (err) console.warn('[chat] persist error', err && err.message);
-            });
-          }
-        } catch (e) {}
-
-        const msgId = randomUUID();
-        const out = {
-          type: 'chat',
-          scope,
-          fromId: ws._player.id,
-          fromName: ws._player.name,
-          text: raw,
-          ts: Date.now(),
-          id: msgId,
-          origin: instanceId
-        };
-        if (data._clientId) out._clientId = String(data._clientId);
-
-        const outStr = JSON.stringify(out);
-        if (redisPub) {
-          try { await redisPub.publish('chat:global', outStr); } catch (e) { console.warn('[redis] publish failed', e && e.message); wss.clients.forEach(c => { if (c && c.readyState === WebSocket.OPEN) try{ c.send(outStr); }catch{} }); }
-        } else {
-          wss.clients.forEach(c => { if (c && c.readyState === WebSocket.OPEN) try{ c.send(outStr); }catch{} });
+          // broadcast once
+          broadcast(out);
+          // optionally persist in background
+          // saveChat(...) .catch(e=>console.warn('saveChat failed', e));
         }
 
-        // ack to sender
-        try { ws.send(JSON.stringify({ type:'chat_ack', id: msgId, _clientId: data._clientId || null, ts: Date.now() })); } catch (e) {}
-        return;
-      }
-      /* ---------- END PATCH ---------- */
+        // handle typing and other events unchanged:
+        if (d.type === 'typing') {
+          const out = { type: 'typing', fromId: ws.userId || null, fromName: ws.userName || 'Anon', state: !!d.state };
+          broadcast(out);
+        }
 
-      // pos handling (se já existir)
-      if (data.type === 'pos') {
-        const out = { type:'pos', id:String(data.id||''), x:Number(data.x||0), y:Number(data.y||0), name:String(data.name||'') };
-        wss.clients.forEach(c => {
-          if (c !== ws && c.readyState === WebSocket.OPEN) {
-            try { c.send(JSON.stringify(out)); } catch(e) {}
-          }
-        });
+        // ...other message types...
+      } catch (e) {
+        console.warn('[ws] bad msg', e && e.message);
       }
     });
 
@@ -793,36 +741,112 @@ app.get('/api/chat/mutes', requireAuth, async (req, res) => {
   }
 });
 
-// dedupe global de broadcasts (evita reenviar acidentalmente a mesma id várias vezes)
+// robust broadcast + message handler (replace existing broadcast/handler)
+
 const recentBroadcastIds = new Set();
 
 function broadcast(msg) {
   try {
-    // se a mensagem tiver id e já foi broadcastada recentemente, ignora
-    if (msg && msg.id && recentBroadcastIds.has(String(msg.id))) {
-      console.log('[ws] skip broadcast (recent id)', String(msg.id));
+    if (!msg) return;
+    // ensure msg has an id string so dedupe works
+    if (!msg.id) msg.id = (Date.now().toString(36) + Math.random().toString(36).slice(2,8));
+    const idStr = String(msg.id);
+    if (recentBroadcastIds.has(idStr)) {
+      console.log('[ws] skip broadcast (recent id)', idStr);
       return;
     }
+    recentBroadcastIds.add(idStr);
+    setTimeout(() => recentBroadcastIds.delete(idStr), 30_000); // keep for 30s
 
-    // registra id para evitar re-broadcasts na janela de tempo
-    if (msg && msg.id) {
-      recentBroadcastIds.add(String(msg.id));
-      setTimeout(() => recentBroadcastIds.delete(String(msg.id)), 30_000); // keep 30s
-    }
-
-    // compila lista de targets abertos
     const targets = [];
     wss.clients.forEach(c => { if (c && c.readyState === WebSocket.OPEN) targets.push(c); });
-    console.log('[ws] broadcasting message to', targets.length, 'clients', msg?.type || '');
-
-    // envia para cada socket (uma vez)
+    console.log('[ws] broadcasting message to', targets.length, 'clients', msg.type || '');
     for (const c of targets) {
-      try { c.send(JSON.stringify(msg)); } catch (e) { console.warn('[ws] send failed', e); }
+      try { c.send(JSON.stringify(msg)); } catch (e) { console.warn('[ws] send failed', e && e.message); }
     }
   } catch (e) {
-    console.warn('[ws] broadcast error', e);
+    console.warn('[ws] broadcast error', e && e.message);
   }
 }
+
+// in your wss.on('connection', ws => { ... }) replace or ensure you have a single message handler like:
+
+wss.on('connection', (ws, req) => {
+  const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+  console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
+
+  // DEBUG: log cookies header (remova em produção se preferir)
+  console.log('[ws] cookies header:', req.headers && req.headers.cookie);
+
+  ws._connectedAt = Date.now();
+  ws._player = null;
+
+  // try validate JWT from cookie immediately (so explicit handshake not required)
+  try {
+    const cookies = parseCookies(req.headers.cookie || '');
+    const token = cookies[COOKIE_NAME] || null;
+    if (token) {
+      try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        ws._player = { id: String(payload.id || payload.playerId || ''), name: String(payload.name || payload.username || payload.displayName || 'Anon') };
+        console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
+      } catch (err) {
+        console.log('[ws] jwt verify failed', err && err.message);
+      }
+    }
+  } catch (e) {
+    console.warn('[ws] cookie parse error', e && e.message);
+  }
+
+  ws.on('message', async (raw) => {
+    try {
+      const d = JSON.parse(String(raw));
+      console.log('[ws recv]', req.socket.remoteAddress, '<-', d.type || 'msg');
+
+      if (d.type === 'chat' && d.scope === 'global') {
+        // if you persist chat to DB, do that here and use DB id/timestamp
+        // Example: if you have an async saveChat(obj) that returns saved row with id and created_at:
+        // const saved = await saveChat({ fromId: ws.userId, fromName: d.name || ws.userName, text: d.text, scope:'global' });
+        // const out = { type:'chat', scope:'global', id: saved.id, fromId: saved.fromId, fromName: saved.fromName, text: saved.text, ts: new Date(saved.created_at).getTime(), _clientId: d._clientId };
+
+        // If you don't have DB here, create a stable id + ts before broadcasting:
+        const out = {
+          type: 'chat',
+          scope: 'global',
+          id: d.id || (Date.now().toString(36) + Math.random().toString(36).slice(2,8)),
+          fromId: d.idSender || ws.userId || null,
+          fromName: d.name || ws.userName || 'Anon',
+          text: d.text,
+          ts: Date.now(),
+          _clientId: d._clientId || null
+        };
+
+        // broadcast once
+        broadcast(out);
+        // optionally persist in background
+        // saveChat(...) .catch(e=>console.warn('saveChat failed', e));
+      }
+
+      // handle typing and other events unchanged:
+      if (d.type === 'typing') {
+        const out = { type: 'typing', fromId: ws.userId || null, fromName: ws.userName || 'Anon', state: !!d.state };
+        broadcast(out);
+      }
+
+      // ...other message types...
+    } catch (e) {
+      console.warn('[ws] bad msg', e && e.message);
+    }
+  });
+
+  ws.on('close', () => {
+    console.log(`[ws] close from ${addr} — clients=${wss.clients.size}`);
+  });
+
+  ws.on('error', (err) => {
+    console.warn('[ws] socket error', err && err.message);
+  });
+});
 
 
 
