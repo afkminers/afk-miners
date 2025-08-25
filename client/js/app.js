@@ -253,7 +253,8 @@ async function loadChatHistory(limit = 200){
 }
 
 /* --- initGlobalChat / handler central (substitui lógica antiga) --- */
-onReady(() => {
+(function attachChatInit(){
+  const init = function(){
   // ...existing code...
   const btnDefault = document.getElementById('btnDefault');
   const btnGlobal  = document.getElementById('btnGlobal');
@@ -451,6 +452,19 @@ onReady(() => {
   });
 
   // ...existing code...
-});
+};
+
+  if (typeof onReady === 'function') {
+    try {
+      onReady(init);
+    } catch (e) {
+      document.addEventListener('DOMContentLoaded', init);
+    }
+  } else if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 
 // ...existing code...
