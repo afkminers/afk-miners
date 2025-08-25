@@ -577,3 +577,63 @@ window.escapeHtml = escapeHtml;
   }
   tick();
 })();
+
+// --- WebSocket singleton / reconnect-safe (shared for whole page) ---
+(function initGameWS() {
+  const G = window;
+  if (!G.__GAME_WS_STATE__) G.__GAME_WS_STATE__ = { ws: null, seenMsgIds: new Set() };
+  const state = G.__GAME_WS_STATE__;
+
+  function onMessage(evt) {
+    try {
+      const d = JSON.parse(evt.data);
+      if (d && d.type === 'chat' && d.id) {
+        if (state.seenMsgIds.has(String(d.id))) return;
+        state.seenMsgIds.add(String(d.id));
+      }
+      if (typeof window.handleIncomingChat === 'function') {
+        window.handleIncomingChat(d);
+      } else {
+        console.log('[ws] message', d);
+      }
+    } catch (e) { console.warn('[ws] bad msg', e && e.message); }
+  }
+
+  function closeOld() {
+    try {
+      if (state.ws) {
+        state.ws.removeEventListener('message', onMessage);
+        try { state.ws.close(); } catch (e) {}
+      }
+    } finally { state.ws = null; }
+  }
+
+  function connectGameWS() {
+    // reuse if already open
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) return state.ws;
+    closeOld();
+    const url = (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws';
+    try {
+      state.ws = new WebSocket(url);
+      window.__GAME_WS__ = state.ws;
+    } catch (e) {
+      console.warn('[ws] create failed', e && e.message);
+      state.ws = null;
+      return null;
+    }
+
+    state.ws.addEventListener('open', () => console.log('[ws] aberto'));
+    state.ws.addEventListener('close', () => console.log('[ws] fechado'));
+    state.ws.addEventListener('error', (err) => console.warn('[ws] error', err));
+    state.ws.addEventListener('message', onMessage);
+
+    return state.ws;
+  }
+
+  // expose
+  window.connectGameWS = connectGameWS;
+  window.closeGameWS = closeOld;
+
+  // auto-connect once
+  if (!state.ws) connectGameWS();
+})();

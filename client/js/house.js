@@ -157,32 +157,24 @@ function update(dt) {
 const USE_WS = true; // marque false se não quiser ws
 let ws = null;
 function connectWS() {
-  if (!USE_WS) return;
-  try {
-    ws = new WebSocket((location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws');
-    ws.onopen = () => setStatus('WS conectado');
-    ws.onmessage = (evt) => {
-      try {
-        const d = JSON.parse(evt.data);
-        if (d.type === 'pos' && d.id !== player.id) {
-          // upsert remote player
-          let p = entities.find(x=>x.id===d.id && x.type==='player_remote');
-          if (!p) {
-            p = { id: d.id, type:'player_remote', x:d.x, y:d.y, w:28, h:40, name: d.name||'Player', hp:100, maxHp:100 };
-            entities.push(p);
-          } else { p.x = d.x; p.y = d.y; }
-        }
-      } catch(e) {}
-    };
-    ws.onclose = () => setStatus('WS desconectado (fallback polling)');
-    ws.onerror = () => {};
-  } catch(e) { console.warn('ws error', e); }
+  // ensure global singleton exists and connect
+  if (typeof window.connectGameWS !== 'function') {
+    console.warn('[ws] global connectGameWS not found, creating via app.js');
+    // fallback: create a simple connection (rare) — prefer the shared one in app.js
+    const url = (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws';
+    try { window.__GAME_WS__ = new WebSocket(url); } catch (e) { console.warn('[ws] fallback create failed', e); return; }
+    window.__GAME_WS__.addEventListener('message', (evt)=>{ try{ const d=JSON.parse(evt.data); if (typeof window.handleIncomingChat === 'function') window.handleIncomingChat(d); }catch(e){}});
+    return;
+  }
+  // reuse the shared WS and attach any per-module handlers if required
+  const ws = window.connectGameWS();
+  if (!ws) { console.warn('[ws] failed to get shared ws'); return; }
+  // house-specific message handling can be attached in handleIncomingChat or add a listener here
+  // avoid adding duplicate listeners: prefer handleIncomingChat global callback
 }
-function maybeSendPos() {
-  if (!ws || ws.readyState !== WebSocket.OPEN) return;
-  const payload = { type:'pos', id: player.id, x: Math.round(player.x), y: Math.round(player.y), name: player.name };
-  ws.send(JSON.stringify(payload));
-}
+
+ // ensure call uses new function (if code previously called connectWS())
+ // ...existing code...
 
 // fallback polling to refresh spawns/remote players if no WS
 let pollInterval = null;

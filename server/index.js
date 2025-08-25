@@ -426,35 +426,36 @@ app.get('/api/admin/content/monsters', requireAuth, (req, res) => {
 
 // WebSocket minimal server (optional)
 const http = require('http').createServer(app);
-
-// adiciona WebSocket server ligado ao http já criado
 const WebSocket = require('ws');
 
-// create or reuse a single WSS to avoid duplicate upgrade handling
-let wss = global.__WSS_SERVER__;
-if (!wss) {
-    wss = new WebSocket.Server({ server: http }); // attach to existing HTTP server
-    global.__WSS_SERVER__ = wss;
-    console.log('[ws] created WSS and attached to http server');
+// ensure single WSS + single upgrade handler even if file loaded twice
+if (!global.__AFKMINERS_WSS__) {
+  const _wss = new WebSocket.Server({ noServer: true });
+  global.__AFKMINERS_WSS__ = _wss;
+
+  // handle only websocket requests on path /ws
+  const upgradeHandler = (req, socket, head) => {
+    try {
+      if (!req.url || !req.url.startsWith('/ws')) {
+        socket.destroy();
+        return;
+      }
+      _wss.handleUpgrade(req, socket, head, (ws) => {
+        _wss.emit('connection', ws, req);
+      });
+    } catch (err) {
+      console.warn('[ws] upgrade handler error', err && err.message);
+    }
+  };
+
+  http.on('upgrade', upgradeHandler);
+  console.log('[ws] created WSS (noServer) and attached single upgrade handler for /ws');
 } else {
-    console.log('[ws] reused existing WSS');
+  console.log('[ws] reused existing WSS');
 }
 
-// debug: quantos listeners de "upgrade" o http tem (0/1 desejável)
-try { console.log('[ws] http upgrade listeners:', http.listeners('upgrade')?.length || 0); } catch(e){}
-
-// try to load ws optionally so server won't crash if it's not installed
-let WebSocketLib = null;
-let useWebSocket = false;
-try {
-  WebSocketLib = require('ws');
-  useWebSocket = !!WebSocketLib && !!WebSocketLib.Server;
-  if (!useWebSocket) console.warn('[ws] package loaded but Server not available');
-} catch (err) {
-  console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run `npm install ws` to enable.');
-  WebSocketLib = null;
-  useWebSocket = false;
-}
+// use the shared instance
+const wss = global.__AFKMINERS_WSS__;
 
 // Consolidated: jwt, redis, crypto and Redis helpers (single declaration)
 const jwt = require('jsonwebtoken');
@@ -509,8 +510,12 @@ function parseCookies(cookieHeader = '') {
   );
 }
 
+const useWebSocket = (typeof process !== 'undefined' && process.env && process.env.USE_WS === '0') ? false : true;
+
 if (useWebSocket) {
-  const wss = new WebSocketLib.Server({ server: http, path: '/ws' });
+  // reuse a instância única criada mais acima
+  const wss = global.__AFKMINERS_WSS__;
+  if (!wss) throw new Error('WSS não inicializado (esperava global.__AFKMINERS_WSS__)');
 
   // inicializa redis (se configurado)
   setupRedis(wss).catch(() => { /* ignore */ });
