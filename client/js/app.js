@@ -605,13 +605,28 @@ window.escapeHtml = escapeHtml;
 // --- WebSocket singleton / reconnect-safe (shared for whole page) ---
 (function initGameWS() {
   const G = window;
-  if (!G.__GAME_WS_STATE__) G.__GAME_WS_STATE__ = { ws: null, seenMsgIds: new Set() };
+  if (!G.__GAME_WS_STATE__) G.__GAME_WS_STATE__ = { ws: null };
   const state = G.__GAME_WS_STATE__;
+
+  // single onMessage defined up-front (avoids ReferenceError)
+  function onMessage(evt) {
+    try {
+      const d = JSON.parse(evt.data);
+      // don't mutate or dedupe here — forward raw payload to UI handlers
+      if (typeof window.handleIncomingChat === 'function') {
+        try { window.handleIncomingChat(d); } catch (e) { console.warn('[ws] handleIncomingChat failed', e); }
+      } else {
+        console.log('[ws] recv', d);
+      }
+    } catch (e) {
+      console.warn('[ws] bad msg', e && e.message);
+    }
+  }
 
   function closeOld() {
     try {
       if (state.ws) {
-        state.ws.removeEventListener('message', onMessage);
+        try { state.ws.removeEventListener('message', onMessage); } catch (e) {}
         try { state.ws.close(); } catch (e) {}
       }
     } finally { state.ws = null; }
@@ -632,11 +647,8 @@ window.escapeHtml = escapeHtml;
 
     state.ws.addEventListener('open', () => {
       console.log('[ws] aberto');
-      // auto-send auth if you use cookies / token
-      // const token = getCookie('token');
-      // if (token) state.ws.send(JSON.stringify({ type: 'auth', token }));
+      // if you need to auto-auth, do it here (but don't add UI-level dedupe)
     });
-
     state.ws.addEventListener('close', () => console.log('[ws] fechado'));
     state.ws.addEventListener('error', (err) => console.warn('[ws] error', err));
     state.ws.addEventListener('message', onMessage);
@@ -644,7 +656,7 @@ window.escapeHtml = escapeHtml;
     return state.ws;
   }
 
-  // send chat - ensures id and timestamp
+  // helper to send chat via singleton
   function sendChat(text) {
     const ws = connectGameWS();
     if (!ws || ws.readyState !== WebSocket.OPEN) return false;
@@ -664,6 +676,5 @@ window.escapeHtml = escapeHtml;
   window.sendChatGlobal = sendChat;
   window.closeGameWS = closeOld;
 
-  // auto-connect once
   if (!state.ws) connectGameWS();
 })();
