@@ -20,6 +20,23 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
   // melhorar concorrência e evitar SQLITE_BUSY
   try { db.run('PRAGMA journal_mode = WAL;'); } catch(e){ console.warn('PRAGMA WAL failed', e); }
   try { db.run('PRAGMA busy_timeout = 5000;'); } catch(e){ console.warn('PRAGMA busy_timeout failed', e); }
+
+  // garantir tabela player_positions
+  const createSql = `
+    CREATE TABLE IF NOT EXISTS player_positions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      playerId TEXT NOT NULL,
+      mapKey TEXT NOT NULL,
+      x INTEGER NOT NULL,
+      y INTEGER NOT NULL,
+      updated_at TEXT DEFAULT (CURRENT_TIMESTAMP),
+      UNIQUE(playerId, mapKey)
+    );
+  `;
+  db.run(createSql, (err2) => {
+    if (err2) console.error('Failed to ensure player_positions table', err2);
+    else console.log('player_positions table ready');
+  });
 });
 
 const all = (q, p = []) => new Promise((res, rej) => db.all(q, p, (e, r) => e ? rej(e) : res(r)));
