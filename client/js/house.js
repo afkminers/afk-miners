@@ -157,24 +157,13 @@ function update(dt) {
 const USE_WS = true; // marque false se não quiser ws
 let ws = null;
 function connectWS() {
-  // ensure global singleton exists and connect
   if (typeof window.connectGameWS !== 'function') {
-    console.warn('[ws] global connectGameWS not found, creating via app.js');
-    // fallback: create a simple connection (rare) — prefer the shared one in app.js
-    const url = (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws';
-    try { window.__GAME_WS__ = new WebSocket(url); } catch (e) { console.warn('[ws] fallback create failed', e); return; }
-    window.__GAME_WS__.addEventListener('message', (evt)=>{ try{ const d=JSON.parse(evt.data); if (typeof window.handleIncomingChat === 'function') window.handleIncomingChat(d); }catch(e){}});
+    console.warn('[ws] global connectGameWS not present');
     return;
   }
-  // reuse the shared WS and attach any per-module handlers if required
-  const ws = window.connectGameWS();
-  if (!ws) { console.warn('[ws] failed to get shared ws'); return; }
-  // house-specific message handling can be attached in handleIncomingChat or add a listener here
-  // avoid adding duplicate listeners: prefer handleIncomingChat global callback
+  // reuse global ws: do not create new socket or add duplicate listeners
+  window.connectGameWS();
 }
-
- // ensure call uses new function (if code previously called connectWS())
- // ...existing code...
 
 // fallback polling to refresh spawns/remote players if no WS
 let pollInterval = null;

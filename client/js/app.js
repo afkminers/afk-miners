@@ -587,14 +587,16 @@ window.escapeHtml = escapeHtml;
   function onMessage(evt) {
     try {
       const d = JSON.parse(evt.data);
+      // dedupe chat messages by id
       if (d && d.type === 'chat' && d.id) {
         if (state.seenMsgIds.has(String(d.id))) return;
         state.seenMsgIds.add(String(d.id));
       }
+      // dispatch to your app handler (implement handleIncomingChat)
       if (typeof window.handleIncomingChat === 'function') {
         window.handleIncomingChat(d);
       } else {
-        console.log('[ws] message', d);
+        console.log('[ws] recv', d);
       }
     } catch (e) { console.warn('[ws] bad msg', e && e.message); }
   }
@@ -609,7 +611,6 @@ window.escapeHtml = escapeHtml;
   }
 
   function connectGameWS() {
-    // reuse if already open
     if (state.ws && state.ws.readyState === WebSocket.OPEN) return state.ws;
     closeOld();
     const url = (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws';
@@ -622,7 +623,13 @@ window.escapeHtml = escapeHtml;
       return null;
     }
 
-    state.ws.addEventListener('open', () => console.log('[ws] aberto'));
+    state.ws.addEventListener('open', () => {
+      console.log('[ws] aberto');
+      // auto-send auth if you use cookies / token
+      // const token = getCookie('token');
+      // if (token) state.ws.send(JSON.stringify({ type: 'auth', token }));
+    });
+
     state.ws.addEventListener('close', () => console.log('[ws] fechado'));
     state.ws.addEventListener('error', (err) => console.warn('[ws] error', err));
     state.ws.addEventListener('message', onMessage);
@@ -630,8 +637,24 @@ window.escapeHtml = escapeHtml;
     return state.ws;
   }
 
-  // expose
+  // send chat - ensures id and timestamp
+  function sendChat(text) {
+    const ws = connectGameWS();
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+    const payload = {
+      type: 'chat',
+      id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('m_' + Date.now() + '_' + Math.random().toString(36).slice(2,8)),
+      text: String(text || ''),
+      timestamp: Date.now(),
+      from: (window.MyPlayerName || null),
+      senderId: (window.MyPlayerId || null)
+    };
+    try { ws.send(JSON.stringify(payload)); } catch (e) { console.warn('[ws] send failed', e && e.message); return false; }
+    return payload;
+  }
+
   window.connectGameWS = connectGameWS;
+  window.sendChatGlobal = sendChat;
   window.closeGameWS = closeOld;
 
   // auto-connect once

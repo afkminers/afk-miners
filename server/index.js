@@ -32,7 +32,7 @@ const { get, run, all } = require('./models/db'); // usa os mesmos helpers do ro
 // Chat moderation / rate-limit config
 const RATE_TOKENS_PER_SEC = Number(process.env.CHAT_TOKENS_PER_SEC || 2);
 const RATE_BURST = Number(process.env.CHAT_RATE_BURST || 4);
-const BANNED_WORDS = (process.env.BANNED_WORDS || 'badword1,badword2').split(',').map(s=>s.trim()).filter(Boolean);
+const BANNED_WORDS = (process.env.BANNED_WORDS || 'badword1,badword2').split(',').map(s => s.trim()).filter(Boolean);
 
 // in-memory fallback (mantido apenas como cache)
 const mutedCache = new Map();
@@ -43,7 +43,7 @@ function filterText(s) {
   let out = String(s);
   for (const w of BANNED_WORDS) {
     if (!w) continue;
-    const re = new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b', 'ig');
+    const re = new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'ig');
     out = out.replace(re, '***');
   }
   return out;
@@ -56,7 +56,7 @@ function ensureTokenBucket(ws) {
     ws._lastRefill = Date.now();
   } else {
     const now = Date.now();
-    const delta = (now - (ws._lastRefill || now))/1000;
+    const delta = (now - (ws._lastRefill || now)) / 1000;
     if (delta > 0) {
       ws._tokens = Math.min(RATE_BURST, (ws._tokens || 0) + delta * RATE_TOKENS_PER_SEC);
       ws._lastRefill = now;
@@ -427,15 +427,16 @@ app.get('/api/admin/content/monsters', requireAuth, (req, res) => {
 // WebSocket minimal server (optional)
 const http = require('http').createServer(app);
 const WebSocket = require('ws');
+const crypto = require('crypto');
 
-// ensure single WSS + single upgrade handler even if file loaded twice
+// create or reuse single WSS in noServer mode and attach a single upgrade handler
 if (!global.__AFKMINERS_WSS__) {
   const _wss = new WebSocket.Server({ noServer: true });
   global.__AFKMINERS_WSS__ = _wss;
 
-  // handle only websocket requests on path /ws
-  const upgradeHandler = (req, socket, head) => {
+  http.on('upgrade', (req, socket, head) => {
     try {
+      // accept only the expected WS path
       if (!req.url || !req.url.startsWith('/ws')) {
         socket.destroy();
         return;
@@ -444,160 +445,113 @@ if (!global.__AFKMINERS_WSS__) {
         _wss.emit('connection', ws, req);
       });
     } catch (err) {
-      console.warn('[ws] upgrade handler error', err && err.message);
+      console.warn('[ws] upgrade error', err && err.message);
+      try { socket.destroy(); } catch(e) {}
     }
-  };
+  });
 
-  http.on('upgrade', upgradeHandler);
   console.log('[ws] created WSS (noServer) and attached single upgrade handler for /ws');
 } else {
   console.log('[ws] reused existing WSS');
 }
 
-// use the shared instance
 const wss = global.__AFKMINERS_WSS__;
+const useWebSocket = !!wss; // fix: define useWebSocket before using in listen message
 
-// Consolidated: jwt, redis, crypto and Redis helpers (single declaration)
-const jwt = require('jsonwebtoken');
-const { createClient } = require('redis');
-const crypto = require('crypto');
-
-const REDIS_URL = process.env.REDIS_URL || null; // ex: redis://127.0.0.1:6379
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
-const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'token'; // ajuste se seu cookie tiver outro nome
-
-let redisPub = null;
-let redisSub = null;
-
-async function setupRedis(wss) {
-  if (!REDIS_URL) {
-    console.log('[redis] REDIS_URL not set — running without Redis pub/sub (single-instance)');
-    return;
-  }
+// debug-friendly broadcast — logs quem recebeu
+function broadcast(payload, opts = {}) {
   try {
-    redisPub = createClient({ url: REDIS_URL });
-    redisSub = redisPub.duplicate();
-    await redisPub.connect();
-    await redisSub.connect();
-    await redisSub.subscribe('chat:global', (message) => {
-      try {
-        const obj = JSON.parse(message);
-        const out = JSON.stringify(obj);
-        wss.clients.forEach(c => {
-          if (c && c.readyState === WebSocket.OPEN) {
-            try { c.send(out); } catch (e) { /* ignore */ }
-          }
-        });
-      } catch (e) { console.warn('[redis] bad pubsub message', e?.message); }
-    });
-    console.log('[redis] connected and subscribed to chat:global');
+    const data = JSON.stringify(payload);
+    const clients = Array.from(wss.clients || []);
+    let sent = 0;
+    for (const c of clients) {
+      if (!c || c.readyState !== WebSocket.OPEN) continue;
+      // se opts.excludeId estiver definido, não envia para esse cliente
+      if (opts.excludeId && c._id === opts.excludeId) continue;
+      try { c.send(data); sent++; } catch (e) { /* ignore individual send errors */ }
+    }
+    console.log(`[ws] broadcast type=${payload.type} to=${sent}/${clients.length} clients`);
   } catch (e) {
-    console.warn('[redis] failed to connect — continuing without Redis', e?.message);
-    redisPub = null; redisSub = null;
+    console.warn('[ws] broadcast error', e && e.message);
   }
 }
 
-// helper: parse cookies from header
-function parseCookies(cookieHeader = '') {
-  return Object.fromEntries(
-    (cookieHeader || '').split(';').map(s => {
-      const idx = s.indexOf('=');
-      if (idx === -1) return [];
-      const k = s.slice(0, idx).trim();
-      const v = s.slice(idx + 1).trim();
-      return [k, decodeURIComponent(v)];
-    }).filter(Boolean)
-  );
-}
-
-const useWebSocket = (typeof process !== 'undefined' && process.env && process.env.USE_WS === '0') ? false : true;
-
-if (useWebSocket) {
-  // reuse a instância única criada mais acima
-  const wss = global.__AFKMINERS_WSS__;
-  if (!wss) throw new Error('WSS não inicializado (esperava global.__AFKMINERS_WSS__)');
-
-  // inicializa redis (se configurado)
-  setupRedis(wss).catch(() => { /* ignore */ });
-
-  const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
-
+// attach single connection handler once
+if (!wss._hasConnectionHandler) {
   wss.on('connection', (ws, req) => {
-    const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
-    console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
+    ws._id = randomUUID();
+    const remote = req.socket.remoteAddress || 'unknown';
+    console.log(`[ws] connection ${ws._id} from ${remote} — clients=${wss.clients.size}`);
 
-    // DEBUG: log cookies header (remova em produção se preferir)
-    console.log('[ws] cookies header:', req.headers && req.headers.cookie);
+    ws.isAlive = true;
+    ws.on('pong', () => { ws.isAlive = true; });
 
-    ws._connectedAt = Date.now();
-    ws._player = null;
+    ws.on('message', (raw) => {
+      let msg;
+      try { msg = JSON.parse(String(raw)); } catch (e) { return; }
 
-    // try validate JWT from cookie immediately (so explicit handshake not required)
-    try {
-      const cookies = parseCookies(req.headers.cookie || '');
-      const token = cookies[COOKIE_NAME] || null;
-      if (token) {
-        try {
-          const payload = jwt.verify(token, JWT_SECRET);
-          ws._player = { id: String(payload.id || payload.playerId || ''), name: String(payload.name || payload.username || payload.displayName || 'Anon') };
-          console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
-        } catch (err) {
-          console.log('[ws] jwt verify failed', err && err.message);
-        }
+      // debug log every incoming message with connection id
+      console.log(`[ws recv] conn=${ws._id}`, msg && msg.type);
+
+      if (msg.type === 'auth') {
+        ws.user = { id: msg.id || null, name: msg.name || null };
+        return;
       }
-    } catch (e) {
-      console.warn('[ws] cookie parse error', e && e.message);
-    }
 
-    ws.on('message', async (raw) => {
-      try {
-        const d = JSON.parse(String(raw));
-        console.log('[ws recv]', req.socket.remoteAddress, '<-', d.type || 'msg');
+      if (msg.type === 'chat') {
+        // opcional: rate-limit / filter (descomente se quiser)
+        // if (!consumeToken(ws)) { try { ws.send(JSON.stringify({ type: 'error', reason: 'rate_limited' })); } catch (e){}; return; }
+        const id = msg.id || randomUUID();
+        const out = {
+          type: 'chat',
+          id,
+          text: filterText(String(msg.text || '')),
+          from: msg.from || (ws.user && ws.user.name) || 'anon',
+          senderId: msg.senderId || (ws.user && ws.user.id) || null,
+          senderConnId: ws._id,
+          timestamp: msg.timestamp || Date.now()
+        };
 
-        if (d.type === 'chat' && d.scope === 'global') {
-          // if you persist chat to DB, do that here and use DB id/timestamp
-          // Example: if you have an async saveChat(obj) that returns saved row with id and created_at:
-          // const saved = await saveChat({ fromId: ws.userId, fromName: d.name || ws.userName, text: d.text, scope:'global' });
-          // const out = { type:'chat', scope:'global', id: saved.id, fromId: saved.fromId, fromName: saved.fromName, text: saved.text, ts: new Date(saved.created_at).getTime(), _clientId: d._clientId };
+        // persistir (não bloqueante)
+        try {
+          db.run(
+            `INSERT INTO chat_messages (scope, fromId, fromName, text) VALUES (?, ?, ?, ?)`,
+            ['global', out.senderId, out.from, out.text],
+            () => {}
+          );
+        } catch (e) { /* ignore persistence errors */ }
 
-          // If you don't have DB here, create a stable id + ts before broadcasting:
-          const out = {
-            type: 'chat',
-            scope: 'global',
-            id: d.id || (Date.now().toString(36) + Math.random().toString(36).slice(2,8)),
-            fromId: d.idSender || ws.userId || null,
-            fromName: d.name || ws.userName || 'Anon',
-            text: d.text,
-            ts: Date.now(),
-            _clientId: d._clientId || null
-          };
+        // broadcast para todos (inclui o remetente). Para excluir remetente, passe { excludeId: ws._id }
+        broadcast(out);
 
-          // broadcast once
-          broadcast(out);
-          // optionally persist in background
-          // saveChat(...) .catch(e=>console.warn('saveChat failed', e));
-        }
+        return;
+      }
 
-        // handle typing and other events unchanged:
-        if (d.type === 'typing') {
-          const out = { type: 'typing', fromId: ws.userId || null, fromName: ws.userName || 'Anon', state: !!d.state };
-          broadcast(out);
-        }
-
-        // ...other message types...
-      } catch (e) {
-        console.warn('[ws] bad msg', e && e.message);
+      if (msg.type === 'typing') {
+        broadcast({ type: 'typing', from: msg.from || (ws.user && ws.user.name) || 'anon', senderConnId: ws._id }, { excludeId: ws._id });
       }
     });
 
     ws.on('close', () => {
-      console.log(`[ws] close from ${addr} — clients=${wss.clients.size}`);
+      console.log(`[ws] close ${ws._id} from ${remote} — clients=${wss.clients.size}`);
     });
 
     ws.on('error', (err) => {
-      console.warn('[ws] socket error', err && err.message);
+      console.warn('[ws] error', err && err.message);
     });
   });
+
+  wss._hasConnectionHandler = true;
+
+  // ping/pong prune
+  setInterval(() => {
+    wss.clients.forEach((c) => {
+      if (!c) return;
+      if (c.isAlive === false) return c.terminate();
+      c.isAlive = false;
+      try { c.ping(); } catch (e) {}
+    });
+  }, 30000);
 }
 
 // ensure DB helpers available
@@ -637,237 +591,44 @@ http.listen(PORT, () => console.log(`server listening on ${PORT} ${useWebSocket 
       const now = Date.now();
 
       for (const t of running) {
-        const last  = Date.parse(t.last_tick_at || t.started_at || new Date().toISOString());
-        let delta   = Math.max(0, Math.floor((now - last)/1000));
+        const last = Date.parse(t.last_tick_at || t.started_at || new Date().toISOString());
+        let delta = Math.max(0, Math.floor((now - last) / 1000));
         if (delta <= 0) continue;
 
-        const sessLeft = Math.max(0, K.MAX_SESSION_SECONDS     - (t.session_seconds || 0));
-        const dayLeft  = Math.max(0, K.DAILY_TRAIN_CAP_SECONDS - (t.daily_seconds   || 0));
-        let allowed    = Math.min(delta, sessLeft, dayLeft);
+        const sessLeft = Math.max(0, K.MAX_SESSION_SECONDS - (t.session_seconds || 0));
+        const dayLeft = Math.max(0, K.DAILY_TRAIN_CAP_SECONDS - (t.daily_seconds || 0));
+        let allowed = Math.min(delta, sessLeft, dayLeft);
 
         const energySec = Math.floor(((t.energy_current || 0) / K.ENERGY_PER_MIN_WHEN_TRAINING) * 60);
         allowed = Math.min(allowed, energySec);
-        if (allowed <= 0) {
-          await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
-          continue;
-        }
+        if (allowed <= 0) continue;
 
-        const newLast   = new Date(last + allowed*1000).toISOString();
-        const energyUse = K.ENERGY_PER_MIN_WHEN_TRAINING * (allowed/60);
-        const newEnergy = Math.max(0, (t.energy_current || 0) - energyUse);
-
+        // calcula ganho de stamina (sem limite de tries)
+        const gain = Math.floor(allowed * K.STAMINA_GAIN_PER_SEC_WHEN_TRAINING);
         await dbRun(
-          `UPDATE hero_training
-              SET last_tick_at=?,
-                  session_seconds=COALESCE(session_seconds,0)+?,
-                  daily_seconds=COALESCE(daily_seconds,0)+?,
-                  energy_current=?,
-                  energy_spent=COALESCE(energy_spent,0)+?
-            WHERE hero_id=?`,
-          [newLast, allowed, allowed, newEnergy, energyUse, t.hero_id]
+          `UPDATE heroes
+              SET stamina_current = COALESCE(stamina_current,0) + ?,
+                  stamina_last_gain = ?
+            WHERE id = ?`,
+          [gain, new Date(now).toISOString(), t.hero_id]
         );
 
-        if (newEnergy <= 0 || allowed < delta || allowed === sessLeft || allowed === dayLeft) {
-          await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
-        }
+        // atualiza apenas o tempo da sessão ativa
+        await dbRun(
+          `UPDATE hero_training
+              SET last_tick_at=?, session_seconds=COALESCE(session_seconds,0)+?
+            WHERE hero_id=?`,
+          [new Date(now).toISOString(), allowed, t.hero_id]
+        );
       }
-    } catch (err) {
-      console.error('[worker] tick error:', err.message);
+    } catch (e) {
+      console.error('[worker]', e);
     }
   }
 
+  // tick do worker (stamina/limites)
   setInterval(trainingTick, WORKER_TICK_SECONDS * 1000);
 })();
-
-// rota para obter histórico global (últimas N mensagens)
-app.get('/api/chat/global', requireAuth, async (req, res) => {
-  try {
-    const limit = Math.min(200, Number(req.query.limit || 100));
-    const before = req.query.before ? Number(req.query.before) : null; // id before
-    if (before) {
-      db.all(
-        'SELECT id, scope, fromId, fromName, text, created_at FROM chat_messages WHERE scope=? AND id < ? ORDER BY id DESC LIMIT ?',
-        ['global', before, limit],
-        (err, rows) => {
-          if (err) return res.status(500).json({ error: err.message });
-          res.json(rows.reverse());
-        }
-      );
-    } else {
-      db.all(
-        'SELECT id, scope, fromId, fromName, text, created_at FROM chat_messages WHERE scope=? ORDER BY id DESC LIMIT ?',
-        ['global', limit],
-        (err, rows) => {
-          if (err) return res.status(500).json({ error: err.message });
-          res.json(rows.reverse());
-        }
-      );
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// mute endpoints (in-memory). Adjust protection as needed (requireAuth present)
-app.post('/api/chat/mute', requireAuth, async (req, res) => {
-  try {
-    const byId = String(req.user?.id || '');
-    const me = await get('SELECT role FROM players WHERE id = ?', [byId]);
-    if (!me || me.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
-
-    const targetId = String(req.body?.targetId || '');
-    const seconds = Number(req.body?.seconds || 0);
-    const reason = String(req.body?.reason || '');
-    if (!targetId || !seconds) return res.status(400).json({ error:'targetId and seconds required' });
-
-    const until = Date.now() + Math.max(0, seconds)*1000;
-    await run('INSERT INTO chat_mutes(targetId, byId, until, reason, created_at) VALUES (?,?,?,?,?)',
-      [targetId, byId, until, reason || null, Date.now()]);
-    // update cache
-    mutedCache.set(targetId, until);
-    return res.json({ ok: true, targetId, until });
-  } catch (e) {
-    console.error('[api/chat/mute] ', e);
-    return res.status(500).json({ error: e.message });
-  }
-});
-
-app.post('/api/chat/unmute', requireAuth, async (req, res) => {
-  try {
-    const byId = String(req.user?.id || '');
-    const me = await get('SELECT role FROM players WHERE id = ?', [byId]);
-    if (!me || me.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
-
-    const targetId = String(req.body?.targetId || '');
-    if (!targetId) return res.status(400).json({ error:'targetId required' });
-    await run('DELETE FROM chat_mutes WHERE targetId = ?', [targetId]);
-    mutedCache.delete(targetId);
-    return res.json({ ok: true, targetId });
-  } catch (e) {
-    console.error('[api/chat/unmute] ', e);
-    return res.status(500).json({ error: e.message });
-  }
-});
-
-app.get('/api/chat/mutes', requireAuth, async (req, res) => {
-  try {
-    const byId = String(req.user?.id || '');
-    const me = await get('SELECT role FROM players WHERE id = ?', [byId]);
-    if (!me || me.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
-    const rows = await all('SELECT id, targetId, byId, until, reason, created_at FROM chat_mutes ORDER BY created_at DESC');
-    return res.json(rows || []);
-  } catch (e) {
-    console.error('[api/chat/mutes] ', e);
-    return res.status(500).json({ error: e.message });
-  }
-});
-
-// robust broadcast + message handler (replace existing broadcast/handler)
-
-const recentBroadcastIds = new Set();
-
-function broadcast(msg) {
-  try {
-    if (!msg) return;
-    // ensure msg has an id string so dedupe works
-    if (!msg.id) msg.id = (Date.now().toString(36) + Math.random().toString(36).slice(2,8));
-    const idStr = String(msg.id);
-    if (recentBroadcastIds.has(idStr)) {
-      console.log('[ws] skip broadcast (recent id)', idStr);
-      return;
-    }
-    recentBroadcastIds.add(idStr);
-    setTimeout(() => recentBroadcastIds.delete(idStr), 30_000); // keep for 30s
-
-    const targets = [];
-    wss.clients.forEach(c => { if (c && c.readyState === WebSocket.OPEN) targets.push(c); });
-    console.log('[ws] broadcasting message to', targets.length, 'clients', msg.type || '');
-    for (const c of targets) {
-      try { c.send(JSON.stringify(msg)); } catch (e) { console.warn('[ws] send failed', e && e.message); }
-    }
-  } catch (e) {
-    console.warn('[ws] broadcast error', e && e.message);
-  }
-}
-
-// in your wss.on('connection', ws => { ... }) replace or ensure you have a single message handler like:
-
-wss.on('connection', (ws, req) => {
-  const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
-  console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
-
-  // DEBUG: log cookies header (remova em produção se preferir)
-  console.log('[ws] cookies header:', req.headers && req.headers.cookie);
-
-  ws._connectedAt = Date.now();
-  ws._player = null;
-
-  // try validate JWT from cookie imediatamente (sem necessidade de handshake explícito)
-  try {
-    const cookies = parseCookies(req.headers.cookie || '');
-    const token = cookies[COOKIE_NAME] || null;
-    if (token) {
-      try {
-        const payload = jwt.verify(token, JWT_SECRET);
-        ws._player = { id: String(payload.id || payload.playerId || ''), name: String(payload.name || payload.username || payload.displayName || 'Anon') };
-        console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
-      } catch (err) {
-        console.log('[ws] jwt verify failed', err && err.message);
-      }
-    }
-  } catch (e) {
-    console.warn('[ws] cookie parse error', e && e.message);
-  }
-
-  ws.on('message', async (raw) => {
-    try {
-      const d = JSON.parse(String(raw));
-      console.log('[ws recv]', req.socket.remoteAddress, '<-', d.type || 'msg');
-
-      if (d.type === 'chat' && d.scope === 'global') {
-        // if you persist chat to DB, do that here and use DB id/timestamp
-        // Example: if you have an async saveChat(obj) that returns saved row with id and created_at:
-        // const saved = await saveChat({ fromId: ws.userId, fromName: d.name || ws.userName, text: d.text, scope:'global' });
-        // const out = { type:'chat', scope:'global', id: saved.id, fromId: saved.fromId, fromName: saved.fromName, text: saved.text, ts: new Date(saved.created_at).getTime(), _clientId: d._clientId };
-
-        // If you don't have DB here, create a stable id + ts before broadcasting:
-        const out = {
-          type: 'chat',
-          scope: 'global',
-          id: d.id || (Date.now().toString(36) + Math.random().toString(36).slice(2,8)),
-          fromId: d.idSender || ws.userId || null,
-          fromName: d.name || ws.userName || 'Anon',
-          text: d.text,
-          ts: Date.now(),
-          _clientId: d._clientId || null
-        };
-
-        // broadcast once
-        broadcast(out);
-        // optionally persist in background
-        // saveChat(...) .catch(e=>console.warn('saveChat failed', e));
-      }
-
-      // handle typing and other events unchanged:
-      if (d.type === 'typing') {
-        const out = { type: 'typing', fromId: ws.userId || null, fromName: ws.userName || 'Anon', state: !!d.state };
-        broadcast(out);
-      }
-
-      // ...other message types...
-    } catch (e) {
-      console.warn('[ws] bad msg', e && e.message);
-    }
-  });
-
-  ws.on('close', () => {
-    console.log(`[ws] close from ${addr} — clients=${wss.clients.size}`);
-  });
-
-  ws.on('error', (err) => {
-    console.warn('[ws] socket error', err && err.message);
-  });
-});
 
 
 
