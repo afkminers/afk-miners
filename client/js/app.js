@@ -199,58 +199,87 @@ function safeAddListener(selectorOrNode, event, handler) {
 
     function log(...args){ try{ console.log('[chat]', ...args); }catch{} }
 
+    // replace existing connectWS and message handler setup inside initGlobalChat
     function connectWS() {
       try {
         // close previous socket if exists (avoid double connections)
         try { if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) ws.close(); } catch {}
-        ws = new WebSocket((location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws');
+        // prefer shared singleton if exposed by other module
+        if (typeof window.connectGameWS === 'function') {
+          ws = window.connectGameWS();
+        } else {
+          ws = new WebSocket((location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws');
+        }
       } catch (e) {
         log('erro ao criar WebSocket', e);
-        ws = null; return;
+        ws = null;
+        return;
       }
 
       try { window._game_ws = ws; } catch (e) {}
 
-      ws.addEventListener('open', async () => {
+      // detach any previous handlers we added to avoid duplicates
+      try { ws.removeEventListener('message', __chat_onmessage); } catch {}
+      try { ws.removeEventListener('open', __chat_onopen); } catch {}
+      try { ws.removeEventListener('close', __chat_onclose); } catch {}
+      try { ws.removeEventListener('error', __chat_onerror); } catch {}
+
+      // named handlers so we can remove later
+      function __chat_onopen() {
         log('ws aberto');
         try { btnGlobal.classList.add('active'); btnDefault.classList.remove('active'); } catch(e){}
+        (async () => {
+          try {
+            const raw = await fetch('/api/player/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+            const me = (raw && raw.profile) ? raw.profile : raw;
+            myId = String((me && (me.id || me.playerId)) || '');
+            myName = (me && (me.name || me.username || me.displayName)) || myName;
+            try { window._chat_me = { id: myId, name: myName }; } catch (e) {}
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'auth', id: myId, name: myName }));
+              log('sent auth handshake', { id: myId, name: myName });
+            }
+            const hist = await fetch('/api/chat/global?limit=200', { credentials: 'include' }).then(r => r.ok ? r.json() : []);
+            for (const m of hist) appendChatRow({ fromId: m.fromId, fromName: m.fromName||m.from, text: m.text, ts: (new Date(m.created_at)).getTime() });
+          } catch (e) { log('auth/history failed', e && e.message); }
+        })();
+      }
 
-        // handshake auth — extrae /api/player/me (note: endpoint retorna { profile: {...} })
-        try {
-          const raw = await fetch('/api/player/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
-          const me = (raw && raw.profile) ? raw.profile : raw;
-          myId = String((me && (me.id || me.playerId)) || '');
-          myName = (me && (me.name || me.username || me.displayName)) || myName;
-          // expose for debugging
-          try { window._chat_me = { id: myId, name: myName }; } catch (e) {}
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'auth', id: myId, name: myName }));
-            log('sent auth handshake', { id: myId, name: myName });
-          }
-          // load history
-          const hist = await fetch('/api/chat/global?limit=200', { credentials: 'include' }).then(r => r.ok ? r.json() : []);
-          for (const m of hist) appendChatRow({ fromId: m.fromId, fromName: m.fromName||m.from, text: m.text, ts: (new Date(m.created_at)).getTime() });
-        } catch (e) { log('auth/history failed', e && e.message); }
-      });
-
-      ws.addEventListener('message', (evt) => {
+      function __chat_onmessage(evt) {
         try {
           const d = JSON.parse(evt.data);
           log('ws message', d);
-          if (d.type === 'chat' && d.scope === 'global') {
-            // dedupe by server id (if present)
+          if (d.type === 'chat' && (d.scope === undefined || d.scope === 'global')) {
             if (d.id) {
               if (seenMsgIds.has(String(d.id))) return;
               seenMsgIds.add(String(d.id));
             }
-            appendChatRow({ id: d.id, fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now(), _clientId: d._clientId || null });
+            // server may echo _clientId — preserve behaviour
+            appendChatRow({ id: d.id, fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now(), _clientId: d._clientId || null, _pendingId: d._pendingId || null });
+          } else if (d.type === 'typing') {
+            if (!d.fromId) return;
+            if (d.state) typingSet.add(d.fromName || 'Anon');
+            else typingSet.delete(d.fromName || 'Anon');
+            updateTypingUI();
+          } else if (d.type === 'chat_ack') {
+            if (d._clientId) {
+              const p = chatBox.querySelector(`[data-pending-id="${d._clientId}"]`);
+              if (p) { const mark = p.querySelector('.pending'); if (mark) { mark.textContent = ' ✓'; mark.style.opacity = '.9'; } p.removeAttribute('data-pending-id'); p.dataset.msgId = d.id || ''; }
+            }
           }
         } catch (e) { log('bad ws message', e); }
-      });
+      }
 
-      ws.addEventListener('close', () => log('ws fechado'));
-      ws.addEventListener('error', (e) => log('ws erro', e && e.message));
+      function __chat_onclose() { log('ws fechado'); }
+      function __chat_onerror(e) { log('ws erro', e && e.message); }
+
+      ws.addEventListener('open', __chat_onopen);
+      ws.addEventListener('message', __chat_onmessage);
+      ws.addEventListener('close', __chat_onclose);
+      ws.addEventListener('error', __chat_onerror);
     }
+    // call connectWS once (existing code already does this)
+    try { connectWS(); } catch (e) { console.warn('connectWS failed', e); }
 
     const typingIndicator = document.createElement('div');
     typingIndicator.id = 'typingIndicator';
