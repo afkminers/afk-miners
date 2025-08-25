@@ -308,23 +308,18 @@ function safeAddListener(selectorOrNode, event, handler) {
     const pendingMap = new Map();
 
     function appendChatRow(msg){
-      // dedupe: se já existe uma mensagem com o mesmo id ou pendingId, não re-adicionar
+      // debug: log entrada
+      try { console.log('[chat] appendChatRow called', msg); } catch(e){}
+
+      // dedupe by explicit ids/pending ids only (avoid fragile lastText heuristic)
       try {
         if (msg.id) {
-          if (seenMsgIds.has(String(msg.id))) return;
-          // also check DOM just in case
-          if (chatBox.querySelector(`[data-msg-id="${msg.id}"]`)) { seenMsgIds.add(String(msg.id)); return; }
+          if (seenMsgIds.has(String(msg.id))) { console.log('[chat] skip: seenMsgIds', msg.id); return; }
+          if (chatBox.querySelector(`[data-msg-id="${msg.id}"]`)) { seenMsgIds.add(String(msg.id)); console.log('[chat] skip: already in DOM', msg.id); return; }
         } else if (msg._pendingId) {
-          if (chatBox.querySelector(`[data-pending-id="${msg._pendingId}"]`)) return;
-        } else {
-          const last = chatBox.lastElementChild;
-          if (last) {
-            const lastText = last.textContent || '';
-            const lastName = (last.querySelector && last.querySelector('.name') && last.querySelector('.name').textContent) || '';
-            if (lastName === (msg.fromName || '') && lastText.includes((msg.text||'').trim())) return;
-          }
+          if (chatBox.querySelector(`[data-pending-id="${msg._pendingId}"]`)) { console.log('[chat] skip: already pending', msg._pendingId); return; }
         }
-      } catch (e) {}
+      } catch (e) { console.warn('[chat] dedupe check failed', e); }
 
       const d = document.createElement('div');
       d.className='chat-row';
