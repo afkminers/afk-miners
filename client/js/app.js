@@ -248,22 +248,34 @@ function safeAddListener(selectorOrNode, event, handler) {
       function __chat_onmessage(evt) {
         try {
           const d = JSON.parse(evt.data);
-          log('ws message', d);
+          log('ws message raw', d);
           if (d.type === 'chat' && (d.scope === undefined || d.scope === 'global')) {
-            if (d.id) {
-              if (seenMsgIds.has(String(d.id))) return;
-              seenMsgIds.add(String(d.id));
+            const msg = {
+              id: d.id || d.messageId || d._id || null,
+              fromId: d.fromId || d.senderId || d.senderConnId || null,
+              fromName: d.fromName || d.from || d.fromUser || null,
+              text: d.text || d.message || '',
+              ts: d.ts || d.timestamp || d.created_at || Date.now(),
+              _clientId: d._clientId || d._clientid || null,
+              _pendingId: d._pendingId || null
+            };
+            if (msg.id) {
+              if (seenMsgIds.has(String(msg.id))) { log('skip: seenMsgIds', msg.id); return; }
+              seenMsgIds.add(String(msg.id));
             }
-            // server may echo _clientId — preserve behaviour
-            appendChatRow({ id: d.id, fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now(), _clientId: d._clientId || null, _pendingId: d._pendingId || null });
+            appendChatRow(msg);
           } else if (d.type === 'typing') {
-            if (!d.fromId) return;
-            if (d.state) typingSet.add(d.fromName || 'Anon');
-            else typingSet.delete(d.fromName || 'Anon');
+            // normalize typing payload (use fromName/fromId)
+            const name = d.fromName || d.from || null;
+            const id = d.fromId || d.senderId || null;
+            if (!id && !name) return;
+            if (d.state) typingSet.add(name || 'Anon'); else typingSet.delete(name || 'Anon');
             updateTypingUI();
           } else if (d.type === 'chat_ack') {
-            if (d._clientId) {
-              const p = chatBox.querySelector(`[data-pending-id="${d._clientId}"]`);
+            // ack: try to match pending id or id
+            const clientId = d._clientId || d._clientid || null;
+            if (clientId) {
+              const p = chatBox.querySelector(`[data-pending-id="${clientId}"]`);
               if (p) { const mark = p.querySelector('.pending'); if (mark) { mark.textContent = ' ✓'; mark.style.opacity = '.9'; } p.removeAttribute('data-pending-id'); p.dataset.msgId = d.id || ''; }
             }
           }
@@ -382,48 +394,36 @@ function safeAddListener(selectorOrNode, event, handler) {
     ws.addEventListener('message', (evt) => {
       try {
         const d = JSON.parse(evt.data);
-        log('ws message', d);
-        if (d.type === 'chat' && d.scope === 'global') {
-          // if server echoed _clientId, try to match and mark pending -> delivered
-          if (d._clientId) {
-            const pendingEl = chatBox.querySelector(`[data-pending-id="${d._clientId}"]`);
-            if (pendingEl) {
-              // replace pending entry with authoritative message (set data-msgid)
-              pendingEl.dataset.msgId = d.id;
-              const mark = pendingEl.querySelector('.pending');
-              if (mark) { mark.textContent = ' ✓'; mark.style.opacity = '.9'; }
-              pendingEl.removeAttribute('data-pending-id');
-              // update content to server text (filtered)
-              const textNode = pendingEl.querySelector('.muted') ? pendingEl.querySelector('.muted').previousSibling : null;
-            } else {
-              // no pending match — append normalmente
-              appendChatRow({ id: d.id, fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
-            }
-          } else {
-            appendChatRow({ id: d.id, fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
+        log('ws message raw', d);
+        if (d.type === 'chat' && (d.scope === undefined || d.scope === 'global')) {
+          const msg = {
+            id: d.id || d.messageId || d._id || null,
+            fromId: d.fromId || d.senderId || d.senderConnId || null,
+            fromName: d.fromName || d.from || d.fromUser || null,
+            text: d.text || d.message || '',
+            ts: d.ts || d.timestamp || d.created_at || Date.now(),
+            _clientId: d._clientId || d._clientid || null,
+            _pendingId: d._pendingId || null
+          };
+          if (msg.id) {
+            if (seenMsgIds.has(String(msg.id))) { log('skip: seenMsgIds', msg.id); return; }
+            seenMsgIds.add(String(msg.id));
           }
-        } else if (d.type === 'chat_ack') {
-          // robust fallback: if ack returns _clientId, mark pending
-          if (d._clientId) {
-            const p = chatBox.querySelector(`[data-pending-id="${d._clientId}"]`);
-            if (p) {
-              const mark = p.querySelector('.pending');
-              if (mark) { mark.textContent = ' ✓'; mark.style.opacity = '.9'; }
-              p.removeAttribute('data-pending-id');
-              p.dataset.msgId = d.id || '';
-            }
-          } else if (d.id) {
-            // if server ack only with id, try match by content/time (best-effort) — leaving minimal behavior
-          }
+          appendChatRow(msg);
         } else if (d.type === 'typing') {
-          if (!d.fromId) return;
-          if (d.state) typingSet.add(d.fromName || 'Anon');
-          else typingSet.delete(d.fromName || 'Anon');
+          // normalize typing payload (use fromName/fromId)
+          const name = d.fromName || d.from || null;
+          const id = d.fromId || d.senderId || null;
+          if (!id && !name) return;
+          if (d.state) typingSet.add(name || 'Anon'); else typingSet.delete(name || 'Anon');
           updateTypingUI();
-        } else if (d.type === 'error') {
-          console.warn('chat error', d);
-          if (d.code === 'rate_limited') alert('Você está enviando mensagens rápido demais. Aguarde.');
-          if (d.code === 'muted') alert('Você está silenciado até ' + new Date(d.until).toLocaleString());
+        } else if (d.type === 'chat_ack') {
+          // ack: try to match pending id or id
+          const clientId = d._clientId || d._clientid || null;
+          if (clientId) {
+            const p = chatBox.querySelector(`[data-pending-id="${clientId}"]`);
+            if (p) { const mark = p.querySelector('.pending'); if (mark) { mark.textContent = ' ✓'; mark.style.opacity = '.9'; } p.removeAttribute('data-pending-id'); p.dataset.msgId = d.id || ''; }
+          }
         }
       } catch (e) { log('bad ws message', e); }
     });
@@ -607,23 +607,6 @@ window.escapeHtml = escapeHtml;
   const G = window;
   if (!G.__GAME_WS_STATE__) G.__GAME_WS_STATE__ = { ws: null, seenMsgIds: new Set() };
   const state = G.__GAME_WS_STATE__;
-
-  function onMessage(evt) {
-    try {
-      const d = JSON.parse(evt.data);
-      // dedupe chat messages by id
-      if (d && d.type === 'chat' && d.id) {
-        if (state.seenMsgIds.has(String(d.id))) return;
-        state.seenMsgIds.add(String(d.id));
-      }
-      // dispatch to your app handler (implement handleIncomingChat)
-      if (typeof window.handleIncomingChat === 'function') {
-        window.handleIncomingChat(d);
-      } else {
-        console.log('[ws] recv', d);
-      }
-    } catch (e) { console.warn('[ws] bad msg', e && e.message); }
-  }
 
   function closeOld() {
     try {
