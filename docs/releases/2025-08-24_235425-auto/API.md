@@ -2,6 +2,9 @@
 
 ## Variáveis de ambiente
 
+- `BANNED_WORDS` (defaults: badword1,badword2)
+- `CHAT_RATE_BURST` (defaults: 4)
+- `CHAT_TOKENS_PER_SEC` (defaults: 2)
 - `CONTENT_PIPELINE` (defaults: off)
 - `COOKIE_DOMAIN` (defaults: undefined)
 - `COOKIE_NAME` (defaults: sid)
@@ -11,10 +14,10 @@
 - `CTX_DEPTH` (defaults: 4)
 - `CTX_IMPORTS`
 - `CTX_SYMBOLS`
-- `JWT_SECRET` (defaults: changeme, CHANGE_ME_DEV_ONLY)
+- `DB_PATH` (defaults: path.join(process.cwd()
+- `JWT_SECRET` (defaults: CHANGE_ME_DEV_ONLY)
 - `NODE_ENV` (defaults: development)
 - `PORT` (defaults: 3000)
-- `REDIS_URL` (defaults: null)
 - `SESSION_COOKIE_NAME` (defaults: token)
 - `WORKER_TICK_SECONDS` (defaults: 3)
 
@@ -22,7 +25,7 @@
 
 ### GET /
 
-Arquivo: `server\index.js:361`
+Arquivo: `server\index.js:402`
 
 _Sem payload inferido_
 
@@ -31,7 +34,7 @@ _Sem payload inferido_
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:331`
+Arquivo: `server\index.js:372`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -61,7 +64,7 @@ Arquivo: `server\index.js:331`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:308`
+Arquivo: `server\index.js:349`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -93,7 +96,7 @@ Arquivo: `server\index.js:308`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:319`
+Arquivo: `server\index.js:360`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -124,7 +127,7 @@ Arquivo: `server\index.js:319`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:301`
+Arquivo: `server\index.js:342`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -151,7 +154,7 @@ Arquivo: `server\index.js:301`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:279`
+Arquivo: `server\index.js:320`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -181,7 +184,7 @@ Arquivo: `server\index.js:279`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:286`
+Arquivo: `server\index.js:327`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -210,7 +213,7 @@ Arquivo: `server\index.js:286`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:293`
+Arquivo: `server\index.js:334`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -236,25 +239,9 @@ Arquivo: `server\index.js:293`
 - `HTTP 500` → {error:e.message }
 - `HTTP 500` → {error:err.message }
 
-### GET /api/chat/global
-
-Arquivo: `server\index.js:657`
-
-**Payloads (exemplos inferidos):**
-- query:
-```json
-{
-  "limit": 1
-}
-```
-
-**Erros conhecidos:**
-- `HTTP 500` → {error:err.message }
-- `HTTP 500` → {error:err.message }
-
 ### GET /api/csrf
 
-Arquivo: `server\index.js:39`
+Arquivo: `server\index.js:80`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -462,7 +449,7 @@ Arquivo: `server\gacha\routes.js:148`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:344`
+Arquivo: `server\index.js:385`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -646,9 +633,6 @@ Arquivo: `server\starter\routes.js:72`
   - HTTP 404: {error:'map not found' }
   - HTTP 500: {error:'invalid map json' }
   - HTTP 500: {error:e.message }
-  - HTTP 500: {error:err.message }
-- **GET /api/chat/global**
-  - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
 - **GET /api/csrf**
   - HTTP 400: {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }

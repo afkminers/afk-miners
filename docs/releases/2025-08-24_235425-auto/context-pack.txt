@@ -1,5 +1,5 @@
 AFK Miners — Context Pack
-Commit: df2236b | Branch: main | Last Tag: n/a
+Commit: a4eba58 | Branch: main | Last Tag: n/a
 
 == Estrutura (nível 4) ==
 _backup-meta.txt
@@ -219,6 +219,44 @@ docs\backups\2025-08-24_185230-pre-main-14e6edd.zip
 docs\backups\2025-08-24_185242-post-main-e90824f.zip
 docs\backups\2025-08-24_191946-pre-main-f79dc39.zip
 docs\backups\2025-08-24_192002-post-main-df2236b.zip
+docs\backups\2025-08-24_193234-pre-main-df2236b.zip
+docs\backups\2025-08-24_193249-post-main-ec40d70.zip
+docs\backups\2025-08-24_202512-pre-main-ec40d70.zip
+docs\backups\2025-08-24_202527-post-main-dcbed06.zip
+docs\backups\2025-08-24_203517-pre-main-dcbed06.zip
+docs\backups\2025-08-24_203531-post-main-f4e4a92.zip
+docs\backups\2025-08-24_204327-pre-main-f4e4a92.zip
+docs\backups\2025-08-24_204341-post-main-1c26ac9.zip
+docs\backups\2025-08-24_204943-pre-main-1c26ac9.zip
+docs\backups\2025-08-24_204957-post-main-b5df46f.zip
+docs\backups\2025-08-24_205530-pre-main-b5df46f.zip
+docs\backups\2025-08-24_205546-post-main-eac3063.zip
+docs\backups\2025-08-24_210356-pre-main-eac3063.zip
+docs\backups\2025-08-24_210411-post-main-696f8a2.zip
+docs\backups\2025-08-24_211242-pre-main-696f8a2.zip
+docs\backups\2025-08-24_211257-post-main-618ad68.zip
+docs\backups\2025-08-24_213510-pre-main-618ad68.zip
+docs\backups\2025-08-24_213525-post-main-28973ed.zip
+docs\backups\2025-08-24_221431-pre-main-28973ed.zip
+docs\backups\2025-08-24_221445-post-main-98380d4.zip
+docs\backups\2025-08-24_223019-pre-main-98380d4.zip
+docs\backups\2025-08-24_223034-post-main-482b171.zip
+docs\backups\2025-08-24_224001-pre-main-482b171.zip
+docs\backups\2025-08-24_224016-post-main-ca85cc5.zip
+docs\backups\2025-08-24_225105-pre-main-ca85cc5.zip
+docs\backups\2025-08-24_225120-post-main-3be6789.zip
+docs\backups\2025-08-24_230127-pre-main-3be6789.zip
+docs\backups\2025-08-24_230141-post-main-4c17696.zip
+docs\backups\2025-08-24_231846-pre-main-4c17696.zip
+docs\backups\2025-08-24_231900-post-main-7092330.zip
+docs\backups\2025-08-24_232821-pre-main-7092330.zip
+docs\backups\2025-08-24_232836-post-main-9d38bfb.zip
+docs\backups\2025-08-24_233437-pre-main-9d38bfb.zip
+docs\backups\2025-08-24_233451-post-main-6670238.zip
+docs\backups\2025-08-24_234147-pre-main-6670238.zip
+docs\backups\2025-08-24_234203-post-main-5157642.zip
+docs\backups\2025-08-24_235359-pre-main-5157642.zip
+docs\backups\2025-08-24_235413-post-main-a4eba58.zip
 docs\context
 docs\context\API.md
 docs\context\changes-since.txt
@@ -971,6 +1009,443 @@ docs\releases\2025-08-24_185251-auto\route-history.json
 docs\releases\2025-08-24_185251-auto\symbol-index.json
 docs\releases\2025-08-24_185251-auto\todos.json
 docs\releases\2025-08-24_192014-auto
+docs\releases\2025-08-24_192014-auto.zip
+docs\releases\2025-08-24_192014-auto\API.md
+docs\releases\2025-08-24_192014-auto\README.txt
+docs\releases\2025-08-24_192014-auto\changes-since.txt
+docs\releases\2025-08-24_192014-auto\context-pack.txt
+docs\releases\2025-08-24_192014-auto\data-summary.json
+docs\releases\2025-08-24_192014-auto\db-counts.txt
+docs\releases\2025-08-24_192014-auto\db-schema.sql
+docs\releases\2025-08-24_192014-auto\db-tables.json
+docs\releases\2025-08-24_192014-auto\db-tables.txt
+docs\releases\2025-08-24_192014-auto\deps-graph.json
+docs\releases\2025-08-24_192014-auto\deps.txt
+docs\releases\2025-08-24_192014-auto\endpoints-contracts.json
+docs\releases\2025-08-24_192014-auto\env-usage.json
+docs\releases\2025-08-24_192014-auto\error-map.json
+docs\releases\2025-08-24_192014-auto\function-signatures.json
+docs\releases\2025-08-24_192014-auto\openapi.json
+docs\releases\2025-08-24_192014-auto\package.json
+docs\releases\2025-08-24_192014-auto\responses-sample.json
+docs\releases\2025-08-24_192014-auto\route-history.json
+docs\releases\2025-08-24_192014-auto\symbol-index.json
+docs\releases\2025-08-24_192014-auto\todos.json
+docs\releases\2025-08-24_193303-auto
+docs\releases\2025-08-24_193303-auto.zip
+docs\releases\2025-08-24_193303-auto\API.md
+docs\releases\2025-08-24_193303-auto\README.txt
+docs\releases\2025-08-24_193303-auto\changes-since.txt
+docs\releases\2025-08-24_193303-auto\context-pack.txt
+docs\releases\2025-08-24_193303-auto\data-summary.json
+docs\releases\2025-08-24_193303-auto\db-counts.txt
+docs\releases\2025-08-24_193303-auto\db-schema.sql
+docs\releases\2025-08-24_193303-auto\db-tables.json
+docs\releases\2025-08-24_193303-auto\db-tables.txt
+docs\releases\2025-08-24_193303-auto\deps-graph.json
+docs\releases\2025-08-24_193303-auto\deps.txt
+docs\releases\2025-08-24_193303-auto\endpoints-contracts.json
+docs\releases\2025-08-24_193303-auto\env-usage.json
+docs\releases\2025-08-24_193303-auto\error-map.json
+docs\releases\2025-08-24_193303-auto\function-signatures.json
+docs\releases\2025-08-24_193303-auto\openapi.json
+docs\releases\2025-08-24_193303-auto\package.json
+docs\releases\2025-08-24_193303-auto\responses-sample.json
+docs\releases\2025-08-24_193303-auto\route-history.json
+docs\releases\2025-08-24_193303-auto\symbol-index.json
+docs\releases\2025-08-24_193303-auto\todos.json
+docs\releases\2025-08-24_202540-auto
+docs\releases\2025-08-24_202540-auto.zip
+docs\releases\2025-08-24_202540-auto\API.md
+docs\releases\2025-08-24_202540-auto\README.txt
+docs\releases\2025-08-24_202540-auto\changes-since.txt
+docs\releases\2025-08-24_202540-auto\context-pack.txt
+docs\releases\2025-08-24_202540-auto\data-summary.json
+docs\releases\2025-08-24_202540-auto\db-counts.txt
+docs\releases\2025-08-24_202540-auto\db-schema.sql
+docs\releases\2025-08-24_202540-auto\db-tables.json
+docs\releases\2025-08-24_202540-auto\db-tables.txt
+docs\releases\2025-08-24_202540-auto\deps-graph.json
+docs\releases\2025-08-24_202540-auto\deps.txt
+docs\releases\2025-08-24_202540-auto\endpoints-contracts.json
+docs\releases\2025-08-24_202540-auto\env-usage.json
+docs\releases\2025-08-24_202540-auto\error-map.json
+docs\releases\2025-08-24_202540-auto\function-signatures.json
+docs\releases\2025-08-24_202540-auto\openapi.json
+docs\releases\2025-08-24_202540-auto\package.json
+docs\releases\2025-08-24_202540-auto\responses-sample.json
+docs\releases\2025-08-24_202540-auto\route-history.json
+docs\releases\2025-08-24_202540-auto\symbol-index.json
+docs\releases\2025-08-24_202540-auto\todos.json
+docs\releases\2025-08-24_203543-auto
+docs\releases\2025-08-24_203543-auto.zip
+docs\releases\2025-08-24_203543-auto\API.md
+docs\releases\2025-08-24_203543-auto\README.txt
+docs\releases\2025-08-24_203543-auto\changes-since.txt
+docs\releases\2025-08-24_203543-auto\context-pack.txt
+docs\releases\2025-08-24_203543-auto\data-summary.json
+docs\releases\2025-08-24_203543-auto\db-counts.txt
+docs\releases\2025-08-24_203543-auto\db-schema.sql
+docs\releases\2025-08-24_203543-auto\db-tables.json
+docs\releases\2025-08-24_203543-auto\db-tables.txt
+docs\releases\2025-08-24_203543-auto\deps-graph.json
+docs\releases\2025-08-24_203543-auto\deps.txt
+docs\releases\2025-08-24_203543-auto\endpoints-contracts.json
+docs\releases\2025-08-24_203543-auto\env-usage.json
+docs\releases\2025-08-24_203543-auto\error-map.json
+docs\releases\2025-08-24_203543-auto\function-signatures.json
+docs\releases\2025-08-24_203543-auto\openapi.json
+docs\releases\2025-08-24_203543-auto\package.json
+docs\releases\2025-08-24_203543-auto\responses-sample.json
+docs\releases\2025-08-24_203543-auto\route-history.json
+docs\releases\2025-08-24_203543-auto\symbol-index.json
+docs\releases\2025-08-24_203543-auto\todos.json
+docs\releases\2025-08-24_204354-auto
+docs\releases\2025-08-24_204354-auto.zip
+docs\releases\2025-08-24_204354-auto\API.md
+docs\releases\2025-08-24_204354-auto\README.txt
+docs\releases\2025-08-24_204354-auto\changes-since.txt
+docs\releases\2025-08-24_204354-auto\context-pack.txt
+docs\releases\2025-08-24_204354-auto\data-summary.json
+docs\releases\2025-08-24_204354-auto\db-counts.txt
+docs\releases\2025-08-24_204354-auto\db-schema.sql
+docs\releases\2025-08-24_204354-auto\db-tables.json
+docs\releases\2025-08-24_204354-auto\db-tables.txt
+docs\releases\2025-08-24_204354-auto\deps-graph.json
+docs\releases\2025-08-24_204354-auto\deps.txt
+docs\releases\2025-08-24_204354-auto\endpoints-contracts.json
+docs\releases\2025-08-24_204354-auto\env-usage.json
+docs\releases\2025-08-24_204354-auto\error-map.json
+docs\releases\2025-08-24_204354-auto\function-signatures.json
+docs\releases\2025-08-24_204354-auto\openapi.json
+docs\releases\2025-08-24_204354-auto\package.json
+docs\releases\2025-08-24_204354-auto\responses-sample.json
+docs\releases\2025-08-24_204354-auto\route-history.json
+docs\releases\2025-08-24_204354-auto\symbol-index.json
+docs\releases\2025-08-24_204354-auto\todos.json
+docs\releases\2025-08-24_205010-auto
+docs\releases\2025-08-24_205010-auto.zip
+docs\releases\2025-08-24_205010-auto\API.md
+docs\releases\2025-08-24_205010-auto\README.txt
+docs\releases\2025-08-24_205010-auto\changes-since.txt
+docs\releases\2025-08-24_205010-auto\context-pack.txt
+docs\releases\2025-08-24_205010-auto\data-summary.json
+docs\releases\2025-08-24_205010-auto\db-counts.txt
+docs\releases\2025-08-24_205010-auto\db-schema.sql
+docs\releases\2025-08-24_205010-auto\db-tables.json
+docs\releases\2025-08-24_205010-auto\db-tables.txt
+docs\releases\2025-08-24_205010-auto\deps-graph.json
+docs\releases\2025-08-24_205010-auto\deps.txt
+docs\releases\2025-08-24_205010-auto\endpoints-contracts.json
+docs\releases\2025-08-24_205010-auto\env-usage.json
+docs\releases\2025-08-24_205010-auto\error-map.json
+docs\releases\2025-08-24_205010-auto\function-signatures.json
+docs\releases\2025-08-24_205010-auto\openapi.json
+docs\releases\2025-08-24_205010-auto\package.json
+docs\releases\2025-08-24_205010-auto\responses-sample.json
+docs\releases\2025-08-24_205010-auto\route-history.json
+docs\releases\2025-08-24_205010-auto\symbol-index.json
+docs\releases\2025-08-24_205010-auto\todos.json
+docs\releases\2025-08-24_205559-auto
+docs\releases\2025-08-24_205559-auto.zip
+docs\releases\2025-08-24_205559-auto\API.md
+docs\releases\2025-08-24_205559-auto\README.txt
+docs\releases\2025-08-24_205559-auto\changes-since.txt
+docs\releases\2025-08-24_205559-auto\context-pack.txt
+docs\releases\2025-08-24_205559-auto\data-summary.json
+docs\releases\2025-08-24_205559-auto\db-counts.txt
+docs\releases\2025-08-24_205559-auto\db-schema.sql
+docs\releases\2025-08-24_205559-auto\db-tables.json
+docs\releases\2025-08-24_205559-auto\db-tables.txt
+docs\releases\2025-08-24_205559-auto\deps-graph.json
+docs\releases\2025-08-24_205559-auto\deps.txt
+docs\releases\2025-08-24_205559-auto\endpoints-contracts.json
+docs\releases\2025-08-24_205559-auto\env-usage.json
+docs\releases\2025-08-24_205559-auto\error-map.json
+docs\releases\2025-08-24_205559-auto\function-signatures.json
+docs\releases\2025-08-24_205559-auto\openapi.json
+docs\releases\2025-08-24_205559-auto\package.json
+docs\releases\2025-08-24_205559-auto\responses-sample.json
+docs\releases\2025-08-24_205559-auto\route-history.json
+docs\releases\2025-08-24_205559-auto\symbol-index.json
+docs\releases\2025-08-24_205559-auto\todos.json
+docs\releases\2025-08-24_210423-auto
+docs\releases\2025-08-24_210423-auto.zip
+docs\releases\2025-08-24_210423-auto\API.md
+docs\releases\2025-08-24_210423-auto\README.txt
+docs\releases\2025-08-24_210423-auto\changes-since.txt
+docs\releases\2025-08-24_210423-auto\context-pack.txt
+docs\releases\2025-08-24_210423-auto\data-summary.json
+docs\releases\2025-08-24_210423-auto\db-counts.txt
+docs\releases\2025-08-24_210423-auto\db-schema.sql
+docs\releases\2025-08-24_210423-auto\db-tables.json
+docs\releases\2025-08-24_210423-auto\db-tables.txt
+docs\releases\2025-08-24_210423-auto\deps-graph.json
+docs\releases\2025-08-24_210423-auto\deps.txt
+docs\releases\2025-08-24_210423-auto\endpoints-contracts.json
+docs\releases\2025-08-24_210423-auto\env-usage.json
+docs\releases\2025-08-24_210423-auto\error-map.json
+docs\releases\2025-08-24_210423-auto\function-signatures.json
+docs\releases\2025-08-24_210423-auto\openapi.json
+docs\releases\2025-08-24_210423-auto\package.json
+docs\releases\2025-08-24_210423-auto\responses-sample.json
+docs\releases\2025-08-24_210423-auto\route-history.json
+docs\releases\2025-08-24_210423-auto\symbol-index.json
+docs\releases\2025-08-24_210423-auto\todos.json
+docs\releases\2025-08-24_211309-auto
+docs\releases\2025-08-24_211309-auto.zip
+docs\releases\2025-08-24_211309-auto\API.md
+docs\releases\2025-08-24_211309-auto\README.txt
+docs\releases\2025-08-24_211309-auto\changes-since.txt
+docs\releases\2025-08-24_211309-auto\context-pack.txt
+docs\releases\2025-08-24_211309-auto\data-summary.json
+docs\releases\2025-08-24_211309-auto\db-counts.txt
+docs\releases\2025-08-24_211309-auto\db-schema.sql
+docs\releases\2025-08-24_211309-auto\db-tables.json
+docs\releases\2025-08-24_211309-auto\db-tables.txt
+docs\releases\2025-08-24_211309-auto\deps-graph.json
+docs\releases\2025-08-24_211309-auto\deps.txt
+docs\releases\2025-08-24_211309-auto\endpoints-contracts.json
+docs\releases\2025-08-24_211309-auto\env-usage.json
+docs\releases\2025-08-24_211309-auto\error-map.json
+docs\releases\2025-08-24_211309-auto\function-signatures.json
+docs\releases\2025-08-24_211309-auto\openapi.json
+docs\releases\2025-08-24_211309-auto\package.json
+docs\releases\2025-08-24_211309-auto\responses-sample.json
+docs\releases\2025-08-24_211309-auto\route-history.json
+docs\releases\2025-08-24_211309-auto\symbol-index.json
+docs\releases\2025-08-24_211309-auto\todos.json
+docs\releases\2025-08-24_213539-auto
+docs\releases\2025-08-24_213539-auto.zip
+docs\releases\2025-08-24_213539-auto\API.md
+docs\releases\2025-08-24_213539-auto\README.txt
+docs\releases\2025-08-24_213539-auto\changes-since.txt
+docs\releases\2025-08-24_213539-auto\context-pack.txt
+docs\releases\2025-08-24_213539-auto\data-summary.json
+docs\releases\2025-08-24_213539-auto\db-counts.txt
+docs\releases\2025-08-24_213539-auto\db-schema.sql
+docs\releases\2025-08-24_213539-auto\db-tables.json
+docs\releases\2025-08-24_213539-auto\db-tables.txt
+docs\releases\2025-08-24_213539-auto\deps-graph.json
+docs\releases\2025-08-24_213539-auto\deps.txt
+docs\releases\2025-08-24_213539-auto\endpoints-contracts.json
+docs\releases\2025-08-24_213539-auto\env-usage.json
+docs\releases\2025-08-24_213539-auto\error-map.json
+docs\releases\2025-08-24_213539-auto\function-signatures.json
+docs\releases\2025-08-24_213539-auto\openapi.json
+docs\releases\2025-08-24_213539-auto\package.json
+docs\releases\2025-08-24_213539-auto\responses-sample.json
+docs\releases\2025-08-24_213539-auto\route-history.json
+docs\releases\2025-08-24_213539-auto\symbol-index.json
+docs\releases\2025-08-24_213539-auto\todos.json
+docs\releases\2025-08-24_221457-auto
+docs\releases\2025-08-24_221457-auto.zip
+docs\releases\2025-08-24_221457-auto\API.md
+docs\releases\2025-08-24_221457-auto\README.txt
+docs\releases\2025-08-24_221457-auto\changes-since.txt
+docs\releases\2025-08-24_221457-auto\context-pack.txt
+docs\releases\2025-08-24_221457-auto\data-summary.json
+docs\releases\2025-08-24_221457-auto\db-counts.txt
+docs\releases\2025-08-24_221457-auto\db-schema.sql
+docs\releases\2025-08-24_221457-auto\db-tables.json
+docs\releases\2025-08-24_221457-auto\db-tables.txt
+docs\releases\2025-08-24_221457-auto\deps-graph.json
+docs\releases\2025-08-24_221457-auto\deps.txt
+docs\releases\2025-08-24_221457-auto\endpoints-contracts.json
+docs\releases\2025-08-24_221457-auto\env-usage.json
+docs\releases\2025-08-24_221457-auto\error-map.json
+docs\releases\2025-08-24_221457-auto\function-signatures.json
+docs\releases\2025-08-24_221457-auto\openapi.json
+docs\releases\2025-08-24_221457-auto\package.json
+docs\releases\2025-08-24_221457-auto\responses-sample.json
+docs\releases\2025-08-24_221457-auto\route-history.json
+docs\releases\2025-08-24_221457-auto\symbol-index.json
+docs\releases\2025-08-24_221457-auto\todos.json
+docs\releases\2025-08-24_223046-auto
+docs\releases\2025-08-24_223046-auto.zip
+docs\releases\2025-08-24_223046-auto\API.md
+docs\releases\2025-08-24_223046-auto\README.txt
+docs\releases\2025-08-24_223046-auto\changes-since.txt
+docs\releases\2025-08-24_223046-auto\context-pack.txt
+docs\releases\2025-08-24_223046-auto\data-summary.json
+docs\releases\2025-08-24_223046-auto\db-counts.txt
+docs\releases\2025-08-24_223046-auto\db-schema.sql
+docs\releases\2025-08-24_223046-auto\db-tables.json
+docs\releases\2025-08-24_223046-auto\db-tables.txt
+docs\releases\2025-08-24_223046-auto\deps-graph.json
+docs\releases\2025-08-24_223046-auto\deps.txt
+docs\releases\2025-08-24_223046-auto\endpoints-contracts.json
+docs\releases\2025-08-24_223046-auto\env-usage.json
+docs\releases\2025-08-24_223046-auto\error-map.json
+docs\releases\2025-08-24_223046-auto\function-signatures.json
+docs\releases\2025-08-24_223046-auto\openapi.json
+docs\releases\2025-08-24_223046-auto\package.json
+docs\releases\2025-08-24_223046-auto\responses-sample.json
+docs\releases\2025-08-24_223046-auto\route-history.json
+docs\releases\2025-08-24_223046-auto\symbol-index.json
+docs\releases\2025-08-24_223046-auto\todos.json
+docs\releases\2025-08-24_224028-auto
+docs\releases\2025-08-24_224028-auto.zip
+docs\releases\2025-08-24_224028-auto\API.md
+docs\releases\2025-08-24_224028-auto\README.txt
+docs\releases\2025-08-24_224028-auto\changes-since.txt
+docs\releases\2025-08-24_224028-auto\context-pack.txt
+docs\releases\2025-08-24_224028-auto\data-summary.json
+docs\releases\2025-08-24_224028-auto\db-counts.txt
+docs\releases\2025-08-24_224028-auto\db-schema.sql
+docs\releases\2025-08-24_224028-auto\db-tables.json
+docs\releases\2025-08-24_224028-auto\db-tables.txt
+docs\releases\2025-08-24_224028-auto\deps-graph.json
+docs\releases\2025-08-24_224028-auto\deps.txt
+docs\releases\2025-08-24_224028-auto\endpoints-contracts.json
+docs\releases\2025-08-24_224028-auto\env-usage.json
+docs\releases\2025-08-24_224028-auto\error-map.json
+docs\releases\2025-08-24_224028-auto\function-signatures.json
+docs\releases\2025-08-24_224028-auto\openapi.json
+docs\releases\2025-08-24_224028-auto\package.json
+docs\releases\2025-08-24_224028-auto\responses-sample.json
+docs\releases\2025-08-24_224028-auto\route-history.json
+docs\releases\2025-08-24_224028-auto\symbol-index.json
+docs\releases\2025-08-24_224028-auto\todos.json
+docs\releases\2025-08-24_225133-auto
+docs\releases\2025-08-24_225133-auto.zip
+docs\releases\2025-08-24_225133-auto\API.md
+docs\releases\2025-08-24_225133-auto\README.txt
+docs\releases\2025-08-24_225133-auto\changes-since.txt
+docs\releases\2025-08-24_225133-auto\context-pack.txt
+docs\releases\2025-08-24_225133-auto\data-summary.json
+docs\releases\2025-08-24_225133-auto\db-counts.txt
+docs\releases\2025-08-24_225133-auto\db-schema.sql
+docs\releases\2025-08-24_225133-auto\db-tables.json
+docs\releases\2025-08-24_225133-auto\db-tables.txt
+docs\releases\2025-08-24_225133-auto\deps-graph.json
+docs\releases\2025-08-24_225133-auto\deps.txt
+docs\releases\2025-08-24_225133-auto\endpoints-contracts.json
+docs\releases\2025-08-24_225133-auto\env-usage.json
+docs\releases\2025-08-24_225133-auto\error-map.json
+docs\releases\2025-08-24_225133-auto\function-signatures.json
+docs\releases\2025-08-24_225133-auto\openapi.json
+docs\releases\2025-08-24_225133-auto\package.json
+docs\releases\2025-08-24_225133-auto\responses-sample.json
+docs\releases\2025-08-24_225133-auto\route-history.json
+docs\releases\2025-08-24_225133-auto\symbol-index.json
+docs\releases\2025-08-24_225133-auto\todos.json
+docs\releases\2025-08-24_230154-auto
+docs\releases\2025-08-24_230154-auto.zip
+docs\releases\2025-08-24_230154-auto\API.md
+docs\releases\2025-08-24_230154-auto\README.txt
+docs\releases\2025-08-24_230154-auto\changes-since.txt
+docs\releases\2025-08-24_230154-auto\context-pack.txt
+docs\releases\2025-08-24_230154-auto\data-summary.json
+docs\releases\2025-08-24_230154-auto\db-counts.txt
+docs\releases\2025-08-24_230154-auto\db-schema.sql
+docs\releases\2025-08-24_230154-auto\db-tables.json
+docs\releases\2025-08-24_230154-auto\db-tables.txt
+docs\releases\2025-08-24_230154-auto\deps-graph.json
+docs\releases\2025-08-24_230154-auto\deps.txt
+docs\releases\2025-08-24_230154-auto\endpoints-contracts.json
+docs\releases\2025-08-24_230154-auto\env-usage.json
+docs\releases\2025-08-24_230154-auto\error-map.json
+docs\releases\2025-08-24_230154-auto\function-signatures.json
+docs\releases\2025-08-24_230154-auto\openapi.json
+docs\releases\2025-08-24_230154-auto\package.json
+docs\releases\2025-08-24_230154-auto\responses-sample.json
+docs\releases\2025-08-24_230154-auto\route-history.json
+docs\releases\2025-08-24_230154-auto\symbol-index.json
+docs\releases\2025-08-24_230154-auto\todos.json
+docs\releases\2025-08-24_231912-auto
+docs\releases\2025-08-24_231912-auto.zip
+docs\releases\2025-08-24_231912-auto\API.md
+docs\releases\2025-08-24_231912-auto\README.txt
+docs\releases\2025-08-24_231912-auto\changes-since.txt
+docs\releases\2025-08-24_231912-auto\context-pack.txt
+docs\releases\2025-08-24_231912-auto\data-summary.json
+docs\releases\2025-08-24_231912-auto\db-counts.txt
+docs\releases\2025-08-24_231912-auto\db-schema.sql
+docs\releases\2025-08-24_231912-auto\db-tables.json
+docs\releases\2025-08-24_231912-auto\db-tables.txt
+docs\releases\2025-08-24_231912-auto\deps-graph.json
+docs\releases\2025-08-24_231912-auto\deps.txt
+docs\releases\2025-08-24_231912-auto\endpoints-contracts.json
+docs\releases\2025-08-24_231912-auto\env-usage.json
+docs\releases\2025-08-24_231912-auto\error-map.json
+docs\releases\2025-08-24_231912-auto\function-signatures.json
+docs\releases\2025-08-24_231912-auto\openapi.json
+docs\releases\2025-08-24_231912-auto\package.json
+docs\releases\2025-08-24_231912-auto\responses-sample.json
+docs\releases\2025-08-24_231912-auto\route-history.json
+docs\releases\2025-08-24_231912-auto\symbol-index.json
+docs\releases\2025-08-24_231912-auto\todos.json
+docs\releases\2025-08-24_232847-auto
+docs\releases\2025-08-24_232847-auto.zip
+docs\releases\2025-08-24_232847-auto\API.md
+docs\releases\2025-08-24_232847-auto\README.txt
+docs\releases\2025-08-24_232847-auto\changes-since.txt
+docs\releases\2025-08-24_232847-auto\context-pack.txt
+docs\releases\2025-08-24_232847-auto\data-summary.json
+docs\releases\2025-08-24_232847-auto\db-counts.txt
+docs\releases\2025-08-24_232847-auto\db-schema.sql
+docs\releases\2025-08-24_232847-auto\db-tables.json
+docs\releases\2025-08-24_232847-auto\db-tables.txt
+docs\releases\2025-08-24_232847-auto\deps-graph.json
+docs\releases\2025-08-24_232847-auto\deps.txt
+docs\releases\2025-08-24_232847-auto\endpoints-contracts.json
+docs\releases\2025-08-24_232847-auto\env-usage.json
+docs\releases\2025-08-24_232847-auto\error-map.json
+docs\releases\2025-08-24_232847-auto\function-signatures.json
+docs\releases\2025-08-24_232847-auto\openapi.json
+docs\releases\2025-08-24_232847-auto\package.json
+docs\releases\2025-08-24_232847-auto\responses-sample.json
+docs\releases\2025-08-24_232847-auto\route-history.json
+docs\releases\2025-08-24_232847-auto\symbol-index.json
+docs\releases\2025-08-24_232847-auto\todos.json
+docs\releases\2025-08-24_233503-auto
+docs\releases\2025-08-24_233503-auto.zip
+docs\releases\2025-08-24_233503-auto\API.md
+docs\releases\2025-08-24_233503-auto\README.txt
+docs\releases\2025-08-24_233503-auto\changes-since.txt
+docs\releases\2025-08-24_233503-auto\context-pack.txt
+docs\releases\2025-08-24_233503-auto\data-summary.json
+docs\releases\2025-08-24_233503-auto\db-counts.txt
+docs\releases\2025-08-24_233503-auto\db-schema.sql
+docs\releases\2025-08-24_233503-auto\db-tables.json
+docs\releases\2025-08-24_233503-auto\db-tables.txt
+docs\releases\2025-08-24_233503-auto\deps-graph.json
+docs\releases\2025-08-24_233503-auto\deps.txt
+docs\releases\2025-08-24_233503-auto\endpoints-contracts.json
+docs\releases\2025-08-24_233503-auto\env-usage.json
+docs\releases\2025-08-24_233503-auto\error-map.json
+docs\releases\2025-08-24_233503-auto\function-signatures.json
+docs\releases\2025-08-24_233503-auto\openapi.json
+docs\releases\2025-08-24_233503-auto\package.json
+docs\releases\2025-08-24_233503-auto\responses-sample.json
+docs\releases\2025-08-24_233503-auto\route-history.json
+docs\releases\2025-08-24_233503-auto\symbol-index.json
+docs\releases\2025-08-24_233503-auto\todos.json
+docs\releases\2025-08-24_234214-auto
+docs\releases\2025-08-24_234214-auto.zip
+docs\releases\2025-08-24_234214-auto\API.md
+docs\releases\2025-08-24_234214-auto\README.txt
+docs\releases\2025-08-24_234214-auto\changes-since.txt
+docs\releases\2025-08-24_234214-auto\context-pack.txt
+docs\releases\2025-08-24_234214-auto\data-summary.json
+docs\releases\2025-08-24_234214-auto\db-counts.txt
+docs\releases\2025-08-24_234214-auto\db-schema.sql
+docs\releases\2025-08-24_234214-auto\db-tables.json
+docs\releases\2025-08-24_234214-auto\db-tables.txt
+docs\releases\2025-08-24_234214-auto\deps-graph.json
+docs\releases\2025-08-24_234214-auto\deps.txt
+docs\releases\2025-08-24_234214-auto\endpoints-contracts.json
+docs\releases\2025-08-24_234214-auto\env-usage.json
+docs\releases\2025-08-24_234214-auto\error-map.json
+docs\releases\2025-08-24_234214-auto\function-signatures.json
+docs\releases\2025-08-24_234214-auto\openapi.json
+docs\releases\2025-08-24_234214-auto\package.json
+docs\releases\2025-08-24_234214-auto\responses-sample.json
+docs\releases\2025-08-24_234214-auto\route-history.json
+docs\releases\2025-08-24_234214-auto\symbol-index.json
+docs\releases\2025-08-24_234214-auto\todos.json
+docs\releases\2025-08-24_235425-auto
 map.tmx
 package.json
 readme.txt
@@ -988,6 +1463,10 @@ server\config\balance.js
 server\content
 server\content\loader.js
 server\content\schemas.js
+server\data
+server\data\database.sqlite
+server\data\database.sqlite-shm
+server\data\database.sqlite-wal
 server\db
 server\db\backup_20250822_004047.sqlite
 server\db\data
@@ -998,6 +1477,7 @@ server\db\database.sqlite-wal
 server\db\database.sqlite.bak
 server\db\migrations
 server\db\migrations\001_skills.sql
+server\db\migrations\002_chat_mutes.sql
 server\db\migrations\002_content.sql
 server\db\seeds
 server\db\seeds\000_core_auth.sql
@@ -1042,68 +1522,67 @@ package.json
 readme.txt
 
 == Inventário por extensão ==
-.json : 419
-.txt : 220
+.json : 666
+.txt : 334
+.zip : 130
 .png : 76
-.zip : 73
 .js : 70
-.sql : 49
-.md : 33
+.sql : 69
+.md : 52
 .html : 30
 .yml : 22
 .css : 16
 .mp3 : 14
 .ps1 : 8
 <noext> : 6
-.sqlite : 4
+.sqlite : 5
 .tmx : 2
 .mjs : 2
 .bat : 2
 .bak : 2
+.sqlite-wal : 2
+.sqlite-shm : 2
 .csv : 2
 .tsx : 2
-.sqlite-wal : 1
-.sqlite-shm : 1
 
 == Top 20 maiores arquivos ==
-79832.5 KB	docs\backups\2025-08-24_191946-pre-main-f79dc39.zip
-79832.4 KB	docs\backups\2025-08-24_192002-post-main-df2236b.zip
-78404.4 KB	docs\backups\2025-08-24_185230-pre-main-14e6edd.zip
-78404.2 KB	docs\backups\2025-08-24_185242-post-main-e90824f.zip
-78398.5 KB	docs\backups\2025-08-24_182120-pre-main-e6ab269.zip
-78398.4 KB	docs\backups\2025-08-24_182133-post-main-14e6edd.zip
-78354.8 KB	docs\backups\2025-08-24_143124-pre-main-b5dd69a.zip
-78354.7 KB	docs\backups\2025-08-24_143136-post-main-e6ab269.zip
-78353.5 KB	docs\backups\2025-08-24_134210-pre-main-154987a.zip
-78353.4 KB	docs\backups\2025-08-24_134222-post-main-b5dd69a.zip
-78348.8 KB	docs\backups\2025-08-23_235710-pre-main-d63ac29.zip
-78348.7 KB	docs\backups\2025-08-23_235722-post-main-154987a.zip
-78346.3 KB	docs\backups\2025-08-23_231809-pre-main-2f709f5.zip
-78346.2 KB	docs\backups\2025-08-23_231822-post-main-ecfe2b6.zip
-78346.2 KB	docs\backups\2025-08-23_234209-pre-main-ecfe2b6.zip
-78346.0 KB	docs\backups\2025-08-23_234221-post-main-d63ac29.zip
-78345.7 KB	docs\backups\2025-08-23_231551-pre-main-023e3c1.zip
-78345.6 KB	docs\backups\2025-08-23_231604-post-main-2f709f5.zip
-78340.5 KB	docs\backups\2025-08-23_214630-pre-main-ebdac06.zip
-78340.3 KB	docs\backups\2025-08-23_214645-post-main-023e3c1.zip
+79847.5 KB	docs\backups\2025-08-24_235359-pre-main-5157642.zip
+79847.4 KB	docs\backups\2025-08-24_235413-post-main-a4eba58.zip
+79847.2 KB	docs\backups\2025-08-24_234147-pre-main-6670238.zip
+79847.1 KB	docs\backups\2025-08-24_234203-post-main-5157642.zip
+79846.7 KB	docs\backups\2025-08-24_233437-pre-main-9d38bfb.zip
+79846.6 KB	docs\backups\2025-08-24_233451-post-main-6670238.zip
+79844.9 KB	docs\backups\2025-08-24_213510-pre-main-618ad68.zip
+79844.8 KB	docs\backups\2025-08-24_213525-post-main-28973ed.zip
+79844.2 KB	docs\backups\2025-08-24_221431-pre-main-28973ed.zip
+79844.1 KB	docs\backups\2025-08-24_221445-post-main-98380d4.zip
+79844.0 KB	docs\backups\2025-08-24_230127-pre-main-3be6789.zip
+79843.9 KB	docs\backups\2025-08-24_230141-post-main-4c17696.zip
+79843.9 KB	docs\backups\2025-08-24_224001-pre-main-482b171.zip
+79843.8 KB	docs\backups\2025-08-24_224016-post-main-ca85cc5.zip
+79843.8 KB	docs\backups\2025-08-24_225105-pre-main-ca85cc5.zip
+79843.8 KB	docs\backups\2025-08-24_223019-pre-main-98380d4.zip
+79843.7 KB	docs\backups\2025-08-24_225120-post-main-3be6789.zip
+79843.7 KB	docs\backups\2025-08-24_211242-pre-main-696f8a2.zip
+79843.6 KB	docs\backups\2025-08-24_223034-post-main-482b171.zip
+79843.6 KB	docs\backups\2025-08-24_211257-post-main-618ad68.zip
 
 == Rotas detectadas (server) ==
-[GET] /api/admin/content/map/:key/data  (server\index.js:331)
-[GET] /api/admin/content/map/:key/objects  (server\index.js:308)
-[GET] /api/admin/content/map/:key/spawns  (server\index.js:319)
-[GET] /api/admin/content/maps  (server\index.js:301)
-[GET] /api/admin/content/monsters  (server\index.js:279)
-[GET] /api/admin/content/monsters  (server\index.js:377)
-[POST] /api/admin/content/reload-map  (server\index.js:344)
-[GET] /api/assets/items  (server\index.js:286)
-[GET] /api/assets/sprites  (server\index.js:293)
-[GET] /api/chat/global  (server\index.js:657)
-[GET] /api/csrf  (server\index.js:39)
+[GET] /api/admin/content/map/:key/data  (server\index.js:372)
+[GET] /api/admin/content/map/:key/objects  (server\index.js:349)
+[GET] /api/admin/content/map/:key/spawns  (server\index.js:360)
+[GET] /api/admin/content/maps  (server\index.js:342)
+[GET] /api/admin/content/monsters  (server\index.js:320)
+[GET] /api/admin/content/monsters  (server\index.js:418)
+[POST] /api/admin/content/reload-map  (server\index.js:385)
+[GET] /api/assets/items  (server\index.js:327)
+[GET] /api/assets/sprites  (server\index.js:334)
+[GET] /api/csrf  (server\index.js:80)
 [GET] /assets/items  (server\routes\assets.js:12)
 [GET] /assets/sprites  (server\routes\assets.js:5)
 [GET] /class-rates  (server\skills\routes.js:26)
 [GET] /curves  (server\skills\routes.js:10)
-[GET] /  (server\index.js:361)
+[GET] /  (server\index.js:402)
 [GET] /heroes/master  (server\routes\catalog.js:8)
 [GET] /list  (server\starter\routes.js:9)
 [POST] /login  (server\auth\routes.js:83)
@@ -1201,6 +1680,253 @@ data\config\index.yml :: 1 chaves | keys: configs
 package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 3329 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 123049 bytes
+docs\releases\2025-08-24_234214-auto\todos.json :: 23 itens | 3799 bytes
+docs\releases\2025-08-24_234214-auto\symbol-index.json :: 54 itens | 15051 bytes
+docs\releases\2025-08-24_234214-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 849 bytes
+docs\releases\2025-08-24_234214-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 1560 bytes
+docs\releases\2025-08-24_234214-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_234214-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 26852 bytes
+docs\releases\2025-08-24_234214-auto\function-signatures.json :: 565 itens | 98262 bytes
+docs\releases\2025-08-24_234214-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 10546 bytes
+docs\releases\2025-08-24_234214-auto\env-usage.json :: 18 itens | 6190 bytes
+docs\releases\2025-08-24_234214-auto\endpoints-contracts.json :: 28 itens | 19274 bytes
+docs\releases\2025-08-24_234214-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_234214-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_234214-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_233503-auto\todos.json :: 23 itens | 3799 bytes
+docs\releases\2025-08-24_233503-auto\symbol-index.json :: 54 itens | 15051 bytes
+docs\releases\2025-08-24_233503-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 849 bytes
+docs\releases\2025-08-24_233503-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 1560 bytes
+docs\releases\2025-08-24_233503-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_233503-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 26852 bytes
+docs\releases\2025-08-24_233503-auto\function-signatures.json :: 565 itens | 98262 bytes
+docs\releases\2025-08-24_233503-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 10546 bytes
+docs\releases\2025-08-24_233503-auto\env-usage.json :: 18 itens | 6190 bytes
+docs\releases\2025-08-24_233503-auto\endpoints-contracts.json :: 28 itens | 19274 bytes
+docs\releases\2025-08-24_233503-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_233503-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_233503-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_232847-auto\todos.json :: 23 itens | 3799 bytes
+docs\releases\2025-08-24_232847-auto\symbol-index.json :: 54 itens | 15051 bytes
+docs\releases\2025-08-24_232847-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 849 bytes
+docs\releases\2025-08-24_232847-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 1560 bytes
+docs\releases\2025-08-24_232847-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_232847-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 26852 bytes
+docs\releases\2025-08-24_232847-auto\function-signatures.json :: 565 itens | 98262 bytes
+docs\releases\2025-08-24_232847-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 10546 bytes
+docs\releases\2025-08-24_232847-auto\env-usage.json :: 17 itens | 5998 bytes
+docs\releases\2025-08-24_232847-auto\endpoints-contracts.json :: 28 itens | 19274 bytes
+docs\releases\2025-08-24_232847-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_232847-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_232847-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_231912-auto\todos.json :: 23 itens | 3799 bytes
+docs\releases\2025-08-24_231912-auto\symbol-index.json :: 54 itens | 15051 bytes
+docs\releases\2025-08-24_231912-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 849 bytes
+docs\releases\2025-08-24_231912-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 1560 bytes
+docs\releases\2025-08-24_231912-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_231912-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 26852 bytes
+docs\releases\2025-08-24_231912-auto\function-signatures.json :: 565 itens | 98262 bytes
+docs\releases\2025-08-24_231912-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 10546 bytes
+docs\releases\2025-08-24_231912-auto\env-usage.json :: 17 itens | 5998 bytes
+docs\releases\2025-08-24_231912-auto\endpoints-contracts.json :: 28 itens | 19274 bytes
+docs\releases\2025-08-24_231912-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_231912-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_231912-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_230154-auto\todos.json :: 23 itens | 3799 bytes
+docs\releases\2025-08-24_230154-auto\symbol-index.json :: 54 itens | 15216 bytes
+docs\releases\2025-08-24_230154-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 849 bytes
+docs\releases\2025-08-24_230154-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 1560 bytes
+docs\releases\2025-08-24_230154-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_230154-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 26852 bytes
+docs\releases\2025-08-24_230154-auto\function-signatures.json :: 574 itens | 99454 bytes
+docs\releases\2025-08-24_230154-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 10546 bytes
+docs\releases\2025-08-24_230154-auto\env-usage.json :: 17 itens | 5998 bytes
+docs\releases\2025-08-24_230154-auto\endpoints-contracts.json :: 28 itens | 19274 bytes
+docs\releases\2025-08-24_230154-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_230154-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_230154-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_225133-auto\todos.json :: 23 itens | 3799 bytes
+docs\releases\2025-08-24_225133-auto\symbol-index.json :: 54 itens | 15197 bytes
+docs\releases\2025-08-24_225133-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 849 bytes
+docs\releases\2025-08-24_225133-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 1560 bytes
+docs\releases\2025-08-24_225133-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_225133-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 26852 bytes
+docs\releases\2025-08-24_225133-auto\function-signatures.json :: 573 itens | 99311 bytes
+docs\releases\2025-08-24_225133-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 10546 bytes
+docs\releases\2025-08-24_225133-auto\env-usage.json :: 17 itens | 5998 bytes
+docs\releases\2025-08-24_225133-auto\endpoints-contracts.json :: 28 itens | 19274 bytes
+docs\releases\2025-08-24_225133-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_225133-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_225133-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_224028-auto\todos.json :: 23 itens | 3799 bytes
+docs\releases\2025-08-24_224028-auto\symbol-index.json :: 54 itens | 15216 bytes
+docs\releases\2025-08-24_224028-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 849 bytes
+docs\releases\2025-08-24_224028-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 1560 bytes
+docs\releases\2025-08-24_224028-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_224028-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 26852 bytes
+docs\releases\2025-08-24_224028-auto\function-signatures.json :: 574 itens | 99454 bytes
+docs\releases\2025-08-24_224028-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 10546 bytes
+docs\releases\2025-08-24_224028-auto\env-usage.json :: 17 itens | 5998 bytes
+docs\releases\2025-08-24_224028-auto\endpoints-contracts.json :: 28 itens | 19274 bytes
+docs\releases\2025-08-24_224028-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_224028-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_224028-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_223046-auto\todos.json :: 23 itens | 3799 bytes
+docs\releases\2025-08-24_223046-auto\symbol-index.json :: 54 itens | 15216 bytes
+docs\releases\2025-08-24_223046-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 849 bytes
+docs\releases\2025-08-24_223046-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 1560 bytes
+docs\releases\2025-08-24_223046-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_223046-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 26852 bytes
+docs\releases\2025-08-24_223046-auto\function-signatures.json :: 574 itens | 99454 bytes
+docs\releases\2025-08-24_223046-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 10546 bytes
+docs\releases\2025-08-24_223046-auto\env-usage.json :: 17 itens | 5998 bytes
+docs\releases\2025-08-24_223046-auto\endpoints-contracts.json :: 28 itens | 19274 bytes
+docs\releases\2025-08-24_223046-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_223046-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_223046-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_221457-auto\todos.json :: 23 itens | 3799 bytes
+docs\releases\2025-08-24_221457-auto\symbol-index.json :: 54 itens | 15119 bytes
+docs\releases\2025-08-24_221457-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 849 bytes
+docs\releases\2025-08-24_221457-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 1560 bytes
+docs\releases\2025-08-24_221457-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_221457-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 26852 bytes
+docs\releases\2025-08-24_221457-auto\function-signatures.json :: 570 itens | 98897 bytes
+docs\releases\2025-08-24_221457-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 10546 bytes
+docs\releases\2025-08-24_221457-auto\env-usage.json :: 17 itens | 5998 bytes
+docs\releases\2025-08-24_221457-auto\endpoints-contracts.json :: 28 itens | 19274 bytes
+docs\releases\2025-08-24_221457-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_221457-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_221457-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_213539-auto\todos.json :: 22 itens | 3629 bytes
+docs\releases\2025-08-24_213539-auto\symbol-index.json :: 54 itens | 15161 bytes
+docs\releases\2025-08-24_213539-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 992 bytes
+docs\releases\2025-08-24_213539-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 1832 bytes
+docs\releases\2025-08-24_213539-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_213539-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 31213 bytes
+docs\releases\2025-08-24_213539-auto\function-signatures.json :: 572 itens | 99204 bytes
+docs\releases\2025-08-24_213539-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 13120 bytes
+docs\releases\2025-08-24_213539-auto\env-usage.json :: 19 itens | 6508 bytes
+docs\releases\2025-08-24_213539-auto\endpoints-contracts.json :: 32 itens | 23100 bytes
+docs\releases\2025-08-24_213539-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_213539-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_213539-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_211309-auto\todos.json :: 22 itens | 3629 bytes
+docs\releases\2025-08-24_211309-auto\symbol-index.json :: 54 itens | 15123 bytes
+docs\releases\2025-08-24_211309-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 992 bytes
+docs\releases\2025-08-24_211309-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 1832 bytes
+docs\releases\2025-08-24_211309-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_211309-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 31213 bytes
+docs\releases\2025-08-24_211309-auto\function-signatures.json :: 569 itens | 98764 bytes
+docs\releases\2025-08-24_211309-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 12565 bytes
+docs\releases\2025-08-24_211309-auto\env-usage.json :: 18 itens | 6356 bytes
+docs\releases\2025-08-24_211309-auto\endpoints-contracts.json :: 32 itens | 22505 bytes
+docs\releases\2025-08-24_211309-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_211309-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_211309-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_210423-auto\todos.json :: 22 itens | 3629 bytes
+docs\releases\2025-08-24_210423-auto\symbol-index.json :: 54 itens | 15123 bytes
+docs\releases\2025-08-24_210423-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 992 bytes
+docs\releases\2025-08-24_210423-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 1832 bytes
+docs\releases\2025-08-24_210423-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_210423-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 31213 bytes
+docs\releases\2025-08-24_210423-auto\function-signatures.json :: 569 itens | 98764 bytes
+docs\releases\2025-08-24_210423-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 12565 bytes
+docs\releases\2025-08-24_210423-auto\env-usage.json :: 18 itens | 6356 bytes
+docs\releases\2025-08-24_210423-auto\endpoints-contracts.json :: 32 itens | 22505 bytes
+docs\releases\2025-08-24_210423-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_210423-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_210423-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_205559-auto\todos.json :: 22 itens | 3629 bytes
+docs\releases\2025-08-24_205559-auto\symbol-index.json :: 54 itens | 15123 bytes
+docs\releases\2025-08-24_205559-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 992 bytes
+docs\releases\2025-08-24_205559-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 1832 bytes
+docs\releases\2025-08-24_205559-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_205559-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 31213 bytes
+docs\releases\2025-08-24_205559-auto\function-signatures.json :: 569 itens | 98764 bytes
+docs\releases\2025-08-24_205559-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 12565 bytes
+docs\releases\2025-08-24_205559-auto\env-usage.json :: 18 itens | 6356 bytes
+docs\releases\2025-08-24_205559-auto\endpoints-contracts.json :: 32 itens | 22505 bytes
+docs\releases\2025-08-24_205559-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_205559-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_205559-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_205010-auto\todos.json :: 22 itens | 3629 bytes
+docs\releases\2025-08-24_205010-auto\symbol-index.json :: 54 itens | 15132 bytes
+docs\releases\2025-08-24_205010-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 992 bytes
+docs\releases\2025-08-24_205010-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 1832 bytes
+docs\releases\2025-08-24_205010-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_205010-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 31213 bytes
+docs\releases\2025-08-24_205010-auto\function-signatures.json :: 569 itens | 98773 bytes
+docs\releases\2025-08-24_205010-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 12565 bytes
+docs\releases\2025-08-24_205010-auto\env-usage.json :: 18 itens | 6356 bytes
+docs\releases\2025-08-24_205010-auto\endpoints-contracts.json :: 32 itens | 22505 bytes
+docs\releases\2025-08-24_205010-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_205010-auto\db-tables.json :: 20 itens | 6389 bytes
+docs\releases\2025-08-24_205010-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_204354-auto\todos.json :: 22 itens | 3629 bytes
+docs\releases\2025-08-24_204354-auto\symbol-index.json :: 54 itens | 15104 bytes
+docs\releases\2025-08-24_204354-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 992 bytes
+docs\releases\2025-08-24_204354-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 1832 bytes
+docs\releases\2025-08-24_204354-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_204354-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 31213 bytes
+docs\releases\2025-08-24_204354-auto\function-signatures.json :: 568 itens | 98623 bytes
+docs\releases\2025-08-24_204354-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 12565 bytes
+docs\releases\2025-08-24_204354-auto\env-usage.json :: 18 itens | 6356 bytes
+docs\releases\2025-08-24_204354-auto\endpoints-contracts.json :: 32 itens | 22505 bytes
+docs\releases\2025-08-24_204354-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_204354-auto\db-tables.json :: 20 itens | 6388 bytes
+docs\releases\2025-08-24_204354-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_203543-auto\todos.json :: 22 itens | 3629 bytes
+docs\releases\2025-08-24_203543-auto\symbol-index.json :: 54 itens | 15104 bytes
+docs\releases\2025-08-24_203543-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 992 bytes
+docs\releases\2025-08-24_203543-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 1832 bytes
+docs\releases\2025-08-24_203543-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_203543-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 31213 bytes
+docs\releases\2025-08-24_203543-auto\function-signatures.json :: 568 itens | 98623 bytes
+docs\releases\2025-08-24_203543-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 12565 bytes
+docs\releases\2025-08-24_203543-auto\env-usage.json :: 18 itens | 6356 bytes
+docs\releases\2025-08-24_203543-auto\endpoints-contracts.json :: 32 itens | 22505 bytes
+docs\releases\2025-08-24_203543-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_203543-auto\db-tables.json :: 20 itens | 6388 bytes
+docs\releases\2025-08-24_203543-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_202540-auto\todos.json :: 22 itens | 3629 bytes
+docs\releases\2025-08-24_202540-auto\symbol-index.json :: 54 itens | 15025 bytes
+docs\releases\2025-08-24_202540-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 992 bytes
+docs\releases\2025-08-24_202540-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 1832 bytes
+docs\releases\2025-08-24_202540-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_202540-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 31213 bytes
+docs\releases\2025-08-24_202540-auto\function-signatures.json :: 564 itens | 98094 bytes
+docs\releases\2025-08-24_202540-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/mute, GET /api/chat/mutes, POST /api/chat/unmute, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list | 12565 bytes
+docs\releases\2025-08-24_202540-auto\env-usage.json :: 18 itens | 6356 bytes
+docs\releases\2025-08-24_202540-auto\endpoints-contracts.json :: 32 itens | 22505 bytes
+docs\releases\2025-08-24_202540-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_202540-auto\db-tables.json :: 20 itens | 6388 bytes
+docs\releases\2025-08-24_202540-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_193303-auto\todos.json :: 22 itens | 3629 bytes
+docs\releases\2025-08-24_193303-auto\symbol-index.json :: 54 itens | 14886 bytes
+docs\releases\2025-08-24_193303-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 885 bytes
+docs\releases\2025-08-24_193303-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 1590 bytes
+docs\releases\2025-08-24_193303-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_193303-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 27474 bytes
+docs\releases\2025-08-24_193303-auto\function-signatures.json :: 558 itens | 97195 bytes
+docs\releases\2025-08-24_193303-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 10720 bytes
+docs\releases\2025-08-24_193303-auto\env-usage.json :: 15 itens | 5814 bytes
+docs\releases\2025-08-24_193303-auto\endpoints-contracts.json :: 29 itens | 19631 bytes
+docs\releases\2025-08-24_193303-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_193303-auto\db-tables.json :: 19 itens | 6036 bytes
+docs\releases\2025-08-24_193303-auto\data-summary.json :: 22 itens | 4876 bytes
+docs\releases\2025-08-24_192014-auto\todos.json :: 22 itens | 3629 bytes
+docs\releases\2025-08-24_192014-auto\symbol-index.json :: 54 itens | 14886 bytes
+docs\releases\2025-08-24_192014-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 885 bytes
+docs\releases\2025-08-24_192014-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 1590 bytes
+docs\releases\2025-08-24_192014-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+docs\releases\2025-08-24_192014-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 27474 bytes
+docs\releases\2025-08-24_192014-auto\function-signatures.json :: 558 itens | 97195 bytes
+docs\releases\2025-08-24_192014-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 10720 bytes
+docs\releases\2025-08-24_192014-auto\env-usage.json :: 15 itens | 5814 bytes
+docs\releases\2025-08-24_192014-auto\endpoints-contracts.json :: 29 itens | 19631 bytes
+docs\releases\2025-08-24_192014-auto\deps-graph.json :: 18 itens | 1712 bytes
+docs\releases\2025-08-24_192014-auto\db-tables.json :: 19 itens | 6036 bytes
+docs\releases\2025-08-24_192014-auto\data-summary.json :: 22 itens | 4876 bytes
 docs\releases\2025-08-24_185251-auto\todos.json :: 22 itens | 3629 bytes
 docs\releases\2025-08-24_185251-auto\symbol-index.json :: 54 itens | 14866 bytes
 docs\releases\2025-08-24_185251-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 885 bytes
@@ -1588,15 +2314,15 @@ docs\releases\2025-08-22_231259-auto\data-summary.json :: 11 itens | 2153 bytes
 docs\releases\2025-08-22_225607-auto\symbol-index.json :: 20 itens | 4494 bytes
 docs\releases\2025-08-22_225607-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 docs\releases\2025-08-22_225607-auto\data-summary.json :: 16 itens | 3803 bytes
-docs\context\todos.json :: 22 itens | 3629 bytes
-docs\context\symbol-index.json :: 54 itens | 14866 bytes
-docs\context\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 885 bytes
-docs\context\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 1740 bytes
-docs\context\openapi.json :: 3 chaves | keys: openapi, info, paths | 27329 bytes
-docs\context\function-signatures.json :: 557 itens | 97053 bytes
-docs\context\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 10720 bytes
-docs\context\env-usage.json :: 13 itens | 5020 bytes
-docs\context\endpoints-contracts.json :: 29 itens | 19781 bytes
+docs\context\todos.json :: 23 itens | 3799 bytes
+docs\context\symbol-index.json :: 54 itens | 15051 bytes
+docs\context\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 849 bytes
+docs\context\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 1560 bytes
+docs\context\openapi.json :: 3 chaves | keys: openapi, info, paths | 26852 bytes
+docs\context\function-signatures.json :: 565 itens | 98262 bytes
+docs\context\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 10546 bytes
+docs\context\env-usage.json :: 18 itens | 6190 bytes
+docs\context\endpoints-contracts.json :: 28 itens | 19274 bytes
 docs\context\deps-graph.json :: 18 itens | 1712 bytes
 docs\context\data-summary.json :: 22 itens | 4876 bytes
 docs\backups\2025-08-24_143136-post-main-e6ab269\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
@@ -1621,12 +2347,12 @@ client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kael
 == Symbol Index (amostra) ==
 client\js\api.js :: API
 client\js\app_panels.js :: jget, mkPanel, openSkills
-client\js\app.js :: appendChatRow, applyViewport, connectWS, escapeHtml, getCsrf, getInt, jget, jpost, log, makeVSplitter, mountSceneHouse, onDown, onMove, onReady, onUp, sendChat
+client\js\app.js :: __chat_onopen, appendChatRow, applyViewport, closeOld, colorFromId, connectGameWS, escapeHtml, getCsrf, getInt, jget, jpost, loadChatHistory, log, makeVSplitter, mountSceneHouse, onDown, onMessage, onMove, onUp, safeAddListener, sendChat, sendChatViaWS
 client\js\auth.js :: checkAuth
 client\js\boot.js :: closeMobileMenu, goToGameAccordingToStarter, handleLogout, setLoggedOutGlow, setLogoutVisibility, showApp, showLanding, trySession, updateHud
 client\js\dock.js :: bringToFront, clamp, createPanel, dockUndock, ensureShellBounds, loadState, makeDraggable, makeResizable, mm, mu, rect, saveState, snapInside, start
 client\js\gacha.js :: bindGachaUI, cap, closeOverlay, doSummonAPI, done, fillPanel, flash, getHeroes, getInventory, hardCloseOverlay, heroCardMarkup, init, inlineHint, keySkip, lockButtons, loopPix, openOverlay, playChestSequence, playClick, playMultiSummon, playOneSummonAndReveal, playSfx, refreshFromServer, renderHeroes, resizePix, setAgainState, setRarityBg, showErrorInOverlay, skipOnce, spawnPix, spawnSparks, startPix, startSummon, stopPix, toast, wait
-client\js\house.js :: appendChatRow, clearCanvas, connectWS, drawEntity, drawGrid, drawGround, ensureWsAuthOnConnect, escapeHtml, jget, loadImg, loop, maybeSendPos, mergeSpawns, postWithCsrf, sendChat, setStatus, startHub, startPolling, update, worldToScreen, wsAuthAndLoadHistory
+client\js\house.js :: appendChatRow, clearCanvas, connectWS, drawEntity, drawGrid, drawGround, ensureWsAuthOnConnect, escapeHtml, jget, loadImg, loop, mergeSpawns, postWithCsrf, sendChat, setStatus, startHub, startPolling, update, worldToScreen, wsAuthAndLoadHistory
 client\js\landing_fx.js :: addSpark, drawLightning, glow, imgRect, loop, resize, seed, sel, start, stop, sync
 client\js\login_fx.js :: celebrate, drawDebugCross, initLoginFx, loop, px, resize, sel, spawnBurst, spawnTick, start, stop, toCanvasXYFromChar
 client\js\play.js :: clear, drawGround, drawMob, drawPlayer, ensureImgLoaded, fetchCsrf, frame, imgReady, jget, jpost, loadImg, main, mapSpawnsFromTiledJSON, render, resolvePlayerSprite, shouldSyncPos, syncPos, update
@@ -1649,7 +2375,7 @@ docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\play.js :: clear, dra
 docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\player_profile.js :: animateProgressBars, bindProfileModal, close, fetchEquip, fetchPlayerMeOnce, fillEquip, fillHeader, fillSkillsArea, loadHeroSkills, open, paintEquipGrid, refreshAll, refreshEquip, renderHeroSkills, renderTrainBars, resolveCard
 docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\scenes\house.js :: mount
 docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\sprites.js :: drawSprite, loadImg
-(+24 arquivos em symbol-index.json)
+(+25 arquivos em symbol-index.json)
 
 == Import Graph (amostra) ==
 docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\player_profile.js -> ./api.js

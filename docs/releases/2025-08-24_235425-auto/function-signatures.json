@@ -1,7 +1,34 @@
 [
   {
     "file": "server\\index.js",
-    "line": 46,
+    "line": 41,
+    "kind": "function",
+    "name": "filterText",
+    "params": [
+      "s"
+    ]
+  },
+  {
+    "file": "server\\index.js",
+    "line": 53,
+    "kind": "function",
+    "name": "ensureTokenBucket",
+    "params": [
+      "ws"
+    ]
+  },
+  {
+    "file": "server\\index.js",
+    "line": 66,
+    "kind": "function",
+    "name": "consumeToken",
+    "params": [
+      "ws"
+    ]
+  },
+  {
+    "file": "server\\index.js",
+    "line": 87,
     "kind": "arrow",
     "name": "dbGet",
     "params": [
@@ -11,7 +38,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 47,
+    "line": 88,
     "kind": "arrow",
     "name": "dbAll",
     "params": [
@@ -21,7 +48,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 48,
+    "line": 89,
     "kind": "arrow",
     "name": "dbRun",
     "params": [
@@ -31,7 +58,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 131,
+    "line": 172,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -40,7 +67,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 355,
+    "line": 396,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -49,25 +76,17 @@
   },
   {
     "file": "server\\index.js",
-    "line": 414,
+    "line": 462,
     "kind": "function",
-    "name": "setupRedis",
+    "name": "broadcast",
     "params": [
-      "wss"
+      "payload",
+      "opts = {}"
     ]
   },
   {
     "file": "server\\index.js",
-    "line": 443,
-    "kind": "function",
-    "name": "parseCookies",
-    "params": [
-      "cookieHeader = ''"
-    ]
-  },
-  {
-    "file": "server\\index.js",
-    "line": 594,
+    "line": 574,
     "kind": "function",
     "name": "trainingTick",
     "params": []
@@ -577,7 +596,7 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 17,
+    "line": 62,
     "kind": "arrow",
     "name": "all",
     "params": [
@@ -587,7 +606,7 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 18,
+    "line": 63,
     "kind": "arrow",
     "name": "get",
     "params": [
@@ -597,7 +616,7 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 19,
+    "line": 64,
     "kind": "arrow",
     "name": "run",
     "params": [
@@ -4008,21 +4027,14 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 181,
-    "kind": "function",
-    "name": "maybeSendPos",
-    "params": []
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 189,
+    "line": 170,
     "kind": "function",
     "name": "startPolling",
     "params": []
   },
   {
     "file": "client\\js\\house.js",
-    "line": 200,
+    "line": 181,
     "kind": "function",
     "name": "mergeSpawns",
     "params": [
@@ -4031,7 +4043,7 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 233,
+    "line": 214,
     "kind": "function",
     "name": "loop",
     "params": [
@@ -4040,14 +4052,14 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 247,
+    "line": 228,
     "kind": "function",
     "name": "startHub",
     "params": []
   },
   {
     "file": "client\\js\\house.js",
-    "line": 315,
+    "line": 296,
     "kind": "function",
     "name": "appendChatRow",
     "params": [
@@ -4056,7 +4068,7 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 325,
+    "line": 306,
     "kind": "function",
     "name": "escapeHtml",
     "params": [
@@ -4065,21 +4077,21 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 330,
+    "line": 311,
     "kind": "function",
     "name": "wsAuthAndLoadHistory",
     "params": []
   },
   {
     "file": "client\\js\\house.js",
-    "line": 349,
+    "line": 330,
     "kind": "function",
     "name": "sendChat",
     "params": []
   },
   {
     "file": "client\\js\\house.js",
-    "line": 385,
+    "line": 366,
     "kind": "function",
     "name": "ensureWsAuthOnConnect",
     "params": []
@@ -4769,16 +4781,59 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 153,
+    "line": 162,
     "kind": "function",
-    "name": "onReady",
+    "name": "safeAddListener",
     "params": [
-      "fn"
+      "selectorOrNode",
+      "event",
+      "handler"
     ]
   },
   {
     "file": "client\\js\\app.js",
-    "line": 172,
+    "line": 179,
+    "kind": "function",
+    "name": "onMessage",
+    "params": [
+      "evt"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 190,
+    "kind": "function",
+    "name": "closeOld",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 199,
+    "kind": "function",
+    "name": "connectGameWS",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 220,
+    "kind": "function",
+    "name": "sendChatViaWS",
+    "params": [
+      "payload"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 235,
+    "kind": "function",
+    "name": "loadChatHistory",
+    "params": [
+      "limit = 200"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 270,
     "kind": "function",
     "name": "log",
     "params": [
@@ -4787,14 +4842,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 174,
-    "kind": "function",
-    "name": "connectWS",
-    "params": []
-  },
-  {
-    "file": "client\\js\\app.js",
-    "line": 219,
+    "line": 271,
     "kind": "function",
     "name": "escapeHtml",
     "params": [
@@ -4803,7 +4851,16 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 220,
+    "line": 272,
+    "kind": "function",
+    "name": "colorFromId",
+    "params": [
+      "id"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 275,
     "kind": "function",
     "name": "appendChatRow",
     "params": [
@@ -4812,7 +4869,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 230,
+    "line": 345,
+    "kind": "function",
+    "name": "__chat_onopen",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 379,
     "kind": "function",
     "name": "sendChat",
     "params": []

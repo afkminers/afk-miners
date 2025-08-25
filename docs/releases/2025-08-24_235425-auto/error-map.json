@@ -251,16 +251,6 @@
       "body": "{error:err.message }"
     }
   ],
-  "GET /api/chat/global": [
-    {
-      "status": 500,
-      "body": "{error:err.message }"
-    },
-    {
-      "status": 500,
-      "body": "{error:err.message }"
-    }
-  ],
   "GET /api/csrf": [
     {
       "status": 400,

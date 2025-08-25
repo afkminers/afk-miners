@@ -7,7 +7,6 @@
   "POST /api/admin/content/reload-map": "no-tag",
   "GET /api/assets/items": "no-tag",
   "GET /api/assets/sprites": "no-tag",
-  "GET /api/chat/global": "no-tag",
   "GET /api/csrf": "no-tag",
   "GET /assets/items": "no-tag",
   "GET /assets/sprites": "no-tag",

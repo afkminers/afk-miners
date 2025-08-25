@@ -157,12 +157,31 @@ function update(dt) {
 const USE_WS = true; // marque false se não quiser ws
 let ws = null;
 function connectWS() {
-  if (typeof window.connectGameWS !== 'function') {
-    console.warn('[ws] global connectGameWS not present');
-    return;
-  }
-  // reuse global ws: do not create new socket or add duplicate listeners
-  window.connectGameWS();
+  if (!USE_WS) return;
+  try {
+    ws = new WebSocket((location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws');
+    ws.onopen = () => setStatus('WS conectado');
+    ws.onmessage = (evt) => {
+      try {
+        const d = JSON.parse(evt.data);
+        if (d.type === 'pos' && d.id !== player.id) {
+          // upsert remote player
+          let p = entities.find(x=>x.id===d.id && x.type==='player_remote');
+          if (!p) {
+            p = { id: d.id, type:'player_remote', x:d.x, y:d.y, w:28, h:40, name: d.name||'Player', hp:100, maxHp:100 };
+            entities.push(p);
+          } else { p.x = d.x; p.y = d.y; }
+        }
+      } catch(e) {}
+    };
+    ws.onclose = () => setStatus('WS desconectado (fallback polling)');
+    ws.onerror = () => {};
+  } catch(e) { console.warn('ws error', e); }
+}
+function maybeSendPos() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  const payload = { type:'pos', id: player.id, x: Math.round(player.x), y: Math.round(player.y), name: player.name };
+  ws.send(JSON.stringify(payload));
 }
 
 // fallback polling to refresh spawns/remote players if no WS

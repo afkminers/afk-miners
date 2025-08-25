@@ -16,22 +16,28 @@
   {
     "file": "client\\js\\app.js",
     "symbols": [
+      "__chat_onopen",
       "appendChatRow",
       "applyViewport",
-      "connectWS",
+      "closeOld",
+      "colorFromId",
+      "connectGameWS",
       "escapeHtml",
       "getCsrf",
       "getInt",
       "jget",
       "jpost",
+      "loadChatHistory",
       "log",
       "makeVSplitter",
       "mountSceneHouse",
       "onDown",
+      "onMessage",
       "onMove",
-      "onReady",
       "onUp",
-      "sendChat"
+      "safeAddListener",
+      "sendChat",
+      "sendChatViaWS"
     ]
   },
   {
@@ -128,7 +134,6 @@
       "jget",
       "loadImg",
       "loop",
-      "maybeSendPos",
       "mergeSpawns",
       "postWithCsrf",
       "sendChat",
@@ -659,11 +664,19 @@
   {
     "file": "server\\index.js",
     "symbols": [
-      "parseCookies",
+      "broadcast",
+      "consumeToken",
+      "ensureTokenBucket",
+      "filterText",
       "resolveSkillType",
       "safeParse",
-      "setupRedis",
       "trainingTick"
+    ]
+  },
+  {
+    "file": "server\\models\\db.js",
+    "symbols": [
+      "TEXT"
     ]
   },
   {

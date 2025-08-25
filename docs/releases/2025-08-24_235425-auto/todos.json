@@ -1,5 +1,10 @@
 [
   {
+    "file": "server\\index.js",
+    "line": 524,
+    "text": "// broadcast para todos (inclui o remetente). Para excluir remetente, passe { excludeId: ws._id }"
+  },
+  {
     "file": "server\\scripts\\gen-context.js",
     "line": 14,
     "text": "// - todos.json                    (NOVO)"

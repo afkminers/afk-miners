@@ -38,29 +38,6 @@ export async function mount({ canvas, hud, params } = {}){
     unmount(){
       try{ mod.destroy?.(); }catch{}
       if (originalId) canvas.id = originalId; else canvas.removeAttribute('id');
-    },
-    // expose a snapshot helper for the mini-map (best-effort, tolerant)
-    getSnapshot() {
-      try {
-        // prefer explicit API from play.js
-        if (typeof mod.getSnapshot === 'function') return mod.getSnapshot();
-
-        // try common property names used by simple engines
-        const mapW = mod.mapWidth || mod.map?.width || (mod.state && mod.state.mapWidth) || 1024;
-        const mapH = mod.mapHeight || mod.map?.height || (mod.state && mod.state.mapHeight) || 768;
-
-        const player = {
-          x: (mod.player && (mod.player.x ?? mod.player.posX)) ?? (mod.hero && (mod.hero.x ?? mod.hero.posX)) ?? (mod.state && mod.state.player && (mod.state.player.x ?? mod.state.player.posX)) ?? 0,
-          y: (mod.player && (mod.player.y ?? mod.player.posY)) ?? (mod.hero && (mod.hero.y ?? mod.hero.posY)) ?? (mod.state && mod.state.player && (mod.state.player.y ?? mod.state.player.posY)) ?? 0
-        };
-
-        const rawEntities = mod.entities || mod.actors || mod.state?.entities || [];
-        const entities = Array.isArray(rawEntities) ? rawEntities.map(e => ({ x: e.x||0, y: e.y||0, color: e.color || '#ff4d4d' })) : [];
-
-        return { mapW, mapH, player, entities };
-      } catch (e) {
-        return null;
-      }
     }
   };
 }

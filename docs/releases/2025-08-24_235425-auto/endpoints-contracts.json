@@ -3,7 +3,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 331,
+    "line": 372,
     "sample": {
       "params": {
         "key": "value"
@@ -45,7 +45,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 308,
+    "line": 349,
     "sample": {
       "params": {
         "key": "value"
@@ -95,7 +95,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 319,
+    "line": 360,
     "sample": {
       "params": {
         "key": "value"
@@ -141,7 +141,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 301,
+    "line": 342,
     "sample": {
       "query": {
         "map": "value"
@@ -192,7 +192,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 279,
+    "line": 320,
     "sample": {
       "query": {
         "map": "value"
@@ -255,7 +255,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 377,
+    "line": 418,
     "sample": {},
     "errors": [
       {
@@ -268,7 +268,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 344,
+    "line": 385,
     "sample": {
       "query": {
         "map": "value"
@@ -295,7 +295,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 286,
+    "line": 327,
     "sample": {
       "query": {
         "map": "value"
@@ -354,7 +354,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 293,
+    "line": 334,
     "sample": {
       "query": {
         "map": "value"
@@ -407,30 +407,9 @@
   },
   {
     "method": "GET",
-    "path": "/api/chat/global",
-    "file": "server\\index.js",
-    "line": 657,
-    "sample": {
-      "query": {
-        "limit": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      }
-    ]
-  },
-  {
-    "method": "GET",
     "path": "/api/csrf",
     "file": "server\\index.js",
-    "line": 39,
+    "line": 80,
     "sample": {
       "body": {
         "try {\n    const { heroId": 1,
@@ -574,7 +553,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 361,
+    "line": 402,
     "sample": {},
     "errors": [
       {

@@ -21,7 +21,6 @@
   "GET /api/assets/sprites": [
     "{ok:true,reloaded:mapKey }"
   ],
-  "GET /api/chat/global": [],
   "GET /api/csrf": [
     "{ok:true,message:'Training started',heroId,skillType }",
     "{ok:true,message:'No active session' }"

@@ -27,47 +27,6 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const PORT = Number(process.env.PORT || 3000);
 const CLIENT_ROOT_DIR = path.join(__dirname, '..', 'client');
 const WORKER_TICK_SECONDS = Number(process.env.WORKER_TICK_SECONDS || 3);
-const { randomUUID } = require('crypto');
-const { get, run, all } = require('./models/db'); // usa os mesmos helpers do routes.js
-// Chat moderation / rate-limit config
-const RATE_TOKENS_PER_SEC = Number(process.env.CHAT_TOKENS_PER_SEC || 2);
-const RATE_BURST = Number(process.env.CHAT_RATE_BURST || 4);
-const BANNED_WORDS = (process.env.BANNED_WORDS || 'badword1,badword2').split(',').map(s => s.trim()).filter(Boolean);
-
-// in-memory fallback (mantido apenas como cache)
-const mutedCache = new Map();
-
-// simple filter
-function filterText(s) {
-  if (!s) return s;
-  let out = String(s);
-  for (const w of BANNED_WORDS) {
-    if (!w) continue;
-    const re = new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'ig');
-    out = out.replace(re, '***');
-  }
-  return out;
-}
-
-// token-bucket helpers
-function ensureTokenBucket(ws) {
-  if (!ws._tokens) {
-    ws._tokens = RATE_BURST;
-    ws._lastRefill = Date.now();
-  } else {
-    const now = Date.now();
-    const delta = (now - (ws._lastRefill || now)) / 1000;
-    if (delta > 0) {
-      ws._tokens = Math.min(RATE_BURST, (ws._tokens || 0) + delta * RATE_TOKENS_PER_SEC);
-      ws._lastRefill = now;
-    }
-  }
-}
-function consumeToken(ws) {
-  ensureTokenBucket(ws);
-  if ((ws._tokens || 0) >= 1) { ws._tokens -= 1; return true; }
-  return false;
-}
 
 // ========= APP =========
 const app = express();
@@ -426,135 +385,196 @@ app.get('/api/admin/content/monsters', requireAuth, (req, res) => {
 
 // WebSocket minimal server (optional)
 const http = require('http').createServer(app);
-const WebSocket = require('ws');
-const crypto = require('crypto');
 
-// create or reuse single WSS in noServer mode and attach a single upgrade handler
-if (!global.__AFKMINERS_WSS__) {
-  const _wss = new WebSocket.Server({ noServer: true });
-  global.__AFKMINERS_WSS__ = _wss;
-
-  http.on('upgrade', (req, socket, head) => {
-    try {
-      // accept only the expected WS path
-      if (!req.url || !req.url.startsWith('/ws')) {
-        socket.destroy();
-        return;
-      }
-      _wss.handleUpgrade(req, socket, head, (ws) => {
-        _wss.emit('connection', ws, req);
-      });
-    } catch (err) {
-      console.warn('[ws] upgrade error', err && err.message);
-      try { socket.destroy(); } catch(e) {}
-    }
-  });
-
-  console.log('[ws] created WSS (noServer) and attached single upgrade handler for /ws');
-} else {
-  console.log('[ws] reused existing WSS');
+// try to load ws optionally so server won't crash if it's not installed
+let WebSocketLib = null;
+let useWebSocket = false;
+try {
+  WebSocketLib = require('ws');
+  useWebSocket = !!WebSocketLib && !!WebSocketLib.Server;
+  if (!useWebSocket) console.warn('[ws] package loaded but Server not available');
+} catch (err) {
+  console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run `npm install ws` to enable.');
+  WebSocketLib = null;
+  useWebSocket = false;
 }
 
-const wss = global.__AFKMINERS_WSS__;
-const useWebSocket = !!wss; // fix: define useWebSocket before using in listen message
+// Consolidated: jwt, redis, crypto and Redis helpers (single declaration)
+const jwt = require('jsonwebtoken');
+const { createClient } = require('redis');
+const crypto = require('crypto');
 
-// debug-friendly broadcast — logs quem recebeu
-function broadcast(payload, opts = {}) {
+const REDIS_URL = process.env.REDIS_URL || null; // ex: redis://127.0.0.1:6379
+const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
+const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'token'; // ajuste se seu cookie tiver outro nome
+
+let redisPub = null;
+let redisSub = null;
+
+async function setupRedis(wss) {
+  if (!REDIS_URL) {
+    console.log('[redis] REDIS_URL not set — running without Redis pub/sub (single-instance)');
+    return;
+  }
   try {
-    const data = JSON.stringify(payload);
-    const clients = Array.from(wss.clients || []);
-    let sent = 0;
-    for (const c of clients) {
-      if (!c || c.readyState !== WebSocket.OPEN) continue;
-      // se opts.excludeId estiver definido, não envia para esse cliente
-      if (opts.excludeId && c._id === opts.excludeId) continue;
-      try { c.send(data); sent++; } catch (e) { /* ignore individual send errors */ }
-    }
-    console.log(`[ws] broadcast type=${payload.type} to=${sent}/${clients.length} clients`);
+    redisPub = createClient({ url: REDIS_URL });
+    redisSub = redisPub.duplicate();
+    await redisPub.connect();
+    await redisSub.connect();
+    await redisSub.subscribe('chat:global', (message) => {
+      try {
+        const obj = JSON.parse(message);
+        const out = JSON.stringify(obj);
+        wss.clients.forEach(c => {
+          if (c && c.readyState === WebSocket.OPEN) {
+            try { c.send(out); } catch (e) { /* ignore */ }
+          }
+        });
+      } catch (e) { console.warn('[redis] bad pubsub message', e?.message); }
+    });
+    console.log('[redis] connected and subscribed to chat:global');
   } catch (e) {
-    console.warn('[ws] broadcast error', e && e.message);
+    console.warn('[redis] failed to connect — continuing without Redis', e?.message);
+    redisPub = null; redisSub = null;
   }
 }
 
-// attach single connection handler once
-if (!wss._hasConnectionHandler) {
+// helper: parse cookies from header
+function parseCookies(cookieHeader = '') {
+  return Object.fromEntries(
+    (cookieHeader || '').split(';').map(s => {
+      const idx = s.indexOf('=');
+      if (idx === -1) return [];
+      const k = s.slice(0, idx).trim();
+      const v = s.slice(idx + 1).trim();
+      return [k, decodeURIComponent(v)];
+    }).filter(Boolean)
+  );
+}
+
+if (useWebSocket) {
+  const wss = new WebSocketLib.Server({ server: http, path: '/ws' });
+
+  // inicializa redis (se configurado)
+  setupRedis(wss).catch(() => { /* ignore */ });
+
+  const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
+
   wss.on('connection', (ws, req) => {
-    ws._id = randomUUID();
-    const remote = req.socket.remoteAddress || 'unknown';
-    console.log(`[ws] connection ${ws._id} from ${remote} — clients=${wss.clients.size}`);
+    const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+    console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
 
-    ws.isAlive = true;
-    ws.on('pong', () => { ws.isAlive = true; });
+    // DEBUG: log cookies header (remova em produção se preferir)
+    console.log('[ws] cookies header:', req.headers && req.headers.cookie);
 
-    ws.on('message', (raw) => {
-      let msg;
-      try { msg = JSON.parse(String(raw)); } catch (e) { return; }
+    ws._connectedAt = Date.now();
+    ws._player = null;
 
-      // debug log every incoming message with connection id
-      console.log(`[ws recv] conn=${ws._id}`, msg && msg.type);
+    // try validate JWT from cookie immediately (so explicit handshake not required)
+    try {
+      const cookies = parseCookies(req.headers.cookie || '');
+      const token = cookies[COOKIE_NAME] || null;
+      if (token) {
+        try {
+          const payload = jwt.verify(token, JWT_SECRET);
+          ws._player = { id: String(payload.id || payload.playerId || ''), name: String(payload.name || payload.username || payload.displayName || 'Anon') };
+          console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
+        } catch (err) {
+          console.log('[ws] jwt verify failed', err && err.message);
+        }
+      }
+    } catch (e) {
+      console.warn('[ws] cookie parse error', e && e.message);
+    }
 
-      if (msg.type === 'auth') {
-        ws.user = { id: msg.id || null, name: msg.name || null };
+    ws.on('message', async (msg) => {
+      let data;
+      try { data = JSON.parse(msg.toString()); } catch (err) { console.warn('[ws] malformed json from', addr); return; }
+
+      if (data.type === 'auth') {
+        ws._player = { id: String(data.id || ''), name: String(data.name || 'Anonymous') };
+        console.log(`[ws] auth from ${addr} => id=${ws._player.id} name=${ws._player.name}`);
+        try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
         return;
       }
 
-      if (msg.type === 'chat') {
-        // opcional: rate-limit / filter (descomente se quiser)
-        // if (!consumeToken(ws)) { try { ws.send(JSON.stringify({ type: 'error', reason: 'rate_limited' })); } catch (e){}; return; }
-        const id = msg.id || randomUUID();
+      if (data.type === 'chat') {
+        if (!ws._player) {
+          console.warn('[ws] received chat from unauthenticated socket — ignoring');
+          try { ws.send(JSON.stringify({ type:'error', message:'not-authenticated' })); } catch {}
+          return;
+        }
+        const scope = String(data.scope || 'global').toLowerCase();
+        const raw = String(data.text || '').trim().slice(0, 800);
+        if (!raw) return;
+
+        console.log(`[chat] from=${ws._player.id} scope=${scope} text="${raw}"`);
+
+        // persist if db available
+        try {
+          if (scope === 'global' && typeof db !== 'undefined' && db && db.run) {
+            db.run('INSERT INTO chat_messages(scope, fromId, fromName, text) VALUES (?,?,?,?)', ['global', ws._player.id, ws._player.name, raw], function (err) {
+              if (err) console.warn('[chat] persist error', err && err.message);
+            });
+          }
+        } catch (e) { /* ignore db errors */ }
+
         const out = {
           type: 'chat',
-          id,
-          text: filterText(String(msg.text || '')),
-          from: msg.from || (ws.user && ws.user.name) || 'anon',
-          senderId: msg.senderId || (ws.user && ws.user.id) || null,
-          senderConnId: ws._id,
-          timestamp: msg.timestamp || Date.now()
+          scope,
+          fromId: ws._player.id,
+          fromName: ws._player.name,
+          text: raw,
+          ts: Date.now(),
+          origin: instanceId
         };
 
-        // persistir (não bloqueante)
-        try {
-          db.run(
-            `INSERT INTO chat_messages (scope, fromId, fromName, text) VALUES (?, ?, ?, ?)`,
-            ['global', out.senderId, out.from, out.text],
-            () => {}
-          );
-        } catch (e) { /* ignore persistence errors */ }
-
-        // broadcast para todos (inclui o remetente). Para excluir remetente, passe { excludeId: ws._id }
-        broadcast(out);
-
+        if (redisPub) {
+          try {
+            await redisPub.publish('chat:global', JSON.stringify(out));
+          } catch (e) {
+            console.warn('[redis] publish failed', e && e.message);
+            const outStr = JSON.stringify(out);
+            wss.clients.forEach(c => {
+              if (c && c.readyState === WebSocket.OPEN) {
+                try { c.send(outStr); } catch (e) {}
+              }
+            });
+          }
+        } else {
+          const outStr = JSON.stringify(out);
+          wss.clients.forEach(c => {
+            if (c && c.readyState === WebSocket.OPEN) {
+              try { c.send(outStr); } catch (e) {}
+            }
+          });
+        }
         return;
       }
 
-      if (msg.type === 'typing') {
-        broadcast({ type: 'typing', from: msg.from || (ws.user && ws.user.name) || 'anon', senderConnId: ws._id }, { excludeId: ws._id });
+      // pos handling (se já existir)
+      if (data.type === 'pos') {
+        const out = { type:'pos', id:String(data.id||''), x:Number(data.x||0), y:Number(data.y||0), name:String(data.name||'') };
+        wss.clients.forEach(c => {
+          if (c !== ws && c.readyState === WebSocket.OPEN) {
+            try { c.send(JSON.stringify(out)); } catch(e) {}
+          }
+        });
       }
     });
 
     ws.on('close', () => {
-      console.log(`[ws] close ${ws._id} from ${remote} — clients=${wss.clients.size}`);
+      console.log(`[ws] close from ${addr} — clients=${wss.clients.size}`);
     });
 
     ws.on('error', (err) => {
-      console.warn('[ws] error', err && err.message);
+      console.warn('[ws] socket error', err && err.message);
     });
   });
-
-  wss._hasConnectionHandler = true;
-
-  // ping/pong prune
-  setInterval(() => {
-    wss.clients.forEach((c) => {
-      if (!c) return;
-      if (c.isAlive === false) return c.terminate();
-      c.isAlive = false;
-      try { c.ping(); } catch (e) {}
-    });
-  }, 30000);
 }
 
-// ensure DB helpers available
+// ...existing code...
+
 http.listen(PORT, () => console.log(`server listening on ${PORT} ${useWebSocket ? '(ws enabled)' : '(ws disabled)'}`));
 
 // ========= START =========
@@ -591,44 +611,62 @@ http.listen(PORT, () => console.log(`server listening on ${PORT} ${useWebSocket 
       const now = Date.now();
 
       for (const t of running) {
-        const last = Date.parse(t.last_tick_at || t.started_at || new Date().toISOString());
-        let delta = Math.max(0, Math.floor((now - last) / 1000));
+        const last  = Date.parse(t.last_tick_at || t.started_at || new Date().toISOString());
+        let delta   = Math.max(0, Math.floor((now - last)/1000));
         if (delta <= 0) continue;
 
-        const sessLeft = Math.max(0, K.MAX_SESSION_SECONDS - (t.session_seconds || 0));
-        const dayLeft = Math.max(0, K.DAILY_TRAIN_CAP_SECONDS - (t.daily_seconds || 0));
-        let allowed = Math.min(delta, sessLeft, dayLeft);
+        const sessLeft = Math.max(0, K.MAX_SESSION_SECONDS     - (t.session_seconds || 0));
+        const dayLeft  = Math.max(0, K.DAILY_TRAIN_CAP_SECONDS - (t.daily_seconds   || 0));
+        let allowed    = Math.min(delta, sessLeft, dayLeft);
 
         const energySec = Math.floor(((t.energy_current || 0) / K.ENERGY_PER_MIN_WHEN_TRAINING) * 60);
         allowed = Math.min(allowed, energySec);
-        if (allowed <= 0) continue;
+        if (allowed <= 0) {
+          await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
+          continue;
+        }
 
-        // calcula ganho de stamina (sem limite de tries)
-        const gain = Math.floor(allowed * K.STAMINA_GAIN_PER_SEC_WHEN_TRAINING);
-        await dbRun(
-          `UPDATE heroes
-              SET stamina_current = COALESCE(stamina_current,0) + ?,
-                  stamina_last_gain = ?
-            WHERE id = ?`,
-          [gain, new Date(now).toISOString(), t.hero_id]
-        );
+        const newLast   = new Date(last + allowed*1000).toISOString();
+        const energyUse = K.ENERGY_PER_MIN_WHEN_TRAINING * (allowed/60);
+        const newEnergy = Math.max(0, (t.energy_current || 0) - energyUse);
 
-        // atualiza apenas o tempo da sessão ativa
         await dbRun(
           `UPDATE hero_training
-              SET last_tick_at=?, session_seconds=COALESCE(session_seconds,0)+?
+              SET last_tick_at=?,
+                  session_seconds=COALESCE(session_seconds,0)+?,
+                  daily_seconds=COALESCE(daily_seconds,0)+?,
+                  energy_current=?,
+                  energy_spent=COALESCE(energy_spent,0)+?
             WHERE hero_id=?`,
-          [new Date(now).toISOString(), allowed, t.hero_id]
+          [newLast, allowed, allowed, newEnergy, energyUse, t.hero_id]
         );
+
+        if (newEnergy <= 0 || allowed < delta || allowed === sessLeft || allowed === dayLeft) {
+          await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
+        }
       }
-    } catch (e) {
-      console.error('[worker]', e);
+    } catch (err) {
+      console.error('[worker] tick error:', err.message);
     }
   }
 
-  // tick do worker (stamina/limites)
   setInterval(trainingTick, WORKER_TICK_SECONDS * 1000);
 })();
 
-
-
+// rota para obter histórico global (últimas N mensagens)
+app.get('/api/chat/global', requireAuth, async (req, res) => {
+  try {
+    const limit = Math.min(200, Number(req.query.limit || 100));
+    db.all(
+      'SELECT id, scope, fromId, fromName, text, created_at FROM chat_messages WHERE scope=? ORDER BY id DESC LIMIT ?',
+      ['global', limit],
+      (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        // retornar em ordem cronológica asc
+        res.json(rows.reverse());
+      }
+    );
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});

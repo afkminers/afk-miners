@@ -380,35 +380,6 @@
         ]
       }
     },
-    "/api/chat/global": {
-      "get": {
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "number"
-            }
-          }
-        ]
-      }
-    },
     "/api/csrf": {
       "get": {
         "responses": {

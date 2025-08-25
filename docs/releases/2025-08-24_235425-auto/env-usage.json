@@ -1,5 +1,41 @@
 [
   {
+    "key": "BANNED_WORDS",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 1505
+      }
+    ],
+    "defaults": [
+      "badword1,badword2"
+    ]
+  },
+  {
+    "key": "CHAT_RATE_BURST",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 1447
+      }
+    ],
+    "defaults": [
+      "4"
+    ]
+  },
+  {
+    "key": "CHAT_TOKENS_PER_SEC",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 1381
+      }
+    ],
+    "defaults": [
+      "2"
+    ]
+  },
+  {
     "key": "CONTENT_PIPELINE",
     "occurrences": [
       {
@@ -163,12 +199,20 @@
     "defaults": []
   },
   {
-    "key": "JWT_SECRET",
+    "key": "DB_PATH",
     "occurrences": [
       {
-        "file": "server\\index.js",
-        "index": 14527
-      },
+        "file": "server\\models\\db.js",
+        "index": 188
+      }
+    ],
+    "defaults": [
+      "path.join(process.cwd("
+    ]
+  },
+  {
+    "key": "JWT_SECRET",
+    "occurrences": [
       {
         "file": "server\\auth\\routes.js",
         "index": 3145
@@ -183,7 +227,6 @@
       }
     ],
     "defaults": [
-      "changeme",
       "CHANGE_ME_DEV_ONLY",
       "CHANGE_ME_DEV_ONLY"
     ]
@@ -241,31 +284,14 @@
     ]
   },
   {
-    "key": "REDIS_URL",
-    "occurrences": [
-      {
-        "file": "server\\index.js",
-        "index": 14446
-      }
-    ],
-    "defaults": [
-      "null"
-    ]
-  },
-  {
     "key": "SESSION_COOKIE_NAME",
     "occurrences": [
-      {
-        "file": "server\\index.js",
-        "index": 14586
-      },
       {
         "file": "server\\auth\\routes.js",
         "index": 3289
       }
     ],
     "defaults": [
-      "token",
       "token"
     ]
   },
