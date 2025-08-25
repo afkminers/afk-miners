@@ -427,6 +427,22 @@ app.get('/api/admin/content/monsters', requireAuth, (req, res) => {
 // WebSocket minimal server (optional)
 const http = require('http').createServer(app);
 
+// adiciona WebSocket server ligado ao http já criado
+const WebSocket = require('ws');
+
+// create or reuse a single WSS to avoid duplicate upgrade handling
+let wss = global.__WSS_SERVER__;
+if (!wss) {
+    wss = new WebSocket.Server({ server: http }); // attach to existing HTTP server
+    global.__WSS_SERVER__ = wss;
+    console.log('[ws] created WSS and attached to http server');
+} else {
+    console.log('[ws] reused existing WSS');
+}
+
+// debug: quantos listeners de "upgrade" o http tem (0/1 desejável)
+try { console.log('[ws] http upgrade listeners:', http.listeners('upgrade')?.length || 0); } catch(e){}
+
 // try to load ws optionally so server won't crash if it's not installed
 let WebSocketLib = null;
 let useWebSocket = false;
@@ -781,7 +797,7 @@ wss.on('connection', (ws, req) => {
   ws._connectedAt = Date.now();
   ws._player = null;
 
-  // try validate JWT from cookie immediately (so explicit handshake not required)
+  // try validate JWT from cookie imediatamente (sem necessidade de handshake explícito)
   try {
     const cookies = parseCookies(req.headers.cookie || '');
     const token = cookies[COOKIE_NAME] || null;
