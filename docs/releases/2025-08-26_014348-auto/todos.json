@@ -1,0 +1,157 @@
+[
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "line": 14,
+    "text": "// - todos.json                    (NOVO)"
+  },
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "line": 334,
+    "text": "// TODO/FIXME"
+  },
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "line": 335,
+    "text": "function scanTodos(){"
+  },
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "line": 342,
+    "text": "if(/TODO|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
+  },
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "line": 600,
+    "text": "// TODOs"
+  },
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "line": 601,
+    "text": "const todos = scanTodos();"
+  },
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "line": 623,
+    "text": "fs.writeFileSync(path.join(CTX_DIR,'todos.json'),               JSON.stringify(todos,null,2));"
+  },
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "line": 671,
+    "text": "console.log('OK: v6 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi');"
+  },
+  {
+    "file": "server\\balance\\config.js",
+    "line": 2,
+    "text": "// Todos os knobs ficam aqui. Troque números aqui e o jogo inteiro acompanha."
+  },
+  {
+    "file": "docs\\releases\\2025-08-23_001936-auto\\API.md",
+    "line": 183,
+    "text": "## TODO / FIXME"
+  },
+  {
+    "file": "docs\\releases\\2025-08-23_001936-auto\\API.md",
+    "line": 185,
+    "text": "- server\\scripts\\gen-context.js:366 — TODO: /FIXME scanner"
+  },
+  {
+    "file": "docs\\releases\\2025-08-23_001936-auto\\API.md",
+    "line": 186,
+    "text": "- server\\scripts\\gen-context.js:508 — TODO: /FIXME"
+  },
+  {
+    "file": "docs\\releases\\2025-08-23_001936-auto\\API.md",
+    "line": 187,
+    "text": "- server\\scripts\\gen-context.js:509 — TODO: / FIXME');"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
+    "line": 14,
+    "text": "// - todos.json                    (NOVO)"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
+    "line": 334,
+    "text": "// TODO/FIXME"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
+    "line": 335,
+    "text": "function scanTodos(){"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
+    "line": 342,
+    "text": "if(/TODO|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
+    "line": 600,
+    "text": "// TODOs"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
+    "line": 601,
+    "text": "const todos = scanTodos();"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
+    "line": 623,
+    "text": "fs.writeFileSync(path.join(CTX_DIR,'todos.json'),               JSON.stringify(todos,null,2));"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
+    "line": 671,
+    "text": "console.log('OK: v6 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi');"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\balance\\config.js",
+    "line": 2,
+    "text": "// Todos os knobs ficam aqui. Troque números aqui e o jogo inteiro acompanha."
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
+    "line": 14,
+    "text": "// - todos.json                    (NOVO)"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
+    "line": 334,
+    "text": "// TODO/FIXME"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
+    "line": 335,
+    "text": "function scanTodos(){"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
+    "line": 342,
+    "text": "if(/TODO|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
+    "line": 600,
+    "text": "// TODOs"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
+    "line": 601,
+    "text": "const todos = scanTodos();"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
+    "line": 623,
+    "text": "fs.writeFileSync(path.join(CTX_DIR,'todos.json'),               JSON.stringify(todos,null,2));"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
+    "line": 671,
+    "text": "console.log('OK: v6 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi');"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\balance\\config.js",
+    "line": 2,
+    "text": "// Todos os knobs ficam aqui. Troque números aqui e o jogo inteiro acompanha."
+  }
+]
