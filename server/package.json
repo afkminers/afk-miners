@@ -12,7 +12,7 @@
     "git:push": "git push origin main",
     "deploy": "npm run git:add && npm run git:commit && npm run git:push",
     "db:drop": "if exist db\\database.sqlite del /Q db\\database.sqlite",
-    "db:migrate": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/000_core_auth.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001_skills.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001a_hero_training.sql\"",
+    "db:migrate": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/000_core_auth.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001_skills.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001a_hero_training.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/002_afk.sql\"",
     "db:seed": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/001_skill_maps.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/002_skill_curves.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/003_class_skill_rates.sql\"",
     "db:tables": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".tables\"",
     "db:info": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".schema\"",

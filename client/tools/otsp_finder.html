@@ -1,0 +1,90 @@
+<!DOCTYPE html><meta charset="utf-8">
+<title>OTSP Finder</title>
+<style>
+  body{background:#111;color:#ddd;font:14px/1.4 monospace;margin:12px}
+  #c{image-rendering: pixelated; border:1px solid #333; display:block; margin:8px 0}
+  .row{margin:6px 0}
+  select,input,button{font:inherit}
+  .err{color:#ff6b6b}
+</style>
+
+<div class="row">
+  Folha:
+  <select id="sheet"></select>
+  | Índice: <span id="idx">0</span>
+  | Q/E para -/+ índice, clique na folha para pegar índice
+</div>
+<canvas id="c" width="512" height="512"></canvas>
+<div id="msg" class="err"></div>
+
+<script>
+// ==== helpers sem import ====
+function loadImage(src){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.onload = ()=>resolve(img);
+    img.onerror = (e)=>reject(new Error('Falha ao carregar: '+src));
+    img.src = src;
+  });
+}
+class SpriteSheet32{
+  constructor(img,tile=32){ this.img=img; this.tile=tile; this.cols=img.width/tile; }
+}
+
+// IMPORTANTE: este HTML deve estar em client/tools/
+// Então as folhas ficam em ../sprites/otsp/...
+const SHEETS = [
+  '../sprites/otsp/otsp_creatures_01.png',
+  '../sprites/otsp/otsp_creatures_02.png',
+  '../sprites/otsp/otsp_creatures_03.png',
+  '../sprites/otsp/otsp_creatures_04.png',
+];
+
+const sel = document.getElementById('sheet');
+SHEETS.forEach((p,i)=>{ const o=document.createElement('option'); o.value=i; o.text=p; sel.appendChild(o); });
+
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+const msg = document.getElementById('msg');
+let sheetIndex = 0, index = 0, sheet;
+
+function render(){
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0,0,c.width,c.height);
+  if(!sheet){ return; }
+  ctx.drawImage(sheet.img,0,0);
+  const t=32, col=index % sheet.cols, row = Math.floor(index / sheet.cols);
+  ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 2;
+  ctx.strokeRect(col*t, row*t, t, t);
+  document.getElementById('idx').textContent = index;
+}
+
+async function loadSheet(){
+  msg.textContent = '';
+  try{
+    const img = await loadImage(SHEETS[sheetIndex]);
+    sheet = new SpriteSheet32(img,32);
+  }catch(e){
+    sheet = null;
+    msg.textContent = 'Não consegui carregar a folha: ' + SHEETS[sheetIndex] +
+      ' — verifique SE este arquivo está em client/tools e SE os PNGs existem em client/sprites/otsp.';
+  }
+  render();
+}
+
+sel.onchange = ()=>{ sheetIndex = Number(sel.value); index = 0; loadSheet(); };
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='q' || e.key==='Q') index = Math.max(0,index-1);
+  if(e.key==='e' || e.key==='E') index = index+1;
+  render();
+});
+c.addEventListener('click', (e)=>{
+  if(!sheet) return;
+  const r = c.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  const col = Math.floor(x/32), row = Math.floor(y/32);
+  index = row*sheet.cols + col;
+  render();
+});
+
+loadSheet();
+</script>

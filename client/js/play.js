@@ -62,6 +62,14 @@ async function ensureImgLoaded(img) {
   try { await img.decode(); } catch {}
 }
 
+// --- Sprite Metadata (carregado do backend via /api/assets/sprites) ---
+let SPRITES_META = {};
+async function loadSpriteMeta() {
+  const list = await jget('/api/assets/sprites');
+  // estrutura: [{ key, kind, data: { image, frame, grid, anims, anchor, ... } }]
+  SPRITES_META = Object.fromEntries(list.map(e => [e.key, e.data]));
+}
+
 // Estado
 let mapData = null;
 let tileset = null;
@@ -126,11 +134,62 @@ function drawPlayer() {
   }
 }
 
+// --- MOB RENDER usando YAML do sprite (com orientação/flip) ---
 function drawMob(m) {
+  if (m.meta && imgReady(m.img)) {
+    const meta   = m.meta;
+    const frameW = meta.frame?.width  ?? 32;
+    const frameH = meta.frame?.height ?? 32;
+    const cols   = meta.grid?.cols ?? 1;
+    const rows   = meta.grid?.rows ?? 1;
+
+    const anim = meta.anims?.walk || { fps: 8, frames: cols, row: 0, startCol: 0 };
+    const fps      = anim.fps || 8;
+    const frames   = anim.frames || cols;
+    const startCol = anim.startCol || 0;
+
+    // Seleção de linha por direção
+    let row = typeof anim.row === 'number' ? anim.row : 0;
+    if (anim.rowByDir && m.face && anim.rowByDir[m.face] != null) {
+      row = anim.rowByDir[m.face];
+    }
+
+    // Frame corrente
+    const t = performance.now() / 1000;
+    const f = Math.floor(t * fps) % frames;
+    const col = startCol + f;
+
+    const sx = (col % cols) * frameW;
+    const sy = (row % rows) * frameH;
+
+    const anchorX = (meta.anchor?.x ?? 0.5);
+    const anchorY = (meta.anchor?.y ?? 0.9);
+    const dw = frameW;
+    const dh = frameH;
+    const ox = Math.round(m.x - dw * anchorX);
+    const oy = Math.round(m.y - dh * anchorY);
+
+    // Se não há linhas por direção (1 row), espelha quando olhando pra WEST
+    const canFlipX = !anim.rowByDir && rows === 1 && m.face === 'west';
+
+    ctx.save();
+    if (canFlipX) {
+      ctx.translate(ox + dw, oy);
+      ctx.scale(-1, 1);
+      ctx.drawImage(m.img, sx, sy, frameW, frameH, 0, 0, dw, dh);
+    } else {
+      ctx.drawImage(m.img, sx, sy, frameW, frameH, ox, oy, dw, dh);
+    }
+    ctx.restore();
+    return;
+  }
+
+  // Fallback antigo: desenha PNG inteiro
   if (imgReady(m.img)) {
-    const ox = Math.round(m.x - m.w * 0.5);
-    const oy = Math.round(m.y - m.h * 0.9);
-    ctx.drawImage(m.img, ox, oy, m.w, m.h);
+    const dw = m.w || 32, dh = m.h || 32;
+    const ox = Math.round(m.x - dw * 0.5);
+    const oy = Math.round(m.y - dh * 0.9);
+    ctx.drawImage(m.img, ox, oy, dw, dh);
   } else {
     ctx.save();
     ctx.fillStyle = "#ef4444";
@@ -160,7 +219,6 @@ async function syncPos(now) {
     lastSentX = player.x;
     lastSentY = player.y;
   } catch (e) {
-    // silencioso para não poluir HUD, só log
     console.warn('pos sync failed:', e.message);
   }
 }
@@ -194,6 +252,16 @@ function update(dt) {
     }
     m.x += m.dirX * m.speed * dt;
     m.y += m.dirY * m.speed * dt;
+
+    // Atualiza "face" (direção olhando) quando há movimento
+    const mag = Math.hypot(m.dirX, m.dirY);
+    if (mag > 0.1) {
+      if (Math.abs(m.dirX) >= Math.abs(m.dirY)) {
+        m.face = m.dirX >= 0 ? 'east' : 'west';
+      } else {
+        m.face = m.dirY >= 0 ? 'south' : 'north';
+      }
+    }
 
     if (m.bound) {
       const { x, y, w, h } = m.bound;
@@ -272,11 +340,9 @@ async function resolvePlayerSprite() {
   try {
     const me = await jget('/api/player/me');
     const heroes = Array.isArray(me.heroes) ? me.heroes : [];
-    // prioriza isStarter=1 se existir; senão pega o primeiro
     const starter = heroes.find(h => h.isStarter === 1 || h.isStarter === true) || heroes[0];
     if (starter) {
       player.heroKey = starter.heroKey || starter.key || null;
-      // tenta sprites/characters/<heroKey>.png; fallback para imageUrl do /me; fallback final para player.png
       const candidate = player.heroKey ? `/sprites/characters/${player.heroKey}.png` : null;
       if (candidate) {
         player.img = loadImg(candidate);
@@ -292,7 +358,6 @@ async function resolvePlayerSprite() {
   } catch (e) {
     console.warn('resolvePlayerSprite:', e.message);
   }
-  // fallback
   player.img = loadImg("/sprites/characters/player.png");
   ensureImgLoaded(player.img).catch(()=>{});
 }
@@ -302,8 +367,10 @@ async function main() {
   cam.w = canvas.width;
   cam.h = canvas.height;
 
-  // Garante CSRF para futuros POSTs
   await fetchCsrf().catch(()=>{});
+
+  // carrega meta de sprites (YAML já empacotado pelo servidor)
+  await loadSpriteMeta();
 
   const maps = await jget("/api/admin/content/maps");
   if (!maps.some((m) => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
@@ -311,7 +378,7 @@ async function main() {
   const objs = await jget(`/api/admin/content/map/${MAP_KEY}/objects`);
   starts = objs.filter((o) => (o.type || "").toLowerCase() === "start");
 
-  // tenta carregar posição salva do jogador
+  // posição salva do jogador
   let posLoaded = false;
   try {
     const p = await jget(`/api/player/pos?map=${encodeURIComponent(MAP_KEY)}`);
@@ -319,9 +386,7 @@ async function main() {
       player.x = p.x; player.y = p.y;
       posLoaded = true;
     }
-  } catch {
-    // se rota não existir, segue para fallback
-  }
+  } catch {}
   if (!posLoaded && starts[0]) {
     player.x = starts[0].x; player.y = starts[0].y;
   }
@@ -332,7 +397,6 @@ async function main() {
   if (!tileset || !tileset.image) {
     console.warn("Tileset não embedado. No Tiled: 'Embed Tileset' e exporte novamente o JSON.");
   } else {
-    // normaliza caminhos tipo "../../client/..." → "/" (servido estático)
     let imgPath = tileset.image.replace(/^(\.\.\/)+/, "/");
     if (!imgPath.startsWith("/")) imgPath = "/" + imgPath;
     imgPath = imgPath.replace(/^\/client\//, "/");
@@ -344,10 +408,9 @@ async function main() {
     (l) => l.type === "tilelayer" && l.name && l.name.toLowerCase() === "ground"
   );
 
-  // sprite do jogador baseada no herói
   await resolvePlayerSprite();
 
-  // tenta do servidor
+  // spawns
   try {
     spawns = await jget(`/api/admin/content/map/${MAP_KEY}/spawns`);
   } catch { spawns = []; }
@@ -366,13 +429,26 @@ async function main() {
         kind: s.monsterKey || s.monster || "mob",
         x: (s.x || 0) + Math.random() * (s.w || TILE),
         y: (s.y || 0) + Math.random() * (s.h || TILE),
-        w: 28, h: 28, speed: 40 + Math.random() * 20,
+        w: 32, h: 32,                            // apenas para fallback
+        speed: 40 + Math.random() * 20,
         dirX: 0, dirY: 0, changeAt: 0,
-        img: null,
+        face: 'east',                             // 👈 direção olhando inicial
+        img: null, meta: null,
         bound: (s.w || s.h) ? { x: s.x || 0, y: s.y || 0, w: s.w || TILE, h: s.h || TILE } : null,
       };
-      m.img = loadImg(`/sprites/monsters/${m.kind}.png`); // se não existir, fica o círculo
-      ensureImgLoaded(m.img).catch(()=>{});
+
+      // tenta usar o YAML do sprite
+      const meta = SPRITES_META[m.kind];
+      if (meta?.image) {
+        const url = '/' + String(meta.image).replace(/^\/?client\//, '');
+        m.meta = meta;
+        m.img  = loadImg(url);
+        await ensureImgLoaded(m.img).catch(()=>{});
+      } else {
+        m.img = loadImg(`/sprites/monsters/${m.kind}.png`);
+        ensureImgLoaded(m.img).catch(()=>{});
+      }
+
       mobs.push(m);
     }
   }
