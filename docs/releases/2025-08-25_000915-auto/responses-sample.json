@@ -1,22 +1,4 @@
 {
-  "POST /afk/assign": [
-    "{ok:true,worker:w }",
-    "{ok:true,gains,inventory:inv }"
-  ],
-  "POST /afk/collect": [
-    "{ok:true,gains,inventory:inv }"
-  ],
-  "POST /afk/create-worker": [
-    "{ok:true,worker:w }",
-    "{ok:true,worker:w }",
-    "{ok:true,gains,inventory:inv }"
-  ],
-  "GET /afk/state": [
-    "{workers,boxes,inventory:inv }",
-    "{ok:true,worker:w }",
-    "{ok:true,worker:w }",
-    "{ok:true,gains,inventory:inv }"
-  ],
   "GET /api/admin/content/map/:key/data": [
     "{ok:true,reloaded:mapKey }"
   ],

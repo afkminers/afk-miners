@@ -10,6 +10,9 @@
  <tileset firstgid="822" name="kennie" tilewidth="32" tileheight="32" tilecount="816" columns="34">
   <image source="client/sprites/tiles/kenney_map.png" width="1088" height="768"/>
  </tileset>
+ <tileset firstgid="1638" name="kennie" tilewidth="32" tileheight="32" tilecount="816" columns="34">
+  <image source="client/sprites/tiles/kenney_map.png" width="1088" height="768"/>
+ </tileset>
  <layer id="1" name="Camada de Blocos 1" width="50" height="50">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -128,7 +131,7 @@
  <objectgroup color="#000000" id="4" name="spawn">
   <object id="7" type="spawn" x="836" y="726" width="36" height="36">
    <properties>
-    <property name="count" type="int" value="3"/>
+    <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="goblin"/>
     <property name="respawnSec" type="int" value="30"/>
     <property name="type" value="spawn"/>

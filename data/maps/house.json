@@ -166,7 +166,7 @@
                         {
                          "name":"count",
                          "type":"int",
-                         "value":3
+                         "value":1
                         }, 
                         {
                          "name":"monsterKey",
@@ -223,6 +223,19 @@
         {
          "columns":34,
          "firstgid":822,
+         "image":"..\/..\/client\/sprites\/tiles\/kenney_map.png",
+         "imageheight":768,
+         "imagewidth":1088,
+         "margin":0,
+         "name":"kennie",
+         "spacing":0,
+         "tilecount":816,
+         "tileheight":32,
+         "tilewidth":32
+        }, 
+        {
+         "columns":34,
+         "firstgid":1638,
          "image":"..\/..\/client\/sprites\/tiles\/kenney_map.png",
          "imageheight":768,
          "imagewidth":1088,

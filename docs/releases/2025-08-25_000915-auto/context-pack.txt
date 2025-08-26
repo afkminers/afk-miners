@@ -1,5 +1,5 @@
 AFK Miners — Context Pack
-Commit: 2b5fa7b | Branch: feature/afk-workers | Last Tag: n/a
+Commit: 2b5fa7b | Branch: main | Last Tag: n/a
 
 == Estrutura (nível 4) ==
 _backup-meta.txt
@@ -102,18 +102,11 @@ client\sfx\rare.mp3
 client\sfx\super_rare.mp3
 client\sfx\ultimate.mp3
 client\sprites
-client\sprites\as
 client\sprites\characters
-client\sprites\monsters
-client\sprites\monsters\goblin.png
-client\sprites\otsp
-client\sprites\otsp\otsp_creatures_01.png
 client\sprites\tiles
 client\sprites\tiles\kenney_map.png
 client\starter.html
 client\teste
-client\tools
-client\tools\otsp_finder.html
 data
 data\config
 data\config\index.yml
@@ -134,12 +127,9 @@ data\sprites\characters
 data\sprites\characters\knight.yml
 data\sprites\index.yml
 data\sprites\monsters
-data\sprites\monsters\goblin.yml
 data\tilesets
 data\tilesets\kenney.tsx
 docs
-docs\add-monsters-guide.html
-docs\add-monsters-guide.md
 docs\backups
 docs\backups\2025-08-23_102903-pre-main-a5c8b84.zip
 docs\backups\2025-08-23_102957-post-main-2d91a25.zip
@@ -1531,30 +1521,7 @@ docs\releases\2025-08-24_235425-auto\route-history.json
 docs\releases\2025-08-24_235425-auto\symbol-index.json
 docs\releases\2025-08-24_235425-auto\todos.json
 docs\releases\2025-08-25_000915-auto
-docs\releases\2025-08-25_000915-auto.zip
-docs\releases\2025-08-25_000915-auto\API.md
-docs\releases\2025-08-25_000915-auto\README.txt
-docs\releases\2025-08-25_000915-auto\changes-since.txt
-docs\releases\2025-08-25_000915-auto\context-pack.txt
-docs\releases\2025-08-25_000915-auto\data-summary.json
-docs\releases\2025-08-25_000915-auto\db-counts.txt
-docs\releases\2025-08-25_000915-auto\db-schema.sql
-docs\releases\2025-08-25_000915-auto\db-tables.json
-docs\releases\2025-08-25_000915-auto\db-tables.txt
-docs\releases\2025-08-25_000915-auto\deps-graph.json
-docs\releases\2025-08-25_000915-auto\deps.txt
-docs\releases\2025-08-25_000915-auto\endpoints-contracts.json
-docs\releases\2025-08-25_000915-auto\env-usage.json
-docs\releases\2025-08-25_000915-auto\error-map.json
-docs\releases\2025-08-25_000915-auto\function-signatures.json
-docs\releases\2025-08-25_000915-auto\openapi.json
-docs\releases\2025-08-25_000915-auto\package.json
-docs\releases\2025-08-25_000915-auto\responses-sample.json
-docs\releases\2025-08-25_000915-auto\route-history.json
-docs\releases\2025-08-25_000915-auto\symbol-index.json
-docs\releases\2025-08-25_000915-auto\todos.json
 map.tmx
-package-lock.json
 package.json
 readme.txt
 scripts
@@ -1585,7 +1552,6 @@ server\db\database.sqlite-wal
 server\db\database.sqlite.bak
 server\db\migrations
 server\db\migrations\001_skills.sql
-server\db\migrations\002_afk.sql
 server\db\migrations\002_chat_mutes.sql
 server\db\migrations\002_content.sql
 server\db\seeds
@@ -1606,7 +1572,6 @@ server\package.json
 server\player
 server\player\routes.js
 server\routes
-server\routes\afk.js
 server\routes\assets.js
 server\routes\catalog.js
 server\scripts
@@ -1622,32 +1587,29 @@ server\skills\engine.js
 server\skills\routes.js
 server\starter
 server\starter\routes.js
-tools
-tools\extract-sprite.js
 
 == Arquivos na raiz ==
 .gitattributes
 .gitignore
 _backup-meta.txt
 map.tmx
-package-lock.json
 package.json
 readme.txt
 
 == Inventário por extensão ==
-.json : 709
-.txt : 351
-.zip : 134
-.png : 116
-.js : 107
-.sql : 79
-.md : 56
-.html : 47
-.yml : 34
+.json : 695
+.txt : 345
+.zip : 133
+.png : 114
+.js : 105
+.sql : 77
+.md : 54
+.html : 45
+.yml : 33
 .css : 24
 .mp3 : 21
 .ps1 : 12
-<noext> : 10
+<noext> : 9
 .sqlite : 7
 .tmx : 3
 .mjs : 3
@@ -1681,10 +1643,6 @@ readme.txt
 79843.6 KB	docs\backups\2025-08-24_211257-post-main-618ad68.zip
 
 == Rotas detectadas (server) ==
-[POST] /afk/assign  (server\routes\afk.js:57)
-[POST] /afk/collect  (server\routes\afk.js:71)
-[POST] /afk/create-worker  (server\routes\afk.js:39)
-[GET] /afk/state  (server\routes\afk.js:26)
 [GET] /api/admin/content/map/:key/data  (server\index.js:331)
 [GET] /api/admin/content/map/:key/objects  (server\index.js:308)
 [GET] /api/admin/content/map/:key/spawns  (server\index.js:319)
@@ -1723,7 +1681,6 @@ Seeds:
   - (nenhuma)
 
 == HTML (title/scripts/styles) ==
-docs\add-monsters-guide.html :: title="add-monsters-guide" | scripts=0 | styles=0 | 5289 bytes
 docs\backups\2025-08-24_193249-post-main-ec40d70\client\starter.html :: title="Escolha seu Herói" | scripts=1 | styles=0 | 1908 bytes
 docs\backups\2025-08-24_193249-post-main-ec40d70\client\play.html :: title="Play" | scripts=1 | styles=0 | 175 bytes
 docs\backups\2025-08-24_193249-post-main-ec40d70\client\lobby.html :: title="Lobby" | scripts=0 | styles=0 | 706 bytes
@@ -1761,7 +1718,6 @@ client\index.html :: title="AFK Miners — Login + Gacha" | scripts=2 | styles=7
 client\house_debug.html :: title="House Debug" | scripts=1 | styles=0 | 1664 bytes
 client\house.html :: title="House" | scripts=0 | styles=0 | 777 bytes
 client\app.html :: title="AFK Miners — Game" | scripts=1 | styles=1 | 3448 bytes
-client\tools\otsp_finder.html :: title="OTSP Finder" | scripts=0 | styles=0 | 2924 bytes
 client\pages\treasure-hunt.html :: title="" | scripts=0 | styles=0 | 387 bytes
 client\pages\training.html :: title="" | scripts=0 | styles=0 | 303 bytes
 client\pages\summon.html :: title="" | scripts=0 | styles=0 | 315 bytes
@@ -1820,7 +1776,6 @@ docs\backups\2025-08-24_143136-post-main-e6ab269\data\items\bronze_sword.yml :: 
 docs\backups\2025-08-24_143136-post-main-e6ab269\data\config\server.yml :: 2 chaves | keys: rates, respawn
 docs\backups\2025-08-24_143136-post-main-e6ab269\data\config\index.yml :: 1 chaves | keys: configs
 data\sprites\index.yml :: 1 chaves | keys: sprites
-data\sprites\monsters\goblin.yml :: 6 chaves | keys: key, image, frame, grid, anims, anchor
 data\sprites\characters\knight.yml :: 7 chaves | keys: key, image, frame, grid, directions, anims, anchor
 data\monsters\index.yml :: 1 chaves | keys: monsters
 data\monsters\goblin.yml :: 8 chaves | keys: key, name, xp, health, speed, look, attacks, loot
@@ -1832,23 +1787,9 @@ data\config\server.yml :: 2 chaves | keys: rates, respawn
 data\config\index.yml :: 1 chaves | keys: configs
 
 == JSON — sumário (repo inteiro) ==
-package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2714 bytes
-package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 128410 bytes
-server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 3412 bytes
+package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
+server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 3329 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 123049 bytes
-docs\releases\2025-08-25_000915-auto\todos.json :: 31 itens | 5376 bytes
-docs\releases\2025-08-25_000915-auto\symbol-index.json :: 81 itens | 23192 bytes
-docs\releases\2025-08-25_000915-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 885 bytes
-docs\releases\2025-08-25_000915-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 1590 bytes
-docs\releases\2025-08-25_000915-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
-docs\releases\2025-08-25_000915-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 27474 bytes
-docs\releases\2025-08-25_000915-auto\function-signatures.json :: 845 itens | 154752 bytes
-docs\releases\2025-08-25_000915-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 10720 bytes
-docs\releases\2025-08-25_000915-auto\env-usage.json :: 15 itens | 9168 bytes
-docs\releases\2025-08-25_000915-auto\endpoints-contracts.json :: 29 itens | 19631 bytes
-docs\releases\2025-08-25_000915-auto\deps-graph.json :: 27 itens | 2801 bytes
-docs\releases\2025-08-25_000915-auto\db-tables.json :: 19 itens | 6036 bytes
-docs\releases\2025-08-25_000915-auto\data-summary.json :: 33 itens | 7599 bytes
 docs\releases\2025-08-24_235425-auto\todos.json :: 23 itens | 3799 bytes
 docs\releases\2025-08-24_235425-auto\symbol-index.json :: 55 itens | 15133 bytes
 docs\releases\2025-08-24_235425-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me, GET /pos | 849 bytes
@@ -2496,17 +2437,17 @@ docs\releases\2025-08-22_231259-auto\data-summary.json :: 11 itens | 2153 bytes
 docs\releases\2025-08-22_225607-auto\symbol-index.json :: 20 itens | 4494 bytes
 docs\releases\2025-08-22_225607-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 docs\releases\2025-08-22_225607-auto\data-summary.json :: 16 itens | 3803 bytes
-docs\context\todos.json :: 31 itens | 5376 bytes
-docs\context\symbol-index.json :: 81 itens | 23192 bytes
-docs\context\route-history.json :: 20 chaves | keys: POST /afk/assign, POST /afk/collect, POST /afk/create-worker, GET /afk/state, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master | 1019 bytes
-docs\context\responses-sample.json :: 20 chaves | keys: POST /afk/assign, POST /afk/collect, POST /afk/create-worker, GET /afk/state, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master | 2033 bytes
-docs\context\openapi.json :: 3 chaves | keys: openapi, info, paths | 34352 bytes
-docs\context\function-signatures.json :: 850 itens | 155469 bytes
-docs\context\error-map.json :: 20 chaves | keys: POST /afk/assign, POST /afk/collect, POST /afk/create-worker, GET /afk/state, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master | 12515 bytes
-docs\context\env-usage.json :: 15 itens | 9168 bytes
-docs\context\endpoints-contracts.json :: 33 itens | 23600 bytes
-docs\context\deps-graph.json :: 27 itens | 2801 bytes
-docs\context\data-summary.json :: 34 itens | 7806 bytes
+docs\context\todos.json :: 22 itens | 3629 bytes
+docs\context\symbol-index.json :: 54 itens | 14886 bytes
+docs\context\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 885 bytes
+docs\context\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 1590 bytes
+docs\context\openapi.json :: 3 chaves | keys: openapi, info, paths | 27474 bytes
+docs\context\function-signatures.json :: 558 itens | 97195 bytes
+docs\context\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, GET /class-rates, GET /curves, GET /, GET /heroes/master, GET /list, POST /login, POST /logout, GET /me | 10720 bytes
+docs\context\env-usage.json :: 15 itens | 5814 bytes
+docs\context\endpoints-contracts.json :: 29 itens | 19631 bytes
+docs\context\deps-graph.json :: 18 itens | 1712 bytes
+docs\context\data-summary.json :: 22 itens | 4876 bytes
 docs\backups\2025-08-24_193249-post-main-ec40d70\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 docs\backups\2025-08-24_193249-post-main-ec40d70\server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 3329 bytes
 docs\backups\2025-08-24_193249-post-main-ec40d70\server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 123049 bytes
@@ -2541,6 +2482,68 @@ docs\backups\2025-08-24_143136-post-main-e6ab269\data\maps\house.json :: 15 chav
 docs\backups\2025-08-24_143136-post-main-e6ab269\client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1800 bytes
 data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 24041 bytes
 client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1800 bytes
+
+== Symbol Index (amostra) ==
+client\js\api.js :: API
+client\js\app_panels.js :: jget, mkPanel, openSkills
+client\js\app.js :: appendChatRow, applyViewport, connectWS, escapeHtml, getCsrf, getInt, jget, jpost, log, makeVSplitter, mountSceneHouse, onDown, onMove, onReady, onUp, sendChat
+client\js\auth.js :: checkAuth
+client\js\boot.js :: closeMobileMenu, goToGameAccordingToStarter, handleLogout, setLoggedOutGlow, setLogoutVisibility, showApp, showLanding, trySession, updateHud
+client\js\dock.js :: bringToFront, clamp, createPanel, dockUndock, ensureShellBounds, loadState, makeDraggable, makeResizable, mm, mu, rect, saveState, snapInside, start
+client\js\gacha.js :: bindGachaUI, cap, closeOverlay, doSummonAPI, done, fillPanel, flash, getHeroes, getInventory, hardCloseOverlay, heroCardMarkup, init, inlineHint, keySkip, lockButtons, loopPix, openOverlay, playChestSequence, playClick, playMultiSummon, playOneSummonAndReveal, playSfx, refreshFromServer, renderHeroes, resizePix, setAgainState, setRarityBg, showErrorInOverlay, skipOnce, spawnPix, spawnSparks, startPix, startSummon, stopPix, toast, wait
+client\js\house.js :: appendChatRow, clearCanvas, connectWS, drawEntity, drawGrid, drawGround, ensureWsAuthOnConnect, escapeHtml, jget, loadImg, loop, maybeSendPos, mergeSpawns, postWithCsrf, sendChat, setStatus, startHub, startPolling, update, worldToScreen, wsAuthAndLoadHistory
+client\js\landing_fx.js :: addSpark, drawLightning, glow, imgRect, loop, resize, seed, sel, start, stop, sync
+client\js\login_fx.js :: celebrate, drawDebugCross, initLoginFx, loop, px, resize, sel, spawnBurst, spawnTick, start, stop, toCanvasXYFromChar
+client\js\play.js :: clear, drawGround, drawMob, drawPlayer, ensureImgLoaded, fetchCsrf, frame, imgReady, jget, jpost, loadImg, main, mapSpawnsFromTiledJSON, render, resolvePlayerSprite, shouldSyncPos, syncPos, update
+client\js\player_profile.js :: animateProgressBars, bindProfileModal, close, fetchEquip, fetchPlayerMeOnce, fillEquip, fillHeader, fillSkillsArea, loadHeroSkills, open, paintEquipGrid, refreshAll, refreshEquip, renderHeroSkills, renderTrainBars, resolveCard
+client\js\scenes\house.js :: mount
+client\js\sprites.js :: drawSprite, loadImg
+client\js\starter.js :: fetchCsrf, jget, jpost, main, spriteUrlFrom
+client\js\ui.js :: cap
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\api.js :: API
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\app_panels.js :: jget, mkPanel, openSkills
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\app.js :: applyViewport, chatPush, getCsrf, getInt, jget, jpost, makeVSplitter, mountSceneHouse, onDown, onMove, onUp
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\auth.js :: checkAuth
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\boot.js :: closeMobileMenu, goToGameAccordingToStarter, handleLogout, setLoggedOutGlow, setLogoutVisibility, showApp, showLanding, trySession, updateHud
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\dock.js :: bringToFront, clamp, createPanel, dockUndock, ensureShellBounds, loadState, makeDraggable, makeResizable, mm, mu, rect, saveState, snapInside, start
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\gacha.js :: bindGachaUI, cap, closeOverlay, doSummonAPI, done, fillPanel, flash, getHeroes, getInventory, hardCloseOverlay, heroCardMarkup, init, inlineHint, keySkip, lockButtons, loopPix, openOverlay, playChestSequence, playClick, playMultiSummon, playOneSummonAndReveal, playSfx, refreshFromServer, renderHeroes, resizePix, setAgainState, setRarityBg, showErrorInOverlay, skipOnce, spawnPix, spawnSparks, startPix, startSummon, stopPix, toast, wait
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\house.js :: clear, drawGrid, drawGround, drawSpawnRect, drawStart, jget, loadImg, main, normalizeTilesetPath, postWithCsrf, reloadMapOnServer, setStatus
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\landing_fx.js :: addSpark, drawLightning, glow, imgRect, loop, resize, seed, sel, start, stop, sync
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\login_fx.js :: celebrate, drawDebugCross, initLoginFx, loop, px, resize, sel, spawnBurst, spawnTick, start, stop, toCanvasXYFromChar
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\play.js :: clear, drawGround, drawMob, drawPlayer, ensureImgLoaded, fetchCsrf, frame, imgReady, jget, jpost, loadImg, main, mapSpawnsFromTiledJSON, render, resolvePlayerSprite, shouldSyncPos, syncPos, update
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\player_profile.js :: animateProgressBars, bindProfileModal, close, fetchEquip, fetchPlayerMeOnce, fillEquip, fillHeader, fillSkillsArea, loadHeroSkills, open, paintEquipGrid, refreshAll, refreshEquip, renderHeroSkills, renderTrainBars, resolveCard
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\scenes\house.js :: mount
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\sprites.js :: drawSprite, loadImg
+(+51 arquivos em symbol-index.json)
+
+== Import Graph (amostra) ==
+docs\backups\2025-08-24_193249-post-main-ec40d70\client\js\player_profile.js -> ./api.js
+docs\backups\2025-08-24_193249-post-main-ec40d70\client\js\gacha.js -> ./api.js
+docs\backups\2025-08-24_193249-post-main-ec40d70\client\js\boot.js -> ./api.js
+docs\backups\2025-08-24_193249-post-main-ec40d70\client\js\boot.js -> ./auth.js
+docs\backups\2025-08-24_193249-post-main-ec40d70\client\js\boot.js -> ./gacha.js
+docs\backups\2025-08-24_193249-post-main-ec40d70\client\js\boot.js -> ./login_fx.js
+docs\backups\2025-08-24_193249-post-main-ec40d70\client\js\boot.js -> ./player_profile.js
+docs\backups\2025-08-24_193249-post-main-ec40d70\client\js\auth.js -> ./api.js
+docs\backups\2025-08-24_193249-post-main-ec40d70\client\js\app.js -> ./app_panels.js
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\player_profile.js -> ./api.js
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\gacha.js -> ./api.js
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\boot.js -> ./api.js
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\boot.js -> ./auth.js
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\boot.js -> ./gacha.js
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\boot.js -> ./login_fx.js
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\boot.js -> ./player_profile.js
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\auth.js -> ./api.js
+docs\backups\2025-08-24_143136-post-main-e6ab269\client\js\app.js -> ./app_panels.js
+client\js\player_profile.js -> ./api.js
+client\js\gacha.js -> ./api.js
+client\js\boot.js -> ./api.js
+client\js\boot.js -> ./auth.js
+client\js\boot.js -> ./gacha.js
+client\js\boot.js -> ./login_fx.js
+client\js\boot.js -> ./player_profile.js
+client\js\auth.js -> ./api.js
+client\js\app.js -> ./app_panels.js
 
 == Changes since last tag ==
 (sem tag anterior)

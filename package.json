@@ -7,12 +7,10 @@
     "start": "nodemon index.js",
     "dev": "nodemon index.js",
     "serve": "node index.js",
-
     "git:add": "git add -A",
     "git:commit": "git commit -m \"update\"",
     "git:push": "git push origin main",
     "deploy": "npm run git:add && npm run git:commit && npm run git:push",
-
     "db:drop": "if exist db\\database.sqlite del /Q db\\database.sqlite",
     "db:migrate": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/000_core_auth.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001_skills.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001a_hero_training.sql\"",
     "db:seed": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/001_skill_maps.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/002_skill_curves.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/003_class_skill_rates.sql\"",
@@ -20,14 +18,12 @@
     "db:info": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".schema\"",
     "db:verify": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \"SELECT 'heroes_master' as t, COUNT(*) FROM heroes_master; SELECT 'player_heroes', COUNT(*) FROM player_heroes; SELECT 'weapon_skill_map', COUNT(*) FROM weapon_skill_map; SELECT 'skill_curves', COUNT(*) FROM skill_curves; SELECT 'class_skill_rates', COUNT(*) FROM class_skill_rates;\"",
     "db:reset": "npm run db:drop && npm run db:migrate && npm run db:seed",
-
     "ctx:pack": "node scripts/gen-context.js",
     "ctx:pack:full": "node scripts/gen-context.js --full",
     "ctx:print:win": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/print-context.ps1",
     "ctx:snapshot:win": "scripts\\snapshot.bat",
     "ctx:bundle:win": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/make-context-pack.ps1",
     "ctx:zip": "npm run ctx:bundle:win -- -Name auto -Symbols -Imports -Depth 4 -Zip",
-
     "test": "echo \"No tests yet\" && exit 0"
   },
   "keywords": [],
@@ -36,6 +32,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
+    "canvas": "^3.2.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
@@ -46,11 +43,11 @@
     "zod": "^4.0.17"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0",
+    "acorn": "^8.11.3",
+    "acorn-walk": "^8.3.2",
+    "chokidar": "^4.0.3",
     "glob": "^11.0.3",
     "js-yaml": "^4.1.0",
-    "chokidar": "^4.0.3",
-    "acorn": "^8.11.3",
-    "acorn-walk": "^8.3.2"
+    "nodemon": "^3.1.0"
   }
 }

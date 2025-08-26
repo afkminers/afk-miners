@@ -1,8 +1,4 @@
 {
-  "POST /afk/assign": "no-tag",
-  "POST /afk/collect": "no-tag",
-  "POST /afk/create-worker": "no-tag",
-  "GET /afk/state": "no-tag",
   "GET /api/admin/content/map/:key/data": "no-tag",
   "GET /api/admin/content/map/:key/objects": "no-tag",
   "GET /api/admin/content/map/:key/spawns": "no-tag",

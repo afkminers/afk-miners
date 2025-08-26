@@ -1,23 +1,5 @@
 [
   {
-    "file": "tools\\extract-sprite.js",
-    "line": 40,
-    "kind": "function",
-    "name": "parseArgs",
-    "params": [
-      "argv"
-    ]
-  },
-  {
-    "file": "tools\\extract-sprite.js",
-    "line": 96,
-    "kind": "function",
-    "name": "usageAndExit",
-    "params": [
-      "msg"
-    ]
-  },
-  {
     "file": "server\\index.js",
     "line": 46,
     "kind": "arrow",
@@ -552,24 +534,6 @@
     "name": "imageUrlFor",
     "params": [
       "k"
-    ]
-  },
-  {
-    "file": "server\\routes\\afk.js",
-    "line": 11,
-    "kind": "function",
-    "name": "tx",
-    "params": [
-      "fn"
-    ]
-  },
-  {
-    "file": "server\\routes\\afk.js",
-    "line": 18,
-    "kind": "function",
-    "name": "getPlayerId",
-    "params": [
-      "req"
     ]
   },
   {
@@ -6042,35 +6006,28 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 67,
-    "kind": "function",
-    "name": "loadSpriteMeta",
-    "params": []
-  },
-  {
-    "file": "client\\js\\play.js",
-    "line": 94,
+    "line": 86,
     "kind": "function",
     "name": "clear",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 96,
+    "line": 88,
     "kind": "function",
     "name": "drawGround",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 124,
+    "line": 116,
     "kind": "function",
     "name": "drawPlayer",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 138,
+    "line": 129,
     "kind": "function",
     "name": "drawMob",
     "params": [
@@ -6079,7 +6036,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 191,
+    "line": 146,
     "kind": "function",
     "name": "shouldSyncPos",
     "params": [
@@ -6088,7 +6045,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 197,
+    "line": 152,
     "kind": "function",
     "name": "syncPos",
     "params": [
@@ -6097,7 +6054,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 213,
+    "line": 168,
     "kind": "function",
     "name": "update",
     "params": [
@@ -6106,14 +6063,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 275,
+    "line": 230,
     "kind": "function",
     "name": "render",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 287,
+    "line": 242,
     "kind": "function",
     "name": "frame",
     "params": [
@@ -6122,7 +6079,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 296,
+    "line": 251,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -6131,14 +6088,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 316,
+    "line": 271,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 346,
+    "line": 301,
     "kind": "function",
     "name": "main",
     "params": []
