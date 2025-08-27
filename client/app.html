@@ -11,12 +11,13 @@
     <div class="brand">AFK MINERS</div>
     <nav class="actions">
       <button id="btnSkills">Skills</button>
+      <button id="btnAFK" class="dock-btn">AFK</button>
+      <button id="btnFarm" class="dock-btn">Farm</button>
       <button id="btnHeroes">Heroes</button>
       <button id="btnInventory">Inventory</button>
       <button id="btnSummon">Summon</button>
+      <button id="btnSettings">Settings</button>
       <button id="btnLogout" class="danger">Logout</button>
-      <button id="btnAFK" class="dock-btn">AFK</button>
-      <button id="btnFarm" class="dock-btn">Farm</button>
     </nav>
   </header>
 
@@ -48,7 +49,6 @@
 
     <!-- CHAT FIXO EMBAIXO -->
     <footer id="chatDock">
-      <!-- chat controls: substitui o bloco antigo #chatLog + #chatForm -->
       <div class="chat-controls" style="padding:12px;">
         <div class="chat-tabs" style="display:flex; gap:8px; margin-bottom:8px;">
           <button id="btnDefault" class="chat-tab active" type="button" style="padding:4px 8px">Default</button>
@@ -78,9 +78,24 @@
     </div>
   </div>
 
-  <script type="module" src="/js/app.js"></script>
+  <!-- Scripts de UI existentes -->
   <script src="/js/afk_panel.js"></script>
   <script src="/js/farm_panel.js"></script>
+
+  <!-- Configurações globais + painel de Settings (devem vir antes do app.js) -->
+  <script src="/js/settings.js"></script>
+  <script src="/js/ui/settings_panel.js"></script>
+
+  <!-- App (module), depois que settings_panel já está disponível -->
+  <script type="module" src="/js/app.js"></script>
+
+  <!-- Engine do jogo (ordem importa) + cena -->
+  <script src="/js/engine/camera2d.js"></script>
+  <script src="/js/engine/input.js"></script>
+  <script src="/js/engine/pathfinder.js"></script>
+  <script src="/js/engine/player_controller.js"></script>
+  <script src="/js/engine/click_to_move.js"></script>
+  <script src="/js/play.js"></script>
 
   <style>
     /* segurança: nada de sidebars legadas aparecendo */

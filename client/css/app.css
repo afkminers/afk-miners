@@ -12,6 +12,9 @@
   --rightW: 320px;
   --chatH: 170px;
   --splitW: 10px;
+
+  /* 👇 NOVO: escala global de UI (controlada pelo Settings) */
+  --ui-scale: 1;
 }
 
 *{ box-sizing:border-box }
@@ -37,6 +40,12 @@ html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-
   grid-template-rows: 1fr var(--chatH);
   gap:0;
   height:calc(100vh - 48px);
+}
+
+/* 👇 NOVO: aplica escala global aos elementos de UI (não ao canvas) */
+#hud, #leftStack, #rightStack, #chatDock{
+  transform-origin: top left;
+  transform: scale(var(--ui-scale));
 }
 
 #leftStack{ grid-column:1; grid-row:1; }

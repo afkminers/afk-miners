@@ -45,6 +45,7 @@ const btnSkills    = document.getElementById('btnSkills');
 const btnHeroes    = document.getElementById('btnHeroes');
 const btnInventory = document.getElementById('btnInventory');
 const btnSummon    = document.getElementById('btnSummon');
+const btnSettings  = document.getElementById('btnSettings');
 const btnLogout    = document.getElementById('btnLogout');
 
 const summonModal  = document.getElementById('summonModal');
@@ -121,6 +122,18 @@ makeVSplitter(splitR,'right');
 btnSkills   ?.addEventListener('click', ()=> openSkills(rightS));
 btnHeroes   ?.addEventListener('click', ()=> openHeroes(leftS));
 btnInventory?.addEventListener('click', ()=> openInventory(rightS));
+
+/* ---------- Settings (dock no stack direito) ---------- */
+btnSettings?.addEventListener('click', ()=>{
+  if (window.openSettingsPanel) window.openSettingsPanel(rightS);
+});
+// atalho opcional F10
+window.addEventListener('keydown', (e)=>{
+  if (e.key === 'F10'){
+    e.preventDefault();
+    if (window.openSettingsPanel) window.openSettingsPanel(rightS);
+  }
+});
 
 /* ---------- Summon como MODAL ---------- */
 btnSummon?.addEventListener('click', ()=>{

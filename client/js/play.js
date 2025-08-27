@@ -1,18 +1,52 @@
 // client/js/play.js
-// Cena jogável genérica: usa ?map=<key> (padrão house), segue o player e instancia mobs.
-// Lê posição salva do jogador (GET /api/player/pos?map=...) e salva periodicamente (POST /api/player/pos).
-// Se /spawns vier vazio, faz fallback lendo a camada "spawn" direto do JSON do Tiled.
+// Cena jogável genérica (House/PvP): usa ?map=<key> (padrão house).
+// Orquestra: Input (WASD/Numpad/Mouse), PlayerController (mov/colisão),
+// Camera2D (follow), AStarGrid (pathfinding 8-dir) e ClickToMove.
+// Hotfixes: assetUrl() robusto, loader de tileset com tentativas, fallback de sprites e Respawn Manager.
 
-const MAP_KEY = new URLSearchParams(location.search).get('map') || 'house';
+const QS = new URLSearchParams(location.search);
+const MAP_KEY = QS.get('map') || 'house';
 const TILE = 32;
 
-// DOM
-const $ = (s) => document.querySelector(s);
-const canvas = $("#view");
-const ctx = canvas.getContext("2d");
-const hud = $("#hud");
+/* =============== Canvas/HUD flexível (querystring + auto) =============== */
+function pickElByIds(prefIds = [], fallbackSelectors = []) {
+  for (const id of prefIds) {
+    if (!id) continue;
+    const el = document.getElementById(id);
+    if (el) return el;
+  }
+  for (const sel of fallbackSelectors) {
+    const el = document.querySelector(sel);
+    if (el) return el;
+  }
+  return null;
+}
+const preferCanvasId = QS.get('canvas'); // ex: ?canvas=scene
+const preferHudId    = QS.get('hud');    // ex: ?hud=hud
 
-// --- CSRF para POSTs protegidos ---
+const canvas = pickElByIds(
+  [preferCanvasId, 'view', 'scene'],
+  ['canvas#view', 'canvas#scene', 'canvas']
+);
+const hud = pickElByIds(
+  [preferHudId, 'hud', 'app-hud'],
+  ['#hud', '#app-hud']
+);
+
+if (!canvas) {
+  console.error('play.js: canvas não encontrado (#view ou #scene).');
+  alert('Erro: canvas não encontrado (#view/#scene).');
+  throw new Error('Canvas not found');
+}
+const ctx = canvas.getContext('2d');
+
+// helper DOM
+const $ = (s) => document.querySelector(s);
+
+// camera hoisted (evita TDZ)
+let camera;
+
+/* =========================== CSRF / HTTP ============================ */
 let CSRF_TOKEN = null;
 async function fetchCsrf() {
   if (CSRF_TOKEN) return CSRF_TOKEN;
@@ -24,7 +58,6 @@ async function fetchCsrf() {
   return CSRF_TOKEN;
 }
 
-// HTTP helpers
 async function jget(url) {
   const r = await fetch(url, { credentials: "include" });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
@@ -45,32 +78,132 @@ async function jpost(url, body) {
   return r.json();
 }
 
-// Imagens
+/* ===================== Assets: normalização de paths ===================== */
+function assetUrl(p, { asTileset = false } = {}) {
+  let s = String(p || '');
+  if (!s) return s;
+  if (/^https?:\/\//i.test(s)) return s;
+  s = s.replace(/^(\.\/)+/, '');     // remove ./, .//...
+  s = s.replace(/^client\//, '');    // tira client/
+  s = s.replace(/^\/client\//, '/'); // tira /client/ duplo
+  if (!s.startsWith('/')) {
+    // nome “seco” (ex.: kenney_map.png). Pra tileset, tente /img/ primeiro.
+    s = asTileset ? '/img/' + s : '/' + s;
+  }
+  return s;
+}
+
+// --- loader de tileset compatível com seu caminho antigo do Tiled
+function normalizeTilesetPath(p) {
+  let s = String(p || '');
+  // remove "../../../"
+  s = s.replace(/^(\.\.\/)+/, '/');
+  // garante barra inicial
+  if (!s.startsWith('/')) s = '/' + s;
+  // tira prefixo "/client/"
+  s = s.replace(/^\/client\//, '/'); // => "/sprites/tiles/kenney_map.png"
+  return s;
+}
+
+async function loadTilesetImage(rawPath) {
+  const primary = normalizeTilesetPath(rawPath);
+  const base = primary.split('/').pop();
+
+  // tenta primeiro o caminho que SEMPRE funcionou no seu server:
+  const candidates = [
+    primary,                             // ex.: /sprites/tiles/kenney_map.png  ✅ (seu caso)
+    '/sprites/' + base,
+    '/sprites/tiles/' + base,
+    '/img/tiles/' + base,
+    '/img/' + base,
+    '/' + base
+  ];
+
+  for (const url of candidates) {
+    const img = loadImg(url);
+    const ok = await ensureImgLoaded(img);
+    if (ok) return img;
+  }
+  console.warn('[tileset] falhou carregar. Tentativas:', candidates);
+  return null;
+}
+
+/* ============================= Settings (patch mínimo) ============================= */
+// Pixel-art nítido (liga/desliga smoothing conforme GameSettings)
+function applySmoothing(){
+  const s = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
+  const smooth = !s.pixelArt; // pixelArt=true => smoothing OFF
+  try {
+    ctx.imageSmoothingEnabled = smooth;
+    ctx.mozImageSmoothingEnabled = smooth;
+    ctx.webkitImageSmoothingEnabled = smooth;
+  } catch {}
+}
+applySmoothing();
+document.addEventListener('settings:changed', () => {
+  applySmoothing();
+  resize(); // dprCap pode ter mudado
+});
+
+/* ============================= Resize ============================= */
+function resize() {
+  const shell = document.querySelector('#clientShell') || canvas.parentElement;
+  const rect = shell
+    ? shell.getBoundingClientRect()
+    : { width: window.innerWidth * 0.9, height: window.innerHeight * 0.9 };
+
+  const wCSS = Math.max(320, Math.floor(rect.width  || window.innerWidth  * 0.9));
+  const hCSS = Math.max(200, Math.floor(rect.height || window.innerHeight * 0.9));
+
+  // DPR efetivo (cap opcional vindo das Settings)
+  const st = (window.GameSettings?.get?.() || window.GameSettings?.getState?.()) || {};
+  const dprBase = window.devicePixelRatio || 1;
+  const dpr = Math.min(dprBase, Number(st.dprCap || dprBase));
+
+  // tamanho visual do canvas (CSS pixels)
+  canvas.style.width  = wCSS + 'px';
+  canvas.style.height = hCSS + 'px';
+
+  // tamanho do buffer interno (device pixels)
+  const w = Math.round(wCSS * dpr);
+  const h = Math.round(hCSS * dpr);
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width  = w;
+    canvas.height = h;
+  }
+
+  if (camera?.resize) camera.resize(canvas.width, canvas.height);
+}
+window.addEventListener('resize', resize);
+
+
+/* ============================ Imagens ============================ */
 const IMG_CACHE = new Map();
 function loadImg(src) {
-  if (IMG_CACHE.has(src)) return IMG_CACHE.get(src);
+  const key = assetUrl(src || '');
+  if (IMG_CACHE.has(key)) return IMG_CACHE.get(key);
   const img = new Image();
-  img.src = src;
-  IMG_CACHE.set(src, img);
+  img.src = key;
+  IMG_CACHE.set(key, img);
   return img;
 }
 function imgReady(img) {
   return img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0;
 }
 async function ensureImgLoaded(img) {
-  if (imgReady(img)) return;
-  try { await img.decode(); } catch {}
+  if (imgReady(img)) return true;
+  try { await img.decode(); return imgReady(img); } catch { return imgReady(img); }
 }
 
-// --- Sprite Metadata (carregado do backend via /api/assets/sprites) ---
+/* ====================== Sprite Metadata (YAML) ====================== */
 let SPRITES_META = {};
 async function loadSpriteMeta() {
   const list = await jget('/api/assets/sprites');
-  // estrutura: [{ key, kind, data: { image, frame, grid, anims, anchor, ... } }]
+  // [{ key, kind, data: { image, frame, grid, anims, anchor, ... } }]
   SPRITES_META = Object.fromEntries(list.map(e => [e.key, e.data]));
 }
 
-// Estado
+/* ========================= Estado do Mapa ========================= */
 let mapData = null;
 let tileset = null;
 let tilesetImg = null;
@@ -79,21 +212,18 @@ let groundLayer = null;
 let starts = [];
 let spawns = [];
 
-const player = { x: 100, y: 100, w: 32, h: 32, speed: 140, img: null, heroKey: null };
-const mobs = [];
+/* ========================= Spawners / Mobs ======================== */
+const spawners = []; // [{def, want, respawnMs, nextAt, area, liveIds:Set<number>}]
+const mobs = [];     // lista de mobs ativos
+let mobAutoId = 1;
 
-// Câmera
-const cam = { x: 0, y: 0, w: 0, h: 0, lerp: 0.15 };
+/* ========================= Player Visual ========================== */
+const playerVis = { w: 32, h: 32, img: null, heroKey: null };
 
-// Input
-const keys = {};
-addEventListener("keydown", (e) => (keys[e.key.toLowerCase()] = true));
-addEventListener("keyup", (e) => (keys[e.key.toLowerCase()] = false));
-
-// Draw
+/* ============================== Render ============================ */
 function clear() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
-function drawGround() {
+function drawGround(cameraObj) {
   if (!groundLayer || !tileset || !imgReady(tilesetImg)) return;
 
   const data = groundLayer.data;
@@ -103,11 +233,10 @@ function drawGround() {
   const tw = tileset.tilewidth, th = tileset.tileheight;
   const columnsInImage = tileset.columns;
 
-  // somente tiles visíveis no viewport
-  const x0 = Math.max(0, Math.floor(cam.x / TILE));
-  const y0 = Math.max(0, Math.floor(cam.y / TILE));
-  const x1 = Math.min(cols - 1, Math.ceil((cam.x + cam.w) / TILE));
-  const y1 = Math.min(rows - 1, Math.ceil((cam.y + cam.h) / TILE));
+  const x0 = Math.max(0, Math.floor(cameraObj.x / TILE));
+  const y0 = Math.max(0, Math.floor(cameraObj.y / TILE));
+  const x1 = Math.min(cols - 1, Math.ceil((cameraObj.x + cameraObj.w) / TILE));
+  const y1 = Math.min(rows - 1, Math.ceil((cameraObj.y + cameraObj.h) / TILE));
 
   for (let y = y0; y <= y1; y++) {
     for (let x = x0; x <= x1; x++) {
@@ -121,20 +250,20 @@ function drawGround() {
   }
 }
 
-function drawPlayer() {
-  if (imgReady(player.img)) {
-    const ox = Math.round(player.x - player.w * 0.5);
-    const oy = Math.round(player.y - player.h * 0.9);
-    ctx.drawImage(player.img, ox, oy, player.w, player.h);
+function drawPlayer(controller) {
+  const p = controller.getPosition();
+  if (imgReady(playerVis.img)) {
+    const ox = Math.round(p.x - playerVis.w * 0.5);
+    const oy = Math.round(p.y - playerVis.h * 0.9);
+    ctx.drawImage(playerVis.img, ox, oy, playerVis.w, playerVis.h);
   } else {
     ctx.save();
     ctx.fillStyle = "#f59e0b";
-    ctx.beginPath(); ctx.arc(player.x, player.y, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
 }
 
-// --- MOB RENDER usando YAML do sprite (com orientação/flip) ---
 function drawMob(m) {
   if (m.meta && imgReady(m.img)) {
     const meta   = m.meta;
@@ -148,13 +277,11 @@ function drawMob(m) {
     const frames   = anim.frames || cols;
     const startCol = anim.startCol || 0;
 
-    // Seleção de linha por direção
     let row = typeof anim.row === 'number' ? anim.row : 0;
     if (anim.rowByDir && m.face && anim.rowByDir[m.face] != null) {
       row = anim.rowByDir[m.face];
     }
 
-    // Frame corrente
     const t = performance.now() / 1000;
     const f = Math.floor(t * fps) % frames;
     const col = startCol + f;
@@ -169,7 +296,6 @@ function drawMob(m) {
     const ox = Math.round(m.x - dw * anchorX);
     const oy = Math.round(m.y - dh * anchorY);
 
-    // Se não há linhas por direção (1 row), espelha quando olhando pra WEST
     const canFlipX = !anim.rowByDir && rows === 1 && m.face === 'west';
 
     ctx.save();
@@ -184,138 +310,65 @@ function drawMob(m) {
     return;
   }
 
-  // Fallback antigo: desenha PNG inteiro
-  if (imgReady(m.img)) {
-    const dw = m.w || 32, dh = m.h || 32;
-    const ox = Math.round(m.x - dw * 0.5);
-    const oy = Math.round(m.y - dh * 0.9);
-    ctx.drawImage(m.img, ox, oy, dw, dh);
-  } else {
-    ctx.save();
-    ctx.fillStyle = "#ef4444";
-    ctx.beginPath(); ctx.arc(m.x, m.y, 7, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-  }
+  // Fallback: dot vermelho
+  ctx.save();
+  ctx.fillStyle = "#ef4444";
+  ctx.beginPath(); ctx.arc(m.x, m.y, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
 }
 
-// Lógica
-let lastSentAt = 0;
-let lastSentX = 0, lastSentY = 0;
-
-function shouldSyncPos(now) {
-  const moved = Math.hypot(player.x - lastSentX, player.y - lastSentY) >= 2;
-  const elapsed = (now - lastSentAt) >= 1000; // 1s
-  return moved && elapsed;
-}
-
-async function syncPos(now) {
+/* ======================= Posição Persistente ======================= */
+let lastSaveAt = 0;
+async function postPosThrottled(mapKey, x, y) {
+  const now = performance.now();
+  if (now - lastSaveAt < 2000) return; // 2s
+  lastSaveAt = now;
   try {
-    await jpost('/api/player/pos', {
-      mapKey: MAP_KEY,
-      x: Math.round(player.x),
-      y: Math.round(player.y)
-    });
-    lastSentAt = now;
-    lastSentX = player.x;
-    lastSentY = player.y;
+    await jpost('/api/player/pos', { mapKey, x: Math.round(x), y: Math.round(y) });
   } catch (e) {
     console.warn('pos sync failed:', e.message);
   }
 }
 
-function update(dt) {
-  let dx = 0, dy = 0;
-  if (keys["w"] || keys["arrowup"]) dy -= 1;
-  if (keys["s"] || keys["arrowdown"]) dy += 1;
-  if (keys["a"] || keys["arrowleft"]) dx -= 1;
-  if (keys["d"] || keys["arrowright"]) dx += 1;
-
-  if (dx || dy) {
-    const len = Math.hypot(dx, dy) || 1;
-    player.x += (dx / len) * player.speed * dt;
-    player.y += (dy / len) * player.speed * dt;
-  }
-
-  if (mapData) {
-    const maxX = mapData.width * TILE, maxY = mapData.height * TILE;
-    player.x = Math.max(0, Math.min(maxX, player.x));
-    player.y = Math.max(0, Math.min(maxY, player.y));
-  }
-
-  const now = performance.now();
-  for (const m of mobs) {
-    if (now >= m.changeAt) {
-      const ang = Math.random() * Math.PI * 2;
-      m.dirX = Math.cos(ang);
-      m.dirY = Math.sin(ang);
-      m.changeAt = now + 700 + Math.random() * 1300;
-    }
-    m.x += m.dirX * m.speed * dt;
-    m.y += m.dirY * m.speed * dt;
-
-    // Atualiza "face" (direção olhando) quando há movimento
-    const mag = Math.hypot(m.dirX, m.dirY);
-    if (mag > 0.1) {
-      if (Math.abs(m.dirX) >= Math.abs(m.dirY)) {
-        m.face = m.dirX >= 0 ? 'east' : 'west';
-      } else {
-        m.face = m.dirY >= 0 ? 'south' : 'north';
-      }
-    }
-
-    if (m.bound) {
-      const { x, y, w, h } = m.bound;
-      if (m.x < x)   { m.x = x;   m.dirX *= -1; }
-      if (m.y < y)   { m.y = y;   m.dirY *= -1; }
-      if (m.x > x+w) { m.x = x+w; m.dirX *= -1; }
-      if (m.y > y+h) { m.y = y+h; m.dirY *= -1; }
-    }
-  }
-
-  // câmera segue player
-  cam.x += (player.x - cam.x - cam.w * 0.5) * cam.lerp;
-  cam.y += (player.y - cam.y - cam.h * 0.5) * cam.lerp;
-
-  if (mapData) {
-    const maxCamX = mapData.width * TILE - cam.w;
-    const maxCamY = mapData.height * TILE - cam.h;
-    cam.x = Math.max(0, Math.min(maxCamX, cam.x));
-    cam.y = Math.max(0, Math.min(maxCamY, cam.y));
-  }
-
-  // sync pos (debounced)
-  if (shouldSyncPos(now)) syncPos(now);
-
-  if (hud) {
-    hud.innerHTML = `
-      <div>map: ${MAP_KEY}</div>
-      <div>Move: WASD / Setas</div>
-      <div>pos: ${Math.round(player.x)}, ${Math.round(player.y)}</div>
-    `;
-  }
+async function getSavedPos() {
+  try {
+    const p = await jget(`/api/player/pos?map=${encodeURIComponent(MAP_KEY)}`);
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) return { x: p.x, y: p.y };
+  } catch {}
+  return null;
 }
 
-function render() {
-  clear();
-  ctx.save();
-  ctx.translate(-Math.floor(cam.x), -Math.floor(cam.y));
-  drawGround();
-  for (const m of mobs) drawMob(m);
-  drawPlayer();
-  ctx.restore();
+/* ==================== Colisão e Spawns do Tiled ==================== */
+function buildCollisionGridFromObjects(mapW, mapH, objs) {
+  const cols = Math.floor(mapW / TILE);
+  const rows = Math.floor(mapH / TILE);
+  const grid = new Uint8Array(cols * rows); // 0 livre, 1 sólido
+  for (const o of objs) {
+    const oType = String(o.type || '').toLowerCase();
+    const isSolid = oType === 'solid' || (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1));
+    if (!isSolid) continue;
+    const x0 = Math.floor(o.x / TILE), y0 = Math.floor(o.y / TILE);
+    const x1 = Math.floor((o.x + o.width  - 1) / TILE);
+    const y1 = Math.floor((o.y + o.height - 1) / TILE);
+    for (let cy=y0; cy<=y1; cy++) for (let cx=x0; cx<=x1; cx++) {
+      if (cx>=0 && cy>=0 && cx<cols && cy<rows) grid[cy*cols + cx] = 1;
+    }
+  }
+  return { grid, cols, rows };
 }
 
-// Loop
-let last = 0;
-function frame(ts) {
-  const dt = Math.min(0.05, (ts - last) / 1000);
-  last = ts;
-  update(dt);
-  render();
-  requestAnimationFrame(frame);
+function buildCollisionGridFromTiled(json) {
+  const cols = json.width, rows = json.height;
+  const grid = new Uint8Array(cols * rows);
+  const collisionLayer = (json.layers || []).find(l => l.type === 'tilelayer' && l.name && l.name.toLowerCase().includes('collision'));
+  if (collisionLayer && collisionLayer.data) {
+    for (let i=0; i<collisionLayer.data.length; i++) {
+      if (collisionLayer.data[i]) grid[i] = 1;
+    }
+  }
+  return { grid, cols, rows };
 }
 
-// Fallback: ler spawns direto do JSON do Tiled
 function mapSpawnsFromTiledJSON(json) {
   const layer = (json.layers || []).find(
     (l) => l.type === "objectgroup" && l.name && l.name.toLowerCase() === "spawn"
@@ -335,61 +388,109 @@ function mapSpawnsFromTiledJSON(json) {
     });
 }
 
-// Resolve sprite do player com base no herói (starter ou primeiro da lista)
+/* ===================== Resolução de Sprite Player ===================== */
 async function resolvePlayerSprite() {
   try {
     const me = await jget('/api/player/me');
     const heroes = Array.isArray(me.heroes) ? me.heroes : [];
     const starter = heroes.find(h => h.isStarter === 1 || h.isStarter === true) || heroes[0];
     if (starter) {
-      player.heroKey = starter.heroKey || starter.key || null;
-      const candidate = player.heroKey ? `/sprites/characters/${player.heroKey}.png` : null;
+      playerVis.heroKey = starter.heroKey || starter.key || null;
+      const candidate = playerVis.heroKey ? `/sprites/characters/${playerVis.heroKey}.png` : null;
       if (candidate) {
-        player.img = loadImg(candidate);
-        await ensureImgLoaded(player.img).catch(()=>{});
-        if (imgReady(player.img)) return;
+        playerVis.img = loadImg(candidate);
+        await ensureImgLoaded(playerVis.img).catch(()=>{});
+        if (imgReady(playerVis.img)) return;
       }
       if (starter.imageUrl) {
-        player.img = loadImg(starter.imageUrl);
-        await ensureImgLoaded(player.img).catch(()=>{});
-        if (imgReady(player.img)) return;
+        playerVis.img = loadImg(starter.imageUrl);
+        await ensureImgLoaded(playerVis.img).catch(()=>{});
+        if (imgReady(playerVis.img)) return;
       }
     }
   } catch (e) {
     console.warn('resolvePlayerSprite:', e.message);
   }
-  player.img = loadImg("/sprites/characters/player.png");
-  ensureImgLoaded(player.img).catch(()=>{});
+  playerVis.img = loadImg("/sprites/characters/player.png");
+  ensureImgLoaded(playerVis.img).catch(()=>{});
 }
 
-// Bootstrap
-async function main() {
-  cam.w = canvas.width;
-  cam.h = canvas.height;
+/* =========================== Respawn Manager ========================== */
+function addMobFromSpawn(spDef) {
+  const m = {
+    id: mobAutoId++,
+    kind: spDef.monsterKey || spDef.monster || "mob",
+    x: (spDef.x || 0) + Math.random() * (spDef.w || TILE),
+    y: (spDef.y || 0) + Math.random() * (spDef.h || TILE),
+    w: 32, h: 32,
+    speed: 40 + Math.random() * 20,
+    dirX: 0, dirY: 0, changeAt: 0,
+    face: 'east',
+    img: null, meta: null,
+    bound: (spDef.w || spDef.h) ? { x: spDef.x || 0, y: spDef.y || 0, w: spDef.w || TILE, h: spDef.h || TILE } : null,
+  };
 
+  const meta = SPRITES_META[m.kind];
+  let url = null;
+  if (meta?.image) {
+    url = assetUrl(meta.image);
+    m.meta = meta;
+    m.img  = loadImg(url);
+  } else {
+    url = `/sprites/monsters/${m.kind}.png`;
+    m.img = loadImg(url);
+  }
+  ensureImgLoaded(m.img).then(ok => {
+    if (!ok) console.warn(`[mob sprite] falhou carregar: ${m.kind} @ ${url}`);
+  }).catch(()=>{});
+
+  mobs.push(m);
+  return m.id;
+}
+
+function buildSpawnersFromDefs(defs) {
+  spawners.length = 0;
+  defs.forEach(d => {
+    const want = Math.max(1, Number(d.count || 1));
+    const respawnMs = Math.max(1, Number(d.respawnSec || d.respawn || 20)) * 1000;
+    spawners.push({
+      def: d,
+      want,
+      respawnMs,
+      nextAt: performance.now(),
+      area: { x: d.x||0, y: d.y||0, w: d.w||TILE, h: d.h||TILE },
+      liveIds: new Set()
+    });
+  });
+}
+
+function updateRespawns(now) {
+  for (const sp of spawners) {
+    for (const id of Array.from(sp.liveIds)) {
+      if (!mobs.some(m => m.id === id)) sp.liveIds.delete(id);
+    }
+    while (sp.liveIds.size < sp.want && now >= sp.nextAt) {
+      const id = addMobFromSpawn(sp.def);
+      sp.liveIds.add(id);
+      sp.nextAt = now + sp.respawnMs;
+    }
+  }
+}
+
+/* ================================ Boot ================================ */
+(async function main() {
   await fetchCsrf().catch(()=>{});
-
-  // carrega meta de sprites (YAML já empacotado pelo servidor)
   await loadSpriteMeta();
+
+  // aplica tamanho inicial
+  resize();
 
   const maps = await jget("/api/admin/content/maps");
   if (!maps.some((m) => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
 
+  // Objetos do mapa (starts/solids) e data (tiles)
   const objs = await jget(`/api/admin/content/map/${MAP_KEY}/objects`);
   starts = objs.filter((o) => (o.type || "").toLowerCase() === "start");
-
-  // posição salva do jogador
-  let posLoaded = false;
-  try {
-    const p = await jget(`/api/player/pos?map=${encodeURIComponent(MAP_KEY)}`);
-    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
-      player.x = p.x; player.y = p.y;
-      posLoaded = true;
-    }
-  } catch {}
-  if (!posLoaded && starts[0]) {
-    player.x = starts[0].x; player.y = starts[0].y;
-  }
 
   mapData = await jget(`/api/admin/content/map/${MAP_KEY}/data`);
   tileset = (mapData.tilesets && mapData.tilesets[0]) || null;
@@ -397,20 +498,98 @@ async function main() {
   if (!tileset || !tileset.image) {
     console.warn("Tileset não embedado. No Tiled: 'Embed Tileset' e exporte novamente o JSON.");
   } else {
-    let imgPath = tileset.image.replace(/^(\.\.\/)+/, "/");
-    if (!imgPath.startsWith("/")) imgPath = "/" + imgPath;
-    imgPath = imgPath.replace(/^\/client\//, "/");
-    tilesetImg = loadImg(imgPath);
-    await ensureImgLoaded(tilesetImg);
+    tilesetImg = await loadTilesetImage(tileset.image);
   }
 
   groundLayer = (mapData.layers || []).find(
     (l) => l.type === "tilelayer" && l.name && l.name.toLowerCase() === "ground"
   );
 
+  // Colisão (objetos sólidos preferidos; fallback layer "collision")
+  const mapW = (mapData.width || 64) * TILE;
+  const mapH = (mapData.height || 64) * TILE;
+
+  const hasSolidObj = objs.some(o => {
+    const t = String(o.type || '').toLowerCase();
+    const hasProp = (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1));
+    return t === 'solid' || hasProp;
+  });
+
+  const collBuild = hasSolidObj
+    ? buildCollisionGridFromObjects(mapW, mapH, objs)
+    : buildCollisionGridFromTiled(mapData);
+
+  const cols = collBuild.cols || (mapData.width || 64);
+  const rows = collBuild.rows || (mapData.height || 64);
+  const worldW = cols * TILE;
+  const worldH = rows * TILE;
+  const grid = collBuild.grid || new Uint8Array(cols * rows);
+
+  // Instâncias centrais
+  camera = new Camera2D({
+    width: canvas.width,
+    height: canvas.height,
+    worldWidth: worldW,
+    worldHeight: worldH
+  });
+
+  // ---- Polyfills de compatibilidade para o ClickToMove e (eventual) zoom
+  if (typeof camera.getZoom !== 'function') {
+    camera.getZoom = () => (camera.zoom && Number(camera.zoom)) || 1;
+  }
+  if (typeof camera.setZoom !== 'function') {
+    // não muda o render; apenas guarda um valor para conversões
+    camera.setZoom = (z) => { camera.zoom = Number(z) || 1; };
+  }
+  if (typeof camera.screenToWorld !== 'function') {
+    camera.screenToWorld = (sx, sy) => {
+      const z = camera.getZoom ? Number(camera.getZoom()) || 1 : 1;
+      return { x: camera.x + (sx / z), y: camera.y + (sy / z) };
+    };
+  }
+  if (typeof camera.worldToScreen !== 'function') {
+    camera.worldToScreen = (wx, wy) => {
+      const z = camera.getZoom ? Number(camera.getZoom()) || 1 : 1;
+      return { x: (wx - camera.x) * z, y: (wy - camera.y) * z };
+    };
+  }
+
+  // aplica ZOOM da camera se existir e reage a Settings
+  function applyCameraZoom(){
+    const st = (window.GameSettings?.getState && window.GameSettings.getState()) || { zoom: 1 };
+    if (typeof camera.setZoom === 'function') camera.setZoom(Number(st.zoom || 1));
+  }
+  applyCameraZoom();
+  document.addEventListener('settings:changed', () => {
+    applyCameraZoom();
+    resize(); // DPR cap pode ter mudado
+  });
+
+  const controller = new PlayerController({
+    speed: 140,
+    collisionGrid: grid,
+    cols, rows,
+    onMoved: (x,y) => postPosThrottled(MAP_KEY, x, y)
+  });
+
+  const astar = new AStarGrid(grid, cols, rows);
+  const clickMove = new ClickToMove({ canvas, camera, controller, grid });
+  clickMove.setAStar(astar);
+
+  // Input
+  Input.attach(window, canvas);
+  resize(); // garante buffer inicial correto com DPR cap
+
+  // Posição inicial: salva ou start
+  const saved = await getSavedPos();
+  if (saved) controller.setPosition(saved.x, saved.y);
+  else if (starts[0]) controller.setPosition(starts[0].x, starts[0].y);
+  else controller.setPosition(TILE*2 + TILE/2, TILE*2 + TILE/2);
+
+  camera.follow(controller);
   await resolvePlayerSprite();
 
-  // spawns
+  // Spawns de mobs
   try {
     spawns = await jget(`/api/admin/content/map/${MAP_KEY}/spawns`);
   } catch { spawns = []; }
@@ -421,45 +600,87 @@ async function main() {
     console.log("spawns do servidor:", spawns);
   }
 
-  mobs.length = 0;
-  for (const s of spawns) {
-    const count = Math.max(1, Number(s.count || 1));
-    for (let i = 0; i < count; i++) {
-      const m = {
-        kind: s.monsterKey || s.monster || "mob",
-        x: (s.x || 0) + Math.random() * (s.w || TILE),
-        y: (s.y || 0) + Math.random() * (s.h || TILE),
-        w: 32, h: 32,                            // apenas para fallback
-        speed: 40 + Math.random() * 20,
-        dirX: 0, dirY: 0, changeAt: 0,
-        face: 'east',                             // 👈 direção olhando inicial
-        img: null, meta: null,
-        bound: (s.w || s.h) ? { x: s.x || 0, y: s.y || 0, w: s.w || TILE, h: s.h || TILE } : null,
-      };
-
-      // tenta usar o YAML do sprite
-      const meta = SPRITES_META[m.kind];
-      if (meta?.image) {
-        const url = '/' + String(meta.image).replace(/^\/?client\//, '');
-        m.meta = meta;
-        m.img  = loadImg(url);
-        await ensureImgLoaded(m.img).catch(()=>{});
-      } else {
-        m.img = loadImg(`/sprites/monsters/${m.kind}.png`);
-        ensureImgLoaded(m.img).catch(()=>{});
-      }
-
-      mobs.push(m);
-    }
+  // Monta respawners e popula inicial
+  buildSpawnersFromDefs(spawns);
+  const now0 = performance.now();
+  for (const s of spawners) {
+    while (s.liveIds.size < s.want) s.liveIds.add(addMobFromSpawn(s.def));
+    s.nextAt = now0 + s.respawnMs;
   }
 
-  cam.x = Math.max(0, player.x - cam.w * 0.5);
-  cam.y = Math.max(0, player.y - cam.h * 0.5);
+  // Loop principal
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
 
-  requestAnimationFrame((t) => { last = t; frame(t); });
-}
+    // Click-to-move
+    const m = Input.getMouse();
+    if (Input.consumeClick()) {
+      const rect = canvas.getBoundingClientRect();
+      clickMove.handleClick(m.x - rect.left, m.y - rect.top);
+    }
 
-main().catch((err) => {
+    // Teclado
+    const dir = Input.getDir();
+    controller.update(dt, dir);
+    camera.update(dt);
+
+    // AI placeholder dos mobs
+    for (const mob of mobs) {
+      if (now >= mob.changeAt) {
+        const ang = Math.random() * Math.PI * 2;
+        mob.dirX = Math.cos(ang);
+        mob.dirY = Math.sin(ang);
+        mob.changeAt = now + 700 + Math.random() * 1300;
+      }
+      mob.x += mob.dirX * mob.speed * dt;
+      mob.y += mob.dirY * mob.speed * dt;
+
+      const mag = Math.hypot(mob.dirX, mob.dirY);
+      if (mag > 0.1) {
+        if (Math.abs(mob.dirX) >= Math.abs(mob.dirY)) {
+          mob.face = mob.dirX >= 0 ? 'east' : 'west';
+        } else {
+          mob.face = mob.dirY >= 0 ? 'south' : 'north';
+        }
+      }
+      if (mob.bound) {
+        const { x, y, w, h } = mob.bound;
+        if (mob.x < x)   { mob.x = x;   mob.dirX *= -1; }
+        if (mob.y < y)   { mob.y = y;   mob.dirY *= -1; }
+        if (mob.x > x+w) { mob.x = x+w; mob.dirX *= -1; }
+        if (mob.y > y+h) { mob.y = y+h; mob.dirY *= -1; }
+      }
+    }
+
+    // Respawn
+    updateRespawns(now);
+
+    // Render
+    clear();
+    camera.apply(ctx, () => {
+      drawGround(camera);
+      for (const m of mobs) drawMob(m);
+      drawPlayer(controller);
+    });
+
+    // HUD
+    if (hud) {
+      const p = controller.getPosition();
+      hud.innerHTML = `
+        <div>map: ${MAP_KEY}</div>
+        <div>Move: WASD/Setas/Numpad • Click-to-move</div>
+        <div>pos: ${Math.round(p.x)}, ${Math.round(p.y)}</div>
+        <div>mobs: ${mobs.length} • spawns: ${spawners.length}</div>
+      `;
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+})().catch((err) => {
   console.error(err);
   if (hud) hud.textContent = "Erro: " + err.message;
 });
