@@ -51,6 +51,21 @@ const btnLogout    = document.getElementById('btnLogout');
 const summonModal  = document.getElementById('summonModal');
 const summonClose  = summonModal?.querySelector('.close');
 
+/* ---------- Util CSS Vars ---------- */
+function setRootVar(name, value){ document.documentElement.style.setProperty(name, String(value)); }
+function getRootVar(name, fallback){
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  if (!v) return fallback;
+  return v;
+}
+
+/* ---------- Topbar height -> --topbarH ---------- */
+function updateTopbarHeight(){
+  const tb = document.querySelector('.topbar');
+  const h = Math.round((tb?.getBoundingClientRect().height || 56));
+  setRootVar('--topbarH', h+'px');
+}
+
 /* ---------- Cena House ---------- */
 let currentScene = null;
 async function mountSceneHouse(){
@@ -69,27 +84,30 @@ async function mountSceneHouse(){
 }
 
 /* ---------- Viewport: respeita stacks laterais e chat ---------- */
-function getInt(v){ return parseInt(getComputedStyle(document.documentElement).getPropertyValue(v))||0; }
-
 function applyViewport(){
   // tamanho disponível do centerStage
   const center = document.getElementById('centerStage');
+  if (!center || !canvas) return;
   const rect = center.getBoundingClientRect();
 
-  // margem interna
   const pad = 16;
   const wCSS = Math.max(400, rect.width  - pad);
   const hCSS = Math.max(240, rect.height - pad);
 
-  const dpr = Math.max(1, Math.min(window.devicePixelRatio||1, 3));
+  // DPR cap pode ser controlado por GameSettings (play.js usa também)
+  const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
+  const baseDpr = window.devicePixelRatio || 1;
+  const dpr = Math.max(1, Math.min(baseDpr, Number(st.dprCap || baseDpr)));
+
   canvas.style.width  = `${wCSS}px`;
   canvas.style.height = `${hCSS}px`;
 
   const w = Math.round(wCSS*dpr), h=Math.round(hCSS*dpr);
   if (canvas.width!==w || canvas.height!==h){ canvas.width=w; canvas.height=h; }
+
   try{ currentScene?.resize?.(wCSS, hCSS, dpr); }catch{}
 }
-window.addEventListener('resize', applyViewport);
+window.addEventListener('resize', ()=>{ updateTopbarHeight(); applyViewport(); });
 
 /* ---------- Splitters (arrasta para redimensionar as sidebars) ---------- */
 function makeVSplitter(splitEl, side){
@@ -101,6 +119,7 @@ function makeVSplitter(splitEl, side){
     const root = document.documentElement;
     startW = parseInt(getComputedStyle(root).getPropertyValue(side==='left'?'--leftW':'--rightW'))|| (side==='left'?300:320);
     document.body.style.userSelect='none';
+    e.preventDefault();
   }
   function onMove(e){
     if(!dragging) return;
@@ -111,12 +130,46 @@ function makeVSplitter(splitEl, side){
   }
   function onUp(){ dragging=false; document.body.style.userSelect=''; }
 
-  splitEl.addEventListener('mousedown', onDown);
+  splitEl?.addEventListener('mousedown', onDown);
   window.addEventListener('mousemove', onMove);
   window.addEventListener('mouseup', onUp);
 }
 makeVSplitter(splitL,'left');
 makeVSplitter(splitR,'right');
+
+/* ---------- Resizer do Chat (arrasta a barrinha no topo do chat) ---------- */
+(function mountChatResizer(){
+  if (!chatDock) return;
+  let res = document.getElementById('chatResizer');
+  if (!res){
+    res = document.createElement('div');
+    res.id = 'chatResizer';
+    // insere como primeiro filho do chatDock (uma barrinha horizontal)
+    chatDock.insertBefore(res, chatDock.firstChild);
+  }
+  let dragging=false, startY=0, startH=0;
+
+  function onDown(e){
+    dragging=true;
+    startY = e.clientY;
+    const cur = parseInt(getRootVar('--chatH','170px')) || 170;
+    startH = cur;
+    document.body.style.userSelect='none';
+    e.preventDefault();
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const dy = startY - e.clientY; // arrastar pra cima aumenta área do jogo (reduz chat)
+    const newH = Math.max(120, Math.min(window.innerHeight*0.6, startH + dy));
+    setRootVar('--chatH', Math.round(newH) + 'px');
+    applyViewport();
+  }
+  function onUp(){ dragging=false; document.body.style.userSelect=''; }
+
+  res.addEventListener('mousedown', onDown);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+})();
 
 /* ---------- Abrir painéis (sempre dockados) ---------- */
 btnSkills   ?.addEventListener('click', ()=> openSkills(rightS));
@@ -135,9 +188,31 @@ window.addEventListener('keydown', (e)=>{
   }
 });
 
+/* ---------- Flags vindas do Settings -> UI Scale / Imersivo / Overlay Chat ---------- */
+function applyUiFromSettings(){
+  const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
+  // UI scale
+  const ui = Number(st.uiScale || 1);
+  setRootVar('--ui-scale', ui);
+
+  // Imersivo & Overlay Chat
+  document.body.classList.toggle('immersive', !!st.immersive);
+  document.body.classList.toggle('overlay-chat', !!st.overlayChat);
+
+  // quando muda layout, refaz viewport
+  updateTopbarHeight();
+  applyViewport();
+
+  // avisa o jogo (play.js) que houve mudança (ele cuida de zoom/smoothing/DPR)
+  const ev = new Event('settings:changed');
+  document.dispatchEvent(ev);
+}
+// aplica uma vez no boot e fica ouvindo mudanças do painel
+document.addEventListener('GameSettings:changed', applyUiFromSettings);
+
 /* ---------- Summon como MODAL ---------- */
 btnSummon?.addEventListener('click', ()=>{
-  summonModal.hidden = false;
+  if (summonModal) summonModal.hidden = false;
 });
 summonClose?.addEventListener('click', ()=> summonModal.hidden = true);
 summonModal?.addEventListener('click', (e)=>{ if(e.target===summonModal) summonModal.hidden = true; });
@@ -150,19 +225,22 @@ btnLogout?.addEventListener('click', async ()=>{
 
 /* ---------- Boot (guard starter + cena) ---------- */
 (async function boot(){
+  updateTopbarHeight();                 // mede topbar e define --topbarH
   await getCsrf().catch(()=>null);
   try{
     const st = await jget('/api/starter/status');
     if (st?.canSelect){ location.href='/starter.html'; return; }
   }catch{}
 
+  // aplica estado atual do Settings (se já carregou)
+  applyUiFromSettings();
+
   await mountSceneHouse();
   applyViewport();
 })();
 
-// Chat global — init seguro e tolerante (connect WS, load history, bind UI)
+/* ===================== Chat global — init seguro (WS + UI) ===================== */
 (function initGlobalChat() {
-  // aguarda DOM por segurança
   function onReady(fn) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
     else fn();
@@ -207,7 +285,6 @@ btnLogout?.addEventListener('click', async ()=>{
           const me = (raw && raw.profile) ? raw.profile : raw;
           myId = String((me && (me.id || me.playerId)) || '');
           myName = (me && (me.name || me.username || me.displayName)) || myName;
-          // expose for debugging
           try { window._chat_me = { id: myId, name: myName }; } catch (e) {}
           if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'auth', id: myId, name: myName }));
@@ -238,7 +315,6 @@ btnLogout?.addEventListener('click', async ()=>{
       const d = document.createElement('div');
       d.className='chat-row';
       const time = new Date(msg.ts||Date.now()).toLocaleTimeString();
-      // determine if message is mine (prefer fromId, fallback to name)
       const isMe = (msg.fromId && myId && String(msg.fromId) === String(myId)) || (!msg.fromId && msg.fromName && myName && String(msg.fromName) === String(myName));
       d.classList.add(isMe ? 'me' : 'other');
       const displayName = escapeHtml(msg.fromName || (isMe ? myName : 'Anon'));

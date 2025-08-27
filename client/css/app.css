@@ -10,16 +10,24 @@
 
   --leftW: 300px;
   --rightW: 320px;
-  --chatH: 170px;
   --splitW: 10px;
 
-  /* 👇 NOVO: escala global de UI (controlada pelo Settings) */
+  /* Alturas dinâmicas */
+  --topbarH: 56px;   /* pode ser atualizado pelo app.js */
+  --chatH: 170px;    /* redimensionável (bar acima do chat) */
+
+  /* Escala global de UI (não afeta o canvas) */
   --ui-scale: 1;
 }
 
 *{ box-sizing:border-box }
-html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+html,body{
+  height:100%; margin:0;
+  background:var(--bg); color:var(--text);
+  font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
 
+/* ===================== Topbar ===================== */
 .topbar{
   position:sticky; top:0; z-index:50;
   display:flex; align-items:center; justify-content:space-between;
@@ -32,17 +40,17 @@ html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-
 }
 .topbar .actions .danger{ background:var(--danger); border-color:#7a2a26; color:#fff; }
 
-/* GRID PRINCIPAL (TIBIA) */
+/* ===================== GRID PRINCIPAL (TIBIA) ===================== */
 #tibiaLayout{
   position:relative;
   display:grid;
   grid-template-columns: var(--leftW) var(--splitW) 1fr var(--splitW) var(--rightW);
-  grid-template-rows: 1fr var(--chatH);
+  grid-template-rows: 1fr var(--chatH);     /* linha 1 = jogo, linha 2 = chat */
   gap:0;
-  height:calc(100vh - 48px);
+  height:calc(100vh - var(--topbarH));      /* ocupa o restante da janela */
 }
 
-/* 👇 NOVO: aplica escala global aos elementos de UI (não ao canvas) */
+/* Escala global nos elementos de UI (não no canvas) */
 #hud, #leftStack, #rightStack, #chatDock{
   transform-origin: top left;
   transform: scale(var(--ui-scale));
@@ -55,6 +63,7 @@ html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-
 #rightStack{ grid-column:5; grid-row:1; }
 #chatDock  { grid-column:1 / span 5; grid-row:2; }
 
+/* ===================== Sidebars / Splitters ===================== */
 .stack{
   background:var(--panel-2);
   border-right:1px solid var(--border);
@@ -67,9 +76,11 @@ html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-
   width:var(--splitW); cursor:col-resize;
   background:linear-gradient(to right, transparent 0 4px, var(--border) 4px 6px, transparent 6px 100%);
 }
-.splitter.v:hover{ background:linear-gradient(to right, transparent 0 3px, #2a3a5a 3px 7px, transparent 7px 100%); }
+.splitter.v:hover{
+  background:linear-gradient(to right, transparent 0 3px, #2a3a5a 3px 7px, transparent 7px 100%);
+}
 
-/* VIEWPORT CENTRAL */
+/* ===================== Viewport Central ===================== */
 #clientShell{
   position:relative; width:100%; height:100%;
   display:flex; align-items:center; justify-content:center;
@@ -78,13 +89,14 @@ html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-
 #scene{
   display:block; background:#0b1220; border:1px solid var(--border);
   image-rendering: pixelated;
+  image-rendering: crisp-edges; /* compat extra */
 }
 .hud{
   position:absolute; left:10px; top:10px;
   background:#0e1628; border:1px solid var(--border); padding:6px 10px; border-radius:8px; font-size:12px;
 }
 
-/* PAINÉIS DOCKADOS */
+/* ===================== Painéis Dockados ===================== */
 .panel{
   background:var(--panel);
   border:1px solid var(--border);
@@ -106,11 +118,21 @@ html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-
 /* mini-map */
 .mini-map .body{ padding:8px; display:flex; justify-content:center; }
 
-/* CHAT */
+/* ===================== Chat + Resizer ===================== */
+#chatResizer{
+  height: 6px;
+  cursor: ns-resize;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+}
+
 #chatDock{
   display:grid; grid-template-rows: auto 1fr auto;
   background:#0c1426; border-top:1px solid var(--border);
   padding:8px;
+  height: var(--chatH);
+  min-height: 140px;
+  max-height: 50vh;
+  overflow: hidden;
 }
 #chatDock .tabs{ display:flex; gap:8px; margin-bottom:6px; }
 #chatDock .tabs button{ padding:6px 10px; border:1px solid var(--border); border-radius:8px; background:#18233a; color:#dfe6f6; }
@@ -119,6 +141,10 @@ html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-
 #chatDock form{ margin-top:6px; }
 #chatDock input{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:#0a1326; color:#e6ebf4; }
 
+/* caixa rolável ocupa o espaço restante do grid do chat */
+#chatBox{ height: 100%; }
+#chatDock .chat-box{ height: calc(100% - 82px); } /* caso use a classe 'chat-box' existente */
+
 /* Chat styling */
 #chatBox .chat-row { padding:6px 8px; border-radius:4px; margin-bottom:6px; background:transparent; transition:background .12s; }
 #chatBox .chat-row.other { color:#ffffff; }
@@ -126,11 +152,9 @@ html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-
 #chatBox .chat-row .name { font-weight:600; margin-right:6px; }
 #chatBox .chat-row.me .name { color:inherit; }
 #chatBox .chat-row .you-tag { font-weight:400; color:rgba(255,255,255,0.6); margin-left:6px; font-size:11px; }
-
-/* muted small timestamp */
 #chatBox .chat-row .muted { opacity:.6; font-size:11px; }
 
-/* MODAL (SUMMON) */
+/* ===================== Modal (Summon) ===================== */
 .modal{ position:fixed; inset:0; display:grid; place-items:center; background:rgba(0,0,0,.55); z-index:60; }
 .modal[hidden]{ display:none; }
 .modal .window{
@@ -142,3 +166,50 @@ html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-
 .modal header{ display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:#0b1220; border-bottom:1px solid #0f1930; }
 .modal header .close{ padding:8px 12px; background:#b3453e; color:#fff; border:0; border-radius:10px; cursor:pointer; }
 .modal iframe{ width:100%; height:100%; border:0; background:#0b1220; }
+
+/* ===================== Modo Imersivo (sidebars como overlay) ===================== */
+body.immersive #leftStack,
+body.immersive #rightStack{
+  position: absolute;
+  top: var(--topbarH);
+  bottom: var(--chatH);
+  width: var(--leftW);
+  pointer-events: auto;
+  z-index: 5;
+  opacity: .98;
+}
+body.immersive #leftStack{ left: 8px; }
+body.immersive #rightStack{ right: 8px; }
+body.immersive #splitLeft,
+body.immersive #splitRight{ display:none; }  /* esconde splitters fixos */
+
+body.immersive #centerStage{
+  height: calc(100vh - var(--topbarH) - var(--chatH));
+  margin: 0 8px;   /* respirinho nas bordas */
+}
+
+/* ===================== Chat em Overlay (flutua sobre o jogo) ===================== */
+body.overlay-chat #chatDock{
+  position: fixed;
+  left: 8px; right: 8px;
+  bottom: 8px;
+  width: calc(100vw - 16px);
+  z-index: 6;
+  box-shadow: 0 8px 32px rgba(0,0,0,.35);
+  border-radius: 8px;
+  background: rgba(7,16,26,.92);
+  backdrop-filter: blur(4px);
+}
+body.overlay-chat #centerStage{
+  /* quando o chat flutua, o jogo usa toda a altura abaixo da topbar */
+  height: calc(100vh - var(--topbarH));
+}
+
+/* ===================== Responsivo fino ===================== */
+@media (max-width: 1100px){
+  :root{ --leftW: 260px; --rightW: 280px; }
+  #centerStage{ min-width: 360px; }
+}
+@media (max-width: 920px){
+  :root{ --leftW: 0px; --splitW: 0px; } /* some com a esquerda se necessário */
+}

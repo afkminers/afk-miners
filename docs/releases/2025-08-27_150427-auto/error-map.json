@@ -1,0 +1,867 @@
+{
+  "GET /api/admin/content/map/:key/data": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    }
+  ],
+  "GET /api/admin/content/map/:key/objects": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    }
+  ],
+  "GET /api/admin/content/map/:key/spawns": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    }
+  ],
+  "GET /api/admin/content/maps": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    }
+  ],
+  "GET /api/admin/content/monsters": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    }
+  ],
+  "POST /api/admin/content/reload-map": [
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    }
+  ],
+  "GET /api/assets/items": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    }
+  ],
+  "GET /api/assets/sprites": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    }
+  ],
+  "GET /api/chat/global": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    }
+  ],
+  "GET /api/csrf": [
+    {
+      "status": 400,
+      "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'weaponOrSkill inválido' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'erro ao iniciar treino' }"
+    }
+  ],
+  "GET /assets/items": [
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    }
+  ],
+  "GET /assets/sprites": [
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    }
+  ],
+  "POST /assign": [
+    {
+      "status": 400,
+      "body": "{error:'worker_id required' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'worker_not_found' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'box_not_found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'assign_failed' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'collect_failed' }"
+    }
+  ],
+  "GET /class-rates": [
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar rates' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Herói não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar skills do herói' }"
+    }
+  ],
+  "POST /collect": [
+    {
+      "status": 500,
+      "body": "{error:'collect_failed' }"
+    }
+  ],
+  "POST /create-worker": [
+    {
+      "status": 400,
+      "body": "{error:'produce_type required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'create_worker_failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'worker_id required' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'worker_not_found' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'box_not_found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'assign_failed' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'collect_failed' }"
+    }
+  ],
+  "GET /curves": [
+    {
+      "status": 400,
+      "body": "{error:'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar curvas' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar rates' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Herói não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar skills do herói' }"
+    }
+  ],
+  "POST /debug/grant-seed": [
+    {
+      "status": 403,
+      "body": "{error:'forbidden' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'debug_grant_failed' }"
+    }
+  ],
+  "GET /": [],
+  "POST /harvest": [
+    {
+      "status": 400,
+      "body": "{error:'plot_id required' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'plot_not_found' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'empty_plot' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid_crop' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'not_ripe',stage:s.stage,next_at:s.nextAt,progress_pct:s.progressPct }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'harvest_failed' }"
+    },
+    {
+      "status": 403,
+      "body": "{error:'forbidden' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'debug_grant_failed' }"
+    }
+  ],
+  "GET /heroes/master": [
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar heróis' }"
+    }
+  ],
+  "GET /list": [
+    {
+      "status": 500,
+      "body": "{error:\"erro ao listar starters\" }"
+    },
+    {
+      "status": 500,
+      "body": "{error:\"erro ao checar status do starter\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"heroKey é obrigatório\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"starter já escolhido\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"starter já escolhido\" }"
+    },
+    {
+      "status": 500,
+      "body": "{error:\"erro ao selecionar starter\" }"
+    }
+  ],
+  "POST /login": [
+    {
+      "status": 401,
+      "body": "{error:'Credenciais inválidas' }"
+    },
+    {
+      "status": 401,
+      "body": "{error:'Credenciais inválidas' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao autenticar' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Jogador não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter perfil' }"
+    }
+  ],
+  "POST /logout": [
+    {
+      "status": 404,
+      "body": "{error:'Jogador não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter perfil' }"
+    }
+  ],
+  "GET /me": [
+    {
+      "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Herói não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar skills do herói' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Jogador não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter dados do jogador' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter posição' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao salvar posição' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Jogador não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter perfil' }"
+    }
+  ],
+  "GET /ping": [
+    {
+      "status": 500,
+      "body": "{error:'afk_state_failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'produce_type required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'create_worker_failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'worker_id required' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'worker_not_found' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'box_not_found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'assign_failed' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'collect_failed' }"
+    }
+  ],
+  "POST /plant": [
+    {
+      "status": 400,
+      "body": "{error:'plot_id and crop_key required' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'plot_not_found' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'plot_not_empty' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid_crop' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'no_seed' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'plant_failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'plot_id required' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'plot_not_found' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'empty_plot' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid_crop' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'not_ripe',stage:s.stage,next_at:s.nextAt,progress_pct:s.progressPct }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'harvest_failed' }"
+    },
+    {
+      "status": 403,
+      "body": "{error:'forbidden' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'debug_grant_failed' }"
+    }
+  ],
+  "POST /plot/create": [
+    {
+      "status": 500,
+      "body": "{error:'plot_create_failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'plot_id and crop_key required' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'plot_not_found' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'plot_not_empty' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid_crop' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'no_seed' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'plant_failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'plot_id required' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'plot_not_found' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'empty_plot' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid_crop' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'not_ripe',stage:s.stage,next_at:s.nextAt,progress_pct:s.progressPct }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'harvest_failed' }"
+    },
+    {
+      "status": 403,
+      "body": "{error:'forbidden' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'debug_grant_failed' }"
+    }
+  ],
+  "GET /pos": [
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter posição' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao salvar posição' }"
+    }
+  ],
+  "POST /pos": [
+    {
+      "status": 500,
+      "body": "{error:'Falha ao salvar posição' }"
+    }
+  ],
+  "POST /": [
+    {
+      "status": 400,
+      "body": "{error:result.error,cost:SUMMON_COST_COINS }"
+    },
+    {
+      "status": 400,
+      "body": "{error:r.error,cost:SUMMON_COST_COINS,pulls }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao girar gacha' }"
+    }
+  ],
+  "POST /register": [
+    {
+      "status": 400,
+      "body": "{error:v.msg }"
+    },
+    {
+      "status": 400,
+      "body": "{error:vp.msg }"
+    },
+    {
+      "status": 409,
+      "body": "{error:'Nome já está em uso.' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao registrar' }"
+    },
+    {
+      "status": 401,
+      "body": "{error:'Credenciais inválidas' }"
+    },
+    {
+      "status": 401,
+      "body": "{error:'Credenciais inválidas' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao autenticar' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Jogador não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter perfil' }"
+    }
+  ],
+  "POST /select": [
+    {
+      "status": 400,
+      "body": "{error:\"heroKey é obrigatório\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"starter já escolhido\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"starter já escolhido\" }"
+    },
+    {
+      "status": 500,
+      "body": "{error:\"erro ao selecionar starter\" }"
+    }
+  ],
+  "GET /state": [
+    {
+      "status": 500,
+      "body": "{error:'farm_state_failed' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'plot_create_failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'plot_id and crop_key required' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'plot_not_found' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'plot_not_empty' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid_crop' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'no_seed' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'plant_failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'plot_id required' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'plot_not_found' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'empty_plot' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid_crop' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'not_ripe',stage:s.stage,next_at:s.nextAt,progress_pct:s.progressPct }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'harvest_failed' }"
+    },
+    {
+      "status": 403,
+      "body": "{error:'forbidden' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'debug_grant_failed' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'afk_state_failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'produce_type required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'create_worker_failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'worker_id required' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'worker_not_found' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'box_not_found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'assign_failed' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'collect_failed' }"
+    }
+  ],
+  "GET /status": [
+    {
+      "status": 500,
+      "body": "{error:\"erro ao checar status do starter\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"heroKey é obrigatório\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"starter já escolhido\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"starter já escolhido\" }"
+    },
+    {
+      "status": 500,
+      "body": "{error:\"erro ao selecionar starter\" }"
+    }
+  ]
+}

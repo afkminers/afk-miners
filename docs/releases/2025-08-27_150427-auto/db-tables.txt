@@ -1,0 +1,6 @@
+afk_boxes           farm_plots          maps                skill_curves      
+afk_inventories     hero_training       monsters_master     spawns            
+afk_workers         heroes_master       player_hero_skills  sprites_master    
+chat_messages       inventory           player_heroes       starters_pool     
+class_skill_rates   items_master        player_positions    weapon_skill_map  
+content_files       map_objects         players           
