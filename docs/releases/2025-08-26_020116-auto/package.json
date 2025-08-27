@@ -9,7 +9,7 @@
     "serve": "node index.js",
     "git:add": "git add -A",
     "git:commit": "git commit -m \"update\"",
-    "git:push": "git push -u origin HEAD",
+    "git:push": "git push origin main",
     "deploy": "npm run git:add && npm run git:commit && npm run git:push",
     "db:drop": "if exist db\\database.sqlite del /Q db\\database.sqlite",
     "db:migrate": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/000_core_auth.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001_skills.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001a_hero_training.sql\"",

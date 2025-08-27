@@ -4,8 +4,9 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
+const http = require('http');
 
+const { db } = require('./models/db');
 const { migrate } = require('./models/migrate');
 const { cookieParser, requireAuth, requireCsrf, csrfRoute } = require('./auth/middleware');
 
@@ -13,6 +14,11 @@ const authRoutes = require('./auth/routes');
 const playerRoutes = require('./player/routes');
 const gachaRoutes = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
+const skillsRoutes = require('./skills/routes');
+
+// AFK & Farm (base/ilha)
+const afkRoutes = require('./routes/afk');
+const farmRoutes = require('./routes/farm');
 
 const K = require('./balance/config');
 const buildStarterRouter = require('./starter/routes');
@@ -33,16 +39,14 @@ const app = express();
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
-app.use(requireCsrf);
 
-// CSRF token
+// 1) Expor o endpoint de CSRF ANTES de ligar o guard global
 app.get('/api/csrf', csrfRoute);
 
-// ========= DB =========
-const DB_PATH = path.join(__dirname, 'db', 'database.sqlite');
-const db = new sqlite3.Database(DB_PATH);
+// 2) Ativar o guard de CSRF para o restante das rotas
+app.use(requireCsrf);
 
-// helpers DB (promises)
+// ========= helpers DB (promises) =========
 const dbGet = (sql, params = []) => new Promise((res, rej) => db.get(sql, params, (e, r) => e ? rej(e) : res(r)));
 const dbAll = (sql, params = []) => new Promise((res, rej) => db.all(sql, params, (e, r) => e ? rej(e) : res(r)));
 const dbRun = (sql, params = []) => new Promise((res, rej) => db.run(sql, params, function (e) { e ? rej(e) : res(this) }));
@@ -118,14 +122,24 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   else console.log("[content] tables ready (bootstrap)");
 });
 
-// ========= ROTAS QUE NÃO PRECISAM DO DB PASSADO =========
+// ========= ROTAS =========
+
+// públicas / auth
 app.use('/api/auth', authRoutes);
+
+// catálogos públicos (seu router já cuida do que é público)
 app.use('/api', catalogRoutes);
+
+// protegidas
 app.use('/api/player', requireAuth, playerRoutes);
 app.use('/api/gacha', requireAuth, gachaRoutes);
-app.use('/api/skills', require('./skills/routes'));
+app.use('/api/skills', requireAuth, skillsRoutes);
 
-// ========= Helpers =========
+// AFK (base/ilha)
+app.use('/api/afk', requireAuth, afkRoutes);
+app.use('/api/farm', requireAuth, farmRoutes);
+
+// ========= Helpers (Treino) =========
 const SKILLS = new Set(['SWORD', 'AXE', 'CLUB', 'DISTANCE', 'SHIELD', 'MAGIC']);
 
 async function resolveSkillType(weaponOrSkill) {
@@ -273,16 +287,18 @@ trainingRouter.get('/status', requireAuth, async (req, res) => {
 
 app.use('/api/training', trainingRouter);
 
-// ========= ROTAS QUE USAM DB (admin/content + starter) =========
+// ========= admin/content + starter =========
 
-// utilitários (pipeline YAML/Tiled)
-app.get('/api/admin/content/monsters', async (_req, res) => {
-  db.all('SELECT key,name,xp FROM monsters_master ORDER BY key', (err, rows) => {
+// DEBUG: listar monsters (autenticado) — evita duplicidade de rota
+app.get('/api/admin/content/monsters', requireAuth, (req, res) => {
+  db.all('SELECT key, name, xp, healthMax, speed, lookJSON FROM monsters_master', [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
+    const parsed = rows.map(r => ({ ...r, look: r.lookJSON ? JSON.parse(r.lookJSON) : {} }));
+    res.json(parsed);
   });
 });
 
+// itens/sprites
 app.get('/api/assets/items', (_req, res) => {
   db.all('SELECT key, dataJSON FROM items_master ORDER BY key', (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -372,19 +388,7 @@ app.use((req, res, next) => {
   res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
 });
 
-// after app and middleware setup (localize this where app is configured)
-// add monsters endpoint (admin/content)
-app.get('/api/admin/content/monsters', requireAuth, (req, res) => {
-  db.all('SELECT key, name, xp, healthMax, speed, lookJSON FROM monsters_master', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    // parse lookJSON for convenience
-    const parsed = rows.map(r => ({ ...r, look: r.lookJSON ? JSON.parse(r.lookJSON) : {} }));
-    res.json(parsed);
-  });
-});
-
-// WebSocket minimal server (optional)
-const http = require('http').createServer(app);
+// ========= WebSocket minimal server (opcional) =========
 
 // try to load ws optionally so server won't crash if it's not installed
 let WebSocketLib = null;
@@ -411,6 +415,19 @@ const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'token'; // ajuste se seu
 let redisPub = null;
 let redisSub = null;
 
+// helper: parse cookies from header
+function parseCookies(cookieHeader = '') {
+  return Object.fromEntries(
+    (cookieHeader || '').split(';').map(s => {
+      const idx = s.indexOf('=');
+      if (idx === -1) return [];
+      const k = s.slice(0, idx).trim();
+      const v = s.slice(idx + 1).trim();
+      return [k, decodeURIComponent(v)];
+    }).filter(Boolean)
+  );
+}
+
 async function setupRedis(wss) {
   if (!REDIS_URL) {
     console.log('[redis] REDIS_URL not set — running without Redis pub/sub (single-instance)');
@@ -426,7 +443,7 @@ async function setupRedis(wss) {
         const obj = JSON.parse(message);
         const out = JSON.stringify(obj);
         wss.clients.forEach(c => {
-          if (c && c.readyState === WebSocket.OPEN) {
+          if (c && c.readyState === WebSocketLib.OPEN) {
             try { c.send(out); } catch (e) { /* ignore */ }
           }
         });
@@ -439,218 +456,213 @@ async function setupRedis(wss) {
   }
 }
 
-// helper: parse cookies from header
-function parseCookies(cookieHeader = '') {
-  return Object.fromEntries(
-    (cookieHeader || '').split(';').map(s => {
-      const idx = s.indexOf('=');
-      if (idx === -1) return [];
-      const k = s.slice(0, idx).trim();
-      const v = s.slice(idx + 1).trim();
-      return [k, decodeURIComponent(v)];
-    }).filter(Boolean)
-  );
-}
-
-if (useWebSocket) {
-  const wss = new WebSocketLib.Server({ server: http, path: '/ws' });
-
-  // inicializa redis (se configurado)
-  setupRedis(wss).catch(() => { /* ignore */ });
-
-  const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
-
-  wss.on('connection', (ws, req) => {
-    const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
-    console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
-
-    // DEBUG: log cookies header (remova em produção se preferir)
-    console.log('[ws] cookies header:', req.headers && req.headers.cookie);
-
-    ws._connectedAt = Date.now();
-    ws._player = null;
-
-    // try validate JWT from cookie immediately (so explicit handshake not required)
-    try {
-      const cookies = parseCookies(req.headers.cookie || '');
-      const token = cookies[COOKIE_NAME] || null;
-      if (token) {
-        try {
-          const payload = jwt.verify(token, JWT_SECRET);
-          ws._player = { id: String(payload.id || payload.playerId || ''), name: String(payload.name || payload.username || payload.displayName || 'Anon') };
-          console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
-        } catch (err) {
-          console.log('[ws] jwt verify failed', err && err.message);
-        }
-      }
-    } catch (e) {
-      console.warn('[ws] cookie parse error', e && e.message);
-    }
-
-    ws.on('message', async (msg) => {
-      let data;
-      try { data = JSON.parse(msg.toString()); } catch (err) { console.warn('[ws] malformed json from', addr); return; }
-
-      if (data.type === 'auth') {
-        ws._player = { id: String(data.id || ''), name: String(data.name || 'Anonymous') };
-        console.log(`[ws] auth from ${addr} => id=${ws._player.id} name=${ws._player.name}`);
-        try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
-        return;
-      }
-
-      if (data.type === 'chat') {
-        if (!ws._player) {
-          console.warn('[ws] received chat from unauthenticated socket — ignoring');
-          try { ws.send(JSON.stringify({ type:'error', message:'not-authenticated' })); } catch {}
-          return;
-        }
-        const scope = String(data.scope || 'global').toLowerCase();
-        const raw = String(data.text || '').trim().slice(0, 800);
-        if (!raw) return;
-
-        console.log(`[chat] from=${ws._player.id} scope=${scope} text="${raw}"`);
-
-        // persist if db available
-        try {
-          if (scope === 'global' && typeof db !== 'undefined' && db && db.run) {
-            db.run('INSERT INTO chat_messages(scope, fromId, fromName, text) VALUES (?,?,?,?)', ['global', ws._player.id, ws._player.name, raw], function (err) {
-              if (err) console.warn('[chat] persist error', err && err.message);
-            });
-          }
-        } catch (e) { /* ignore db errors */ }
-
-        const out = {
-          type: 'chat',
-          scope,
-          fromId: ws._player.id,
-          fromName: ws._player.name,
-          text: raw,
-          ts: Date.now(),
-          origin: instanceId
-        };
-
-        if (redisPub) {
-          try {
-            await redisPub.publish('chat:global', JSON.stringify(out));
-          } catch (e) {
-            console.warn('[redis] publish failed', e && e.message);
-            const outStr = JSON.stringify(out);
-            wss.clients.forEach(c => {
-              if (c && c.readyState === WebSocket.OPEN) {
-                try { c.send(outStr); } catch (e) {}
-              }
-            });
-          }
-        } else {
-          const outStr = JSON.stringify(out);
-          wss.clients.forEach(c => {
-            if (c && c.readyState === WebSocket.OPEN) {
-              try { c.send(outStr); } catch (e) {}
-            }
-          });
-        }
-        return;
-      }
-
-      // pos handling (se já existir)
-      if (data.type === 'pos') {
-        const out = { type:'pos', id:String(data.id||''), x:Number(data.x||0), y:Number(data.y||0), name:String(data.name||'') };
-        wss.clients.forEach(c => {
-          if (c !== ws && c.readyState === WebSocket.OPEN) {
-            try { c.send(JSON.stringify(out)); } catch(e) {}
-          }
-        });
-      }
-    });
-
-    ws.on('close', () => {
-      console.log(`[ws] close from ${addr} — clients=${wss.clients.size}`);
-    });
-
-    ws.on('error', (err) => {
-      console.warn('[ws] socket error', err && err.message);
-    });
-  });
-}
-
-// ...existing code...
-
-http.listen(PORT, () => console.log(`server listening on ${PORT} ${useWebSocket ? '(ws enabled)' : '(ws disabled)'}`));
+let server; // http.Server
+let wss = null;
 
 // ========= START =========
 (async () => {
-  await migrate();
+  try {
+    await migrate();
 
-  if (CONTENT_PIPELINE !== 'off') {
-    console.log(`[content] pipeline: ${CONTENT_PIPELINE}`);
-    await loadAll(db, path.join(__dirname, '..'));
-  }
-
-  // Removido app.listen duplicado — usamos o http server criado acima.
-  console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
-  console.log(`[training] DB: ${DB_PATH}`);
-
-  // ========= WORKER (stamina/limites; NÃO dá tries) =========
-  async function trainingTick() {
-    try {
-      await dbRun(`
-        UPDATE hero_training
-           SET daily_seconds=CASE
-                 WHEN daily_reset_at IS NULL THEN daily_seconds
-                 WHEN datetime('now') >= daily_reset_at THEN 0
-                 ELSE daily_seconds
-               END,
-               daily_reset_at=CASE
-                 WHEN daily_reset_at IS NULL THEN datetime('now','start of day','+1 day')
-                 WHEN datetime('now') >= daily_reset_at THEN datetime('now','start of day','+1 day')
-                 ELSE daily_reset_at
-               END
-      `, []);
-
-      const running = await dbAll(`SELECT * FROM hero_training WHERE status='RUNNING'`, []);
-      const now = Date.now();
-
-      for (const t of running) {
-        const last  = Date.parse(t.last_tick_at || t.started_at || new Date().toISOString());
-        let delta   = Math.max(0, Math.floor((now - last)/1000));
-        if (delta <= 0) continue;
-
-        const sessLeft = Math.max(0, K.MAX_SESSION_SECONDS     - (t.session_seconds || 0));
-        const dayLeft  = Math.max(0, K.DAILY_TRAIN_CAP_SECONDS - (t.daily_seconds   || 0));
-        let allowed    = Math.min(delta, sessLeft, dayLeft);
-
-        const energySec = Math.floor(((t.energy_current || 0) / K.ENERGY_PER_MIN_WHEN_TRAINING) * 60);
-        allowed = Math.min(allowed, energySec);
-        if (allowed <= 0) {
-          await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
-          continue;
-        }
-
-        const newLast   = new Date(last + allowed*1000).toISOString();
-        const energyUse = K.ENERGY_PER_MIN_WHEN_TRAINING * (allowed/60);
-        const newEnergy = Math.max(0, (t.energy_current || 0) - energyUse);
-
-        await dbRun(
-          `UPDATE hero_training
-              SET last_tick_at=?,
-                  session_seconds=COALESCE(session_seconds,0)+?,
-                  daily_seconds=COALESCE(daily_seconds,0)+?,
-                  energy_current=?,
-                  energy_spent=COALESCE(energy_spent,0)+?
-            WHERE hero_id=?`,
-          [newLast, allowed, allowed, newEnergy, energyUse, t.hero_id]
-        );
-
-        if (newEnergy <= 0 || allowed < delta || allowed === sessLeft || allowed === dayLeft) {
-          await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
-        }
-      }
-    } catch (err) {
-      console.error('[worker] tick error:', err.message);
+    if (CONTENT_PIPELINE !== 'off') {
+      console.log(`[content] pipeline: ${CONTENT_PIPELINE}`);
+      await loadAll(db, path.join(__dirname, '..'));
     }
-  }
 
-  setInterval(trainingTick, WORKER_TICK_SECONDS * 1000);
+    server = http.createServer(app);
+
+    if (useWebSocket) {
+      const WebSocketServer = WebSocketLib.Server;
+      wss = new WebSocketServer({ server, path: '/ws' });
+
+      // inicializa redis (se configurado)
+      setupRedis(wss).catch(() => { /* ignore */ });
+
+      const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
+
+      wss.on('connection', (ws, req) => {
+        const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+        console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
+
+        // DEBUG: log cookies header (remova em produção se preferir)
+        console.log('[ws] cookies header:', req.headers && req.headers.cookie);
+
+        ws._connectedAt = Date.now();
+        ws._player = null;
+
+        // try validate JWT from cookie immediately (so explicit handshake not required)
+        try {
+          const cookies = parseCookies(req.headers.cookie || '');
+          const token = cookies[COOKIE_NAME] || null;
+          if (token) {
+            try {
+              const payload = jwt.verify(token, JWT_SECRET);
+              ws._player = { id: String(payload.id || payload.playerId || ''), name: String(payload.name || payload.username || payload.displayName || 'Anon') };
+              console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
+            } catch (err) {
+              console.log('[ws] jwt verify failed', err && err.message);
+            }
+          }
+        } catch (e) {
+          console.warn('[ws] cookie parse error', e && e.message);
+        }
+
+        ws.on('message', async (msg) => {
+          let data;
+          try { data = JSON.parse(msg.toString()); } catch (err) { console.warn('[ws] malformed json from', addr); return; }
+
+          if (data.type === 'auth') {
+            ws._player = { id: String(data.id || ''), name: String(data.name || 'Anonymous') };
+            console.log(`[ws] auth from ${addr} => id=${ws._player.id} name=${ws._player.name}`);
+            try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
+            return;
+          }
+
+          if (data.type === 'chat') {
+            if (!ws._player) {
+              console.warn('[ws] received chat from unauthenticated socket — ignoring');
+              try { ws.send(JSON.stringify({ type:'error', message:'not-authenticated' })); } catch {}
+              return;
+            }
+            const scope = String(data.scope || 'global').toLowerCase();
+            const raw = String(data.text || '').trim().slice(0, 800);
+            if (!raw) return;
+
+            console.log(`[chat] from=${ws._player.id} scope=${scope} text="${raw}"`);
+
+            // persist if db available
+            try {
+              if (scope === 'global' && typeof db !== 'undefined' && db && db.run) {
+                db.run('INSERT INTO chat_messages(scope, fromId, fromName, text) VALUES (?,?,?,?)', ['global', ws._player.id, ws._player.name, raw], function (err) {
+                  if (err) console.warn('[chat] persist error', err && err.message);
+                });
+              }
+            } catch (e) { /* ignore db errors */ }
+
+            const out = {
+              type: 'chat',
+              scope,
+              fromId: ws._player.id,
+              fromName: ws._player.name,
+              text: raw,
+              ts: Date.now(),
+              origin: instanceId
+            };
+
+            if (redisPub) {
+              try {
+                await redisPub.publish('chat:global', JSON.stringify(out));
+              } catch (e) {
+                console.warn('[redis] publish failed', e && e.message);
+                const outStr = JSON.stringify(out);
+                wss.clients.forEach(c => {
+                  if (c && c.readyState === WebSocketLib.OPEN) {
+                    try { c.send(outStr); } catch (e) {}
+                  }
+                });
+              }
+            } else {
+              const outStr = JSON.stringify(out);
+              wss.clients.forEach(c => {
+                if (c && c.readyState === WebSocketLib.OPEN) {
+                  try { c.send(outStr); } catch (e) {}
+                }
+              });
+            }
+            return;
+          }
+
+          // pos handling (se já existir)
+          if (data.type === 'pos') {
+            const out = { type:'pos', id:String(data.id||''), x:Number(data.x||0), y:Number(data.y||0), name:String(data.name||'') };
+            wss.clients.forEach(c => {
+              if (c !== ws && c.readyState === WebSocketLib.OPEN) {
+                try { c.send(JSON.stringify(out)); } catch(e) {}
+              }
+            });
+          }
+        });
+
+        ws.on('close', () => {
+          console.log(`[ws] close from ${addr} — clients=${wss.clients.size}`);
+        });
+
+        ws.on('error', (err) => {
+          console.warn('[ws] socket error', err && err.message);
+        });
+      });
+    }
+
+    server.listen(PORT, () => {
+      console.log(`server listening on ${PORT} ${useWebSocket ? '(ws enabled)' : '(ws disabled)'}`);
+      console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
+    });
+
+    // ========= WORKER (stamina/limites; NÃO dá tries) =========
+    async function trainingTick() {
+      try {
+        await dbRun(`
+          UPDATE hero_training
+             SET daily_seconds=CASE
+                   WHEN daily_reset_at IS NULL THEN daily_seconds
+                   WHEN datetime('now') >= daily_reset_at THEN 0
+                   ELSE daily_seconds
+                 END,
+                 daily_reset_at=CASE
+                   WHEN daily_reset_at IS NULL THEN datetime('now','start of day','+1 day')
+                   WHEN datetime('now') >= daily_reset_at THEN datetime('now','start of day','+1 day')
+                   ELSE daily_reset_at
+                 END
+        `, []);
+
+        const running = await dbAll(`SELECT * FROM hero_training WHERE status='RUNNING'`, []);
+        const now = Date.now();
+
+        for (const t of running) {
+          const last  = Date.parse(t.last_tick_at || t.started_at || new Date().toISOString());
+          let delta   = Math.max(0, Math.floor((now - last)/1000));
+          if (delta <= 0) continue;
+
+          const sessLeft = Math.max(0, K.MAX_SESSION_SECONDS     - (t.session_seconds || 0));
+          const dayLeft  = Math.max(0, K.DAILY_TRAIN_CAP_SECONDS - (t.daily_seconds   || 0));
+          let allowed    = Math.min(delta, sessLeft, dayLeft);
+
+          const energySec = Math.floor(((t.energy_current || 0) / K.ENERGY_PER_MIN_WHEN_TRAINING) * 60);
+          allowed = Math.min(allowed, energySec);
+          if (allowed <= 0) {
+            await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
+            continue;
+          }
+
+          const newLast   = new Date(last + allowed*1000).toISOString();
+          const energyUse = K.ENERGY_PER_MIN_WHEN_TRAINING * (allowed/60);
+          const newEnergy = Math.max(0, (t.energy_current || 0) - energyUse);
+
+          await dbRun(
+            `UPDATE hero_training
+                SET last_tick_at=?,
+                    session_seconds=COALESCE(session_seconds,0)+?,
+                    daily_seconds=COALESCE(daily_seconds,0)+?,
+                    energy_current=?,
+                    energy_spent=COALESCE(energy_spent,0)+?
+              WHERE hero_id=?`,
+            [newLast, allowed, allowed, newEnergy, energyUse, t.hero_id]
+          );
+
+          if (newEnergy <= 0 || allowed < delta || allowed === sessLeft || allowed === dayLeft) {
+            await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
+          }
+        }
+      } catch (err) {
+        console.error('[worker] tick error:', err.message);
+      }
+    }
+
+    setInterval(trainingTick, WORKER_TICK_SECONDS * 1000);
+  } catch (err) {
+    console.error('Fatal start error:', err);
+    process.exit(1);
+  }
 })();
 
 // rota para obter histórico global (últimas N mensagens)

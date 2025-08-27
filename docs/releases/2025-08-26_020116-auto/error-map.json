@@ -1,0 +1,658 @@
+{
+  "POST /afk/assign": [
+    {
+      "status": 401,
+      "body": "{error:'auth required' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'workerId required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:String(e) }"
+    },
+    {
+      "status": 401,
+      "body": "{error:'auth required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:String(e) }"
+    }
+  ],
+  "POST /afk/collect": [
+    {
+      "status": 401,
+      "body": "{error:'auth required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:String(e) }"
+    }
+  ],
+  "POST /afk/create-worker": [
+    {
+      "status": 401,
+      "body": "{error:'auth required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:String(e) }"
+    },
+    {
+      "status": 401,
+      "body": "{error:'auth required' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'workerId required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:String(e) }"
+    },
+    {
+      "status": 401,
+      "body": "{error:'auth required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:String(e) }"
+    }
+  ],
+  "GET /afk/state": [
+    {
+      "status": 401,
+      "body": "{error:'auth required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:String(e) }"
+    },
+    {
+      "status": 401,
+      "body": "{error:'auth required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:String(e) }"
+    },
+    {
+      "status": 401,
+      "body": "{error:'auth required' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'workerId required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:String(e) }"
+    },
+    {
+      "status": 401,
+      "body": "{error:'auth required' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:String(e) }"
+    }
+  ],
+  "GET /api/admin/content/map/:key/data": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    }
+  ],
+  "GET /api/admin/content/map/:key/objects": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    }
+  ],
+  "GET /api/admin/content/map/:key/spawns": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    }
+  ],
+  "GET /api/admin/content/maps": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    }
+  ],
+  "GET /api/admin/content/monsters": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    }
+  ],
+  "POST /api/admin/content/reload-map": [
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    }
+  ],
+  "GET /api/assets/items": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    }
+  ],
+  "GET /api/assets/sprites": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'map not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'invalid map json' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    }
+  ],
+  "GET /api/chat/global": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    }
+  ],
+  "GET /api/csrf": [
+    {
+      "status": 400,
+      "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'weaponOrSkill inválido' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'erro ao iniciar treino' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    }
+  ],
+  "GET /assets/items": [
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    }
+  ],
+  "GET /assets/sprites": [
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    },
+    {
+      "status": 500,
+      "body": "{error:e.message }"
+    }
+  ],
+  "GET /class-rates": [
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar rates' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Herói não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar skills do herói' }"
+    }
+  ],
+  "GET /curves": [
+    {
+      "status": 400,
+      "body": "{error:'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar curvas' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar rates' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Herói não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar skills do herói' }"
+    }
+  ],
+  "GET /": [
+    {
+      "status": 500,
+      "body": "{error:err.message }"
+    }
+  ],
+  "GET /heroes/master": [
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar heróis' }"
+    }
+  ],
+  "GET /list": [
+    {
+      "status": 500,
+      "body": "{error:\"erro ao listar starters\" }"
+    },
+    {
+      "status": 500,
+      "body": "{error:\"erro ao checar status do starter\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"heroKey é obrigatório\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"starter já escolhido\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"starter já escolhido\" }"
+    },
+    {
+      "status": 500,
+      "body": "{error:\"erro ao selecionar starter\" }"
+    }
+  ],
+  "POST /login": [
+    {
+      "status": 401,
+      "body": "{error:'Credenciais inválidas' }"
+    },
+    {
+      "status": 401,
+      "body": "{error:'Credenciais inválidas' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao autenticar' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Jogador não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter perfil' }"
+    }
+  ],
+  "POST /logout": [
+    {
+      "status": 404,
+      "body": "{error:'Jogador não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter perfil' }"
+    }
+  ],
+  "GET /me": [
+    {
+      "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Herói não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar skills do herói' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Jogador não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter dados do jogador' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter posição' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao salvar posição' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Jogador não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter perfil' }"
+    }
+  ],
+  "GET /pos": [
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter posição' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao salvar posição' }"
+    }
+  ],
+  "POST /pos": [
+    {
+      "status": 500,
+      "body": "{error:'Falha ao salvar posição' }"
+    }
+  ],
+  "POST /": [
+    {
+      "status": 400,
+      "body": "{error:result.error,cost:SUMMON_COST_COINS }"
+    },
+    {
+      "status": 400,
+      "body": "{error:r.error,cost:SUMMON_COST_COINS,pulls }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao girar gacha' }"
+    }
+  ],
+  "POST /register": [
+    {
+      "status": 400,
+      "body": "{error:v.msg }"
+    },
+    {
+      "status": 400,
+      "body": "{error:vp.msg }"
+    },
+    {
+      "status": 409,
+      "body": "{error:'Nome já está em uso.' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao registrar' }"
+    },
+    {
+      "status": 401,
+      "body": "{error:'Credenciais inválidas' }"
+    },
+    {
+      "status": 401,
+      "body": "{error:'Credenciais inválidas' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao autenticar' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Jogador não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao obter perfil' }"
+    }
+  ],
+  "POST /select": [
+    {
+      "status": 400,
+      "body": "{error:\"heroKey é obrigatório\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"starter já escolhido\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"starter já escolhido\" }"
+    },
+    {
+      "status": 500,
+      "body": "{error:\"erro ao selecionar starter\" }"
+    }
+  ],
+  "GET /status": [
+    {
+      "status": 500,
+      "body": "{error:\"erro ao checar status do starter\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"heroKey é obrigatório\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"starter já escolhido\" }"
+    },
+    {
+      "status": 400,
+      "body": "{error:\"starter já escolhido\" }"
+    },
+    {
+      "status": 500,
+      "body": "{error:\"erro ao selecionar starter\" }"
+    }
+  ]
+}
