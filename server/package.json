@@ -7,17 +7,24 @@
     "start": "nodemon index.js",
     "dev": "nodemon index.js",
     "serve": "node index.js",
+
     "git:add": "git add -A",
     "git:commit": "git commit -m \"update\"",
-    "git:push": "git push origin main",
+    "git:push": "git push -u origin HEAD",
+    "push:current": "git push -u origin HEAD",
+    "push:main": "git push origin main",
+    "branch": "git rev-parse --abbrev-ref HEAD",
     "deploy": "npm run git:add && npm run git:commit && npm run git:push",
+
     "db:drop": "if exist db\\database.sqlite del /Q db\\database.sqlite",
-    "db:migrate": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/000_core_auth.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001_skills.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001a_hero_training.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/002_afk.sql\"",
+    "db:migrate": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001_skills.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/002_content.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/002_afk.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/003_farm.sql\"",
+    "db:migrate:all": "npm run db:migrate",
     "db:seed": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/001_skill_maps.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/002_skill_curves.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/003_class_skill_rates.sql\"",
     "db:tables": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".tables\"",
     "db:info": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".schema\"",
     "db:verify": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \"SELECT 'heroes_master' as t, COUNT(*) FROM heroes_master; SELECT 'player_heroes', COUNT(*) FROM player_heroes; SELECT 'weapon_skill_map', COUNT(*) FROM weapon_skill_map; SELECT 'skill_curves', COUNT(*) FROM skill_curves; SELECT 'class_skill_rates', COUNT(*) FROM class_skill_rates;\"",
     "db:reset": "npm run db:drop && npm run db:migrate && npm run db:seed",
+
     "ctx:pack": "node scripts/gen-context.js",
     "ctx:print:win": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/print-context.ps1",
     "ctx:snapshot:win": "scripts\\snapshot.bat",
@@ -25,8 +32,10 @@
     "ctx:zip": "npm run ctx:bundle:win -- -Name auto -Symbols -Imports -Depth 4 -Zip",
     "ctx:tag": "git tag -a v-am-%npm_config_name% -m \"snapshot: %npm_config_name%\" && git push origin --tags",
     "ctx:verify": "node scripts/verify-context.mjs",
+
     "backup:pre": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/backup-repo.ps1 -Label pre",
     "backup:post": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/backup-repo.ps1 -Label post",
+
     "save": "node -e \"console.log('🚀 Salvando alterações no GitHub...')\" && npm run backup:pre && npm run deploy && npm run backup:post && node -e \"console.log('📦 Gerando snapshot zipado...')\" && npm run ctx:zip && node -e \"console.log('✅ Pronto! Agora só mandar o zip em nova conversa.')\""
   },
   "keywords": [],
