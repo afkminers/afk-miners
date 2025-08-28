@@ -24,9 +24,7 @@
     "{ok:true,reloaded:mapKey }"
   ],
   "GET /api/chat/global": [],
-  "GET /api/csrf": [
-    "{ok:true,message:'Training started',heroId,skillType }"
-  ],
+  "GET /api/csrf": [],
   "GET /assets/items": [],
   "GET /assets/sprites": [],
   "POST /assign": [
@@ -46,12 +44,12 @@
     "{skill_type:skill,rows }"
   ],
   "POST /debug/grant-seed": [
-    "{ok:true,item_type,amount:Number(amount)||0 }"
+    "{ok:true,item_type,amount:Number(amount) || 0 }"
   ],
   "GET /": [],
   "POST /harvest": [
     "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }",
-    "{ok:true,item_type,amount:Number(amount)||0 }"
+    "{ok:true,item_type,amount:Number(amount) || 0 }"
   ],
   "GET /heroes/master": [],
   "GET /list": [
@@ -78,15 +76,14 @@
     "{ok:true,added:total }"
   ],
   "POST /plant": [
-    "{ok:true,plot_id,crop_key,stage:1,planted_at:planted,next_at:nextAt }",
+    "{ok:true,plot_id,crop_key,stage:1,planted_at:new Date(plantedAtSec * 1000).toISOString(),next_at:new Date(nextAtSec * 1000).toISOString() }",
     "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }",
-    "{ok:true,item_type,amount:Number(amount)||0 }"
+    "{ok:true,item_type,amount:Number(amount) || 0 }"
   ],
   "POST /plot/create": [
     "{ok:true,id }",
-    "{ok:true,plot_id,crop_key,stage:1,planted_at:planted,next_at:nextAt }",
-    "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }",
-    "{ok:true,item_type,amount:Number(amount)||0 }"
+    "{ok:true,plot_id,crop_key,stage:1,planted_at:new Date(plantedAtSec * 1000).toISOString(),next_at:new Date(nextAtSec * 1000).toISOString() }",
+    "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }"
   ],
   "GET /pos": [
     "{ok:true }"
@@ -98,7 +95,6 @@
     "{cost:SUMMON_COST_COINS,pulls,newBalance:updated }"
   ],
   "POST /register": [
-    "{id,name:v.name,coins:500,gems:0,createdAt }",
     "{ok:true }",
     "{ok:true }",
     "{profile }"

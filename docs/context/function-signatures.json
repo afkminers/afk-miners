@@ -20,36 +20,13 @@
   {
     "file": "server\\index.js",
     "line": 50,
-    "kind": "arrow",
-    "name": "dbGet",
-    "params": [
-      "sql",
-      "params = []"
-    ]
+    "kind": "function",
+    "name": "bootstrapContentTables",
+    "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 51,
-    "kind": "arrow",
-    "name": "dbAll",
-    "params": [
-      "sql",
-      "params = []"
-    ]
-  },
-  {
-    "file": "server\\index.js",
-    "line": 52,
-    "kind": "arrow",
-    "name": "dbRun",
-    "params": [
-      "sql",
-      "params = []"
-    ]
-  },
-  {
-    "file": "server\\index.js",
-    "line": 145,
+    "line": 171,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -58,7 +35,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 371,
+    "line": 407,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -67,7 +44,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 419,
+    "line": 454,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -76,7 +53,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 431,
+    "line": 466,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -85,19 +62,17 @@
   },
   {
     "file": "server\\index.js",
-    "line": 602,
+    "line": 640,
     "kind": "function",
     "name": "trainingTick",
     "params": []
   },
   {
     "file": "server\\starter\\routes.js",
-    "line": 5,
+    "line": 6,
     "kind": "function",
     "name": "buildStarterRouter",
-    "params": [
-      "db"
-    ]
+    "params": []
   },
   {
     "file": "server\\skills\\engine.js",
@@ -111,7 +86,7 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 18,
+    "line": 19,
     "kind": "function",
     "name": "triesNeeded",
     "params": [
@@ -121,7 +96,7 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 26,
+    "line": 29,
     "kind": "function",
     "name": "getClassRate",
     "params": [
@@ -131,7 +106,7 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 35,
+    "line": 40,
     "kind": "function",
     "name": "applyTries",
     "params": [
@@ -142,80 +117,70 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 72,
+    "line": 85,
     "kind": "function",
-    "name": "_tryFrom",
+    "name": "triesBase",
     "params": [
       "kind"
     ]
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 77,
+    "line": 92,
     "kind": "function",
-    "name": "_ctxMul",
+    "name": "contextMul",
     "params": [
       "context"
     ]
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 83,
-    "kind": "function",
-    "name": "_trainingGate",
-    "params": [
-      "heroId",
-      "context"
-    ]
-  },
-  {
-    "file": "server\\skills\\engine.js",
-    "line": 90,
+    "line": 100,
     "kind": "function",
     "name": "gainFromHit",
     "params": [
       "{ heroId",
       "skillType",
       "heroClass",
-      "context='COMBAT' }"
+      "context = 'COMBAT' }"
     ]
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 97,
+    "line": 106,
     "kind": "function",
     "name": "gainFromShot",
     "params": [
       "{ heroId",
       "heroClass",
-      "context='COMBAT' }"
+      "context = 'COMBAT' }"
     ]
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 104,
+    "line": 112,
     "kind": "function",
     "name": "gainFromCast",
     "params": [
       "{ heroId",
       "heroClass",
-      "context='COMBAT' }"
+      "context = 'COMBAT' }"
     ]
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 111,
+    "line": 118,
     "kind": "function",
     "name": "gainFromBlock",
     "params": [
       "{ heroId",
       "heroClass",
-      "context='COMBAT' }"
+      "context = 'COMBAT' }"
     ]
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 44,
+    "line": 46,
     "kind": "function",
     "name": "sh",
     "params": [
@@ -224,7 +189,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 45,
+    "line": 47,
     "kind": "function",
     "name": "ensureDir",
     "params": [
@@ -233,14 +198,14 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 47,
+    "line": 49,
     "kind": "function",
     "name": "gitInfo",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 54,
+    "line": 56,
     "kind": "function",
     "name": "walkDir",
     "params": [
@@ -251,7 +216,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 68,
+    "line": 70,
     "kind": "function",
     "name": "dirTree",
     "params": [
@@ -260,21 +225,21 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 73,
+    "line": 75,
     "kind": "function",
     "name": "listRootFiles",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 80,
+    "line": 82,
     "kind": "function",
     "name": "inventoryByExt",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 90,
+    "line": 92,
     "kind": "function",
     "name": "largestFiles",
     "params": [
@@ -283,63 +248,63 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 98,
+    "line": 100,
     "kind": "function",
     "name": "scanRoutes",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 115,
+    "line": 117,
     "kind": "function",
     "name": "listMigSeed",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 121,
+    "line": 123,
     "kind": "function",
     "name": "summarizeYAML",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 137,
+    "line": 139,
     "kind": "function",
     "name": "summarizeJSON",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 155,
+    "line": 157,
     "kind": "function",
     "name": "summarizeHTML",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 178,
+    "line": 180,
     "kind": "function",
     "name": "buildSymbolIndex",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 197,
+    "line": 199,
     "kind": "function",
     "name": "buildImportGraph",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 214,
+    "line": 216,
     "kind": "function",
     "name": "buildFunctionSignatures",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 237,
+    "line": 239,
     "kind": "function",
     "name": "splitParams",
     "params": [
@@ -348,14 +313,14 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 240,
+    "line": 242,
     "kind": "function",
     "name": "buildEnvUsage",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 258,
+    "line": 260,
     "kind": "function",
     "name": "cleanDefault",
     "params": [
@@ -364,7 +329,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 265,
+    "line": 267,
     "kind": "function",
     "name": "buildEndpointContracts",
     "params": [
@@ -373,7 +338,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 296,
+    "line": 298,
     "kind": "function",
     "name": "inferParamsFromPath",
     "params": [
@@ -382,7 +347,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 297,
+    "line": 299,
     "kind": "function",
     "name": "inferKeys",
     "params": [
@@ -392,7 +357,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 305,
+    "line": 307,
     "kind": "function",
     "name": "inferErrors",
     "params": [
@@ -401,7 +366,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 313,
+    "line": 315,
     "kind": "function",
     "name": "inferOkResponses",
     "params": [
@@ -410,7 +375,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 323,
+    "line": 325,
     "kind": "function",
     "name": "compactJsonLike",
     "params": [
@@ -419,7 +384,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 324,
+    "line": 326,
     "kind": "function",
     "name": "objFromKeys",
     "params": [
@@ -428,7 +393,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 325,
+    "line": 327,
     "kind": "function",
     "name": "exampleForKey",
     "params": [
@@ -437,14 +402,14 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 335,
+    "line": 337,
     "kind": "function",
     "name": "scanTodos",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 349,
+    "line": 351,
     "kind": "function",
     "name": "buildRouteHistory",
     "params": [
@@ -454,7 +419,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 364,
+    "line": 366,
     "kind": "function",
     "name": "buildOpenAPI",
     "params": [
@@ -463,7 +428,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 424,
+    "line": 425,
     "kind": "function",
     "name": "schemaType",
     "params": [
@@ -472,7 +437,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 429,
+    "line": 430,
     "kind": "function",
     "name": "schemaFromSample",
     "params": [
@@ -481,7 +446,7 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 432,
+    "line": 433,
     "kind": "function",
     "name": "schemaFromJsonLike",
     "params": [
@@ -540,51 +505,21 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 571,
+    "line": 574,
+    "kind": "function",
+    "name": "dumpPostgresSnapshot",
+    "params": []
+  },
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "line": 653,
     "kind": "function",
     "name": "main",
     "params": []
   },
   {
     "file": "server\\routes\\farm.js",
-    "line": 7,
-    "kind": "arrow",
-    "name": "dbGet",
-    "params": [
-      "sql",
-      "p=[]"
-    ]
-  },
-  {
-    "file": "server\\routes\\farm.js",
-    "line": 8,
-    "kind": "arrow",
-    "name": "dbAll",
-    "params": [
-      "sql",
-      "p=[]"
-    ]
-  },
-  {
-    "file": "server\\routes\\farm.js",
-    "line": 9,
-    "kind": "arrow",
-    "name": "dbRun",
-    "params": [
-      "sql",
-      "p=[]"
-    ]
-  },
-  {
-    "file": "server\\routes\\farm.js",
-    "line": 31,
-    "kind": "arrow",
-    "name": "nowSql",
-    "params": []
-  },
-  {
-    "file": "server\\routes\\farm.js",
-    "line": 32,
+    "line": 26,
     "kind": "function",
     "name": "toMs",
     "params": [
@@ -593,7 +528,7 @@
   },
   {
     "file": "server\\routes\\farm.js",
-    "line": 35,
+    "line": 34,
     "kind": "function",
     "name": "computeStage",
     "params": [
@@ -602,50 +537,11 @@
   },
   {
     "file": "server\\routes\\catalog.js",
-    "line": 6,
+    "line": 8,
     "kind": "arrow",
     "name": "imageUrlFor",
     "params": [
       "k"
-    ]
-  },
-  {
-    "file": "server\\routes\\afk.js",
-    "line": 7,
-    "kind": "arrow",
-    "name": "dbGet",
-    "params": [
-      "sql",
-      "p=[]"
-    ]
-  },
-  {
-    "file": "server\\routes\\afk.js",
-    "line": 8,
-    "kind": "arrow",
-    "name": "dbAll",
-    "params": [
-      "sql",
-      "p=[]"
-    ]
-  },
-  {
-    "file": "server\\routes\\afk.js",
-    "line": 9,
-    "kind": "arrow",
-    "name": "dbRun",
-    "params": [
-      "sql",
-      "p=[]"
-    ]
-  },
-  {
-    "file": "server\\routes\\afk.js",
-    "line": 90,
-    "kind": "function",
-    "name": "tsToMs",
-    "params": [
-      "s"
     ]
   },
   {
@@ -659,7 +555,7 @@
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 72,
+    "line": 71,
     "kind": "arrow",
     "name": "imageUrlFor",
     "params": [
@@ -668,21 +564,21 @@
   },
   {
     "file": "server\\models\\migrate.js",
-    "line": 4,
+    "line": 5,
     "kind": "function",
     "name": "migrate",
     "params": []
   },
   {
     "file": "server\\models\\heroes.js",
-    "line": 4,
+    "line": 12,
     "kind": "function",
     "name": "ensureHeroesSchema",
     "params": []
   },
   {
     "file": "server\\models\\heroes.js",
-    "line": 28,
+    "line": 37,
     "kind": "function",
     "name": "seedHeroesIfEmpty",
     "params": []
@@ -690,32 +586,39 @@
   {
     "file": "server\\models\\db.js",
     "line": 17,
-    "kind": "arrow",
+    "kind": "function",
     "name": "all",
     "params": [
       "q",
-      "p = []"
+      "params = []"
     ]
   },
   {
     "file": "server\\models\\db.js",
-    "line": 18,
-    "kind": "arrow",
+    "line": 22,
+    "kind": "function",
     "name": "get",
     "params": [
       "q",
-      "p = []"
+      "params = []"
     ]
   },
   {
     "file": "server\\models\\db.js",
-    "line": 19,
-    "kind": "arrow",
+    "line": 32,
+    "kind": "function",
     "name": "run",
     "params": [
       "q",
-      "p = []"
+      "params = []"
     ]
+  },
+  {
+    "file": "server\\models\\db.js",
+    "line": 46,
+    "kind": "arrow",
+    "name": "shutdown",
+    "params": []
   },
   {
     "file": "server\\gacha\\routes.js",
@@ -781,29 +684,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 18,
-    "kind": "function",
-    "name": "upsert",
-    "params": [
-      "db",
-      "sql",
-      "params"
-    ]
-  },
-  {
-    "file": "server\\content\\loader.js",
     "line": 23,
-    "kind": "function",
-    "name": "get",
-    "params": [
-      "db",
-      "sql",
-      "params"
-    ]
-  },
-  {
-    "file": "server\\content\\loader.js",
-    "line": 27,
     "kind": "function",
     "name": "loadMonsters",
     "params": [
@@ -813,7 +694,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 61,
+    "line": 87,
     "kind": "function",
     "name": "loadItems",
     "params": [
@@ -823,7 +704,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 84,
+    "line": 130,
     "kind": "function",
     "name": "loadSprites",
     "params": [
@@ -833,7 +714,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 105,
+    "line": 172,
     "kind": "function",
     "name": "loadMap",
     "params": [
@@ -844,7 +725,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 172,
+    "line": 268,
     "kind": "function",
     "name": "loadAll",
     "params": [
@@ -864,7 +745,7 @@
   },
   {
     "file": "server\\auth\\routes.js",
-    "line": 17,
+    "line": 16,
     "kind": "function",
     "name": "validateName",
     "params": [
@@ -873,7 +754,7 @@
   },
   {
     "file": "server\\auth\\routes.js",
-    "line": 32,
+    "line": 31,
     "kind": "function",
     "name": "validatePassword",
     "params": [
@@ -882,7 +763,7 @@
   },
   {
     "file": "server\\auth\\routes.js",
-    "line": 39,
+    "line": 38,
     "kind": "function",
     "name": "noStore",
     "params": [
@@ -7520,7 +7401,7 @@
   },
   {
     "file": "client\\js\\auth.js",
-    "line": 35,
+    "line": 29,
     "kind": "function",
     "name": "doRegister",
     "params": [
@@ -7530,7 +7411,7 @@
   },
   {
     "file": "client\\js\\auth.js",
-    "line": 50,
+    "line": 38,
     "kind": "function",
     "name": "doLogout",
     "params": []

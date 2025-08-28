@@ -420,27 +420,10 @@
       "get": {
         "responses": {
           "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": "OK"
           },
           "400": {
             "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -484,7 +467,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
@@ -503,7 +491,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
@@ -839,10 +832,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "item_type='seed_wheat'": {
+                  "item_type = 'seed_wheat'": {
                     "type": "string"
                   },
-                  "amount=5": {
+                  "amount = 5": {
                     "type": "number"
                   }
                 }
@@ -969,10 +962,10 @@
                   "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { plot_id": {
                     "type": "number"
                   },
-                  "item_type='seed_wheat'": {
+                  "item_type = 'seed_wheat'": {
                     "type": "string"
                   },
-                  "amount=5": {
+                  "amount = 5": {
                     "type": "number"
                   }
                 }
@@ -1019,12 +1012,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
+                  "type": "object"
                 }
               }
             }
@@ -1034,12 +1022,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
+                  "type": "object"
                 }
               }
             }
@@ -1356,10 +1339,10 @@
                   "crop_key": {
                     "type": "string"
                   },
-                  "item_type='seed_wheat'": {
+                  "item_type = 'seed_wheat'": {
                     "type": "string"
                   },
-                  "amount=5": {
+                  "amount = 5": {
                     "type": "number"
                   }
                 }
@@ -1430,10 +1413,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { x=0": {
+                  "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { x = 0": {
                     "type": "number"
                   },
-                  "y=0": {
+                  "y = 0": {
                     "type": "string"
                   },
                   "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { plot_id": {
@@ -1442,10 +1425,10 @@
                   "crop_key": {
                     "type": "string"
                   },
-                  "item_type='seed_wheat'": {
+                  "item_type = 'seed_wheat'": {
                     "type": "string"
                   },
-                  "amount=5": {
+                  "amount = 5": {
                     "type": "number"
                   }
                 }
@@ -1533,7 +1516,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
                 }
               }
             }
@@ -1609,12 +1597,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
+                  "type": "object"
                 }
               }
             }
@@ -1624,12 +1607,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
+                  "type": "object"
                 }
               }
             }
@@ -1667,16 +1645,6 @@
           },
           "400": {
             "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error 403 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1759,12 +1727,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
+                  "type": "object"
                 }
               }
             }
@@ -1774,12 +1737,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
+                  "type": "object"
                 }
               }
             }

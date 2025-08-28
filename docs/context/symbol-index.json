@@ -1117,7 +1117,6 @@
   {
     "file": "server\\content\\loader.js",
     "symbols": [
-      "get",
       "list",
       "loadAll",
       "loadItems",
@@ -1125,8 +1124,7 @@
       "loadMonsters",
       "loadSprites",
       "read",
-      "sha1",
-      "upsert"
+      "sha1"
     ]
   },
   {
@@ -1140,11 +1138,20 @@
   {
     "file": "server\\index.js",
     "symbols": [
+      "bootstrapContentTables",
       "parseCookies",
       "resolveSkillType",
       "safeParse",
       "setupRedis",
       "trainingTick"
+    ]
+  },
+  {
+    "file": "server\\models\\db.js",
+    "symbols": [
+      "all",
+      "get",
+      "run"
     ]
   },
   {
@@ -1157,6 +1164,7 @@
   {
     "file": "server\\models\\migrate.js",
     "symbols": [
+      "TEXT",
       "migrate"
     ]
   },
@@ -1164,12 +1172,6 @@
     "file": "server\\player\\routes.js",
     "symbols": [
       "noStore"
-    ]
-  },
-  {
-    "file": "server\\routes\\afk.js",
-    "symbols": [
-      "tsToMs"
     ]
   },
   {
@@ -1194,6 +1196,7 @@
       "cleanDefault",
       "compactJsonLike",
       "dirTree",
+      "dumpPostgresSnapshot",
       "ensureDir",
       "exampleForKey",
       "genCtxYmlIfMissing",
@@ -1226,16 +1229,15 @@
   {
     "file": "server\\skills\\engine.js",
     "symbols": [
-      "_ctxMul",
-      "_trainingGate",
-      "_tryFrom",
       "applyTries",
+      "contextMul",
       "ensureSkillRow",
       "gainFromBlock",
       "gainFromCast",
       "gainFromHit",
       "gainFromShot",
       "getClassRate",
+      "triesBase",
       "triesNeeded"
     ]
   },

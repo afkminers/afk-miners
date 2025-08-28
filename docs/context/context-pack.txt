@@ -1,5 +1,5 @@
 AFK Miners — Context Pack
-Commit: 115998a | Branch: main | Last Tag: n/a
+Commit: e78f281 | Branch: main | Last Tag: n/a
 
 == Estrutura (nível 4) ==
 _backup-meta.txt
@@ -342,6 +342,8 @@ docs\backups\2025-08-27_150358-pre-main-697020e.zip
 docs\backups\2025-08-27_150414-post-main-bfb25dd.zip
 docs\backups\2025-08-27_151424-pre-main-bfb25dd.zip
 docs\backups\2025-08-27_151439-post-main-115998a.zip
+docs\backups\2025-08-28_011344-pre-main-90fdf79.zip
+docs\backups\2025-08-28_011402-post-main-e78f281.zip
 docs\context
 docs\context\API.md
 docs\context\changes-since.txt
@@ -1669,6 +1671,29 @@ docs\releases\2025-08-27_150427-auto\route-history.json
 docs\releases\2025-08-27_150427-auto\symbol-index.json
 docs\releases\2025-08-27_150427-auto\todos.json
 docs\releases\2025-08-27_151452-auto
+docs\releases\2025-08-27_151452-auto.zip
+docs\releases\2025-08-27_151452-auto\API.md
+docs\releases\2025-08-27_151452-auto\README.txt
+docs\releases\2025-08-27_151452-auto\changes-since.txt
+docs\releases\2025-08-27_151452-auto\context-pack.txt
+docs\releases\2025-08-27_151452-auto\data-summary.json
+docs\releases\2025-08-27_151452-auto\db-counts.txt
+docs\releases\2025-08-27_151452-auto\db-schema.sql
+docs\releases\2025-08-27_151452-auto\db-tables.json
+docs\releases\2025-08-27_151452-auto\db-tables.txt
+docs\releases\2025-08-27_151452-auto\deps-graph.json
+docs\releases\2025-08-27_151452-auto\deps.txt
+docs\releases\2025-08-27_151452-auto\endpoints-contracts.json
+docs\releases\2025-08-27_151452-auto\env-usage.json
+docs\releases\2025-08-27_151452-auto\error-map.json
+docs\releases\2025-08-27_151452-auto\function-signatures.json
+docs\releases\2025-08-27_151452-auto\openapi.json
+docs\releases\2025-08-27_151452-auto\package.json
+docs\releases\2025-08-27_151452-auto\responses-sample.json
+docs\releases\2025-08-27_151452-auto\route-history.json
+docs\releases\2025-08-27_151452-auto\symbol-index.json
+docs\releases\2025-08-27_151452-auto\todos.json
+docs\releases\2025-08-28_011414-auto
 map.tmx
 package-lock.json
 package.json
@@ -1696,6 +1721,7 @@ server\db\database.sqlite-shm
 server\db\database.sqlite-wal
 server\db\database.sqlite.bak
 server\db\migrations
+server\db\migrations\000_extensions.sql
 server\db\migrations\001_skills.sql
 server\db\migrations\002_afk.sql
 server\db\migrations\002_chat_mutes.sql
@@ -1728,7 +1754,6 @@ server\scripts\backup-repo.ps1
 server\scripts\gen-context.js
 server\scripts\make-context-pack.ps1
 server\scripts\print-context-full.ps1
-server\scripts\print-context.ps1
 server\scripts\snapshot.bat
 server\scripts\verify-context.mjs
 server\skills
@@ -1749,18 +1774,18 @@ package.json
 readme.txt
 
 == Inventário por extensão ==
-.json : 761
-.txt : 375
-.zip : 150
+.json : 774
+.txt : 381
+.zip : 153
 .js : 117
 .png : 116
-.sql : 84
-.md : 60
+.sql : 86
+.md : 61
 .html : 47
 .yml : 34
 .css : 24
 .mp3 : 21
-.ps1 : 12
+.ps1 : 11
 <noext> : 10
 .sqlite : 6
 .tmx : 3
@@ -1785,54 +1810,54 @@ readme.txt
 80218.7 KB	docs\backups\2025-08-26_020104-post-feature-afk-workers-118c7ba.zip
 80217.4 KB	docs\backups\2025-08-26_014321-pre-feature-afk-workers-2b5fa7b.zip
 80217.1 KB	docs\backups\2025-08-26_014336-post-feature-afk-workers-3438d7a.zip
+80163.1 KB	docs\backups\2025-08-28_011344-pre-main-90fdf79.zip
+80162.8 KB	docs\backups\2025-08-28_011402-post-main-e78f281.zip
 79847.5 KB	docs\backups\2025-08-24_235359-pre-main-5157642.zip
 79847.4 KB	docs\backups\2025-08-24_235413-post-main-a4eba58.zip
 79847.2 KB	docs\backups\2025-08-24_234147-pre-main-6670238.zip
 79847.1 KB	docs\backups\2025-08-24_234203-post-main-5157642.zip
 79846.7 KB	docs\backups\2025-08-24_233437-pre-main-9d38bfb.zip
 79846.6 KB	docs\backups\2025-08-24_233451-post-main-6670238.zip
-79844.9 KB	docs\backups\2025-08-24_213510-pre-main-618ad68.zip
-79844.8 KB	docs\backups\2025-08-24_213525-post-main-28973ed.zip
 
 == Rotas detectadas (server) ==
-[GET] /api/admin/content/map/:key/data  (server\index.js:347)
-[GET] /api/admin/content/map/:key/objects  (server\index.js:324)
-[GET] /api/admin/content/map/:key/spawns  (server\index.js:335)
-[GET] /api/admin/content/maps  (server\index.js:317)
-[GET] /api/admin/content/monsters  (server\index.js:293)
-[POST] /api/admin/content/reload-map  (server\index.js:360)
-[GET] /api/assets/items  (server\index.js:302)
-[GET] /api/assets/sprites  (server\index.js:309)
-[GET] /api/chat/global  (server\index.js:669)
+[GET] /api/admin/content/map/:key/data  (server\index.js:384)
+[GET] /api/admin/content/map/:key/objects  (server\index.js:358)
+[GET] /api/admin/content/map/:key/spawns  (server\index.js:370)
+[GET] /api/admin/content/maps  (server\index.js:347)
+[GET] /api/admin/content/monsters  (server\index.js:317)
+[POST] /api/admin/content/reload-map  (server\index.js:395)
+[GET] /api/assets/items  (server\index.js:328)
+[GET] /api/assets/sprites  (server\index.js:337)
+[GET] /api/chat/global  (server\index.js:708)
 [GET] /api/csrf  (server\index.js:44)
-[GET] /assets/items  (server\routes\assets.js:12)
-[GET] /assets/sprites  (server\routes\assets.js:5)
-[POST] /assign  (server\routes\afk.js:61)
-[GET] /class-rates  (server\skills\routes.js:26)
-[POST] /collect  (server\routes\afk.js:84)
-[POST] /create-worker  (server\routes\afk.js:39)
+[GET] /assets/items  (server\routes\assets.js:29)
+[GET] /assets/sprites  (server\routes\assets.js:8)
+[POST] /assign  (server\routes\afk.js:65)
+[GET] /class-rates  (server\skills\routes.js:33)
+[POST] /collect  (server\routes\afk.js:88)
+[POST] /create-worker  (server\routes\afk.js:42)
 [GET] /curves  (server\skills\routes.js:10)
-[POST] /debug/grant-seed  (server\routes\farm.js:200)
-[GET] /  (server\index.js:377)
-[POST] /harvest  (server\routes\farm.js:149)
-[GET] /heroes/master  (server\routes\catalog.js:8)
-[GET] /list  (server\starter\routes.js:9)
-[POST] /login  (server\auth\routes.js:83)
-[POST] /logout  (server\auth\routes.js:121)
-[GET] /me  (server\skills\routes.js:37)
+[POST] /debug/grant-seed  (server\routes\farm.js:240)
+[GET] /  (server\index.js:414)
+[POST] /harvest  (server\routes\farm.js:181)
+[GET] /heroes/master  (server\routes\catalog.js:10)
+[GET] /list  (server\starter\routes.js:10)
+[POST] /login  (server\auth\routes.js:85)
+[POST] /logout  (server\auth\routes.js:114)
+[GET] /me  (server\skills\routes.js:48)
 [GET] /me  (server\player\routes.js:22)
-[GET] /me  (server\auth\routes.js:128)
-[GET] /ping  (server\routes\afk.js:12)
-[POST] /plant  (server\routes\farm.js:108)
-[POST] /plot/create  (server\routes\farm.js:90)
-[GET] /pos  (server\player\routes.js:91)
-[POST] /pos  (server\player\routes.js:128)
-[POST] /  (server\gacha\routes.js:148)
-[POST] /register  (server\auth\routes.js:47)
-[POST] /select  (server\starter\routes.js:72)
+[GET] /me  (server\auth\routes.js:124)
+[GET] /ping  (server\routes\afk.js:7)
+[POST] /plant  (server\routes\farm.js:122)
+[POST] /plot/create  (server\routes\farm.js:101)
+[GET] /pos  (server\player\routes.js:90)
+[POST] /pos  (server\player\routes.js:127)
+[POST] /  (server\gacha\routes.js:149)
+[POST] /register  (server\auth\routes.js:46)
+[POST] /select  (server\starter\routes.js:73)
 [GET] /state  (server\routes\farm.js:71)
-[GET] /state  (server\routes\afk.js:15)
-[GET] /status  (server\starter\routes.js:54)
+[GET] /state  (server\routes\afk.js:10)
+[GET] /status  (server\starter\routes.js:55)
 
 == Migrations/Seeds ==
 Migrations:
@@ -1953,8 +1978,21 @@ data\config\index.yml :: 1 chaves | keys: configs
 == JSON — sumário (repo inteiro) ==
 package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2664 bytes
 package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 124907 bytes
-server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 3532 bytes
-server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 123049 bytes
+server\package.json :: 8 chaves | keys: name, version, description, main, scripts, dependencies, devDependencies, engines | 2331 bytes
+server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 129578 bytes
+docs\releases\2025-08-27_151452-auto\todos.json :: 32 itens | 5516 bytes
+docs\releases\2025-08-27_151452-auto\symbol-index.json :: 93 itens | 25270 bytes
+docs\releases\2025-08-27_151452-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 1155 bytes
+docs\releases\2025-08-27_151452-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 2789 bytes
+docs\releases\2025-08-27_151452-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2664 bytes
+docs\releases\2025-08-27_151452-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 44483 bytes
+docs\releases\2025-08-27_151452-auto\function-signatures.json :: 951 itens | 172214 bytes
+docs\releases\2025-08-27_151452-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 16811 bytes
+docs\releases\2025-08-27_151452-auto\env-usage.json :: 15 itens | 9272 bytes
+docs\releases\2025-08-27_151452-auto\endpoints-contracts.json :: 38 itens | 33045 bytes
+docs\releases\2025-08-27_151452-auto\deps-graph.json :: 27 itens | 2801 bytes
+docs\releases\2025-08-27_151452-auto\db-tables.json :: 23 itens | 7409 bytes
+docs\releases\2025-08-27_151452-auto\data-summary.json :: 34 itens | 7806 bytes
 docs\releases\2025-08-27_150427-auto\todos.json :: 32 itens | 5516 bytes
 docs\releases\2025-08-27_150427-auto\symbol-index.json :: 93 itens | 25189 bytes
 docs\releases\2025-08-27_150427-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 1155 bytes
@@ -2668,11 +2706,11 @@ docs\releases\2025-08-22_225607-auto\symbol-index.json :: 20 itens | 4494 bytes
 docs\releases\2025-08-22_225607-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 docs\releases\2025-08-22_225607-auto\data-summary.json :: 16 itens | 3803 bytes
 docs\context\todos.json :: 32 itens | 5516 bytes
-docs\context\symbol-index.json :: 93 itens | 25189 bytes
+docs\context\symbol-index.json :: 93 itens | 25270 bytes
 docs\context\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 1155 bytes
 docs\context\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 2789 bytes
 docs\context\openapi.json :: 3 chaves | keys: openapi, info, paths | 44483 bytes
-docs\context\function-signatures.json :: 945 itens | 171361 bytes
+docs\context\function-signatures.json :: 951 itens | 172214 bytes
 docs\context\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 16811 bytes
 docs\context\env-usage.json :: 15 itens | 9272 bytes
 docs\context\endpoints-contracts.json :: 38 itens | 33045 bytes

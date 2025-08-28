@@ -20,7 +20,7 @@ const skillsRoutes = require('./skills/routes');
 const afkRoutes = require('./routes/afk');
 const farmRoutes = require('./routes/farm');
 
-const K = require('./balance/config');
+const K = require('./balance/config'); // ainda usado nas rotas de treino (stop/status)
 const buildStarterRouter = require('./starter/routes');
 
 // ======== Pipeline de Conteúdo (YAML/Tiled) ========
@@ -32,7 +32,6 @@ const CONTENT_PIPELINE = process.env.CONTENT_PIPELINE || 'off'; // off | shadow 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const PORT = Number(process.env.PORT || 3000);
 const CLIENT_ROOT_DIR = path.join(__dirname, '..', 'client');
-const WORKER_TICK_SECONDS = Number(process.env.WORKER_TICK_SECONDS || 3);
 
 // ========= APP =========
 const app = express();
@@ -166,8 +165,6 @@ app.use('/api/afk', requireAuth, afkRoutes);
 app.use('/api/farm', requireAuth, farmRoutes);
 
 /* ========= Helpers (Treino) ========= */
-const SKILLS = new Set(['SWORD', 'AXE', 'CLUB', 'DISTANCE', 'SHIELD', 'MAGIC']);
-
 async function resolveSkillType(weaponOrSkill) {
   if (!weaponOrSkill) return null;
   const raw = String(weaponOrSkill);
@@ -178,7 +175,7 @@ async function resolveSkillType(weaponOrSkill) {
   return row?.skill_type || null;
 }
 
-/* ========= Rotas de Treino ========= */
+/* ========= Rotas de Treino (sem tick global) ========= */
 const trainingRouter = express.Router();
 
 // START
@@ -235,6 +232,7 @@ trainingRouter.post('/stop', requireAuth, async (req, res) => {
     const t = await get(`SELECT * FROM hero_training WHERE hero_id=$1`, [heroId]);
     if (!t || t.status !== 'RUNNING') return res.json({ ok: true, message: 'No active session' });
 
+    // Sem tick global: ainda computamos o delta só para fechar a sessão atual
     const now = Date.now();
     const last = Date.parse(t.last_tick_at || t.started_at || new Date(0).toISOString());
     const delta = Math.max(0, Math.floor((now - last) / 1000));
@@ -527,7 +525,7 @@ let wss = null;
         ws._connectedAt = Date.now();
         ws._player = null;
 
-        // try validate JWT from cookie immediately (so explicit handshake not required)
+        // valida JWT do cookie (handshake implícito)
         try {
           const cookies = parseCookies(req.headers.cookie || '');
           const token = cookies[COOKIE_NAME] || null;
@@ -635,69 +633,6 @@ let wss = null;
       console.log(`server listening on ${PORT} ${useWebSocket ? '(ws enabled)' : '(ws disabled)'}`);
       console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
     });
-
-    /* ========= WORKER (stamina/limites; NÃO dá tries) ========= */
-    async function trainingTick() {
-      try {
-        // reset diário (quando cruza meia-noite)
-        await run(`
-          UPDATE hero_training
-             SET daily_seconds = CASE
-                   WHEN daily_reset_at IS NULL THEN daily_seconds
-                   WHEN now() >= daily_reset_at THEN 0
-                   ELSE daily_seconds
-                 END,
-                 daily_reset_at = CASE
-                   WHEN daily_reset_at IS NULL THEN date_trunc('day', now()) + interval '1 day'
-                   WHEN now() >= daily_reset_at THEN date_trunc('day', now()) + interval '1 day'
-                   ELSE daily_reset_at
-                 END
-        `);
-
-        const running = await all(`SELECT * FROM hero_training WHERE status='RUNNING'`);
-        const now = Date.now();
-
-        for (const t of running) {
-          const last  = Date.parse(t.last_tick_at || t.started_at || new Date().toISOString());
-          let delta   = Math.max(0, Math.floor((now - last)/1000));
-          if (delta <= 0) continue;
-
-          const sessLeft = Math.max(0, K.MAX_SESSION_SECONDS     - (t.session_seconds || 0));
-          const dayLeft  = Math.max(0, K.DAILY_TRAIN_CAP_SECONDS - (t.daily_seconds   || 0));
-          let allowed    = Math.min(delta, sessLeft, dayLeft);
-
-          const energySec = Math.floor(((t.energy_current || 0) / K.ENERGY_PER_MIN_WHEN_TRAINING) * 60);
-          allowed = Math.min(allowed, energySec);
-          if (allowed <= 0) {
-            await run(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=$1`, [t.hero_id]);
-            continue;
-          }
-
-          const newLast   = new Date(last + allowed*1000).toISOString();
-          const energyUse = K.ENERGY_PER_MIN_WHEN_TRAINING * (allowed/60);
-          const newEnergy = Math.max(0, (t.energy_current || 0) - energyUse);
-
-          await run(
-            `UPDATE hero_training
-                SET last_tick_at=$1,
-                    session_seconds=COALESCE(session_seconds,0)+$2,
-                    daily_seconds=COALESCE(daily_seconds,0)+$3,
-                    energy_current=$4,
-                    energy_spent=COALESCE(energy_spent,0)+$5
-              WHERE hero_id=$6`,
-            [newLast, allowed, allowed, newEnergy, energyUse, t.hero_id]
-          );
-
-          if (newEnergy <= 0 || allowed < delta || allowed === sessLeft || allowed === dayLeft) {
-            await run(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=$1`, [t.hero_id]);
-          }
-        }
-      } catch (err) {
-        console.error('[worker] tick error:', err.message);
-      }
-    }
-
-    setInterval(trainingTick, WORKER_TICK_SECONDS * 1000);
   } catch (err) {
     console.error('Fatal start error:', err);
     process.exit(1);

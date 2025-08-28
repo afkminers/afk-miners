@@ -11,6 +11,7 @@
 - `CTX_DEPTH` (defaults: 4)
 - `CTX_IMPORTS`
 - `CTX_SYMBOLS`
+- `DATABASE_URL`
 - `JWT_SECRET` (defaults: changeme, CHANGE_ME_DEV_ONLY)
 - `NODE_ENV` (defaults: development)
 - `PORT` (defaults: 3000)
@@ -22,13 +23,13 @@
 
 ### GET /
 
-Arquivo: `server\index.js:377`
+Arquivo: `server\index.js:414`
 
 _Sem payload inferido_
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:347`
+Arquivo: `server\index.js:384`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -50,14 +51,13 @@ Arquivo: `server\index.js:347`
 ```
 
 **Erros conhecidos:**
-- `HTTP 500` → {error:err.message }
 - `HTTP 404` → {error:'map not found' }
-- `HTTP 500` → {error:'invalid map json' }
+- `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:e.message }
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:324`
+Arquivo: `server\index.js:358`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -81,14 +81,13 @@ Arquivo: `server\index.js:324`
 **Erros conhecidos:**
 - `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:err.message }
-- `HTTP 500` → {error:err.message }
 - `HTTP 404` → {error:'map not found' }
-- `HTTP 500` → {error:'invalid map json' }
+- `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:e.message }
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:335`
+Arquivo: `server\index.js:370`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -111,12 +110,36 @@ Arquivo: `server\index.js:335`
 
 **Erros conhecidos:**
 - `HTTP 500` → {error:err.message }
-- `HTTP 500` → {error:err.message }
 - `HTTP 404` → {error:'map not found' }
-- `HTTP 500` → {error:'invalid map json' }
+- `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:e.message }
 
 ### GET /api/admin/content/maps
+
+Arquivo: `server\index.js:347`
+
+**Payloads (exemplos inferidos):**
+- query:
+```json
+{
+  "map": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,reloaded:mapKey }
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:err.message }
+- `HTTP 500` → {error:err.message }
+- `HTTP 500` → {error:err.message }
+- `HTTP 404` → {error:'map not found' }
+- `HTTP 500` → {error:err.message }
+- `HTTP 500` → {error:e.message }
+
+### GET /api/admin/content/monsters
 
 Arquivo: `server\index.js:317`
 
@@ -138,42 +161,15 @@ Arquivo: `server\index.js:317`
 - `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:err.message }
-- `HTTP 404` → {error:'map not found' }
-- `HTTP 500` → {error:'invalid map json' }
-- `HTTP 500` → {error:e.message }
-
-### GET /api/admin/content/monsters
-
-Arquivo: `server\index.js:293`
-
-**Payloads (exemplos inferidos):**
-- query:
-```json
-{
-  "map": "value"
-}
-```
-
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,reloaded:mapKey }
-```
-
-**Erros conhecidos:**
-- `HTTP 500` → {error:err.message }
-- `HTTP 500` → {error:err.message }
-- `HTTP 500` → {error:err.message }
-- `HTTP 500` → {error:err.message }
-- `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:err.message }
 - `HTTP 404` → {error:'map not found' }
-- `HTTP 500` → {error:'invalid map json' }
+- `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:e.message }
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:302`
+Arquivo: `server\index.js:328`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -194,14 +190,13 @@ Arquivo: `server\index.js:302`
 - `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:err.message }
-- `HTTP 500` → {error:err.message }
 - `HTTP 404` → {error:'map not found' }
-- `HTTP 500` → {error:'invalid map json' }
+- `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:e.message }
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:309`
+Arquivo: `server\index.js:337`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -221,14 +216,13 @@ Arquivo: `server\index.js:309`
 - `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:err.message }
-- `HTTP 500` → {error:err.message }
 - `HTTP 404` → {error:'map not found' }
-- `HTTP 500` → {error:'invalid map json' }
+- `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:e.message }
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:669`
+Arquivo: `server\index.js:708`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -239,7 +233,6 @@ Arquivo: `server\index.js:669`
 ```
 
 **Erros conhecidos:**
-- `HTTP 500` → {error:err.message }
 - `HTTP 500` → {error:err.message }
 
 ### GET /api/csrf
@@ -256,38 +249,32 @@ Arquivo: `server\index.js:44`
 }
 ```
 
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,message:'Training started',heroId,skillType }
-```
-
 **Erros conhecidos:**
 - `HTTP 400` → {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
 - `HTTP 400` → {error:'weaponOrSkill inválido' }
-- `HTTP 500` → {error:'erro ao iniciar treino' }
 
 ### GET /assets/items
 
-Arquivo: `server\routes\assets.js:12`
+Arquivo: `server\routes\assets.js:29`
 
 _Sem payload inferido_
 
 **Erros conhecidos:**
-- `HTTP 500` → {error:e.message }
+- `HTTP 500` → {error:"Falha ao listar items" }
 
 ### GET /assets/sprites
 
-Arquivo: `server\routes\assets.js:5`
+Arquivo: `server\routes\assets.js:8`
 
 _Sem payload inferido_
 
 **Erros conhecidos:**
-- `HTTP 500` → {error:e.message }
-- `HTTP 500` → {error:e.message }
+- `HTTP 500` → {error:"Falha ao listar sprites" }
+- `HTTP 500` → {error:"Falha ao listar items" }
 
 ### GET /class-rates
 
-Arquivo: `server\skills\routes.js:26`
+Arquivo: `server\skills\routes.js:33`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -322,7 +309,7 @@ Arquivo: `server\skills\routes.js:10`
 ```
 
 **Erros conhecidos:**
-- `HTTP 400` → {error:'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC' }
+- `HTTP 400` → {error:'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC',}
 - `HTTP 500` → {error:'Falha ao listar curvas' }
 - `HTTP 500` → {error:'Falha ao listar rates' }
 - `HTTP 400` → {error:'heroId é obrigatório' }
@@ -331,7 +318,7 @@ Arquivo: `server\skills\routes.js:10`
 
 ### GET /heroes/master
 
-Arquivo: `server\routes\catalog.js:8`
+Arquivo: `server\routes\catalog.js:10`
 
 _Sem payload inferido_
 
@@ -340,7 +327,7 @@ _Sem payload inferido_
 
 ### GET /list
 
-Arquivo: `server\starter\routes.js:9`
+Arquivo: `server\starter\routes.js:10`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -356,16 +343,16 @@ Arquivo: `server\starter\routes.js:9`
 ```
 
 **Erros conhecidos:**
-- `HTTP 500` → {error:"erro ao listar starters" }
-- `HTTP 500` → {error:"erro ao checar status do starter" }
-- `HTTP 400` → {error:"heroKey é obrigatório" }
-- `HTTP 400` → {error:"starter já escolhido" }
-- `HTTP 400` → {error:"starter já escolhido" }
-- `HTTP 500` → {error:"erro ao selecionar starter" }
+- `HTTP 500` → {error:'erro ao listar starters' }
+- `HTTP 500` → {error:'erro ao checar status do starter' }
+- `HTTP 400` → {error:'heroKey é obrigatório' }
+- `HTTP 400` → {error:'starter já escolhido' }
+- `HTTP 400` → {error:'starter já escolhido' }
+- `HTTP 500` → {error:'erro ao selecionar starter' }
 
 ### GET /me
 
-Arquivo: `server\skills\routes.js:37`
+Arquivo: `server\skills\routes.js:48`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -382,7 +369,7 @@ Arquivo: `server\skills\routes.js:37`
 
 ### GET /ping
 
-Arquivo: `server\routes\afk.js:12`
+Arquivo: `server\routes\afk.js:7`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -415,7 +402,7 @@ Arquivo: `server\routes\afk.js:12`
 
 ### GET /pos
 
-Arquivo: `server\player\routes.js:91`
+Arquivo: `server\player\routes.js:90`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -444,12 +431,10 @@ Arquivo: `server\routes\farm.js:71`
 - body:
 ```json
 {
-  "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { x=0": 1,
-  "y=0": "value",
+  "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { x = 0": 1,
+  "y = 0": "value",
   "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { plot_id": 1,
-  "crop_key": "value",
-  "item_type='seed_wheat'": "value",
-  "amount=5": 1
+  "crop_key": "value"
 }
 ```
 
@@ -472,13 +457,10 @@ Arquivo: `server\routes\farm.js:71`
 - `HTTP 400` → {error:'empty_plot' }
 - `HTTP 400` → {error:'invalid_crop' }
 - `HTTP 400` → {error:'not_ripe',stage:s.stage,next_at:s.nextAt,progress_pct:s.progressPct }
-- `HTTP 500` → {error:'harvest_failed' }
-- `HTTP 403` → {error:'forbidden' }
-- `HTTP 500` → {error:'debug_grant_failed' }
 
 ### GET /status
 
-Arquivo: `server\starter\routes.js:54`
+Arquivo: `server\starter\routes.js:55`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -494,15 +476,15 @@ Arquivo: `server\starter\routes.js:54`
 ```
 
 **Erros conhecidos:**
-- `HTTP 500` → {error:"erro ao checar status do starter" }
-- `HTTP 400` → {error:"heroKey é obrigatório" }
-- `HTTP 400` → {error:"starter já escolhido" }
-- `HTTP 400` → {error:"starter já escolhido" }
-- `HTTP 500` → {error:"erro ao selecionar starter" }
+- `HTTP 500` → {error:'erro ao checar status do starter' }
+- `HTTP 400` → {error:'heroKey é obrigatório' }
+- `HTTP 400` → {error:'starter já escolhido' }
+- `HTTP 400` → {error:'starter já escolhido' }
+- `HTTP 500` → {error:'erro ao selecionar starter' }
 
 ### POST /
 
-Arquivo: `server\gacha\routes.js:148`
+Arquivo: `server\gacha\routes.js:149`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -524,7 +506,7 @@ Arquivo: `server\gacha\routes.js:148`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:360`
+Arquivo: `server\index.js:395`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -544,7 +526,7 @@ Arquivo: `server\index.js:360`
 
 ### POST /assign
 
-Arquivo: `server\routes\afk.js:61`
+Arquivo: `server\routes\afk.js:65`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -571,7 +553,7 @@ Arquivo: `server\routes\afk.js:61`
 
 ### POST /collect
 
-Arquivo: `server\routes\afk.js:84`
+Arquivo: `server\routes\afk.js:88`
 
 _Sem payload inferido_
 
@@ -585,7 +567,7 @@ _Sem payload inferido_
 
 ### POST /create-worker
 
-Arquivo: `server\routes\afk.js:39`
+Arquivo: `server\routes\afk.js:42`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -617,20 +599,20 @@ Arquivo: `server\routes\afk.js:39`
 
 ### POST /debug/grant-seed
 
-Arquivo: `server\routes\farm.js:200`
+Arquivo: `server\routes\farm.js:240`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "item_type='seed_wheat'": "value",
-  "amount=5": 1
+  "item_type = 'seed_wheat'": "value",
+  "amount = 5": 1
 }
 ```
 
 **Resposta de sucesso (amostra):**
 ```json
-{ok:true,item_type,amount:Number(amount)||0 }
+{ok:true,item_type,amount:Number(amount) || 0 }
 ```
 
 **Erros conhecidos:**
@@ -639,15 +621,15 @@ Arquivo: `server\routes\farm.js:200`
 
 ### POST /harvest
 
-Arquivo: `server\routes\farm.js:149`
+Arquivo: `server\routes\farm.js:181`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
   "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { plot_id": 1,
-  "item_type='seed_wheat'": "value",
-  "amount=5": 1
+  "item_type = 'seed_wheat'": "value",
+  "amount = 5": 1
 }
 ```
 
@@ -668,7 +650,7 @@ Arquivo: `server\routes\farm.js:149`
 
 ### POST /login
 
-Arquivo: `server\auth\routes.js:83`
+Arquivo: `server\auth\routes.js:85`
 
 _Sem payload inferido_
 
@@ -688,7 +670,7 @@ _Sem payload inferido_
 
 ### POST /logout
 
-Arquivo: `server\auth\routes.js:121`
+Arquivo: `server\auth\routes.js:114`
 
 _Sem payload inferido_
 
@@ -705,7 +687,7 @@ _Sem payload inferido_
 
 ### POST /plant
 
-Arquivo: `server\routes\farm.js:108`
+Arquivo: `server\routes\farm.js:122`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -713,14 +695,14 @@ Arquivo: `server\routes\farm.js:108`
 {
   "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { plot_id": 1,
   "crop_key": "value",
-  "item_type='seed_wheat'": "value",
-  "amount=5": 1
+  "item_type = 'seed_wheat'": "value",
+  "amount = 5": 1
 }
 ```
 
 **Resposta de sucesso (amostra):**
 ```json
-{ok:true,plot_id,crop_key,stage:1,planted_at:planted,next_at:nextAt }
+{ok:true,plot_id,crop_key,stage:1,planted_at:new Date(plantedAtSec * 1000).toISOString(),next_at:new Date(nextAtSec * 1000).toISOString() }
 ```
 
 **Erros conhecidos:**
@@ -741,18 +723,18 @@ Arquivo: `server\routes\farm.js:108`
 
 ### POST /plot/create
 
-Arquivo: `server\routes\farm.js:90`
+Arquivo: `server\routes\farm.js:101`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { x=0": 1,
-  "y=0": "value",
+  "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { x = 0": 1,
+  "y = 0": "value",
   "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { plot_id": 1,
   "crop_key": "value",
-  "item_type='seed_wheat'": "value",
-  "amount=5": 1
+  "item_type = 'seed_wheat'": "value",
+  "amount = 5": 1
 }
 ```
 
@@ -776,11 +758,10 @@ Arquivo: `server\routes\farm.js:90`
 - `HTTP 400` → {error:'not_ripe',stage:s.stage,next_at:s.nextAt,progress_pct:s.progressPct }
 - `HTTP 500` → {error:'harvest_failed' }
 - `HTTP 403` → {error:'forbidden' }
-- `HTTP 500` → {error:'debug_grant_failed' }
 
 ### POST /pos
 
-Arquivo: `server\player\routes.js:128`
+Arquivo: `server\player\routes.js:127`
 
 _Sem payload inferido_
 
@@ -796,13 +777,15 @@ _Sem payload inferido_
 
 ### POST /register
 
-Arquivo: `server\auth\routes.js:47`
+Arquivo: `server\auth\routes.js:46`
 
 _Sem payload inferido_
 
 **Resposta de sucesso (amostra):**
 ```json
-{id,name:v.name,coins:500,gems:0,createdAt }
+{
+  "ok": true
+}
 ```
 
 **Erros conhecidos:**
@@ -818,7 +801,7 @@ _Sem payload inferido_
 
 ### POST /select
 
-Arquivo: `server\starter\routes.js:72`
+Arquivo: `server\starter\routes.js:73`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -834,39 +817,35 @@ Arquivo: `server\starter\routes.js:72`
 ```
 
 **Erros conhecidos:**
-- `HTTP 400` → {error:"heroKey é obrigatório" }
-- `HTTP 400` → {error:"starter já escolhido" }
-- `HTTP 400` → {error:"starter já escolhido" }
-- `HTTP 500` → {error:"erro ao selecionar starter" }
+- `HTTP 400` → {error:'heroKey é obrigatório' }
+- `HTTP 400` → {error:'starter já escolhido' }
+- `HTTP 400` → {error:'starter já escolhido' }
+- `HTTP 500` → {error:'erro ao selecionar starter' }
 
 ## Tabela sintética de erros por rota
 
 - **GET /**
 - **GET /api/admin/content/map/:key/data**
-  - HTTP 500: {error:err.message }
   - HTTP 404: {error:'map not found' }
-  - HTTP 500: {error:'invalid map json' }
+  - HTTP 500: {error:err.message }
   - HTTP 500: {error:e.message }
 - **GET /api/admin/content/map/:key/objects**
   - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
-  - HTTP 500: {error:err.message }
   - HTTP 404: {error:'map not found' }
-  - HTTP 500: {error:'invalid map json' }
+  - HTTP 500: {error:err.message }
   - HTTP 500: {error:e.message }
 - **GET /api/admin/content/map/:key/spawns**
   - HTTP 500: {error:err.message }
-  - HTTP 500: {error:err.message }
   - HTTP 404: {error:'map not found' }
-  - HTTP 500: {error:'invalid map json' }
+  - HTTP 500: {error:err.message }
   - HTTP 500: {error:e.message }
 - **GET /api/admin/content/maps**
   - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
-  - HTTP 500: {error:err.message }
   - HTTP 404: {error:'map not found' }
-  - HTTP 500: {error:'invalid map json' }
+  - HTTP 500: {error:err.message }
   - HTTP 500: {error:e.message }
 - **GET /api/admin/content/monsters**
   - HTTP 500: {error:err.message }
@@ -875,9 +854,8 @@ Arquivo: `server\starter\routes.js:72`
   - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
-  - HTTP 500: {error:err.message }
   - HTTP 404: {error:'map not found' }
-  - HTTP 500: {error:'invalid map json' }
+  - HTTP 500: {error:err.message }
   - HTTP 500: {error:e.message }
 - **GET /api/assets/items**
   - HTTP 500: {error:err.message }
@@ -885,38 +863,34 @@ Arquivo: `server\starter\routes.js:72`
   - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
-  - HTTP 500: {error:err.message }
   - HTTP 404: {error:'map not found' }
-  - HTTP 500: {error:'invalid map json' }
+  - HTTP 500: {error:err.message }
   - HTTP 500: {error:e.message }
 - **GET /api/assets/sprites**
   - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
-  - HTTP 500: {error:err.message }
   - HTTP 404: {error:'map not found' }
-  - HTTP 500: {error:'invalid map json' }
+  - HTTP 500: {error:err.message }
   - HTTP 500: {error:e.message }
 - **GET /api/chat/global**
-  - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
 - **GET /api/csrf**
   - HTTP 400: {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
   - HTTP 400: {error:'weaponOrSkill inválido' }
-  - HTTP 500: {error:'erro ao iniciar treino' }
 - **GET /assets/items**
-  - HTTP 500: {error:e.message }
+  - HTTP 500: {error:"Falha ao listar items" }
 - **GET /assets/sprites**
-  - HTTP 500: {error:e.message }
-  - HTTP 500: {error:e.message }
+  - HTTP 500: {error:"Falha ao listar sprites" }
+  - HTTP 500: {error:"Falha ao listar items" }
 - **GET /class-rates**
   - HTTP 500: {error:'Falha ao listar rates' }
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
   - HTTP 500: {error:'Falha ao listar skills do herói' }
 - **GET /curves**
-  - HTTP 400: {error:'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC' }
+  - HTTP 400: {error:'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC',}
   - HTTP 500: {error:'Falha ao listar curvas' }
   - HTTP 500: {error:'Falha ao listar rates' }
   - HTTP 400: {error:'heroId é obrigatório' }
@@ -925,12 +899,12 @@ Arquivo: `server\starter\routes.js:72`
 - **GET /heroes/master**
   - HTTP 500: {error:'Falha ao listar heróis' }
 - **GET /list**
-  - HTTP 500: {error:"erro ao listar starters" }
-  - HTTP 500: {error:"erro ao checar status do starter" }
-  - HTTP 400: {error:"heroKey é obrigatório" }
-  - HTTP 400: {error:"starter já escolhido" }
-  - HTTP 400: {error:"starter já escolhido" }
-  - HTTP 500: {error:"erro ao selecionar starter" }
+  - HTTP 500: {error:'erro ao listar starters' }
+  - HTTP 500: {error:'erro ao checar status do starter' }
+  - HTTP 400: {error:'heroKey é obrigatório' }
+  - HTTP 400: {error:'starter já escolhido' }
+  - HTTP 400: {error:'starter já escolhido' }
+  - HTTP 500: {error:'erro ao selecionar starter' }
 - **GET /me**
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
@@ -967,9 +941,6 @@ Arquivo: `server\starter\routes.js:72`
   - HTTP 400: {error:'empty_plot' }
   - HTTP 400: {error:'invalid_crop' }
   - HTTP 400: {error:'not_ripe',stage:s.stage,next_at:s.nextAt,progress_pct:s.progressPct }
-  - HTTP 500: {error:'harvest_failed' }
-  - HTTP 403: {error:'forbidden' }
-  - HTTP 500: {error:'debug_grant_failed' }
   - HTTP 500: {error:'afk_state_failed' }
   - HTTP 400: {error:'produce_type required' }
   - HTTP 500: {error:'create_worker_failed' }
@@ -979,11 +950,11 @@ Arquivo: `server\starter\routes.js:72`
   - HTTP 500: {error:'assign_failed' }
   - HTTP 500: {error:'collect_failed' }
 - **GET /status**
-  - HTTP 500: {error:"erro ao checar status do starter" }
-  - HTTP 400: {error:"heroKey é obrigatório" }
-  - HTTP 400: {error:"starter já escolhido" }
-  - HTTP 400: {error:"starter já escolhido" }
-  - HTTP 500: {error:"erro ao selecionar starter" }
+  - HTTP 500: {error:'erro ao checar status do starter' }
+  - HTTP 400: {error:'heroKey é obrigatório' }
+  - HTTP 400: {error:'starter já escolhido' }
+  - HTTP 400: {error:'starter já escolhido' }
+  - HTTP 500: {error:'erro ao selecionar starter' }
 - **POST /**
   - HTTP 400: {error:result.error,cost:SUMMON_COST_COINS }
   - HTTP 400: {error:r.error,cost:SUMMON_COST_COINS,pulls }
@@ -1057,7 +1028,6 @@ Arquivo: `server\starter\routes.js:72`
   - HTTP 400: {error:'not_ripe',stage:s.stage,next_at:s.nextAt,progress_pct:s.progressPct }
   - HTTP 500: {error:'harvest_failed' }
   - HTTP 403: {error:'forbidden' }
-  - HTTP 500: {error:'debug_grant_failed' }
 - **POST /pos**
   - HTTP 500: {error:'Falha ao salvar posição' }
 - **POST /register**
@@ -1071,7 +1041,7 @@ Arquivo: `server\starter\routes.js:72`
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
 - **POST /select**
-  - HTTP 400: {error:"heroKey é obrigatório" }
-  - HTTP 400: {error:"starter já escolhido" }
-  - HTTP 400: {error:"starter já escolhido" }
-  - HTTP 500: {error:"erro ao selecionar starter" }
+  - HTTP 400: {error:'heroKey é obrigatório' }
+  - HTTP 400: {error:'starter já escolhido' }
+  - HTTP 400: {error:'starter já escolhido' }
+  - HTTP 500: {error:'erro ao selecionar starter' }

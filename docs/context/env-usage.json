@@ -4,7 +4,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 947
+        "index": 975
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -136,7 +136,7 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 1036
+        "index": 1178
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
@@ -158,11 +158,11 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 22539
+        "index": 26128
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 26458
+        "index": 30047
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
@@ -188,11 +188,11 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 22385
+        "index": 25974
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 26075
+        "index": 29664
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
@@ -214,15 +214,37 @@
     "defaults": []
   },
   {
+    "key": "DATABASE_URL",
+    "occurrences": [
+      {
+        "file": "server\\scripts\\gen-context.js",
+        "index": 21391
+      },
+      {
+        "file": "server\\scripts\\gen-context.js",
+        "index": 21651
+      },
+      {
+        "file": "server\\models\\db.js",
+        "index": 93
+      },
+      {
+        "file": "server\\models\\db.js",
+        "index": 299
+      },
+      {
+        "file": "server\\models\\db.js",
+        "index": 986
+      }
+    ],
+    "defaults": []
+  },
+  {
     "key": "JWT_SECRET",
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14090
-      },
-      {
-        "file": "server\\auth\\routes.js",
-        "index": 3145
+        "index": 14538
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -258,19 +280,11 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1110
+        "index": 1138
       },
       {
         "file": "server\\routes\\farm.js",
-        "index": 7385
-      },
-      {
-        "file": "server\\auth\\routes.js",
-        "index": 3380
-      },
-      {
-        "file": "server\\auth\\routes.js",
-        "index": 3460
+        "index": 7557
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -316,7 +330,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1169
+        "index": 1197
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -338,7 +352,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14010
+        "index": 14458
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -355,11 +369,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14148
-      },
-      {
-        "file": "server\\auth\\routes.js",
-        "index": 3289
+        "index": 14596
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -373,7 +383,6 @@
     "defaults": [
       "token",
       "token",
-      "token",
       "token"
     ]
   },
@@ -382,7 +391,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1293
+        "index": 1321
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
