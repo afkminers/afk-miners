@@ -1,56 +1,59 @@
--- Tabelas-base para o pacote de skills
--- 1) Curvas de dificuldade por skill (fonte: CSV; mas ter a tabela facilita consultas)
+-- 001_skills.pg.sql  — Skills & Training (PostgreSQL)
+
+-- 1) Curvas de dificuldade
 CREATE TABLE IF NOT EXISTS skill_curves (
-  skill_type VARCHAR(24) NOT NULL,
-  -- 'SWORD','AXE','CLUB','DISTANCE','SHIELD','MAGIC'
-  level INTEGER NOT NULL,
-  -- nível alvo (ex.: precisa de X tries para ir do 14→15)
-  tries_needed INTEGER NOT NULL,
-  -- número de tries requeridos
+  skill_type     VARCHAR(24) NOT NULL,   -- 'SWORD','AXE','CLUB','DISTANCE','SHIELD','MAGIC'
+  level          INT NOT NULL,           -- nível alvo (ex.: 14->15)
+  tries_needed   INT NOT NULL,           -- tentativas necessárias
   PRIMARY KEY (skill_type, level)
 );
 
--- 2) Multiplicadores por CLASSE (define o "quem treina o quê" melhor/pior)
+-- 2) Multiplicadores por classe
 CREATE TABLE IF NOT EXISTS class_skill_rates (
-  class VARCHAR(32) NOT NULL,
-  -- ex.: 'warrior','ranger','mage','guardian',...
-  skill_type VARCHAR(24) NOT NULL,
-  rate REAL NOT NULL DEFAULT 1.0,
-  -- >1 facilita treinar; <1 dificulta
+  class       VARCHAR(32) NOT NULL,      -- 'WARRIOR','RANGER','MAGE','GUARDIAN', etc (use uppercase no seed)
+  skill_type  VARCHAR(24) NOT NULL,
+  rate        DOUBLE PRECISION NOT NULL DEFAULT 1.0,
   PRIMARY KEY (class, skill_type)
 );
 
--- 3) Mapa de tipo de ARMA → skill treinada
+-- 3) Mapa arma -> tipo de skill (case-insensitive)
+-- Se quiser citext: weapon_type CITEXT UNIQUE
 CREATE TABLE IF NOT EXISTS weapon_skill_map (
-  weapon_type VARCHAR(32) PRIMARY KEY,
-  -- ex.: 'sword','axe','daggers','bow','mace_shield',...
-  skill_type VARCHAR(24) NOT NULL -- SWORD/AXE/CLUB/DISTANCE/MAGIC
+  weapon_type   TEXT NOT NULL,
+  skill_type    VARCHAR(24) NOT NULL,
+  PRIMARY KEY (weapon_type)
 );
+-- Acesso eficiente por lower(weapon_type)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_weapon_skill_map_lower
+  ON weapon_skill_map (LOWER(weapon_type));
 
--- 4) Progresso de skill por JOGADOR+HERÓI
+-- 4) Skills do herói por jogador
+-- hero_id e player_id vêm do app (UUID) — sem DEFAULT
 CREATE TABLE IF NOT EXISTS player_hero_skills (
-  player_id INTEGER NOT NULL,
-  hero_id INTEGER NOT NULL,
-  skill_type VARCHAR(24) NOT NULL,
-  level INTEGER NOT NULL DEFAULT 10,
-  -- ponto de partida (ajustável)
-  tries INTEGER NOT NULL DEFAULT 0,
-  -- tries acumulados no nível atual
-  need INTEGER NOT NULL,
-  -- tries_needed do nível atual (cacheado p/ performance)
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  player_id       UUID NOT NULL,
+  hero_id         UUID NOT NULL,
+  skill_type      VARCHAR(24) NOT NULL,
+  level           INT NOT NULL DEFAULT 1,
+  tries_progress  INT NOT NULL DEFAULT 0,
   PRIMARY KEY (player_id, hero_id, skill_type)
 );
-
--- 5) Energia/stamina de treino do herói (sem energia, não progride)
-CREATE TABLE IF NOT EXISTS hero_training (
-  hero_id INTEGER PRIMARY KEY,
-  energy_current REAL NOT NULL DEFAULT 0,
-  energy_max REAL NOT NULL DEFAULT 100,
-  last_refill_ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices úteis
 CREATE INDEX IF NOT EXISTS idx_phs_player ON player_hero_skills (player_id);
+CREATE INDEX IF NOT EXISTS idx_phs_hero   ON player_hero_skills (hero_id);
 
-CREATE INDEX IF NOT EXISTS idx_phs_hero ON player_hero_skills (hero_id);
+-- 5) Sessões de treino / stamina (usado pelo worker + rotas /training)
+-- Este schema casa com server/index.js e routes de treinamento
+CREATE TABLE IF NOT EXISTS hero_training (
+  hero_id         UUID PRIMARY KEY,
+  skill_type      VARCHAR(24),                       -- última/atual
+  status          TEXT,                              -- RUNNING | STOPPED | IDLE
+  started_at      TIMESTAMP,                         -- início da sessão atual
+  last_tick_at    TIMESTAMP,                         -- último processamento
+  energy_current  DOUBLE PRECISION DEFAULT 0,
+  energy_max      DOUBLE PRECISION DEFAULT 100,
+  energy_spent    DOUBLE PRECISION DEFAULT 0,
+  session_seconds INT DEFAULT 0,                     -- acumulado na sessão atual
+  daily_seconds   INT DEFAULT 0,                     -- acumulado no dia
+  daily_reset_at  TIMESTAMP,                         -- quando reseta daily_seconds
+  notes           TEXT                               -- JSON textual (ex.: {"heroClass":"KNIGHT"})
+);
+CREATE INDEX IF NOT EXISTS idx_ht_status ON hero_training (status);

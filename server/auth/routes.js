@@ -2,7 +2,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { randomUUID } = require('crypto');
-const jwt = require('jsonwebtoken');
 
 const { get, run } = require('../models/db');
 const {
@@ -56,7 +55,7 @@ router.post('/register', async (req, res) => {
 
     // checa nome já usado (case-insensitive)
     const exist = await get(
-      `SELECT id FROM players WHERE lower(name) = lower(?)`,
+      `SELECT id FROM players WHERE lower(name) = lower($1)`,
       [v.name]
     );
     if (exist) return res.status(409).json({ error: 'Nome já está em uso.' });
@@ -65,14 +64,17 @@ router.post('/register', async (req, res) => {
     const createdAt = Date.now();
     const hash = await bcrypt.hash(vp.p, 10);
 
-    await run(
-      `INSERT INTO players (id, name, password_hash, coins, gems, createdAt)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+    const ins = await run(
+      `INSERT INTO players (id, name, password_hash, coins, gems, "createdAt")
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, name, coins, gems, "createdAt"`,
       [id, v.name, hash, 500, 0, createdAt]
     );
+    const row = ins.rows[0];
 
-    setAuthCookie(res, { id, name: v.name });
-    return res.json({ id, name: v.name, coins: 500, gems: 0, createdAt });
+    // seta cookie de sessão unificado (sid)
+    setAuthCookie(res, { id: row.id, name: row.name });
+    return res.json(row);
   } catch (e) {
     console.error('[auth/register] error:', e);
     return res.status(500).json({ error: 'Falha ao registrar' });
@@ -89,7 +91,7 @@ router.post('/login', async (req, res) => {
 
     // busca case-insensitive
     const user = await get(
-      `SELECT * FROM players WHERE lower(name) = lower(?)`,
+      `SELECT * FROM players WHERE lower(name) = lower($1)`,
       [name]
     );
     if (!user || !user.password_hash) {
@@ -99,18 +101,9 @@ router.post('/login', async (req, res) => {
     const ok = await bcrypt.compare(pass, user.password_hash);
     if (!ok) return res.status(401).json({ error: 'Credenciais inválidas' });
 
-    const token = jwt.sign({ id: user.id, name: user.name }, process.env.JWT_SECRET, {
-      expiresIn: '30d' // expira em 30 dias
-    });
-
-    // depois de criar token (jwt.sign(...))
-    res.cookie(process.env.SESSION_COOKIE_NAME || 'token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // true em prod (https)
-      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // permitir envio em cross-site em prod
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 dias (ajuste)
-    });
-    res.json({ ok: true });
+    // cookie de sessão padronizado (sid) — usa helper do middleware
+    setAuthCookie(res, { id: user.id, name: user.name });
+    return res.json({ ok: true });
   } catch (e) {
     console.error('[auth/login] error:', e);
     return res.status(500).json({ error: 'Falha ao autenticar' });
@@ -120,7 +113,10 @@ router.post('/login', async (req, res) => {
 // POST /api/auth/logout
 router.post('/logout', (_req, res) => {
   noStore(res);
+  // limpa cookie oficial
   clearAuthCookie(res);
+  // limpa cookie legado (se algum código antigo ainda setou 'token')
+  res.clearCookie('token', { path: '/' });
   return res.json({ ok: true });
 });
 
@@ -130,9 +126,9 @@ router.get('/me', requireAuth, async (req, res) => {
     noStore(res);
     // retorna perfil atualizado do DB (evita dados “velhos” do cookie)
     const profile = await get(
-      `SELECT id, name, coins, gems, createdAt
+      `SELECT id, name, coins, gems, "createdAt"
          FROM players
-        WHERE id = ?`,
+        WHERE id = $1`,
       [req.user.id]
     );
     if (!profile) return res.status(404).json({ error: 'Jogador não encontrado' });

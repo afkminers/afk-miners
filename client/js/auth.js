@@ -15,32 +15,20 @@ export async function checkAuth() {
 }
 
 /**
- * Login e redireciona para /starter.html em caso de sucesso.
+ * Login — não redireciona aqui; retorna o JSON para a página decidir.
  */
 export async function doLogin(name, password) {
   await getCsrf();
   const res = await apiPost(`${API}/api/auth/login`, { name, password });
-  try {
-    // sucesso -> manda para seleção de herói
-    window.location.href = '/starter.html';
-  } catch {
-    /* ignore */
-  }
   return res;
 }
 
 /**
- * Registro e redireciona para /starter.html em caso de sucesso.
+ * Registro — não redireciona aqui; retorna o JSON para a página decidir.
  */
 export async function doRegister(name, password) {
   await getCsrf();
   const res = await apiPost(`${API}/api/auth/register`, { name, password });
-  try {
-    // sucesso -> manda para seleção de herói
-    window.location.href = '/starter.html';
-  } catch {
-    /* ignore */
-  }
   return res;
 }
 

@@ -1,19 +1,26 @@
--- adiciona role na tabela players e tabela de mutes do chat
-PRAGMA foreign_keys = OFF;
+-- 002_chat_mutes.pg.sql  — Players.role + Chat mutes
 
-BEGIN TRANSACTION;
+-- Adiciona coluna role em players (idempotente)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+      WHERE table_name='players' AND column_name='role'
+  ) THEN
+    ALTER TABLE players ADD COLUMN role TEXT DEFAULT 'player';
+  END IF;
+END$$;
 
--- adiciona coluna role se não existir (SQLite não tem IF NOT EXISTS para ALTER TABLE)
--- a forma segura: cria tabela temporária, copia, recria. Aqui vamos tentar um ALTER simples (se falhar, execute manualmente).
-ALTER TABLE players ADD COLUMN role TEXT DEFAULT 'player';
-
+-- Tabela de mutes
 CREATE TABLE IF NOT EXISTS chat_mutes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  targetId TEXT NOT NULL,
-  byId TEXT NOT NULL,
-  until INTEGER NOT NULL,
-  reason TEXT,
-  created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')*1000)
+  id         BIGSERIAL PRIMARY KEY,
+  targetId   UUID NOT NULL,                    -- jogador alvo
+  byId       UUID NOT NULL,                    -- quem mutou
+  until      BIGINT NOT NULL,                  -- epoch ms
+  reason     TEXT,
+  created_at BIGINT NOT NULL DEFAULT ((EXTRACT(EPOCH FROM NOW())*1000)::BIGINT)
 );
 
-COMMIT;
+-- Índices úteis
+CREATE INDEX IF NOT EXISTS idx_chat_mutes_target ON chat_mutes (targetId);
+CREATE INDEX IF NOT EXISTS idx_chat_mutes_until  ON chat_mutes (until);

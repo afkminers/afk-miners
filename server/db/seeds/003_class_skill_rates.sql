@@ -1,3 +1,16 @@
+-- 003_class_skill_rates.sql  (PostgreSQL)
+
+BEGIN;
+
+-- Cria tabela se não existir
+CREATE TABLE IF NOT EXISTS class_skill_rates (
+  class TEXT NOT NULL,
+  skill_type TEXT NOT NULL,
+  rate NUMERIC NOT NULL DEFAULT 1.0,
+  PRIMARY KEY (class, skill_type)
+);
+
+-- Seed idempotente
 INSERT INTO class_skill_rates (class, skill_type, rate) VALUES
   -- Knight-like
   ('KNIGHT','SWORD',    1.00),
@@ -21,4 +34,8 @@ INSERT INTO class_skill_rates (class, skill_type, rate) VALUES
   ('MAGE','CLUB',     0.30),
   ('MAGE','DISTANCE', 0.50),
   ('MAGE','SHIELD',   0.50),
-  ('MAGE','MAGIC',    1.20);
+  ('MAGE','MAGIC',    1.20)
+ON CONFLICT (class, skill_type)
+DO UPDATE SET rate = EXCLUDED.rate;
+
+COMMIT;

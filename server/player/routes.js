@@ -26,9 +26,9 @@ router.get('/me', async (req, res) => {
 
     // perfil do jogador
     const profile = await get(
-      `SELECT id, name, coins, gems, createdAt
+      `SELECT id, name, coins, gems, "createdAt"
          FROM players
-        WHERE id = ?`,
+        WHERE id = $1`,
       [playerId]
     );
     if (!profile) {
@@ -39,23 +39,23 @@ router.get('/me', async (req, res) => {
     const rows = await all(`
       SELECT
         ph.id,
-        ph.heroKey,
+        ph."heroKey",
         ph.name,
         ph.rarity,
         ph.attack,
         ph.defense,
         ph.speed,
         ph.level,
-        ph.createdAt,
-        ph.isStarter,
+        ph."createdAt",
+        ph."isStarter",
         hm.class,
         hm.role,
         hm.attack_type,
         hm.element,
         hm.weapon_pref
       FROM player_heroes AS ph
-      LEFT JOIN heroes_master AS hm ON hm.heroKey = ph.heroKey
-      WHERE ph.playerId = ?
+      LEFT JOIN heroes_master AS hm ON hm."heroKey" = ph."heroKey"
+      WHERE ph."playerId" = $1
       ORDER BY
         CASE ph.rarity
           WHEN 'ULTIMATE'   THEN 1
@@ -65,10 +65,9 @@ router.get('/me', async (req, res) => {
           WHEN 'RARE'       THEN 5
           ELSE 6
         END,
-        ph.createdAt DESC
+        ph."createdAt" DESC
     `, [playerId]);
 
-    // aponta para sprites do seu pipeline (data/sprites/characters/*.yml -> image: sprites/characters/<key>.png)
     const imageUrlFor = (heroKey) => `/sprites/characters/${heroKey}.png`;
 
     const heroes = rows.map(h => ({
@@ -97,17 +96,17 @@ router.get('/pos', async (req, res) => {
     const row = await get(
       `SELECT x, y
          FROM player_positions
-        WHERE playerId=? AND mapKey=?`,
+        WHERE "playerId"=$1 AND "mapKey"=$2`,
       [playerId, mapKey]
     ).catch(() => null);
 
     if (row) return res.json(row);
 
-    // fallback: primeiro objeto "start" do mapa (gravado por seu content loader)
+    // fallback: primeiro objeto "start" do mapa
     const start = await get(
       `SELECT x, y
          FROM map_objects
-        WHERE mapKey=? AND type='start'
+        WHERE "mapKey"=$1 AND type='start'
         LIMIT 1`,
       [mapKey]
     ).catch(() => null);
@@ -133,10 +132,10 @@ router.post('/pos', async (req, res) => {
     const y = Math.round(req.body?.y || 0);
 
     await run(`
-      INSERT INTO player_positions(playerId,mapKey,x,y,updated_at)
-      VALUES(?,?,?,?,CURRENT_TIMESTAMP)
-      ON CONFLICT(playerId,mapKey) DO UPDATE
-        SET x=excluded.x, y=excluded.y, updated_at=CURRENT_TIMESTAMP
+      INSERT INTO player_positions("playerId","mapKey",x,y,updated_at)
+      VALUES($1,$2,$3,$4,CURRENT_TIMESTAMP)
+      ON CONFLICT("playerId","mapKey") DO UPDATE
+        SET x=EXCLUDED.x, y=EXCLUDED.y, updated_at=CURRENT_TIMESTAMP
     `, [playerId, mapKey, x, y]);
 
     res.json({ ok: true });

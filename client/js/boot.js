@@ -33,7 +33,7 @@ const authClose = document.getElementById('authClose');
 const btnHamb   = document.getElementById('btnHamb');
 const mobMenu   = document.getElementById('mobileMenu');
 
-// Referências gacha (seguem existentes no index; não serão usadas após o redirect)
+// Referências gacha
 const ctx = {
   elGacha:    document.getElementById('btnGacha'),
   elGacha10:  document.getElementById('btnGacha10'),

@@ -1,32 +1,35 @@
 // server/routes/afk.js
 const express = require('express');
 const router = express.Router();
-const { db } = require('../models/db');
-
-// Helpers Promises
-const dbGet = (sql, p=[]) => new Promise((res, rej)=> db.get(sql, p, (e, r)=> e?rej(e):res(r)));
-const dbAll = (sql, p=[]) => new Promise((res, rej)=> db.all(sql, p, (e, r)=> e?rej(e):res(r)));
-const dbRun = (sql, p=[]) => new Promise((res, rej)=> db.run(sql, p, function(e){ e?rej(e):res(this) }));
+const { all, get, run } = require('../models/db'); // PG helpers
 
 // Sanity: ping
-router.get('/ping', (_req, res) => res.json({ ok:true, ts: Date.now() }));
+router.get('/ping', (_req, res) => res.json({ ok: true, ts: Date.now() }));
 
 // Estado agregado: workers, boxes, inventário
 router.get('/state', async (req, res) => {
   try {
     const playerId = String(req.user.id || req.user.playerId || req.user.userId || '');
-    const workers = await dbAll(
+    const workers = await all(
       `SELECT id, name, produce_type, produce_amount, rate_sec, assigned_box, last_collected, created_at
          FROM afk_workers
-        WHERE player_id=? ORDER BY created_at ASC`, [playerId]
+        WHERE player_id=$1
+        ORDER BY created_at ASC`,
+      [playerId]
     );
-    const boxes = await dbAll(
+    const boxes = await all(
       `SELECT id, kind, level, capacity, created_at
-         FROM afk_boxes WHERE player_id=? ORDER BY created_at ASC`, [playerId]
+         FROM afk_boxes
+        WHERE player_id=$1
+        ORDER BY created_at ASC`,
+      [playerId]
     );
-    const inv = await dbAll(
+    const inv = await all(
       `SELECT item_type, amount
-         FROM afk_inventories WHERE player_id=? ORDER BY item_type ASC`, [playerId]
+         FROM afk_inventories
+        WHERE player_id=$1
+        ORDER BY item_type ASC`,
+      [playerId]
     );
     res.json({ workers, boxes, inventory: inv });
   } catch (e) {
@@ -43,14 +46,15 @@ router.post('/create-worker', async (req, res) => {
 
     if (!produce_type) return res.status(400).json({ error: 'produce_type required' });
 
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
-    await dbRun(
-      `INSERT INTO afk_workers (id, player_id, name, produce_type, produce_amount, rate_sec, assigned_box)
-       VALUES (?,?,?,?,?,?,?)`,
-      [id, playerId, String(name||'Worker'), String(produce_type), Number(produce_amount), Number(rate_sec), assigned_box]
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    await run(
+      `INSERT INTO afk_workers
+         (id, player_id, name, produce_type, produce_amount, rate_sec, assigned_box, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, now())`,
+      [id, playerId, String(name || 'Worker'), String(produce_type), Number(produce_amount), Number(rate_sec), assigned_box]
     );
 
-    res.json({ ok:true, id });
+    res.json({ ok: true, id });
   } catch (e) {
     console.error('[afk/create-worker] error:', e.message);
     res.status(500).json({ error: 'create_worker_failed' });
@@ -64,16 +68,16 @@ router.post('/assign', async (req, res) => {
     const { worker_id, box_id } = req.body || {};
     if (!worker_id) return res.status(400).json({ error: 'worker_id required' });
 
-    const w = await dbGet(`SELECT id, player_id FROM afk_workers WHERE id=?`, [worker_id]);
+    const w = await get(`SELECT id, player_id FROM afk_workers WHERE id=$1`, [worker_id]);
     if (!w || w.player_id !== playerId) return res.status(404).json({ error: 'worker_not_found' });
 
     if (box_id) {
-      const b = await dbGet(`SELECT id, player_id FROM afk_boxes WHERE id=?`, [box_id]);
+      const b = await get(`SELECT id, player_id FROM afk_boxes WHERE id=$1`, [box_id]);
       if (!b || b.player_id !== playerId) return res.status(404).json({ error: 'box_not_found' });
     }
 
-    await dbRun(`UPDATE afk_workers SET assigned_box=? WHERE id=?`, [box_id || null, worker_id]);
-    res.json({ ok:true });
+    await run(`UPDATE afk_workers SET assigned_box=$1 WHERE id=$2`, [box_id || null, worker_id]);
+    res.json({ ok: true });
   } catch (e) {
     console.error('[afk/assign] error:', e.message);
     res.status(500).json({ error: 'assign_failed' });
@@ -86,23 +90,18 @@ router.post('/collect', async (req, res) => {
     const playerId = String(req.user.id || req.user.playerId || req.user.userId || '');
     const now = Date.now();
 
-    // helper para converter "YYYY-MM-DD HH:MM:SS" -> epoch
-    function tsToMs(s) {
-      if (!s) return NaN;
-      // transforma em ISO: "YYYY-MM-DDTHH:MM:SSZ"
-      const iso = String(s).replace(' ', 'T') + 'Z';
-      const ms = Date.parse(iso);
-      return Number.isNaN(ms) ? NaN : ms;
-    }
-
-    const workers = await dbAll(
+    // last_collected deve ser TIMESTAMPTZ/DATE no PG; Date.parse lida com ISO
+    const workers = await all(
       `SELECT id, produce_type, produce_amount, rate_sec, last_collected
-         FROM afk_workers WHERE player_id=?`, [playerId]
+         FROM afk_workers
+        WHERE player_id=$1`,
+      [playerId]
     );
 
     const total = {};
     for (const w of workers) {
-      const lastMs = tsToMs(w.last_collected);
+      // se vier null, considera "agora" como base (não acumula nada)
+      const lastMs = w.last_collected ? Date.parse(w.last_collected) : NaN;
       const baseLast = Number.isNaN(lastMs) ? now : lastMs;
 
       let seconds = Math.floor((now - baseLast) / 1000);
@@ -124,26 +123,27 @@ router.post('/collect', async (req, res) => {
       }
 
       // avança last_collected exatamente o nº de ticks processados
-      await dbRun(
-        `UPDATE afk_workers SET last_collected = datetime(?, 'unixepoch') WHERE id=?`,
-        [Math.floor((baseLast + ticks * rate * 1000) / 1000), w.id]
+      const newSec = Math.floor((baseLast + ticks * rate * 1000) / 1000);
+      await run(
+        `UPDATE afk_workers SET last_collected = to_timestamp($1) WHERE id=$2`,
+        [newSec, w.id]
       );
     }
 
-    // aplica no inventário
+    // aplica no inventário (manter lógica select->update/insert para compatibilidade)
     for (const [type, amount] of Object.entries(total)) {
-      const row = await dbGet(
-        `SELECT amount FROM afk_inventories WHERE player_id=? AND item_type=?`,
+      const row = await get(
+        `SELECT amount FROM afk_inventories WHERE player_id=$1 AND item_type=$2`,
         [playerId, type]
       );
       if (row) {
-        await dbRun(
-          `UPDATE afk_inventories SET amount=amount+? WHERE player_id=? AND item_type=?`,
+        await run(
+          `UPDATE afk_inventories SET amount = amount + $1 WHERE player_id=$2 AND item_type=$3`,
           [amount, playerId, type]
         );
       } else {
-        await dbRun(
-          `INSERT INTO afk_inventories (player_id, item_type, amount) VALUES (?,?,?)`,
+        await run(
+          `INSERT INTO afk_inventories (player_id, item_type, amount) VALUES ($1, $2, $3)`,
           [playerId, type, amount]
         );
       }
@@ -155,6 +155,5 @@ router.post('/collect', async (req, res) => {
     res.status(500).json({ error: 'collect_failed' });
   }
 });
-
 
 module.exports = router;

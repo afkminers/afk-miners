@@ -1,22 +1,30 @@
-# Node
+# ======================
+# Node.js
+# ======================
 node_modules/
 **/node_modules/
 npm-debug.log*
 yarn-error.log*
 pnpm-lock.yaml
 
-# Builds/artefatos
+# ======================
+# Builds / Artefatos
+# ======================
 dist/
 build/
 **/dist/
 **/build/
 
-# Ambiente
+# ======================
+# Ambiente (.env secrets)
+# ======================
 .env
 .env.*
 *.local
 
-# Banco de dados (SQLite) — NÃO subir DB local nem WAL/SHM
+# ======================
+# Banco de dados (SQLite dev only)
+# ======================
 server/db/*.sqlite
 server/db/*.sqlite-wal
 server/db/*.sqlite-shm
@@ -24,22 +32,37 @@ db/*.sqlite
 db/*.sqlite-wal
 db/*.sqlite-shm
 
+# ======================
 # Sistema
+# ======================
 .DS_Store
 Thumbs.db
 .vscode/
+.idea/
 
-# Logs (gerais)
+# ======================
+# Logs
+# ======================
 *.log
 logs/
 **/logs/
 
-# Backups e releases
+# ======================
+# Backups / Releases
+# ======================
 docs/backups/
 docs/releases/
+docs/context/
 
-# Cache/bundlers comuns (opcional, seguro ignorar)
+# ======================
+# Cache / Bundlers
+# ======================
 .cache/
 .parcel-cache/
 .temp/
 .tmp/
+
+# ======================
+# Snapshots temporários
+# ======================
+*.zip

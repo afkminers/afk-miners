@@ -30,11 +30,12 @@
     "file": "client\\js\\app.js",
     "symbols": [
       "appendChatRow",
+      "applyUiFromSettings",
       "applyViewport",
       "connectWS",
       "escapeHtml",
       "getCsrf",
-      "getInt",
+      "getRootVar",
       "jget",
       "jpost",
       "log",
@@ -44,7 +45,9 @@
       "onMove",
       "onReady",
       "onUp",
-      "sendChat"
+      "sendChat",
+      "setRootVar",
+      "updateTopbarHeight"
     ]
   },
   {

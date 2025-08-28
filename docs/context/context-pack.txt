@@ -1,5 +1,5 @@
 AFK Miners — Context Pack
-Commit: bfb25dd | Branch: main | Last Tag: n/a
+Commit: 115998a | Branch: main | Last Tag: n/a
 
 == Estrutura (nível 4) ==
 _backup-meta.txt
@@ -340,6 +340,8 @@ docs\backups\2025-08-27_014523-pre-main-27e63d5.zip
 docs\backups\2025-08-27_014537-post-main-697020e.zip
 docs\backups\2025-08-27_150358-pre-main-697020e.zip
 docs\backups\2025-08-27_150414-post-main-bfb25dd.zip
+docs\backups\2025-08-27_151424-pre-main-bfb25dd.zip
+docs\backups\2025-08-27_151439-post-main-115998a.zip
 docs\context
 docs\context\API.md
 docs\context\changes-since.txt
@@ -1644,6 +1646,29 @@ docs\releases\2025-08-27_014549-auto\route-history.json
 docs\releases\2025-08-27_014549-auto\symbol-index.json
 docs\releases\2025-08-27_014549-auto\todos.json
 docs\releases\2025-08-27_150427-auto
+docs\releases\2025-08-27_150427-auto.zip
+docs\releases\2025-08-27_150427-auto\API.md
+docs\releases\2025-08-27_150427-auto\README.txt
+docs\releases\2025-08-27_150427-auto\changes-since.txt
+docs\releases\2025-08-27_150427-auto\context-pack.txt
+docs\releases\2025-08-27_150427-auto\data-summary.json
+docs\releases\2025-08-27_150427-auto\db-counts.txt
+docs\releases\2025-08-27_150427-auto\db-schema.sql
+docs\releases\2025-08-27_150427-auto\db-tables.json
+docs\releases\2025-08-27_150427-auto\db-tables.txt
+docs\releases\2025-08-27_150427-auto\deps-graph.json
+docs\releases\2025-08-27_150427-auto\deps.txt
+docs\releases\2025-08-27_150427-auto\endpoints-contracts.json
+docs\releases\2025-08-27_150427-auto\env-usage.json
+docs\releases\2025-08-27_150427-auto\error-map.json
+docs\releases\2025-08-27_150427-auto\function-signatures.json
+docs\releases\2025-08-27_150427-auto\openapi.json
+docs\releases\2025-08-27_150427-auto\package.json
+docs\releases\2025-08-27_150427-auto\responses-sample.json
+docs\releases\2025-08-27_150427-auto\route-history.json
+docs\releases\2025-08-27_150427-auto\symbol-index.json
+docs\releases\2025-08-27_150427-auto\todos.json
+docs\releases\2025-08-27_151452-auto
 map.tmx
 package-lock.json
 package.json
@@ -1724,13 +1749,13 @@ package.json
 readme.txt
 
 == Inventário por extensão ==
-.json : 748
-.txt : 369
-.zip : 147
+.json : 761
+.txt : 375
+.zip : 150
 .js : 117
 .png : 116
-.sql : 83
-.md : 59
+.sql : 84
+.md : 60
 .html : 47
 .yml : 34
 .css : 24
@@ -1748,6 +1773,8 @@ readme.txt
 .sqlite-shm : 2
 
 == Top 20 maiores arquivos ==
+80243.7 KB	docs\backups\2025-08-27_151424-pre-main-bfb25dd.zip
+80243.6 KB	docs\backups\2025-08-27_151439-post-main-115998a.zip
 80239.4 KB	docs\backups\2025-08-27_150358-pre-main-697020e.zip
 80239.2 KB	docs\backups\2025-08-27_150414-post-main-bfb25dd.zip
 80225.7 KB	docs\backups\2025-08-27_013314-pre-feature-afk-workers-118c7ba.zip
@@ -1766,8 +1793,6 @@ readme.txt
 79846.6 KB	docs\backups\2025-08-24_233451-post-main-6670238.zip
 79844.9 KB	docs\backups\2025-08-24_213510-pre-main-618ad68.zip
 79844.8 KB	docs\backups\2025-08-24_213525-post-main-28973ed.zip
-79844.2 KB	docs\backups\2025-08-24_221431-pre-main-28973ed.zip
-79844.1 KB	docs\backups\2025-08-24_221445-post-main-98380d4.zip
 
 == Rotas detectadas (server) ==
 [GET] /api/admin/content/map/:key/data  (server\index.js:347)
@@ -1930,6 +1955,19 @@ package.json :: 10 chaves | keys: name, version, description, main, scripts, key
 package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 124907 bytes
 server\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 3532 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 123049 bytes
+docs\releases\2025-08-27_150427-auto\todos.json :: 32 itens | 5516 bytes
+docs\releases\2025-08-27_150427-auto\symbol-index.json :: 93 itens | 25189 bytes
+docs\releases\2025-08-27_150427-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 1155 bytes
+docs\releases\2025-08-27_150427-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 2789 bytes
+docs\releases\2025-08-27_150427-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2664 bytes
+docs\releases\2025-08-27_150427-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 44483 bytes
+docs\releases\2025-08-27_150427-auto\function-signatures.json :: 945 itens | 171361 bytes
+docs\releases\2025-08-27_150427-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 16811 bytes
+docs\releases\2025-08-27_150427-auto\env-usage.json :: 15 itens | 9272 bytes
+docs\releases\2025-08-27_150427-auto\endpoints-contracts.json :: 38 itens | 33045 bytes
+docs\releases\2025-08-27_150427-auto\deps-graph.json :: 27 itens | 2801 bytes
+docs\releases\2025-08-27_150427-auto\db-tables.json :: 23 itens | 7409 bytes
+docs\releases\2025-08-27_150427-auto\data-summary.json :: 34 itens | 7806 bytes
 docs\releases\2025-08-27_014549-auto\todos.json :: 32 itens | 5516 bytes
 docs\releases\2025-08-27_014549-auto\symbol-index.json :: 86 itens | 24077 bytes
 docs\releases\2025-08-27_014549-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 1155 bytes
@@ -2630,11 +2668,11 @@ docs\releases\2025-08-22_225607-auto\symbol-index.json :: 20 itens | 4494 bytes
 docs\releases\2025-08-22_225607-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2697 bytes
 docs\releases\2025-08-22_225607-auto\data-summary.json :: 16 itens | 3803 bytes
 docs\context\todos.json :: 32 itens | 5516 bytes
-docs\context\symbol-index.json :: 86 itens | 24077 bytes
+docs\context\symbol-index.json :: 93 itens | 25189 bytes
 docs\context\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 1155 bytes
 docs\context\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 2789 bytes
 docs\context\openapi.json :: 3 chaves | keys: openapi, info, paths | 44483 bytes
-docs\context\function-signatures.json :: 885 itens | 160558 bytes
+docs\context\function-signatures.json :: 945 itens | 171361 bytes
 docs\context\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET /, POST /harvest | 16811 bytes
 docs\context\env-usage.json :: 15 itens | 9272 bytes
 docs\context\endpoints-contracts.json :: 38 itens | 33045 bytes
@@ -2679,7 +2717,7 @@ client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kael
 client\js\afk_panel.js :: attachButton, el, getCsrf, jget, jpost, openAFK, pretty, renderState
 client\js\api.js :: API
 client\js\app_panels.js :: jget, mkPanel, openSkills
-client\js\app.js :: appendChatRow, applyViewport, connectWS, escapeHtml, getCsrf, getInt, jget, jpost, log, makeVSplitter, mountSceneHouse, onDown, onMove, onReady, onUp, sendChat
+client\js\app.js :: appendChatRow, applyUiFromSettings, applyViewport, connectWS, escapeHtml, getCsrf, getRootVar, jget, jpost, log, makeVSplitter, mountSceneHouse, onDown, onMove, onReady, onUp, sendChat, setRootVar, updateTopbarHeight
 client\js\auth.js :: checkAuth
 client\js\boot.js :: closeMobileMenu, goToGameAccordingToStarter, handleLogout, setLoggedOutGlow, setLogoutVisibility, showApp, showLanding, trySession, updateHud
 client\js\dock.js :: bringToFront, clamp, createPanel, dockUndock, ensureShellBounds, loadState, makeDraggable, makeResizable, mm, mu, rect, saveState, snapInside, start

@@ -1,11 +1,20 @@
+// server/models/heroes.js
 const { randomUUID } = require('crypto');
 const { all, get, run } = require('./db');
 
+/**
+ * Cria/atualiza o schema de heroes_master no Postgres.
+ * - id: UUID PK
+ * - "heroKey": TEXT UNIQUE
+ * - Campos base_* inteiros
+ * - Campos extras (class, role, attack_type, element, weapon_pref)
+ */
 async function ensureHeroesSchema() {
+  // Tabela base
   await run(`
-    CREATE TABLE IF NOT EXISTS heroes_master(
-      id TEXT PRIMARY KEY,
-      heroKey TEXT NOT NULL,
+    CREATE TABLE IF NOT EXISTS heroes_master (
+      id UUID PRIMARY KEY,
+      "heroKey" TEXT NOT NULL UNIQUE,
       name TEXT NOT NULL,
       rarity TEXT NOT NULL,
       base_attack INTEGER NOT NULL,
@@ -13,21 +22,21 @@ async function ensureHeroesSchema() {
       base_speed INTEGER NOT NULL
     )
   `);
-  const pragma = await all(`PRAGMA table_info(heroes_master)`);
-  const cols = new Set(pragma.map(c => c.name));
-  const wants = [
-    { name: 'class',       sql: `ALTER TABLE heroes_master ADD COLUMN class TEXT DEFAULT ''` },
-    { name: 'role',        sql: `ALTER TABLE heroes_master ADD COLUMN role TEXT DEFAULT ''` },
-    { name: 'attack_type', sql: `ALTER TABLE heroes_master ADD COLUMN attack_type TEXT DEFAULT ''` },
-    { name: 'element',     sql: `ALTER TABLE heroes_master ADD COLUMN element TEXT DEFAULT ''` },
-    { name: 'weapon_pref', sql: `ALTER TABLE heroes_master ADD COLUMN weapon_pref TEXT DEFAULT ''` },
-  ];
-  for (const w of wants) if (!cols.has(w.name)) await run(w.sql);
+
+  // Colunas opcionais (se não existirem)
+  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS class TEXT DEFAULT ''`);
+  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS role TEXT DEFAULT ''`);
+  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS attack_type TEXT DEFAULT ''`);
+  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS element TEXT DEFAULT ''`);
+  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS weapon_pref TEXT DEFAULT ''`);
 }
 
+/**
+ * Insere seed de heróis, caso a tabela esteja vazia.
+ */
 async function seedHeroesIfEmpty() {
-  const row = await get(`SELECT COUNT(*) AS c FROM heroes_master`);
-  if (row.c) return;
+  const row = await get(`SELECT COUNT(*)::int AS c FROM heroes_master`);
+  if (Number(row?.c || 0) > 0) return;
 
   const seed = [
     { key:'aric',   name:'Aric, the Swordsman',      rarity:'COMMON',     atk:2, def:1, spd:1, class:'warrior',   role:'dps',          attack_type:'melee',  element:'neutral', weapon_pref:'sword' },
@@ -46,21 +55,33 @@ async function seedHeroesIfEmpty() {
     { key:'zephyr', name:'Zephyr, the Dragonmaster', rarity:'ULTIMATE',   atk:7, def:3, spd:5, class:'summoner',  role:'dps_control',  attack_type:'magic',  element:'wind',    weapon_pref:'tome' },
     { key:'arkan',  name:'Arkan, the Arcane Master', rarity:'ULTIMATE',   atk:8, def:4, spd:4, class:'archmage',  role:'dps',          attack_type:'magic',  element:'arcane',  weapon_pref:'staff' },
   ];
-  const stmt = await run(`BEGIN`);
-  const prep = await new Promise((res) => res(
-    require('./db').db.prepare(`
-      INSERT INTO heroes_master
-      (id,heroKey,name,rarity,base_attack,base_defense,base_speed,class,role,attack_type,element,weapon_pref)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
-    `)
-  ));
-  seed.forEach(h => prep.run(
-    randomUUID(), h.key, h.name, h.rarity, h.atk, h.def, h.spd,
-    h.class, h.role, h.attack_type, h.element, h.weapon_pref
-  ));
-  prep.finalize();
-  await run(`COMMIT`);
-  console.log('> heroes_master seed OK');
+
+  await run('BEGIN');
+  try {
+    for (const h of seed) {
+      await run(
+        `
+        INSERT INTO heroes_master
+          (id, "heroKey", name, rarity,
+           base_attack, base_defense, base_speed,
+           class, role, attack_type, element, weapon_pref)
+        VALUES
+          ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+        ON CONFLICT ("heroKey") DO NOTHING
+        `,
+        [
+          randomUUID(), h.key, h.name, h.rarity,
+          h.atk, h.def, h.spd,
+          h.class, h.role, h.attack_type, h.element, h.weapon_pref
+        ]
+      );
+    }
+    await run('COMMIT');
+    console.log('> heroes_master seed OK');
+  } catch (e) {
+    await run('ROLLBACK');
+    throw e;
+  }
 }
 
 module.exports = { ensureHeroesSchema, seedHeroesIfEmpty };

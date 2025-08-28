@@ -1,15 +1,16 @@
 // server/skills/engine.js
 const { get, run } = require('../models/db');
-const K = require('../balance/config'); // usa seus knobs em server/balance/config.js
+const K = require('../balance/config'); // knobs em server/balance/config.js
 
 async function ensureSkillRow(heroId, skillType) {
   const row = await get(
-    `SELECT 1 FROM player_hero_skills WHERE hero_id=? AND skill_type=?`,
+    `SELECT 1 FROM player_hero_skills WHERE hero_id = $1 AND skill_type = $2`,
     [heroId, skillType]
   );
   if (!row) {
     await run(
-      `INSERT INTO player_hero_skills (hero_id, skill_type, level, tries_progress) VALUES (?,?,1,0)`,
+      `INSERT INTO player_hero_skills (hero_id, skill_type, level, tries_progress)
+       VALUES ($1, $2, 1, 0)`,
       [heroId, skillType]
     );
   }
@@ -17,19 +18,23 @@ async function ensureSkillRow(heroId, skillType) {
 
 async function triesNeeded(skillType, level) {
   const r = await get(
-    `SELECT tries_needed FROM skill_curves WHERE skill_type=? AND level=?`,
+    `SELECT tries_needed
+       FROM skill_curves
+      WHERE skill_type = $1 AND level = $2`,
     [skillType, level]
   );
-  return r ? r.tries_needed : null; // null = cap
+  return r ? Number(r.tries_needed) : null; // null = cap
 }
 
 async function getClassRate(heroClass, skillType) {
   if (!heroClass) return K.CLASS_RATE_FALLBACK || 1.0;
   const r = await get(
-    `SELECT rate FROM class_skill_rates WHERE class=? AND skill_type=?`,
+    `SELECT rate
+       FROM class_skill_rates
+      WHERE class = $1 AND skill_type = $2`,
     [String(heroClass).toUpperCase(), skillType]
   );
-  return r?.rate ?? (K.CLASS_RATE_FALLBACK || 1.0);
+  return r?.rate != null ? Number(r.rate) : (K.CLASS_RATE_FALLBACK || 1.0);
 }
 
 async function applyTries(heroId, skillType, triesToApply) {
@@ -38,16 +43,20 @@ async function applyTries(heroId, skillType, triesToApply) {
   await ensureSkillRow(heroId, skillType);
 
   let row = await get(
-    `SELECT level, tries_progress FROM player_hero_skills WHERE hero_id=? AND skill_type=?`,
+    `SELECT level, tries_progress
+       FROM player_hero_skills
+      WHERE hero_id = $1 AND skill_type = $2`,
     [heroId, skillType]
   );
-  let level = row?.level ?? 1;
-  let tries = row?.tries_progress ?? 0;
+  let level = row?.level ? Number(row.level) : 1;
+  let tries = row?.tries_progress ? Number(row.tries_progress) : 0;
 
-  let rem = triesToApply, leveled = 0;
+  let rem = triesToApply;
+  let leveled = 0;
+
   while (rem > 0) {
     const need = await triesNeeded(skillType, level);
-    if (need == null) break; // cap
+    if (need == null) break; // chegou no cap
     const missing = need - tries;
 
     if (rem >= missing) {
@@ -62,61 +71,61 @@ async function applyTries(heroId, skillType, triesToApply) {
   }
 
   await run(
-    `UPDATE player_hero_skills SET level=?, tries_progress=? WHERE hero_id=? AND skill_type=?`,
+    `UPDATE player_hero_skills
+        SET level = $1,
+            tries_progress = $2
+      WHERE hero_id = $3 AND skill_type = $4`,
     [level, tries, heroId, skillType]
   );
+
   return { leveled, level, tries_progress: tries };
 }
 
-/** ---- PER-HIT (Tibia-like) ---- */
-function _tryFrom(kind) {
-  if (kind === 'BLOCK') return K.TRIES_PER_HIT;         // pode ajustar por tipo se quiser
+/** ---- PER-HIT (Tibia-like), sem gate/treino ---- */
+function triesBase(kind) {
+  // Se quiser diferenciar, crie knobs por tipo: K.TRIES_PER_HIT_MELEE etc.
+  if (kind === 'BLOCK') return K.TRIES_PER_HIT;
   if (kind === 'CAST')  return K.TRIES_PER_HIT;
   return K.TRIES_PER_HIT; // MELEE / DISTANCE
 }
-function _ctxMul(context) {
+
+function contextMul(context) {
+  // Ajuste à vontade: TRAINING pode dar bônus, COMBAT levemente menor, etc.
   const c = String(context || 'COMBAT').toUpperCase();
-  return c === 'TRAINING' ? 1.0 : 0.6; // se quiser knobs separados, adicione em K
+  if (c === 'TRAINING') return 1.0;
+  return 0.8;
 }
 
-/** Gate: só conta tries em TRAINING se existir sessão ativa com energia */
-async function _trainingGate(heroId, context) {
-  if (String(context).toUpperCase() !== 'TRAINING') return true;
-  const t = await get(`SELECT status, energy_current FROM hero_training WHERE hero_id=?`, [heroId]);
-  return !!(t && t.status === 'RUNNING' && (t.energy_current || 0) > 0);
-}
-
-/** Eventos que o combate deve chamar */
-async function gainFromHit({ heroId, skillType, heroClass, context='COMBAT' }) {
-  if (!(await _trainingGate(heroId, context))) return { gated: true };
+/** Eventos que o combate deve chamar (sem depender de hero_training) */
+async function gainFromHit({ heroId, skillType, heroClass, context = 'COMBAT' }) {
   const rate  = await getClassRate(heroClass, skillType);
-  const tries = _tryFrom('MELEE') * rate * _ctxMul(context);
+  const tries = triesBase('MELEE') * rate * contextMul(context);
   return applyTries(heroId, skillType, tries);
 }
 
-async function gainFromShot({ heroId, heroClass, context='COMBAT' }) {
-  if (!(await _trainingGate(heroId, context))) return { gated: true };
+async function gainFromShot({ heroId, heroClass, context = 'COMBAT' }) {
   const rate  = await getClassRate(heroClass, 'DISTANCE');
-  const tries = _tryFrom('DISTANCE') * rate * _ctxMul(context);
+  const tries = triesBase('DISTANCE') * rate * contextMul(context);
   return applyTries(heroId, 'DISTANCE', tries);
 }
 
-async function gainFromCast({ heroId, heroClass, context='COMBAT' }) {
-  if (!(await _trainingGate(heroId, context))) return { gated: true };
+async function gainFromCast({ heroId, heroClass, context = 'COMBAT' }) {
   const rate  = await getClassRate(heroClass, 'MAGIC');
-  const tries = _tryFrom('CAST') * rate * _ctxMul(context);
+  const tries = triesBase('CAST') * rate * contextMul(context);
   return applyTries(heroId, 'MAGIC', tries);
 }
 
-async function gainFromBlock({ heroId, heroClass, context='COMBAT' }) {
-  if (!(await _trainingGate(heroId, context))) return { gated: true };
+async function gainFromBlock({ heroId, heroClass, context = 'COMBAT' }) {
   const rate  = await getClassRate(heroClass, 'SHIELD');
-  const tries = _tryFrom('BLOCK') * rate * _ctxMul(context);
+  const tries = triesBase('BLOCK') * rate * contextMul(context);
   return applyTries(heroId, 'SHIELD', tries);
 }
 
 module.exports = {
   applyTries,
   getClassRate,
-  gainFromHit, gainFromShot, gainFromCast, gainFromBlock
+  gainFromHit,
+  gainFromShot,
+  gainFromCast,
+  gainFromBlock,
 };

@@ -52,10 +52,10 @@ async function chooseHeroFromPool(rarity) {
 
   while (idx >= 0) {
     const pool = await all(
-      `SELECT heroKey, name, rarity, base_attack, base_defense, base_speed,
+      `SELECT "heroKey", name, rarity, base_attack, base_defense, base_speed,
               class, role, attack_type, element, weapon_pref, type, weapon
          FROM heroes_master
-        WHERE UPPER(TRIM(rarity)) = ?`,
+        WHERE UPPER(TRIM(rarity)) = $1`,
       [RARITY_ORDER[idx]]
     );
     if (pool.length) {
@@ -76,7 +76,7 @@ async function chooseHeroFromPool(rarity) {
 }
 
 async function doSingleSummon(playerId) {
-  const player = await get(`SELECT id, coins, gems FROM players WHERE id = ?`, [playerId]);
+  const player = await get(`SELECT id, coins, gems FROM players WHERE id = $1`, [playerId]);
   if (!player) return { error: 'Jogador não encontrado' };
   if (player.coins < SUMMON_COST_COINS) return { error: 'Moedas insuficientes' };
 
@@ -93,14 +93,15 @@ async function doSingleSummon(playerId) {
 
   const heroId = randomUUID();
 
-  await run('BEGIN IMMEDIATE');
+  // Transação em Postgres
+  await run('BEGIN');
   try {
-    await run(`UPDATE players SET coins = coins - ? WHERE id = ?`, [SUMMON_COST_COINS, playerId]);
+    await run(`UPDATE players SET coins = coins - $1 WHERE id = $2`, [SUMMON_COST_COINS, playerId]);
 
     await run(
       `INSERT INTO player_heroes
-         (id, playerId, heroKey, name, rarity, attack, defense, speed, createdAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, "playerId", "heroKey", name, rarity, attack, defense, speed, "createdAt")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
         heroId,
         playerId,
@@ -120,7 +121,7 @@ async function doSingleSummon(playerId) {
     throw e;
   }
 
-  const updated = await get(`SELECT coins, gems FROM players WHERE id = ?`, [playerId]);
+  const updated = await get(`SELECT coins, gems FROM players WHERE id = $1`, [playerId]);
 
   return {
     cost: SUMMON_COST_COINS,
@@ -167,7 +168,7 @@ router.post('/', async (req, res) => {
       }
       pulls.push(r.hero);
     }
-    const updated = await get(`SELECT coins, gems FROM players WHERE id = ?`, [playerId]);
+    const updated = await get(`SELECT coins, gems FROM players WHERE id = $1`, [playerId]);
     return res.json({ cost: SUMMON_COST_COINS, pulls, newBalance: updated });
   } catch (e) {
     console.error(e);

@@ -6,7 +6,7 @@ const path = require('path');
 const cors = require('cors');
 const http = require('http');
 
-const { db } = require('./models/db');
+const { all, get, run } = require('./models/db'); // <- PG helpers
 const { migrate } = require('./models/migrate');
 const { cookieParser, requireAuth, requireCsrf, csrfRoute } = require('./auth/middleware');
 
@@ -46,83 +46,109 @@ app.get('/api/csrf', csrfRoute);
 // 2) Ativar o guard de CSRF para o restante das rotas
 app.use(requireCsrf);
 
-// ========= helpers DB (promises) =========
-const dbGet = (sql, params = []) => new Promise((res, rej) => db.get(sql, params, (e, r) => e ? rej(e) : res(r)));
-const dbAll = (sql, params = []) => new Promise((res, rej) => db.all(sql, params, (e, r) => e ? rej(e) : res(r)));
-const dbRun = (sql, params = []) => new Promise((res, rej) => db.run(sql, params, function (e) { e ? rej(e) : res(this) }));
+/* ========= Bootstrap: tabelas do pipeline (Postgres) ========= */
+async function bootstrapContentTables() {
+  try {
+    // content_files
+    await run(`
+      CREATE TABLE IF NOT EXISTS content_files (
+        path TEXT PRIMARY KEY,
+        checksum TEXT NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
 
-// --- bootstrap de segurança do pipeline ---
-db.exec(`
-PRAGMA foreign_keys=ON;
-CREATE TABLE IF NOT EXISTS content_files (
-  path TEXT PRIMARY KEY,
-  checksum TEXT NOT NULL,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE IF NOT EXISTS monsters_master (
-  id INTEGER PRIMARY KEY,
-  key TEXT UNIQUE,
-  name TEXT,
-  xp INTEGER,
-  healthMax INTEGER,
-  speed INTEGER,
-  flagsJSON TEXT,
-  elementsJSON TEXT,
-  attacksJSON TEXT,
-  defensesJSON TEXT,
-  lootJSON TEXT,
-  lookJSON TEXT,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE IF NOT EXISTS items_master (
-  id INTEGER PRIMARY KEY,
-  key TEXT UNIQUE,
-  dataJSON TEXT,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE IF NOT EXISTS sprites_master (
-  id INTEGER PRIMARY KEY,
-  key TEXT UNIQUE,
-  kind TEXT,
-  dataJSON TEXT,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE IF NOT EXISTS maps (
-  key TEXT PRIMARY KEY,
-  dataJSON TEXT,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE IF NOT EXISTS map_objects (
-  id INTEGER PRIMARY KEY,
-  mapKey TEXT,
-  type TEXT,
-  x INTEGER, y INTEGER, w INTEGER, h INTEGER,
-  propsJSON TEXT,
-  FOREIGN KEY(mapKey) REFERENCES maps(key)
-);
-CREATE TABLE IF NOT EXISTS spawns (
-  id INTEGER PRIMARY KEY,
-  mapKey TEXT,
-  monsterKey TEXT,
-  x INTEGER, y INTEGER, w INTEGER, h INTEGER,
-  count INTEGER, respawnSec INTEGER,
-  levelMin INTEGER, levelMax INTEGER,
-  FOREIGN KEY(mapKey) REFERENCES maps(key)
-);
-CREATE TABLE IF NOT EXISTS chat_messages (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  scope TEXT NOT NULL,
-  fromId TEXT,
-  fromName TEXT,
-  text TEXT NOT NULL,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-`, (e) => {
-  if (e) console.error("[content] bootstrap error:", e.message);
-  else console.log("[content] tables ready (bootstrap)");
-});
+    // monsters_master
+    await run(`
+      CREATE TABLE IF NOT EXISTS monsters_master (
+        id BIGSERIAL PRIMARY KEY,
+        key TEXT UNIQUE,
+        name TEXT,
+        xp INTEGER,
+        "healthMax" INTEGER,
+        speed INTEGER,
+        "flagsJSON" JSONB,
+        "elementsJSON" JSONB,
+        "attacksJSON" JSONB,
+        "defensesJSON" JSONB,
+        "lootJSON" JSONB,
+        "lookJSON" JSONB,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
 
-// ========= ROTAS =========
+    // items_master
+    await run(`
+      CREATE TABLE IF NOT EXISTS items_master (
+        id BIGSERIAL PRIMARY KEY,
+        key TEXT UNIQUE,
+        "dataJSON" JSONB,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+
+    // sprites_master
+    await run(`
+      CREATE TABLE IF NOT EXISTS sprites_master (
+        id BIGSERIAL PRIMARY KEY,
+        key TEXT UNIQUE,
+        kind TEXT,
+        "dataJSON" JSONB,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+
+    // maps
+    await run(`
+      CREATE TABLE IF NOT EXISTS maps (
+        key TEXT PRIMARY KEY,
+        "dataJSON" JSONB,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+
+    // map_objects
+    await run(`
+      CREATE TABLE IF NOT EXISTS map_objects (
+        id BIGSERIAL PRIMARY KEY,
+        "mapKey" TEXT REFERENCES maps(key) ON DELETE CASCADE,
+        type TEXT,
+        x INTEGER, y INTEGER, w INTEGER, h INTEGER,
+        "propsJSON" JSONB
+      )
+    `);
+
+    // spawns
+    await run(`
+      CREATE TABLE IF NOT EXISTS spawns (
+        id BIGSERIAL PRIMARY KEY,
+        "mapKey" TEXT REFERENCES maps(key) ON DELETE CASCADE,
+        "monsterKey" TEXT,
+        x INTEGER, y INTEGER, w INTEGER, h INTEGER,
+        count INTEGER, "respawnSec" INTEGER,
+        "levelMin" INTEGER, "levelMax" INTEGER
+      )
+    `);
+
+    // chat_messages
+    await run(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id BIGSERIAL PRIMARY KEY,
+        scope TEXT NOT NULL,
+        "fromId" TEXT,
+        "fromName" TEXT,
+        text TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+
+    console.log('[content] tables ready (bootstrap)');
+  } catch (e) {
+    console.error('[content] bootstrap error:', e.message);
+  }
+}
+
+/* ========= ROTAS ========= */
 
 // públicas / auth
 app.use('/api/auth', authRoutes);
@@ -139,23 +165,20 @@ app.use('/api/skills', requireAuth, skillsRoutes);
 app.use('/api/afk', requireAuth, afkRoutes);
 app.use('/api/farm', requireAuth, farmRoutes);
 
-// ========= Helpers (Treino) =========
+/* ========= Helpers (Treino) ========= */
 const SKILLS = new Set(['SWORD', 'AXE', 'CLUB', 'DISTANCE', 'SHIELD', 'MAGIC']);
 
 async function resolveSkillType(weaponOrSkill) {
   if (!weaponOrSkill) return null;
   const raw = String(weaponOrSkill);
-  const up = raw.toUpperCase();
-  if (SKILLS.has(up)) return up;
-
-  const row = await dbGet(
-    `SELECT skill_type FROM weapon_skill_map WHERE LOWER(weapon_type) = LOWER(?)`,
+  const row = await get(
+    `SELECT skill_type FROM weapon_skill_map WHERE lower(weapon_type) = lower($1)`,
     [raw]
   );
   return row?.skill_type || null;
 }
 
-// ========= Rotas de Treino =========
+/* ========= Rotas de Treino ========= */
 const trainingRouter = express.Router();
 
 // START
@@ -172,25 +195,26 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
     const nowIso = new Date().toISOString();
     const notes = JSON.stringify({ heroClass: String(heroClass).toUpperCase() });
 
-    const t = await dbGet(`SELECT * FROM hero_training WHERE hero_id=?`, [heroId]);
+    const t = await get(`SELECT * FROM hero_training WHERE hero_id=$1`, [heroId]);
     if (t) {
-      await dbRun(
+      await run(
         `UPDATE hero_training
-            SET skill_type=?, status='RUNNING',
-                started_at=COALESCE(started_at, ?),
-                last_tick_at=?,
-                notes=?,
-                daily_reset_at = COALESCE(daily_reset_at, datetime('now','start of day','+1 day')),
+            SET skill_type=$1, status='RUNNING',
+                started_at=COALESCE(started_at, $2),
+                last_tick_at=$3,
+                notes=$4,
+                daily_reset_at = COALESCE(daily_reset_at, date_trunc('day', now()) + interval '1 day'),
                 energy_current = COALESCE(energy_current, energy_max)
-          WHERE hero_id=?`,
+          WHERE hero_id=$5`,
         [skillType, nowIso, nowIso, notes, heroId]
       );
     } else {
-      await dbRun(
+      await run(
         `INSERT INTO hero_training
            (hero_id, skill_type, status, started_at, last_tick_at,
             energy_current, energy_max, energy_spent, session_seconds, daily_seconds, daily_reset_at, notes)
-         VALUES (?, ?, 'RUNNING', ?, ?, 100, 100, 0, 0, 0, datetime('now','start of day','+1 day'), ?)`,
+         VALUES ($1, $2, 'RUNNING', $3, $4, 100, 100, 0, 0, 0,
+                 date_trunc('day', now()) + interval '1 day', $5)`,
         [heroId, skillType, nowIso, nowIso, notes]
       );
     }
@@ -208,7 +232,7 @@ trainingRouter.post('/stop', requireAuth, async (req, res) => {
     const { heroId } = req.body || {};
     if (!heroId) return res.status(400).json({ error: 'heroId é obrigatório' });
 
-    const t = await dbGet(`SELECT * FROM hero_training WHERE hero_id=?`, [heroId]);
+    const t = await get(`SELECT * FROM hero_training WHERE hero_id=$1`, [heroId]);
     if (!t || t.status !== 'RUNNING') return res.json({ ok: true, message: 'No active session' });
 
     const now = Date.now();
@@ -218,15 +242,15 @@ trainingRouter.post('/stop', requireAuth, async (req, res) => {
     const energyCost = K.ENERGY_PER_MIN_WHEN_TRAINING * (delta / 60);
     const newEnergy = Math.max(0, (t.energy_current || 0) - energyCost);
 
-    await dbRun(
+    await run(
       `UPDATE hero_training
           SET status='STOPPED',
-              last_tick_at=?,
-              session_seconds=COALESCE(session_seconds,0)+?,
-              daily_seconds=COALESCE(daily_seconds,0)+?,
-              energy_current=?,
-              energy_spent=COALESCE(energy_spent,0)+?
-        WHERE hero_id=?`,
+              last_tick_at=$1,
+              session_seconds=COALESCE(session_seconds,0)+$2,
+              daily_seconds=COALESCE(daily_seconds,0)+$3,
+              energy_current=$4,
+              energy_spent=COALESCE(energy_spent,0)+$5
+        WHERE hero_id=$6`,
       [new Date(now).toISOString(), delta, delta, newEnergy, energyCost, heroId]
     );
 
@@ -243,17 +267,17 @@ trainingRouter.get('/status', requireAuth, async (req, res) => {
     const heroId = req.query.heroId;
     if (!heroId) return res.status(400).json({ error: 'heroId é obrigatório' });
 
-    const t = await dbGet(`SELECT * FROM hero_training WHERE hero_id=?`, [heroId]);
+    const t = await get(`SELECT * FROM hero_training WHERE hero_id=$1`, [heroId]);
     if (!t) return res.json({ status: 'IDLE' });
 
-    const skillRow = await dbGet(
-      `SELECT level, tries_progress FROM player_hero_skills WHERE hero_id=? AND skill_type=?`,
+    const skillRow = await get(
+      `SELECT level, tries_progress FROM player_hero_skills WHERE hero_id=$1 AND skill_type=$2`,
       [heroId, t.skill_type]
     );
     let need = null, remaining = null, pct = null;
     if (skillRow) {
-      const n = await dbGet(
-        `SELECT tries_needed FROM skill_curves WHERE skill_type=? AND level=?`,
+      const n = await get(
+        `SELECT tries_needed FROM skill_curves WHERE skill_type=$1 AND level=$2`,
         [t.skill_type, skillRow.level]
       );
       need = n?.tries_needed ?? null;
@@ -287,80 +311,92 @@ trainingRouter.get('/status', requireAuth, async (req, res) => {
 
 app.use('/api/training', trainingRouter);
 
-// ========= admin/content + starter =========
+/* ========= admin/content + starter ========= */
 
-// DEBUG: listar monsters (autenticado) — evita duplicidade de rota
-app.get('/api/admin/content/monsters', requireAuth, (req, res) => {
-  db.all('SELECT key, name, xp, healthMax, speed, lookJSON FROM monsters_master', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    const parsed = rows.map(r => ({ ...r, look: r.lookJSON ? JSON.parse(r.lookJSON) : {} }));
+// DEBUG: listar monsters (autenticado)
+app.get('/api/admin/content/monsters', requireAuth, async (_req, res) => {
+  try {
+    const rows = await all('SELECT key, name, xp, "healthMax", speed, "lookJSON" FROM monsters_master ORDER BY id');
+    const parsed = rows.map(r => ({ ...r, look: r.lookJSON || {} }));
     res.json(parsed);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // itens/sprites
-app.get('/api/assets/items', (_req, res) => {
-  db.all('SELECT key, dataJSON FROM items_master ORDER BY key', (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows.map(r => ({ key: r.key, data: JSON.parse(r.dataJSON) })));
-  });
+app.get('/api/assets/items', async (_req, res) => {
+  try {
+    const rows = await all('SELECT key, "dataJSON" FROM items_master ORDER BY key');
+    res.json(rows.map(r => ({ key: r.key, data: r.dataJSON || {} })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get('/api/assets/sprites', (_req, res) => {
-  db.all('SELECT key, kind, dataJSON FROM sprites_master ORDER BY key', (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows.map(r => ({ key: r.key, kind: r.kind, data: JSON.parse(r.dataJSON) })));
-  });
+app.get('/api/assets/sprites', async (_req, res) => {
+  try {
+    const rows = await all('SELECT key, kind, "dataJSON" FROM sprites_master ORDER BY key');
+    res.json(rows.map(r => ({ key: r.key, kind: r.kind, data: r.dataJSON || {} })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // DEBUG MAPS
-app.get('/api/admin/content/maps', (_req, res) => {
-  db.all('SELECT key, length(dataJSON) AS bytes, updated_at FROM maps ORDER BY key', (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.get('/api/admin/content/maps', async (_req, res) => {
+  try {
+    const rows = await all(
+      `SELECT key, length(("dataJSON"::text)) AS bytes, updated_at FROM maps ORDER BY key`
+    );
     res.json(rows);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get('/api/admin/content/map/:key/objects', (req, res) => {
-  db.all(
-    'SELECT id, type, x, y, w, h, propsJSON FROM map_objects WHERE mapKey=? ORDER BY id',
-    [req.params.key],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(rows.map(r => ({ ...r, props: safeParse(r.propsJSON) })));
-    }
-  );
+app.get('/api/admin/content/map/:key/objects', async (req, res) => {
+  try {
+    const rows = await all(
+      `SELECT id, type, x, y, w, h, "propsJSON" FROM map_objects WHERE "mapKey"=$1 ORDER BY id`,
+      [req.params.key]
+    );
+    res.json(rows.map(r => ({ ...r, props: safeParse(r.propsJSON) })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get('/api/admin/content/map/:key/spawns', (req, res) => {
-  db.all(
-    'SELECT id, monsterKey, x, y, w, h, count, respawnSec, levelMin, levelMax FROM spawns WHERE mapKey=? ORDER BY id',
-    [req.params.key],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(rows);
-    }
-  );
+app.get('/api/admin/content/map/:key/spawns', async (req, res) => {
+  try {
+    const rows = await all(
+      `SELECT id, "monsterKey", x, y, w, h, count, "respawnSec", "levelMin", "levelMax"
+         FROM spawns WHERE "mapKey"=$1 ORDER BY id`,
+      [req.params.key]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // JSON bruto do mapa
-app.get('/api/admin/content/map/:key/data', (req, res) => {
-  db.get('SELECT dataJSON FROM maps WHERE key=?', [req.params.key], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.get('/api/admin/content/map/:key/data', async (req, res) => {
+  try {
+    const row = await get('SELECT "dataJSON" FROM maps WHERE key=$1', [req.params.key]);
     if (!row) return res.status(404).json({ error: 'map not found' });
-    try {
-      return res.json(JSON.parse(row.dataJSON || '{}'));
-    } catch (e) {
-      return res.status(500).json({ error: 'invalid map json' });
-    }
-  });
+    res.json(row.dataJSON || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // reload de mapa sem reiniciar
 app.post('/api/admin/content/reload-map', async (req, res) => {
   try {
     const mapKey = (req.query.map || 'house').toString();
-    await loadMap(db, path.join(__dirname, '..'), mapKey);
+    // passa um adaptador com as mesmas assinaturas (all/get/run)
+    await loadMap({ all, get, run }, path.join(__dirname, '..'), mapKey);
     res.json({ ok: true, reloaded: mapKey });
   } catch (e) {
     console.error('[content] reload-map error:', e.message);
@@ -368,10 +404,11 @@ app.post('/api/admin/content/reload-map', async (req, res) => {
   }
 });
 
-function safeParse(s) { try { return JSON.parse(s || '{}'); } catch { return {}; } }
+function safeParse(s) { try { return typeof s === 'object' ? s : JSON.parse(s || '{}'); } catch { return {}; } }
 
 // >>> ROTA STARTER
-app.use('/api/starter', requireAuth, buildStarterRouter(db));
+// passa adaptador {all,get,run} para o router do starter
+app.use('/api/starter', requireAuth, buildStarterRouter({ all, get, run }));
 
 // ---- Raiz pública: entrega index.html (landing + login)
 app.get('/', (_req, res) => {
@@ -389,8 +426,6 @@ app.use((req, res, next) => {
 });
 
 // ========= WebSocket minimal server (opcional) =========
-
-// try to load ws optionally so server won't crash if it's not installed
 let WebSocketLib = null;
 let useWebSocket = false;
 try {
@@ -462,11 +497,13 @@ let wss = null;
 // ========= START =========
 (async () => {
   try {
-    await migrate();
+    await migrate();              // aplica migrations PG
+    await bootstrapContentTables();
 
     if (CONTENT_PIPELINE !== 'off') {
       console.log(`[content] pipeline: ${CONTENT_PIPELINE}`);
-      await loadAll(db, path.join(__dirname, '..'));
+      // passa adaptador com as mesmas assinaturas
+      await loadAll({ all, get, run }, path.join(__dirname, '..'));
     }
 
     server = http.createServer(app);
@@ -530,14 +567,15 @@ let wss = null;
 
             console.log(`[chat] from=${ws._player.id} scope=${scope} text="${raw}"`);
 
-            // persist if db available
+            // persist in PG
             try {
-              if (scope === 'global' && typeof db !== 'undefined' && db && db.run) {
-                db.run('INSERT INTO chat_messages(scope, fromId, fromName, text) VALUES (?,?,?,?)', ['global', ws._player.id, ws._player.name, raw], function (err) {
-                  if (err) console.warn('[chat] persist error', err && err.message);
-                });
+              if (scope === 'global') {
+                await run(
+                  `INSERT INTO chat_messages(scope, "fromId", "fromName", text) VALUES ($1, $2, $3, $4)`,
+                  ['global', ws._player.id, ws._player.name, raw]
+                );
               }
-            } catch (e) { /* ignore db errors */ }
+            } catch (e) { console.warn('[chat] persist error', e && e.message); }
 
             const out = {
               type: 'chat',
@@ -598,24 +636,25 @@ let wss = null;
       console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
     });
 
-    // ========= WORKER (stamina/limites; NÃO dá tries) =========
+    /* ========= WORKER (stamina/limites; NÃO dá tries) ========= */
     async function trainingTick() {
       try {
-        await dbRun(`
+        // reset diário (quando cruza meia-noite)
+        await run(`
           UPDATE hero_training
-             SET daily_seconds=CASE
+             SET daily_seconds = CASE
                    WHEN daily_reset_at IS NULL THEN daily_seconds
-                   WHEN datetime('now') >= daily_reset_at THEN 0
+                   WHEN now() >= daily_reset_at THEN 0
                    ELSE daily_seconds
                  END,
-                 daily_reset_at=CASE
-                   WHEN daily_reset_at IS NULL THEN datetime('now','start of day','+1 day')
-                   WHEN datetime('now') >= daily_reset_at THEN datetime('now','start of day','+1 day')
+                 daily_reset_at = CASE
+                   WHEN daily_reset_at IS NULL THEN date_trunc('day', now()) + interval '1 day'
+                   WHEN now() >= daily_reset_at THEN date_trunc('day', now()) + interval '1 day'
                    ELSE daily_reset_at
                  END
-        `, []);
+        `);
 
-        const running = await dbAll(`SELECT * FROM hero_training WHERE status='RUNNING'`, []);
+        const running = await all(`SELECT * FROM hero_training WHERE status='RUNNING'`);
         const now = Date.now();
 
         for (const t of running) {
@@ -630,7 +669,7 @@ let wss = null;
           const energySec = Math.floor(((t.energy_current || 0) / K.ENERGY_PER_MIN_WHEN_TRAINING) * 60);
           allowed = Math.min(allowed, energySec);
           if (allowed <= 0) {
-            await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
+            await run(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=$1`, [t.hero_id]);
             continue;
           }
 
@@ -638,19 +677,19 @@ let wss = null;
           const energyUse = K.ENERGY_PER_MIN_WHEN_TRAINING * (allowed/60);
           const newEnergy = Math.max(0, (t.energy_current || 0) - energyUse);
 
-          await dbRun(
+          await run(
             `UPDATE hero_training
-                SET last_tick_at=?,
-                    session_seconds=COALESCE(session_seconds,0)+?,
-                    daily_seconds=COALESCE(daily_seconds,0)+?,
-                    energy_current=?,
-                    energy_spent=COALESCE(energy_spent,0)+?
-              WHERE hero_id=?`,
+                SET last_tick_at=$1,
+                    session_seconds=COALESCE(session_seconds,0)+$2,
+                    daily_seconds=COALESCE(daily_seconds,0)+$3,
+                    energy_current=$4,
+                    energy_spent=COALESCE(energy_spent,0)+$5
+              WHERE hero_id=$6`,
             [newLast, allowed, allowed, newEnergy, energyUse, t.hero_id]
           );
 
           if (newEnergy <= 0 || allowed < delta || allowed === sessLeft || allowed === dayLeft) {
-            await dbRun(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=?`, [t.hero_id]);
+            await run(`UPDATE hero_training SET status='STOPPED' WHERE hero_id=$1`, [t.hero_id]);
           }
         }
       } catch (err) {
@@ -665,19 +704,19 @@ let wss = null;
   }
 })();
 
-// rota para obter histórico global (últimas N mensagens)
+/* ========= Chat history ========= */
 app.get('/api/chat/global', requireAuth, async (req, res) => {
   try {
     const limit = Math.min(200, Number(req.query.limit || 100));
-    db.all(
-      'SELECT id, scope, fromId, fromName, text, created_at FROM chat_messages WHERE scope=? ORDER BY id DESC LIMIT ?',
-      ['global', limit],
-      (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        // retornar em ordem cronológica asc
-        res.json(rows.reverse());
-      }
+    const rows = await all(
+      `SELECT id, scope, "fromId", "fromName", text, created_at
+         FROM chat_messages
+        WHERE scope=$1
+        ORDER BY id DESC
+        LIMIT $2`,
+      ['global', limit]
     );
+    res.json(rows.reverse()); // ordem cronológica asc
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

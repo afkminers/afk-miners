@@ -1,129 +1,128 @@
 // server/starter/routes.js
-const express = require("express");
-const { randomUUID } = require("crypto"); // ⬅️ substitui 'uuid'
+const express = require('express');
+const { randomUUID } = require('crypto');
+const { get, run } = require('../models/db'); // helpers unificados (PG)
 
-function buildStarterRouter(db) {
+function buildStarterRouter() {
   const router = express.Router();
 
-  // Lista os starters (ideal: puxar do BD; por ora mantém como está/ajuste quando quiser)
-  router.get("/list", async (req, res) => {
+  // Lista estática de starters (pode migrar para BD quando quiser)
+  router.get('/list', async (_req, res) => {
     try {
       const starters = [
         {
-          heroKey: "aric",
-          name: "Aric, the Swordsman",
-          rarity: "COMMON",
-          class: "KNIGHT",
-          role: "DPS",
-          element: "NEUTRAL",
-          attack_type: "MELEE",
-          weapon_pref: "sword",
-          spriteKey: "knight_v1",
+          heroKey: 'aric',
+          name: 'Aric, the Swordsman',
+          rarity: 'COMMON',
+          class: 'KNIGHT',
+          role: 'DPS',
+          element: 'NEUTRAL',
+          attack_type: 'MELEE',
+          weapon_pref: 'sword',
+          spriteKey: 'knight_v1',
         },
         {
-          heroKey: "brokk",
-          name: "Brokk, the Dwarf",
-          rarity: "COMMON",
-          class: "KNIGHT",
-          role: "TANK",
-          element: "EARTH",
-          attack_type: "MELEE",
-          weapon_pref: "hammer_shield",
-          spriteKey: "dwarf_v1",
+          heroKey: 'brokk',
+          name: 'Brokk, the Dwarf',
+          rarity: 'COMMON',
+          class: 'KNIGHT',
+          role: 'TANK',
+          element: 'EARTH',
+          attack_type: 'MELEE',
+          weapon_pref: 'hammer_shield',
+          spriteKey: 'dwarf_v1',
         },
         {
-          heroKey: "lyria",
-          name: "Lyria, the Archer",
-          rarity: "COMMON",
-          class: "PALADIN",
-          role: "DPS",
-          element: "NATURE",
-          attack_type: "RANGED",
-          weapon_pref: "bow",
-          spriteKey: "archer_v1",
+          heroKey: 'lyria',
+          name: 'Lyria, the Archer',
+          rarity: 'COMMON',
+          class: 'PALADIN',
+          role: 'DPS',
+          element: 'NATURE',
+          attack_type: 'RANGED',
+          weapon_pref: 'bow',
+          spriteKey: 'archer_v1',
         },
       ];
       res.json(starters);
     } catch (err) {
-      console.error("[starter] list error:", err);
-      res.status(500).json({ error: "erro ao listar starters" });
+      console.error('[starter] list error:', err);
+      res.status(500).json({ error: 'erro ao listar starters' });
     }
   });
 
-  // Status: pode escolher starter?
-  router.get("/status", async (req, res) => {
+  // Pode escolher starter?
+  router.get('/status', async (req, res) => {
     try {
       const playerId = req.user.id;
-      const row = await new Promise((resolve, reject) => {
-        db.get(
-          `SELECT 1 FROM player_heroes WHERE playerId=? AND isStarter=1 LIMIT 1`,
-          [playerId],
-          (err, r) => (err ? reject(err) : resolve(r))
-        );
-      });
+      const row = await get(
+        `SELECT 1
+           FROM player_heroes
+          WHERE playerId = $1 AND isStarter = TRUE
+          LIMIT 1`,
+        [playerId]
+      );
       res.json({ canSelect: !row });
     } catch (err) {
-      console.error("[starter] status error:", err);
-      res.status(500).json({ error: "erro ao checar status do starter" });
+      console.error('[starter] status error:', err);
+      res.status(500).json({ error: 'erro ao checar status do starter' });
     }
   });
 
   // Escolher starter
-  router.post("/select", async (req, res) => {
+  router.post('/select', async (req, res) => {
     try {
       const playerId = req.user.id;
       const { heroKey } = req.body || {};
       if (!heroKey) {
-        return res.status(400).json({ error: "heroKey é obrigatório" });
+        return res.status(400).json({ error: 'heroKey é obrigatório' });
       }
 
       // já tem starter?
-      const exists = await new Promise((resolve, reject) => {
-        db.get(
-          `SELECT 1 FROM player_heroes WHERE playerId=? AND isStarter=1 LIMIT 1`,
-          [playerId],
-          (err, r) => (err ? reject(err) : resolve(r))
-        );
-      });
+      const exists = await get(
+        `SELECT 1
+           FROM player_heroes
+          WHERE playerId = $1 AND isStarter = TRUE
+          LIMIT 1`,
+        [playerId]
+      );
       if (exists) {
-        return res.status(400).json({ error: "starter já escolhido" });
+        return res.status(400).json({ error: 'starter já escolhido' });
       }
 
-      const id = randomUUID(); // ⬅️ agora usa crypto
+      const id = randomUUID();
       const createdAt = Date.now();
 
-      await new Promise((resolve, reject) => {
-        db.run(
-          `INSERT INTO player_heroes
-            (id, playerId, heroKey, name, rarity, attack, defense, speed, level, createdAt, isStarter)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-          [
-            id,
-            playerId,
-            heroKey,
-            heroKey.toUpperCase(),
-            "COMMON",
-            1, 1, 1, 1,
-            createdAt,
-          ],
-          function (err) {
-            if (err) reject(err);
-            else resolve(this);
-          }
-        );
-      });
+      // Insere herói starter com stats básicos
+      await run(
+        `INSERT INTO player_heroes
+           (id, playerId, heroKey, name, rarity, attack, defense, speed, level, createdAt, isStarter)
+         VALUES
+           ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE)`,
+        [
+          id,
+          playerId,
+          heroKey,
+          heroKey.toUpperCase(), // nome padrão
+          'COMMON',
+          1, 1, 1,                // attack, defense, speed
+          1,                      // level inicial
+          createdAt,
+        ]
+      );
 
       res.json({ ok: true, heroKey, id });
     } catch (err) {
-      if (String(err.message).includes("UNIQUE constraint")) {
-        return res.status(400).json({ error: "starter já escolhido" });
+      // Conflitos de chave única podem vir com mensagens diferentes em PG
+      if (String(err.message || '').toLowerCase().includes('duplicate key')) {
+        return res.status(400).json({ error: 'starter já escolhido' });
       }
-      console.error("[starter] select error:", err);
-      res.status(500).json({ error: "erro ao selecionar starter" });
+      console.error('[starter] select error:', err);
+      res.status(500).json({ error: 'erro ao selecionar starter' });
     }
   });
 
   return router;
 }
 
-module.exports =  buildStarterRouter ;
+module.exports = buildStarterRouter;

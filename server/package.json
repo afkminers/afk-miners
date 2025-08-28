@@ -4,7 +4,7 @@
   "description": "Backend do jogo",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
+    "start": "node index.js",
     "dev": "nodemon index.js",
     "serve": "node index.js",
     "git:add": "git add -A",
@@ -14,14 +14,7 @@
     "push:main": "git push origin main",
     "branch": "git rev-parse --abbrev-ref HEAD",
     "deploy": "npm run git:add && npm run git:commit && npm run git:push",
-    "db:drop": "if exist db\\database.sqlite del /Q db\\database.sqlite",
-    "db:migrate": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/001_skills.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/002_content.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/002_afk.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/migrations/003_farm.sql\"",
-    "db:migrate:all": "npm run db:migrate",
-    "db:seed": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/001_skill_maps.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/002_skill_curves.sql\" && C:\\sqlite\\sqlite3.exe db\\database.sqlite \".read db/seeds/003_class_skill_rates.sql\"",
-    "db:tables": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".tables\"",
-    "db:info": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \".schema\"",
-    "db:verify": "C:\\sqlite\\sqlite3.exe db\\database.sqlite \"SELECT 'heroes_master' as t, COUNT(*) FROM heroes_master; SELECT 'player_heroes', COUNT(*) FROM player_heroes; SELECT 'weapon_skill_map', COUNT(*) FROM weapon_skill_map; SELECT 'skill_curves', COUNT(*) FROM skill_curves; SELECT 'class_skill_rates', COUNT(*) FROM class_skill_rates;\"",
-    "db:reset": "npm run db:drop && npm run db:migrate && npm run db:seed",
+    "pg:migrate": "node -e \"(async()=>{await require('./models/migrate').migrate();console.log('✅ pg:migrate ok')})().catch(e=>{console.error(e);process.exit(1)})\"",
     "ctx:pack": "node scripts/gen-context.js",
     "ctx:print:win": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/print-context.ps1",
     "ctx:snapshot:win": "scripts\\snapshot.bat",
@@ -34,26 +27,28 @@
     "save": "node -e \"console.log('🚀 Salvando alterações no GitHub...')\" && npm run backup:pre && npm run deploy && npm run backup:post && node -e \"console.log('📦 Gerando snapshot zipado...')\" && npm run ctx:zip && node -e \"console.log('✅ Pronto! Agora só mandar o zip em nova conversa.')\""
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "body-parser": "^1.20.3",
-    "cookie-parser": "^1.4.6",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "jsonwebtoken": "^9.0.2",
-    "pg": "^8.16.0",
-    "redis": "^5.8.0",
-    "sqlite3": "^5.1.7",
-    "ws": "^8.18.0",
-    "yaml": "^2.8.0",
-    "zod": "^3.23.8"
+    "bcryptjs": "2.4.3",
+    "body-parser": "1.20.3",
+    "cookie-parser": "1.4.6",
+    "cors": "2.8.5",
+    "dotenv": "16.4.5",
+    "express": "4.19.2",
+    "jsonwebtoken": "9.0.2",
+    "pg": "8.16.0",
+    "redis": "5.8.0",
+    "ws": "8.18.0",
+    "yaml": "2.8.0",
+    "zod": "3.23.8"
   },
   "devDependencies": {
-    "acorn": "^8.15.0",
-    "acorn-walk": "^8.3.4",
-    "chokidar": "^4.0.3",
-    "glob": "^11.0.3",
-    "js-yaml": "^4.1.0",
-    "nodemon": "^3.1.0"
+    "acorn": "8.15.0",
+    "acorn-walk": "8.3.4",
+    "chokidar": "4.0.3",
+    "glob": "11.0.3",
+    "js-yaml": "4.1.0",
+    "nodemon": "3.1.0"
+  },
+  "engines": {
+    "node": ">=18 <23"
   }
 }

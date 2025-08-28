@@ -1,12 +1,8 @@
-DROP TABLE IF EXISTS hero_training;
-
-CREATE TABLE hero_training (
-  hero_id         INTEGER     PRIMARY KEY,               -- id do herói (player_heroes.id se quiser)
-  skill_type      VARCHAR(24) NOT NULL,                  -- SWORD / AXE / ...
-  status          TEXT        NOT NULL DEFAULT 'STOPPED',-- RUNNING|STOPPED
-  started_at      TEXT,                                  -- ISO
-  last_tick_at    TEXT,                                  -- ISO
-  energy_spent    REAL        NOT NULL DEFAULT 0,
-  session_seconds INTEGER     NOT NULL DEFAULT 0,
-  notes           TEXT                                       -- JSON { heroClass: "MAGE" }
-);
+-- 999_drop_hero_training.pg.sql (opcional)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables 
+             WHERE table_name = 'hero_training') THEN
+    DROP TABLE hero_training;
+  END IF;
+END $$;

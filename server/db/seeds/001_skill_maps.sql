@@ -1,27 +1,60 @@
--- Multiplicadores por CLASSE (ajuste livre)
--- 1.0 = padrão; >1 treina mais rápido; <1 mais lento
-INSERT OR REPLACE INTO class_skill_rates (class, skill_type, rate) VALUES
--- melee
-('warrior',   'SWORD',1.20),('warrior','AXE',1.10),('warrior','CLUB',1.00),('warrior','DISTANCE',0.40),('warrior','MAGIC',0.15),('warrior','SHIELD',1.20),
-('guardian',  'SWORD',0.90),('guardian','AXE',1.00),('guardian','CLUB',1.00),('guardian','DISTANCE',0.40),('guardian','MAGIC',0.20),('guardian','SHIELD',1.40),
-('barbarian', 'SWORD',0.90),('barbarian','AXE',1.30),('barbarian','CLUB',1.20),('barbarian','DISTANCE',0.40),('barbarian','MAGIC',0.10),('barbarian','SHIELD',0.80),
-('rogue',     'SWORD',0.90),('rogue','AXE',0.80),('rogue','CLUB',0.80),('rogue','DISTANCE',0.60),('rogue','MAGIC',0.30),('rogue','SHIELD',0.60),
--- distance/ranged
-('ranger',    'SWORD',0.60),('ranger','AXE',0.60),('ranger','CLUB',0.60),('ranger','DISTANCE',1.20),('ranger','MAGIC',0.40),('ranger','SHIELD',0.70),
--- magic users (vão MUITO mal em melee)
-('mage',      'SWORD',0.20),('mage','AXE',0.20),('mage','CLUB',0.20),('mage','DISTANCE',0.30),('mage','MAGIC',1.20),('mage','SHIELD',0.50),
-('archmage',  'SWORD',0.15),('archmage','AXE',0.15),('archmage','CLUB',0.15),('archmage','DISTANCE',0.30),('archmage','MAGIC',1.30),('archmage','SHIELD',0.50),
-('cleric',    'SWORD',0.50),('cleric','AXE',0.50),('cleric','CLUB',0.60),('cleric','DISTANCE',0.40),('cleric','MAGIC',1.00),('cleric','SHIELD',0.80),
-('druid',     'SWORD',0.40),('druid','AXE',0.40),('druid','CLUB',0.40),('druid','DISTANCE',0.50),('druid','MAGIC',1.10),('druid','SHIELD',0.70),
-('necromancer','SWORD',0.20),('necromancer','AXE',0.20),('necromancer','CLUB',0.20),('necromancer','DISTANCE',0.30),('necromancer','MAGIC',1.20),('necromancer','SHIELD',0.50),
-('angel',     'SWORD',0.70),('angel','AXE',0.70),('angel','CLUB',0.70),('angel','DISTANCE',0.60),('angel','MAGIC',1.00),('angel','SHIELD',0.90),
-('summoner',  'SWORD',0.20),('summoner','AXE',0.20),('summoner','CLUB',0.20),('summoner','DISTANCE',0.30),('summoner','MAGIC',1.10),('summoner','SHIELD',0.50);
+-- 001_skill_maps.sql  (PostgreSQL)
 
--- Mapa arma → skill treinada (pode crescer à vontade)
-INSERT OR REPLACE INTO weapon_skill_map (weapon_type, skill_type) VALUES
+BEGIN;
+
+-- ======================================================
+-- Tabelas (criadas se não existirem)
+-- ======================================================
+
+-- Taxas por classe x skill
+CREATE TABLE IF NOT EXISTS class_skill_rates (
+  class       TEXT NOT NULL,
+  skill_type  TEXT NOT NULL,
+  rate        NUMERIC NOT NULL DEFAULT 1.0,
+  PRIMARY KEY (class, skill_type)
+);
+
+-- Mapa: tipo de arma -> skill treinada
+CREATE TABLE IF NOT EXISTS weapon_skill_map (
+  weapon_type TEXT PRIMARY KEY,
+  skill_type  TEXT NOT NULL
+);
+
+-- ======================================================
+-- Seed: CLASS → SKILL (idempotente)
+-- (classes em UPPERCASE para casar com o código que usa .toUpperCase())
+-- ======================================================
+INSERT INTO class_skill_rates (class, skill_type, rate) VALUES
+-- melee
+('WARRIOR',   'SWORD',1.20), ('WARRIOR','AXE',1.10), ('WARRIOR','CLUB',1.00), ('WARRIOR','DISTANCE',0.40), ('WARRIOR','MAGIC',0.15), ('WARRIOR','SHIELD',1.20),
+('GUARDIAN',  'SWORD',0.90), ('GUARDIAN','AXE',1.00), ('GUARDIAN','CLUB',1.00), ('GUARDIAN','DISTANCE',0.40), ('GUARDIAN','MAGIC',0.20), ('GUARDIAN','SHIELD',1.40),
+('BARBARIAN', 'SWORD',0.90), ('BARBARIAN','AXE',1.30), ('BARBARIAN','CLUB',1.20), ('BARBARIAN','DISTANCE',0.40), ('BARBARIAN','MAGIC',0.10), ('BARBARIAN','SHIELD',0.80),
+('ROGUE',     'SWORD',0.90), ('ROGUE','AXE',0.80),   ('ROGUE','CLUB',0.80),   ('ROGUE','DISTANCE',0.60),   ('ROGUE','MAGIC',0.30),   ('ROGUE','SHIELD',0.60),
+-- distance/ranged
+('RANGER',    'SWORD',0.60), ('RANGER','AXE',0.60),  ('RANGER','CLUB',0.60),  ('RANGER','DISTANCE',1.20),  ('RANGER','MAGIC',0.40),  ('RANGER','SHIELD',0.70),
+-- magic users
+('MAGE',      'SWORD',0.20), ('MAGE','AXE',0.20),    ('MAGE','CLUB',0.20),    ('MAGE','DISTANCE',0.30),    ('MAGE','MAGIC',1.20),    ('MAGE','SHIELD',0.50),
+('ARCHMAGE',  'SWORD',0.15), ('ARCHMAGE','AXE',0.15),('ARCHMAGE','CLUB',0.15),('ARCHMAGE','DISTANCE',0.30),('ARCHMAGE','MAGIC',1.30),('ARCHMAGE','SHIELD',0.50),
+('CLERIC',    'SWORD',0.50), ('CLERIC','AXE',0.50),  ('CLERIC','CLUB',0.60),  ('CLERIC','DISTANCE',0.40),  ('CLERIC','MAGIC',1.00),  ('CLERIC','SHIELD',0.80),
+('DRUID',     'SWORD',0.40), ('DRUID','AXE',0.40),   ('DRUID','CLUB',0.40),   ('DRUID','DISTANCE',0.50),   ('DRUID','MAGIC',1.10),   ('DRUID','SHIELD',0.70),
+('NECROMANCER','SWORD',0.20),('NECROMANCER','AXE',0.20),('NECROMANCER','CLUB',0.20),('NECROMANCER','DISTANCE',0.30),('NECROMANCER','MAGIC',1.20),('NECROMANCER','SHIELD',0.50),
+('ANGEL',     'SWORD',0.70), ('ANGEL','AXE',0.70),   ('ANGEL','CLUB',0.70),   ('ANGEL','DISTANCE',0.60),   ('ANGEL','MAGIC',1.00),   ('ANGEL','SHIELD',0.90),
+('SUMMONER',  'SWORD',0.20), ('SUMMONER','AXE',0.20),('SUMMONER','CLUB',0.20),('SUMMONER','DISTANCE',0.30),('SUMMONER','MAGIC',1.10),('SUMMONER','SHIELD',0.50)
+ON CONFLICT (class, skill_type)
+DO UPDATE SET rate = EXCLUDED.rate;
+
+-- ======================================================
+-- Seed: WEAPON → SKILL (idempotente)
+-- (arma em lowercase; seu código consulta com LOWER(...)=LOWER(?), então ok)
+-- ======================================================
+INSERT INTO weapon_skill_map (weapon_type, skill_type) VALUES
 ('sword','SWORD'), ('greatsword','SWORD'), ('daggers','SWORD'),
 ('axe','AXE'),
 ('mace','CLUB'), ('hammer','CLUB'),
-('mace_shield','CLUB'), ('hammer_shield','CLUB'),    -- arma treina CLUB; escudo treina SHIELD ao bloquear/levar hit
+('mace_shield','CLUB'), ('hammer_shield','CLUB'),   -- escudo treina SHIELD nos eventos de block
 ('bow','DISTANCE'), ('crossbow','DISTANCE'), ('spear','DISTANCE'), ('spear_shield','DISTANCE'),
-('staff','MAGIC'), ('tome','MAGIC'), ('wand','MAGIC');
+('staff','MAGIC'), ('tome','MAGIC'), ('wand','MAGIC')
+ON CONFLICT (weapon_type)
+DO UPDATE SET skill_type = EXCLUDED.skill_type;
+
+COMMIT;
