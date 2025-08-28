@@ -16,10 +16,30 @@ build/
 .env.*
 *.local
 
+# Banco de dados (SQLite) — NÃO subir DB local nem WAL/SHM
+server/db/*.sqlite
+server/db/*.sqlite-wal
+server/db/*.sqlite-shm
+db/*.sqlite
+db/*.sqlite-wal
+db/*.sqlite-shm
+
 # Sistema
 .DS_Store
 Thumbs.db
 .vscode/
 
-# backups
+# Logs (gerais)
+*.log
+logs/
+**/logs/
+
+# Backups e releases
 docs/backups/
+docs/releases/
+
+# Cache/bundlers comuns (opcional, seguro ignorar)
+.cache/
+.parcel-cache/
+.temp/
+.tmp/
