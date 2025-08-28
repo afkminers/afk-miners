@@ -23,13 +23,13 @@
 
 ### GET /
 
-Arquivo: `server\index.js:414`
+Arquivo: `server\index.js:412`
 
 _Sem payload inferido_
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:384`
+Arquivo: `server\index.js:382`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -57,7 +57,7 @@ Arquivo: `server\index.js:384`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:358`
+Arquivo: `server\index.js:356`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -87,7 +87,7 @@ Arquivo: `server\index.js:358`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:370`
+Arquivo: `server\index.js:368`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -116,7 +116,7 @@ Arquivo: `server\index.js:370`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:347`
+Arquivo: `server\index.js:345`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -141,7 +141,7 @@ Arquivo: `server\index.js:347`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:317`
+Arquivo: `server\index.js:315`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -169,7 +169,7 @@ Arquivo: `server\index.js:317`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:328`
+Arquivo: `server\index.js:326`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -196,7 +196,7 @@ Arquivo: `server\index.js:328`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:337`
+Arquivo: `server\index.js:335`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -222,7 +222,7 @@ Arquivo: `server\index.js:337`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:708`
+Arquivo: `server\index.js:643`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -237,7 +237,7 @@ Arquivo: `server\index.js:708`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:44`
+Arquivo: `server\index.js:43`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -506,7 +506,7 @@ Arquivo: `server\gacha\routes.js:149`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:395`
+Arquivo: `server\index.js:393`
 
 **Payloads (exemplos inferidos):**
 - query:

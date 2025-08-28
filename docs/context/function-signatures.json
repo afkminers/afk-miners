@@ -19,14 +19,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 50,
+    "line": 49,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 171,
+    "line": 168,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -35,7 +35,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 407,
+    "line": 405,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -44,7 +44,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 454,
+    "line": 452,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -53,19 +53,12 @@
   },
   {
     "file": "server\\index.js",
-    "line": 466,
+    "line": 464,
     "kind": "function",
     "name": "setupRedis",
     "params": [
       "wss"
     ]
-  },
-  {
-    "file": "server\\index.js",
-    "line": 640,
-    "kind": "function",
-    "name": "trainingTick",
-    "params": []
   },
   {
     "file": "server\\starter\\routes.js",

@@ -1142,5 +1142,129 @@
     })();
   </script>
 
+  <!-- ==== AUTH WIRING (sem conflito de nomes) ==== -->
+  <script type="module">
+    import { checkAuth, doLogin, doRegister, doLogout } from './js/auth.js';
+
+    const $ = (s)=>document.querySelector(s);
+    const authModal = $('#authScreen');
+    const appRoot   = $('#appMain');   // <-- antes era appMain
+    const body      = document.body;
+
+    const el = {
+      loginName : $('#loginName'),
+      loginPass : $('#loginPass'),
+      btnLogin  : $('#btnLogin'),
+      loginMsg  : $('#loginMsg'),
+
+      regName   : $('#regName'),
+      regPass   : $('#regPass'),
+      btnReg    : $('#btnRegister'),
+      regMsg    : $('#regMsg'),
+
+      userInfo     : $('#userInfo'),
+      btnLogout    : $('#btnLogout'),
+      btnLogoutTop : $('#btnLogoutTop'),
+      mobileLogout : $('#mobileLogout'),
+    };
+
+    function msg(node, text){ if (node) node.textContent = text || ''; }
+    function openAuth(){ authModal?.classList.remove('hidden'); }
+    function closeAuth(){ authModal?.classList.add('hidden'); }
+
+    async function refreshAuthUI(){
+      const profile = await checkAuth();
+      const loggedIn = !!profile;
+      body.classList.toggle('logged-out', !loggedIn);
+
+      if (loggedIn) {
+        appRoot?.classList.remove('hidden'); // <-- usa appRoot
+        closeAuth();
+
+        if (el.userInfo) {
+          const coins = (profile.coins ?? profile.balance ?? 0);
+          el.userInfo.textContent = `${profile.name || profile.username || 'Player'} — Coins ${coins}`;
+          document.dispatchEvent(new CustomEvent('coins-updated', { detail:{ coins } }));
+        }
+        el.btnLogout?.classList.remove('hidden');
+        el.btnLogoutTop?.classList.remove('hidden');
+        el.mobileLogout?.classList.remove('hidden');
+      } else {
+        appRoot?.classList.add('hidden'); // <-- usa appRoot
+        el.btnLogout?.classList.add('hidden');
+        el.btnLogoutTop?.classList.add('hidden');
+        el.mobileLogout?.classList.add('hidden');
+      }
+    }
+
+    async function onLogin(){
+      msg(el.loginMsg, '');
+      const name = el.loginName?.value?.trim();
+      const pass = el.loginPass?.value || '';
+      if (!name || !pass) return msg(el.loginMsg, 'Preencha usuário e senha');
+      try {
+        await doLogin(name, pass);
+        msg(el.loginMsg, '✅ Logado!');
+        await refreshAuthUI();
+      } catch (e) {
+        const status = e?.status ?? 0;
+        if (status === 401) msg(el.loginMsg, 'Credenciais inválidas');
+        else if (status === 403) msg(el.loginMsg, 'Falha de CSRF — recarregue a página');
+        else msg(el.loginMsg, e?.message || 'Erro ao logar');
+      }
+    }
+
+    async function onRegister(){
+      msg(el.regMsg, '');
+      const name = el.regName?.value?.trim();
+      const pass = el.regPass?.value || '';
+      if (!name || !pass) return msg(el.regMsg, 'Preencha usuário e senha');
+      if (name.length < 3) return msg(el.regMsg, 'Nome mínimo: 3');
+      if (pass.length < 6) return msg(el.regMsg, 'Senha mínima: 6');
+      try {
+        await doRegister(name, pass);
+        msg(el.regMsg, '✅ Conta criada! Entrando…');
+        await refreshAuthUI();
+      } catch (e) {
+        const status = e?.status ?? 0;
+        const text = (e?.message || '').toLowerCase();
+        if (status === 400 && (text.includes('exist') || text.includes('duplicate') || text.includes('23505')))
+          msg(el.regMsg, 'Nome de usuário já existe');
+        else if (status === 403)
+          msg(el.regMsg, 'Falha de CSRF — recarregue a página');
+        else
+          msg(el.regMsg, e?.message || 'Erro ao registrar');
+      }
+    }
+
+    async function onLogout(){
+      try { await doLogout(); } catch {}
+      await refreshAuthUI();
+    }
+
+    el.btnLogin     ?.addEventListener('click', (e)=>{ e.preventDefault(); onLogin(); });
+    el.btnReg       ?.addEventListener('click', (e)=>{ e.preventDefault(); onRegister(); });
+    el.btnLogout    ?.addEventListener('click', (e)=>{ e.preventDefault(); onLogout(); });
+    el.btnLogoutTop ?.addEventListener('click', (e)=>{ e.preventDefault(); onLogout(); });
+    el.mobileLogout ?.addEventListener('click', (e)=>{ e.preventDefault(); onLogout(); });
+
+    [el.loginName, el.loginPass].forEach(inp=>{
+      inp?.addEventListener('keydown', (ev)=>{ if (ev.key === 'Enter') onLogin(); });
+    });
+    [el.regName, el.regPass].forEach(inp=>{
+      inp?.addEventListener('keydown', (ev)=>{ if (ev.key === 'Enter') onRegister(); });
+    });
+
+    const playBtn = document.getElementById('btnPlay');
+    playBtn?.addEventListener('click', async ()=>{
+      const profile = await checkAuth();
+      if (!profile) openAuth();
+    });
+
+    refreshAuthUI();
+  </script>
+  <!-- ==== /AUTH WIRING ==== -->
+
+
 </body>
 </html>

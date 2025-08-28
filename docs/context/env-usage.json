@@ -4,7 +4,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 975
+        "index": 1024
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -244,7 +244,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14538
+        "index": 14528
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -280,7 +280,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1138
+        "index": 1187
       },
       {
         "file": "server\\routes\\farm.js",
@@ -330,7 +330,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1197
+        "index": 1246
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -352,7 +352,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14458
+        "index": 14448
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -369,7 +369,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14596
+        "index": 14586
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -390,10 +390,6 @@
     "key": "WORKER_TICK_SECONDS",
     "occurrences": [
       {
-        "file": "server\\index.js",
-        "index": 1321
-      },
-      {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
         "index": 1134
       },
@@ -403,7 +399,6 @@
       }
     ],
     "defaults": [
-      "3",
       "3",
       "3"
     ]

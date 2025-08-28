@@ -1142,8 +1142,7 @@
       "parseCookies",
       "resolveSkillType",
       "safeParse",
-      "setupRedis",
-      "trainingTick"
+      "setupRedis"
     ]
   },
   {
