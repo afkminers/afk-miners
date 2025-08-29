@@ -3,8 +3,38 @@
  <editorsettings>
   <export target="data/maps/house.json" format="json"/>
  </editorsettings>
- <tileset firstgid="1" source=":/automap-tiles.tsx"/>
+ <tileset firstgid="1" name="AutoMap Rules" tilewidth="32" tileheight="32" tilecount="5" columns="5" tilerendersize="grid" fillmode="preserve-aspect-fit">
+  <image source="qrc:/automap-tiles.svg" width="160" height="32"/>
+  <tile id="3">
+   <properties>
+    <property name="MatchType" value="Empty"/>
+   </properties>
+  </tile>
+  <tile id="1">
+   <properties>
+    <property name="MatchType" value="Ignore"/>
+   </properties>
+  </tile>
+  <tile id="2">
+   <properties>
+    <property name="MatchType" value="NonEmpty"/>
+   </properties>
+  </tile>
+  <tile id="4">
+   <properties>
+    <property name="MatchType" value="Other"/>
+   </properties>
+  </tile>
+  <tile id="0">
+   <properties>
+    <property name="MatchType" value="Negate"/>
+   </properties>
+  </tile>
+ </tileset>
  <tileset firstgid="6" name="kennie" tilewidth="32" tileheight="32" tilecount="816" columns="34">
+  <image source="client/sprites/tiles/kenney_map.png" width="1088" height="768"/>
+ </tileset>
+ <tileset firstgid="822" name="kennie" tilewidth="32" tileheight="32" tilecount="816" columns="34">
   <image source="client/sprites/tiles/kenney_map.png" width="1088" height="768"/>
  </tileset>
  <layer id="1" name="Camada de Blocos 1" width="50" height="50">
@@ -125,7 +155,7 @@
  <objectgroup color="#000000" id="4" name="spawn">
   <object id="7" type="spawn" x="836" y="726" width="36" height="36">
    <properties>
-    <property name="count" type="int" value="1"/>
+    <property name="count" type="int" value="5"/>
     <property name="monsterKey" value="goblin"/>
     <property name="respawnSec" type="int" value="30"/>
     <property name="type" value="spawn"/>

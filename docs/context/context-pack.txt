@@ -1,5 +1,5 @@
 AFK Miners — Context Pack
-Commit: c4f2817 | Branch: main | Last Tag: n/a
+Commit: 2e1805b | Branch: main | Last Tag: n/a
 
 == Estrutura (nível 4) ==
 _backup-meta.txt
@@ -354,6 +354,8 @@ docs\backups\2025-08-29_012634-pre-main-1dde2f8.zip
 docs\backups\2025-08-29_012648-post-main-c8d0246.zip
 docs\backups\2025-08-29_013951-pre-main-c8d0246.zip
 docs\backups\2025-08-29_014003-post-main-c4f2817.zip
+docs\backups\2025-08-29_015026-pre-main-c4f2817.zip
+docs\backups\2025-08-29_015039-post-main-2e1805b.zip
 docs\context
 docs\context\API.md
 docs\context\changes-since.txt
@@ -1819,6 +1821,29 @@ docs\releases\2025-08-29_012658-auto\route-history.json
 docs\releases\2025-08-29_012658-auto\symbol-index.json
 docs\releases\2025-08-29_012658-auto\todos.json
 docs\releases\2025-08-29_014013-auto
+docs\releases\2025-08-29_014013-auto.zip
+docs\releases\2025-08-29_014013-auto\API.md
+docs\releases\2025-08-29_014013-auto\README.txt
+docs\releases\2025-08-29_014013-auto\changes-since.txt
+docs\releases\2025-08-29_014013-auto\context-pack.txt
+docs\releases\2025-08-29_014013-auto\data-summary.json
+docs\releases\2025-08-29_014013-auto\db-counts.txt
+docs\releases\2025-08-29_014013-auto\db-schema.sql
+docs\releases\2025-08-29_014013-auto\db-tables.json
+docs\releases\2025-08-29_014013-auto\db-tables.txt
+docs\releases\2025-08-29_014013-auto\deps-graph.json
+docs\releases\2025-08-29_014013-auto\deps.txt
+docs\releases\2025-08-29_014013-auto\endpoints-contracts.json
+docs\releases\2025-08-29_014013-auto\env-usage.json
+docs\releases\2025-08-29_014013-auto\error-map.json
+docs\releases\2025-08-29_014013-auto\function-signatures.json
+docs\releases\2025-08-29_014013-auto\openapi.json
+docs\releases\2025-08-29_014013-auto\package.json
+docs\releases\2025-08-29_014013-auto\responses-sample.json
+docs\releases\2025-08-29_014013-auto\route-history.json
+docs\releases\2025-08-29_014013-auto\symbol-index.json
+docs\releases\2025-08-29_014013-auto\todos.json
+docs\releases\2025-08-29_015050-auto
 fix-camel-columns.js
 fix-sql-columns.js
 fix-sql-precision.js
@@ -1917,13 +1942,13 @@ readme.txt
 undo-fix-baks.js
 
 == Inventário por extensão ==
-.json : 839
-.txt : 411
-.zip : 168
+.json : 852
+.txt : 417
+.zip : 171
 .js : 121
 .png : 116
-.sql : 93
-.md : 66
+.sql : 94
+.md : 67
 .html : 47
 .yml : 34
 .css : 24
@@ -2046,7 +2071,7 @@ docs\backups\2025-08-24_143136-post-main-e6ab269\client\pages\dungeon.html :: ti
 client\starter.html :: title="Escolha seu Herói" | scripts=1 | styles=0 | 1908 bytes
 client\play.html :: title="Play" | scripts=6 | styles=0 | 493 bytes
 client\lobby.html :: title="Lobby" | scripts=0 | styles=0 | 706 bytes
-client\index.html :: title="AFK Miners — Login + Gacha" | scripts=2 | styles=7 | 52439 bytes
+client\index.html :: title="AFK Miners — Login + Gacha" | scripts=2 | styles=7 | 47619 bytes
 client\house_debug.html :: title="House Debug" | scripts=1 | styles=0 | 1664 bytes
 client\house.html :: title="House" | scripts=0 | styles=0 | 777 bytes
 client\app.html :: title="AFK Miners — Game" | scripts=11 | styles=1 | 4170 bytes
@@ -2125,6 +2150,19 @@ package.json :: 10 chaves | keys: name, version, description, main, scripts, key
 package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 124907 bytes
 server\package.json :: 8 chaves | keys: name, version, description, main, scripts, dependencies, devDependencies, engines | 2331 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 83480 bytes
+docs\releases\2025-08-29_014013-auto\todos.json :: 36 itens | 6074 bytes
+docs\releases\2025-08-29_014013-auto\symbol-index.json :: 97 itens | 25900 bytes
+docs\releases\2025-08-29_014013-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 1192 bytes
+docs\releases\2025-08-29_014013-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 2837 bytes
+docs\releases\2025-08-29_014013-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2664 bytes
+docs\releases\2025-08-29_014013-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 44910 bytes
+docs\releases\2025-08-29_014013-auto\function-signatures.json :: 957 itens | 172991 bytes
+docs\releases\2025-08-29_014013-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 16918 bytes
+docs\releases\2025-08-29_014013-auto\env-usage.json :: 16 itens | 9542 bytes
+docs\releases\2025-08-29_014013-auto\endpoints-contracts.json :: 39 itens | 33162 bytes
+docs\releases\2025-08-29_014013-auto\deps-graph.json :: 27 itens | 2801 bytes
+docs\releases\2025-08-29_014013-auto\db-tables.json :: 23 itens | 7409 bytes
+docs\releases\2025-08-29_014013-auto\data-summary.json :: 34 itens | 7806 bytes
 docs\releases\2025-08-29_012658-auto\todos.json :: 36 itens | 6074 bytes
 docs\releases\2025-08-29_012658-auto\symbol-index.json :: 97 itens | 25900 bytes
 docs\releases\2025-08-29_012658-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 1192 bytes
@@ -2920,7 +2958,7 @@ docs\context\symbol-index.json :: 97 itens | 25900 bytes
 docs\context\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 1192 bytes
 docs\context\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 2837 bytes
 docs\context\openapi.json :: 3 chaves | keys: openapi, info, paths | 44910 bytes
-docs\context\function-signatures.json :: 956 itens | 172858 bytes
+docs\context\function-signatures.json :: 957 itens | 172991 bytes
 docs\context\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 16918 bytes
 docs\context\env-usage.json :: 16 itens | 9542 bytes
 docs\context\endpoints-contracts.json :: 39 itens | 33162 bytes

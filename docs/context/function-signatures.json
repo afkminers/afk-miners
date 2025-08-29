@@ -7502,16 +7502,9 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 259,
+    "line": 257,
     "kind": "function",
     "name": "handleLogout",
-    "params": []
-  },
-  {
-    "file": "client\\js\\boot.js",
-    "line": 268,
-    "kind": "function",
-    "name": "closeMobileMenu",
     "params": []
   },
   {

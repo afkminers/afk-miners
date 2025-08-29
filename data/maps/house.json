@@ -166,7 +166,7 @@
                         {
                          "name":"count",
                          "type":"int",
-                         "value":1
+                         "value":5
                         }, 
                         {
                          "name":"monsterKey",
@@ -204,8 +204,65 @@
  "tileheight":32,
  "tilesets":[
         {
+         "columns":5,
+         "fillmode":"preserve-aspect-fit",
          "firstgid":1,
-         "source":":\/automap-tiles.tsx"
+         "image":"qrc:\/automap-tiles.svg",
+         "imageheight":32,
+         "imagewidth":160,
+         "margin":0,
+         "name":"AutoMap Rules",
+         "spacing":0,
+         "tilecount":5,
+         "tileheight":32,
+         "tilerendersize":"grid",
+         "tiles":[
+                {
+                 "id":3,
+                 "properties":[
+                        {
+                         "name":"MatchType",
+                         "type":"string",
+                         "value":"Empty"
+                        }]
+                }, 
+                {
+                 "id":1,
+                 "properties":[
+                        {
+                         "name":"MatchType",
+                         "type":"string",
+                         "value":"Ignore"
+                        }]
+                }, 
+                {
+                 "id":2,
+                 "properties":[
+                        {
+                         "name":"MatchType",
+                         "type":"string",
+                         "value":"NonEmpty"
+                        }]
+                }, 
+                {
+                 "id":4,
+                 "properties":[
+                        {
+                         "name":"MatchType",
+                         "type":"string",
+                         "value":"Other"
+                        }]
+                }, 
+                {
+                 "id":0,
+                 "properties":[
+                        {
+                         "name":"MatchType",
+                         "type":"string",
+                         "value":"Negate"
+                        }]
+                }],
+         "tilewidth":32
         }, 
         {
          "columns":34,
