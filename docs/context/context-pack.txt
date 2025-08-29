@@ -1,5 +1,5 @@
 AFK Miners — Context Pack
-Commit: 36a1d85 | Branch: main | Last Tag: n/a
+Commit: 1594ff5 | Branch: main | Last Tag: n/a
 
 == Estrutura (nível 4) ==
 _backup-meta.txt
@@ -358,6 +358,8 @@ docs\backups\2025-08-29_015026-pre-main-c4f2817.zip
 docs\backups\2025-08-29_015039-post-main-2e1805b.zip
 docs\backups\2025-08-29_020055-pre-main-2e1805b.zip
 docs\backups\2025-08-29_020107-post-main-36a1d85.zip
+docs\backups\2025-08-29_020235-pre-main-36a1d85.zip
+docs\backups\2025-08-29_020247-post-main-1594ff5.zip
 docs\context
 docs\context\API.md
 docs\context\changes-since.txt
@@ -1869,6 +1871,29 @@ docs\releases\2025-08-29_015050-auto\route-history.json
 docs\releases\2025-08-29_015050-auto\symbol-index.json
 docs\releases\2025-08-29_015050-auto\todos.json
 docs\releases\2025-08-29_020117-auto
+docs\releases\2025-08-29_020117-auto.zip
+docs\releases\2025-08-29_020117-auto\API.md
+docs\releases\2025-08-29_020117-auto\README.txt
+docs\releases\2025-08-29_020117-auto\changes-since.txt
+docs\releases\2025-08-29_020117-auto\context-pack.txt
+docs\releases\2025-08-29_020117-auto\data-summary.json
+docs\releases\2025-08-29_020117-auto\db-counts.txt
+docs\releases\2025-08-29_020117-auto\db-schema.sql
+docs\releases\2025-08-29_020117-auto\db-tables.json
+docs\releases\2025-08-29_020117-auto\db-tables.txt
+docs\releases\2025-08-29_020117-auto\deps-graph.json
+docs\releases\2025-08-29_020117-auto\deps.txt
+docs\releases\2025-08-29_020117-auto\endpoints-contracts.json
+docs\releases\2025-08-29_020117-auto\env-usage.json
+docs\releases\2025-08-29_020117-auto\error-map.json
+docs\releases\2025-08-29_020117-auto\function-signatures.json
+docs\releases\2025-08-29_020117-auto\openapi.json
+docs\releases\2025-08-29_020117-auto\package.json
+docs\releases\2025-08-29_020117-auto\responses-sample.json
+docs\releases\2025-08-29_020117-auto\route-history.json
+docs\releases\2025-08-29_020117-auto\symbol-index.json
+docs\releases\2025-08-29_020117-auto\todos.json
+docs\releases\2025-08-29_020257-auto
 fix-camel-columns.js
 fix-sql-columns.js
 fix-sql-precision.js
@@ -1967,13 +1992,13 @@ readme.txt
 undo-fix-baks.js
 
 == Inventário por extensão ==
-.json : 865
-.txt : 423
-.zip : 174
+.json : 878
+.txt : 429
+.zip : 177
 .js : 121
 .png : 116
-.sql : 95
-.md : 68
+.sql : 96
+.md : 69
 .html : 47
 .yml : 34
 .css : 24
@@ -2175,6 +2200,19 @@ package.json :: 10 chaves | keys: name, version, description, main, scripts, key
 package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 124907 bytes
 server\package.json :: 8 chaves | keys: name, version, description, main, scripts, dependencies, devDependencies, engines | 2331 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 83480 bytes
+docs\releases\2025-08-29_020117-auto\todos.json :: 36 itens | 6074 bytes
+docs\releases\2025-08-29_020117-auto\symbol-index.json :: 97 itens | 25900 bytes
+docs\releases\2025-08-29_020117-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 1192 bytes
+docs\releases\2025-08-29_020117-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 2837 bytes
+docs\releases\2025-08-29_020117-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2664 bytes
+docs\releases\2025-08-29_020117-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 44910 bytes
+docs\releases\2025-08-29_020117-auto\function-signatures.json :: 956 itens | 172858 bytes
+docs\releases\2025-08-29_020117-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 16918 bytes
+docs\releases\2025-08-29_020117-auto\env-usage.json :: 16 itens | 9542 bytes
+docs\releases\2025-08-29_020117-auto\endpoints-contracts.json :: 39 itens | 33162 bytes
+docs\releases\2025-08-29_020117-auto\deps-graph.json :: 27 itens | 2801 bytes
+docs\releases\2025-08-29_020117-auto\db-tables.json :: 23 itens | 7409 bytes
+docs\releases\2025-08-29_020117-auto\data-summary.json :: 34 itens | 7806 bytes
 docs\releases\2025-08-29_015050-auto\todos.json :: 36 itens | 6074 bytes
 docs\releases\2025-08-29_015050-auto\symbol-index.json :: 97 itens | 25900 bytes
 docs\releases\2025-08-29_015050-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 1192 bytes
@@ -3034,7 +3072,7 @@ docs\backups\2025-08-24_143136-post-main-e6ab269\docs\context\deps-graph.json ::
 docs\backups\2025-08-24_143136-post-main-e6ab269\docs\context\data-summary.json :: 11 itens | 2153 bytes
 docs\backups\2025-08-24_143136-post-main-e6ab269\data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 24041 bytes
 docs\backups\2025-08-24_143136-post-main-e6ab269\client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1800 bytes
-data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 23180 bytes
+data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 21068 bytes
 client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1800 bytes
 
 == Symbol Index (amostra) ==
