@@ -10,28 +10,15 @@ const TILE = 32;
 
 /* =============== Canvas/HUD flexível (querystring + auto) =============== */
 function pickElByIds(prefIds = [], fallbackSelectors = []) {
-  for (const id of prefIds) {
-    if (!id) continue;
-    const el = document.getElementById(id);
-    if (el) return el;
-  }
-  for (const sel of fallbackSelectors) {
-    const el = document.querySelector(sel);
-    if (el) return el;
-  }
+  for (const id of prefIds) { if (!id) continue; const el = document.getElementById(id); if (el) return el; }
+  for (const sel of fallbackSelectors) { const el = document.querySelector(sel); if (el) return el; }
   return null;
 }
 const preferCanvasId = QS.get('canvas'); // ex: ?canvas=scene
 const preferHudId    = QS.get('hud');    // ex: ?hud=hud
 
-const canvas = pickElByIds(
-  [preferCanvasId, 'view', 'scene'],
-  ['canvas#view', 'canvas#scene', 'canvas']
-);
-const hud = pickElByIds(
-  [preferHudId, 'hud', 'app-hud'],
-  ['#hud', '#app-hud']
-);
+const canvas = pickElByIds([preferCanvasId, 'view', 'scene'], ['canvas#view', 'canvas#scene', 'canvas']);
+const hud    = pickElByIds([preferHudId, 'hud', 'app-hud'],    ['#hud', '#app-hud']);
 
 if (!canvas) {
   console.error('play.js: canvas não encontrado (#view ou #scene).');
@@ -68,10 +55,7 @@ async function jpost(url, body) {
   const r = await fetch(url, {
     method: 'POST',
     credentials: 'include',
-    headers: Object.assign(
-      { 'Content-Type': 'application/json' },
-      tok ? { 'x-csrf-token': tok } : {}
-    ),
+    headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { 'x-csrf-token': tok } : {}),
     body: JSON.stringify(body || {})
   });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
@@ -83,42 +67,33 @@ function assetUrl(p, { asTileset = false } = {}) {
   let s = String(p || '');
   if (!s) return s;
   if (/^https?:\/\//i.test(s)) return s;
-  s = s.replace(/^(\.\/)+/, '');     // remove ./, .//...
-  s = s.replace(/^client\//, '');    // tira client/
-  s = s.replace(/^\/client\//, '/'); // tira /client/ duplo
-  if (!s.startsWith('/')) {
-    // nome “seco” (ex.: kenney_map.png). Pra tileset, tente /img/ primeiro.
-    s = asTileset ? '/img/' + s : '/' + s;
-  }
+  s = s.replace(/^(\.\/)+/, '');
+  s = s.replace(/^client\//, '');
+  s = s.replace(/^\/client\//, '/');
+  if (!s.startsWith('/')) s = asTileset ? '/img/' + s : '/' + s;
   return s;
 }
 
 // --- loader de tileset compatível com seu caminho antigo do Tiled
 function normalizeTilesetPath(p) {
   let s = String(p || '');
-  // remove "../../../"
   s = s.replace(/^(\.\.\/)+/, '/');
-  // garante barra inicial
   if (!s.startsWith('/')) s = '/' + s;
-  // tira prefixo "/client/"
-  s = s.replace(/^\/client\//, '/'); // => "/sprites/tiles/kenney_map.png"
+  s = s.replace(/^\/client\//, '/');
   return s;
 }
 
 async function loadTilesetImage(rawPath) {
   const primary = normalizeTilesetPath(rawPath);
   const base = primary.split('/').pop();
-
-  // tenta primeiro o caminho que SEMPRE funcionou no seu server:
   const candidates = [
-    primary,                             // ex.: /sprites/tiles/kenney_map.png  ✅ (seu caso)
+    primary,
     '/sprites/' + base,
     '/sprites/tiles/' + base,
     '/img/tiles/' + base,
     '/img/' + base,
     '/' + base
   ];
-
   for (const url of candidates) {
     const img = loadImg(url);
     const ok = await ensureImgLoaded(img);
@@ -129,7 +104,6 @@ async function loadTilesetImage(rawPath) {
 }
 
 /* ============================= Settings (patch mínimo) ============================= */
-// Pixel-art nítido (liga/desliga smoothing conforme GameSettings)
 function applySmoothing(){
   const s = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
   const smooth = !s.pixelArt; // pixelArt=true => smoothing OFF
@@ -140,42 +114,25 @@ function applySmoothing(){
   } catch {}
 }
 applySmoothing();
-document.addEventListener('settings:changed', () => {
-  applySmoothing();
-  resize(); // dprCap pode ter mudado
-});
+document.addEventListener('settings:changed', () => { applySmoothing(); resize(); });
 
 /* ============================= Resize ============================= */
 function resize() {
   const shell = document.querySelector('#clientShell') || canvas.parentElement;
-  const rect = shell
-    ? shell.getBoundingClientRect()
-    : { width: window.innerWidth * 0.9, height: window.innerHeight * 0.9 };
-
+  const rect = shell ? shell.getBoundingClientRect() : { width: window.innerWidth * 0.9, height: window.innerHeight * 0.9 };
   const wCSS = Math.max(320, Math.floor(rect.width  || window.innerWidth  * 0.9));
   const hCSS = Math.max(200, Math.floor(rect.height || window.innerHeight * 0.9));
-
-  // DPR efetivo (cap opcional vindo das Settings)
   const st = (window.GameSettings?.get?.() || window.GameSettings?.getState?.()) || {};
   const dprBase = window.devicePixelRatio || 1;
   const dpr = Math.min(dprBase, Number(st.dprCap || dprBase));
-
-  // tamanho visual do canvas (CSS pixels)
   canvas.style.width  = wCSS + 'px';
   canvas.style.height = hCSS + 'px';
-
-  // tamanho do buffer interno (device pixels)
   const w = Math.round(wCSS * dpr);
   const h = Math.round(hCSS * dpr);
-  if (canvas.width !== w || canvas.height !== h) {
-    canvas.width  = w;
-    canvas.height = h;
-  }
-
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
   if (camera?.resize) camera.resize(canvas.width, canvas.height);
 }
 window.addEventListener('resize', resize);
-
 
 /* ============================ Imagens ============================ */
 const IMG_CACHE = new Map();
@@ -187,9 +144,7 @@ function loadImg(src) {
   IMG_CACHE.set(key, img);
   return img;
 }
-function imgReady(img) {
-  return img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0;
-}
+function imgReady(img) { return img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0; }
 async function ensureImgLoaded(img) {
   if (imgReady(img)) return true;
   try { await img.decode(); return imgReady(img); } catch { return imgReady(img); }
@@ -199,7 +154,6 @@ async function ensureImgLoaded(img) {
 let SPRITES_META = {};
 async function loadSpriteMeta() {
   const list = await jget('/api/assets/sprites');
-  // [{ key, kind, data: { image, frame, grid, anims, anchor, ... } }]
   SPRITES_META = Object.fromEntries(list.map(e => [e.key, e.data]));
 }
 
@@ -213,8 +167,8 @@ let starts = [];
 let spawns = [];
 
 /* ========================= Spawners / Mobs ======================== */
-const spawners = []; // [{def, want, respawnMs, nextAt, area, liveIds:Set<number>}]
-const mobs = [];     // lista de mobs ativos
+const spawners = [];
+const mobs = [];
 let mobAutoId = 1;
 
 /* ========================= Player Visual ========================== */
@@ -225,7 +179,6 @@ function clear() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
 function drawGround(cameraObj) {
   if (!groundLayer || !tileset || !imgReady(tilesetImg)) return;
-
   const data = groundLayer.data;
   const cols = mapData.width;
   const rows = mapData.height;
@@ -278,9 +231,7 @@ function drawMob(m) {
     const startCol = anim.startCol || 0;
 
     let row = typeof anim.row === 'number' ? anim.row : 0;
-    if (anim.rowByDir && m.face && anim.rowByDir[m.face] != null) {
-      row = anim.rowByDir[m.face];
-    }
+    if (anim.rowByDir && m.face && anim.rowByDir[m.face] != null) row = anim.rowByDir[m.face];
 
     const t = performance.now() / 1000;
     const f = Math.floor(t * fps) % frames;
@@ -291,21 +242,15 @@ function drawMob(m) {
 
     const anchorX = (meta.anchor?.x ?? 0.5);
     const anchorY = (meta.anchor?.y ?? 0.9);
-    const dw = frameW;
-    const dh = frameH;
+    const dw = frameW, dh = frameH;
     const ox = Math.round(m.x - dw * anchorX);
     const oy = Math.round(m.y - dh * anchorY);
 
     const canFlipX = !anim.rowByDir && rows === 1 && m.face === 'west';
 
     ctx.save();
-    if (canFlipX) {
-      ctx.translate(ox + dw, oy);
-      ctx.scale(-1, 1);
-      ctx.drawImage(m.img, sx, sy, frameW, frameH, 0, 0, dw, dh);
-    } else {
-      ctx.drawImage(m.img, sx, sy, frameW, frameH, ox, oy, dw, dh);
-    }
+    if (canFlipX) { ctx.translate(ox + dw, oy); ctx.scale(-1, 1); ctx.drawImage(m.img, sx, sy, frameW, frameH, 0, 0, dw, dh); }
+    else { ctx.drawImage(m.img, sx, sy, frameW, frameH, ox, oy, dw, dh); }
     ctx.restore();
     return;
   }
@@ -323,11 +268,8 @@ async function postPosThrottled(mapKey, x, y) {
   const now = performance.now();
   if (now - lastSaveAt < 2000) return; // 2s
   lastSaveAt = now;
-  try {
-    await jpost('/api/player/pos', { mapKey, x: Math.round(x), y: Math.round(y) });
-  } catch (e) {
-    console.warn('pos sync failed:', e.message);
-  }
+  try { await jpost('/api/player/pos', { mapKey, x: Math.round(x), y: Math.round(y) }); }
+  catch (e) { console.warn('pos sync failed:', e.message); }
 }
 
 async function getSavedPos() {
@@ -342,7 +284,7 @@ async function getSavedPos() {
 function buildCollisionGridFromObjects(mapW, mapH, objs) {
   const cols = Math.floor(mapW / TILE);
   const rows = Math.floor(mapH / TILE);
-  const grid = new Uint8Array(cols * rows); // 0 livre, 1 sólido
+  const grid = new Uint8Array(cols * rows);
   for (const o of objs) {
     const oType = String(o.type || '').toLowerCase();
     const isSolid = oType === 'solid' || (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1));
@@ -362,9 +304,7 @@ function buildCollisionGridFromTiled(json) {
   const grid = new Uint8Array(cols * rows);
   const collisionLayer = (json.layers || []).find(l => l.type === 'tilelayer' && l.name && l.name.toLowerCase().includes('collision'));
   if (collisionLayer && collisionLayer.data) {
-    for (let i=0; i<collisionLayer.data.length; i++) {
-      if (collisionLayer.data[i]) grid[i] = 1;
-    }
+    for (let i=0; i<collisionLayer.data.length; i++) if (collisionLayer.data[i]) grid[i] = 1;
   }
   return { grid, cols, rows };
 }
@@ -377,8 +317,7 @@ function mapSpawnsFromTiledJSON(json) {
   return (layer.objects || [])
     .filter((o) => ((o.class || o.type || "") + "").toLowerCase() === "spawn")
     .map((o) => {
-      const p = {};
-      (o.properties || []).forEach((kv) => { p[kv.name] = kv.value; });
+      const p = {}; (o.properties || []).forEach((kv) => { p[kv.name] = kv.value; });
       const monsterKey = String(p.monsterKey || p.monster || "goblin");
       const count = Number(p.count || 1) || 1;
       const respawnSec = Number(p.respawnSec || p.respawn || 20) || 20;
@@ -408,9 +347,7 @@ async function resolvePlayerSprite() {
         if (imgReady(playerVis.img)) return;
       }
     }
-  } catch (e) {
-    console.warn('resolvePlayerSprite:', e.message);
-  }
+  } catch (e) { console.warn('resolvePlayerSprite:', e.message); }
   playerVis.img = loadImg("/sprites/characters/player.png");
   ensureImgLoaded(playerVis.img).catch(()=>{});
 }
@@ -440,9 +377,7 @@ function addMobFromSpawn(spDef) {
     url = `/sprites/monsters/${m.kind}.png`;
     m.img = loadImg(url);
   }
-  ensureImgLoaded(m.img).then(ok => {
-    if (!ok) console.warn(`[mob sprite] falhou carregar: ${m.kind} @ ${url}`);
-  }).catch(()=>{});
+  ensureImgLoaded(m.img).then(ok => { if (!ok) console.warn(`[mob sprite] falhou carregar: ${m.kind} @ ${url}`); }).catch(()=>{});
 
   mobs.push(m);
   return m.id;
@@ -488,12 +423,27 @@ function updateRespawns(now) {
   const maps = await jget("/api/admin/content/maps");
   if (!maps.some((m) => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
 
-  // Objetos do mapa (starts/solids) e data (tiles)
-  const objs = await jget(`/api/admin/content/map/${MAP_KEY}/objects`);
-  starts = objs.filter((o) => (o.type || "").toLowerCase() === "start");
+  // --- helper para normalizar payloads que podem vir string/array/obj
+  function normalizeApiJson(payload) {
+    let v = payload;
+    if (Array.isArray(v)) v = v[0];
+    if (typeof v === 'string') { try { v = JSON.parse(v); } catch {} }
+    return v;
+  }
 
-  mapData = await jget(`/api/admin/content/map/${MAP_KEY}/data`);
-  tileset = (mapData.tilesets && mapData.tilesets[0]) || null;
+  // Objetos do mapa (starts/solids)
+  const rawObjs = await jget(`/api/admin/content/map/${MAP_KEY}/objects`);
+  const objsNorm = normalizeApiJson(rawObjs);
+  const objArr = Array.isArray(objsNorm)
+    ? objsNorm
+    : (objsNorm && Array.isArray(objsNorm.objects) ? objsNorm.objects : []);
+  starts = objArr.filter(o => (o.type || '').toLowerCase() === 'start');
+
+  // Data (tiles)
+  const rawMap = await jget(`/api/admin/content/map/${MAP_KEY}/data`);
+  mapData = normalizeApiJson(rawMap);
+
+  tileset = (mapData && mapData.tilesets && mapData.tilesets[0]) || null;
 
   if (!tileset || !tileset.image) {
     console.warn("Tileset não embedado. No Tiled: 'Embed Tileset' e exporte novamente o JSON.");
@@ -509,14 +459,14 @@ function updateRespawns(now) {
   const mapW = (mapData.width || 64) * TILE;
   const mapH = (mapData.height || 64) * TILE;
 
-  const hasSolidObj = objs.some(o => {
+  const hasSolidObj = objArr.some(o => {
     const t = String(o.type || '').toLowerCase();
     const hasProp = (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1));
     return t === 'solid' || hasProp;
   });
 
   const collBuild = hasSolidObj
-    ? buildCollisionGridFromObjects(mapW, mapH, objs)
+    ? buildCollisionGridFromObjects(mapW, mapH, objArr)
     : buildCollisionGridFromTiled(mapData);
 
   const cols = collBuild.cols || (mapData.width || 64);
@@ -533,37 +483,24 @@ function updateRespawns(now) {
     worldHeight: worldH
   });
 
-  // ---- Polyfills de compatibilidade para o ClickToMove e (eventual) zoom
-  if (typeof camera.getZoom !== 'function') {
-    camera.getZoom = () => (camera.zoom && Number(camera.zoom)) || 1;
-  }
-  if (typeof camera.setZoom !== 'function') {
-    // não muda o render; apenas guarda um valor para conversões
-    camera.setZoom = (z) => { camera.zoom = Number(z) || 1; };
-  }
-  if (typeof camera.screenToWorld !== 'function') {
-    camera.screenToWorld = (sx, sy) => {
-      const z = camera.getZoom ? Number(camera.getZoom()) || 1 : 1;
-      return { x: camera.x + (sx / z), y: camera.y + (sy / z) };
-    };
-  }
-  if (typeof camera.worldToScreen !== 'function') {
-    camera.worldToScreen = (wx, wy) => {
-      const z = camera.getZoom ? Number(camera.getZoom()) || 1 : 1;
-      return { x: (wx - camera.x) * z, y: (wy - camera.y) * z };
-    };
-  }
+  // Polyfills e zoom
+  if (typeof camera.getZoom !== 'function') camera.getZoom = () => (camera.zoom && Number(camera.zoom)) || 1;
+  if (typeof camera.setZoom !== 'function') camera.setZoom = (z) => { camera.zoom = Number(z) || 1; };
+  if (typeof camera.screenToWorld !== 'function') camera.screenToWorld = (sx, sy) => {
+    const z = camera.getZoom ? Number(camera.getZoom()) || 1 : 1;
+    return { x: camera.x + (sx / z), y: camera.y + (sy / z) };
+  };
+  if (typeof camera.worldToScreen !== 'function') camera.worldToScreen = (wx, wy) => {
+    const z = camera.getZoom ? Number(camera.getZoom()) || 1 : 1;
+    return { x: (wx - camera.x) * z, y: (wy - camera.y) * z };
+  };
 
-  // aplica ZOOM da camera se existir e reage a Settings
   function applyCameraZoom(){
     const st = (window.GameSettings?.getState && window.GameSettings.getState()) || { zoom: 1 };
     if (typeof camera.setZoom === 'function') camera.setZoom(Number(st.zoom || 1));
   }
   applyCameraZoom();
-  document.addEventListener('settings:changed', () => {
-    applyCameraZoom();
-    resize(); // DPR cap pode ter mudado
-  });
+  document.addEventListener('settings:changed', () => { applyCameraZoom(); resize(); });
 
   const controller = new PlayerController({
     speed: 140,
@@ -578,9 +515,9 @@ function updateRespawns(now) {
 
   // Input
   Input.attach(window, canvas);
-  resize(); // garante buffer inicial correto com DPR cap
+  resize();
 
-  // Posição inicial: salva ou start
+  // Posição inicial
   const saved = await getSavedPos();
   if (saved) controller.setPosition(saved.x, saved.y);
   else if (starts[0]) controller.setPosition(starts[0].x, starts[0].y);
@@ -590,9 +527,7 @@ function updateRespawns(now) {
   await resolvePlayerSprite();
 
   // Spawns de mobs
-  try {
-    spawns = await jget(`/api/admin/content/map/${MAP_KEY}/spawns`);
-  } catch { spawns = []; }
+  try { spawns = await jget(`/api/admin/content/map/${MAP_KEY}/spawns`); } catch { spawns = []; }
   if (!Array.isArray(spawns) || spawns.length === 0) {
     spawns = mapSpawnsFromTiledJSON(mapData);
     console.log("spawns fallback (JSON):", spawns);
@@ -639,11 +574,8 @@ function updateRespawns(now) {
 
       const mag = Math.hypot(mob.dirX, mob.dirY);
       if (mag > 0.1) {
-        if (Math.abs(mob.dirX) >= Math.abs(mob.dirY)) {
-          mob.face = mob.dirX >= 0 ? 'east' : 'west';
-        } else {
-          mob.face = mob.dirY >= 0 ? 'south' : 'north';
-        }
+        if (Math.abs(mob.dirX) >= Math.abs(mob.dirY)) mob.face = mob.dirX >= 0 ? 'east' : 'west';
+        else mob.face = mob.dirY >= 0 ? 'south' : 'north';
       }
       if (mob.bound) {
         const { x, y, w, h } = mob.bound;
