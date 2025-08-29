@@ -471,29 +471,39 @@
     </div>
 
     <div class="auth-card">
-      <button class="auth-close" id="authClose">X</button>
+      <button class="auth-close" id="authClose" type="button">X</button>
       <div class="auth-head">AFK MINERS — LOGIN / SIGN UP</div>
 
-      <div class="auth-pane">
+      <!-- SIGN IN -->
+      <form id="loginForm" class="auth-pane" autocomplete="on">
         <h3>Sign In</h3>
-        <div class="auth-field"><input id="loginName" placeholder="Name"/></div>
-        <div class="auth-field"><input id="loginPass" type="password" placeholder="Password"/></div>
-        <button class="btn8" id="btnLogin">Login</button>
-        <div id="loginMsg" class="auth-msg"></div>
-      </div>
+        <div class="auth-field">
+          <input id="loginName" name="username" placeholder="Name" autocomplete="username" />
+        </div>
+        <div class="auth-field">
+          <input id="loginPass" name="current-password" type="password" placeholder="Password" autocomplete="current-password" />
+        </div>
+        <button class="btn8" id="btnLogin" type="button">Login</button>
+        <div id="loginMsg" class="auth-msg" aria-live="polite"></div>
+      </form>
 
-      <div class="auth-pane">
+      <!-- SIGN UP -->
+      <form id="registerForm" class="auth-pane" autocomplete="on">
         <h3>Sign Up</h3>
-        <div class="auth-field"><input id="regName" placeholder="Name (3–20)"/></div>
-        <div class="auth-field"><input id="regPass" type="password" placeholder="Password (≥6)"/></div>
-        <button class="btn8" id="btnRegister">Create Account</button>
-        <div id="regMsg" class="auth-msg"></div>
-      </div>
+        <div class="auth-field">
+          <input id="regName" name="new-username" placeholder="Name (3–20)" minlength="3" maxlength="20" autocomplete="username" />
+        </div>
+        <div class="auth-field">
+          <input id="regPass" name="new-password" type="password" placeholder="Password (≥6)" minlength="6" autocomplete="new-password" />
+        </div>
+        <button class="btn8" id="btnRegister" type="button">Create Account</button>
+        <div id="regMsg" class="auth-msg" aria-live="polite"></div>
+      </form>
     </div>
   </div>
-
   <!-- FLASH -->
   <div id="flash"></div>
+
 
   <!-- OVERLAY GACHA -->
   <div id="summon" class="overlay" aria-hidden="true">

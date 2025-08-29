@@ -42,7 +42,11 @@ function noStore(res) {
 
 /* ---------------- rotas ---------------- */
 
-// POST /api/auth/register
+/**
+ * POST /api/auth/register
+ * - Checa existência case-insensitive via lower(name)
+ * - Insere e, se houver corrida, captura 23505 e retorna 409
+ */
 router.post('/register', async (req, res) => {
   try {
     noStore(res);
@@ -53,29 +57,33 @@ router.post('/register', async (req, res) => {
     const vp = validatePassword(req.body?.password);
     if (!vp.ok) return res.status(400).json({ error: vp.msg });
 
-    // checa nome já usado (case-insensitive)
-    const exist = await get(
+    // 1) checa se já existe (case-insensitive)
+    const exists = await get(
       `SELECT id FROM players WHERE lower(name) = lower($1)`,
       [v.name]
     );
-    if (exist) return res.status(409).json({ error: 'Nome já está em uso.' });
+    if (exists) return res.status(409).json({ error: 'Nome já está em uso.' });
 
+    // 2) tenta inserir
     const id = randomUUID();
     const hash = await bcrypt.hash(vp.p, 10);
 
-    // createdAt/updatedAt ficam por DEFAULT no banco
     const ins = await run(
-      `INSERT INTO players (id, name, password_hash, coins, gems)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO players (id, name, password_hash, coins, gems, "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
        RETURNING id, name, coins, gems, "createdAt"`,
       [id, v.name, hash, 500, 0]
     );
     const row = ins.rows[0];
 
-    // cookie de sessão (sid)
+    // 3) cria sessão
     setAuthCookie(res, { id: row.id, name: row.name });
     return res.json(row);
   } catch (e) {
+    // corrida: índice único em lower(name) disparou
+    if (e && e.code === '23505') {
+      return res.status(409).json({ error: 'Nome já está em uso.' });
+    }
     console.error('[auth/register] error:', e);
     return res.status(500).json({ error: 'Falha ao registrar' });
   }
@@ -122,7 +130,7 @@ router.get('/me', requireAuth, async (req, res) => {
   try {
     noStore(res);
     const profile = await get(
-      `SELECT id, name, coins, gems, "createdAt"
+      `SELECT id, name, coins, gems, "createdAt", "updatedAt"
          FROM players
         WHERE id = $1`,
       [req.user.id]

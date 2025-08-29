@@ -6,7 +6,7 @@ const path = require('path');
 const cors = require('cors');
 const http = require('http');
 
-const { all, get, run } = require('./models/db'); // <- PG helpers
+const { all, get, run } = require('./models/db'); // PG helpers
 const { migrate } = require('./models/migrate');
 const { cookieParser, requireAuth, requireCsrf, csrfRoute } = require('./auth/middleware');
 
@@ -16,17 +16,17 @@ const gachaRoutes = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 const skillsRoutes = require('./skills/routes');
 
-// AFK & Farm (base/ilha)
+// AFK & Farm
 const afkRoutes = require('./routes/afk');
 const farmRoutes = require('./routes/farm');
 
-const K = require('./balance/config'); // ainda usado nas rotas de treino (stop/status)
+const K = require('./balance/config');
 const buildStarterRouter = require('./starter/routes');
 
-// ======== Pipeline de Conteúdo (YAML/Tiled) ========
+// ======== Pipeline de Conteúdo ========
 const { loadAll, loadMap } = require('./content/loader');
-const CONTENT_PIPELINE = process.env.CONTENT_PIPELINE || 'off'; // off | shadow | on
-// ===================================================
+const CONTENT_PIPELINE = process.env.CONTENT_PIPELINE || 'off';
+// =====================================
 
 // ========= CONFIG =========
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -39,10 +39,10 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
 
-// 1) Expor o endpoint de CSRF ANTES de ligar o guard global
+// 1) CSRF BEFORE guard
 app.get('/api/csrf', csrfRoute);
 
-// 2) Ativar o guard de CSRF para o restante das rotas
+// 2) CSRF guard global (métodos que mudam estado)
 app.use(requireCsrf);
 
 /* ========= Bootstrap: tabelas do pipeline (Postgres) ========= */
@@ -129,17 +129,24 @@ async function bootstrapContentTables() {
       )
     `);
 
-    // chat_messages
+    // chat_messages — usar nomes MINÚSCULOS (sem aspas)
     await run(`
       CREATE TABLE IF NOT EXISTS chat_messages (
         id BIGSERIAL PRIMARY KEY,
         scope TEXT NOT NULL,
-        "fromId" TEXT,
-        "fromName" TEXT,
+        fromid TEXT,
+        fromname TEXT,
         text TEXT NOT NULL,
         created_at TIMESTAMPTZ DEFAULT now()
       )
     `);
+
+    // Auto-fix: se por acaso existirem colunas "fromId"/"fromName", renomeia para minúsculas
+    try { await run(`ALTER TABLE chat_messages RENAME COLUMN "fromId" TO fromid`); } catch(_) {}
+    try { await run(`ALTER TABLE chat_messages RENAME COLUMN "fromName" TO fromname`); } catch(_) {}
+
+    // Índice útil
+    await run(`CREATE INDEX IF NOT EXISTS chat_scope_id_idx ON chat_messages (scope, id DESC)`);
 
     console.log('[content] tables ready (bootstrap)');
   } catch (e) {
@@ -152,7 +159,7 @@ async function bootstrapContentTables() {
 // públicas / auth
 app.use('/api/auth', authRoutes);
 
-// catálogos públicos (seu router já cuida do que é público)
+// catálogos públicos
 app.use('/api', catalogRoutes);
 
 // protegidas
@@ -160,7 +167,7 @@ app.use('/api/player', requireAuth, playerRoutes);
 app.use('/api/gacha', requireAuth, gachaRoutes);
 app.use('/api/skills', requireAuth, skillsRoutes);
 
-// AFK (base/ilha)
+// AFK / Farm
 app.use('/api/afk', requireAuth, afkRoutes);
 app.use('/api/farm', requireAuth, farmRoutes);
 
@@ -175,17 +182,15 @@ async function resolveSkillType(weaponOrSkill) {
   return row?.skill_type || null;
 }
 
-/* ========= Rotas de Treino (sem tick global) ========= */
+/* ========= Rotas de Treino ========= */
 const trainingRouter = express.Router();
 
-// START
 trainingRouter.post('/start', requireAuth, async (req, res) => {
   try {
     const { heroId, weaponOrSkill, heroClass } = req.body || {};
     if (!heroId || !weaponOrSkill || !heroClass) {
       return res.status(400).json({ error: 'heroId, weaponOrSkill e heroClass são obrigatórios' });
     }
-
     const skillType = await resolveSkillType(weaponOrSkill);
     if (!skillType) return res.status(400).json({ error: 'weaponOrSkill inválido' });
 
@@ -196,13 +201,13 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
     if (t) {
       await run(
         `UPDATE hero_training
-            SET skill_type=$1, status='RUNNING',
-                started_at=COALESCE(started_at, $2),
-                last_tick_at=$3,
-                notes=$4,
-                daily_reset_at = COALESCE(daily_reset_at, date_trunc('day', now()) + interval '1 day'),
-                energy_current = COALESCE(energy_current, energy_max)
-          WHERE hero_id=$5`,
+           SET skill_type=$1, status='RUNNING',
+               started_at=COALESCE(started_at, $2),
+               last_tick_at=$3,
+               notes=$4,
+               daily_reset_at = COALESCE(daily_reset_at, date_trunc('day', now()) + interval '1 day'),
+               energy_current = COALESCE(energy_current, energy_max)
+         WHERE hero_id=$5`,
         [skillType, nowIso, nowIso, notes, heroId]
       );
     } else {
@@ -223,7 +228,6 @@ trainingRouter.post('/start', requireAuth, async (req, res) => {
   }
 });
 
-// STOP
 trainingRouter.post('/stop', requireAuth, async (req, res) => {
   try {
     const { heroId } = req.body || {};
@@ -232,7 +236,6 @@ trainingRouter.post('/stop', requireAuth, async (req, res) => {
     const t = await get(`SELECT * FROM hero_training WHERE hero_id=$1`, [heroId]);
     if (!t || t.status !== 'RUNNING') return res.json({ ok: true, message: 'No active session' });
 
-    // Sem tick global: ainda computamos o delta só para fechar a sessão atual
     const now = Date.now();
     const last = Date.parse(t.last_tick_at || t.started_at || new Date(0).toISOString());
     const delta = Math.max(0, Math.floor((now - last) / 1000));
@@ -242,13 +245,13 @@ trainingRouter.post('/stop', requireAuth, async (req, res) => {
 
     await run(
       `UPDATE hero_training
-          SET status='STOPPED',
-              last_tick_at=$1,
-              session_seconds=COALESCE(session_seconds,0)+$2,
-              daily_seconds=COALESCE(daily_seconds,0)+$3,
-              energy_current=$4,
-              energy_spent=COALESCE(energy_spent,0)+$5
-        WHERE hero_id=$6`,
+         SET status='STOPPED',
+             last_tick_at=$1,
+             session_seconds=COALESCE(session_seconds,0)+$2,
+             daily_seconds=COALESCE(daily_seconds,0)+$3,
+             energy_current=$4,
+             energy_spent=COALESCE(energy_spent,0)+$5
+       WHERE hero_id=$6`,
       [new Date(now).toISOString(), delta, delta, newEnergy, energyCost, heroId]
     );
 
@@ -259,7 +262,6 @@ trainingRouter.post('/stop', requireAuth, async (req, res) => {
   }
 });
 
-// STATUS
 trainingRouter.get('/status', requireAuth, async (req, res) => {
   try {
     const heroId = req.query.heroId;
@@ -311,7 +313,7 @@ app.use('/api/training', trainingRouter);
 
 /* ========= admin/content + starter ========= */
 
-// DEBUG: listar monsters (autenticado)
+// DEBUG: listar monsters
 app.get('/api/admin/content/monsters', requireAuth, async (_req, res) => {
   try {
     const rows = await all('SELECT key, name, xp, "healthMax", speed, "lookJSON" FROM monsters_master ORDER BY id');
@@ -322,7 +324,7 @@ app.get('/api/admin/content/monsters', requireAuth, async (_req, res) => {
   }
 });
 
-// itens/sprites
+// assets
 app.get('/api/assets/items', async (_req, res) => {
   try {
     const rows = await all('SELECT key, "dataJSON" FROM items_master ORDER BY key');
@@ -341,7 +343,7 @@ app.get('/api/assets/sprites', async (_req, res) => {
   }
 });
 
-// DEBUG MAPS
+// maps debug
 app.get('/api/admin/content/maps', async (_req, res) => {
   try {
     const rows = await all(
@@ -378,7 +380,6 @@ app.get('/api/admin/content/map/:key/spawns', async (req, res) => {
   }
 });
 
-// JSON bruto do mapa
 app.get('/api/admin/content/map/:key/data', async (req, res) => {
   try {
     const row = await get('SELECT "dataJSON" FROM maps WHERE key=$1', [req.params.key]);
@@ -389,11 +390,9 @@ app.get('/api/admin/content/map/:key/data', async (req, res) => {
   }
 });
 
-// reload de mapa sem reiniciar
 app.post('/api/admin/content/reload-map', async (req, res) => {
   try {
     const mapKey = (req.query.map || 'house').toString();
-    // passa um adaptador com as mesmas assinaturas (all/get/run)
     await loadMap({ all, get, run }, path.join(__dirname, '..'), mapKey);
     res.json({ ok: true, reloaded: mapKey });
   } catch (e) {
@@ -404,26 +403,25 @@ app.post('/api/admin/content/reload-map', async (req, res) => {
 
 function safeParse(s) { try { return typeof s === 'object' ? s : JSON.parse(s || '{}'); } catch { return {}; } }
 
-// >>> ROTA STARTER
-// passa adaptador {all,get,run} para o router do starter
+// starter
 app.use('/api/starter', requireAuth, buildStarterRouter({ all, get, run }));
 
-// ---- Raiz pública: entrega index.html (landing + login)
+// ---- Raiz pública
 app.get('/', (_req, res) => {
   res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
 });
 
-// ========= SERVE CLIENTE (estático)
+// ========= STATIC
 app.use(express.static(CLIENT_ROOT_DIR));
 
-// ========= SPA fallback (não intercepta assets)
+// ========= SPA fallback
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   if (/\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|map)$/i.test(req.path)) return next();
   res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
 });
 
-// ========= WebSocket minimal server (opcional) =========
+// ========= WebSocket =========
 let WebSocketLib = null;
 let useWebSocket = false;
 try {
@@ -436,20 +434,17 @@ try {
   useWebSocket = false;
 }
 
-// Consolidated: jwt, redis, crypto and Redis helpers (single declaration)
 const jwt = require('jsonwebtoken');
 const { createClient } = require('redis');
 const crypto = require('crypto');
 
-const REDIS_URL = process.env.REDIS_URL || null; // ex: redis://127.0.0.1:6379
+const REDIS_URL = process.env.REDIS_URL || null;
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
 const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || process.env.COOKIE_NAME || 'sid';
- // ajuste se seu cookie tiver outro nome
 
 let redisPub = null;
 let redisSub = null;
 
-// helper: parse cookies from header
 function parseCookies(cookieHeader = '') {
   return Object.fromEntries(
     (cookieHeader || '').split(';').map(s => {
@@ -496,12 +491,11 @@ let wss = null;
 // ========= START =========
 (async () => {
   try {
-    await migrate();              // aplica migrations PG
+    await migrate();
     await bootstrapContentTables();
 
     if (CONTENT_PIPELINE !== 'off') {
       console.log(`[content] pipeline: ${CONTENT_PIPELINE}`);
-      // passa adaptador com as mesmas assinaturas
       await loadAll({ all, get, run }, path.join(__dirname, '..'));
     }
 
@@ -511,8 +505,7 @@ let wss = null;
       const WebSocketServer = WebSocketLib.Server;
       wss = new WebSocketServer({ server, path: '/ws' });
 
-      // inicializa redis (se configurado)
-      setupRedis(wss).catch(() => { /* ignore */ });
+      setupRedis(wss).catch(() => {});
 
       const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
 
@@ -520,13 +513,11 @@ let wss = null;
         const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
         console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
 
-        // DEBUG: log cookies header (remova em produção se preferir)
         console.log('[ws] cookies header:', req.headers && req.headers.cookie);
 
         ws._connectedAt = Date.now();
         ws._player = null;
 
-        // valida JWT do cookie (handshake implícito)
         try {
           const cookies = parseCookies(req.headers.cookie || '');
           const token = cookies[COOKIE_NAME] || null;
@@ -545,18 +536,16 @@ let wss = null;
 
         ws.on('message', async (msg) => {
           let data;
-          try { data = JSON.parse(msg.toString()); } catch (err) { console.warn('[ws] malformed json from', addr); return; }
+          try { data = JSON.parse(msg.toString()); } catch { console.warn('[ws] malformed json from', addr); return; }
 
           if (data.type === 'auth') {
             ws._player = { id: String(data.id || ''), name: String(data.name || 'Anonymous') };
-            console.log(`[ws] auth from ${addr} => id=${ws._player.id} name=${ws._player.name}`);
             try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
             return;
           }
 
           if (data.type === 'chat') {
             if (!ws._player) {
-              console.warn('[ws] received chat from unauthenticated socket — ignoring');
               try { ws.send(JSON.stringify({ type:'error', message:'not-authenticated' })); } catch {}
               return;
             }
@@ -564,13 +553,11 @@ let wss = null;
             const raw = String(data.text || '').trim().slice(0, 800);
             if (!raw) return;
 
-            console.log(`[chat] from=${ws._player.id} scope=${scope} text="${raw}"`);
-
-            // persist in PG
+            // persist em PG (colunas minúsculas)
             try {
               if (scope === 'global') {
                 await run(
-                  `INSERT INTO chat_messages(scope, "fromId", "fromName", text) VALUES ($1, $2, $3, $4)`,
+                  `INSERT INTO chat_messages(scope, fromid, fromname, text) VALUES ($1, $2, $3, $4)`,
                   ['global', ws._player.id, ws._player.name, raw]
                 );
               }
@@ -586,35 +573,24 @@ let wss = null;
               origin: instanceId
             };
 
+            const outStr = JSON.stringify(out);
             if (redisPub) {
-              try {
-                await redisPub.publish('chat:global', JSON.stringify(out));
-              } catch (e) {
-                console.warn('[redis] publish failed', e && e.message);
-                const outStr = JSON.stringify(out);
-                wss.clients.forEach(c => {
-                  if (c && c.readyState === WebSocketLib.OPEN) {
-                    try { c.send(outStr); } catch (e) {}
-                  }
-                });
-              }
-            } else {
-              const outStr = JSON.stringify(out);
-              wss.clients.forEach(c => {
-                if (c && c.readyState === WebSocketLib.OPEN) {
-                  try { c.send(outStr); } catch (e) {}
-                }
-              });
+              try { await redisPub.publish('chat:global', outStr); }
+              catch (e) { console.warn('[redis] publish failed', e && e.message); }
             }
+            wss.clients.forEach(c => {
+              if (c && c.readyState === WebSocketLib.OPEN) {
+                try { c.send(outStr); } catch {}
+              }
+            });
             return;
           }
 
-          // pos handling (se já existir)
           if (data.type === 'pos') {
             const out = { type:'pos', id:String(data.id||''), x:Number(data.x||0), y:Number(data.y||0), name:String(data.name||'') };
             wss.clients.forEach(c => {
               if (c !== ws && c.readyState === WebSocketLib.OPEN) {
-                try { c.send(JSON.stringify(out)); } catch(e) {}
+                try { c.send(JSON.stringify(out)); } catch {}
               }
             });
           }
@@ -640,19 +616,43 @@ let wss = null;
   }
 })();
 
-/* ========= Chat history ========= */
+/* ========= Chat HTTP API ========= */
+
+// História (cronológico asc)
 app.get('/api/chat/global', requireAuth, async (req, res) => {
   try {
     const limit = Math.min(200, Number(req.query.limit || 100));
     const rows = await all(
-      `SELECT id, scope, "fromId", "fromName", text, created_at
+      `SELECT id,
+              scope,
+              fromid   AS "fromId",
+              fromname AS "fromName",
+              text,
+              created_at AS "createdAt"
          FROM chat_messages
-        WHERE scope=$1
+        WHERE scope = $1
         ORDER BY id DESC
         LIMIT $2`,
       ['global', limit]
     );
-    res.json(rows.reverse()); // ordem cronológica asc
+    res.json(rows.reverse());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Enviar mensagem (HTTP, opcional — WS já envia em tempo real)
+app.post('/api/chat/global', requireAuth, async (req, res) => {
+  try {
+    const text = (req.body?.text || '').trim();
+    if (!text) return res.status(400).json({ error: 'Mensagem vazia' });
+
+    await run(
+      `INSERT INTO chat_messages (scope, fromid, fromname, text) VALUES ($1, $2, $3, $4)`,
+      ['global', req.user.id, req.user.name, text]
+    );
+
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

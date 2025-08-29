@@ -1,5 +1,5 @@
 // client/js/auth.js
-// Corrigido: todos os requests usam credentials:'include' (envia cookie `sid`)
+// Corrigido: todos os requests usam credentials:'include' (envia/recebe cookie `sid`)
 // e os POSTs levam o header X-CSRF-Token.
 
 import { API, getCsrf } from './api.js';
@@ -8,11 +8,17 @@ import { API, getCsrf } from './api.js';
 async function httpGet(url) {
   const r = await fetch(url, {
     method: 'GET',
-    credentials: 'include',            // <-- envia o cookie `sid`
+    credentials: 'include',            // <-- envia/recebe o cookie `sid`
     headers: { 'Accept': 'application/json' },
     cache: 'no-store'
   });
-  if (!r.ok) throw new Error(`GET ${url} -> ${r.status}`);
+  if (!r.ok) {
+    // tenta retornar JSON pra msg amigável
+    let err = {};
+    try { err = await r.json(); } catch {}
+    const msg = err?.error || `GET ${url} -> ${r.status}`;
+    throw new Error(msg);
+  }
   return r.json();
 }
 
@@ -20,7 +26,7 @@ async function httpPost(url, body) {
   const csrf = await getCsrf();        // garante cookie+token do CSRF
   const r = await fetch(url, {
     method: 'POST',
-    credentials: 'include',            // <-- envia o cookie `sid`
+    credentials: 'include',            // <-- envia/recebe o cookie `sid`
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -34,7 +40,10 @@ async function httpPost(url, body) {
     let err = {};
     try { err = await r.json(); } catch {}
     const msg = err?.error || `POST ${url} -> ${r.status}`;
-    throw new Error(msg);
+    const e = new Error(msg);
+    // expõe também o status para o caller tratar (ex.: 409)
+    e.status = r.status;
+    throw e;
   }
   return r.json();
 }
@@ -62,6 +71,7 @@ export async function doLogin(name, password) {
 
 /**
  * Registro — não redireciona aqui; retorna o JSON para a página decidir.
+ * (se o backend responder 409, a exception terá e.status === 409)
  */
 export async function doRegister(name, password) {
   await getCsrf();

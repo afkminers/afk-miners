@@ -16,7 +16,7 @@
 - `NODE_ENV` (defaults: development)
 - `PORT` (defaults: 3000)
 - `REDIS_URL` (defaults: null)
-- `SESSION_COOKIE_NAME` (defaults: token)
+- `SESSION_COOKIE_NAME` (defaults: process.env.COOKIE_NAME, token)
 - `WORKER_TICK_SECONDS` (defaults: 3)
 
 ## Endpoints
@@ -222,7 +222,7 @@ Arquivo: `server\index.js:335`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:643`
+Arquivo: `server\index.js:644`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -327,7 +327,7 @@ _Sem payload inferido_
 
 ### GET /list
 
-Arquivo: `server\starter\routes.js:10`
+Arquivo: `server\starter\routes.js:12`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -347,6 +347,7 @@ Arquivo: `server\starter\routes.js:10`
 - `HTTP 500` → {error:'erro ao checar status do starter' }
 - `HTTP 400` → {error:'heroKey é obrigatório' }
 - `HTTP 400` → {error:'starter já escolhido' }
+- `HTTP 400` → {error:'heroKey inválido' }
 - `HTTP 400` → {error:'starter já escolhido' }
 - `HTTP 500` → {error:'erro ao selecionar starter' }
 
@@ -402,7 +403,7 @@ Arquivo: `server\routes\afk.js:7`
 
 ### GET /pos
 
-Arquivo: `server\player\routes.js:90`
+Arquivo: `server\player\routes.js:93`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -460,7 +461,7 @@ Arquivo: `server\routes\farm.js:71`
 
 ### GET /status
 
-Arquivo: `server\starter\routes.js:55`
+Arquivo: `server\starter\routes.js:57`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -479,12 +480,13 @@ Arquivo: `server\starter\routes.js:55`
 - `HTTP 500` → {error:'erro ao checar status do starter' }
 - `HTTP 400` → {error:'heroKey é obrigatório' }
 - `HTTP 400` → {error:'starter já escolhido' }
+- `HTTP 400` → {error:'heroKey inválido' }
 - `HTTP 400` → {error:'starter já escolhido' }
 - `HTTP 500` → {error:'erro ao selecionar starter' }
 
 ### POST /
 
-Arquivo: `server\gacha\routes.js:149`
+Arquivo: `server\gacha\routes.js:144`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -670,7 +672,7 @@ _Sem payload inferido_
 
 ### POST /logout
 
-Arquivo: `server\auth\routes.js:114`
+Arquivo: `server\auth\routes.js:113`
 
 _Sem payload inferido_
 
@@ -761,7 +763,7 @@ Arquivo: `server\routes\farm.js:101`
 
 ### POST /pos
 
-Arquivo: `server\player\routes.js:127`
+Arquivo: `server\player\routes.js:130`
 
 _Sem payload inferido_
 
@@ -801,7 +803,7 @@ _Sem payload inferido_
 
 ### POST /select
 
-Arquivo: `server\starter\routes.js:73`
+Arquivo: `server\starter\routes.js:75`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -819,6 +821,7 @@ Arquivo: `server\starter\routes.js:73`
 **Erros conhecidos:**
 - `HTTP 400` → {error:'heroKey é obrigatório' }
 - `HTTP 400` → {error:'starter já escolhido' }
+- `HTTP 400` → {error:'heroKey inválido' }
 - `HTTP 400` → {error:'starter já escolhido' }
 - `HTTP 500` → {error:'erro ao selecionar starter' }
 
@@ -903,6 +906,7 @@ Arquivo: `server\starter\routes.js:73`
   - HTTP 500: {error:'erro ao checar status do starter' }
   - HTTP 400: {error:'heroKey é obrigatório' }
   - HTTP 400: {error:'starter já escolhido' }
+  - HTTP 400: {error:'heroKey inválido' }
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 500: {error:'erro ao selecionar starter' }
 - **GET /me**
@@ -953,6 +957,7 @@ Arquivo: `server\starter\routes.js:73`
   - HTTP 500: {error:'erro ao checar status do starter' }
   - HTTP 400: {error:'heroKey é obrigatório' }
   - HTTP 400: {error:'starter já escolhido' }
+  - HTTP 400: {error:'heroKey inválido' }
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 500: {error:'erro ao selecionar starter' }
 - **POST /**
@@ -1043,5 +1048,6 @@ Arquivo: `server\starter\routes.js:73`
 - **POST /select**
   - HTTP 400: {error:'heroKey é obrigatório' }
   - HTTP 400: {error:'starter já escolhido' }
+  - HTTP 400: {error:'heroKey inválido' }
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 500: {error:'erro ao selecionar starter' }

@@ -14,16 +14,21 @@ const COOKIE_NAME =
   process.env.COOKIE_NAME ||
   'sid';
 
-const COOKIE_SECURE = String(process.env.COOKIE_SECURE || 'false').toLowerCase() === 'true';
+// Flags vindas do .env
 const COOKIE_SAME_SITE = process.env.COOKIE_SAME_SITE || 'Lax';
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
 const CSRF_COOKIE = process.env.CSRF_COOKIE || 'csrf';
+
+// Em DEV (localhost/http), NUNCA usar Secure. Em PROD, obedece .env.
+const COOKIE_SECURE_ENV =
+  String(process.env.COOKIE_SECURE || 'false').toLowerCase() === 'true';
+const EFFECTIVE_SECURE = NODE_ENV === 'production' ? COOKIE_SECURE_ENV : false;
 
 function cookieOpts() {
   const base = {
     httpOnly: true,
     sameSite: COOKIE_SAME_SITE,
-    secure: COOKIE_SECURE,
+    secure: EFFECTIVE_SECURE,
     path: '/',
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 dias
   };
@@ -37,7 +42,13 @@ function setAuthCookie(res, payload) {
 }
 
 function clearAuthCookie(res) {
-  res.clearCookie(COOKIE_NAME, { path: '/' });
+  const base = cookieOpts();
+  res.clearCookie(COOKIE_NAME, {
+    path: '/',
+    sameSite: base.sameSite,
+    secure: base.secure,
+    domain: base.domain,
+  });
 }
 
 async function requireAuth(req, res, next) {
@@ -66,9 +77,9 @@ async function requireAuth(req, res, next) {
 function csrfRoute(_req, res) {
   const t = randomBytes(24).toString('hex');
   res.cookie(CSRF_COOKIE, t, {
-    httpOnly: false,            // acessível no client para mandar no header
+    httpOnly: false,            // client lê e manda no header
     sameSite: COOKIE_SAME_SITE,
-    secure: COOKIE_SECURE,
+    secure: EFFECTIVE_SECURE,
     path: '/',
     maxAge: 1000 * 60 * 60 * 24 * 7,
   });

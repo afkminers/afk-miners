@@ -1,5 +1,130 @@
 [
   {
+    "file": "undo-fix-baks.js",
+    "line": 9,
+    "kind": "function",
+    "name": "walk",
+    "params": [
+      "dir"
+    ]
+  },
+  {
+    "file": "fix-sql-precision.js",
+    "line": 30,
+    "kind": "function",
+    "name": "walk",
+    "params": [
+      "dir"
+    ]
+  },
+  {
+    "file": "fix-sql-precision.js",
+    "line": 40,
+    "kind": "function",
+    "name": "extractQuotedBlocks",
+    "params": [
+      "src"
+    ]
+  },
+  {
+    "file": "fix-sql-precision.js",
+    "line": 61,
+    "kind": "function",
+    "name": "fixBlockText",
+    "params": [
+      "txt"
+    ]
+  },
+  {
+    "file": "fix-sql-precision.js",
+    "line": 74,
+    "kind": "function",
+    "name": "processFile",
+    "params": [
+      "p"
+    ]
+  },
+  {
+    "file": "fix-sql-columns.js",
+    "line": 37,
+    "kind": "function",
+    "name": "walk",
+    "params": [
+      "dir"
+    ]
+  },
+  {
+    "file": "fix-sql-columns.js",
+    "line": 49,
+    "kind": "function",
+    "name": "extractStringBlocks",
+    "params": [
+      "src"
+    ]
+  },
+  {
+    "file": "fix-sql-columns.js",
+    "line": 75,
+    "kind": "function",
+    "name": "fixSqlInSource",
+    "params": [
+      "src"
+    ]
+  },
+  {
+    "file": "fix-sql-columns.js",
+    "line": 80,
+    "kind": "function",
+    "name": "applyReplace",
+    "params": [
+      "start",
+      "end",
+      "newText"
+    ]
+  },
+  {
+    "file": "fix-sql-columns.js",
+    "line": 120,
+    "kind": "function",
+    "name": "run",
+    "params": []
+  },
+  {
+    "file": "fix-camel-columns.js",
+    "line": 35,
+    "kind": "function",
+    "name": "shouldTouch",
+    "params": [
+      "file"
+    ]
+  },
+  {
+    "file": "fix-camel-columns.js",
+    "line": 39,
+    "kind": "function",
+    "name": "walk",
+    "params": [
+      "dir",
+      "files = []"
+    ]
+  },
+  {
+    "file": "fix-camel-columns.js",
+    "line": 51,
+    "kind": "function",
+    "name": "applyReplacements",
+    "params": [
+      "text"
+    ]
+  },
+  {
+    "file": "fix-camel-columns.js",
+    "line": 59,
+    "kind": "function",
+    "name": "run",
+    "params": []
+  },
+  {
     "file": "tools\\extract-sprite.js",
     "line": 40,
     "kind": "function",
@@ -44,7 +169,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 452,
+    "line": 453,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -53,7 +178,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 464,
+    "line": 465,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -62,7 +187,7 @@
   },
   {
     "file": "server\\starter\\routes.js",
-    "line": 6,
+    "line": 7,
     "kind": "function",
     "name": "buildStarterRouter",
     "params": []
@@ -548,7 +673,7 @@
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 71,
+    "line": 74,
     "kind": "arrow",
     "name": "imageUrlFor",
     "params": [
@@ -615,7 +740,7 @@
   },
   {
     "file": "server\\gacha\\routes.js",
-    "line": 35,
+    "line": 34,
     "kind": "arrow",
     "name": "imageUrlFor",
     "params": [
@@ -624,14 +749,14 @@
   },
   {
     "file": "server\\gacha\\routes.js",
-    "line": 37,
+    "line": 36,
     "kind": "function",
     "name": "pickRarity",
     "params": []
   },
   {
     "file": "server\\gacha\\routes.js",
-    "line": 47,
+    "line": 46,
     "kind": "function",
     "name": "chooseHeroFromPool",
     "params": [
@@ -640,7 +765,7 @@
   },
   {
     "file": "server\\gacha\\routes.js",
-    "line": 78,
+    "line": 74,
     "kind": "function",
     "name": "doSingleSummon",
     "params": [
@@ -765,14 +890,14 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 15,
+    "line": 22,
     "kind": "function",
     "name": "cookieOpts",
     "params": []
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 27,
+    "line": 34,
     "kind": "function",
     "name": "setAuthCookie",
     "params": [
@@ -782,7 +907,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 32,
+    "line": 39,
     "kind": "function",
     "name": "clearAuthCookie",
     "params": [
@@ -791,7 +916,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 36,
+    "line": 43,
     "kind": "function",
     "name": "requireAuth",
     "params": [
@@ -802,17 +927,17 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 51,
+    "line": 66,
     "kind": "function",
     "name": "csrfRoute",
     "params": [
-      "req",
+      "_req",
       "res"
     ]
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 62,
+    "line": 78,
     "kind": "function",
     "name": "requireCsrf",
     "params": [
@@ -7377,14 +7502,33 @@
   },
   {
     "file": "client\\js\\auth.js",
-    "line": 7,
+    "line": 8,
+    "kind": "function",
+    "name": "httpGet",
+    "params": [
+      "url"
+    ]
+  },
+  {
+    "file": "client\\js\\auth.js",
+    "line": 19,
+    "kind": "function",
+    "name": "httpPost",
+    "params": [
+      "url",
+      "body"
+    ]
+  },
+  {
+    "file": "client\\js\\auth.js",
+    "line": 45,
     "kind": "function",
     "name": "checkAuth",
     "params": []
   },
   {
     "file": "client\\js\\auth.js",
-    "line": 20,
+    "line": 58,
     "kind": "function",
     "name": "doLogin",
     "params": [
@@ -7394,7 +7538,7 @@
   },
   {
     "file": "client\\js\\auth.js",
-    "line": 29,
+    "line": 66,
     "kind": "function",
     "name": "doRegister",
     "params": [
@@ -7404,7 +7548,7 @@
   },
   {
     "file": "client\\js\\auth.js",
-    "line": 38,
+    "line": 74,
     "kind": "function",
     "name": "doLogout",
     "params": []
@@ -7651,14 +7795,16 @@
   },
   {
     "file": "client\\js\\api.js",
-    "line": 4,
+    "line": 7,
     "kind": "function",
     "name": "getCsrf",
-    "params": []
+    "params": [
+      "force = false"
+    ]
   },
   {
     "file": "client\\js\\api.js",
-    "line": 10,
+    "line": 26,
     "kind": "function",
     "name": "apiGet",
     "params": [
@@ -7667,7 +7813,7 @@
   },
   {
     "file": "client\\js\\api.js",
-    "line": 15,
+    "line": 41,
     "kind": "function",
     "name": "apiPost",
     "params": [

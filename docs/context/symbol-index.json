@@ -53,7 +53,9 @@
   {
     "file": "client\\js\\auth.js",
     "symbols": [
-      "checkAuth"
+      "checkAuth",
+      "httpGet",
+      "httpPost"
     ]
   },
   {
@@ -1096,6 +1098,34 @@
     ]
   },
   {
+    "file": "fix-camel-columns.js",
+    "symbols": [
+      "applyReplacements",
+      "run",
+      "shouldTouch",
+      "walk"
+    ]
+  },
+  {
+    "file": "fix-sql-columns.js",
+    "symbols": [
+      "applyReplace",
+      "extractStringBlocks",
+      "fixSqlInSource",
+      "run",
+      "walk"
+    ]
+  },
+  {
+    "file": "fix-sql-precision.js",
+    "symbols": [
+      "extractQuotedBlocks",
+      "fixBlockText",
+      "processFile",
+      "walk"
+    ]
+  },
+  {
     "file": "server\\auth\\middleware.js",
     "symbols": [
       "clearAuthCookie",
@@ -1251,6 +1281,12 @@
     "symbols": [
       "parseArgs",
       "usageAndExit"
+    ]
+  },
+  {
+    "file": "undo-fix-baks.js",
+    "symbols": [
+      "walk"
     ]
   }
 ]

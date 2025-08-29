@@ -33,6 +33,10 @@ const authClose = document.getElementById('authClose');
 const btnHamb   = document.getElementById('btnHamb');
 const mobMenu   = document.getElementById('mobileMenu');
 
+// (Opcional) se existir form no HTML, bloqueia submit nativo (Enter) para evitar duplo POST
+document.getElementById('loginForm')?.addEventListener('submit', (ev) => ev.preventDefault());
+document.getElementById('registerForm')?.addEventListener('submit', (ev) => ev.preventDefault());
+
 // Referências gacha
 const ctx = {
   elGacha:    document.getElementById('btnGacha'),
@@ -193,22 +197,68 @@ if (authClose) {
 }
 
 /* ========= Auth handlers ========= */
-btnLogin?.addEventListener('click', async () => {
+btnLogin?.addEventListener('click', async (ev) => {
+  ev.preventDefault();
   loginMsg.textContent = '';
-  const data = await doLogin(loginName.value.trim(), loginPass.value);
-  if (data?.error) { loginMsg.textContent = data.error; return; }
-  celebrate();
-  await goToGameAccordingToStarter();
+
+  if (window._loginBusy) return;
+  window._loginBusy = true;
+
+  try {
+    const data = await doLogin(loginName.value.trim(), loginPass.value);
+    if (data?.error) { loginMsg.textContent = data.error; return; }
+
+    // Confirma sessão de fato
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json());
+    if (!me?.profile) { loginMsg.textContent = 'Sessão não criada. Tente novamente.'; return; }
+
+    celebrate();
+    await goToGameAccordingToStarter();
+  } catch (e) {
+    loginMsg.textContent = 'Falha ao autenticar.';
+  } finally {
+    window._loginBusy = false;
+  }
 });
 
-btnRegister?.addEventListener('click', async () => {
+btnRegister?.addEventListener('click', async (ev) => {
+  ev.preventDefault();
   regMsg.textContent = '';
-  const data = await doRegister(regName.value.trim(), regPass.value);
-  if (data?.error) { regMsg.textContent = data.error; return; }
-  celebrate();
-  await goToGameAccordingToStarter();
+
+  if (window._regBusy) return;     // evita duplo clique
+  window._regBusy = true;
+
+  try {
+    const res = await doRegister(regName.value.trim(), regPass.value);
+    if (res?.error) {
+      regMsg.textContent = res.error;
+      return;
+    }
+
+    celebrate();
+
+    // Confere se sessão realmente foi criada
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json());
+    if (!me?.profile) {
+      regMsg.textContent = 'Sessão não criada. Tente novamente.';
+      return;
+    }
+
+    // Decide rota correta (starter ou app)
+    await goToGameAccordingToStarter();
+  } catch (e) {
+    const msg = (e?.message || '').toLowerCase();
+    if (msg.includes('já está em uso') || msg.includes('duplicate')) {
+      regMsg.textContent = 'Nome já está em uso.';
+    } else {
+      regMsg.textContent = 'Falha ao registrar.';
+    }
+  } finally {
+    window._regBusy = false;
+  }
 });
 
+/* ========= Logout ========= */
 async function handleLogout(){
   await doLogout();
   showLanding();

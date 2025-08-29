@@ -24,7 +24,7 @@ router.get('/me', async (req, res) => {
     noStore(res);
     const playerId = req.user.id;
 
-    // perfil do jogador — use "createdAt" com aspas
+    // perfil do jogador — usa "createdAt" com aspas (tabela players tem CamelCase)
     const profile = await get(
       `SELECT id, name, coins, gems, "createdAt"
          FROM players
@@ -89,6 +89,9 @@ router.get('/me', async (req, res) => {
  * GET /api/player/pos?map=<mapKey>
  * Retorna a posição salva do jogador nesse mapa.
  * Se não existir, cai no start do mapa (camada "start" do Tiled) ou (64,64).
+ *
+ * IMPORTANTE: em player_positions, as colunas são:
+ *   "playerId" (CamelCase), mapkey (minúsculo), updated_at (minúsculo)
  */
 router.get('/pos', async (req, res) => {
   try {
@@ -99,13 +102,15 @@ router.get('/pos', async (req, res) => {
     const row = await get(
       `SELECT x, y
          FROM player_positions
-        WHERE "playerId" = $1 AND "mapKey" = $2`,
+        WHERE "playerId" = $1 AND mapkey = $2
+        ORDER BY updated_at DESC
+        LIMIT 1`,
       [playerId, mapKey]
     ).catch(() => null);
 
     if (row) return res.json(row);
 
-    // fallback: primeiro objeto "start" do mapa
+    // fallback: primeiro objeto "start" do mapa (aqui o schema usa "mapKey" CamelCase)
     const start = await get(
       `SELECT x, y
          FROM map_objects
@@ -125,7 +130,11 @@ router.get('/pos', async (req, res) => {
  * POST /api/player/pos
  * Body: { mapKey, x, y }
  * Salva/atualiza a posição do jogador no mapa.
- * Requer índice único ("playerId","mapKey") em player_positions.
+ *
+ * IMPORTANTE:
+ * - Em player_positions, as colunas certas para upsert são ("playerId", mapkey)
+ * - A coluna de timestamp é updated_at (minúsculo)
+ * - Garanta no banco um índice único:  CREATE UNIQUE INDEX IF NOT EXISTS player_pos_uidx ON player_positions ("playerId", mapkey);
  */
 router.post('/pos', async (req, res) => {
   try {
@@ -136,10 +145,12 @@ router.post('/pos', async (req, res) => {
 
     await run(
       `
-      INSERT INTO player_positions ("playerId", "mapKey", x, y, "updatedAt")
+      INSERT INTO player_positions ("playerId", mapkey, x, y, updated_at)
       VALUES ($1, $2, $3, $4, NOW())
-      ON CONFLICT ("playerId", "mapKey") DO UPDATE
-        SET x = EXCLUDED.x, y = EXCLUDED.y, "updatedAt" = NOW()
+      ON CONFLICT ("playerId", mapkey) DO UPDATE
+        SET x = EXCLUDED.x,
+            y = EXCLUDED.y,
+            updated_at = NOW()
       `,
       [playerId, mapKey, x, y]
     );

@@ -26,7 +26,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 564
+        "index": 709
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
@@ -47,8 +47,12 @@
     "key": "COOKIE_NAME",
     "occurrences": [
       {
+        "file": "server\\index.js",
+        "index": 14621
+      },
+      {
         "file": "server\\auth\\middleware.js",
-        "index": 348
+        "index": 488
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
@@ -61,7 +65,6 @@
     ],
     "defaults": [
       "sid",
-      "sid",
       "sid"
     ]
   },
@@ -70,7 +73,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 502
+        "index": 647
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
@@ -92,7 +95,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 412
+        "index": 557
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
@@ -114,7 +117,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 625
+        "index": 770
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
@@ -248,7 +251,7 @@
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 279
+        "index": 309
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -288,7 +291,7 @@
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 220
+        "index": 250
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -372,6 +375,10 @@
         "index": 14586
       },
       {
+        "file": "server\\auth\\middleware.js",
+        "index": 450
+      },
+      {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
         "index": 14586
       },
@@ -381,7 +388,8 @@
       }
     ],
     "defaults": [
-      "token",
+      "process.env.COOKIE_NAME",
+      "process.env.COOKIE_NAME",
       "token",
       "token"
     ]

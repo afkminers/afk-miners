@@ -391,6 +391,10 @@
     },
     {
       "status": 400,
+      "body": "{error:'heroKey inválido' }"
+    },
+    {
+      "status": 400,
       "body": "{error:'starter já escolhido' }"
     },
     {
@@ -697,6 +701,10 @@
     },
     {
       "status": 400,
+      "body": "{error:'heroKey inválido' }"
+    },
+    {
+      "status": 400,
       "body": "{error:'starter já escolhido' }"
     },
     {
@@ -802,6 +810,10 @@
     {
       "status": 400,
       "body": "{error:'starter já escolhido' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'heroKey inválido' }"
     },
     {
       "status": 400,

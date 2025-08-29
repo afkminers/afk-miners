@@ -1,5 +1,15 @@
 [
   {
+    "file": "undo-fix-baks.js",
+    "line": 2,
+    "text": "// Restaura todos os arquivos server/**/*.js a partir de seus backups .bak"
+  },
+  {
+    "file": "fix-sql-columns.js",
+    "line": 36,
+    "text": "// pega todos os .js em server/"
+  },
+  {
     "file": "server\\scripts\\gen-context.js",
     "line": 14,
     "text": "// - todos.json                    (NOVO)"
@@ -158,5 +168,10 @@
     "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\balance\\config.js",
     "line": 2,
     "text": "// Todos os knobs ficam aqui. Troque números aqui e o jogo inteiro acompanha."
+  },
+  {
+    "file": "client\\js\\auth.js",
+    "line": 2,
+    "text": "// Corrigido: todos os requests usam credentials:'include' (envia cookie `sid`)"
   }
 ]
