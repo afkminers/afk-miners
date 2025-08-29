@@ -7479,14 +7479,14 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 143,
+    "line": 148,
     "kind": "function",
     "name": "goToGameAccordingToStarter",
     "params": []
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 157,
+    "line": 162,
     "kind": "function",
     "name": "showApp",
     "params": [
@@ -7495,16 +7495,23 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 168,
+    "line": 172,
     "kind": "function",
     "name": "trySession",
     "params": []
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 262,
+    "line": 259,
     "kind": "function",
     "name": "handleLogout",
+    "params": []
+  },
+  {
+    "file": "client\\js\\boot.js",
+    "line": 268,
+    "kind": "function",
+    "name": "closeMobileMenu",
     "params": []
   },
   {

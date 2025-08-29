@@ -33,11 +33,11 @@ const authClose = document.getElementById('authClose');
 const btnHamb   = document.getElementById('btnHamb');
 const mobMenu   = document.getElementById('mobileMenu');
 
-// Bloqueia submit nativo para evitar duplo POST
+// (Opcional) evitar submit nativo duplicado
 document.getElementById('loginForm')?.addEventListener('submit', (ev) => ev.preventDefault());
 document.getElementById('registerForm')?.addEventListener('submit', (ev) => ev.preventDefault());
 
-// Referências gacha
+// ===== Gacha refs =====
 const ctx = {
   elGacha:    document.getElementById('btnGacha'),
   elGacha10:  document.getElementById('btnGacha10'),
@@ -141,9 +141,9 @@ function showLanding(){
 }
 
 /**
- * Regra:
- *  - Se PODE selecionar starter (ainda não escolheu) -> /starter.html
- *  - Senão -> /app.html#house (shell novo direto na House)
+ * Regras de navegação:
+ *  - Se PODE selecionar starter (não escolheu ainda) -> /starter.html
+ *  - Senão -> /app.html#house
  */
 async function goToGameAccordingToStarter() {
   try {
@@ -154,7 +154,7 @@ async function goToGameAccordingToStarter() {
       location.href = '/app.html#house';
     }
   } catch {
-    // fallback conservador: abre shell novo na House
+    // fallback conservador: shell na House
     location.href = '/app.html#house';
   }
 }
@@ -188,7 +188,7 @@ trySession();
 if (btnPlay) {
   btnPlay.onclick = async () => {
     if (window.__isAuth && __profile) {
-      goToGameAccordingToStarter();   // mantém mesma regra
+      goToGameAccordingToStarter();
     } else {
       authScreen?.classList.remove('hidden');
     }
@@ -196,9 +196,7 @@ if (btnPlay) {
 }
 
 /* ========= Close do modal de auth ========= */
-if (authClose) {
-  authClose.onclick = () => authScreen?.classList.add('hidden');
-}
+authClose?.addEventListener('click', () => authScreen?.classList.add('hidden'));
 
 /* ========= Auth handlers ========= */
 btnLogin?.addEventListener('click', async (ev) => {
@@ -265,10 +263,6 @@ btnLogoutTop?.addEventListener('click', handleLogout);
 mobileLogout?.addEventListener('click', handleLogout);
 
 /* ========= Mobile menu ========= */
-function closeMobileMenu(){
-  mobMenu?.classList.remove('open');
-  btnHamb?.setAttribute('aria-expanded','false');
-}
 btnHamb?.addEventListener('click', () => {
   mobMenu?.classList.toggle('open');
   const open = mobMenu?.classList.contains('open');
