@@ -443,7 +443,8 @@ const crypto = require('crypto');
 
 const REDIS_URL = process.env.REDIS_URL || null; // ex: redis://127.0.0.1:6379
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
-const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'token'; // ajuste se seu cookie tiver outro nome
+const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || process.env.COOKIE_NAME || 'sid';
+ // ajuste se seu cookie tiver outro nome
 
 let redisPub = null;
 let redisSub = null;

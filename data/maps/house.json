@@ -245,6 +245,19 @@
          "tilecount":816,
          "tileheight":32,
          "tilewidth":32
+        }, 
+        {
+         "columns":34,
+         "firstgid":2454,
+         "image":"..\/..\/client\/sprites\/tiles\/kenney_map.png",
+         "imageheight":768,
+         "imagewidth":1088,
+         "margin":0,
+         "name":"kennie",
+         "spacing":0,
+         "tilecount":816,
+         "tileheight":32,
+         "tilewidth":32
         }],
  "tilewidth":32,
  "type":"map",

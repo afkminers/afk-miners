@@ -13,6 +13,9 @@
  <tileset firstgid="1638" name="kennie" tilewidth="32" tileheight="32" tilecount="816" columns="34">
   <image source="client/sprites/tiles/kenney_map.png" width="1088" height="768"/>
  </tileset>
+ <tileset firstgid="2454" name="kennie" tilewidth="32" tileheight="32" tilecount="816" columns="34">
+  <image source="client/sprites/tiles/kenney_map.png" width="1088" height="768"/>
+ </tileset>
  <layer id="1" name="Camada de Blocos 1" width="50" height="50">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

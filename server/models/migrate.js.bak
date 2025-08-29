@@ -47,7 +47,8 @@ async function migrate() {
 
   // posições por mapa (usada em /api/player/pos)
   await run(`
-    CREATE TABLE IF NOT EXISTS player_positions ("playerId" TEXT NOT NULL,
+    CREATE TABLE IF NOT EXISTS player_positions (
+      playerId TEXT NOT NULL,
       mapKey   TEXT NOT NULL,
       x INTEGER NOT NULL,
       y INTEGER NOT NULL,

@@ -60,7 +60,7 @@ function buildStarterRouter() {
       const row = await get(
         `SELECT 1
            FROM player_heroes
-          WHERE "playerId" = $1 AND "isStarter" = TRUE
+          WHERE playerid = $1 AND isstarter = TRUE
           LIMIT 1`,
         [playerId]
       );
@@ -84,7 +84,7 @@ function buildStarterRouter() {
       const exists = await get(
         `SELECT 1
            FROM player_heroes
-          WHERE "playerId" = $1 AND "isStarter" = TRUE
+          WHERE playerid = $1 AND isstarter = TRUE
           LIMIT 1`,
         [playerId]
       );
@@ -92,34 +92,24 @@ function buildStarterRouter() {
         return res.status(400).json({ error: 'starter já escolhido' });
       }
 
-      // valida heroKey no catálogo
-      const master = await get(
-        `SELECT "heroKey", name, rarity, class, role, element, attack_type, weapon_pref
-           FROM heroes_master
-          WHERE "heroKey" = $1`,
-        [heroKey]
-      );
-      if (!master) {
-        return res.status(400).json({ error: 'heroKey inválido' });
-      }
-
       const id = randomUUID();
+      const createdAt = Date.now();
 
-      // IMPORTANTE:
-      // - NÃO inserir "heroKey" (coluna gerada) para evitar erro 428C9.
-      // - Para casar com o catálogo, gravamos name = heroKey (curto), assim a coluna gerada tende a bater.
+      // Insere herói starter com stats básicos
       await run(
         `INSERT INTO player_heroes
-           (id, "playerId", name, rarity, attack, defense, speed, level, "createdAt", "isStarter")
+           (id, playerid, herokey, name, rarity, attack, defense, speed, level, createdat, isstarter)
          VALUES
-           ($1,  $2,        $3,   $4,    $5,     $6,     $7,    $8,    NOW(),      TRUE)`,
+           ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE)`,
         [
           id,
           playerId,
-          heroKey,          // name (curto) — deixa a gerada "heroKey" casar com este texto
+          heroKey,
+          heroKey.toUpperCase(), // nome padrão
           'COMMON',
-          1, 1, 1,          // attack, defense, speed
-          1,                // level inicial
+          1, 1, 1,                // attack, defense, speed
+          1,                      // level inicial
+          createdAt,
         ]
       );
 

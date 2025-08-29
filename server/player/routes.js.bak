@@ -24,9 +24,9 @@ router.get('/me', async (req, res) => {
     noStore(res);
     const playerId = req.user.id;
 
-    // perfil do jogador — use "createdAt" com aspas
+    // perfil do jogador (colunas reais em minúsculo; alias para camelCase)
     const profile = await get(
-      `SELECT id, name, coins, gems, "createdAt"
+      `SELECT id, name, coins, gems, createdat AS "createdAt"
          FROM players
         WHERE id = $1`,
       [playerId]
@@ -40,23 +40,23 @@ router.get('/me', async (req, res) => {
       `
       SELECT
         ph.id,
-        ph."heroKey"    AS "heroKey",
+        ph.herokey    AS "heroKey",
         ph.name,
         ph.rarity,
         ph.attack,
         ph.defense,
         ph.speed,
         ph.level,
-        ph."createdAt"  AS "createdAt",
-        ph."isStarter"  AS "isStarter",
+        ph.createdat  AS "createdAt",
+        ph.isstarter  AS "isStarter",
         hm.class,
         hm.role,
         hm.attack_type,
         hm.element,
         hm.weapon_pref
       FROM player_heroes ph
-      LEFT JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
-      WHERE ph."playerId" = $1
+      LEFT JOIN heroes_master hm ON hm.herokey = ph.herokey
+      WHERE ph.playerid = $1
       ORDER BY
         CASE ph.rarity
           WHEN 'ULTIMATE'   THEN 1
@@ -66,7 +66,7 @@ router.get('/me', async (req, res) => {
           WHEN 'RARE'       THEN 5
           ELSE 6
         END,
-        ph."createdAt" DESC
+        ph.createdat DESC
       `,
       [playerId]
     );
@@ -99,7 +99,7 @@ router.get('/pos', async (req, res) => {
     const row = await get(
       `SELECT x, y
          FROM player_positions
-        WHERE "playerId" = $1 AND "mapKey" = $2`,
+        WHERE playerid = $1 AND mapkey = $2`,
       [playerId, mapKey]
     ).catch(() => null);
 
@@ -109,7 +109,7 @@ router.get('/pos', async (req, res) => {
     const start = await get(
       `SELECT x, y
          FROM map_objects
-        WHERE "mapKey" = $1 AND type = 'start'
+        WHERE mapkey = $1 AND type = 'start'
         LIMIT 1`,
       [mapKey]
     ).catch(() => null);
@@ -125,7 +125,7 @@ router.get('/pos', async (req, res) => {
  * POST /api/player/pos
  * Body: { mapKey, x, y }
  * Salva/atualiza a posição do jogador no mapa.
- * Requer índice único ("playerId","mapKey") em player_positions.
+ * Requer índice único (playerid, mapkey) em player_positions.
  */
 router.post('/pos', async (req, res) => {
   try {
@@ -136,10 +136,10 @@ router.post('/pos', async (req, res) => {
 
     await run(
       `
-      INSERT INTO player_positions ("playerId", "mapKey", x, y, "updatedAt")
+      INSERT INTO player_positions (playerid, mapkey, x, y, updated_at)
       VALUES ($1, $2, $3, $4, NOW())
-      ON CONFLICT ("playerId", "mapKey") DO UPDATE
-        SET x = EXCLUDED.x, y = EXCLUDED.y, "updatedAt" = NOW()
+      ON CONFLICT (playerid, mapkey) DO UPDATE
+        SET x = EXCLUDED.x, y = EXCLUDED.y, updated_at = NOW()
       `,
       [playerId, mapKey, x, y]
     );

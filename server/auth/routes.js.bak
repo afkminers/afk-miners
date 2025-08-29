@@ -63,16 +63,16 @@ router.post('/register', async (req, res) => {
     const id = randomUUID();
     const hash = await bcrypt.hash(vp.p, 10);
 
-    // createdAt/updatedAt ficam por DEFAULT no banco
+    // Deixa createdat com DEFAULT (now()); retornamos com alias "createdAt"
     const ins = await run(
       `INSERT INTO players (id, name, password_hash, coins, gems)
        VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, name, coins, gems, "createdAt"`,
+       RETURNING id, name, coins, gems, createdat AS "createdAt"`,
       [id, v.name, hash, 500, 0]
     );
     const row = ins.rows[0];
 
-    // cookie de sessão (sid)
+    // seta cookie de sessão unificado (sid)
     setAuthCookie(res, { id: row.id, name: row.name });
     return res.json(row);
   } catch (e) {
@@ -122,7 +122,7 @@ router.get('/me', requireAuth, async (req, res) => {
   try {
     noStore(res);
     const profile = await get(
-      `SELECT id, name, coins, gems, "createdAt"
+      `SELECT id, name, coins, gems, createdat AS "createdAt"
          FROM players
         WHERE id = $1`,
       [req.user.id]

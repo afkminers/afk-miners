@@ -11,7 +11,7 @@ router.get('/heroes/master', async (_req, res) => {
   try {
     const rows = await all(`
       SELECT
-        "heroKey" AS "heroKey",
+        heroKey,
         name,
         rarity,
         base_attack,
@@ -39,7 +39,7 @@ router.get('/heroes/master', async (_req, res) => {
     // - attack_type e weapon_pref (novos nomes do schema)
     // - adiciona os aliases "type" e "weapon" para retrocompatibilidade
     const out = rows.map((h) => ({
-      heroKey: h.heroKey, // agora garantido pelo alias no SELECT
+      heroKey: h.herokey || h.herokey, // pg pode retornar em minúsculas se não-quoted
       name: h.name,
       rarity: h.rarity,
       base_attack: h.base_attack,
@@ -54,7 +54,7 @@ router.get('/heroes/master', async (_req, res) => {
       type: h.attack_type,
       weapon: h.weapon_pref,
       // asset
-      imageUrl: imageUrlFor(h.heroKey),
+      imageUrl: imageUrlFor(h.herokey || h.heroKey),
     }));
 
     res.set('Cache-Control', 'no-store');
