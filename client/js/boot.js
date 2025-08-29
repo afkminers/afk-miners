@@ -33,7 +33,7 @@ const authClose = document.getElementById('authClose');
 const btnHamb   = document.getElementById('btnHamb');
 const mobMenu   = document.getElementById('mobileMenu');
 
-// (Opcional) se existir form no HTML, bloqueia submit nativo (Enter) para evitar duplo POST
+// Bloqueia submit nativo para evitar duplo POST
 document.getElementById('loginForm')?.addEventListener('submit', (ev) => ev.preventDefault());
 document.getElementById('registerForm')?.addEventListener('submit', (ev) => ev.preventDefault());
 
@@ -112,7 +112,7 @@ function updateHud(profileOrCoins) {
   } catch {}
 }
 
-// Mantido por compatibilidade, mas o fluxo agora redireciona para /app.html
+// Mantido por compatibilidade
 const gacha = bindGachaUI(ctx, { onHudUpdate: updateHud });
 
 /* ========= helpers visual ========= */
@@ -140,17 +140,22 @@ function showLanding(){
   initLoginFx();
 }
 
+/**
+ * Regra:
+ *  - Se PODE selecionar starter (ainda não escolheu) -> /starter.html
+ *  - Senão -> /app.html#house (shell novo direto na House)
+ */
 async function goToGameAccordingToStarter() {
   try {
     const st = await apiGet(`${API}/api/starter/status`); // { canSelect: boolean }
     if (st?.canSelect) {
-      location.href = '/starter.html'; // ainda não escolheu starter
+      location.href = '/starter.html';
     } else {
-      location.href = '/app.html';     // já tem starter → client
+      location.href = '/app.html#house';
     }
   } catch {
-    // fallback conservador
-    location.href = '/app.html';
+    // fallback conservador: abre shell novo na House
+    location.href = '/app.html#house';
   }
 }
 
@@ -160,7 +165,6 @@ async function showApp(profile) {
   window.__isAuth = true;
   updateHud(profile);
   await gacha.init?.(profile);
-  // vai direto para a rota certa (starter/app)
   goToGameAccordingToStarter();
 }
 
@@ -184,7 +188,7 @@ trySession();
 if (btnPlay) {
   btnPlay.onclick = async () => {
     if (window.__isAuth && __profile) {
-      goToGameAccordingToStarter();
+      goToGameAccordingToStarter();   // mantém mesma regra
     } else {
       authScreen?.classList.remove('hidden');
     }
@@ -208,13 +212,13 @@ btnLogin?.addEventListener('click', async (ev) => {
     const data = await doLogin(loginName.value.trim(), loginPass.value);
     if (data?.error) { loginMsg.textContent = data.error; return; }
 
-    // Confirma sessão de fato
+    // Confirma sessão
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json());
     if (!me?.profile) { loginMsg.textContent = 'Sessão não criada. Tente novamente.'; return; }
 
     celebrate();
     await goToGameAccordingToStarter();
-  } catch (e) {
+  } catch {
     loginMsg.textContent = 'Falha ao autenticar.';
   } finally {
     window._loginBusy = false;
@@ -225,26 +229,19 @@ btnRegister?.addEventListener('click', async (ev) => {
   ev.preventDefault();
   regMsg.textContent = '';
 
-  if (window._regBusy) return;     // evita duplo clique
+  if (window._regBusy) return;
   window._regBusy = true;
 
   try {
     const res = await doRegister(regName.value.trim(), regPass.value);
-    if (res?.error) {
-      regMsg.textContent = res.error;
-      return;
-    }
+    if (res?.error) { regMsg.textContent = res.error; return; }
 
     celebrate();
 
-    // Confere se sessão realmente foi criada
+    // Confere sessão
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json());
-    if (!me?.profile) {
-      regMsg.textContent = 'Sessão não criada. Tente novamente.';
-      return;
-    }
+    if (!me?.profile) { regMsg.textContent = 'Sessão não criada. Tente novamente.'; return; }
 
-    // Decide rota correta (starter ou app)
     await goToGameAccordingToStarter();
   } catch (e) {
     const msg = (e?.message || '').toLowerCase();
@@ -268,6 +265,10 @@ btnLogoutTop?.addEventListener('click', handleLogout);
 mobileLogout?.addEventListener('click', handleLogout);
 
 /* ========= Mobile menu ========= */
+function closeMobileMenu(){
+  mobMenu?.classList.remove('open');
+  btnHamb?.setAttribute('aria-expanded','false');
+}
 btnHamb?.addEventListener('click', () => {
   mobMenu?.classList.toggle('open');
   const open = mobMenu?.classList.contains('open');

@@ -23,13 +23,13 @@
 
 ### GET /
 
-Arquivo: `server\index.js:412`
+Arquivo: `server\index.js:410`
 
 _Sem payload inferido_
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:382`
+Arquivo: `server\index.js:383`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -57,7 +57,7 @@ Arquivo: `server\index.js:382`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:356`
+Arquivo: `server\index.js:358`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -87,7 +87,7 @@ Arquivo: `server\index.js:356`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:368`
+Arquivo: `server\index.js:370`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -116,7 +116,7 @@ Arquivo: `server\index.js:368`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:345`
+Arquivo: `server\index.js:347`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -141,7 +141,7 @@ Arquivo: `server\index.js:345`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:315`
+Arquivo: `server\index.js:317`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -169,7 +169,7 @@ Arquivo: `server\index.js:315`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:326`
+Arquivo: `server\index.js:328`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -196,7 +196,7 @@ Arquivo: `server\index.js:326`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:335`
+Arquivo: `server\index.js:337`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -222,7 +222,7 @@ Arquivo: `server\index.js:335`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:644`
+Arquivo: `server\index.js:622`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -232,7 +232,16 @@ Arquivo: `server\index.js:644`
 }
 ```
 
+**Resposta de sucesso (amostra):**
+```json
+{
+  "ok": true
+}
+```
+
 **Erros conhecidos:**
+- `HTTP 500` → {error:err.message }
+- `HTTP 400` → {error:'Mensagem vazia' }
 - `HTTP 500` → {error:err.message }
 
 ### GET /api/csrf
@@ -327,7 +336,7 @@ _Sem payload inferido_
 
 ### GET /list
 
-Arquivo: `server\starter\routes.js:12`
+Arquivo: `server\starter\routes.js:29`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -349,6 +358,7 @@ Arquivo: `server\starter\routes.js:12`
 - `HTTP 400` → {error:'starter já escolhido' }
 - `HTTP 400` → {error:'heroKey inválido' }
 - `HTTP 400` → {error:'starter já escolhido' }
+- `HTTP 400` → {error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }
 - `HTTP 500` → {error:'erro ao selecionar starter' }
 
 ### GET /me
@@ -403,7 +413,7 @@ Arquivo: `server\routes\afk.js:7`
 
 ### GET /pos
 
-Arquivo: `server\player\routes.js:93`
+Arquivo: `server\player\routes.js:96`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -461,7 +471,7 @@ Arquivo: `server\routes\farm.js:71`
 
 ### GET /status
 
-Arquivo: `server\starter\routes.js:57`
+Arquivo: `server\starter\routes.js:74`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -482,6 +492,7 @@ Arquivo: `server\starter\routes.js:57`
 - `HTTP 400` → {error:'starter já escolhido' }
 - `HTTP 400` → {error:'heroKey inválido' }
 - `HTTP 400` → {error:'starter já escolhido' }
+- `HTTP 400` → {error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }
 - `HTTP 500` → {error:'erro ao selecionar starter' }
 
 ### POST /
@@ -525,6 +536,23 @@ Arquivo: `server\index.js:393`
 
 **Erros conhecidos:**
 - `HTTP 500` → {error:e.message }
+
+### POST /api/chat/global
+
+Arquivo: `server\index.js:645`
+
+_Sem payload inferido_
+
+**Resposta de sucesso (amostra):**
+```json
+{
+  "ok": true
+}
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {error:'Mensagem vazia' }
+- `HTTP 500` → {error:err.message }
 
 ### POST /assign
 
@@ -652,7 +680,7 @@ Arquivo: `server\routes\farm.js:181`
 
 ### POST /login
 
-Arquivo: `server\auth\routes.js:85`
+Arquivo: `server\auth\routes.js:93`
 
 _Sem payload inferido_
 
@@ -672,7 +700,7 @@ _Sem payload inferido_
 
 ### POST /logout
 
-Arquivo: `server\auth\routes.js:113`
+Arquivo: `server\auth\routes.js:121`
 
 _Sem payload inferido_
 
@@ -763,7 +791,7 @@ Arquivo: `server\routes\farm.js:101`
 
 ### POST /pos
 
-Arquivo: `server\player\routes.js:130`
+Arquivo: `server\player\routes.js:139`
 
 _Sem payload inferido_
 
@@ -779,7 +807,7 @@ _Sem payload inferido_
 
 ### POST /register
 
-Arquivo: `server\auth\routes.js:46`
+Arquivo: `server\auth\routes.js:50`
 
 _Sem payload inferido_
 
@@ -794,6 +822,7 @@ _Sem payload inferido_
 - `HTTP 400` → {error:v.msg }
 - `HTTP 400` → {error:vp.msg }
 - `HTTP 409` → {error:'Nome já está em uso.' }
+- `HTTP 409` → {error:'Nome já está em uso.' }
 - `HTTP 500` → {error:'Falha ao registrar' }
 - `HTTP 401` → {error:'Credenciais inválidas' }
 - `HTTP 401` → {error:'Credenciais inválidas' }
@@ -803,7 +832,7 @@ _Sem payload inferido_
 
 ### POST /select
 
-Arquivo: `server\starter\routes.js:75`
+Arquivo: `server\starter\routes.js:92`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -815,7 +844,7 @@ Arquivo: `server\starter\routes.js:75`
 
 **Resposta de sucesso (amostra):**
 ```json
-{ok:true,heroKey,id }
+{ok:true,id,heroKey }
 ```
 
 **Erros conhecidos:**
@@ -823,6 +852,7 @@ Arquivo: `server\starter\routes.js:75`
 - `HTTP 400` → {error:'starter já escolhido' }
 - `HTTP 400` → {error:'heroKey inválido' }
 - `HTTP 400` → {error:'starter já escolhido' }
+- `HTTP 400` → {error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }
 - `HTTP 500` → {error:'erro ao selecionar starter' }
 
 ## Tabela sintética de erros por rota
@@ -879,6 +909,8 @@ Arquivo: `server\starter\routes.js:75`
   - HTTP 500: {error:e.message }
 - **GET /api/chat/global**
   - HTTP 500: {error:err.message }
+  - HTTP 400: {error:'Mensagem vazia' }
+  - HTTP 500: {error:err.message }
 - **GET /api/csrf**
   - HTTP 400: {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
   - HTTP 400: {error:'weaponOrSkill inválido' }
@@ -908,6 +940,7 @@ Arquivo: `server\starter\routes.js:75`
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 400: {error:'heroKey inválido' }
   - HTTP 400: {error:'starter já escolhido' }
+  - HTTP 400: {error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }
   - HTTP 500: {error:'erro ao selecionar starter' }
 - **GET /me**
   - HTTP 400: {error:'heroId é obrigatório' }
@@ -959,6 +992,7 @@ Arquivo: `server\starter\routes.js:75`
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 400: {error:'heroKey inválido' }
   - HTTP 400: {error:'starter já escolhido' }
+  - HTTP 400: {error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }
   - HTTP 500: {error:'erro ao selecionar starter' }
 - **POST /**
   - HTTP 400: {error:result.error,cost:SUMMON_COST_COINS }
@@ -966,6 +1000,9 @@ Arquivo: `server\starter\routes.js:75`
   - HTTP 500: {error:'Falha ao girar gacha' }
 - **POST /api/admin/content/reload-map**
   - HTTP 500: {error:e.message }
+- **POST /api/chat/global**
+  - HTTP 400: {error:'Mensagem vazia' }
+  - HTTP 500: {error:err.message }
 - **POST /assign**
   - HTTP 400: {error:'worker_id required' }
   - HTTP 404: {error:'worker_not_found' }
@@ -1039,6 +1076,7 @@ Arquivo: `server\starter\routes.js:75`
   - HTTP 400: {error:v.msg }
   - HTTP 400: {error:vp.msg }
   - HTTP 409: {error:'Nome já está em uso.' }
+  - HTTP 409: {error:'Nome já está em uso.' }
   - HTTP 500: {error:'Falha ao registrar' }
   - HTTP 401: {error:'Credenciais inválidas' }
   - HTTP 401: {error:'Credenciais inválidas' }
@@ -1050,4 +1088,5 @@ Arquivo: `server\starter\routes.js:75`
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 400: {error:'heroKey inválido' }
   - HTTP 400: {error:'starter já escolhido' }
+  - HTTP 400: {error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }
   - HTTP 500: {error:'erro ao selecionar starter' }

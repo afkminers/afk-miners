@@ -1273,7 +1273,8 @@
   {
     "file": "server\\starter\\routes.js",
     "symbols": [
-      "buildStarterRouter"
+      "buildStarterRouter",
+      "isHeroKeyGenerated"
     ]
   },
   {

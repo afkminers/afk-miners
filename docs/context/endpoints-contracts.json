@@ -3,7 +3,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 382,
+    "line": 383,
     "sample": {
       "params": {
         "key": "value"
@@ -37,7 +37,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 356,
+    "line": 358,
     "sample": {
       "params": {
         "key": "value"
@@ -79,7 +79,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 368,
+    "line": 370,
     "sample": {
       "params": {
         "key": "value"
@@ -117,7 +117,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 345,
+    "line": 347,
     "sample": {
       "query": {
         "map": "value"
@@ -160,7 +160,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 315,
+    "line": 317,
     "sample": {
       "query": {
         "map": "value"
@@ -238,7 +238,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 326,
+    "line": 328,
     "sample": {
       "query": {
         "map": "value"
@@ -289,7 +289,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 335,
+    "line": 337,
     "sample": {
       "query": {
         "map": "value"
@@ -336,7 +336,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 644,
+    "line": 622,
     "sample": {
       "query": {
         "limit": 1
@@ -346,6 +346,43 @@
       {
         "status": 500,
         "body": "{error:err.message }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'Mensagem vazia' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/chat/global",
+    "file": "server\\index.js",
+    "line": 645,
+    "sample": {},
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:'Mensagem vazia' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:err.message }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true }"
       }
     ]
   },
@@ -631,7 +668,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 412,
+    "line": 410,
     "sample": {},
     "errors": []
   },
@@ -709,7 +746,7 @@
     "method": "GET",
     "path": "/list",
     "file": "server\\starter\\routes.js",
-    "line": 12,
+    "line": 29,
     "sample": {
       "body": {
         "try {\n      const playerId = req.user.id;\n      const { heroKey": 1
@@ -741,6 +778,10 @@
         "body": "{error:'starter já escolhido' }"
       },
       {
+        "status": 400,
+        "body": "{error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }"
+      },
+      {
         "status": 500,
         "body": "{error:'erro ao selecionar starter' }"
       }
@@ -752,7 +793,7 @@
       },
       {
         "status": 200,
-        "body": "{ok:true,heroKey,id }"
+        "body": "{ok:true,id,heroKey }"
       }
     ]
   },
@@ -760,7 +801,7 @@
     "method": "POST",
     "path": "/login",
     "file": "server\\auth\\routes.js",
-    "line": 85,
+    "line": 93,
     "sample": {},
     "errors": [
       {
@@ -803,7 +844,7 @@
     "method": "POST",
     "path": "/logout",
     "file": "server\\auth\\routes.js",
-    "line": 113,
+    "line": 121,
     "sample": {},
     "errors": [
       {
@@ -894,7 +935,7 @@
     "method": "GET",
     "path": "/me",
     "file": "server\\auth\\routes.js",
-    "line": 121,
+    "line": 129,
     "sample": {},
     "errors": [
       {
@@ -1164,7 +1205,7 @@
     "method": "GET",
     "path": "/pos",
     "file": "server\\player\\routes.js",
-    "line": 93,
+    "line": 96,
     "sample": {
       "query": {
         "map": "value"
@@ -1191,7 +1232,7 @@
     "method": "POST",
     "path": "/pos",
     "file": "server\\player\\routes.js",
-    "line": 130,
+    "line": 139,
     "sample": {},
     "errors": [
       {
@@ -1241,7 +1282,7 @@
     "method": "POST",
     "path": "/register",
     "file": "server\\auth\\routes.js",
-    "line": 46,
+    "line": 50,
     "sample": {},
     "errors": [
       {
@@ -1251,6 +1292,10 @@
       {
         "status": 400,
         "body": "{error:vp.msg }"
+      },
+      {
+        "status": 409,
+        "body": "{error:'Nome já está em uso.' }"
       },
       {
         "status": 409,
@@ -1300,7 +1345,7 @@
     "method": "POST",
     "path": "/select",
     "file": "server\\starter\\routes.js",
-    "line": 75,
+    "line": 92,
     "sample": {
       "body": {
         "try {\n      const playerId = req.user.id;\n      const { heroKey": 1
@@ -1324,6 +1369,10 @@
         "body": "{error:'starter já escolhido' }"
       },
       {
+        "status": 400,
+        "body": "{error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }"
+      },
+      {
         "status": 500,
         "body": "{error:'erro ao selecionar starter' }"
       }
@@ -1331,7 +1380,7 @@
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true,heroKey,id }"
+        "body": "{ok:true,id,heroKey }"
       }
     ]
   },
@@ -1494,7 +1543,7 @@
     "method": "GET",
     "path": "/status",
     "file": "server\\starter\\routes.js",
-    "line": 57,
+    "line": 74,
     "sample": {
       "body": {
         "try {\n      const playerId = req.user.id;\n      const { heroKey": 1
@@ -1522,6 +1571,10 @@
         "body": "{error:'starter já escolhido' }"
       },
       {
+        "status": 400,
+        "body": "{error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }"
+      },
+      {
         "status": 500,
         "body": "{error:'erro ao selecionar starter' }"
       }
@@ -1533,7 +1586,7 @@
       },
       {
         "status": 200,
-        "body": "{ok:true,heroKey,id }"
+        "body": "{ok:true,id,heroKey }"
       }
     ]
   }

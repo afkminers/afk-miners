@@ -23,7 +23,12 @@
   "GET /api/assets/sprites": [
     "{ok:true,reloaded:mapKey }"
   ],
-  "GET /api/chat/global": [],
+  "GET /api/chat/global": [
+    "{ok:true }"
+  ],
+  "POST /api/chat/global": [
+    "{ok:true }"
+  ],
   "GET /api/csrf": [],
   "GET /assets/items": [],
   "GET /assets/sprites": [],
@@ -54,7 +59,7 @@
   "GET /heroes/master": [],
   "GET /list": [
     "{canSelect:!row }",
-    "{ok:true,heroKey,id }"
+    "{ok:true,id,heroKey }"
   ],
   "POST /login": [
     "{ok:true }",
@@ -100,7 +105,7 @@
     "{profile }"
   ],
   "POST /select": [
-    "{ok:true,heroKey,id }"
+    "{ok:true,id,heroKey }"
   ],
   "GET /state": [
     "{workers,boxes,inventory:inv }",
@@ -110,6 +115,6 @@
   ],
   "GET /status": [
     "{canSelect:!row }",
-    "{ok:true,heroKey,id }"
+    "{ok:true,id,heroKey }"
   ]
 }

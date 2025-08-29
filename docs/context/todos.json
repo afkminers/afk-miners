@@ -10,6 +10,11 @@
     "text": "// pega todos os .js em server/"
   },
   {
+    "file": "server\\index.js",
+    "line": 45,
+    "text": "// 2) CSRF guard global (métodos que mudam estado)"
+  },
+  {
     "file": "server\\scripts\\gen-context.js",
     "line": 14,
     "text": "// - todos.json                    (NOVO)"
@@ -172,6 +177,6 @@
   {
     "file": "client\\js\\auth.js",
     "line": 2,
-    "text": "// Corrigido: todos os requests usam credentials:'include' (envia cookie `sid`)"
+    "text": "// Corrigido: todos os requests usam credentials:'include' (envia/recebe cookie `sid`)"
   }
 ]
