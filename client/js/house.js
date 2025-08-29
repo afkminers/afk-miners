@@ -12,7 +12,7 @@
 const MAP_KEY = 'house';
 const TILE = 32;
 const $ = (id) => document.getElementById(id);
-const canvas = $('view');
+const canvas = $('scene');
 const ctx = canvas.getContext('2d');
 const statusEl = $('status');
 const startPosEl = $('startPos');
