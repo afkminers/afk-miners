@@ -91,13 +91,13 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 728,
+    "line": 865,
     "tag": "TODO",
     "text": "|FIXME|NOTE)\\b[:\\s-]*(.*)/i;"
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 816,
+    "line": 953,
     "tag": "NOTE",
     "text": "==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)'])); lines.push('');"
   }

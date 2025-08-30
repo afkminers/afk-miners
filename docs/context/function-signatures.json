@@ -612,21 +612,21 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 526,
+    "line": 527,
     "kind": "function",
     "name": "dumpPostgresSnapshot",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 530,
+    "line": 531,
     "kind": "function",
     "name": "hasPgDump",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 534,
+    "line": 535,
     "kind": "function",
     "name": "runPgDump",
     "params": [
@@ -635,7 +635,16 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 709,
+    "line": 780,
+    "kind": "arrow",
+    "name": "kb",
+    "params": [
+      "n"
+    ]
+  },
+  {
+    "file": "server\\scripts\\gen-context.js",
+    "line": 846,
     "kind": "function",
     "name": "buildRouteHistory",
     "params": [
@@ -645,14 +654,14 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 725,
+    "line": 862,
     "kind": "function",
     "name": "scanTodos",
     "params": []
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 751,
+    "line": 888,
     "kind": "function",
     "name": "main",
     "params": []

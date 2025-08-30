@@ -1,4 +1,4 @@
-// server/scripts/gen-context.js (v6.1)
+// server/scripts/gen-context.js (v6.2)
 // Gera (em docs/context/):
 // - context-pack.txt
 // - API.md
@@ -15,17 +15,27 @@
 // - openapi.json
 // - symbol-index.json          (se CTX_SYMBOLS=1)
 // - deps.txt                   (se CTX_IMPORTS=1)
-// - db-tables.json             (quando DATABASE_URL estiver definido - Postgres)
-// - db-schema.sql              (idem Postgres)
-// - db-counts.txt              (idem Postgres)  ← NOVO
+// - db-tables.json             (Postgres)
+// - db-schema.sql              (Postgres; pg_dump se disponível, senão reconstruído)
+// - db-counts.txt              (Postgres)
+// - db-indexes.json            (Postgres)        ← NOVO
+// - db-fks.json                (Postgres)        ← NOVO
+// - db-enums.json              (Postgres)        ← NOVO
+// - db-views.sql               (Postgres)        ← NOVO
+// - db-triggers.sql            (Postgres)        ← NOVO
+// - db-functions.sql           (Postgres)        ← NOVO
+// - db-sequences.json          (Postgres)        ← NOVO
+// - db-extensions.txt          (Postgres)        ← NOVO
+// - db-sizes.txt               (Postgres)        ← NOVO
 
-const fs = require('fs');
+const fs   = require('fs');
 const path = require('path');
-const cp = require('child_process');
+const cp   = require('child_process');
 const glob = require('glob');
 const yaml = require('js-yaml');
 const dotenv = require('dotenv');
-// carrega o .env que está em /server/.env
+
+// carrega o .env do /server
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const SCRIPT_DIR = __dirname;
@@ -58,8 +68,8 @@ function ensureDir(p){ if(!fs.existsSync(p)) fs.mkdirSync(p,{recursive:true}); }
 function gitInfo(){
   const hash = sh('git rev-parse --short HEAD');
   const branch = sh('git rev-parse --abbrev-ref HEAD');
-  let lastTag = '';
-  try { lastTag = sh('git describe --tags --abbrev=0'); } catch { lastTag = ''; }
+  let lastTag = sh('git describe --tags --abbrev=0');
+  if (!lastTag) lastTag = '';
   return { hash, branch, lastTag };
 }
 
@@ -402,7 +412,6 @@ function schemaFromJsonLike(str){
     return schemaFromSample(JSON.parse(fixed));
   }catch{ return { type:'object' }; }
 }
-function writeJSON(p,obj){ fs.writeFileSync(p, JSON.stringify(obj,null,2)); }
 
 // ctx.yml (se faltar)
 function genCtxYmlIfMissing(info, routes){
@@ -427,7 +436,7 @@ modules:
     notes: YAML/JSON de catálogo/config; ver data-summary.json
 
 endpoints:
-${routes.slice(0,20).map(r=>`  - [${r.method}] ${r.path}  # ${r.file}`).join('\n')}
+${scanRoutes().slice(0,20).map(r=>`  - [${r.method}] ${r.path}  # ${r.file}`).join('\n')}
 
 important_env:
   - JWT_SECRET
@@ -443,79 +452,6 @@ notes:
   fs.writeFileSync(p, y, 'utf8');
 }
 
-// API.md legível
-function buildAPIMarkdown(contracts, errorMap, envUsage){
-  const lines = [];
-  lines.push('# AFK Miners — API');
-  lines.push('');
-
-  lines.push('## Variáveis de ambiente');
-  lines.push('');
-  if(envUsage.length){
-    for(const e of envUsage){
-      const defs = (e.defaults||[]).length ? ` (defaults: ${Array.from(new Set(e.defaults)).join(', ')})` : '';
-      lines.push(`- \`${e.key}\`${defs}`);
-    }
-  } else lines.push('- (nenhuma detectada)');
-  lines.push('');
-
-  lines.push('## Endpoints');
-  lines.push('');
-  const byKey={};
-  for(const c of contracts){
-    const k = `${c.method} ${c.path}`;
-    byKey[k] = byKey[k] || c;
-  }
-  for(const k of Object.keys(byKey).sort()){
-    const c = byKey[k];
-    lines.push(`### ${k}`);
-    lines.push('');
-    lines.push(`Arquivo: \`${c.file}:${c.line}\``);
-
-    if(c.sample?.params || c.sample?.query || c.sample?.body){
-      lines.push('');
-      lines.push('**Payloads (exemplos inferidos):**');
-      if(c.sample.params){ lines.push('- params:'); lines.push('```json'); lines.push(JSON.stringify(c.sample.params,null,2)); lines.push('```'); }
-      if(c.sample.query){  lines.push('- query:');  lines.push('```json'); lines.push(JSON.stringify(c.sample.query, null,2)); lines.push('```'); }
-      if(c.sample.body){   lines.push('- body:');   lines.push('```json'); lines.push(JSON.stringify(c.sample.body,  null,2)); lines.push('```'); }
-    } else {
-      lines.push('');
-      lines.push('_Sem payload inferido_');
-    }
-
-    const ok = (c.ok||[])[0];
-    if(ok){
-      lines.push('');
-      lines.push('**Resposta de sucesso (amostra):**');
-      lines.push('```json'); lines.push(prettyJsonLike(ok.body)); lines.push('```');
-    }
-
-    const errs = (c.errors||[]);
-    if(errs.length){
-      lines.push('');
-      lines.push('**Erros conhecidos:**');
-      for(const e of errs){
-        if(e.status) lines.push(`- \`HTTP ${e.status}\` → ${e.body}`);
-        else if(e.throw) lines.push(`- throw Error("${e.message}")`);
-      }
-    }
-    lines.push('');
-  }
-
-  lines.push('## Tabela sintética de erros por rota');
-  lines.push('');
-  if(Object.keys(errorMap).length){
-    for(const k of Object.keys(errorMap).sort()){
-      lines.push(`- **${k}**`);
-      for(const e of errorMap[k]){
-        if(e.status) lines.push(`  - HTTP ${e.status}: ${e.body}`);
-        else if(e.throw) lines.push(`  - throw: ${e.message}`);
-      }
-    }
-  } else lines.push('- (nenhum erro mapeado)');
-  lines.push('');
-  return lines.join('\n');
-}
 function prettyJsonLike(s){
   try{
     const fixed = s.replace(/([{,])(\s*)([A-Za-z0-9_]+)\s*:/g, '$1"$3":');
@@ -523,18 +459,60 @@ function prettyJsonLike(s){
   }catch{ return s; }
 }
 
+function buildRouteHistory(routes, lastTag) {
+  if (!lastTag) return [];
+  const files = Array.from(new Set(routes.map(r => r.file)));
+  const changed = [];
+  for (const f of files) {
+    try {
+      const diff = sh(`git diff --name-status ${lastTag}..HEAD -- "${f}"`);
+      if (diff && diff.trim()) {
+        changed.push({ file: f, changed: true });
+      }
+    } catch {}
+  }
+  return changed.sort((a, b) => a.file.localeCompare(b.file));
+}
+
+function scanTodos() {
+  const files = glob.sync('**/*.{js,ts,jsx,tsx,md}', { nodir: true, ignore: GLOB_IGNORE });
+  const todos = [];
+  const rx = /\b(TODO|FIXME|NOTE)\b[:\s-]*(.*)/i;
+
+  for (const f of files) {
+    let src = '';
+    try { src = fs.readFileSync(f, 'utf8'); } catch { continue; }
+    const lines = src.split(/\r?\n/);
+
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(rx);
+      if (m) {
+        todos.push({
+          file: f,
+          line: i + 1,
+          tag: m[1].toUpperCase(),
+          text: m[2].trim()
+        });
+      }
+    }
+  }
+  return todos.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
+}
+
 // ===== Snapshot Postgres (schema + tabelas + counts + ++ metadados) =====
 async function dumpPostgresSnapshot() {
   if (!process.env.DATABASE_URL) return;
 
-  // Helpers para pg_dump
+  // Helpers para pg_dump (suporta PG_DUMP_PATH no .env)
   function hasPgDump() {
-    try { cp.execSync('pg_dump --version', { stdio: 'ignore' }); return true; }
+    const exe = process.env.PG_DUMP_PATH ? `"${process.env.PG_DUMP_PATH}"` : 'pg_dump';
+    try { cp.execSync(`${exe} --version`, { stdio: 'ignore' }); return true; }
     catch { return false; }
   }
   function runPgDump(uri) {
+    const exe = process.env.PG_DUMP_PATH ? `"${process.env.PG_DUMP_PATH}"` : 'pg_dump';
     try {
-      const cmd = `pg_dump --schema-only --no-owner --no-privileges --schema=public --dbname="${uri}"`;
+      const cmd = `${exe} --schema-only --no-owner --no-privileges --schema=public --dbname="${uri}"`;
       return cp.execSync(cmd, { encoding: 'utf8' });
     } catch (e) {
       console.warn('WARN: pg_dump falhou:', e.message);
@@ -653,7 +631,7 @@ async function dumpPostgresSnapshot() {
       fkByTable.set(r.table_name, arr);
     }
 
-    // --- Índices (inclui únicos) ---
+    // --- Índices (inclui únicos)
     const indexes = await client.query(`
       SELECT
         t.relname AS table_name,
@@ -668,7 +646,7 @@ async function dumpPostgresSnapshot() {
       ORDER BY t.relname, i.relname;
     `);
 
-    // --- Views (DDL) ---
+    // --- Views (DDL)
     const views = await client.query(`
       SELECT table_name AS view_name,
              view_definition
@@ -680,7 +658,7 @@ async function dumpPostgresSnapshot() {
       .map(v => `CREATE OR REPLACE VIEW "public"."${v.view_name}" AS\n${v.view_definition.trim().replace(/;?$/, ';')}`)
       .join('\n\n');
 
-    // --- Triggers (DDL) ---
+    // --- Triggers (DDL)
     const triggers = await client.query(`
       SELECT tg.tgname AS trigger_name,
              tbl.relname AS table_name,
@@ -695,7 +673,17 @@ async function dumpPostgresSnapshot() {
       .map(t => `${t.triggerdef}; -- ON "${t.table_name}"`)
       .join('\n');
 
-    // --- Tipos ENUM ---
+    // --- Funções (DDL)
+    const funcs = await client.query(`
+      SELECT n.nspname AS schema, p.proname AS name, pg_get_functiondef(p.oid) AS definition
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public'
+      ORDER BY 1,2;
+    `);
+    const functionsSQL = funcs.rows.map(f => (f.definition || '').trim().replace(/;?$/, ';')).filter(Boolean).join('\n\n');
+
+    // --- Tipos ENUM
     const enums = await client.query(`
       SELECT t.typname AS enum_name, e.enumlabel AS enum_value
       FROM pg_type t
@@ -710,7 +698,7 @@ async function dumpPostgresSnapshot() {
       enumsGrouped[r.enum_name].push(r.enum_value);
     }
 
-    // --- Sequências ---
+    // --- Sequências
     const sequences = await client.query(`
       SELECT
         s.relname AS sequence_name,
@@ -725,7 +713,14 @@ async function dumpPostgresSnapshot() {
       ORDER BY s.relname;
     `);
 
-    // --- Tamanhos (tabelas/índices) ---
+    // --- Extensões
+    const extensions = await client.query(`
+      SELECT extname, extversion
+      FROM pg_extension
+      ORDER BY extname;
+    `);
+
+    // --- Tamanhos (tabelas/índices)
     const sizes = await client.query(`
       SELECT c.relname AS relation,
              pg_relation_size(c.oid) AS rel_bytes,
@@ -736,7 +731,7 @@ async function dumpPostgresSnapshot() {
       ORDER BY total_bytes DESC;
     `);
 
-    // --- Counts de linhas ---
+    // --- Counts de linhas
     const counts = [];
     for (const t of tables) {
       try {
@@ -747,41 +742,37 @@ async function dumpPostgresSnapshot() {
       }
     }
 
-    // --- Persistência dos artefatos ---
+    // --- Persistência dos artefatos
     ensureDir(CTX_DIR);
 
-    // Tabelas + colunas + constraints cruas
     fs.writeFileSync(path.join(CTX_DIR, 'db-tables.json'),
       JSON.stringify({ tables, tablesInfo, constraints: constraints.rows }, null, 2));
 
-    // Counts
     fs.writeFileSync(path.join(CTX_DIR, 'db-counts.txt'),
       counts.map(x => `${x.table}\t${x.count ?? 'n/a'}`).join('\n'), 'utf8');
 
-    // Índices
     fs.writeFileSync(path.join(CTX_DIR, 'db-indexes.json'),
       JSON.stringify(indexes.rows, null, 2));
 
-    // FKs detalhadas
     fs.writeFileSync(path.join(CTX_DIR, 'db-fks.json'),
       JSON.stringify(Object.fromEntries(Array.from(fkByTable.entries())), null, 2));
 
-    // Enums
     fs.writeFileSync(path.join(CTX_DIR, 'db-enums.json'),
       JSON.stringify(enumsGrouped, null, 2));
 
-    // Sequências
     fs.writeFileSync(path.join(CTX_DIR, 'db-sequences.json'),
       JSON.stringify(sequences.rows, null, 2));
 
-    // Tamanhos
+    fs.writeFileSync(path.join(CTX_DIR, 'db-extensions.txt'),
+      (extensions.rows.map(e => `${e.extname}\t${e.extversion}`).join('\n')) || '-- (sem extensões)', 'utf8');
+
     fs.writeFileSync(path.join(CTX_DIR, 'db-sizes.txt'),
       sizes.rows.map(r => {
         const kb = (n) => (n/1024).toFixed(1);
         return `${r.relation}\trel=${kb(r.rel_bytes)}KB\ttotal=${kb(r.total_bytes)}KB`;
       }).join('\n'), 'utf8');
 
-    // --- db-schema.sql: pg_dump (preferido) OU reconstrução ---
+    // --- db-schema.sql: pg_dump (preferido) OU reconstrução
     let ddlText = '';
     if (hasPgDump()) ddlText = runPgDump(process.env.DATABASE_URL);
 
@@ -821,18 +812,20 @@ async function dumpPostgresSnapshot() {
         pieces.push(`CREATE TABLE "public"."${t}" (\n${colDefs.join(',\n')}\n);`);
       }
 
-      // Adiciona DDL de views e triggers ao final
+      // Adiciona DDL de views, triggers e functions ao final
       if (viewsDDL) pieces.push(viewsDDL);
       if (triggersDDL) pieces.push(triggersDDL);
+      if (functionsSQL) pieces.push(functionsSQL);
 
       ddlText = pieces.join('\n\n');
     }
 
     fs.writeFileSync(path.join(CTX_DIR, 'db-views.sql'), viewsDDL || '-- (sem views)', 'utf8');
     fs.writeFileSync(path.join(CTX_DIR, 'db-triggers.sql'), triggersDDL || '-- (sem triggers)', 'utf8');
+    fs.writeFileSync(path.join(CTX_DIR, 'db-functions.sql'), functionsSQL || '-- (sem funções)', 'utf8');
     fs.writeFileSync(path.join(CTX_DIR, 'db-schema.sql'), ddlText || '-- (sem DDL gerado)', 'utf8');
 
-    console.log('OK: snapshot PG (schema, counts, indexes, fks, enums, views, triggers, sequences, sizes).');
+    console.log('OK: snapshot PG (schema, counts, indexes, fks, enums, views, triggers, functions, sequences, extensions, sizes).');
   } catch (e) {
     console.warn('WARN: dumpPostgresSnapshot falhou:', e.message);
   } finally {
@@ -840,52 +833,80 @@ async function dumpPostgresSnapshot() {
   }
 }
 
+function buildAPIMarkdown(contracts, errorMap, envUsage){
+  const lines = [];
+  lines.push('# AFK Miners — API');
+  lines.push('');
 
+  lines.push('## Variáveis de ambiente');
+  lines.push('');
+  if(envUsage.length){
+    for(const e of envUsage){
+      const defs = (e.defaults||[]).length ? ` (defaults: ${Array.from(new Set(e.defaults)).join(', ')})` : '';
+      lines.push(`- \`${e.key}\`${defs}`);
+    }
+  } else lines.push('- (nenhuma detectada)');
+  lines.push('');
 
-
-function buildRouteHistory(routes, lastTag) {
-  if (!lastTag) return [];
-  // Lista arquivos de rotas alterados desde a última tag
-  const files = Array.from(new Set(routes.map(r => r.file)));
-  const changed = [];
-  for (const f of files) {
-    try {
-      const diff = sh(`git diff --name-status ${lastTag}..HEAD -- "${f}"`);
-      if (diff && diff.trim()) {
-        changed.push({ file: f, changed: true });
-      }
-    } catch {}
+  lines.push('## Endpoints');
+  lines.push('');
+  const byKey={};
+  for(const c of contracts){
+    const k = `${c.method} ${c.path}`;
+    byKey[k] = byKey[k] || c;
   }
-  return changed.sort((a, b) => a.file.localeCompare(b.file));
-}
+  for(const k of Object.keys(byKey).sort()){
+    const c = byKey[k];
+    lines.push(`### ${k}`);
+    lines.push('');
+    lines.push(`Arquivo: \`${c.file}:${c.line}\``);
 
-function scanTodos() {
-  const files = glob.sync('**/*.{js,ts,jsx,tsx,md}', { nodir: true, ignore: GLOB_IGNORE });
-  const todos = [];
-  const rx = /\b(TODO|FIXME|NOTE)\b[:\s-]*(.*)/i;
+    if(c.sample?.params || c.sample?.query || c.sample?.body){
+      lines.push('');
+      lines.push('**Payloads (exemplos inferidos):**');
+      if(c.sample.params){ lines.push('- params:'); lines.push('```json'); lines.push(JSON.stringify(c.sample.params,null,2)); lines.push('```'); }
+      if(c.sample.query){  lines.push('- query:');  lines.push('```json'); lines.push(JSON.stringify(c.sample.query, null,2)); lines.push('```'); }
+      if(c.sample.body){   lines.push('- body:');   lines.push('```json'); lines.push(JSON.stringify(c.sample.body,  null,2)); lines.push('```'); }
+    } else {
+      lines.push('');
+      lines.push('_Sem payload inferido_');
+    }
 
-  for (const f of files) {
-    let src = '';
-    try { src = fs.readFileSync(f, 'utf8'); } catch { continue; }
-    const lines = src.split(/\r?\n/);
+    const ok = (c.ok||[])[0];
+    if(ok){
+      lines.push('');
+      lines.push('**Resposta de sucesso (amostra):**');
+      lines.push('```json'); lines.push(prettyJsonLike(ok.body)); lines.push('```');
+    }
 
-    for (let i = 0; i < lines.length; i++) {
-      const m = lines[i].match(rx);
-      if (m) {
-        todos.push({
-          file: f,
-          line: i + 1,
-          tag: m[1].toUpperCase(),
-          text: m[2].trim()
-        });
+    const errs = (c.errors||[]);
+    if(errs.length){
+      lines.push('');
+      lines.push('**Erros conhecidos:**');
+      for(const e of errs){
+        if(e.status) lines.push(`- \`HTTP ${e.status}\` → ${e.body}`);
+        else if(e.throw) lines.push(`- throw Error("${e.message}")`);
       }
     }
+    lines.push('');
   }
-  return todos.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
+
+  lines.push('## Tabela sintética de erros por rota');
+  lines.push('');
+  if(Object.keys(errorMap).length){
+    for(const k of Object.keys(errorMap).sort()){
+      lines.push(`- **${k}**`);
+      for(const e of errorMap[k]){
+        if(e.status) lines.push(`  - HTTP ${e.status}: ${e.body}`);
+        else if(e.throw) lines.push(`  - throw: ${e.message}`);
+      }
+    }
+  } else lines.push('- (nenhum erro mapeado)');
+  lines.push('');
+  return lines.join('\n');
 }
 
-
-function main(){
+async function main(){
   ensureDir(DOCS_DIR); ensureDir(CTX_DIR);
   const info = gitInfo();
 
@@ -916,8 +937,14 @@ function main(){
   const openapi = buildOpenAPI(contracts);
 
   let sym = []; let depsTxtEdges = [];
-  if(process.env.CTX_SYMBOLS === '1'){ sym = buildSymbolIndex(); fs.writeFileSync(path.join(CTX_DIR,'symbol-index.json'), JSON.stringify(sym,null,2)); }
-  if(process.env.CTX_IMPORTS === '1'){ depsTxtEdges = depsGraph; fs.writeFileSync(path.join(CTX_DIR,'deps.txt'), depsTxtEdges.map(e=> `${e.from} -> ${e.to}`).join('\n') || '(sem imports)'); }
+  if(process.env.CTX_SYMBOLS === '1'){
+    sym = buildSymbolIndex();
+    fs.writeFileSync(path.join(CTX_DIR,'symbol-index.json'), JSON.stringify(sym,null,2));
+  }
+  if(process.env.CTX_IMPORTS === '1'){
+    depsTxtEdges = depsGraph;
+    fs.writeFileSync(path.join(CTX_DIR,'deps.txt'), depsTxtEdges.map(e=> `${e.from} -> ${e.to}`).join('\n') || '(sem imports)');
+  }
 
   fs.writeFileSync(path.join(CTX_DIR,'data-summary.json'),        JSON.stringify(yml,null,2));
   fs.writeFileSync(path.join(CTX_DIR,'function-signatures.json'), JSON.stringify(fnSigs,null,2));
@@ -953,9 +980,9 @@ function main(){
   lines.push(...(jsn.length? jsn.map(e=> e.error? `ERR ${e.file} :: ${e.error}` : (e.note==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)'])); lines.push('');
   if(process.env.CTX_SYMBOLS === '1'){
     lines.push('== Symbol Index (amostra) ==');
-    const sym = JSON.parse(fs.readFileSync(path.join(CTX_DIR,'symbol-index.json'),'utf8'));
-    lines.push(...(sym.slice(0,30).map(s=> `${s.file} :: ${s.symbols.join(', ')}`)));
-    if(sym.length>30) lines.push(`(+${sym.length-30} arquivos em symbol-index.json)`);
+    const symAm = JSON.parse(fs.readFileSync(path.join(CTX_DIR,'symbol-index.json'),'utf8'));
+    lines.push(...(symAm.slice(0,30).map(s=> `${s.file} :: ${s.symbols.join(', ')}`)));
+    if(symAm.length>30) lines.push(`(+${symAm.length-30} arquivos em symbol-index.json)`);
     lines.push('');
   }
   if(process.env.CTX_IMPORTS === '1'){
@@ -977,9 +1004,12 @@ function main(){
   genCtxYmlIfMissing(info, routes);
 
   // Snapshot PG (se DATABASE_URL disponível)
-  dumpPostgresSnapshot().catch(()=>{});
+  await dumpPostgresSnapshot();
 
-  console.log('OK: v6.1 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi (+ pg snapshot com counts)');
+  console.log('OK: v6.2 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi + snapshot PG (++ metadados)');
 }
 
-main();
+main().catch(err => {
+  console.error('FATAL gen-context:', err);
+  process.exit(1);
+});
