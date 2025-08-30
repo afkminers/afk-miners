@@ -151,7 +151,7 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 1210
+        "index": 1710
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
@@ -173,11 +173,11 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 35027
+        "index": 37291
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 38917
+        "index": 41202
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
@@ -203,11 +203,11 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 34873
+        "index": 37124
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 38534
+        "index": 40811
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
@@ -233,15 +233,15 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 20224
+        "index": 19212
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 20966
+        "index": 21102
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 30223
+        "index": 30938
       },
       {
         "file": "server\\models\\db.js",
@@ -343,6 +343,24 @@
       "development",
       "development"
     ]
+  },
+  {
+    "key": "PG_DUMP_PATH",
+    "occurrences": [
+      {
+        "file": "server\\scripts\\gen-context.js",
+        "index": 19386
+      },
+      {
+        "file": "server\\scripts\\gen-context.js",
+        "index": 19414
+      },
+      {
+        "file": "server\\scripts\\gen-context.js",
+        "index": 19455
+      }
+    ],
+    "defaults": []
   },
   {
     "key": "PORT",

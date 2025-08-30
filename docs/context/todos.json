@@ -85,19 +85,19 @@
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 148,
+    "line": 158,
     "tag": "NOTE",
     "text": "'too-large' }); continue; }"
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 865,
+    "line": 480,
     "tag": "TODO",
     "text": "|FIXME|NOTE)\\b[:\\s-]*(.*)/i;"
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 953,
+    "line": 1015,
     "tag": "NOTE",
     "text": "==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)'])); lines.push('');"
   }

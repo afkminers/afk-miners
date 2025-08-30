@@ -1268,6 +1268,7 @@
       "main",
       "objFromKeys",
       "prettyJsonLike",
+      "resolvePgDumpExe",
       "runPgDump",
       "scanRoutes",
       "scanTodos",
@@ -1279,8 +1280,7 @@
       "summarizeHTML",
       "summarizeJSON",
       "summarizeYAML",
-      "walkDir",
-      "writeJSON"
+      "walkDir"
     ]
   },
   {

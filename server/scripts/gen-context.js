@@ -503,22 +503,57 @@ function scanTodos() {
 async function dumpPostgresSnapshot() {
   if (!process.env.DATABASE_URL) return;
 
-  // Helpers para pg_dump (suporta PG_DUMP_PATH no .env)
-  function hasPgDump() {
-    const exe = process.env.PG_DUMP_PATH ? `"${process.env.PG_DUMP_PATH}"` : 'pg_dump';
-    try { cp.execSync(`${exe} --version`, { stdio: 'ignore' }); return true; }
-    catch { return false; }
+  // Helpers para pg_dump (suporta PG_DUMP_PATH no .env) — versão com spawnSync (sem shell)
+  function resolvePgDumpExe() {
+    return process.env.PG_DUMP_PATH && process.env.PG_DUMP_PATH.trim()
+      ? process.env.PG_DUMP_PATH.trim()
+      : 'pg_dump';
   }
-  function runPgDump(uri) {
-    const exe = process.env.PG_DUMP_PATH ? `"${process.env.PG_DUMP_PATH}"` : 'pg_dump';
+
+  function hasPgDump() {
+    const exe = resolvePgDumpExe();
     try {
-      const cmd = `${exe} --schema-only --no-owner --no-privileges --schema=public --dbname="${uri}"`;
-      return cp.execSync(cmd, { encoding: 'utf8' });
+      const r = cp.spawnSync(exe, ['--version'], { encoding: 'utf8' });
+      return r.status === 0 && /pg_dump\s+\(PostgreSQL\)\s+\d+/i.test(r.stdout || r.stderr || '');
+    } catch {
+      return false;
+    }
+  }
+
+  function runPgDump(uri) {
+    const exe = resolvePgDumpExe();
+    const args = [
+      '--schema-only',
+      '--no-owner',
+      '--no-privileges',
+      '--schema=public',
+      '--dbname', uri
+    ];
+    try {
+      const r = cp.spawnSync(exe, args, { encoding: 'utf8' });
+      if (r.status === 0) {
+        console.log('INFO: db-schema.sql via pg_dump.');
+        return r.stdout || '';
+      } else {
+        fs.writeFileSync(
+          path.join(CTX_DIR, '_pgdump.log'),
+          `cmd: ${exe} ${args.join(' ')}\nexit: ${r.status}\nstdout:\n${r.stdout}\nstderr:\n${r.stderr}\n`,
+          'utf8'
+        );
+        console.warn('WARN: pg_dump retornou código', r.status, '— veja docs/context/_pgdump.log');
+        return '';
+      }
     } catch (e) {
-      console.warn('WARN: pg_dump falhou:', e.message);
+      fs.writeFileSync(
+        path.join(CTX_DIR, '_pgdump.log'),
+        `exception: ${e && e.stack ? e.stack : String(e)}`,
+        'utf8'
+      );
+      console.warn('WARN: pg_dump lançou exceção — veja docs/context/_pgdump.log');
       return '';
     }
   }
+
 
   let pg;
   try { pg = require('pg'); } catch {

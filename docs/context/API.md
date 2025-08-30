@@ -15,6 +15,7 @@
 - `DATABASE_URL`
 - `JWT_SECRET` (defaults: changeme, CHANGE_ME_DEV_ONLY)
 - `NODE_ENV` (defaults: development)
+- `PG_DUMP_PATH`
 - `PORT` (defaults: 3000)
 - `REDIS_URL` (defaults: null)
 - `SESSION_COOKIE_NAME` (defaults: process.env.COOKIE_NAME, token)
