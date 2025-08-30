@@ -1,4 +1,4 @@
-// server/scripts/gen-context.js (v6)
+// server/scripts/gen-context.js (v6.1)
 // Gera (em docs/context/):
 // - context-pack.txt
 // - API.md
@@ -8,17 +8,16 @@
 // - env-usage.json
 // - error-map.json
 // - function-signatures.json
-// - responses-sample.json         (NOVO)
-// - deps-graph.json               (NOVO)
-// - route-history.json            (NOVO)
-// - todos.json                    (NOVO)
-// - openapi.json                  (NOVO)
-// - symbol-index.json             (se CTX_SYMBOLS=1)
-// - deps.txt                      (se CTX_IMPORTS=1)
-// - db-tables.json                (se DATABASE_URL definido)  ← NOVO
-// - db-schema.sql                 (se DATABASE_URL definido)  ← NOVO
-//
-// Execução: npm run ctx:pack (de /server)
+// - responses-sample.json
+// - deps-graph.json
+// - route-history.json
+// - todos.json
+// - openapi.json
+// - symbol-index.json          (se CTX_SYMBOLS=1)
+// - deps.txt                   (se CTX_IMPORTS=1)
+// - db-tables.json             (quando DATABASE_URL estiver definido - Postgres)
+// - db-schema.sql              (idem Postgres)
+// - db-counts.txt              (idem Postgres)  ← NOVO
 
 const fs = require('fs');
 const path = require('path');
@@ -49,7 +48,8 @@ function ensureDir(p){ if(!fs.existsSync(p)) fs.mkdirSync(p,{recursive:true}); }
 function gitInfo(){
   const hash = sh('git rev-parse --short HEAD');
   const branch = sh('git rev-parse --abbrev-ref HEAD');
-  const lastTag = sh('git describe --tags --abbrev=0');
+  let lastTag = '';
+  try { lastTag = sh('git describe --tags --abbrev=0'); } catch { lastTag = ''; }
   return { hash, branch, lastTag };
 }
 
@@ -66,19 +66,16 @@ function walkDir(dir, depth, out){
     if(e.isDirectory()) walkDir(p, depth - 1, out);
   }
 }
-
 function dirTree(depth = CTX_DEPTH){
   const out=[]; walkDir(ROOT, depth, out);
   return out.filter(p => p.split(path.sep).length <= depth + 1).sort();
 }
-
 function listRootFiles(){
   try {
     return fs.readdirSync(ROOT,{withFileTypes:true})
       .filter(e=>e.isFile()).map(e=>e.name).sort();
   } catch { return []; }
 }
-
 function inventoryByExt(){
   const all = glob.sync('**/*', { nodir:true, ignore: GLOB_IGNORE });
   const counts = new Map();
@@ -88,7 +85,6 @@ function inventoryByExt(){
   }
   return Array.from(counts.entries()).sort((a,b)=> b[1]-a[1]).map(([ext,n])=>`${ext} : ${n}`);
 }
-
 function largestFiles(n = SHOW_TOP_LARGEST){
   const all = glob.sync('**/*', { nodir:true, ignore: GLOB_IGNORE });
   const sizes = [];
@@ -113,13 +109,11 @@ function scanRoutes(){
   routes.sort((a,b)=>(a.path+a.method).localeCompare(b.path+b.method));
   return routes;
 }
-
 function listMigSeed(){
   const mig  = glob.sync('server/**/*{migrat*,schema*}*', { nodir:true, ignore: GLOB_IGNORE }).sort();
   const seed = glob.sync('server/**/*seed*',             { nodir:true, ignore: GLOB_IGNORE }).sort();
   return { migrations: mig, seeds: seed };
 }
-
 function summarizeYAML(){
   const files = glob.sync('**/*.{yml,yaml}', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
@@ -135,7 +129,6 @@ function summarizeYAML(){
   }
   return out;
 }
-
 function summarizeJSON(){
   const files = glob.sync('**/*.json', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
@@ -153,7 +146,6 @@ function summarizeJSON(){
   }
   return out;
 }
-
 function summarizeHTML(){
   const files = glob.sync('**/*.html', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
@@ -175,8 +167,6 @@ function summarizeHTML(){
 }
 
 // ===== v6 extras =====
-
-// Symbols (opcional)
 function buildSymbolIndex(){
   const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const idx = [];
@@ -195,7 +185,6 @@ function buildSymbolIndex(){
   return idx.sort((a,b)=> a.file.localeCompare(b.file));
 }
 
-// Imports (texto) + grafo JSON
 function buildImportGraph(){
   const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const edges = [];
@@ -212,7 +201,6 @@ function buildImportGraph(){
   return edges;
 }
 
-// Assinaturas
 function buildFunctionSignatures(){
   const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
@@ -238,7 +226,7 @@ function buildFunctionSignatures(){
 }
 function splitParams(s){ return (s||'').split(',').map(x=>x.trim()).filter(Boolean); }
 
-// ENV + defaults
+// ENV
 function buildEnvUsage(){
   const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const all = {};
@@ -263,13 +251,13 @@ function cleanDefault(t){
   return s;
 }
 
-// Contratos por rota (params/query/body) + erros + respostas OK
+// Contracts/Erros/OK/OpenAPI
 function buildEndpointContracts(routes){
-  const LOOK = 160; // linhas após a definição
+  const LOOK = 160;
   const out = [];
   for(const r of routes){
     let src=''; try{ src = fs.readFileSync(r.file,'utf8'); }catch{ continue; }
-    const lines = src.split(/\r?\n/);
+    const lines = src.split(/\r?\\n/);
     const start = Math.max(0, r.line-1);
     const end   = Math.min(lines.length-1, start + LOOK);
     const slice = lines.slice(start, end+1).join('\n');
@@ -279,7 +267,7 @@ function buildEndpointContracts(routes){
     const body   = inferKeys(slice, 'body');
 
     const errors = inferErrors(slice);
-    const okResp = inferOkResponses(slice); // NOVO
+    const okResp = inferOkResponses(slice);
 
     out.push({
       method: r.method, path: r.path, file: r.file, line: r.line,
@@ -294,7 +282,6 @@ function buildEndpointContracts(routes){
   }
   return out;
 }
-
 function inferParamsFromPath(p){ const rx=/:([A-Za-z0-9_]+)/g; const out=[]; let m; while((m=rx.exec(p))!==null) out.push(m[1]); return out; }
 function inferKeys(text, which){
   const keys = new Set();
@@ -314,10 +301,8 @@ function inferErrors(text){
 }
 function inferOkResponses(text){
   const out=[]; let m;
-  // res.json({...}) | return res.json({...})
   const rxJson = /(?:return\s+)?res\.json\(\s*({[\s\S]*?})\s*\)/g;
   while((m=rxJson.exec(text))!==null){ out.push({ status:200, body: compactJsonLike(m[1]) }); }
-  // res.send({...}) string/number — capturamos objeto json-like
   const rxSend = /(?:return\s+)?res\.send\(\s*({[\s\S]*?})\s*\)/g;
   while((m=rxSend.exec(text))!==null){ out.push({ status:200, body: compactJsonLike(m[1]) }); }
   return out;
@@ -332,37 +317,15 @@ function exampleForKey(k){
   if(/token|auth/i.test(k)) return "jwt_token_here";
   return "value";
 }
-
-// TODO/FIXME
-function scanTodos(){
-  const files = glob.sync('**/*.{js,ts,jsx,tsx,md}', { nodir:true, ignore: GLOB_IGNORE });
-  const out=[];
-  for(const f of files){
-    let src=''; try{ src = fs.readFileSync(f,'utf8'); }catch{ continue; }
-    const lines = src.split(/\r?\n/);
-    lines.forEach((ln,i)=>{
-      if(/TODO|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });
-    });
-  }
-  return out;
-}
-
-// Histórico por rota (alterado desde a última tag?)
-function buildRouteHistory(routes, lastTag){
+function buildErrorMap(contracts){
   const map={};
-  for(const r of routes){
-    let status = 'no-tag';
-    if(lastTag){
-      const diff = sh(`git diff --name-only ${lastTag}..HEAD -- "${r.file.replace(/"/g,'\\"')}"`);
-      status = diff ? 'modified' : 'unchanged';
-    }
-    const key = `${r.method} ${r.path}`;
-    map[key] = status;
+  for(const c of contracts){
+    const k = `${c.method} ${c.path}`;
+    map[k] = map[k] || [];
+    (c.errors||[]).forEach(e => map[k].push(e));
   }
   return map;
 }
-
-// OpenAPI mínimo a partir de contracts/erros/ok
 function buildOpenAPI(contracts){
   const doc = {
     openapi: "3.0.3",
@@ -374,17 +337,12 @@ function buildOpenAPI(contracts){
     const mm = c.method.toLowerCase();
     const item = p[mm] = p[mm] || { responses: {} };
 
-    // requestBody (se body inferido)
     if(c.sample?.body){
       item.requestBody = {
         required: true,
-        content: {
-          "application/json": { schema: schemaFromSample(c.sample.body) }
-        }
+        content: { "application/json": { schema: schemaFromSample(c.sample.body) } }
       };
     }
-
-    // parâmetros (params+query)
     const params = [];
     if(c.sample?.params){
       for(const k of Object.keys(c.sample.params)){
@@ -398,7 +356,6 @@ function buildOpenAPI(contracts){
     }
     if(params.length) item.parameters = params;
 
-    // respostas sucesso (ok) e erros
     if(c.ok?.length){
       const ok = c.ok[0];
       item.responses["200"] = {
@@ -421,7 +378,6 @@ function buildOpenAPI(contracts){
   }
   return doc;
 }
-
 function schemaType(v){
   if(typeof v === 'number') return { type: 'number' };
   if(typeof v === 'boolean') return { type: 'boolean' };
@@ -436,11 +392,9 @@ function schemaFromJsonLike(str){
     return schemaFromSample(JSON.parse(fixed));
   }catch{ return { type:'object' }; }
 }
-
-// helpers
 function writeJSON(p,obj){ fs.writeFileSync(p, JSON.stringify(obj,null,2)); }
 
-// ctx.yml auto
+// ctx.yml (se faltar)
 function genCtxYmlIfMissing(info, routes){
   const p = path.join(CTX_DIR,'ctx.yml');
   if(fs.existsSync(p)) return;
@@ -471,6 +425,7 @@ important_env:
   - WORKER_TICK_SECONDS
   - TRIES_PER_MINUTE_BASE
   - NODE_ENV
+  - DATABASE_URL
 
 notes:
   - Ajuste este arquivo conforme o projeto evoluir.
@@ -479,7 +434,7 @@ notes:
 }
 
 // API.md legível
-function buildAPIMarkdown(contracts, errorMap, envUsage, responses){
+function buildAPIMarkdown(contracts, errorMap, envUsage){
   const lines = [];
   lines.push('# AFK Miners — API');
   lines.push('');
@@ -558,31 +513,20 @@ function prettyJsonLike(s){
   }catch{ return s; }
 }
 
-function buildErrorMap(contracts){
-  const map={};
-  for(const c of contracts){
-    const k = `${c.method} ${c.path}`;
-    map[k] = map[k] || [];
-    (c.errors||[]).forEach(e => map[k].push(e));
-  }
-  return map;
-}
-
-/* =========================
-   NOVO: Snapshot do Postgres
-   ========================= */
+// ===== Snapshot Postgres (schema + tabelas + counts) =====
 async function dumpPostgresSnapshot() {
   if (!process.env.DATABASE_URL) return;
   let pg;
-  try { pg = require('pg'); } catch { 
-    console.warn('WARN: pg não instalado — ignorando snapshot Postgres.');
-    return; 
+  try { pg = require('pg'); } catch {
+    console.warn('WARN: pacote "pg" não instalado — pulando snapshot Postgres.');
+    return;
   }
   const { Client } = pg;
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
   });
+
   try {
     await client.connect();
 
@@ -617,32 +561,49 @@ async function dumpPostgresSnapshot() {
       ORDER BY tc.table_name, tc.constraint_type;
     `);
 
-    // pg_get_tabledef não existe em todas as instalações; fallback
+    // DDL por tabela (fallback portátil)
     const ddlRes = await client.query(`
       SELECT
         'CREATE TABLE ' || quote_ident(n.nspname) || '.' || quote_ident(c.relname) || E'\\n(' ||
-        string_agg('  ' || quote_ident(a.attname) || ' ' || pg_catalog.format_type(a.atttypid, a.atttypmod) ||
-                   CASE WHEN a.attnotnull THEN ' NOT NULL' ELSE '' END ||
-                   CASE WHEN at.attgenerated = 's' THEN ' GENERATED ALWAYS AS IDENTITY'
-                        WHEN at.attgenerated = 'd' THEN ' GENERATED BY DEFAULT AS IDENTITY'
-                        ELSE '' END ||
-                   CASE WHEN a.attdefault IS NOT NULL THEN ' DEFAULT ' || a.attdefault ELSE '' END, E',\\n'
-                   ORDER BY a.attnum) || E'\\n);' AS ddl
+        string_agg(
+          '  ' || quote_ident(a.attname) || ' ' || pg_catalog.format_type(a.atttypid, a.atttypmod) ||
+          CASE WHEN a.attnotnull THEN ' NOT NULL' ELSE '' END ||
+          CASE WHEN at.attgenerated = 's' THEN ' GENERATED ALWAYS AS IDENTITY'
+               WHEN at.attgenerated = 'd' THEN ' GENERATED BY DEFAULT AS IDENTITY'
+               ELSE '' END ||
+          CASE WHEN ad.adsrc IS NOT NULL THEN ' DEFAULT ' || ad.adsrc ELSE '' END
+          , E',\\n' ORDER BY a.attnum
+        ) || E'\\n);' AS ddl
       FROM pg_class c
       JOIN pg_namespace n ON n.oid = c.relnamespace
       JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
-      LEFT JOIN pg_attrdef at ON at.adrelid = a.attrelid AND at.adnum = a.attnum
+      LEFT JOIN pg_attrdef ad ON ad.adrelid = a.attrelid AND ad.adnum = a.attnum
+      LEFT JOIN pg_attribute at ON at.attrelid = a.attrelid AND at.attnum = a.attnum
       WHERE c.relkind = 'r' AND n.nspname='public'
       GROUP BY n.nspname, c.relname
       ORDER BY c.relname;
     `).catch(() => ({ rows: tables.map(t => ({ ddl: `-- CREATE TABLE ${t} (...);` })) }));
+
+    // Counts de cada tabela
+    const counts = [];
+    for (const t of tables) {
+      try {
+        const r = await client.query(`SELECT COUNT(*)::bigint AS c FROM ${JSON.stringify(t).replace(/^"|"$/g,'').replace(/"/g,'""') === t ? `"public"."${t}"` : `"public"."${t}"`}`);
+        counts.push({ table: t, count: Number(r.rows[0].c) });
+      } catch {
+        counts.push({ table: t, count: null });
+      }
+    }
 
     ensureDir(CTX_DIR);
     fs.writeFileSync(path.join(CTX_DIR, 'db-tables.json'),
       JSON.stringify({ tables, tablesInfo, constraints: constraints.rows }, null, 2));
     fs.writeFileSync(path.join(CTX_DIR, 'db-schema.sql'),
       ddlRes.rows.map(r => r.ddl).join('\n\n'));
-    console.log('OK: snapshot Postgres → docs/context/db-tables.json + db-schema.sql');
+    fs.writeFileSync(path.join(CTX_DIR, 'db-counts.txt'),
+      counts.map(x => `${x.table}\t${x.count ?? 'n/a'}`).join('\n'), 'utf8');
+
+    console.log('OK: snapshot Postgres → docs/context/db-tables.json + db-schema.sql + db-counts.txt');
   } catch (e) {
     console.warn('WARN: dumpPostgresSnapshot falhou:', e.message);
   } finally {
@@ -669,31 +630,21 @@ function main(){
   const contracts = buildEndpointContracts(routes);
   const errorMap  = buildErrorMap(contracts);
 
-  // NEW: responses (consolidado) — além de já vir em contracts.ok
   const responses = {};
   for(const c of contracts){
     const k = `${c.method} ${c.path}`;
     responses[k] = (c.ok||[]).map(o => o.body);
   }
 
-  // Grafo de deps (sempre geramos JSON); deps.txt só com CTX_IMPORTS=1
   const depsGraph = buildImportGraph();
-
-  // TODOs
   const todos = scanTodos();
-
-  // Histórico por rota
   const routeHistory = buildRouteHistory(routes, info.lastTag);
-
-  // OpenAPI
   const openapi = buildOpenAPI(contracts);
 
-  // opcionais
   let sym = []; let depsTxtEdges = [];
   if(process.env.CTX_SYMBOLS === '1'){ sym = buildSymbolIndex(); fs.writeFileSync(path.join(CTX_DIR,'symbol-index.json'), JSON.stringify(sym,null,2)); }
   if(process.env.CTX_IMPORTS === '1'){ depsTxtEdges = depsGraph; fs.writeFileSync(path.join(CTX_DIR,'deps.txt'), depsTxtEdges.map(e=> `${e.from} -> ${e.to}`).join('\n') || '(sem imports)'); }
 
-  // grava JSONs principais
   fs.writeFileSync(path.join(CTX_DIR,'data-summary.json'),        JSON.stringify(yml,null,2));
   fs.writeFileSync(path.join(CTX_DIR,'function-signatures.json'), JSON.stringify(fnSigs,null,2));
   fs.writeFileSync(path.join(CTX_DIR,'env-usage.json'),           JSON.stringify(envUsage,null,2));
@@ -751,10 +702,10 @@ function main(){
 
   genCtxYmlIfMissing(info, routes);
 
-  // NOVO: snapshot opcional do Postgres
+  // Snapshot PG (se DATABASE_URL disponível)
   dumpPostgresSnapshot().catch(()=>{});
 
-  console.log('OK: v6 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi (+ pg snapshot opcional)');
+  console.log('OK: v6.1 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi (+ pg snapshot com counts)');
 }
 
 main();

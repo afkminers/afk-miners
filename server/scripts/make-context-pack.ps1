@@ -1,8 +1,8 @@
-# server/scripts/make-context-pack.ps1 (v6)
-# Gera um Context Pack completo + ZIP
+# server/scripts/make-context-pack.ps1 (v6.1)
+# Gera um Context Pack completo + ZIP (agora orientado a Postgres)
 # Uso:
 #   pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/make-context-pack.ps1 `
-#        -Name lobby-alpha -Depth 4 -Symbols -Imports -Zip
+#        -Name auto -Depth 4 -Symbols -Imports -Zip
 
 param(
   [string] $Name   = "auto",
@@ -25,7 +25,7 @@ $OutRoot    = Join-Path $RootDir "docs\releases"
 $ReleaseDir = Join-Path $OutRoot $RelName
 New-Item -ItemType Directory -Force -Path $ReleaseDir | Out-Null
 
-# --- Gerar contextos (robusto) -> escreve em docs/context/* na RAIZ
+# --- Gerar contextos (full) -> escreve em docs/context/* na RAIZ
 Write-Host "➡️  Gerando contextos (full)..." -ForegroundColor Cyan
 $env:CTX_DEPTH   = $Depth
 $env:CTX_SYMBOLS = ($Symbols.IsPresent ? "1" : "0")
@@ -49,7 +49,11 @@ $filesToCopy = @(
   "deps-graph.json",
   "route-history.json",
   "todos.json",
-  "openapi.json"
+  "openapi.json",
+  # Postgres snapshot
+  "db-tables.json",
+  "db-schema.sql",
+  "db-counts.txt"
 ) | ForEach-Object { Join-Path $CtxDir $_ } | Where-Object { Test-Path $_ }
 foreach ($f in $filesToCopy) { Copy-Item $f $ReleaseDir -Force }
 
@@ -58,56 +62,6 @@ $extra = @(".gitattributes", ".gitignore", "package.json") `
   | ForEach-Object { Join-Path $RootDir $_ } `
   | Where-Object { Test-Path $_ }
 foreach ($f in $extra) { Copy-Item $f $ReleaseDir -Force }
-
-# --- DB: dumps (schema / tables / counts + JSON rico)
-$Sqlite = "C:\sqlite\sqlite3.exe"
-$DbPath = Join-Path $ServerDir "db\database.sqlite"
-
-if ( (Test-Path $Sqlite) -and (Test-Path $DbPath) ) {
-  Write-Host "📄 Extraindo schema/tables/counts do SQLite..." -ForegroundColor DarkCyan
-
-  $schemaOut = Join-Path $ReleaseDir "db-schema.sql"
-  $tablesOut = Join-Path $ReleaseDir "db-tables.txt"
-  $countsOut = Join-Path $ReleaseDir "db-counts.txt"
-  $tablesJson = Join-Path $ReleaseDir "db-tables.json"
-
-  & $Sqlite $DbPath ".schema"  | Out-File -Encoding utf8 $schemaOut
-  & $Sqlite $DbPath ".tables"  | Out-File -Encoding utf8 $tablesOut
-
-  $tablesRaw = & $Sqlite $DbPath ".tables"
-  $tables = @()
-  if ($tablesRaw) { $tables = ($tablesRaw -join ' ') -split '\s+' | Where-Object { $_ -match '^\w+$' } }
-
-  $counts = New-Object System.Collections.Generic.List[string]
-  $tablesInfo = @()
-
-  foreach ($t in $tables) {
-    try {
-      $n = & $Sqlite $DbPath "SELECT COUNT(*) FROM [$t];"
-      $line = "{0,-30} {1,12}" -f $t, $n
-    } catch {
-      $pad  = ' ' * ([Math]::Max(1, 30 - $t.Length))
-      $line = "$t$pad (erro ao contar)"
-      $n = $null
-    }
-    $counts.Add($line)
-
-    # PRAGMA table_info + foreign_key_list
-    $cols = & $Sqlite $DbPath "PRAGMA table_info([$t]);"
-    $fks  = & $Sqlite $DbPath "PRAGMA foreign_key_list([$t]);"
-
-    $tablesInfo += [pscustomobject]@{
-      table = $t
-      count = $n
-      columns = $cols
-      foreign_keys = $fks
-    }
-  }
-  $counts | Out-File -Encoding utf8 $countsOut
-  $tablesInfo | ConvertTo-Json -Depth 6 | Out-File -Encoding utf8 $tablesJson
-} else {
-  Write-Host "⚠️  SQLite não encontrado em C:\sqlite\sqlite3.exe ou DB ausente. Pulando dumps." -ForegroundColor Yellow
-}
 
 # --- README com instruções
 $Readme = @()
@@ -130,18 +84,13 @@ $Readme += " - env-usage.json           → todas as process.env + defaults dete
 $Readme += " - function-signatures.json → assinaturas (nome/params/arquivo/linha)"
 $Readme += " - deps-graph.json          → grafo de imports (JSON)"
 $Readme += " - route-history.json       → rotas alteradas desde a última tag"
-$Readme += " - openapi.json             → OpenAPI inferido (importável em Postman/Insomnia)"
-$Readme += " - symbol-index.json        → símbolos (se CTX_SYMBOLS=1)"
-$Readme += " - deps.txt                 → import graph (se CTX_IMPORTS=1)"
-$Readme += " - data-summary.json        → resumo YAML/JSON"
-$Readme += " - changes-since.txt        → diff desde a última tag (se houver)"
-$Readme += " - db-schema.sql / db-tables.txt / db-counts.txt / db-tables.json"
-$Readme += " - .gitattributes / .gitignore / package.json (root)"
-$Readme += ""
-$Readme += "Gerado por: scripts/make-context-pack.ps1"
-$Readme | Out-File -Encoding utf8 (Join-Path $ReleaseDir "README.txt")
+$Readme += " - openapi.json             → OpenAPI inferido (Postman/Insomnia)"
+$Readme += " - db-schema.sql            → **Postgres**: DDL gerado por introspecção"
+$Readme += " - db-tables.json           → **Postgres**: colunas/constraints por tabela"
+$Readme += " - db-counts.txt            → **Postgres**: contagem de linhas por tabela"
+$Readme | Out-File -FilePath (Join-Path $ReleaseDir "_README.txt") -Encoding utf8
 
-# --- Zipar se pedido
+# --- Zip (opcional)
 if ($Zip) {
   $zipPath = "$ReleaseDir.zip"
   if (Test-Path $zipPath) { Remove-Item $zipPath -Force }

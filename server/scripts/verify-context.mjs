@@ -4,8 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(SCRIPT_DIR, '..', '..');        // <repo raiz>
-const CTX_DIR = path.join(ROOT, 'docs', 'context');       // artefatos ficam em RAIZ/docs/context
+const ROOT = path.resolve(SCRIPT_DIR, '..', '..');
+const CTX_DIR = path.join(ROOT, 'docs', 'context');
 
 function mustExist(p) {
   if (!fs.existsSync(p)) throw new Error(`Arquivo obrigatório ausente: ${path.relative(ROOT, p)}`);
@@ -22,40 +22,22 @@ function main() {
     process.exit(1);
   }
 
-  // Obrigatórios
-  const requiredText = [
-    'context-pack.txt',
-    'API.md',
-    'changes-since.txt',
-  ];
+  const requiredText = ['context-pack.txt','API.md','changes-since.txt'];
   const requiredJson = [
-    'data-summary.json',
-    'endpoints-contracts.json',
-    'env-usage.json',
-    'error-map.json',
-    'function-signatures.json',
-    'responses-sample.json',
-    'deps-graph.json',
-    'route-history.json',
-    'todos.json',
-    'openapi.json'
+    'data-summary.json','endpoints-contracts.json','env-usage.json','error-map.json',
+    'function-signatures.json','responses-sample.json','deps-graph.json','route-history.json',
+    'todos.json','openapi.json'
   ];
 
-  // Opcionais
   const optional = [
-    'symbol-index.json',
-    'deps.txt',
-    'db-schema.sql',
-    'db-tables.txt',
-    'db-counts.txt',
-    'db-tables.json'
+    'symbol-index.json','deps.txt',
+    // Snapshot de banco (PG)
+    'db-schema.sql','db-tables.txt','db-counts.txt','db-tables.json'
   ];
 
-  // Checks
   for (const f of requiredText)  mustExist(path.join(CTX_DIR, f));
   for (const f of requiredJson)  { const p = path.join(CTX_DIR, f); mustExist(p); mustBeJsonParseable(p); }
 
-  // Opcionais (se existirem e forem JSON, validar)
   for (const f of optional) {
     const p = path.join(CTX_DIR, f);
     if (fs.existsSync(p) && p.endsWith('.json')) mustBeJsonParseable(p);
@@ -67,9 +49,7 @@ function main() {
   console.log(`- OK JSONs : ${requiredJson.length} + opcionais válidos (se presentes)`);
 }
 
-try {
-  main();
-} catch (e) {
+try { main(); } catch (e) {
   console.error('❌ Falha na verificação:', e.message);
   process.exit(1);
 }
