@@ -293,12 +293,24 @@ Arquivo: `server\skills\routes.js:33`
   "heroId": 1
 }
 ```
+- body:
+```json
+{
+  "router.post('/gain/dev'": "value",
+  "async (req": "value",
+  "res) => {\n    try {\n      const { heroId": 1,
+  "heroClass": "value",
+  "skillType": "value"
+}
+```
 
 **Erros conhecidos:**
 - `HTTP 500` → {error:'Falha ao listar rates' }
 - `HTTP 400` → {error:'heroId é obrigatório' }
 - `HTTP 404` → {error:'Herói não encontrado' }
 - `HTTP 500` → {error:'Falha ao listar skills do herói' }
+- `HTTP 400` → {error:'heroId e skillType são obrigatórios' }
+- `HTTP 500` → {error:'Falha ao aplicar ganho' }
 
 ### GET /curves
 
@@ -310,6 +322,16 @@ Arquivo: `server\skills\routes.js:10`
 {
   "skill": "value",
   "heroId": 1
+}
+```
+- body:
+```json
+{
+  "router.post('/gain/dev'": "value",
+  "async (req": "value",
+  "res) => {\n    try {\n      const { heroId": 1,
+  "heroClass": "value",
+  "skillType": "value"
 }
 ```
 
@@ -325,6 +347,8 @@ Arquivo: `server\skills\routes.js:10`
 - `HTTP 400` → {error:'heroId é obrigatório' }
 - `HTTP 404` → {error:'Herói não encontrado' }
 - `HTTP 500` → {error:'Falha ao listar skills do herói' }
+- `HTTP 400` → {error:'heroId e skillType são obrigatórios' }
+- `HTTP 500` → {error:'Falha ao aplicar ganho' }
 
 ### GET /heroes/master
 
@@ -373,11 +397,23 @@ Arquivo: `server\skills\routes.js:48`
   "heroId": 1
 }
 ```
+- body:
+```json
+{
+  "router.post('/gain/dev'": "value",
+  "async (req": "value",
+  "res) => {\n    try {\n      const { heroId": 1,
+  "heroClass": "value",
+  "skillType": "value"
+}
+```
 
 **Erros conhecidos:**
 - `HTTP 400` → {error:'heroId é obrigatório' }
 - `HTTP 404` → {error:'Herói não encontrado' }
 - `HTTP 500` → {error:'Falha ao listar skills do herói' }
+- `HTTP 400` → {error:'heroId e skillType são obrigatórios' }
+- `HTTP 500` → {error:'Falha ao aplicar ganho' }
 
 ### GET /ping
 
@@ -661,6 +697,24 @@ Arquivo: `server\routes\farm.js:240`
 **Erros conhecidos:**
 - `HTTP 403` → {error:'forbidden' }
 - `HTTP 500` → {error:'debug_grant_failed' }
+
+### POST /gain/dev
+
+Arquivo: `server\skills\routes.js:91`
+
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "try {\n      const { heroId": 1,
+  "heroClass": "value",
+  "skillType": "value"
+}
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {error:'heroId e skillType são obrigatórios' }
+- `HTTP 500` → {error:'Falha ao aplicar ganho' }
 
 ### POST /harvest
 
@@ -976,6 +1030,8 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
   - HTTP 500: {error:'Falha ao listar skills do herói' }
+  - HTTP 400: {error:'heroId e skillType são obrigatórios' }
+  - HTTP 500: {error:'Falha ao aplicar ganho' }
 - **GET /curves**
   - HTTP 400: {error:'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC',}
   - HTTP 500: {error:'Falha ao listar curvas' }
@@ -983,6 +1039,8 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
   - HTTP 500: {error:'Falha ao listar skills do herói' }
+  - HTTP 400: {error:'heroId e skillType são obrigatórios' }
+  - HTTP 500: {error:'Falha ao aplicar ganho' }
 - **GET /heroes/master**
   - HTTP 500: {error:'Falha ao listar heróis' }
 - **GET /list**
@@ -998,6 +1056,8 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
   - HTTP 500: {error:'Falha ao listar skills do herói' }
+  - HTTP 400: {error:'heroId e skillType são obrigatórios' }
+  - HTTP 500: {error:'Falha ao aplicar ganho' }
   - HTTP 500: {error:'pos-read-failed' }
   - HTTP 429: {error:'rate-limited' }
   - HTTP 400: {error:'invalid-pos' }
@@ -1087,6 +1147,9 @@ Arquivo: `server\starter\routes.js:92`
 - **POST /debug/grant-seed**
   - HTTP 403: {error:'forbidden' }
   - HTTP 500: {error:'debug_grant_failed' }
+- **POST /gain/dev**
+  - HTTP 400: {error:'heroId e skillType são obrigatórios' }
+  - HTTP 500: {error:'Falha ao aplicar ganho' }
 - **POST /harvest**
   - HTTP 400: {error:'plot_id required' }
   - HTTP 404: {error:'plot_not_found' }

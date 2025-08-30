@@ -211,7 +211,7 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 19,
+    "line": 15,
     "kind": "function",
     "name": "triesNeeded",
     "params": [
@@ -221,7 +221,7 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 29,
+    "line": 25,
     "kind": "function",
     "name": "getClassRate",
     "params": [
@@ -231,7 +231,7 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 40,
+    "line": 36,
     "kind": "function",
     "name": "applyTries",
     "params": [
@@ -242,7 +242,7 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 85,
+    "line": 81,
     "kind": "function",
     "name": "triesBase",
     "params": [
@@ -251,7 +251,7 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 92,
+    "line": 87,
     "kind": "function",
     "name": "contextMul",
     "params": [
@@ -260,7 +260,7 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 100,
+    "line": 94,
     "kind": "function",
     "name": "gainFromHit",
     "params": [
@@ -272,7 +272,7 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 106,
+    "line": 100,
     "kind": "function",
     "name": "gainFromShot",
     "params": [
@@ -283,7 +283,7 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 112,
+    "line": 106,
     "kind": "function",
     "name": "gainFromCast",
     "params": [
@@ -294,7 +294,7 @@
   },
   {
     "file": "server\\skills\\engine.js",
-    "line": 118,
+    "line": 112,
     "kind": "function",
     "name": "gainFromBlock",
     "params": [

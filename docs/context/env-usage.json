@@ -302,6 +302,10 @@
         "index": 1103
       },
       {
+        "file": "server\\skills\\routes.js",
+        "index": 2664
+      },
+      {
         "file": "server\\routes\\farm.js",
         "index": 7557
       },

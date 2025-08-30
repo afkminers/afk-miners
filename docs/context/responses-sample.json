@@ -51,6 +51,7 @@
   "POST /debug/grant-seed": [
     "{ok:true,item_type,amount:Number(amount) || 0 }"
   ],
+  "POST /gain/dev": [],
   "GET /": [],
   "POST /harvest": [
     "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }",

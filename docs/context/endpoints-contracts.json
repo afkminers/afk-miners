@@ -487,6 +487,13 @@
     "sample": {
       "query": {
         "heroId": 1
+      },
+      "body": {
+        "router.post('/gain/dev'": "value",
+        "async (req": "value",
+        "res) => {\n    try {\n      const { heroId": 1,
+        "heroClass": "value",
+        "skillType": "value"
       }
     },
     "errors": [
@@ -505,6 +512,14 @@
       {
         "status": 500,
         "body": "{error:'Falha ao listar skills do herói' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'heroId e skillType são obrigatórios' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao aplicar ganho' }"
       }
     ]
   },
@@ -597,6 +612,13 @@
       "query": {
         "skill": "value",
         "heroId": 1
+      },
+      "body": {
+        "router.post('/gain/dev'": "value",
+        "async (req": "value",
+        "res) => {\n    try {\n      const { heroId": 1,
+        "heroClass": "value",
+        "skillType": "value"
       }
     },
     "errors": [
@@ -623,6 +645,14 @@
       {
         "status": 500,
         "body": "{error:'Falha ao listar skills do herói' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'heroId e skillType são obrigatórios' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao aplicar ganho' }"
       }
     ],
     "ok": [
@@ -657,6 +687,29 @@
       {
         "status": 200,
         "body": "{ok:true,item_type,amount:Number(amount) || 0 }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/gain/dev",
+    "file": "server\\skills\\routes.js",
+    "line": 91,
+    "sample": {
+      "body": {
+        "try {\n      const { heroId": 1,
+        "heroClass": "value",
+        "skillType": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:'heroId e skillType são obrigatórios' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao aplicar ganho' }"
       }
     ]
   },
@@ -871,6 +924,13 @@
     "sample": {
       "query": {
         "heroId": 1
+      },
+      "body": {
+        "router.post('/gain/dev'": "value",
+        "async (req": "value",
+        "res) => {\n    try {\n      const { heroId": 1,
+        "heroClass": "value",
+        "skillType": "value"
       }
     },
     "errors": [
@@ -885,6 +945,14 @@
       {
         "status": 500,
         "body": "{error:'Falha ao listar skills do herói' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'heroId e skillType são obrigatórios' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao aplicar ganho' }"
       }
     ]
   },

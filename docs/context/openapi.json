@@ -671,6 +671,33 @@
             }
           }
         },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "router.post('/gain/dev'": {
+                    "type": "string"
+                  },
+                  "async (req": {
+                    "type": "string"
+                  },
+                  "res) => {\n    try {\n      const { heroId": {
+                    "type": "number"
+                  },
+                  "heroClass": {
+                    "type": "string"
+                  },
+                  "skillType": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "parameters": [
           {
             "name": "heroId",
@@ -832,6 +859,33 @@
             }
           }
         },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "router.post('/gain/dev'": {
+                    "type": "string"
+                  },
+                  "async (req": {
+                    "type": "string"
+                  },
+                  "res) => {\n    try {\n      const { heroId": {
+                    "type": "number"
+                  },
+                  "heroClass": {
+                    "type": "string"
+                  },
+                  "skillType": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "parameters": [
           {
             "name": "skill",
@@ -898,6 +952,56 @@
                   },
                   "amount = 5": {
                     "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gain/dev": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "try {\n      const { heroId": {
+                    "type": "number"
+                  },
+                  "heroClass": {
+                    "type": "string"
+                  },
+                  "skillType": {
+                    "type": "string"
                   }
                 }
               }
@@ -1272,16 +1376,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "map",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1308,7 +1402,17 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "map",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/move": {
