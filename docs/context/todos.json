@@ -1,192 +1,104 @@
 [
   {
-    "file": "undo-fix-baks.js",
-    "line": 2,
-    "text": "// Restaura todos os arquivos server/**/*.js a partir de seus backups .bak"
-  },
-  {
-    "file": "fix-sql-columns.js",
-    "line": 36,
-    "text": "// pega todos os .js em server/"
-  },
-  {
-    "file": "server\\index.js",
-    "line": 45,
-    "text": "// 2) CSRF guard global (métodos que mudam estado)"
+    "file": "server\\scripts\\gen-context.js",
+    "line": 138,
+    "tag": "NOTE",
+    "text": "'too-large' }); continue; }"
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 14,
-    "text": "// - todos.json                    (NOVO)"
+    "line": 617,
+    "tag": "TODO",
+    "text": "|FIXME|NOTE)\\b[:\\s-]*(.*)/i;"
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 336,
-    "text": "// TODO/FIXME"
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 337,
-    "text": "function scanTodos(){"
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 344,
-    "text": "if(/TODO|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 682,
-    "text": "// TODOs"
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 683,
-    "text": "const todos = scanTodos();"
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 705,
-    "text": "fs.writeFileSync(path.join(CTX_DIR,'todos.json'),               JSON.stringify(todos,null,2));"
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 757,
-    "text": "console.log('OK: v6 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi (+ pg snapshot opcional)');"
-  },
-  {
-    "file": "server\\routes\\afk.js",
-    "line": 87,
-    "text": "// Coletar produção acumulada de todos os workers do jogador"
-  },
-  {
-    "file": "server\\content\\loader.js",
-    "line": 180,
-    "text": "// 2) Se não houver índice, varre recursivamente todos os .yml"
-  },
-  {
-    "file": "server\\balance\\config.js",
-    "line": 2,
-    "text": "// Todos os knobs ficam aqui. Troque números aqui e o jogo inteiro acompanha."
+    "line": 722,
+    "tag": "NOTE",
+    "text": "==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)'])); lines.push('');"
   },
   {
     "file": "docs\\releases\\2025-08-23_001936-auto\\API.md",
     "line": 183,
-    "text": "## TODO / FIXME"
+    "tag": "TODO",
+    "text": "/ FIXME"
   },
   {
     "file": "docs\\releases\\2025-08-23_001936-auto\\API.md",
     "line": 185,
-    "text": "- server\\scripts\\gen-context.js:366 — TODO: /FIXME scanner"
+    "tag": "TODO",
+    "text": "/FIXME scanner"
   },
   {
     "file": "docs\\releases\\2025-08-23_001936-auto\\API.md",
     "line": 186,
-    "text": "- server\\scripts\\gen-context.js:508 — TODO: /FIXME"
+    "tag": "TODO",
+    "text": "/FIXME"
   },
   {
     "file": "docs\\releases\\2025-08-23_001936-auto\\API.md",
     "line": 187,
-    "text": "- server\\scripts\\gen-context.js:509 — TODO: / FIXME');"
+    "tag": "TODO",
+    "text": "/ FIXME');"
   },
   {
     "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-    "line": 14,
-    "text": "// - todos.json                    (NOVO)"
+    "line": 143,
+    "tag": "NOTE",
+    "text": "'too-large' }); continue; }"
   },
   {
     "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
     "line": 334,
-    "text": "// TODO/FIXME"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-    "line": 335,
-    "text": "function scanTodos(){"
+    "tag": "TODO",
+    "text": "/FIXME"
   },
   {
     "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
     "line": 342,
-    "text": "if(/TODO|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
+    "tag": "TODO",
+    "text": "|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
   },
   {
     "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-    "line": 600,
-    "text": "// TODOs"
+    "line": 646,
+    "tag": "NOTE",
+    "text": "==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)'])); lines.push('');"
   },
   {
-    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-    "line": 601,
-    "text": "const todos = scanTodos();"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-    "line": 623,
-    "text": "fs.writeFileSync(path.join(CTX_DIR,'todos.json'),               JSON.stringify(todos,null,2));"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-    "line": 671,
-    "text": "console.log('OK: v6 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi');"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\balance\\config.js",
-    "line": 2,
-    "text": "// Todos os knobs ficam aqui. Troque números aqui e o jogo inteiro acompanha."
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\client\\js\\app.js",
+    "line": 191,
+    "tag": "NOTE",
+    "text": "endpoint retorna { profile: {...} })"
   },
   {
     "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-    "line": 14,
-    "text": "// - todos.json                    (NOVO)"
+    "line": 143,
+    "tag": "NOTE",
+    "text": "'too-large' }); continue; }"
   },
   {
     "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
     "line": 334,
-    "text": "// TODO/FIXME"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-    "line": 335,
-    "text": "function scanTodos(){"
+    "tag": "TODO",
+    "text": "/FIXME"
   },
   {
     "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
     "line": 342,
-    "text": "if(/TODO|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
+    "tag": "TODO",
+    "text": "|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
   },
   {
     "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-    "line": 600,
-    "text": "// TODOs"
+    "line": 646,
+    "tag": "NOTE",
+    "text": "==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)'])); lines.push('');"
   },
   {
-    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-    "line": 601,
-    "text": "const todos = scanTodos();"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-    "line": 623,
-    "text": "fs.writeFileSync(path.join(CTX_DIR,'todos.json'),               JSON.stringify(todos,null,2));"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-    "line": 671,
-    "text": "console.log('OK: v6 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi');"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\balance\\config.js",
-    "line": 2,
-    "text": "// Todos os knobs ficam aqui. Troque números aqui e o jogo inteiro acompanha."
-  },
-  {
-    "file": "client\\js\\play.js",
-    "line": 29,
-    "text": "// garante foco p/ WASD e click-to-move em todos os navegadores"
-  },
-  {
-    "file": "client\\js\\auth.js",
-    "line": 2,
-    "text": "// Corrigido: todos os requests usam credentials:'include' (envia/recebe cookie `sid`)"
+    "file": "client\\js\\app.js",
+    "line": 282,
+    "tag": "NOTE",
+    "text": "endpoint retorna { profile: {...} })"
   }
 ]

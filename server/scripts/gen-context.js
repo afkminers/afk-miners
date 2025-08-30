@@ -257,7 +257,7 @@ function buildEndpointContracts(routes){
   const out = [];
   for(const r of routes){
     let src=''; try{ src = fs.readFileSync(r.file,'utf8'); }catch{ continue; }
-    const lines = src.split(/\r?\\n/);
+    const lines = src.split(/\r?\n/);
     const start = Math.max(0, r.line-1);
     const end   = Math.min(lines.length-1, start + LOOK);
     const slice = lines.slice(start, end+1).join('\n');
@@ -588,7 +588,7 @@ async function dumpPostgresSnapshot() {
     const counts = [];
     for (const t of tables) {
       try {
-        const r = await client.query(`SELECT COUNT(*)::bigint AS c FROM ${JSON.stringify(t).replace(/^"|"$/g,'').replace(/"/g,'""') === t ? `"public"."${t}"` : `"public"."${t}"`}`);
+        const r = await client.query(`SELECT COUNT(*)::bigint AS c FROM "public"."${t}"`);
         counts.push({ table: t, count: Number(r.rows[0].c) });
       } catch {
         counts.push({ table: t, count: null });
@@ -634,6 +634,23 @@ function scanTodos() {
     }
   }
   return todos;
+}
+
+
+function buildRouteHistory(routes, lastTag) {
+  if (!lastTag) return [];
+  // Lista arquivos de rotas alterados desde a última tag
+  const files = Array.from(new Set(routes.map(r => r.file)));
+  const changed = [];
+  for (const f of files) {
+    try {
+      const diff = sh(`git diff --name-status ${lastTag}..HEAD -- "${f}"`);
+      if (diff && diff.trim()) {
+        changed.push({ file: f, changed: true });
+      }
+    } catch {}
+  }
+  return changed.sort((a, b) => a.file.localeCompare(b.file));
 }
 
 
