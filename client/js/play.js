@@ -74,7 +74,7 @@ function assetUrl(p, { asTileset = false } = {}) {
   return s;
 }
 
-// --- loader de tileset compatível com seu caminho antigo do Tiled
+// --- loader de tileset compatível com teu caminho antigo do Tiled
 function normalizeTilesetPath(p) {
   let s = String(p || '');
   s = s.replace(/^(\.\.\/)+/, '/');
@@ -150,11 +150,83 @@ async function ensureImgLoaded(img) {
   try { await img.decode(); return imgReady(img); } catch { return imgReady(img); }
 }
 
-/* ====================== Sprite Metadata (YAML) ====================== */
+/* ======== Índice tolerante para sprites (YAML) + loader robusto ======== */
 let SPRITES_META = {};
+let SPRITE_INDEX = new Map(); // chave normalizada -> meta
+
+function normKey(s) {
+  return String(s || '')
+    .replace(/\\/g, '/')
+    .replace(/^.*\//, '')                       // remove caminho
+    .replace(/\.(png|jpg|jpeg|gif|webp)$/i, '') // tira extensão
+    .replace(/[\s_]+/g, '-')                    // normaliza separadores
+    .toLowerCase()
+    .trim();
+}
+
+function indexSpriteMeta(obj) {
+  SPRITE_INDEX.clear();
+  for (const [key, data] of Object.entries(obj || {})) {
+    const nk = normKey(key);
+    SPRITE_INDEX.set(nk, data);
+    if (data?.image) {
+      SPRITE_INDEX.set(normKey(data.image), data);
+    }
+    if (Array.isArray(data?.aliases)) {
+      for (const a of data.aliases) SPRITE_INDEX.set(normKey(a), data);
+    }
+  }
+}
+
 async function loadSpriteMeta() {
-  const list = await jget('/api/assets/sprites');
+  const list = await jget('/api/assets/sprites'); // [{ key, kind, data }]
   SPRITES_META = Object.fromEntries(list.map(e => [e.key, e.data]));
+  indexSpriteMeta(SPRITES_META);
+}
+
+function findMetaFor(spawnKey) {
+  const tries = [
+    spawnKey,
+    String(spawnKey || '').toLowerCase(),
+    String(spawnKey || '').replace(/[\s_]+/g,'-'),
+    normKey(spawnKey)
+  ];
+  for (const t of tries) {
+    const m = SPRITE_INDEX.get(normKey(t));
+    if (m) return m;
+  }
+  // aproximação
+  const nk = normKey(spawnKey);
+  for (const [k, m] of SPRITE_INDEX.entries()) {
+    if (k.includes(nk)) return m;
+  }
+  return null;
+}
+
+function buildMonsterCandidates(kindNorm, meta) {
+  const base = normKey(kindNorm);
+  const fromMeta = meta?.image ? assetUrl(meta.image) : null;
+  const metaBase = fromMeta ? fromMeta.replace(/^(\.\/)+/,'') : null;
+  return [
+    fromMeta,                              // prioriza o caminho informado no YAML
+    metaBase,
+    `/sprites/monsters/${base}.png`,
+    `/sprites/${base}.png`,
+    `/img/monsters/${base}.png`,
+    `/img/${base}.png`,
+    `/${base}.png`
+  ].filter(Boolean);
+}
+
+async function loadMonsterImg(kindNorm, meta) {
+  const candidates = buildMonsterCandidates(kindNorm, meta);
+  for (const url of candidates) {
+    const img = loadImg(url);
+    const ok = await ensureImgLoaded(img);
+    if (ok) return img;
+  }
+  console.warn(`[mob sprite] falhou carregar: ${kindNorm}. Tentativas:`, candidates);
+  return null;
 }
 
 /* ========================= Estado do Mapa ========================= */
@@ -354,31 +426,24 @@ async function resolvePlayerSprite() {
 
 /* =========================== Respawn Manager ========================== */
 function addMobFromSpawn(spDef) {
+  const rawKey = spDef.monsterKey || spDef.monster || "goblin";
+  const kindNorm = normKey(rawKey);
+  const meta = findMetaFor(rawKey);
+
   const m = {
     id: mobAutoId++,
-    kind: spDef.monsterKey || spDef.monster || "mob",
+    kind: kindNorm,
     x: (spDef.x || 0) + Math.random() * (spDef.w || TILE),
     y: (spDef.y || 0) + Math.random() * (spDef.h || TILE),
     w: 32, h: 32,
     speed: 40 + Math.random() * 20,
     dirX: 0, dirY: 0, changeAt: 0,
     face: 'east',
-    img: null, meta: null,
+    img: null, meta: meta || null,
     bound: (spDef.w || spDef.h) ? { x: spDef.x || 0, y: spDef.y || 0, w: spDef.w || TILE, h: spDef.h || TILE } : null,
   };
 
-  const meta = SPRITES_META[m.kind];
-  let url = null;
-  if (meta?.image) {
-    url = assetUrl(meta.image);
-    m.meta = meta;
-    m.img  = loadImg(url);
-  } else {
-    url = `/sprites/monsters/${m.kind}.png`;
-    m.img = loadImg(url);
-  }
-  ensureImgLoaded(m.img).then(ok => { if (!ok) console.warn(`[mob sprite] falhou carregar: ${m.kind} @ ${url}`); }).catch(()=>{});
-
+  loadMonsterImg(kindNorm, meta).then(img => { if (img) m.img = img; });
   mobs.push(m);
   return m.id;
 }
@@ -423,7 +488,7 @@ function updateRespawns(now) {
   const maps = await jget("/api/admin/content/maps");
   if (!maps.some((m) => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
 
-  // --- helper para normalizar payloads que podem vir string/array/obj
+  // helper para normalizar payloads que podem vir string/array/obj
   function normalizeApiJson(payload) {
     let v = payload;
     if (Array.isArray(v)) v = v[0];

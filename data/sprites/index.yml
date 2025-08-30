@@ -1,2 +1,5 @@
 sprites:
-  knight: "./characters/knight.yml"
+  knight: "./knight.yml"
+  goblin: "./monsters/goblin.yml"
+  balor: "./monsters/balor.yml"
+  # ... outros monstros aqui

@@ -205,6 +205,7 @@
       "setStatus",
       "startHub",
       "startPolling",
+      "syncCameraSize",
       "update",
       "worldToScreen",
       "wsAuthAndLoadHistory"
@@ -268,6 +269,7 @@
       "loadSpriteMeta",
       "loadTilesetImage",
       "mapSpawnsFromTiledJSON",
+      "normalizeApiJson",
       "normalizeTilesetPath",
       "pickElByIds",
       "postPosThrottled",

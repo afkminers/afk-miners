@@ -1,4 +1,5 @@
 key: goblin
+kind: monster
 image: "sprites/monsters/goblin.png"
 frame:
   width: 32

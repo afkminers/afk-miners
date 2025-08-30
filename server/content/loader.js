@@ -15,6 +15,28 @@ function list(dir, ext) {
     : [];
 }
 
+// --- helpers extras ---
+function listRecursive(dir, ext) {
+  const out = [];
+  if (!fs.existsSync(dir)) return out;
+  for (const name of fs.readdirSync(dir)) {
+    const p = path.join(dir, name);
+    const st = fs.statSync(p);
+    if (st.isDirectory()) out.push(...listRecursive(p, ext));
+    else if (name.toLowerCase().endsWith(ext)) out.push(p);
+  }
+  return out;
+}
+function inferSpriteKind(filePath, data) {
+  if (data && typeof data.kind === 'string' && data.kind.trim()) {
+    return data.kind.trim();
+  }
+  const fp = filePath.replace(/\\/g, '/').toLowerCase();
+  if (fp.includes('/monsters/'))   return 'monster';
+  if (fp.includes('/characters/')) return 'character';
+  return 'sprite';
+}
+
 /**
  * OBS: Este loader usa um adaptador com as funções { all, get, run } — não o objeto sqlite.
  * Passe { all, get, run } em index.js: await loadAll({ all, get, run }, root)
@@ -129,10 +151,48 @@ async function loadItems(db, root) {
 
 async function loadSprites(db, root) {
   const { get, run } = db;
-  const dir = path.join(root, 'data/sprites/characters');
-  if (!fs.existsSync(dir)) return;
+  const base = path.join(root, 'data/sprites');
+  if (!fs.existsSync(base)) return;
 
-  for (const file of list(dir, '.yml')) {
+  // 1) Tenta índice (data/sprites.yml ou data/sprites/index.yml)
+  let indexEntries = null;
+  const idxFiles = [
+    path.join(root, 'data/sprites.yml'),
+    path.join(base, 'index.yml')
+  ].filter(fs.existsSync);
+
+  for (const idx of idxFiles) {
+    try {
+      const idxObj = YAML.parse(read(idx));
+      const entries = Object.entries((idxObj && idxObj.sprites) || {});
+      if (entries.length) {
+        indexEntries = entries.map(([key, rel]) => ({
+          key,
+          file: path.join(base, rel)
+        }));
+        break;
+      }
+    } catch (e) {
+      console.warn('[sprites] índice inválido:', idx, e.message);
+    }
+  }
+
+  // 2) Se não houver índice, varre recursivamente todos os .yml
+  let filesToLoad = [];
+  if (indexEntries) {
+    filesToLoad = indexEntries;
+  } else {
+    const yamlFiles = listRecursive(base, '.yml');
+    filesToLoad = yamlFiles.map(f => ({ key: null, file: f }));
+  }
+
+  for (const ent of filesToLoad) {
+    const file = ent.file;
+    if (!fs.existsSync(file)) {
+      console.warn('[sprites] arquivo não existe (índice aponta para):', file);
+      continue;
+    }
+
     const src = read(file);
     const sum = sha1(src);
 
@@ -142,18 +202,30 @@ async function loadSprites(db, root) {
     ).catch(() => null);
     if (seen && seen.checksum === sum) continue;
 
-    const data = SpriteYAML.parse(YAML.parse(src));
+    // Parse e validação
+    const parsed = YAML.parse(src);
+    const data = SpriteYAML.parse(parsed);
+
+    // key pode vir do índice ou do próprio YAML
+    const key = (ent.key && String(ent.key)) || String(data.key);
+    if (!key) {
+      console.warn('[sprites] ignorado (sem key):', file);
+      continue;
+    }
+
+    // kind dinâmico
+    const kind = inferSpriteKind(file, data);
 
     await run(
       `
       INSERT INTO sprites_master(key, kind, "dataJSON", updated_at)
-      VALUES ($1, 'character', $2::jsonb, now())
+      VALUES ($1, $2, $3::jsonb, now())
       ON CONFLICT (key) DO UPDATE SET
-        kind='character',
+        kind=EXCLUDED.kind,
         "dataJSON"=EXCLUDED."dataJSON",
         updated_at=now()
       `,
-      [data.key, JSON.stringify(data)]
+      [key, kind, JSON.stringify(data)]
     );
 
     await run(
@@ -243,7 +315,7 @@ async function loadMap(db, root, mapKey) {
           VALUES ($1,$2,$3,$4,$5,$6,$7)
           `,
           [
-            mapKey, lname, // usamos o nome da camada como "type" (ex.: "start")
+            mapKey, lname,
             Math.round(o.x || 0), Math.round(o.y || 0),
             Math.round(o.width || 0), Math.round(o.height || 0),
             JSON.stringify(props)
@@ -271,7 +343,6 @@ async function loadAll(db, root) {
   await loadSprites(db, root);
   await loadMap(db, root, 'house'); // carrega house.json se existir
 
-  // Logs rápidos (opcional)
   console.log('[content] Finished loadAll()');
 
   try {

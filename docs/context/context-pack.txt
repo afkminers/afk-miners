@@ -1,5 +1,5 @@
 AFK Miners — Context Pack
-Commit: 01443c5 | Branch: main | Last Tag: n/a
+Commit: 028aa00 | Branch: main | Last Tag: n/a
 
 == Estrutura (nível 4) ==
 _backup-meta.txt
@@ -364,6 +364,8 @@ docs\backups\2025-08-29_020748-pre-main-1594ff5.zip
 docs\backups\2025-08-29_020800-post-main-eb8804f.zip
 docs\backups\2025-08-29_020855-pre-main-eb8804f.zip
 docs\backups\2025-08-29_020907-post-main-01443c5.zip
+docs\backups\2025-08-29_194111-pre-main-01443c5.zip
+docs\backups\2025-08-29_194127-post-main-028aa00.zip
 docs\context
 docs\context\API.md
 docs\context\changes-since.txt
@@ -1944,6 +1946,29 @@ docs\releases\2025-08-29_020809-auto\route-history.json
 docs\releases\2025-08-29_020809-auto\symbol-index.json
 docs\releases\2025-08-29_020809-auto\todos.json
 docs\releases\2025-08-29_020917-auto
+docs\releases\2025-08-29_020917-auto.zip
+docs\releases\2025-08-29_020917-auto\API.md
+docs\releases\2025-08-29_020917-auto\README.txt
+docs\releases\2025-08-29_020917-auto\changes-since.txt
+docs\releases\2025-08-29_020917-auto\context-pack.txt
+docs\releases\2025-08-29_020917-auto\data-summary.json
+docs\releases\2025-08-29_020917-auto\db-counts.txt
+docs\releases\2025-08-29_020917-auto\db-schema.sql
+docs\releases\2025-08-29_020917-auto\db-tables.json
+docs\releases\2025-08-29_020917-auto\db-tables.txt
+docs\releases\2025-08-29_020917-auto\deps-graph.json
+docs\releases\2025-08-29_020917-auto\deps.txt
+docs\releases\2025-08-29_020917-auto\endpoints-contracts.json
+docs\releases\2025-08-29_020917-auto\env-usage.json
+docs\releases\2025-08-29_020917-auto\error-map.json
+docs\releases\2025-08-29_020917-auto\function-signatures.json
+docs\releases\2025-08-29_020917-auto\openapi.json
+docs\releases\2025-08-29_020917-auto\package.json
+docs\releases\2025-08-29_020917-auto\responses-sample.json
+docs\releases\2025-08-29_020917-auto\route-history.json
+docs\releases\2025-08-29_020917-auto\symbol-index.json
+docs\releases\2025-08-29_020917-auto\todos.json
+docs\releases\2025-08-29_194138-auto
 fix-camel-columns.js
 fix-sql-columns.js
 fix-sql-precision.js
@@ -1964,6 +1989,10 @@ server\balance\config.js
 server\config
 server\config\balance.js
 server\content
+server\content\data
+server\content\data\maps
+server\content\data\maps\house.json
+server\content\data\s
 server\content\loader.js
 server\content\schemas.js
 server\db
@@ -2042,20 +2071,20 @@ readme.txt
 undo-fix-baks.js
 
 == Inventário por extensão ==
-.json : 904
-.txt : 441
-.zip : 183
+.json : 918
+.txt : 447
+.zip : 186
 .js : 121
 .png : 116
-.sql : 98
-.md : 71
+.sql : 99
+.md : 72
 .html : 47
 .yml : 34
 .css : 24
 .mp3 : 21
 .bak : 11
 .ps1 : 11
-<noext> : 10
+<noext> : 11
 .sqlite : 6
 .tmx : 3
 .mjs : 3
@@ -2250,6 +2279,20 @@ package.json :: 10 chaves | keys: name, version, description, main, scripts, key
 package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 124907 bytes
 server\package.json :: 8 chaves | keys: name, version, description, main, scripts, dependencies, devDependencies, engines | 2331 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 83480 bytes
+server\content\data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 22030 bytes
+docs\releases\2025-08-29_020917-auto\todos.json :: 36 itens | 6074 bytes
+docs\releases\2025-08-29_020917-auto\symbol-index.json :: 97 itens | 25900 bytes
+docs\releases\2025-08-29_020917-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 1192 bytes
+docs\releases\2025-08-29_020917-auto\responses-sample.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 2837 bytes
+docs\releases\2025-08-29_020917-auto\package.json :: 10 chaves | keys: name, version, description, main, scripts, keywords, author, license, dependencies, devDependencies | 2664 bytes
+docs\releases\2025-08-29_020917-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 44910 bytes
+docs\releases\2025-08-29_020917-auto\function-signatures.json :: 956 itens | 172858 bytes
+docs\releases\2025-08-29_020917-auto\error-map.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 16918 bytes
+docs\releases\2025-08-29_020917-auto\env-usage.json :: 16 itens | 9542 bytes
+docs\releases\2025-08-29_020917-auto\endpoints-contracts.json :: 39 itens | 33162 bytes
+docs\releases\2025-08-29_020917-auto\deps-graph.json :: 27 itens | 2801 bytes
+docs\releases\2025-08-29_020917-auto\db-tables.json :: 23 itens | 7409 bytes
+docs\releases\2025-08-29_020917-auto\data-summary.json :: 34 itens | 7806 bytes
 docs\releases\2025-08-29_020809-auto\todos.json :: 36 itens | 6074 bytes
 docs\releases\2025-08-29_020809-auto\symbol-index.json :: 97 itens | 25900 bytes
 docs\releases\2025-08-29_020809-auto\route-history.json :: 20 chaves | keys: GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global, POST /api/chat/global, GET /api/csrf, GET /assets/items, GET /assets/sprites, POST /assign, GET /class-rates, POST /collect, POST /create-worker, GET /curves, POST /debug/grant-seed, GET / | 1192 bytes
@@ -3148,7 +3191,7 @@ docs\backups\2025-08-24_143136-post-main-e6ab269\docs\context\deps-graph.json ::
 docs\backups\2025-08-24_143136-post-main-e6ab269\docs\context\data-summary.json :: 11 itens | 2153 bytes
 docs\backups\2025-08-24_143136-post-main-e6ab269\data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 24041 bytes
 docs\backups\2025-08-24_143136-post-main-e6ab269\client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1800 bytes
-data\maps\house.json :: 13 chaves | keys: columns, image, imageheight, imagewidth, margin, name, spacing, tilecount, tiledversion, tileheight, tilewidth, type, version | 290 bytes
+data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 25895 bytes
 client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1800 bytes
 
 == Symbol Index (amostra) ==
@@ -3166,10 +3209,10 @@ client\js\engine\pathfinder.js :: AStarGrid, MinHeap
 client\js\engine\player_controller.js :: PlayerController
 client\js\farm_panel.js :: attachButton, getCsrf, jget, jpost, onAddPlot, onHarvest, onPlant, openFarm, renderAll, renderInfo, renderInv, renderPlots, stopAuto, toggleAuto, updateButtons
 client\js\gacha.js :: bindGachaUI, cap, closeOverlay, doSummonAPI, done, fillPanel, flash, getHeroes, getInventory, hardCloseOverlay, heroCardMarkup, init, inlineHint, keySkip, lockButtons, loopPix, openOverlay, playChestSequence, playClick, playMultiSummon, playOneSummonAndReveal, playSfx, refreshFromServer, renderHeroes, resizePix, setAgainState, setRarityBg, showErrorInOverlay, skipOnce, spawnPix, spawnSparks, startPix, startSummon, stopPix, toast, wait
-client\js\house.js :: appendChatRow, clearCanvas, connectWS, drawEntity, drawGrid, drawGround, ensureWsAuthOnConnect, escapeHtml, jget, loadImg, loop, maybeSendPos, mergeSpawns, postWithCsrf, sendChat, setStatus, startHub, startPolling, update, worldToScreen, wsAuthAndLoadHistory
+client\js\house.js :: appendChatRow, clearCanvas, connectWS, drawEntity, drawGrid, drawGround, ensureWsAuthOnConnect, escapeHtml, jget, loadImg, loop, maybeSendPos, mergeSpawns, postWithCsrf, sendChat, setStatus, startHub, startPolling, syncCameraSize, update, worldToScreen, wsAuthAndLoadHistory
 client\js\landing_fx.js :: addSpark, drawLightning, glow, imgRect, loop, resize, seed, sel, start, stop, sync
 client\js\login_fx.js :: celebrate, drawDebugCross, initLoginFx, loop, px, resize, sel, spawnBurst, spawnTick, start, stop, toCanvasXYFromChar
-client\js\play.js :: addMobFromSpawn, applyCameraZoom, applySmoothing, assetUrl, buildCollisionGridFromObjects, buildCollisionGridFromTiled, buildSpawnersFromDefs, clear, drawGround, drawMob, drawPlayer, ensureImgLoaded, fetchCsrf, frame, getSavedPos, imgReady, jget, jpost, loadImg, loadSpriteMeta, loadTilesetImage, mapSpawnsFromTiledJSON, normalizeTilesetPath, pickElByIds, postPosThrottled, resize, resolvePlayerSprite, updateRespawns
+client\js\play.js :: addMobFromSpawn, applyCameraZoom, applySmoothing, assetUrl, buildCollisionGridFromObjects, buildCollisionGridFromTiled, buildSpawnersFromDefs, clear, drawGround, drawMob, drawPlayer, ensureImgLoaded, fetchCsrf, frame, getSavedPos, imgReady, jget, jpost, loadImg, loadSpriteMeta, loadTilesetImage, mapSpawnsFromTiledJSON, normalizeApiJson, normalizeTilesetPath, pickElByIds, postPosThrottled, resize, resolvePlayerSprite, updateRespawns
 client\js\player_profile.js :: animateProgressBars, bindProfileModal, close, fetchEquip, fetchPlayerMeOnce, fillEquip, fillHeader, fillSkillsArea, loadHeroSkills, open, paintEquipGrid, refreshAll, refreshEquip, renderHeroSkills, renderTrainBars, resolveCard
 client\js\scenes\house.js :: mount
 client\js\settings.js :: autodetect, clampNum, emit, getState, load, save, set
