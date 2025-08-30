@@ -3,17 +3,13 @@ const { get, run } = require('../models/db');
 const K = require('../balance/config'); // knobs em server/balance/config.js
 
 async function ensureSkillRow(heroId, skillType) {
-  const row = await get(
-    `SELECT 1 FROM player_hero_skills WHERE hero_id = $1 AND skill_type = $2`,
+  // Idempotente: cria se não existir. Requer índice único (já passamos o SQL).
+  await run(
+    `INSERT INTO player_hero_skills (hero_id, skill_type, level, tries_progress)
+     VALUES ($1, $2, 1, 0)
+     ON CONFLICT (hero_id, skill_type) DO NOTHING`,
     [heroId, skillType]
   );
-  if (!row) {
-    await run(
-      `INSERT INTO player_hero_skills (hero_id, skill_type, level, tries_progress)
-       VALUES ($1, $2, 1, 0)`,
-      [heroId, skillType]
-    );
-  }
 }
 
 async function triesNeeded(skillType, level) {
@@ -83,14 +79,12 @@ async function applyTries(heroId, skillType, triesToApply) {
 
 /** ---- PER-HIT (Tibia-like), sem gate/treino ---- */
 function triesBase(kind) {
-  // Se quiser diferenciar, crie knobs por tipo: K.TRIES_PER_HIT_MELEE etc.
   if (kind === 'BLOCK') return K.TRIES_PER_HIT;
   if (kind === 'CAST')  return K.TRIES_PER_HIT;
   return K.TRIES_PER_HIT; // MELEE / DISTANCE
 }
 
 function contextMul(context) {
-  // Ajuste à vontade: TRAINING pode dar bônus, COMBAT levemente menor, etc.
   const c = String(context || 'COMBAT').toUpperCase();
   if (c === 'TRAINING') return 1.0;
   return 0.8;

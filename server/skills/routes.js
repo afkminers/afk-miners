@@ -1,7 +1,7 @@
-// server/skills/routes.js
 const express = require('express');
 const { all } = require('../models/db');
 const { requireAuth } = require('../auth/middleware');
+const { gainFromHit } = require('./engine');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -54,12 +54,11 @@ router.get('/me', async (req, res) => {
     const owner = await all(
       `SELECT 1
          FROM player_heroes
-        WHERE id = $1 AND playerId = $2`,
+        WHERE id = $1 AND "playerId" = $2`,
       [heroId, req.user.id]
     );
     if (!owner.length) return res.status(404).json({ error: 'Herói não encontrado' });
 
-    // junta com skill_curves para obter tries_needed (need) do nível atual
     const rows = await all(
       `SELECT
           ps.skill_type,
@@ -86,5 +85,22 @@ router.get('/me', async (req, res) => {
     res.status(500).json({ error: 'Falha ao listar skills do herói' });
   }
 });
+
+// (Opcional) POST /api/skills/gain/dev  -> força um ganho via engine p/ testar
+if (process.env.NODE_ENV !== 'production') {
+  router.post('/gain/dev', async (req, res) => {
+    try {
+      const { heroId, heroClass, skillType } = req.body || {};
+      if (!heroId || !skillType) {
+        return res.status(400).json({ error: 'heroId e skillType são obrigatórios' });
+      }
+      const r = await gainFromHit({ heroId, skillType, heroClass, context:'COMBAT' });
+      res.json(r);
+    } catch (e) {
+      console.error('[skills/gain/dev] error:', e);
+      res.status(500).json({ error: 'Falha ao aplicar ganho' });
+    }
+  });
+}
 
 module.exports = router;

@@ -9,17 +9,14 @@ const envNum = (name, def) => {
 module.exports = {
   // === PROGRESSÃO POR HIT (Tibia-like) ===
   // Ganho de skill NÃO depende do dano. Cada acerto rende a mesma fração.
-  TRIES_PER_HIT: envNum('TRIES_PER_HIT', 1),     // quantos "tries" por acerto (base)
+  TRIES_PER_HIT: envNum('TRIES_PER_HIT', 5), // base de tries por evento
 
   // Intervalo entre swings na arena de treino (dummy). Em combate real, use o ritmo real.
   TRAIN_SWING_SECONDS: envNum('TRAIN_SWING_SECONDS', 2),
 
   // === ENERGIA / STAMINA ===
-  // Quanto de energia consome por minuto enquanto treinando (dummy).
-  ENERGY_PER_MIN_WHEN_TRAINING: envNum('ENERGY_PER_MIN_WHEN_TRAINING', 6), // 6/min => 10 min = 60
-  // Limite de duração por sessão (hard cap)
+  ENERGY_PER_MIN_WHEN_TRAINING: envNum('ENERGY_PER_MIN_WHEN_TRAINING', 6),
   MAX_SESSION_SECONDS: envNum('MAX_SESSION_SECONDS', 12 * 3600),
-  // Limite diário (hard cap)
   DAILY_TRAIN_CAP_SECONDS: envNum('DAILY_TRAIN_CAP_SECONDS', 8 * 3600),
 
   // === DEFAULTS / FALLBACKS ===
@@ -27,4 +24,8 @@ module.exports = {
 
   // Quando não existir rate na tabela class_skill_rates, usa 1.0
   CLASS_RATE_FALLBACK: 1.0,
+
+  // === Combate (para dano simples) ===
+  DAMAGE_VARIANCE: envNum('DAMAGE_VARIANCE', 0.20), // 20%
+  MONSTER_DEF_FALLBACK: envNum('MONSTER_DEF_FALLBACK', 6),
 };
