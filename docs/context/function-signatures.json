@@ -6182,7 +6182,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 66,
+    "line": 70,
     "kind": "function",
     "name": "assetUrl",
     "params": [
@@ -6192,7 +6192,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 78,
+    "line": 82,
     "kind": "function",
     "name": "normalizeTilesetPath",
     "params": [
@@ -6201,7 +6201,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 86,
+    "line": 90,
     "kind": "function",
     "name": "loadTilesetImage",
     "params": [
@@ -6210,21 +6210,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 107,
+    "line": 111,
     "kind": "function",
     "name": "applySmoothing",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 120,
+    "line": 124,
     "kind": "function",
     "name": "resize",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 139,
+    "line": 143,
     "kind": "function",
     "name": "loadImg",
     "params": [
@@ -6233,7 +6233,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 147,
+    "line": 151,
     "kind": "function",
     "name": "imgReady",
     "params": [
@@ -6242,7 +6242,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 148,
+    "line": 152,
     "kind": "function",
     "name": "ensureImgLoaded",
     "params": [
@@ -6251,7 +6251,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 157,
+    "line": 161,
     "kind": "function",
     "name": "normKey",
     "params": [
@@ -6260,7 +6260,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 167,
+    "line": 171,
     "kind": "function",
     "name": "indexSpriteMeta",
     "params": [
@@ -6269,14 +6269,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 181,
+    "line": 183,
     "kind": "function",
     "name": "loadSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 187,
+    "line": 189,
     "kind": "function",
     "name": "findMetaFor",
     "params": [
@@ -6285,7 +6285,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 206,
+    "line": 200,
     "kind": "function",
     "name": "buildMonsterCandidates",
     "params": [
@@ -6295,7 +6295,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 221,
+    "line": 215,
     "kind": "function",
     "name": "loadMonsterImg",
     "params": [
@@ -6305,14 +6305,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 250,
+    "line": 244,
     "kind": "function",
     "name": "clear",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 252,
+    "line": 246,
     "kind": "function",
     "name": "drawGround",
     "params": [
@@ -6321,7 +6321,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 278,
+    "line": 272,
     "kind": "function",
     "name": "drawPlayer",
     "params": [
@@ -6330,7 +6330,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 292,
+    "line": 286,
     "kind": "function",
     "name": "drawMob",
     "params": [
@@ -6339,7 +6339,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 339,
+    "line": 335,
     "kind": "function",
     "name": "postPosThrottled",
     "params": [
@@ -6350,14 +6350,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 347,
+    "line": 353,
     "kind": "function",
     "name": "getSavedPos",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 356,
+    "line": 362,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -6368,7 +6368,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 374,
+    "line": 380,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -6377,7 +6377,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 384,
+    "line": 390,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -6386,14 +6386,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 403,
+    "line": 409,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 428,
+    "line": 434,
     "kind": "function",
     "name": "addMobFromSpawn",
     "params": [
@@ -6402,7 +6402,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 451,
+    "line": 457,
     "kind": "function",
     "name": "buildSpawnersFromDefs",
     "params": [
@@ -6411,7 +6411,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 467,
+    "line": 473,
     "kind": "function",
     "name": "updateRespawns",
     "params": [
@@ -6420,7 +6420,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 492,
+    "line": 498,
     "kind": "function",
     "name": "normalizeApiJson",
     "params": [
@@ -6429,14 +6429,23 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 563,
+    "line": 539,
+    "kind": "function",
+    "name": "theHasPropFn",
+    "params": [
+      "o"
+    ]
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 571,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 613,
+    "line": 621,
     "kind": "function",
     "name": "frame",
     "params": [

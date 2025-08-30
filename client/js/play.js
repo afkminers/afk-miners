@@ -1,8 +1,7 @@
 // client/js/play.js
 // Cena jogável genérica (House/PvP): usa ?map=<key> (padrão house).
-// Orquestra: Input (WASD/Numpad/Mouse), PlayerController (mov/colisão),
-// Camera2D (follow), AStarGrid (pathfinding 8-dir) e ClickToMove.
-// Hotfixes: assetUrl() robusto, loader de tileset com tentativas, fallback de sprites e Respawn Manager.
+// Input (WASD/Numpad/Mouse) + PlayerController + Camera2D + AStarGrid + ClickToMove.
+// CSRF robusto, loader tolerante de tileset, respawn, sprites via YAML, sync de posição com seq/clientTs.
 
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
@@ -27,6 +26,11 @@ if (!canvas) {
 }
 const ctx = canvas.getContext('2d');
 
+// garante foco p/ WASD e click-to-move em todos os navegadores
+try { canvas.setAttribute('tabindex', '0'); } catch {}
+canvas.addEventListener('mousedown', () => { try { canvas.focus(); } catch {} });
+canvas.addEventListener('touchstart', () => { try { canvas.focus(); } catch {} });
+
 // helper DOM
 const $ = (s) => document.querySelector(s);
 
@@ -40,7 +44,7 @@ async function fetchCsrf() {
   const r = await fetch('/api/csrf', { credentials: 'include' });
   const headerTok = r.headers.get('x-csrf-token') || r.headers.get('X-CSRF-Token');
   let bodyTok = null;
-  try { const j = await r.json(); bodyTok = j.token || j.csrf || j.csrfToken || null; } catch {}
+  try { const j = await r.json(); bodyTok = j.token || j.csrf || j.csrfToken || j.csrf_token || null; } catch {}
   CSRF_TOKEN = headerTok || bodyTok;
   return CSRF_TOKEN;
 }
@@ -56,9 +60,10 @@ async function jpost(url, body) {
   const r = await fetch(url, {
     method: 'POST',
     credentials: 'include',
+    referrerPolicy: 'strict-origin-when-cross-origin', // ajuda Origin/Referer quando houver
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRF-Token': tok, // <- grafia padrão mais aceita pelos middlewares
+      'X-CSRF-Token': tok,
     },
     body: JSON.stringify(body || {})
   });
@@ -331,6 +336,7 @@ function drawMob(m) {
 /* ======================= Posição Persistente ======================= */
 let POS_SYNC_ENABLED = true;
 let lastSaveAt = 0;
+let posSeq = 0; // ajuda o servidor a ordenar e bloquear replay
 
 async function postPosThrottled(mapKey, x, y) {
   if (!POS_SYNC_ENABLED) return;
@@ -338,12 +344,19 @@ async function postPosThrottled(mapKey, x, y) {
   if (now - lastSaveAt < 1200) return; // 1.2s pra reduzir chamadas
   lastSaveAt = now;
   try {
-    await jpost('/api/player/pos', { mapKey, x: Math.round(x), y: Math.round(y) });
+    posSeq += 1;
+    await jpost('/api/player/pos', {
+      mapKey,
+      x: Math.round(x),
+      y: Math.round(y),
+      seq: posSeq,
+      clientTs: Date.now()
+    });
   } catch (e) {
     const msg = String(e.message || '');
-    if (msg.includes('403') || msg.includes('csrf-missing')) {
-      POS_SYNC_ENABLED = false; // desliga após 1a falha de auth/csrf
-      // console.debug('pos sync disabled:', msg);
+    if (msg.includes('403') || msg.includes('csrf-missing') ||
+        msg.includes('429') || msg.includes('409')) {
+      POS_SYNC_ENABLED = false; // desliga após 1a falha de auth/csrf/rate/replay
     } else {
       console.warn('pos sync failed:', msg);
     }
@@ -485,7 +498,9 @@ function updateRespawns(now) {
 
 /* ================================ Boot ================================ */
 (async function main() {
+  // pega CSRF e cookies antes de qualquer POST
   await fetchCsrf().catch(()=>{});
+
   await loadSpriteMeta();
 
   // aplica tamanho inicial
@@ -530,15 +545,8 @@ function updateRespawns(now) {
   const mapW = (mapData.width || 64) * TILE;
   const mapH = (mapData.height || 64) * TILE;
 
-  const hasSolidObj = objArr.some(o => {
-    const t = String(o.type || '').toLowerCase();
-    theHasProp = (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1));
-    return t === 'solid' || theHasProp;
-  });
-  // (corrige var local)
-  function theHasPropFn(o){ return (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1)); }
-
-  const collBuild = objArr.some(o => String(o.type||'').toLowerCase()==='solid' || theHasPropFn(o))
+  function hasSolidProp(o){ return (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1)); }
+  const collBuild = objArr.some(o => String(o.type||'').toLowerCase()==='solid' || hasSolidProp(o))
     ? buildCollisionGridFromObjects(mapW, mapH, objArr)
     : buildCollisionGridFromTiled(mapData);
 
@@ -556,7 +564,7 @@ function updateRespawns(now) {
     worldHeight: worldH
   });
 
-  // Polyfills e zoom
+  // Polyfills e zoom + apply
   if (typeof camera.getZoom !== 'function') camera.getZoom = () => (camera.zoom && Number(camera.zoom)) || 1;
   if (typeof camera.setZoom !== 'function') camera.setZoom = (z) => { camera.zoom = Number(z) || 1; };
   if (typeof camera.screenToWorld !== 'function') camera.screenToWorld = (sx, sy) => {
@@ -567,6 +575,9 @@ function updateRespawns(now) {
     const z = camera.getZoom ? Number(camera.getZoom()) || 1 : 1;
     return { x: (wx - camera.x) * z, y: (wy - camera.y) * z };
   };
+  if (typeof camera.apply !== 'function') {
+    camera.apply = (ctx, draw) => { ctx.save(); ctx.translate(-camera.x, -camera.y); draw(); ctx.restore(); };
+  }
 
   function applyCameraZoom(){
     const st = (window.GameSettings?.getState && window.GameSettings.getState()) || { zoom: 1 };
@@ -675,7 +686,7 @@ function updateRespawns(now) {
       const p = controller.getPosition();
       hud.innerHTML = `
         <div>map: ${MAP_KEY}</div>
-        <div>Move: WASD/Setas/Numpad • Click-to-move</div>
+        <div>Move: Click-to-move • WASD/Setas/Numpad</div>
         <div>pos: ${Math.round(p.x)}, ${Math.round(p.y)}</div>
         <div>mobs: ${mobs.length} • spawns: ${spawners.length}</div>
       `;

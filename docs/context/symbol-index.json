@@ -280,6 +280,7 @@
       "postPosThrottled",
       "resize",
       "resolvePlayerSprite",
+      "theHasPropFn",
       "updateRespawns"
     ]
   },

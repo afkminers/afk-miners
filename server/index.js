@@ -11,7 +11,7 @@ const { migrate } = require('./models/migrate');
 const { cookieParser, requireAuth, requireCsrf, csrfRoute } = require('./auth/middleware');
 
 const authRoutes = require('./auth/routes');
-const playerRoutes = require('./player/routes');
+const playerRoutes = require('./player/routes'); // mantém seu caminho atual
 const gachaRoutes = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 const skillsRoutes = require('./skills/routes');
@@ -129,7 +129,7 @@ async function bootstrapContentTables() {
       )
     `);
 
-    // chat_messages — usar nomes MINÚSCULOS (sem aspas)
+    // chat_messages — nomes MINÚSCULOS
     await run(`
       CREATE TABLE IF NOT EXISTS chat_messages (
         id BIGSERIAL PRIMARY KEY,
@@ -140,13 +140,22 @@ async function bootstrapContentTables() {
         created_at TIMESTAMPTZ DEFAULT now()
       )
     `);
-
-    // Auto-fix: se por acaso existirem colunas "fromId"/"fromName", renomeia para minúsculas
     try { await run(`ALTER TABLE chat_messages RENAME COLUMN "fromId" TO fromid`); } catch(_) {}
     try { await run(`ALTER TABLE chat_messages RENAME COLUMN "fromName" TO fromname`); } catch(_) {}
-
-    // Índice útil
     await run(`CREATE INDEX IF NOT EXISTS chat_scope_id_idx ON chat_messages (scope, id DESC)`);
+
+    // posição do player por mapa
+    await run(`
+      CREATE TABLE IF NOT EXISTS player_last_pos (
+        player_id BIGINT NOT NULL,
+        map_key   TEXT   NOT NULL,
+        x INTEGER NOT NULL,
+        y INTEGER NOT NULL,
+        last_seq BIGINT DEFAULT 0,
+        updated_at TIMESTAMPTZ DEFAULT now(),
+        PRIMARY KEY (player_id, map_key)
+      )
+    `);
 
     console.log('[content] tables ready (bootstrap)');
   } catch (e) {
@@ -429,7 +438,7 @@ try {
   useWebSocket = !!WebSocketLib && !!WebSocketLib.Server;
   if (!useWebSocket) console.warn('[ws] package loaded but Server not available');
 } catch (err) {
-  console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run `npm install ws` to enable.');
+  console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run \`npm install ws\` to enable.');
   WebSocketLib = null;
   useWebSocket = false;
 }
