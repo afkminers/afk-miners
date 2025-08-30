@@ -60,6 +60,11 @@
     "text": "// Coletar produção acumulada de todos os workers do jogador"
   },
   {
+    "file": "server\\content\\loader.js",
+    "line": 180,
+    "text": "// 2) Se não houver índice, varre recursivamente todos os .yml"
+  },
+  {
     "file": "server\\balance\\config.js",
     "line": 2,
     "text": "// Todos os knobs ficam aqui. Troque números aqui e o jogo inteiro acompanha."

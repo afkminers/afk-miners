@@ -52,10 +52,14 @@ async function jget(url) {
 }
 async function jpost(url, body) {
   const tok = await fetchCsrf().catch(()=>null);
+  if (!tok) throw new Error('csrf-missing');
   const r = await fetch(url, {
     method: 'POST',
     credentials: 'include',
-    headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { 'x-csrf-token': tok } : {}),
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': tok, // <- grafia padrão mais aceita pelos middlewares
+    },
     body: JSON.stringify(body || {})
   });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
@@ -157,9 +161,9 @@ let SPRITE_INDEX = new Map(); // chave normalizada -> meta
 function normKey(s) {
   return String(s || '')
     .replace(/\\/g, '/')
-    .replace(/^.*\//, '')                       // remove caminho
-    .replace(/\.(png|jpg|jpeg|gif|webp)$/i, '') // tira extensão
-    .replace(/[\s_]+/g, '-')                    // normaliza separadores
+    .replace(/^.*\//, '')
+    .replace(/\.(png|jpg|jpeg|gif|webp)$/i, '')
+    .replace(/[\s_]+/g, '-')
     .toLowerCase()
     .trim();
 }
@@ -169,9 +173,7 @@ function indexSpriteMeta(obj) {
   for (const [key, data] of Object.entries(obj || {})) {
     const nk = normKey(key);
     SPRITE_INDEX.set(nk, data);
-    if (data?.image) {
-      SPRITE_INDEX.set(normKey(data.image), data);
-    }
+    if (data?.image) SPRITE_INDEX.set(normKey(data.image), data);
     if (Array.isArray(data?.aliases)) {
       for (const a of data.aliases) SPRITE_INDEX.set(normKey(a), data);
     }
@@ -185,21 +187,13 @@ async function loadSpriteMeta() {
 }
 
 function findMetaFor(spawnKey) {
-  const tries = [
-    spawnKey,
-    String(spawnKey || '').toLowerCase(),
-    String(spawnKey || '').replace(/[\s_]+/g,'-'),
-    normKey(spawnKey)
-  ];
+  const tries = [spawnKey, String(spawnKey || '').toLowerCase(), String(spawnKey || '').replace(/[\s_]+/g,'-'), normKey(spawnKey)];
   for (const t of tries) {
     const m = SPRITE_INDEX.get(normKey(t));
     if (m) return m;
   }
-  // aproximação
   const nk = normKey(spawnKey);
-  for (const [k, m] of SPRITE_INDEX.entries()) {
-    if (k.includes(nk)) return m;
-  }
+  for (const [k, m] of SPRITE_INDEX.entries()) if (k.includes(nk)) return m;
   return null;
 }
 
@@ -208,7 +202,7 @@ function buildMonsterCandidates(kindNorm, meta) {
   const fromMeta = meta?.image ? assetUrl(meta.image) : null;
   const metaBase = fromMeta ? fromMeta.replace(/^(\.\/)+/,'') : null;
   return [
-    fromMeta,                              // prioriza o caminho informado no YAML
+    fromMeta,
     metaBase,
     `/sprites/monsters/${base}.png`,
     `/sprites/${base}.png`,
@@ -335,13 +329,25 @@ function drawMob(m) {
 }
 
 /* ======================= Posição Persistente ======================= */
+let POS_SYNC_ENABLED = true;
 let lastSaveAt = 0;
+
 async function postPosThrottled(mapKey, x, y) {
+  if (!POS_SYNC_ENABLED) return;
   const now = performance.now();
-  if (now - lastSaveAt < 2000) return; // 2s
+  if (now - lastSaveAt < 1200) return; // 1.2s pra reduzir chamadas
   lastSaveAt = now;
-  try { await jpost('/api/player/pos', { mapKey, x: Math.round(x), y: Math.round(y) }); }
-  catch (e) { console.warn('pos sync failed:', e.message); }
+  try {
+    await jpost('/api/player/pos', { mapKey, x: Math.round(x), y: Math.round(y) });
+  } catch (e) {
+    const msg = String(e.message || '');
+    if (msg.includes('403') || msg.includes('csrf-missing')) {
+      POS_SYNC_ENABLED = false; // desliga após 1a falha de auth/csrf
+      // console.debug('pos sync disabled:', msg);
+    } else {
+      console.warn('pos sync failed:', msg);
+    }
+  }
 }
 
 async function getSavedPos() {
@@ -426,7 +432,7 @@ async function resolvePlayerSprite() {
 
 /* =========================== Respawn Manager ========================== */
 function addMobFromSpawn(spDef) {
-  const rawKey = spDef.monsterKey || spDef.monster || "goblin";
+  const rawKey  = spDef.monsterKey || spDef.monster || "goblin";
   const kindNorm = normKey(rawKey);
   const meta = findMetaFor(rawKey);
 
@@ -526,11 +532,13 @@ function updateRespawns(now) {
 
   const hasSolidObj = objArr.some(o => {
     const t = String(o.type || '').toLowerCase();
-    const hasProp = (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1));
-    return t === 'solid' || hasProp;
+    theHasProp = (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1));
+    return t === 'solid' || theHasProp;
   });
+  // (corrige var local)
+  function theHasPropFn(o){ return (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1)); }
 
-  const collBuild = hasSolidObj
+  const collBuild = objArr.some(o => String(o.type||'').toLowerCase()==='solid' || theHasPropFn(o))
     ? buildCollisionGridFromObjects(mapW, mapH, objArr)
     : buildCollisionGridFromTiled(mapData);
 

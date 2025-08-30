@@ -260,9 +260,10 @@
   {
     "file": "data\\sprites\\monsters\\goblin.yml",
     "kind": "object",
-    "size": 6,
+    "size": 7,
     "topKeys": [
       "key",
+      "kind",
       "image",
       "frame",
       "grid",
