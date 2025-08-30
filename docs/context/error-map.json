@@ -215,10 +215,6 @@
     {
       "status": 400,
       "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'weaponOrSkill inválido' }"
     }
   ],
   "GET /assets/items": [
@@ -470,20 +466,36 @@
       "body": "{error:'Falha ao listar skills do herói' }"
     },
     {
-      "status": 404,
-      "body": "{error:'Jogador não encontrado' }"
+      "status": 500,
+      "body": "{error:'pos-read-failed' }"
+    },
+    {
+      "status": 429,
+      "body": "{error:'rate-limited' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid-pos' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'out-of-bounds' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'inside-solid' }"
+    },
+    {
+      "status": 409,
+      "body": "{error:'stale-seq' }"
+    },
+    {
+      "status": 202,
+      "body": "{ok:false,reason:'too-fast' }"
     },
     {
       "status": 500,
-      "body": "{error:'Falha ao obter dados do jogador' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'Falha ao obter posição' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'Falha ao salvar posição' }"
+      "body": "{error:'pos-write-failed' }"
     },
     {
       "status": 404,
@@ -492,6 +504,16 @@
     {
       "status": 500,
       "body": "{error:'Falha ao obter perfil' }"
+    }
+  ],
+  "POST /move": [
+    {
+      "status": 409,
+      "body": "{error:'old-seq' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'too-fast' }"
     }
   ],
   "GET /ping": [
@@ -646,18 +668,90 @@
   ],
   "GET /pos": [
     {
-      "status": 500,
-      "body": "{error:'Falha ao obter posição' }"
+      "status": 400,
+      "body": "{error:'coords inválidas' }"
+    },
+    {
+      "status": 409,
+      "body": "{error:'old-seq' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'too-fast' }"
     },
     {
       "status": 500,
-      "body": "{error:'Falha ao salvar posição' }"
+      "body": "{error:'pos-read-failed' }"
+    },
+    {
+      "status": 429,
+      "body": "{error:'rate-limited' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid-pos' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'out-of-bounds' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'inside-solid' }"
+    },
+    {
+      "status": 409,
+      "body": "{error:'stale-seq' }"
+    },
+    {
+      "status": 202,
+      "body": "{ok:false,reason:'too-fast' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'pos-write-failed' }"
     }
   ],
   "POST /pos": [
     {
+      "status": 400,
+      "body": "{error:'coords inválidas' }"
+    },
+    {
+      "status": 409,
+      "body": "{error:'old-seq' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'too-fast' }"
+    },
+    {
+      "status": 429,
+      "body": "{error:'rate-limited' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid-pos' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'out-of-bounds' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'inside-solid' }"
+    },
+    {
+      "status": 409,
+      "body": "{error:'stale-seq' }"
+    },
+    {
+      "status": 202,
+      "body": "{ok:false,reason:'too-fast' }"
+    },
+    {
       "status": 500,
-      "body": "{error:'Falha ao salvar posição' }"
+      "body": "{error:'pos-write-failed' }"
     }
   ],
   "POST /": [

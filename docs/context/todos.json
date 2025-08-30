@@ -180,6 +180,11 @@
     "text": "// Todos os knobs ficam aqui. Troque números aqui e o jogo inteiro acompanha."
   },
   {
+    "file": "client\\js\\play.js",
+    "line": 29,
+    "text": "// garante foco p/ WASD e click-to-move em todos os navegadores"
+  },
+  {
     "file": "client\\js\\auth.js",
     "line": 2,
     "text": "// Corrigido: todos os requests usam credentials:'include' (envia/recebe cookie `sid`)"

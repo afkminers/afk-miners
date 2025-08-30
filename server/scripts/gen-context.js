@@ -1,4 +1,4 @@
-// server/scripts/gen-context.js (v6)
+// server/scripts/gen-context.js (v7 — PG-only, parrudo)
 // Gera (em docs/context/):
 // - context-pack.txt
 // - API.md
@@ -8,16 +8,21 @@
 // - env-usage.json
 // - error-map.json
 // - function-signatures.json
-// - responses-sample.json         (NOVO)
-// - deps-graph.json               (NOVO)
-// - route-history.json            (NOVO)
-// - todos.json                    (NOVO)
-// - openapi.json                  (NOVO)
-// - symbol-index.json             (se CTX_SYMBOLS=1)
-// - deps.txt                      (se CTX_IMPORTS=1)
-// - db-tables.json                (se DATABASE_URL definido)  ← NOVO
-// - db-schema.sql                 (se DATABASE_URL definido)  ← NOVO
-//
+// - responses-sample.json
+// - deps-graph.json
+// - route-history.json
+// - todos.json
+// - openapi.json
+// - symbol-index.json          (se CTX_SYMBOLS=1)
+// - deps.txt                   (se CTX_IMPORTS=1)
+// - db-tables.json             (se DATABASE_URL definido)
+// - db-schema.sql              (se DATABASE_URL definido)
+// - db-indexes.json            (se DATABASE_URL definido)      [NOVO]
+// - db-views.json              (se DATABASE_URL definido)      [NOVO]
+// - db-enums.json              (se DATABASE_URL definido)      [NOVO]
+// - db-extensions.json         (se DATABASE_URL definido)      [NOVO]
+// - db-stats.json              (se DATABASE_URL definido)      [NOVO]
+// - db-counts.txt              (se DATABASE_URL definido)      [NOVO]
 // Execução: npm run ctx:pack (de /server)
 
 const fs = require('fs');
@@ -176,7 +181,6 @@ function summarizeHTML(){
 
 // ===== v6 extras =====
 
-// Symbols (opcional)
 function buildSymbolIndex(){
   const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const idx = [];
@@ -195,7 +199,6 @@ function buildSymbolIndex(){
   return idx.sort((a,b)=> a.file.localeCompare(b.file));
 }
 
-// Imports (texto) + grafo JSON
 function buildImportGraph(){
   const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const edges = [];
@@ -212,7 +215,6 @@ function buildImportGraph(){
   return edges;
 }
 
-// Assinaturas
 function buildFunctionSignatures(){
   const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const out = [];
@@ -238,7 +240,6 @@ function buildFunctionSignatures(){
 }
 function splitParams(s){ return (s||'').split(',').map(x=>x.trim()).filter(Boolean); }
 
-// ENV + defaults
 function buildEnvUsage(){
   const files = glob.sync('**/*.{js,ts,jsx,tsx}', { nodir:true, ignore: GLOB_IGNORE });
   const all = {};
@@ -263,13 +264,12 @@ function cleanDefault(t){
   return s;
 }
 
-// Contratos por rota (params/query/body) + erros + respostas OK
 function buildEndpointContracts(routes){
   const LOOK = 160; // linhas após a definição
   const out = [];
   for(const r of routes){
     let src=''; try{ src = fs.readFileSync(r.file,'utf8'); }catch{ continue; }
-    const lines = src.split(/\r?\n/);
+    const lines = src.split(/\r?\\n/);
     const start = Math.max(0, r.line-1);
     const end   = Math.min(lines.length-1, start + LOOK);
     const slice = lines.slice(start, end+1).join('\n');
@@ -279,7 +279,7 @@ function buildEndpointContracts(routes){
     const body   = inferKeys(slice, 'body');
 
     const errors = inferErrors(slice);
-    const okResp = inferOkResponses(slice); // NOVO
+    const okResp = inferOkResponses(slice);
 
     out.push({
       method: r.method, path: r.path, file: r.file, line: r.line,
@@ -294,7 +294,6 @@ function buildEndpointContracts(routes){
   }
   return out;
 }
-
 function inferParamsFromPath(p){ const rx=/:([A-Za-z0-9_]+)/g; const out=[]; let m; while((m=rx.exec(p))!==null) out.push(m[1]); return out; }
 function inferKeys(text, which){
   const keys = new Set();
@@ -314,10 +313,8 @@ function inferErrors(text){
 }
 function inferOkResponses(text){
   const out=[]; let m;
-  // res.json({...}) | return res.json({...})
   const rxJson = /(?:return\s+)?res\.json\(\s*({[\s\S]*?})\s*\)/g;
   while((m=rxJson.exec(text))!==null){ out.push({ status:200, body: compactJsonLike(m[1]) }); }
-  // res.send({...}) string/number — capturamos objeto json-like
   const rxSend = /(?:return\s+)?res\.send\(\s*({[\s\S]*?})\s*\)/g;
   while((m=rxSend.exec(text))!==null){ out.push({ status:200, body: compactJsonLike(m[1]) }); }
   return out;
@@ -333,7 +330,6 @@ function exampleForKey(k){
   return "value";
 }
 
-// TODO/FIXME
 function scanTodos(){
   const files = glob.sync('**/*.{js,ts,jsx,tsx,md}', { nodir:true, ignore: GLOB_IGNORE });
   const out=[];
@@ -347,7 +343,6 @@ function scanTodos(){
   return out;
 }
 
-// Histórico por rota (alterado desde a última tag?)
 function buildRouteHistory(routes, lastTag){
   const map={};
   for(const r of routes){
@@ -362,7 +357,6 @@ function buildRouteHistory(routes, lastTag){
   return map;
 }
 
-// OpenAPI mínimo a partir de contracts/erros/ok
 function buildOpenAPI(contracts){
   const doc = {
     openapi: "3.0.3",
@@ -374,7 +368,6 @@ function buildOpenAPI(contracts){
     const mm = c.method.toLowerCase();
     const item = p[mm] = p[mm] || { responses: {} };
 
-    // requestBody (se body inferido)
     if(c.sample?.body){
       item.requestBody = {
         required: true,
@@ -384,7 +377,6 @@ function buildOpenAPI(contracts){
       };
     }
 
-    // parâmetros (params+query)
     const params = [];
     if(c.sample?.params){
       for(const k of Object.keys(c.sample.params)){
@@ -398,7 +390,6 @@ function buildOpenAPI(contracts){
     }
     if(params.length) item.parameters = params;
 
-    // respostas sucesso (ok) e erros
     if(c.ok?.length){
       const ok = c.ok[0];
       item.responses["200"] = {
@@ -437,8 +428,177 @@ function schemaFromJsonLike(str){
   }catch{ return { type:'object' }; }
 }
 
-// helpers
 function writeJSON(p,obj){ fs.writeFileSync(p, JSON.stringify(obj,null,2)); }
+
+// ===== PG BONUSES (ricos) =====
+async function dumpPostgresSnapshot() {
+  if (!process.env.DATABASE_URL) return;
+
+  let pg;
+  try { pg = require('pg'); } catch {
+    console.warn('WARN: pacote "pg" não instalado — ignorando snapshot Postgres.');
+    return;
+  }
+  const { Client } = pg;
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+  });
+
+  try {
+    await client.connect();
+
+    // Tabelas e colunas (public)
+    const tablesRes = await client.query(`
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema='public' AND table_type='BASE TABLE'
+      ORDER BY table_name;
+    `);
+    const tables = tablesRes.rows.map(r => r.table_name);
+
+    const tablesInfo = {};
+    for (const t of tables) {
+      const cols = await client.query(`
+        SELECT column_name, data_type, is_nullable, column_default
+        FROM information_schema.columns
+        WHERE table_schema='public' AND table_name=$1
+        ORDER BY ordinal_position;
+      `, [t]);
+      tablesInfo[t] = cols.rows;
+    }
+
+    // Constraints (FK/PK/Unique)
+    const constraints = await client.query(`
+      SELECT tc.table_name, tc.constraint_type, kcu.column_name, ccu.table_name AS foreign_table,
+             ccu.column_name AS foreign_column
+      FROM information_schema.table_constraints AS tc
+      LEFT JOIN information_schema.key_column_usage AS kcu
+        ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+      LEFT JOIN information_schema.constraint_column_usage AS ccu
+        ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
+      WHERE tc.table_schema='public'
+      ORDER BY tc.table_name, tc.constraint_type, kcu.column_name;
+    `);
+
+    // Índices
+    const indexes = await client.query(`
+      SELECT
+        t.relname AS table_name,
+        i.relname AS index_name,
+        pg_get_indexdef(ix.indexrelid) AS index_def,
+        ix.indisunique AS is_unique,
+        ix.indisprimary AS is_primary
+      FROM pg_class t
+      JOIN pg_index ix ON t.oid = ix.indrelid
+      JOIN pg_class i ON i.oid = ix.indexrelid
+      JOIN pg_namespace n ON n.oid = t.relnamespace
+      WHERE n.nspname = 'public'
+      ORDER BY t.relname, i.relname;
+    `);
+
+    // Views
+    const views = await client.query(`
+      SELECT table_name AS view_name, view_definition
+      FROM information_schema.views
+      WHERE table_schema='public'
+      ORDER BY table_name;
+    `);
+
+    // Enums
+    const enums = await client.query(`
+      SELECT t.typname AS enum_name, string_agg(e.enumlabel, '|' ORDER BY e.enumsortorder) AS labels
+      FROM pg_type t
+      JOIN pg_enum e ON t.oid = e.enumtypid
+      JOIN pg_namespace n ON n.oid = t.typnamespace
+      WHERE n.nspname = 'public'
+      GROUP BY t.typname
+      ORDER BY t.typname;
+    `);
+
+    // Extensões instaladas
+    const extensions = await client.query(`
+      SELECT extname, extversion
+      FROM pg_extension
+      ORDER BY extname;
+    `);
+
+    // DDL (tabelas)
+    const ddlRes = await client.query(`
+      SELECT
+        'CREATE TABLE ' || quote_ident(n.nspname) || '.' || quote_ident(c.relname) || E'\\n(' ||
+        string_agg('  ' || quote_ident(a.attname) || ' ' || pg_catalog.format_type(a.atttypid, a.atttypmod) ||
+                   CASE WHEN a.attnotnull THEN ' NOT NULL' ELSE '' END ||
+                   CASE WHEN at.attgenerated = 's' THEN ' GENERATED ALWAYS AS IDENTITY'
+                        WHEN at.attgenerated = 'd' THEN ' GENERATED BY DEFAULT AS IDENTITY'
+                        ELSE '' END ||
+                   CASE WHEN ad.adsrc IS NOT NULL THEN ' DEFAULT ' || ad.adsrc ELSE '' END, E',\\n'
+                   ORDER BY a.attnum) || E'\\n);' AS ddl
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+      LEFT JOIN pg_attrdef ad ON ad.adrelid = a.attrelid AND ad.adnum = a.attnum
+      LEFT JOIN pg_attrdef at ON at.adrelid = a.attrelid AND at.adnum = a.attnum
+      WHERE c.relkind = 'r' AND n.nspname='public'
+      GROUP BY n.nspname, c.relname
+      ORDER BY c.relname;
+    `).catch(() => ({ rows: tables.map(t => ({ ddl: `-- CREATE TABLE ${t} (...);` })) }));
+
+    // Stats de tamanho e linhas (aprox.)
+    const stats = await client.query(`
+      SELECT
+        c.relname AS table_name,
+        pg_total_relation_size(c.oid) AS total_bytes,
+        pg_relation_size(c.oid) AS table_bytes,
+        COALESCE(NULLIF(to_char(s.reltuples, 'FM9999999999990'),''),'0') AS reltuples
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      LEFT JOIN pg_stat_all_tables s ON s.relid = c.oid
+      WHERE n.nspname='public' AND c.relkind='r'
+      ORDER BY pg_total_relation_size(c.oid) DESC, c.relname;
+    `);
+
+    // Contagem exata por tabela (cuidado em DBs gigantes; aqui é demo/indie)
+    const counts = {};
+    for (const t of tables) {
+      try {
+        const { rows } = await client.query(`SELECT COUNT(*)::bigint AS n FROM ${JSON.stringify('public')}.${JSON.stringify(t)}`.replace(/"/g,'')); // safer-ish
+        counts[t] = rows?.[0]?.n || "0";
+      } catch {
+        counts[t] = "err";
+      }
+    }
+
+    ensureDir(CTX_DIR);
+    writeJSON(path.join(CTX_DIR, 'db-tables.json'), { tables, tablesInfo, constraints: constraints.rows });
+    fs.writeFileSync(path.join(CTX_DIR, 'db-schema.sql'), ddlRes.rows.map(r => r.ddl).join('\n\n'));
+    writeJSON(path.join(CTX_DIR, 'db-indexes.json'), indexes.rows);
+    writeJSON(path.join(CTX_DIR, 'db-views.json'), views.rows);
+    writeJSON(path.join(CTX_DIR, 'db-enums.json'), enums.rows);
+    writeJSON(path.join(CTX_DIR, 'db-extensions.json'), extensions.rows);
+
+    const statsPretty = stats.rows.map(r => ({
+      table_name: r.table_name,
+      rows_estimate: Number(r.reltuples || 0),
+      size_table_bytes: Number(r.table_bytes || 0),
+      size_total_bytes: Number(r.total_bytes || 0),
+      size_total_mb: Math.round((Number(r.total_bytes||0)/1024/1024)*100)/100
+    }));
+    writeJSON(path.join(CTX_DIR, 'db-stats.json'), statsPretty);
+
+    // db-counts.txt (human-friendly)
+    const lines = [];
+    lines.push('Table\tExact_Count');
+    Object.keys(counts).sort().forEach(t => lines.push(`${t}\t${counts[t]}`));
+    fs.writeFileSync(path.join(CTX_DIR, 'db-counts.txt'), lines.join('\n'), 'utf8');
+
+    console.log('OK: snapshot PG → db-*.json, db-schema.sql, db-counts.txt');
+  } catch (e) {
+    console.warn('WARN: dumpPostgresSnapshot falhou:', e.message);
+  } finally {
+    try { await client.end(); } catch {}
+  }
+}
 
 // ctx.yml auto
 function genCtxYmlIfMissing(info, routes){
@@ -470,6 +630,7 @@ important_env:
   - CSRF_SECRET
   - WORKER_TICK_SECONDS
   - TRIES_PER_MINUTE_BASE
+  - DATABASE_URL
   - NODE_ENV
 
 notes:
@@ -479,7 +640,7 @@ notes:
 }
 
 // API.md legível
-function buildAPIMarkdown(contracts, errorMap, envUsage, responses){
+function buildAPIMarkdown(contracts, errorMap, envUsage){
   const lines = [];
   lines.push('# AFK Miners — API');
   lines.push('');
@@ -568,89 +729,7 @@ function buildErrorMap(contracts){
   return map;
 }
 
-/* =========================
-   NOVO: Snapshot do Postgres
-   ========================= */
-async function dumpPostgresSnapshot() {
-  if (!process.env.DATABASE_URL) return;
-  let pg;
-  try { pg = require('pg'); } catch { 
-    console.warn('WARN: pg não instalado — ignorando snapshot Postgres.');
-    return; 
-  }
-  const { Client } = pg;
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
-  });
-  try {
-    await client.connect();
-
-    const tablesRes = await client.query(`
-      SELECT table_name
-      FROM information_schema.tables
-      WHERE table_schema='public' AND table_type='BASE TABLE'
-      ORDER BY table_name;
-    `);
-    const tables = tablesRes.rows.map(r => r.table_name);
-
-    const tablesInfo = {};
-    for (const t of tables) {
-      const cols = await client.query(`
-        SELECT column_name, data_type, is_nullable, column_default
-        FROM information_schema.columns
-        WHERE table_schema='public' AND table_name=$1
-        ORDER BY ordinal_position;
-      `, [t]);
-      tablesInfo[t] = cols.rows;
-    }
-
-    const constraints = await client.query(`
-      SELECT tc.table_name, tc.constraint_type, kcu.column_name, ccu.table_name AS foreign_table,
-             ccu.column_name AS foreign_column
-      FROM information_schema.table_constraints AS tc
-      LEFT JOIN information_schema.key_column_usage AS kcu
-        ON tc.constraint_name = kcu.constraint_name AND tc.table_name = kcu.table_name
-      LEFT JOIN information_schema.constraint_column_usage AS ccu
-        ON ccu.constraint_name = tc.constraint_name
-      WHERE tc.table_schema='public'
-      ORDER BY tc.table_name, tc.constraint_type;
-    `);
-
-    // pg_get_tabledef não existe em todas as instalações; fallback
-    const ddlRes = await client.query(`
-      SELECT
-        'CREATE TABLE ' || quote_ident(n.nspname) || '.' || quote_ident(c.relname) || E'\\n(' ||
-        string_agg('  ' || quote_ident(a.attname) || ' ' || pg_catalog.format_type(a.atttypid, a.atttypmod) ||
-                   CASE WHEN a.attnotnull THEN ' NOT NULL' ELSE '' END ||
-                   CASE WHEN at.attgenerated = 's' THEN ' GENERATED ALWAYS AS IDENTITY'
-                        WHEN at.attgenerated = 'd' THEN ' GENERATED BY DEFAULT AS IDENTITY'
-                        ELSE '' END ||
-                   CASE WHEN a.attdefault IS NOT NULL THEN ' DEFAULT ' || a.attdefault ELSE '' END, E',\\n'
-                   ORDER BY a.attnum) || E'\\n);' AS ddl
-      FROM pg_class c
-      JOIN pg_namespace n ON n.oid = c.relnamespace
-      JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
-      LEFT JOIN pg_attrdef at ON at.adrelid = a.attrelid AND at.adnum = a.attnum
-      WHERE c.relkind = 'r' AND n.nspname='public'
-      GROUP BY n.nspname, c.relname
-      ORDER BY c.relname;
-    `).catch(() => ({ rows: tables.map(t => ({ ddl: `-- CREATE TABLE ${t} (...);` })) }));
-
-    ensureDir(CTX_DIR);
-    fs.writeFileSync(path.join(CTX_DIR, 'db-tables.json'),
-      JSON.stringify({ tables, tablesInfo, constraints: constraints.rows }, null, 2));
-    fs.writeFileSync(path.join(CTX_DIR, 'db-schema.sql'),
-      ddlRes.rows.map(r => r.ddl).join('\n\n'));
-    console.log('OK: snapshot Postgres → docs/context/db-tables.json + db-schema.sql');
-  } catch (e) {
-    console.warn('WARN: dumpPostgresSnapshot falhou:', e.message);
-  } finally {
-    try { await client.end(); } catch {}
-  }
-}
-
-function main(){
+async function main(){
   ensureDir(DOCS_DIR); ensureDir(CTX_DIR);
   const info = gitInfo();
 
@@ -669,41 +748,28 @@ function main(){
   const contracts = buildEndpointContracts(routes);
   const errorMap  = buildErrorMap(contracts);
 
-  // NEW: responses (consolidado) — além de já vir em contracts.ok
   const responses = {};
   for(const c of contracts){
     const k = `${c.method} ${c.path}`;
     responses[k] = (c.ok||[]).map(o => o.body);
   }
 
-  // Grafo de deps (sempre geramos JSON); deps.txt só com CTX_IMPORTS=1
   const depsGraph = buildImportGraph();
-
-  // TODOs
-  const todos = scanTodos();
-
-  // Histórico por rota
-  const routeHistory = buildRouteHistory(routes, info.lastTag);
-
-  // OpenAPI
-  const openapi = buildOpenAPI(contracts);
-
-  // opcionais
   let sym = []; let depsTxtEdges = [];
-  if(process.env.CTX_SYMBOLS === '1'){ sym = buildSymbolIndex(); fs.writeFileSync(path.join(CTX_DIR,'symbol-index.json'), JSON.stringify(sym,null,2)); }
+
+  if(process.env.CTX_SYMBOLS === '1'){ sym = buildSymbolIndex(); writeJSON(path.join(CTX_DIR,'symbol-index.json'), sym); }
   if(process.env.CTX_IMPORTS === '1'){ depsTxtEdges = depsGraph; fs.writeFileSync(path.join(CTX_DIR,'deps.txt'), depsTxtEdges.map(e=> `${e.from} -> ${e.to}`).join('\n') || '(sem imports)'); }
 
-  // grava JSONs principais
-  fs.writeFileSync(path.join(CTX_DIR,'data-summary.json'),        JSON.stringify(yml,null,2));
-  fs.writeFileSync(path.join(CTX_DIR,'function-signatures.json'), JSON.stringify(fnSigs,null,2));
-  fs.writeFileSync(path.join(CTX_DIR,'env-usage.json'),           JSON.stringify(envUsage,null,2));
-  fs.writeFileSync(path.join(CTX_DIR,'endpoints-contracts.json'), JSON.stringify(contracts,null,2));
-  fs.writeFileSync(path.join(CTX_DIR,'error-map.json'),           JSON.stringify(errorMap,null,2));
-  fs.writeFileSync(path.join(CTX_DIR,'responses-sample.json'),    JSON.stringify(responses,null,2));
-  fs.writeFileSync(path.join(CTX_DIR,'deps-graph.json'),          JSON.stringify(depsGraph,null,2));
-  fs.writeFileSync(path.join(CTX_DIR,'route-history.json'),       JSON.stringify(routeHistory,null,2));
-  fs.writeFileSync(path.join(CTX_DIR,'todos.json'),               JSON.stringify(todos,null,2));
-  fs.writeFileSync(path.join(CTX_DIR,'openapi.json'),             JSON.stringify(openapi,null,2));
+  writeJSON(path.join(CTX_DIR,'data-summary.json'),        yml);
+  writeJSON(path.join(CTX_DIR,'function-signatures.json'), fnSigs);
+  writeJSON(path.join(CTX_DIR,'env-usage.json'),           envUsage);
+  writeJSON(path.join(CTX_DIR,'endpoints-contracts.json'), contracts);
+  writeJSON(path.join(CTX_DIR,'error-map.json'),           errorMap);
+  writeJSON(path.join(CTX_DIR,'responses-sample.json'),    responses);
+  writeJSON(path.join(CTX_DIR,'deps-graph.json'),          depsGraph);
+  writeJSON(path.join(CTX_DIR,'route-history.json'),       buildRouteHistory(routes, info.lastTag));
+  writeJSON(path.join(CTX_DIR,'todos.json'),               scanTodos());
+  writeJSON(path.join(CTX_DIR,'openapi.json'),             buildOpenAPI(contracts));
 
   const changes = info.lastTag ? sh(`git diff --name-status ${info.lastTag}..HEAD`) : '(sem tag anterior)';
   fs.writeFileSync(path.join(CTX_DIR,'changes-since.txt'), changes || '(sem mudanças)');
@@ -728,9 +794,9 @@ function main(){
   lines.push(...(jsn.length? jsn.map(e=> e.error? `ERR ${e.file} :: ${e.error}` : (e.note==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)'])); lines.push('');
   if(process.env.CTX_SYMBOLS === '1'){
     lines.push('== Symbol Index (amostra) ==');
-    const sym = JSON.parse(fs.readFileSync(path.join(CTX_DIR,'symbol-index.json'),'utf8'));
-    lines.push(...(sym.slice(0,30).map(s=> `${s.file} :: ${s.symbols.join(', ')}`)));
-    if(sym.length>30) lines.push(`(+${sym.length-30} arquivos em symbol-index.json)`);
+    const symJS = JSON.parse(fs.readFileSync(path.join(CTX_DIR,'symbol-index.json'),'utf8'));
+    lines.push(...(symJS.slice(0,30).map(s=> `${s.file} :: ${s.symbols.join(', ')}`)));
+    if(symJS.length>30) lines.push(`(+${symJS.length-30} arquivos em symbol-index.json)`);
     lines.push('');
   }
   if(process.env.CTX_IMPORTS === '1'){
@@ -751,10 +817,10 @@ function main(){
 
   genCtxYmlIfMissing(info, routes);
 
-  // NOVO: snapshot opcional do Postgres
-  dumpPostgresSnapshot().catch(()=>{});
+  // Snapshot PG (completo, sem SQLite)
+  await dumpPostgresSnapshot();
 
-  console.log('OK: v6 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi (+ pg snapshot opcional)');
+  console.log('OK: v7 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi + PG snapshot (enums/views/indexes/stats/counts).');
 }
 
 main();

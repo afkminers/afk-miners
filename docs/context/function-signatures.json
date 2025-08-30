@@ -151,7 +151,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 175,
+    "line": 184,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -160,7 +160,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 404,
+    "line": 413,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -169,7 +169,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 448,
+    "line": 457,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -178,7 +178,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 460,
+    "line": 469,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -643,6 +643,27 @@
     "params": []
   },
   {
+    "file": "server\\routes\\player.js",
+    "line": 8,
+    "kind": "function",
+    "name": "clamp",
+    "params": [
+      "v",
+      "a",
+      "b"
+    ]
+  },
+  {
+    "file": "server\\routes\\player.js",
+    "line": 9,
+    "kind": "function",
+    "name": "dist",
+    "params": [
+      "a",
+      "b"
+    ]
+  },
+  {
     "file": "server\\routes\\farm.js",
     "line": 26,
     "kind": "function",
@@ -671,20 +692,92 @@
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 9,
+    "line": 19,
     "kind": "function",
-    "name": "noStore",
+    "name": "loadMapJson",
     "params": [
-      "res"
+      "mapKey"
     ]
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 74,
-    "kind": "arrow",
-    "name": "imageUrlFor",
+    "line": 24,
+    "kind": "function",
+    "name": "loadMapObjects",
     "params": [
-      "heroKey"
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\player\\routes.js",
+    "line": 31,
+    "kind": "function",
+    "name": "hasSolidProp",
+    "params": [
+      "o"
+    ]
+  },
+  {
+    "file": "server\\player\\routes.js",
+    "line": 39,
+    "kind": "function",
+    "name": "buildCollisionGridFromObjects",
+    "params": [
+      "mapW",
+      "mapH",
+      "objs"
+    ]
+  },
+  {
+    "file": "server\\player\\routes.js",
+    "line": 57,
+    "kind": "function",
+    "name": "buildCollisionGridFromTiled",
+    "params": [
+      "json"
+    ]
+  },
+  {
+    "file": "server\\player\\routes.js",
+    "line": 69,
+    "kind": "function",
+    "name": "getMapCollision",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\player\\routes.js",
+    "line": 88,
+    "kind": "function",
+    "name": "isSolidAt",
+    "params": [
+      "grid",
+      "cols",
+      "rows",
+      "x",
+      "y"
+    ]
+  },
+  {
+    "file": "server\\player\\routes.js",
+    "line": 95,
+    "kind": "function",
+    "name": "inWorld",
+    "params": [
+      "cols",
+      "rows",
+      "x",
+      "y"
+    ]
+  },
+  {
+    "file": "server\\player\\routes.js",
+    "line": 101,
+    "kind": "function",
+    "name": "rlAllow",
+    "params": [
+      "playerId"
     ]
   },
   {
@@ -917,14 +1010,14 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 27,
+    "line": 30,
     "kind": "function",
     "name": "cookieOpts",
     "params": []
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 39,
+    "line": 42,
     "kind": "function",
     "name": "setAuthCookie",
     "params": [
@@ -934,7 +1027,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 44,
+    "line": 47,
     "kind": "function",
     "name": "clearAuthCookie",
     "params": [
@@ -943,7 +1036,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 54,
+    "line": 58,
     "kind": "function",
     "name": "requireAuth",
     "params": [
@@ -954,7 +1047,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 77,
+    "line": 79,
     "kind": "function",
     "name": "csrfRoute",
     "params": [
@@ -964,7 +1057,16 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 89,
+    "line": 95,
+    "kind": "function",
+    "name": "isBadCrossOrigin",
+    "params": [
+      "req"
+    ]
+  },
+  {
+    "file": "server\\auth\\middleware.js",
+    "line": 105,
     "kind": "function",
     "name": "requireCsrf",
     "params": [
@@ -6137,7 +6239,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 12,
+    "line": 11,
     "kind": "function",
     "name": "pickElByIds",
     "params": [
@@ -6147,7 +6249,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 31,
+    "line": 35,
     "kind": "arrow",
     "name": "$",
     "params": [
@@ -6156,14 +6258,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 38,
+    "line": 42,
     "kind": "function",
     "name": "fetchCsrf",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 48,
+    "line": 52,
     "kind": "function",
     "name": "jget",
     "params": [
@@ -6172,7 +6274,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 53,
+    "line": 57,
     "kind": "function",
     "name": "jpost",
     "params": [
@@ -6182,7 +6284,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 70,
+    "line": 75,
     "kind": "function",
     "name": "assetUrl",
     "params": [
@@ -6192,7 +6294,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 82,
+    "line": 87,
     "kind": "function",
     "name": "normalizeTilesetPath",
     "params": [
@@ -6201,7 +6303,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 90,
+    "line": 95,
     "kind": "function",
     "name": "loadTilesetImage",
     "params": [
@@ -6210,21 +6312,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 111,
+    "line": 116,
     "kind": "function",
     "name": "applySmoothing",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 124,
+    "line": 129,
     "kind": "function",
     "name": "resize",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 143,
+    "line": 148,
     "kind": "function",
     "name": "loadImg",
     "params": [
@@ -6233,7 +6335,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 151,
+    "line": 156,
     "kind": "function",
     "name": "imgReady",
     "params": [
@@ -6242,7 +6344,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 152,
+    "line": 157,
     "kind": "function",
     "name": "ensureImgLoaded",
     "params": [
@@ -6251,7 +6353,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 161,
+    "line": 166,
     "kind": "function",
     "name": "normKey",
     "params": [
@@ -6260,7 +6362,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 171,
+    "line": 176,
     "kind": "function",
     "name": "indexSpriteMeta",
     "params": [
@@ -6269,14 +6371,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 183,
+    "line": 188,
     "kind": "function",
     "name": "loadSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 189,
+    "line": 194,
     "kind": "function",
     "name": "findMetaFor",
     "params": [
@@ -6285,7 +6387,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 200,
+    "line": 205,
     "kind": "function",
     "name": "buildMonsterCandidates",
     "params": [
@@ -6295,7 +6397,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 215,
+    "line": 220,
     "kind": "function",
     "name": "loadMonsterImg",
     "params": [
@@ -6305,14 +6407,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 244,
+    "line": 249,
     "kind": "function",
     "name": "clear",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 246,
+    "line": 251,
     "kind": "function",
     "name": "drawGround",
     "params": [
@@ -6321,7 +6423,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 272,
+    "line": 277,
     "kind": "function",
     "name": "drawPlayer",
     "params": [
@@ -6330,7 +6432,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 286,
+    "line": 291,
     "kind": "function",
     "name": "drawMob",
     "params": [
@@ -6339,7 +6441,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 335,
+    "line": 341,
     "kind": "function",
     "name": "postPosThrottled",
     "params": [
@@ -6350,14 +6452,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 353,
+    "line": 366,
     "kind": "function",
     "name": "getSavedPos",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 362,
+    "line": 375,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -6368,7 +6470,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 380,
+    "line": 393,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -6377,7 +6479,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 390,
+    "line": 403,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -6386,14 +6488,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 409,
+    "line": 422,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 434,
+    "line": 447,
     "kind": "function",
     "name": "addMobFromSpawn",
     "params": [
@@ -6402,7 +6504,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 457,
+    "line": 470,
     "kind": "function",
     "name": "buildSpawnersFromDefs",
     "params": [
@@ -6411,7 +6513,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 473,
+    "line": 486,
     "kind": "function",
     "name": "updateRespawns",
     "params": [
@@ -6420,7 +6522,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 498,
+    "line": 513,
     "kind": "function",
     "name": "normalizeApiJson",
     "params": [
@@ -6429,23 +6531,23 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 539,
+    "line": 548,
     "kind": "function",
-    "name": "theHasPropFn",
+    "name": "hasSolidProp",
     "params": [
       "o"
     ]
   },
   {
     "file": "client\\js\\play.js",
-    "line": 571,
+    "line": 582,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 621,
+    "line": 632,
     "kind": "function",
     "name": "frame",
     "params": [

@@ -2,6 +2,7 @@
 
 ## Variáveis de ambiente
 
+- `APP_ORIGIN` (defaults: http://localhost:3000)
 - `CONTENT_PIPELINE` (defaults: off)
 - `COOKIE_DOMAIN` (defaults: undefined)
 - `COOKIE_NAME` (defaults: sid)
@@ -23,13 +24,13 @@
 
 ### GET /
 
-Arquivo: `server\index.js:410`
+Arquivo: `server\index.js:419`
 
 _Sem payload inferido_
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:383`
+Arquivo: `server\index.js:392`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -57,7 +58,7 @@ Arquivo: `server\index.js:383`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:358`
+Arquivo: `server\index.js:367`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -87,7 +88,7 @@ Arquivo: `server\index.js:358`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:370`
+Arquivo: `server\index.js:379`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -116,7 +117,7 @@ Arquivo: `server\index.js:370`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:347`
+Arquivo: `server\index.js:356`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -141,7 +142,7 @@ Arquivo: `server\index.js:347`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:317`
+Arquivo: `server\index.js:326`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -169,7 +170,7 @@ Arquivo: `server\index.js:317`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:328`
+Arquivo: `server\index.js:337`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -196,7 +197,7 @@ Arquivo: `server\index.js:328`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:337`
+Arquivo: `server\index.js:346`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -222,7 +223,7 @@ Arquivo: `server\index.js:337`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:622`
+Arquivo: `server\index.js:631`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -260,7 +261,6 @@ Arquivo: `server\index.js:43`
 
 **Erros conhecidos:**
 - `HTTP 400` → {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
-- `HTTP 400` → {error:'weaponOrSkill inválido' }
 
 ### GET /assets/items
 
@@ -413,7 +413,7 @@ Arquivo: `server\routes\afk.js:7`
 
 ### GET /pos
 
-Arquivo: `server\player\routes.js:96`
+Arquivo: `server\routes\player.js:12`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -422,17 +422,29 @@ Arquivo: `server\player\routes.js:96`
   "map": "value"
 }
 ```
-
-**Resposta de sucesso (amostra):**
+- body:
 ```json
 {
-  "ok": true
+  "const { mapKey": "value",
+  "x": "value",
+  "y": "value",
+  "const { seq": "value",
+  "type": "value",
+  "tx": "value",
+  "ty": "value",
+  "mapKey": "value"
 }
 ```
 
+**Resposta de sucesso (amostra):**
+```json
+{x:row.x,y:row.y }
+```
+
 **Erros conhecidos:**
-- `HTTP 500` → {error:'Falha ao obter posição' }
-- `HTTP 500` → {error:'Falha ao salvar posição' }
+- `HTTP 400` → {error:'coords inválidas' }
+- `HTTP 409` → {error:'old-seq' }
+- `HTTP 400` → {error:'too-fast' }
 
 ### GET /state
 
@@ -519,7 +531,7 @@ Arquivo: `server\gacha\routes.js:144`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:393`
+Arquivo: `server\index.js:402`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -539,7 +551,7 @@ Arquivo: `server\index.js:393`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:645`
+Arquivo: `server\index.js:654`
 
 _Sem payload inferido_
 
@@ -715,6 +727,31 @@ _Sem payload inferido_
 - `HTTP 404` → {error:'Jogador não encontrado' }
 - `HTTP 500` → {error:'Falha ao obter perfil' }
 
+### POST /move
+
+Arquivo: `server\routes\player.js:44`
+
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "const { seq": "value",
+  "type": "value",
+  "tx": "value",
+  "ty": "value",
+  "mapKey": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,x,y,seq }
+```
+
+**Erros conhecidos:**
+- `HTTP 409` → {error:'old-seq' }
+- `HTTP 400` → {error:'too-fast' }
+
 ### POST /plant
 
 Arquivo: `server\routes\farm.js:122`
@@ -791,9 +828,22 @@ Arquivo: `server\routes\farm.js:101`
 
 ### POST /pos
 
-Arquivo: `server\player\routes.js:139`
+Arquivo: `server\routes\player.js:23`
 
-_Sem payload inferido_
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "const { mapKey": "value",
+  "x": "value",
+  "y": "value",
+  "const { seq": "value",
+  "type": "value",
+  "tx": "value",
+  "ty": "value",
+  "mapKey": "value"
+}
+```
 
 **Resposta de sucesso (amostra):**
 ```json
@@ -803,7 +853,9 @@ _Sem payload inferido_
 ```
 
 **Erros conhecidos:**
-- `HTTP 500` → {error:'Falha ao salvar posição' }
+- `HTTP 400` → {error:'coords inválidas' }
+- `HTTP 409` → {error:'old-seq' }
+- `HTTP 400` → {error:'too-fast' }
 
 ### POST /register
 
@@ -913,7 +965,6 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 500: {error:err.message }
 - **GET /api/csrf**
   - HTTP 400: {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
-  - HTTP 400: {error:'weaponOrSkill inválido' }
 - **GET /assets/items**
   - HTTP 500: {error:"Falha ao listar items" }
 - **GET /assets/sprites**
@@ -946,10 +997,14 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
   - HTTP 500: {error:'Falha ao listar skills do herói' }
-  - HTTP 404: {error:'Jogador não encontrado' }
-  - HTTP 500: {error:'Falha ao obter dados do jogador' }
-  - HTTP 500: {error:'Falha ao obter posição' }
-  - HTTP 500: {error:'Falha ao salvar posição' }
+  - HTTP 500: {error:'pos-read-failed' }
+  - HTTP 429: {error:'rate-limited' }
+  - HTTP 400: {error:'invalid-pos' }
+  - HTTP 400: {error:'out-of-bounds' }
+  - HTTP 400: {error:'inside-solid' }
+  - HTTP 409: {error:'stale-seq' }
+  - HTTP 202: {ok:false,reason:'too-fast' }
+  - HTTP 500: {error:'pos-write-failed' }
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
 - **GET /ping**
@@ -962,8 +1017,17 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 500: {error:'assign_failed' }
   - HTTP 500: {error:'collect_failed' }
 - **GET /pos**
-  - HTTP 500: {error:'Falha ao obter posição' }
-  - HTTP 500: {error:'Falha ao salvar posição' }
+  - HTTP 400: {error:'coords inválidas' }
+  - HTTP 409: {error:'old-seq' }
+  - HTTP 400: {error:'too-fast' }
+  - HTTP 500: {error:'pos-read-failed' }
+  - HTTP 429: {error:'rate-limited' }
+  - HTTP 400: {error:'invalid-pos' }
+  - HTTP 400: {error:'out-of-bounds' }
+  - HTTP 400: {error:'inside-solid' }
+  - HTTP 409: {error:'stale-seq' }
+  - HTTP 202: {ok:false,reason:'too-fast' }
+  - HTTP 500: {error:'pos-write-failed' }
 - **GET /state**
   - HTTP 500: {error:'farm_state_failed' }
   - HTTP 500: {error:'plot_create_failed' }
@@ -1040,6 +1104,9 @@ Arquivo: `server\starter\routes.js:92`
 - **POST /logout**
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
+- **POST /move**
+  - HTTP 409: {error:'old-seq' }
+  - HTTP 400: {error:'too-fast' }
 - **POST /plant**
   - HTTP 400: {error:'plot_id and crop_key required' }
   - HTTP 404: {error:'plot_not_found' }
@@ -1071,7 +1138,16 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 500: {error:'harvest_failed' }
   - HTTP 403: {error:'forbidden' }
 - **POST /pos**
-  - HTTP 500: {error:'Falha ao salvar posição' }
+  - HTTP 400: {error:'coords inválidas' }
+  - HTTP 409: {error:'old-seq' }
+  - HTTP 400: {error:'too-fast' }
+  - HTTP 429: {error:'rate-limited' }
+  - HTTP 400: {error:'invalid-pos' }
+  - HTTP 400: {error:'out-of-bounds' }
+  - HTTP 400: {error:'inside-solid' }
+  - HTTP 409: {error:'stale-seq' }
+  - HTTP 202: {ok:false,reason:'too-fast' }
+  - HTTP 500: {error:'pos-write-failed' }
 - **POST /register**
   - HTTP 400: {error:v.msg }
   - HTTP 400: {error:vp.msg }

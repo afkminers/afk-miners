@@ -264,6 +264,7 @@
       "findMetaFor",
       "frame",
       "getSavedPos",
+      "hasSolidProp",
       "imgReady",
       "indexSpriteMeta",
       "jget",
@@ -280,7 +281,6 @@
       "postPosThrottled",
       "resize",
       "resolvePlayerSprite",
-      "theHasPropFn",
       "updateRespawns"
     ]
   },
@@ -1139,6 +1139,7 @@
       "clearAuthCookie",
       "cookieOpts",
       "csrfRoute",
+      "isBadCrossOrigin",
       "requireAuth",
       "requireCsrf",
       "setAuthCookie"
@@ -1210,7 +1211,15 @@
   {
     "file": "server\\player\\routes.js",
     "symbols": [
-      "noStore"
+      "buildCollisionGridFromObjects",
+      "buildCollisionGridFromTiled",
+      "getMapCollision",
+      "hasSolidProp",
+      "inWorld",
+      "isSolidAt",
+      "loadMapJson",
+      "loadMapObjects",
+      "rlAllow"
     ]
   },
   {
@@ -1218,6 +1227,13 @@
     "symbols": [
       "computeStage",
       "toMs"
+    ]
+  },
+  {
+    "file": "server\\routes\\player.js",
+    "symbols": [
+      "clamp",
+      "dist"
     ]
   },
   {

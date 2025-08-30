@@ -73,6 +73,9 @@
   "GET /me": [
     "{profile }"
   ],
+  "POST /move": [
+    "{ok:true,x,y,seq }"
+  ],
   "GET /ping": [
     "{ok:true,ts:Date.now() }",
     "{workers,boxes,inventory:inv }",
@@ -91,6 +94,7 @@
     "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }"
   ],
   "GET /pos": [
+    "{x:null,y:null,seq:0,updatedAt:null }",
     "{ok:true }"
   ],
   "POST /pos": [

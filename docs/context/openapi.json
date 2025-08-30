@@ -1211,6 +1211,16 @@
               }
             }
           },
+          "202": {
+            "description": "Error 202 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
           "400": {
             "description": "Error 400 (inferred)",
             "content": {
@@ -1223,6 +1233,26 @@
           },
           "404": {
             "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1251,7 +1281,97 @@
               "type": "string"
             }
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mapKey": {
+                    "type": "string"
+                  },
+                  "x": {
+                    "type": "string"
+                  },
+                  "y": {
+                    "type": "string"
+                  },
+                  "seq": {
+                    "type": "string"
+                  },
+                  "clientTs": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/move": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "const { seq": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "tx": {
+                    "type": "string"
+                  },
+                  "ty": {
+                    "type": "string"
+                  },
+                  "mapKey": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/ping": {
@@ -1509,10 +1629,59 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": {
-                      "type": "boolean"
+                    "x": {
+                      "type": "string"
+                    },
+                    "y": {
+                      "type": "string"
+                    },
+                    "seq": {
+                      "type": "number"
+                    },
+                    "updatedAt": {
+                      "type": "string"
                     }
                   }
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Error 202 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             }
@@ -1523,6 +1692,33 @@
               "application/json": {
                 "schema": {
                   "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mapKey": {
+                    "type": "string"
+                  },
+                  "x": {
+                    "type": "string"
+                  },
+                  "y": {
+                    "type": "string"
+                  },
+                  "seq": {
+                    "type": "string"
+                  },
+                  "clientTs": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -1556,12 +1752,79 @@
               }
             }
           },
+          "202": {
+            "description": "Error 202 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Error 500 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mapKey": {
+                    "type": "string"
+                  },
+                  "x": {
+                    "type": "string"
+                  },
+                  "y": {
+                    "type": "string"
+                  },
+                  "seq": {
+                    "type": "string"
+                  },
+                  "clientTs": {
+                    "type": "string"
+                  }
                 }
               }
             }

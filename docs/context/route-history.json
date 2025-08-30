@@ -25,6 +25,7 @@
   "POST /login": "no-tag",
   "POST /logout": "no-tag",
   "GET /me": "no-tag",
+  "POST /move": "no-tag",
   "GET /ping": "no-tag",
   "POST /plant": "no-tag",
   "POST /plot/create": "no-tag",
