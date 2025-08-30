@@ -1,19 +1,61 @@
 [
   {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 138,
+    "file": "client\\js\\app.js",
+    "line": 282,
+    "tag": "NOTE",
+    "text": "endpoint retorna { profile: {...} })"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
+    "line": 143,
     "tag": "NOTE",
     "text": "'too-large' }); continue; }"
   },
   {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 617,
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
+    "line": 334,
     "tag": "TODO",
-    "text": "|FIXME|NOTE)\\b[:\\s-]*(.*)/i;"
+    "text": "/FIXME"
   },
   {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 722,
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
+    "line": 342,
+    "tag": "TODO",
+    "text": "|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
+    "line": 646,
+    "tag": "NOTE",
+    "text": "==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)'])); lines.push('');"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\client\\js\\app.js",
+    "line": 191,
+    "tag": "NOTE",
+    "text": "endpoint retorna { profile: {...} })"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
+    "line": 143,
+    "tag": "NOTE",
+    "text": "'too-large' }); continue; }"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
+    "line": 334,
+    "tag": "TODO",
+    "text": "/FIXME"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
+    "line": 342,
+    "tag": "TODO",
+    "text": "|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
+  },
+  {
+    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
+    "line": 646,
     "tag": "NOTE",
     "text": "==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)'])); lines.push('');"
   },
@@ -42,63 +84,21 @@
     "text": "/ FIXME');"
   },
   {
-    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-    "line": 143,
+    "file": "server\\scripts\\gen-context.js",
+    "line": 148,
     "tag": "NOTE",
     "text": "'too-large' }); continue; }"
   },
   {
-    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-    "line": 334,
+    "file": "server\\scripts\\gen-context.js",
+    "line": 728,
     "tag": "TODO",
-    "text": "/FIXME"
+    "text": "|FIXME|NOTE)\\b[:\\s-]*(.*)/i;"
   },
   {
-    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-    "line": 342,
-    "tag": "TODO",
-    "text": "|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-    "line": 646,
+    "file": "server\\scripts\\gen-context.js",
+    "line": 816,
     "tag": "NOTE",
     "text": "==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)'])); lines.push('');"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\client\\js\\app.js",
-    "line": 191,
-    "tag": "NOTE",
-    "text": "endpoint retorna { profile: {...} })"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-    "line": 143,
-    "tag": "NOTE",
-    "text": "'too-large' }); continue; }"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-    "line": 334,
-    "tag": "TODO",
-    "text": "/FIXME"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-    "line": 342,
-    "tag": "TODO",
-    "text": "|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
-  },
-  {
-    "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-    "line": 646,
-    "tag": "NOTE",
-    "text": "==='too-large'? `${e.file} :: ${e.bytes} bytes (grande; não analisado)` : `${e.file} :: ${(e.kind==='array'? e.size+' itens' : e.size+' chaves')}${(e.topKeys && e.topKeys.length? ' | keys: '+e.topKeys.join(', ') : '')} | ${e.bytes} bytes`)):['(nenhum .json)'])); lines.push('');"
-  },
-  {
-    "file": "client\\js\\app.js",
-    "line": 282,
-    "tag": "NOTE",
-    "text": "endpoint retorna { profile: {...} })"
   }
 ]
