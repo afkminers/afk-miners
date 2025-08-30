@@ -4,11 +4,21 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 803
+        "index": 960
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "APP_ORIGINS",
+    "occurrences": [
+      {
+        "file": "server\\auth\\middleware.js",
+        "index": 911
       }
     ],
     "defaults": [
-      "http://localhost:3000"
+      "process.env.APP_ORIGIN"
     ]
   },
   {
@@ -38,7 +48,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 676
+        "index": 652
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
@@ -64,7 +74,7 @@
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 528
+        "index": 503
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
@@ -85,7 +95,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 611
+        "index": 587
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
@@ -107,7 +117,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 940
+        "index": 1318
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
@@ -129,7 +139,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 742
+        "index": 718
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
@@ -410,7 +420,7 @@
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 490
+        "index": 465
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",

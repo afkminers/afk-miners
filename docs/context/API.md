@@ -2,7 +2,8 @@
 
 ## Variáveis de ambiente
 
-- `APP_ORIGIN` (defaults: http://localhost:3000)
+- `APP_ORIGIN`
+- `APP_ORIGINS` (defaults: process.env.APP_ORIGIN)
 - `CONTENT_PIPELINE` (defaults: off)
 - `COOKIE_DOMAIN` (defaults: undefined)
 - `COOKIE_NAME` (defaults: sid)

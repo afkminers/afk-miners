@@ -1139,7 +1139,7 @@
       "clearAuthCookie",
       "cookieOpts",
       "csrfRoute",
-      "isBadCrossOrigin",
+      "isAllowedOrigin",
       "requireAuth",
       "requireCsrf",
       "setAuthCookie"

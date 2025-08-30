@@ -1031,14 +1031,14 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 30,
+    "line": 38,
     "kind": "function",
     "name": "cookieOpts",
     "params": []
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 42,
+    "line": 50,
     "kind": "function",
     "name": "setAuthCookie",
     "params": [
@@ -1048,7 +1048,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 47,
+    "line": 55,
     "kind": "function",
     "name": "clearAuthCookie",
     "params": [
@@ -1057,7 +1057,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 58,
+    "line": 66,
     "kind": "function",
     "name": "requireAuth",
     "params": [
@@ -1068,7 +1068,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 79,
+    "line": 87,
     "kind": "function",
     "name": "csrfRoute",
     "params": [
@@ -1078,16 +1078,25 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 95,
+    "line": 102,
     "kind": "function",
-    "name": "isBadCrossOrigin",
+    "name": "isAllowedOrigin",
     "params": [
       "req"
     ]
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 105,
+    "line": 107,
+    "kind": "arrow",
+    "name": "ok",
+    "params": [
+      "val"
+    ]
+  },
+  {
+    "file": "server\\auth\\middleware.js",
+    "line": 111,
     "kind": "function",
     "name": "requireCsrf",
     "params": [
