@@ -611,6 +611,32 @@ async function dumpPostgresSnapshot() {
   }
 }
 
+function scanTodos() {
+  const files = glob.sync('**/*.{js,ts,jsx,tsx,md}', { nodir: true, ignore: GLOB_IGNORE });
+  const todos = [];
+  const rx = /\b(TODO|FIXME|NOTE)\b[:\s-]*(.*)/i;
+
+  for (const f of files) {
+    let src = '';
+    try { src = fs.readFileSync(f, 'utf8'); } catch { continue; }
+    const lines = src.split(/\r?\n/);
+
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(rx);
+      if (m) {
+        todos.push({
+          file: f,
+          line: i + 1,
+          tag: m[1].toUpperCase(),
+          text: m[2].trim()
+        });
+      }
+    }
+  }
+  return todos;
+}
+
+
 function main(){
   ensureDir(DOCS_DIR); ensureDir(CTX_DIR);
   const info = gitInfo();
