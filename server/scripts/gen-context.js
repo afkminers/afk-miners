@@ -1,4 +1,4 @@
-// server/scripts/gen-context.js (v6.2)
+// server/scripts/gen-context.js (v6.3)
 // Gera (em docs/context/):
 // - context-pack.txt
 // - API.md
@@ -18,15 +18,25 @@
 // - db-tables.json             (Postgres)
 // - db-schema.sql              (Postgres; pg_dump se disponível, senão reconstruído)
 // - db-counts.txt              (Postgres)
-// - db-indexes.json            (Postgres)        ← NOVO
-// - db-fks.json                (Postgres)        ← NOVO
-// - db-enums.json              (Postgres)        ← NOVO
-// - db-views.sql               (Postgres)        ← NOVO
-// - db-triggers.sql            (Postgres)        ← NOVO
-// - db-functions.sql           (Postgres)        ← NOVO
-// - db-sequences.json          (Postgres)        ← NOVO
-// - db-extensions.txt          (Postgres)        ← NOVO
-// - db-sizes.txt               (Postgres)        ← NOVO
+// - db-indexes.json            (Postgres)
+// - db-fks.json                (Postgres)
+// - db-enums.json              (Postgres)
+// - db-views.sql               (Postgres)
+// - db-mviews.sql              (Postgres)        ← NOVO
+// - db-triggers.sql            (Postgres)
+// - db-functions.sql           (Postgres)
+// - db-sequences.json          (Postgres)
+// - db-extensions.txt          (Postgres)
+// - db-sizes.txt               (Postgres)
+// - db-srvinfo.json            (Postgres)        ← NOVO
+// - db-column-stats.json       (Postgres)        ← NOVO
+// - db-table-stats.json        (Postgres)        ← NOVO
+// - db-index-usage.json        (Postgres)        ← NOVO
+// - db-comments.json           (Postgres)        ← NOVO
+// - db-grants.txt              (Postgres)        ← NOVO
+// - db-check-constraints.sql   (Postgres)        ← NOVO
+// - db-domains.json            (Postgres)        ← NOVO
+// - db-partitions.json         (Postgres)        ← NOVO
 
 const fs   = require('fs');
 const path = require('path');
@@ -59,8 +69,8 @@ function sh(cmd){
   try {
     const quiet = process.platform === 'win32' ? `${cmd} 2> NUL` : `${cmd} 2>/dev/null`;
     return cp.execSync(quiet, { encoding:'utf8' }).trim();
-  } catch { 
-    return ''; 
+  } catch {
+    return '';
   }
 }
 function ensureDir(p){ if(!fs.existsSync(p)) fs.mkdirSync(p,{recursive:true}); }
@@ -499,62 +509,41 @@ function scanTodos() {
   return todos.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
 }
 
-// ===== Snapshot Postgres (schema + tabelas + counts + ++ metadados) =====
+// ===== Snapshot Postgres (v6.3 — schema + stats avançadas) =====
 async function dumpPostgresSnapshot() {
   if (!process.env.DATABASE_URL) return;
 
-  // Helpers para pg_dump (suporta PG_DUMP_PATH no .env) — versão com spawnSync (sem shell)
-  function resolvePgDumpExe() {
-    return process.env.PG_DUMP_PATH && process.env.PG_DUMP_PATH.trim()
-      ? process.env.PG_DUMP_PATH.trim()
-      : 'pg_dump';
-  }
+  // --- Helpers pg_dump (PG_DUMP_PATH no .env) ---
+  const resolvePgDumpExe = () =>
+    (process.env.PG_DUMP_PATH && process.env.PG_DUMP_PATH.trim()) || 'pg_dump';
 
   function hasPgDump() {
     const exe = resolvePgDumpExe();
     try {
       const r = cp.spawnSync(exe, ['--version'], { encoding: 'utf8' });
-      return r.status === 0 && /pg_dump\s+\(PostgreSQL\)\s+\d+/i.test(r.stdout || r.stderr || '');
-    } catch {
-      return false;
-    }
+      return r.status === 0 && /pg_dump\s+\(PostgreSQL\)\s+\d+/i.test((r.stdout || '') + (r.stderr || ''));
+    } catch { return false; }
   }
 
   function runPgDump(uri) {
     const exe = resolvePgDumpExe();
-    const args = [
-      '--schema-only',
-      '--no-owner',
-      '--no-privileges',
-      '--schema=public',
-      '--dbname', uri
-    ];
+    const args = ['--schema-only','--no-owner','--no-privileges','--schema=public','--dbname', uri];
     try {
       const r = cp.spawnSync(exe, args, { encoding: 'utf8' });
-      if (r.status === 0) {
-        console.log('INFO: db-schema.sql via pg_dump.');
-        return r.stdout || '';
-      } else {
-        fs.writeFileSync(
-          path.join(CTX_DIR, '_pgdump.log'),
-          `cmd: ${exe} ${args.join(' ')}\nexit: ${r.status}\nstdout:\n${r.stdout}\nstderr:\n${r.stderr}\n`,
-          'utf8'
-        );
-        console.warn('WARN: pg_dump retornou código', r.status, '— veja docs/context/_pgdump.log');
-        return '';
-      }
+      if (r.status === 0) return r.stdout || '';
+      fs.writeFileSync(path.join(CTX_DIR, '_pgdump.log'),
+        `cmd: ${exe} ${args.join(' ')}\nexit: ${r.status}\nstdout:\n${r.stdout}\nstderr:\n${r.stderr}\n`, 'utf8');
+      console.warn('WARN: pg_dump retornou código', r.status, '— veja docs/context/_pgdump.log');
+      return '';
     } catch (e) {
-      fs.writeFileSync(
-        path.join(CTX_DIR, '_pgdump.log'),
-        `exception: ${e && e.stack ? e.stack : String(e)}`,
-        'utf8'
-      );
+      fs.writeFileSync(path.join(CTX_DIR, '_pgdump.log'),
+        `exception: ${e && e.stack ? e.stack : String(e)}`, 'utf8');
       console.warn('WARN: pg_dump lançou exceção — veja docs/context/_pgdump.log');
       return '';
     }
   }
 
-
+  // --- Conexão PG ---
   let pg;
   try { pg = require('pg'); } catch {
     console.warn('WARN: pacote "pg" não instalado — pulando snapshot Postgres.');
@@ -569,7 +558,22 @@ async function dumpPostgresSnapshot() {
   try {
     await client.connect();
 
-    // --- Tabelas base ---
+    // ---- Info de servidor ----
+    const srvinfo = {};
+    try {
+      const v = await client.query(`select version() as v, current_user as u, current_database() as db, current_schema as sc, now() as ts`);
+      srvinfo.raw_version = v.rows?.[0]?.v;
+      srvinfo.current_user = v.rows?.[0]?.u;
+      srvinfo.current_database = v.rows?.[0]?.db;
+      srvinfo.current_schema = v.rows?.[0]?.sc;
+      srvinfo.snapshot_time = v.rows?.[0]?.ts;
+      const sp = await client.query(`show search_path`);
+      srvinfo.search_path = sp.rows?.[0]?.search_path || Object.values(sp.rows?.[0]||{})[0];
+      const dbsize = await client.query(`select pg_database_size(current_database()) as bytes`);
+      srvinfo.database_size_bytes = Number(dbsize.rows?.[0]?.bytes || 0);
+    } catch {}
+
+    // ---- Tabelas base ----
     const tablesRes = await client.query(`
       SELECT table_name
       FROM information_schema.tables
@@ -578,7 +582,7 @@ async function dumpPostgresSnapshot() {
     `);
     const tables = tablesRes.rows.map(r => r.table_name);
 
-    // --- Colunas por tabela ---
+    // ---- Colunas por tabela ----
     const tablesInfo = {};
     for (const t of tables) {
       const cols = await client.query(`
@@ -590,7 +594,7 @@ async function dumpPostgresSnapshot() {
       tablesInfo[t] = cols.rows;
     }
 
-    // --- Constraints (todas) ---
+    // ---- Constraints (todas) ----
     const constraints = await client.query(`
       SELECT tc.constraint_name, tc.constraint_type, tc.table_name,
              kcu.column_name, kcu.ordinal_position,
@@ -604,7 +608,7 @@ async function dumpPostgresSnapshot() {
       ORDER BY tc.table_name, tc.constraint_type, kcu.ordinal_position NULLS LAST;
     `);
 
-    // --- PKs agregadas por tabela ---
+    // ---- PKs, UNIQUEs, FKs ----
     const pks = await client.query(`
       SELECT kcu.table_name, array_agg(kcu.column_name ORDER BY kcu.ordinal_position) AS cols
       FROM information_schema.table_constraints tc
@@ -615,7 +619,6 @@ async function dumpPostgresSnapshot() {
     `);
     const pkMap = new Map(pks.rows.map(r => [r.table_name, r.cols || []]));
 
-    // --- UNIQUE por constraint ---
     const uniques = await client.query(`
       SELECT kcu.table_name, tc.constraint_name,
              array_agg(kcu.column_name ORDER BY kcu.ordinal_position) AS cols
@@ -632,7 +635,6 @@ async function dumpPostgresSnapshot() {
       uniqByTable.set(r.table_name, arr);
     }
 
-    // --- FKs detalhadas (inclui ações) ---
     const fks = await client.query(`
       SELECT
         tc.constraint_name,
@@ -666,7 +668,7 @@ async function dumpPostgresSnapshot() {
       fkByTable.set(r.table_name, arr);
     }
 
-    // --- Índices (inclui únicos)
+    // ---- Índices (def) ----
     const indexes = await client.query(`
       SELECT
         t.relname AS table_name,
@@ -681,19 +683,41 @@ async function dumpPostgresSnapshot() {
       ORDER BY t.relname, i.relname;
     `);
 
-    // --- Views (DDL)
+    // ---- Views (DDL) ----
     const views = await client.query(`
-      SELECT table_name AS view_name,
-             view_definition
+      SELECT table_name AS view_name, view_definition
       FROM information_schema.views
       WHERE table_schema='public'
       ORDER BY table_name;
     `);
     const viewsDDL = views.rows
-      .map(v => `CREATE OR REPLACE VIEW "public"."${v.view_name}" AS\n${v.view_definition.trim().replace(/;?$/, ';')}`)
+      .map(v => `CREATE OR REPLACE VIEW "public"."${v.view_name}" AS\n${(v.view_definition||'').trim().replace(/;?$/, ';')}`)
       .join('\n\n');
 
-    // --- Triggers (DDL)
+    // ---- Materialized Views (DDL) ----
+    let mviewsSQL = '';
+    try {
+      const mviews = await client.query(`
+        SELECT c.relname AS name, pg_get_viewdef(c.oid, true) AS def
+        FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname='public' AND c.relkind='m'
+        ORDER BY c.relname;
+      `);
+      mviewsSQL = mviews.rows.map(m => `CREATE MATERIALIZED VIEW "public"."${m.name}" AS\n${(m.def||'').trim().replace(/;?$/, ';')}`).join('\n\n');
+    } catch {}
+
+    // ---- Funções (DDL) ----
+    const funcs = await client.query(`
+      SELECT n.nspname AS schema, p.proname AS name, pg_get_functiondef(p.oid) AS definition
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public'
+      ORDER BY 1,2;
+    `);
+    const functionsSQL = funcs.rows.map(f => (f.definition || '').trim().replace(/;?$/, ';')).filter(Boolean).join('\n\n');
+
+    // ---- Triggers (DDL) ----
     const triggers = await client.query(`
       SELECT tg.tgname AS trigger_name,
              tbl.relname AS table_name,
@@ -704,21 +728,9 @@ async function dumpPostgresSnapshot() {
       WHERE n.nspname='public' AND NOT tg.tgisinternal
       ORDER BY tbl.relname, tg.tgname;
     `);
-    const triggersDDL = triggers.rows
-      .map(t => `${t.triggerdef}; -- ON "${t.table_name}"`)
-      .join('\n');
+    const triggersDDL = triggers.rows.map(t => `${t.triggerdef}; -- ON "${t.table_name}"`).join('\n');
 
-    // --- Funções (DDL)
-    const funcs = await client.query(`
-      SELECT n.nspname AS schema, p.proname AS name, pg_get_functiondef(p.oid) AS definition
-      FROM pg_proc p
-      JOIN pg_namespace n ON n.oid = p.pronamespace
-      WHERE n.nspname = 'public'
-      ORDER BY 1,2;
-    `);
-    const functionsSQL = funcs.rows.map(f => (f.definition || '').trim().replace(/;?$/, ';')).filter(Boolean).join('\n\n');
-
-    // --- Tipos ENUM
+    // ---- ENUMs ----
     const enums = await client.query(`
       SELECT t.typname AS enum_name, e.enumlabel AS enum_value
       FROM pg_type t
@@ -733,12 +745,13 @@ async function dumpPostgresSnapshot() {
       enumsGrouped[r.enum_name].push(r.enum_value);
     }
 
-    // --- Sequências
+    // ---- Sequences ----
     const sequences = await client.query(`
       SELECT
         s.relname AS sequence_name,
-        pg_get_serial_sequence(format('%I.%I','public', t.relname), a.attname) AS owned_by,
-        n.nspname AS schema
+        n.nspname AS schema,
+        d.refobjid IS NOT NULL AS owned,
+        pg_get_serial_sequence(format('%I.%I','public', t.relname), a.attname) AS owned_by
       FROM pg_class s
       JOIN pg_namespace n ON n.oid = s.relnamespace
       LEFT JOIN pg_depend d ON d.objid = s.oid AND d.deptype='a'
@@ -748,14 +761,10 @@ async function dumpPostgresSnapshot() {
       ORDER BY s.relname;
     `);
 
-    // --- Extensões
-    const extensions = await client.query(`
-      SELECT extname, extversion
-      FROM pg_extension
-      ORDER BY extname;
-    `);
+    // ---- Extensões ----
+    const extensions = await client.query(`SELECT extname, extversion FROM pg_extension ORDER BY extname;`);
 
-    // --- Tamanhos (tabelas/índices)
+    // ---- Tamanhos (tabelas/índices) ----
     const sizes = await client.query(`
       SELECT c.relname AS relation,
              pg_relation_size(c.oid) AS rel_bytes,
@@ -766,48 +775,204 @@ async function dumpPostgresSnapshot() {
       ORDER BY total_bytes DESC;
     `);
 
-    // --- Counts de linhas
+    // ---- Counts ----
     const counts = [];
     for (const t of tables) {
       try {
         const r = await client.query(`SELECT COUNT(*)::bigint AS c FROM "public"."${t}"`);
         counts.push({ table: t, count: Number(r.rows[0].c) });
-      } catch {
-        counts.push({ table: t, count: null });
-      }
+      } catch { counts.push({ table: t, count: null }); }
     }
 
-    // --- Persistência dos artefatos
+    // ---- Column stats (pg_stats) ----
+    let columnStats = [];
+    try {
+      const cs = await client.query(`
+        SELECT schemaname, tablename, attname, null_frac, n_distinct, most_common_vals, most_common_freqs, histogram_bounds, correlation
+        FROM pg_stats WHERE schemaname='public'
+        ORDER BY tablename, attname;
+      `);
+      columnStats = cs.rows;
+    } catch {}
+
+    // ---- Table stats (pg_stat_all_tables) ----
+    let tableStats = [];
+    try {
+      const ts = await client.query(`
+        SELECT relname, seq_scan, seq_tup_read, idx_scan, idx_tup_fetch, n_tup_ins, n_tup_upd, n_tup_del, n_tup_hot_upd,
+               n_live_tup, n_dead_tup, vacuum_count, autovacuum_count, analyze_count, autoanalyze_count,
+               last_vacuum, last_autovacuum, last_analyze, last_autoanalyze
+        FROM pg_stat_all_tables
+        WHERE schemaname='public'
+        ORDER BY relname;
+      `);
+      tableStats = ts.rows;
+    } catch {}
+
+    // ---- Index usage (pg_stat_user_indexes) ----
+    let indexUsage = [];
+    try {
+      const iu = await client.query(`
+        SELECT ui.relname AS table_name, ci.relname AS index_name, s.idx_scan, s.idx_tup_read, s.idx_tup_fetch
+        FROM pg_stat_user_indexes s
+        JOIN pg_class ci ON ci.oid = s.indexrelid
+        JOIN pg_class ui ON ui.oid = s.relid
+        ORDER BY ui.relname, ci.relname;
+      `);
+      indexUsage = iu.rows;
+    } catch {}
+
+    // ---- Comentários ----
+    let comments = { tables:{}, columns:{}, indexes:{} };
+    try {
+      const tcom = await client.query(`
+        SELECT c.relname AS table_name, d.description
+        FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0
+        WHERE n.nspname='public' AND c.relkind='r'
+        ORDER BY c.relname;
+      `);
+      for (const r of tcom.rows) if (r.description) comments.tables[r.table_name] = r.description;
+
+      const ccom = await client.query(`
+        SELECT c.relname AS table_name, a.attname AS column_name, d.description
+        FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+        LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = a.attnum
+        WHERE n.nspname='public' AND c.relkind='r'
+        ORDER BY c.relname, a.attnum;
+      `);
+      for (const r of ccom.rows) {
+        if (r.description) {
+          comments.columns[r.table_name] = comments.columns[r.table_name] || {};
+          comments.columns[r.table_name][r.column_name] = r.description;
+        }
+      }
+
+      const icom = await client.query(`
+        SELECT i.relname AS index_name, d.description
+        FROM pg_class i
+        JOIN pg_namespace n ON n.oid = i.relnamespace
+        LEFT JOIN pg_description d ON d.objoid = i.oid AND d.objsubid = 0
+        WHERE n.nspname='public' AND i.relkind='i'
+        ORDER BY i.relname;
+      `);
+      for (const r of icom.rows) if (r.description) comments.indexes[r.index_name] = r.description;
+    } catch {}
+
+    // ---- Grants ----
+    let grantsText = '';
+    try {
+      const g1 = await client.query(`
+        SELECT table_name, grantee, privilege_type, is_grantable
+        FROM information_schema.role_table_grants
+        WHERE table_schema='public'
+        ORDER BY table_name, grantee, privilege_type;
+      `);
+      const g2 = await client.query(`
+        SELECT routine_name, grantee, privilege_type, is_grantable
+        FROM information_schema.role_routine_grants
+        WHERE specific_schema='public'
+        ORDER BY routine_name, grantee, privilege_type;
+      `);
+      const g3 = await client.query(`
+        SELECT grantee, object_name AS schema_name
+        FROM information_schema.usage_privileges
+        WHERE object_type='SCHEMA' AND object_name='public'
+        ORDER BY grantee;
+      `);
+      const lines = [];
+      lines.push('[TABLE GRANTS]');
+      for (const r of g1.rows) lines.push(`${r.table_name}\t${r.grantee}\t${r.privilege_type}\tgrantable=${r.is_grantable}`);
+      lines.push('');
+      lines.push('[ROUTINE GRANTS]');
+      for (const r of g2.rows) lines.push(`${r.routine_name}\t${r.grantee}\t${r.privilege_type}\tgrantable=${r.is_grantable}`);
+      lines.push('');
+      lines.push('[SCHEMA USAGE: public]');
+      for (const r of g3.rows) lines.push(`public\t${r.grantee}`);
+      grantsText = lines.join('\n');
+    } catch {}
+
+    // ---- CHECK constraints ----
+    let checksSQL = '';
+    try {
+      const chk = await client.query(`
+        SELECT tc.table_name, tc.constraint_name, pg_get_constraintdef(con.oid, true) AS def
+        FROM information_schema.table_constraints tc
+        JOIN pg_constraint con ON con.conname = tc.constraint_name
+        WHERE tc.table_schema='public' AND tc.constraint_type='CHECK'
+        ORDER BY tc.table_name, tc.constraint_name;
+      `);
+      checksSQL = chk.rows.map(r => `ALTER TABLE "public"."${r.table_name}" ADD CONSTRAINT "${r.constraint_name}" ${r.def};`).join('\n');
+    } catch {}
+
+    // ---- DOMAINS ----
+    let domains = [];
+    try {
+      const dom = await client.query(`
+        SELECT t.typname AS domain_name, pg_catalog.format_type(t.typbasetype, t.typtypmod) AS base_type,
+               t.typnotnull AS not_null, t.typdefault AS default
+        FROM pg_type t
+        JOIN pg_namespace n ON n.oid = t.typnamespace
+        WHERE n.nspname='public' AND t.typtype='d'
+        ORDER BY t.typname;
+      `);
+      domains = dom.rows;
+    } catch {}
+
+    // ---- Partições ----
+    let partitions = [];
+    try {
+      const part = await client.query(`
+        SELECT parent.relname AS parent_table, child.relname AS child_table
+        FROM pg_inherits
+        JOIN pg_class parent ON pg_inherits.inhparent = parent.oid
+        JOIN pg_class child ON pg_inherits.inhrelid = child.oid
+        JOIN pg_namespace nsp ON nsp.oid = parent.relnamespace
+        WHERE nsp.nspname='public'
+        ORDER BY parent.relname, child.relname;
+      `);
+      partitions = part.rows;
+    } catch {}
+
+    // ---- Persistência ----
     ensureDir(CTX_DIR);
 
+    fs.writeFileSync(path.join(CTX_DIR, 'db-srvinfo.json'), JSON.stringify(srvinfo, null, 2));
     fs.writeFileSync(path.join(CTX_DIR, 'db-tables.json'),
       JSON.stringify({ tables, tablesInfo, constraints: constraints.rows }, null, 2));
-
     fs.writeFileSync(path.join(CTX_DIR, 'db-counts.txt'),
       counts.map(x => `${x.table}\t${x.count ?? 'n/a'}`).join('\n'), 'utf8');
-
-    fs.writeFileSync(path.join(CTX_DIR, 'db-indexes.json'),
-      JSON.stringify(indexes.rows, null, 2));
-
+    fs.writeFileSync(path.join(CTX_DIR, 'db-indexes.json'), JSON.stringify(indexes.rows, null, 2));
     fs.writeFileSync(path.join(CTX_DIR, 'db-fks.json'),
       JSON.stringify(Object.fromEntries(Array.from(fkByTable.entries())), null, 2));
-
-    fs.writeFileSync(path.join(CTX_DIR, 'db-enums.json'),
-      JSON.stringify(enumsGrouped, null, 2));
-
-    fs.writeFileSync(path.join(CTX_DIR, 'db-sequences.json'),
-      JSON.stringify(sequences.rows, null, 2));
-
+    fs.writeFileSync(path.join(CTX_DIR, 'db-enums.json'), JSON.stringify(enumsGrouped, null, 2));
+    fs.writeFileSync(path.join(CTX_DIR, 'db-sequences.json'), JSON.stringify(sequences.rows, null, 2));
     fs.writeFileSync(path.join(CTX_DIR, 'db-extensions.txt'),
       (extensions.rows.map(e => `${e.extname}\t${e.extversion}`).join('\n')) || '-- (sem extensões)', 'utf8');
-
     fs.writeFileSync(path.join(CTX_DIR, 'db-sizes.txt'),
       sizes.rows.map(r => {
         const kb = (n) => (n/1024).toFixed(1);
         return `${r.relation}\trel=${kb(r.rel_bytes)}KB\ttotal=${kb(r.total_bytes)}KB`;
       }).join('\n'), 'utf8');
 
-    // --- db-schema.sql: pg_dump (preferido) OU reconstrução
+    fs.writeFileSync(path.join(CTX_DIR, 'db-views.sql'), viewsDDL || '-- (sem views)', 'utf8');
+    fs.writeFileSync(path.join(CTX_DIR, 'db-mviews.sql'), mviewsSQL || '-- (sem materialized views)', 'utf8');
+    fs.writeFileSync(path.join(CTX_DIR, 'db-triggers.sql'), triggersDDL || '-- (sem triggers)', 'utf8');
+    fs.writeFileSync(path.join(CTX_DIR, 'db-functions.sql'), functionsSQL || '-- (sem funções)', 'utf8');
+
+    fs.writeFileSync(path.join(CTX_DIR, 'db-column-stats.json'), JSON.stringify(columnStats, null, 2));
+    fs.writeFileSync(path.join(CTX_DIR, 'db-table-stats.json'), JSON.stringify(tableStats, null, 2));
+    fs.writeFileSync(path.join(CTX_DIR, 'db-index-usage.json'), JSON.stringify(indexUsage, null, 2));
+    fs.writeFileSync(path.join(CTX_DIR, 'db-comments.json'), JSON.stringify(comments, null, 2));
+    fs.writeFileSync(path.join(CTX_DIR, 'db-grants.txt'), grantsText || '-- (sem grants visíveis)', 'utf8');
+    fs.writeFileSync(path.join(CTX_DIR, 'db-check-constraints.sql'), checksSQL || '-- (sem CHECK constraints)', 'utf8');
+    fs.writeFileSync(path.join(CTX_DIR, 'db-domains.json'), JSON.stringify(domains, null, 2));
+    fs.writeFileSync(path.join(CTX_DIR, 'db-partitions.json'), JSON.stringify(partitions, null, 2));
+
+    // ---- db-schema.sql: pg_dump (preferido) ou reconstruído ----
     let ddlText = '';
     if (hasPgDump()) ddlText = runPgDump(process.env.DATABASE_URL);
 
@@ -846,21 +1011,16 @@ async function dumpPostgresSnapshot() {
 
         pieces.push(`CREATE TABLE "public"."${t}" (\n${colDefs.join(',\n')}\n);`);
       }
-
-      // Adiciona DDL de views, triggers e functions ao final
       if (viewsDDL) pieces.push(viewsDDL);
+      if (mviewsSQL) pieces.push(mviewsSQL);
       if (triggersDDL) pieces.push(triggersDDL);
       if (functionsSQL) pieces.push(functionsSQL);
-
       ddlText = pieces.join('\n\n');
     }
 
-    fs.writeFileSync(path.join(CTX_DIR, 'db-views.sql'), viewsDDL || '-- (sem views)', 'utf8');
-    fs.writeFileSync(path.join(CTX_DIR, 'db-triggers.sql'), triggersDDL || '-- (sem triggers)', 'utf8');
-    fs.writeFileSync(path.join(CTX_DIR, 'db-functions.sql'), functionsSQL || '-- (sem funções)', 'utf8');
     fs.writeFileSync(path.join(CTX_DIR, 'db-schema.sql'), ddlText || '-- (sem DDL gerado)', 'utf8');
 
-    console.log('OK: snapshot PG (schema, counts, indexes, fks, enums, views, triggers, functions, sequences, extensions, sizes).');
+    console.log('OK: snapshot PG v6.3 — schema + stats + metadados avançados (com pg_dump quando disponível).');
   } catch (e) {
     console.warn('WARN: dumpPostgresSnapshot falhou:', e.message);
   } finally {
@@ -1041,7 +1201,7 @@ async function main(){
   // Snapshot PG (se DATABASE_URL disponível)
   await dumpPostgresSnapshot();
 
-  console.log('OK: v6.2 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi + snapshot PG (++ metadados)');
+  console.log('OK: v6.3 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi + snapshot PG (++ metadados/stats)');
 }
 
 main().catch(err => {

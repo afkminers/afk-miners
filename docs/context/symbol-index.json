@@ -1268,7 +1268,6 @@
       "main",
       "objFromKeys",
       "prettyJsonLike",
-      "resolvePgDumpExe",
       "runPgDump",
       "scanRoutes",
       "scanTodos",
