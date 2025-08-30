@@ -523,10 +523,11 @@ function prettyJsonLike(s){
   }catch{ return s; }
 }
 
+// ===== Snapshot Postgres (schema + tabelas + counts + ++ metadados) =====
 async function dumpPostgresSnapshot() {
   if (!process.env.DATABASE_URL) return;
 
-  // 1) Primeiro, tenta pg_dump (melhor DDL possível)
+  // Helpers para pg_dump
   function hasPgDump() {
     try { cp.execSync('pg_dump --version', { stdio: 'ignore' }); return true; }
     catch { return false; }
@@ -534,8 +535,7 @@ async function dumpPostgresSnapshot() {
   function runPgDump(uri) {
     try {
       const cmd = `pg_dump --schema-only --no-owner --no-privileges --schema=public --dbname="${uri}"`;
-      const out = cp.execSync(cmd, { encoding: 'utf8' });
-      return out;
+      return cp.execSync(cmd, { encoding: 'utf8' });
     } catch (e) {
       console.warn('WARN: pg_dump falhou:', e.message);
       return '';
@@ -556,7 +556,7 @@ async function dumpPostgresSnapshot() {
   try {
     await client.connect();
 
-    // Sempre construímos tables + counts + constraints JSON
+    // --- Tabelas base ---
     const tablesRes = await client.query(`
       SELECT table_name
       FROM information_schema.tables
@@ -565,6 +565,7 @@ async function dumpPostgresSnapshot() {
     `);
     const tables = tablesRes.rows.map(r => r.table_name);
 
+    // --- Colunas por tabela ---
     const tablesInfo = {};
     for (const t of tables) {
       const cols = await client.query(`
@@ -576,20 +577,166 @@ async function dumpPostgresSnapshot() {
       tablesInfo[t] = cols.rows;
     }
 
+    // --- Constraints (todas) ---
     const constraints = await client.query(`
       SELECT tc.constraint_name, tc.constraint_type, tc.table_name,
-             kcu.column_name, ccu.table_name AS foreign_table,
-             ccu.column_name AS foreign_column
-      FROM information_schema.table_constraints AS tc
-      LEFT JOIN information_schema.key_column_usage AS kcu
+             kcu.column_name, kcu.ordinal_position,
+             ccu.table_name AS foreign_table, ccu.column_name AS foreign_column
+      FROM information_schema.table_constraints tc
+      LEFT JOIN information_schema.key_column_usage kcu
         ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
-      LEFT JOIN information_schema.constraint_column_usage AS ccu
+      LEFT JOIN information_schema.constraint_column_usage ccu
         ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
       WHERE tc.table_schema='public'
-      ORDER BY tc.table_name, tc.constraint_type, kcu.ordinal_position;
+      ORDER BY tc.table_name, tc.constraint_type, kcu.ordinal_position NULLS LAST;
     `);
 
-    // Counts
+    // --- PKs agregadas por tabela ---
+    const pks = await client.query(`
+      SELECT kcu.table_name, array_agg(kcu.column_name ORDER BY kcu.ordinal_position) AS cols
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu
+        ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+      WHERE tc.table_schema='public' AND tc.constraint_type='PRIMARY KEY'
+      GROUP BY kcu.table_name;
+    `);
+    const pkMap = new Map(pks.rows.map(r => [r.table_name, r.cols || []]));
+
+    // --- UNIQUE por constraint ---
+    const uniques = await client.query(`
+      SELECT kcu.table_name, tc.constraint_name,
+             array_agg(kcu.column_name ORDER BY kcu.ordinal_position) AS cols
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu
+        ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+      WHERE tc.table_schema='public' AND tc.constraint_type='UNIQUE'
+      GROUP BY kcu.table_name, tc.constraint_name;
+    `);
+    const uniqByTable = new Map();
+    for (const r of uniques.rows) {
+      const arr = uniqByTable.get(r.table_name) || [];
+      arr.push({ name: r.constraint_name, cols: r.cols || [] });
+      uniqByTable.set(r.table_name, arr);
+    }
+
+    // --- FKs detalhadas (inclui ações) ---
+    const fks = await client.query(`
+      SELECT
+        tc.constraint_name,
+        tc.table_name,
+        kcu.column_name,
+        ccu.table_name AS foreign_table,
+        ccu.column_name AS foreign_column,
+        rc.update_rule AS on_update,
+        rc.delete_rule AS on_delete,
+        kcu.ordinal_position
+      FROM information_schema.table_constraints AS tc
+      JOIN information_schema.key_column_usage AS kcu
+        ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+      JOIN information_schema.referential_constraints AS rc
+        ON rc.constraint_name = tc.constraint_name AND rc.constraint_schema = tc.table_schema
+      JOIN information_schema.constraint_column_usage AS ccu
+        ON ccu.constraint_name = tc.constraint_name AND ccu.constraint_schema = tc.table_schema
+      WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema='public'
+      ORDER BY tc.table_name, tc.constraint_name, kcu.ordinal_position;
+    `);
+    const fkByTable = new Map();
+    for (const r of fks.rows) {
+      const arr = fkByTable.get(r.table_name) || [];
+      let c = arr.find(x => x.name === r.constraint_name);
+      if (!c) {
+        c = { name: r.constraint_name, cols: [], refTable: r.foreign_table, refCols: [], onUpdate: r.on_update, onDelete: r.on_delete };
+        arr.push(c);
+      }
+      c.cols.push(r.column_name);
+      c.refCols.push(r.foreign_column);
+      fkByTable.set(r.table_name, arr);
+    }
+
+    // --- Índices (inclui únicos) ---
+    const indexes = await client.query(`
+      SELECT
+        t.relname AS table_name,
+        i.relname AS index_name,
+        ix.indisunique AS is_unique,
+        pg_get_indexdef(ix.indexrelid) AS indexdef
+      FROM pg_class t
+      JOIN pg_namespace n ON n.oid = t.relnamespace
+      JOIN pg_index ix ON ix.indrelid = t.oid
+      JOIN pg_class i ON i.oid = ix.indexrelid
+      WHERE n.nspname='public' AND t.relkind='r'
+      ORDER BY t.relname, i.relname;
+    `);
+
+    // --- Views (DDL) ---
+    const views = await client.query(`
+      SELECT table_name AS view_name,
+             view_definition
+      FROM information_schema.views
+      WHERE table_schema='public'
+      ORDER BY table_name;
+    `);
+    const viewsDDL = views.rows
+      .map(v => `CREATE OR REPLACE VIEW "public"."${v.view_name}" AS\n${v.view_definition.trim().replace(/;?$/, ';')}`)
+      .join('\n\n');
+
+    // --- Triggers (DDL) ---
+    const triggers = await client.query(`
+      SELECT tg.tgname AS trigger_name,
+             tbl.relname AS table_name,
+             pg_get_triggerdef(tg.oid, true) AS triggerdef
+      FROM pg_trigger tg
+      JOIN pg_class tbl ON tbl.oid = tg.tgrelid
+      JOIN pg_namespace n ON n.oid = tbl.relnamespace
+      WHERE n.nspname='public' AND NOT tg.tgisinternal
+      ORDER BY tbl.relname, tg.tgname;
+    `);
+    const triggersDDL = triggers.rows
+      .map(t => `${t.triggerdef}; -- ON "${t.table_name}"`)
+      .join('\n');
+
+    // --- Tipos ENUM ---
+    const enums = await client.query(`
+      SELECT t.typname AS enum_name, e.enumlabel AS enum_value
+      FROM pg_type t
+      JOIN pg_enum e ON t.oid = e.enumtypid
+      JOIN pg_namespace n ON n.oid = t.typnamespace
+      WHERE n.nspname = 'public'
+      ORDER BY t.typname, e.enumsortorder;
+    `);
+    const enumsGrouped = {};
+    for (const r of enums.rows) {
+      enumsGrouped[r.enum_name] = enumsGrouped[r.enum_name] || [];
+      enumsGrouped[r.enum_name].push(r.enum_value);
+    }
+
+    // --- Sequências ---
+    const sequences = await client.query(`
+      SELECT
+        s.relname AS sequence_name,
+        pg_get_serial_sequence(format('%I.%I','public', t.relname), a.attname) AS owned_by,
+        n.nspname AS schema
+      FROM pg_class s
+      JOIN pg_namespace n ON n.oid = s.relnamespace
+      LEFT JOIN pg_depend d ON d.objid = s.oid AND d.deptype='a'
+      LEFT JOIN pg_class t ON d.refobjid = t.oid
+      LEFT JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = d.refobjsubid
+      WHERE n.nspname='public' AND s.relkind='S'
+      ORDER BY s.relname;
+    `);
+
+    // --- Tamanhos (tabelas/índices) ---
+    const sizes = await client.query(`
+      SELECT c.relname AS relation,
+             pg_relation_size(c.oid) AS rel_bytes,
+             pg_total_relation_size(c.oid) AS total_bytes
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname='public' AND c.relkind IN ('r','i')
+      ORDER BY total_bytes DESC;
+    `);
+
+    // --- Counts de linhas ---
     const counts = [];
     for (const t of tables) {
       try {
@@ -600,71 +747,45 @@ async function dumpPostgresSnapshot() {
       }
     }
 
+    // --- Persistência dos artefatos ---
     ensureDir(CTX_DIR);
+
+    // Tabelas + colunas + constraints cruas
     fs.writeFileSync(path.join(CTX_DIR, 'db-tables.json'),
       JSON.stringify({ tables, tablesInfo, constraints: constraints.rows }, null, 2));
+
+    // Counts
     fs.writeFileSync(path.join(CTX_DIR, 'db-counts.txt'),
       counts.map(x => `${x.table}\t${x.count ?? 'n/a'}`).join('\n'), 'utf8');
 
-    // 2) db-schema.sql: preferimos pg_dump; senão, reconstruímos via information_schema
+    // Índices
+    fs.writeFileSync(path.join(CTX_DIR, 'db-indexes.json'),
+      JSON.stringify(indexes.rows, null, 2));
+
+    // FKs detalhadas
+    fs.writeFileSync(path.join(CTX_DIR, 'db-fks.json'),
+      JSON.stringify(Object.fromEntries(Array.from(fkByTable.entries())), null, 2));
+
+    // Enums
+    fs.writeFileSync(path.join(CTX_DIR, 'db-enums.json'),
+      JSON.stringify(enumsGrouped, null, 2));
+
+    // Sequências
+    fs.writeFileSync(path.join(CTX_DIR, 'db-sequences.json'),
+      JSON.stringify(sequences.rows, null, 2));
+
+    // Tamanhos
+    fs.writeFileSync(path.join(CTX_DIR, 'db-sizes.txt'),
+      sizes.rows.map(r => {
+        const kb = (n) => (n/1024).toFixed(1);
+        return `${r.relation}\trel=${kb(r.rel_bytes)}KB\ttotal=${kb(r.total_bytes)}KB`;
+      }).join('\n'), 'utf8');
+
+    // --- db-schema.sql: pg_dump (preferido) OU reconstrução ---
     let ddlText = '';
-    if (hasPgDump()) {
-      ddlText = runPgDump(process.env.DATABASE_URL);
-    }
+    if (hasPgDump()) ddlText = runPgDump(process.env.DATABASE_URL);
 
     if (!ddlText) {
-      // Reconstrução básica de DDL (colunas + NOT NULL + DEFAULT + PK + UNIQUE + FK)
-      // PKs agrupadas
-      const pks = await client.query(`
-        SELECT kcu.table_name, array_agg(kcu.column_name ORDER BY kcu.ordinal_position) AS cols
-        FROM information_schema.table_constraints tc
-        JOIN information_schema.key_column_usage kcu
-          ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
-        WHERE tc.table_schema='public' AND tc.constraint_type='PRIMARY KEY'
-        GROUP BY kcu.table_name
-      `);
-      const pkMap = new Map(pks.rows.map(r => [r.table_name, r.cols]));
-
-      // UNIQUE (por constraint → lista de colunas)
-      const uniques = await client.query(`
-        SELECT kcu.table_name, tc.constraint_name,
-               array_agg(kcu.column_name ORDER BY kcu.ordinal_position) AS cols
-        FROM information_schema.table_constraints tc
-        JOIN information_schema.key_column_usage kcu
-          ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
-        WHERE tc.table_schema='public' AND tc.constraint_type='UNIQUE'
-        GROUP BY kcu.table_name, tc.constraint_name
-      `);
-      const uniqByTable = new Map();
-      for (const r of uniques.rows) {
-        const arr = uniqByTable.get(r.table_name) || [];
-        arr.push({ name: r.constraint_name, cols: r.cols });
-        uniqByTable.set(r.table_name, arr);
-      }
-
-      // FKs
-      const fks = await client.query(`
-        SELECT tc.table_name, tc.constraint_name, kcu.column_name,
-               ccu.table_name AS foreign_table, ccu.column_name AS foreign_column
-        FROM information_schema.table_constraints tc
-        JOIN information_schema.key_column_usage kcu
-          ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
-        JOIN information_schema.constraint_column_usage ccu
-          ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
-        WHERE tc.table_schema='public' AND tc.constraint_type='FOREIGN KEY'
-        ORDER BY tc.table_name, tc.constraint_name, kcu.ordinal_position
-      `);
-      const fkByTable = new Map();
-      for (const r of fks.rows) {
-        const arr = fkByTable.get(r.table_name) || [];
-        // agrupa por constraint_name
-        let c = arr.find(x => x.name === r.constraint_name);
-        if (!c) { c = { name: r.constraint_name, cols: [], refTable: r.foreign_table, refCols: [] }; arr.push(c); }
-        c.cols.push(r.column_name);
-        c.refCols.push(r.foreign_column);
-        fkByTable.set(r.table_name, arr);
-      }
-
       const pieces = [];
       for (const t of tables) {
         const cols = tablesInfo[t] || [];
@@ -675,34 +796,50 @@ async function dumpPostgresSnapshot() {
           return `  "${c.column_name}" ${typ}${notnull}${def}`;
         });
 
-        const tablePks = pkMap.get(t);
-        if (tablePks && tablePks.length) {
+        const tablePks = pkMap.get(t) || [];
+        if (Array.isArray(tablePks) && tablePks.length) {
           colDefs.push(`  CONSTRAINT "${t}_pkey" PRIMARY KEY (${tablePks.map(c => `"${c}"`).join(', ')})`);
         }
 
         const tableUniques = uniqByTable.get(t) || [];
         for (const u of tableUniques) {
-          colDefs.push(`  CONSTRAINT "${u.name}" UNIQUE (${u.cols.map(c => `"${c}"`).join(', ')})`);
+          const colsU = Array.isArray(u.cols) ? u.cols : [];
+          if (colsU.length) {
+            colDefs.push(`  CONSTRAINT "${u.name}" UNIQUE (${colsU.map(c => `"${c}"`).join(', ')})`);
+          }
         }
 
         const tableFks = fkByTable.get(t) || [];
         for (const fk of tableFks) {
-          colDefs.push(`  CONSTRAINT "${fk.name}" FOREIGN KEY (${fk.cols.map(c => `"${c}"`).join(', ')}) REFERENCES "${fk.refTable}" (${fk.refCols.map(c => `"${c}"`).join(', ')})`);
+          const colsFK = Array.isArray(fk.cols) ? fk.cols : [];
+          const refFK  = Array.isArray(fk.refCols) ? fk.refCols : [];
+          const onUpd = fk.onUpdate ? ` ON UPDATE ${fk.onUpdate}` : '';
+          const onDel = fk.onDelete ? ` ON DELETE ${fk.onDelete}` : '';
+          colDefs.push(`  CONSTRAINT "${fk.name}" FOREIGN KEY (${colsFK.map(c => `"${c}"`).join(', ')}) REFERENCES "${fk.refTable}" (${refFK.map(c => `"${c}"`).join(', ')})${onUpd}${onDel}`);
         }
 
         pieces.push(`CREATE TABLE "public"."${t}" (\n${colDefs.join(',\n')}\n);`);
       }
+
+      // Adiciona DDL de views e triggers ao final
+      if (viewsDDL) pieces.push(viewsDDL);
+      if (triggersDDL) pieces.push(triggersDDL);
+
       ddlText = pieces.join('\n\n');
     }
 
+    fs.writeFileSync(path.join(CTX_DIR, 'db-views.sql'), viewsDDL || '-- (sem views)', 'utf8');
+    fs.writeFileSync(path.join(CTX_DIR, 'db-triggers.sql'), triggersDDL || '-- (sem triggers)', 'utf8');
     fs.writeFileSync(path.join(CTX_DIR, 'db-schema.sql'), ddlText || '-- (sem DDL gerado)', 'utf8');
-    console.log('OK: snapshot Postgres → db-schema.sql (via pg_dump ou reconstruído), db-tables.json, db-counts.txt');
+
+    console.log('OK: snapshot PG (schema, counts, indexes, fks, enums, views, triggers, sequences, sizes).');
   } catch (e) {
     console.warn('WARN: dumpPostgresSnapshot falhou:', e.message);
   } finally {
     try { await client.end(); } catch {}
   }
 }
+
 
 
 
