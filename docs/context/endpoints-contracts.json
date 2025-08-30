@@ -7,31 +7,9 @@
     "sample": {
       "params": {
         "key": "value"
-      },
-      "query": {
-        "map": "value"
       }
     },
-    "errors": [
-      {
-        "status": 404,
-        "body": "{error:'map not found' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "GET",
@@ -41,39 +19,9 @@
     "sample": {
       "params": {
         "key": "value"
-      },
-      "query": {
-        "map": "value"
       }
     },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'map not found' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "GET",
@@ -83,285 +31,57 @@
     "sample": {
       "params": {
         "key": "value"
-      },
-      "query": {
-        "map": "value"
       }
     },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'map not found' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
     "line": 356,
-    "sample": {
-      "query": {
-        "map": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'map not found' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
     "line": 326,
-    "sample": {
-      "query": {
-        "map": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'map not found' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
     "line": 402,
-    "sample": {
-      "query": {
-        "map": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
     "line": 337,
-    "sample": {
-      "query": {
-        "map": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'map not found' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
     "line": 346,
-    "sample": {
-      "query": {
-        "map": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'map not found' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
     "line": 631,
-    "sample": {
-      "query": {
-        "limit": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'Mensagem vazia' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "POST",
@@ -369,41 +89,15 @@
     "file": "server\\index.js",
     "line": 654,
     "sample": {},
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:'Mensagem vazia' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:err.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/api/csrf",
     "file": "server\\index.js",
     "line": 43,
-    "sample": {
-      "body": {
-        "try {\n    const { heroId": 1,
-        "weaponOrSkill": "value",
-        "heroClass": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
@@ -411,12 +105,7 @@
     "file": "server\\routes\\assets.js",
     "line": 29,
     "sample": {},
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:\"Falha ao listar items\" }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "GET",
@@ -424,89 +113,23 @@
     "file": "server\\routes\\assets.js",
     "line": 8,
     "sample": {},
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:\"Falha ao listar sprites\" }"
-      },
-      {
-        "status": 500,
-        "body": "{error:\"Falha ao listar items\" }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "POST",
     "path": "/assign",
     "file": "server\\routes\\afk.js",
     "line": 65,
-    "sample": {
-      "body": {
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || req.user.userId || '');\n    const { worker_id": 1,
-        "box_id": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:'worker_id required' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'worker_not_found' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'box_not_found' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'assign_failed' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'collect_failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,added:total }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/class-rates",
     "file": "server\\skills\\routes.js",
     "line": 33,
-    "sample": {
-      "query": {
-        "heroId": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'Falha ao listar rates' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'heroId é obrigatório' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'Herói não encontrado' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao listar skills do herói' }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "POST",
@@ -514,151 +137,31 @@
     "file": "server\\routes\\afk.js",
     "line": 88,
     "sample": {},
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'collect_failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,added:total }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "POST",
     "path": "/create-worker",
     "file": "server\\routes\\afk.js",
     "line": 42,
-    "sample": {
-      "body": {
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || req.user.userId || '');\n    const { name": 1,
-        "produce_type": "value",
-        "produce_amount = 1": 1,
-        "rate_sec = 10": "value",
-        "assigned_box = null": "value",
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || req.user.userId || '');\n    const { worker_id": 1,
-        "box_id": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:'produce_type required' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'create_worker_failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'worker_id required' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'worker_not_found' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'box_not_found' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'assign_failed' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'collect_failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,id }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,added:total }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/curves",
     "file": "server\\skills\\routes.js",
     "line": 10,
-    "sample": {
-      "query": {
-        "skill": "value",
-        "heroId": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC',}"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao listar curvas' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao listar rates' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'heroId é obrigatório' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'Herói não encontrado' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao listar skills do herói' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{skill_type:skill,rows }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "POST",
     "path": "/debug/grant-seed",
     "file": "server\\routes\\farm.js",
     "line": 240,
-    "sample": {
-      "body": {
-        "item_type = 'seed_wheat'": "value",
-        "amount = 5": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 403,
-        "body": "{error:'forbidden' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'debug_grant_failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,item_type,amount:Number(amount) || 0 }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
@@ -673,57 +176,8 @@
     "path": "/harvest",
     "file": "server\\routes\\farm.js",
     "line": 181,
-    "sample": {
-      "body": {
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { plot_id": 1,
-        "item_type = 'seed_wheat'": "value",
-        "amount = 5": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:'plot_id required' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'plot_not_found' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'empty_plot' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid_crop' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'not_ripe',stage:s.stage,next_at:s.nextAt,progress_pct:s.progressPct }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'harvest_failed' }"
-      },
-      {
-        "status": 403,
-        "body": "{error:'forbidden' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'debug_grant_failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,item_type,amount:Number(amount) || 0 }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
@@ -731,67 +185,15 @@
     "file": "server\\routes\\catalog.js",
     "line": 10,
     "sample": {},
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'Falha ao listar heróis' }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/list",
     "file": "server\\starter\\routes.js",
     "line": 29,
-    "sample": {
-      "body": {
-        "try {\n      const playerId = req.user.id;\n      const { heroKey": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'erro ao listar starters' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'erro ao checar status do starter' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'heroKey é obrigatório' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'starter já escolhido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'heroKey inválido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'starter já escolhido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'erro ao selecionar starter' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{canSelect:!row }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,id,heroKey }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "POST",
@@ -799,42 +201,7 @@
     "file": "server\\auth\\routes.js",
     "line": 93,
     "sample": {},
-    "errors": [
-      {
-        "status": 401,
-        "body": "{error:'Credenciais inválidas' }"
-      },
-      {
-        "status": 401,
-        "body": "{error:'Credenciais inválidas' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao autenticar' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'Jogador não encontrado' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao obter perfil' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{profile }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "POST",
@@ -842,117 +209,23 @@
     "file": "server\\auth\\routes.js",
     "line": 121,
     "sample": {},
-    "errors": [
-      {
-        "status": 404,
-        "body": "{error:'Jogador não encontrado' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao obter perfil' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{profile }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/me",
     "file": "server\\skills\\routes.js",
     "line": 48,
-    "sample": {
-      "query": {
-        "heroId": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:'heroId é obrigatório' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'Herói não encontrado' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao listar skills do herói' }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/me",
     "file": "server\\player\\routes.js",
     "line": 117,
-    "sample": {
-      "query": {
-        "map": "value"
-      },
-      "body": {
-        "mapKey": "value",
-        "x": "value",
-        "y": "value",
-        "seq": "value",
-        "clientTs": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'pos-read-failed' }"
-      },
-      {
-        "status": 429,
-        "body": "{error:'rate-limited' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid-pos' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'out-of-bounds' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'inside-solid' }"
-      },
-      {
-        "status": 409,
-        "body": "{error:'stale-seq' }"
-      },
-      {
-        "status": 202,
-        "body": "{ok:false,reason:'too-fast' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'pos-write-failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{id:req.user.id,name:req.user.name,}"
-      },
-      {
-        "status": 200,
-        "body": "{x:null,y:null,seq:0,updatedAt:null }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
@@ -960,539 +233,79 @@
     "file": "server\\auth\\routes.js",
     "line": 129,
     "sample": {},
-    "errors": [
-      {
-        "status": 404,
-        "body": "{error:'Jogador não encontrado' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao obter perfil' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{profile }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "POST",
     "path": "/move",
     "file": "server\\routes\\player.js",
     "line": 44,
-    "sample": {
-      "body": {
-        "const { seq": "value",
-        "type": "value",
-        "tx": "value",
-        "ty": "value",
-        "mapKey": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 409,
-        "body": "{error:'old-seq' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'too-fast' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,x,y,seq }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/ping",
     "file": "server\\routes\\afk.js",
     "line": 7,
-    "sample": {
-      "body": {
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || req.user.userId || '');\n    const { name": 1,
-        "produce_type": "value",
-        "produce_amount = 1": 1,
-        "rate_sec = 10": "value",
-        "assigned_box = null": "value",
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || req.user.userId || '');\n    const { worker_id": 1,
-        "box_id": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'afk_state_failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'produce_type required' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'create_worker_failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'worker_id required' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'worker_not_found' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'box_not_found' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'assign_failed' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'collect_failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,ts:Date.now() }"
-      },
-      {
-        "status": 200,
-        "body": "{workers,boxes,inventory:inv }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,id }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,added:total }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "POST",
     "path": "/plant",
     "file": "server\\routes\\farm.js",
     "line": 122,
-    "sample": {
-      "body": {
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { plot_id": 1,
-        "crop_key": "value",
-        "item_type = 'seed_wheat'": "value",
-        "amount = 5": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:'plot_id and crop_key required' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'plot_not_found' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'plot_not_empty' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid_crop' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'no_seed' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'plant_failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'plot_id required' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'plot_not_found' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'empty_plot' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid_crop' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'not_ripe',stage:s.stage,next_at:s.nextAt,progress_pct:s.progressPct }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'harvest_failed' }"
-      },
-      {
-        "status": 403,
-        "body": "{error:'forbidden' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'debug_grant_failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,plot_id,crop_key,stage:1,planted_at:new Date(plantedAtSec * 1000).toISOString(),next_at:new Date(nextAtSec * 1000).toISOString() }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,item_type,amount:Number(amount) || 0 }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "POST",
     "path": "/plot/create",
     "file": "server\\routes\\farm.js",
     "line": 101,
-    "sample": {
-      "body": {
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { x = 0": 1,
-        "y = 0": "value",
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { plot_id": 1,
-        "crop_key": "value",
-        "item_type = 'seed_wheat'": "value",
-        "amount = 5": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'plot_create_failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'plot_id and crop_key required' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'plot_not_found' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'plot_not_empty' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid_crop' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'no_seed' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'plant_failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'plot_id required' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'plot_not_found' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'empty_plot' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid_crop' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'not_ripe',stage:s.stage,next_at:s.nextAt,progress_pct:s.progressPct }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'harvest_failed' }"
-      },
-      {
-        "status": 403,
-        "body": "{error:'forbidden' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,id }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,plot_id,crop_key,stage:1,planted_at:new Date(plantedAtSec * 1000).toISOString(),next_at:new Date(nextAtSec * 1000).toISOString() }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/pos",
     "file": "server\\routes\\player.js",
     "line": 12,
-    "sample": {
-      "query": {
-        "map": "value"
-      },
-      "body": {
-        "const { mapKey": "value",
-        "x": "value",
-        "y": "value",
-        "const { seq": "value",
-        "type": "value",
-        "tx": "value",
-        "ty": "value",
-        "mapKey": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:'coords inválidas' }"
-      },
-      {
-        "status": 409,
-        "body": "{error:'old-seq' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'too-fast' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{x:row.x,y:row.y }"
-      },
-      {
-        "status": 200,
-        "body": "{x:64,y:64 }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,x,y,seq }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/pos",
     "file": "server\\player\\routes.js",
     "line": 125,
-    "sample": {
-      "query": {
-        "map": "value"
-      },
-      "body": {
-        "mapKey": "value",
-        "x": "value",
-        "y": "value",
-        "seq": "value",
-        "clientTs": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'pos-read-failed' }"
-      },
-      {
-        "status": 429,
-        "body": "{error:'rate-limited' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid-pos' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'out-of-bounds' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'inside-solid' }"
-      },
-      {
-        "status": 409,
-        "body": "{error:'stale-seq' }"
-      },
-      {
-        "status": 202,
-        "body": "{ok:false,reason:'too-fast' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'pos-write-failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{x:null,y:null,seq:0,updatedAt:null }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "POST",
     "path": "/pos",
     "file": "server\\routes\\player.js",
     "line": 23,
-    "sample": {
-      "body": {
-        "const { mapKey": "value",
-        "x": "value",
-        "y": "value",
-        "const { seq": "value",
-        "type": "value",
-        "tx": "value",
-        "ty": "value",
-        "mapKey": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:'coords inválidas' }"
-      },
-      {
-        "status": 409,
-        "body": "{error:'old-seq' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'too-fast' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,x,y,seq }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "POST",
     "path": "/pos",
     "file": "server\\player\\routes.js",
     "line": 141,
-    "sample": {
-      "body": {
-        "mapKey": "value",
-        "x": "value",
-        "y": "value",
-        "seq": "value",
-        "clientTs": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 429,
-        "body": "{error:'rate-limited' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid-pos' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'out-of-bounds' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'inside-solid' }"
-      },
-      {
-        "status": 409,
-        "body": "{error:'stale-seq' }"
-      },
-      {
-        "status": 202,
-        "body": "{ok:false,reason:'too-fast' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'pos-write-failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "POST",
     "path": "/",
     "file": "server\\gacha\\routes.js",
     "line": 144,
-    "sample": {
-      "query": {
-        "count": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:result.error,cost:SUMMON_COST_COINS }"
-      },
-      {
-        "status": 400,
-        "body": "{error:r.error,cost:SUMMON_COST_COINS,pulls }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao girar gacha' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{cost:SUMMON_COST_COINS,pulls,newBalance:updated }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "POST",
@@ -1500,310 +313,38 @@
     "file": "server\\auth\\routes.js",
     "line": 50,
     "sample": {},
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:v.msg }"
-      },
-      {
-        "status": 400,
-        "body": "{error:vp.msg }"
-      },
-      {
-        "status": 409,
-        "body": "{error:'Nome já está em uso.' }"
-      },
-      {
-        "status": 409,
-        "body": "{error:'Nome já está em uso.' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao registrar' }"
-      },
-      {
-        "status": 401,
-        "body": "{error:'Credenciais inválidas' }"
-      },
-      {
-        "status": 401,
-        "body": "{error:'Credenciais inválidas' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao autenticar' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'Jogador não encontrado' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'Falha ao obter perfil' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{profile }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "POST",
     "path": "/select",
     "file": "server\\starter\\routes.js",
     "line": 92,
-    "sample": {
-      "body": {
-        "try {\n      const playerId = req.user.id;\n      const { heroKey": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:'heroKey é obrigatório' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'starter já escolhido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'heroKey inválido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'starter já escolhido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'erro ao selecionar starter' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,id,heroKey }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/state",
     "file": "server\\routes\\farm.js",
     "line": 71,
-    "sample": {
-      "body": {
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { x = 0": 1,
-        "y = 0": "value",
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || '');\n    const { plot_id": 1,
-        "crop_key": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'farm_state_failed' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'plot_create_failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'plot_id and crop_key required' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'plot_not_found' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'plot_not_empty' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid_crop' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'no_seed' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'plant_failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'plot_id required' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'plot_not_found' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'empty_plot' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid_crop' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'not_ripe',stage:s.stage,next_at:s.nextAt,progress_pct:s.progressPct }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{plots:enhanced,crops:Object.keys(CROPS) }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,id }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,plot_id,crop_key,stage:1,planted_at:new Date(plantedAtSec * 1000).toISOString(),next_at:new Date(nextAtSec * 1000).toISOString() }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/state",
     "file": "server\\routes\\afk.js",
     "line": 10,
-    "sample": {
-      "body": {
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || req.user.userId || '');\n    const { name": 1,
-        "produce_type": "value",
-        "produce_amount = 1": 1,
-        "rate_sec = 10": "value",
-        "assigned_box = null": "value",
-        "try {\n    const playerId = String(req.user.id || req.user.playerId || req.user.userId || '');\n    const { worker_id": 1,
-        "box_id": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'afk_state_failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'produce_type required' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'create_worker_failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'worker_id required' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'worker_not_found' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'box_not_found' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'assign_failed' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'collect_failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{workers,boxes,inventory:inv }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,id }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,added:total }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
     "path": "/status",
     "file": "server\\starter\\routes.js",
     "line": 74,
-    "sample": {
-      "body": {
-        "try {\n      const playerId = req.user.id;\n      const { heroKey": 1
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'erro ao checar status do starter' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'heroKey é obrigatório' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'starter já escolhido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'heroKey inválido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'starter já escolhido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'erro ao selecionar starter' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{canSelect:!row }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,id,heroKey }"
-      }
-    ]
+    "sample": {},
+    "errors": []
   }
 ]

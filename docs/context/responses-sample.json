@@ -1,124 +1,39 @@
 {
-  "GET /api/admin/content/map/:key/data": [
-    "{ok:true,reloaded:mapKey }"
-  ],
-  "GET /api/admin/content/map/:key/objects": [
-    "{ok:true,reloaded:mapKey }"
-  ],
-  "GET /api/admin/content/map/:key/spawns": [
-    "{ok:true,reloaded:mapKey }"
-  ],
-  "GET /api/admin/content/maps": [
-    "{ok:true,reloaded:mapKey }"
-  ],
-  "GET /api/admin/content/monsters": [
-    "{ok:true,reloaded:mapKey }"
-  ],
-  "POST /api/admin/content/reload-map": [
-    "{ok:true,reloaded:mapKey }"
-  ],
-  "GET /api/assets/items": [
-    "{ok:true,reloaded:mapKey }"
-  ],
-  "GET /api/assets/sprites": [
-    "{ok:true,reloaded:mapKey }"
-  ],
-  "GET /api/chat/global": [
-    "{ok:true }"
-  ],
-  "POST /api/chat/global": [
-    "{ok:true }"
-  ],
+  "GET /api/admin/content/map/:key/data": [],
+  "GET /api/admin/content/map/:key/objects": [],
+  "GET /api/admin/content/map/:key/spawns": [],
+  "GET /api/admin/content/maps": [],
+  "GET /api/admin/content/monsters": [],
+  "POST /api/admin/content/reload-map": [],
+  "GET /api/assets/items": [],
+  "GET /api/assets/sprites": [],
+  "GET /api/chat/global": [],
+  "POST /api/chat/global": [],
   "GET /api/csrf": [],
   "GET /assets/items": [],
   "GET /assets/sprites": [],
-  "POST /assign": [
-    "{ok:true }",
-    "{ok:true,added:total }"
-  ],
+  "POST /assign": [],
   "GET /class-rates": [],
-  "POST /collect": [
-    "{ok:true,added:total }"
-  ],
-  "POST /create-worker": [
-    "{ok:true,id }",
-    "{ok:true }",
-    "{ok:true,added:total }"
-  ],
-  "GET /curves": [
-    "{skill_type:skill,rows }"
-  ],
-  "POST /debug/grant-seed": [
-    "{ok:true,item_type,amount:Number(amount) || 0 }"
-  ],
+  "POST /collect": [],
+  "POST /create-worker": [],
+  "GET /curves": [],
+  "POST /debug/grant-seed": [],
   "GET /": [],
-  "POST /harvest": [
-    "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }",
-    "{ok:true,item_type,amount:Number(amount) || 0 }"
-  ],
+  "POST /harvest": [],
   "GET /heroes/master": [],
-  "GET /list": [
-    "{canSelect:!row }",
-    "{ok:true,id,heroKey }"
-  ],
-  "POST /login": [
-    "{ok:true }",
-    "{ok:true }",
-    "{profile }"
-  ],
-  "POST /logout": [
-    "{ok:true }",
-    "{profile }"
-  ],
-  "GET /me": [
-    "{profile }"
-  ],
-  "POST /move": [
-    "{ok:true,x,y,seq }"
-  ],
-  "GET /ping": [
-    "{ok:true,ts:Date.now() }",
-    "{workers,boxes,inventory:inv }",
-    "{ok:true,id }",
-    "{ok:true }",
-    "{ok:true,added:total }"
-  ],
-  "POST /plant": [
-    "{ok:true,plot_id,crop_key,stage:1,planted_at:new Date(plantedAtSec * 1000).toISOString(),next_at:new Date(nextAtSec * 1000).toISOString() }",
-    "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }",
-    "{ok:true,item_type,amount:Number(amount) || 0 }"
-  ],
-  "POST /plot/create": [
-    "{ok:true,id }",
-    "{ok:true,plot_id,crop_key,stage:1,planted_at:new Date(plantedAtSec * 1000).toISOString(),next_at:new Date(nextAtSec * 1000).toISOString() }",
-    "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }"
-  ],
-  "GET /pos": [
-    "{x:null,y:null,seq:0,updatedAt:null }",
-    "{ok:true }"
-  ],
-  "POST /pos": [
-    "{ok:true }"
-  ],
-  "POST /": [
-    "{cost:SUMMON_COST_COINS,pulls,newBalance:updated }"
-  ],
-  "POST /register": [
-    "{ok:true }",
-    "{ok:true }",
-    "{profile }"
-  ],
-  "POST /select": [
-    "{ok:true,id,heroKey }"
-  ],
-  "GET /state": [
-    "{workers,boxes,inventory:inv }",
-    "{ok:true,id }",
-    "{ok:true }",
-    "{ok:true,added:total }"
-  ],
-  "GET /status": [
-    "{canSelect:!row }",
-    "{ok:true,id,heroKey }"
-  ]
+  "GET /list": [],
+  "POST /login": [],
+  "POST /logout": [],
+  "GET /me": [],
+  "POST /move": [],
+  "GET /ping": [],
+  "POST /plant": [],
+  "POST /plot/create": [],
+  "GET /pos": [],
+  "POST /pos": [],
+  "POST /": [],
+  "POST /register": [],
+  "POST /select": [],
+  "GET /state": [],
+  "GET /status": []
 }

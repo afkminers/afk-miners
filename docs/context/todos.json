@@ -17,42 +17,27 @@
   {
     "file": "server\\scripts\\gen-context.js",
     "line": 14,
-    "text": "// - todos.json                    (NOVO)"
+    "text": "// - todos.json"
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 336,
-    "text": "// TODO/FIXME"
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 337,
+    "line": 333,
     "text": "function scanTodos(){"
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 344,
+    "line": 340,
     "text": "if(/TODO|FIXME/i.test(ln)) out.push({ file:f, line:i+1, text: ln.trim() });"
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 682,
-    "text": "// TODOs"
+    "line": 771,
+    "text": "writeJSON(path.join(CTX_DIR,'todos.json'),               scanTodos());"
   },
   {
     "file": "server\\scripts\\gen-context.js",
-    "line": 683,
-    "text": "const todos = scanTodos();"
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 705,
-    "text": "fs.writeFileSync(path.join(CTX_DIR,'todos.json'),               JSON.stringify(todos,null,2));"
-  },
-  {
-    "file": "server\\scripts\\gen-context.js",
-    "line": 757,
-    "text": "console.log('OK: v6 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi (+ pg snapshot opcional)');"
+    "line": 823,
+    "text": "console.log('OK: v7 — context + api + contracts + env + errors + signatures + responses + deps-graph + route-history + todos + openapi + PG snapshot (enums/views/indexes/stats/counts).');"
   },
   {
     "file": "server\\routes\\afk.js",

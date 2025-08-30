@@ -1,114 +1,45 @@
-# server/scripts/make-context-pack.ps1 (v7 — PG-only, fix ternário + fix $args)
-# Gera um Context Pack completo + ZIP, focado em Postgres (Neon/Supabase/etc.).
-# Remove todo legado de SQLite. Inclui artefatos ricos de PG (db-indexes, db-views, db-enums, db-extensions, db-stats, db-counts).
-#
+# server/scripts/make-context-pack.ps1 (v6)
+# Gera um Context Pack completo + ZIP
 # Uso:
 #   pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/make-context-pack.ps1 `
-#        -Name lobby-alpha -Depth 4 -Symbols -Imports -Zip [-PgDump]
-#
-# Requisitos:
-#   - Node instalado; projeto com dependências ok
-#   - DATABASE_URL no ambiente p/ gerar artefatos de DB
-#   - (Opcional) pg_dump/psql no PATH se usar -PgDump (dump completo .sql)
-#
-# Saída:
-#   docs/releases/<timestamp>-<Name>/ com todos os artefatos
-#   (e <...>.zip se -Zip)
+#        -Name lobby-alpha -Depth 4 -Symbols -Imports -Zip
 
-[CmdletBinding()]
 param(
   [string] $Name   = "auto",
   [int]    $Depth  = 4,
   [switch] $Symbols,
   [switch] $Imports,
-  [switch] $Zip,
-  [switch] $PgDump
+  [switch] $Zip
 )
 
-# -----------------------------
-# Helpers
-# -----------------------------
-function _git([string[]]$gitArgs) {
-  try { (git @gitArgs) 2>$null } catch { "" }
-}
-function _section($title) {
-  Write-Host ""
-  Write-Host ("=== {0} ===" -f $title) -ForegroundColor Cyan
-}
-function _ensureDir($p) {
-  if (-not (Test-Path $p)) { New-Item -ItemType Directory -Force -Path $p | Out-Null }
-}
-
-# -----------------------------
-# Caminhos base
-# -----------------------------
+# --- Preparação de caminhos
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path      # ...\server\scripts
 $ServerDir = Split-Path -Parent $ScriptDir                        # ...\server
 $RootDir   = Split-Path -Parent $ServerDir                        # repo raiz
 Set-Location $ServerDir
 
-$DocsDir = Join-Path $RootDir "docs"
-$CtxDir  = Join-Path $DocsDir "context"
-_ensureDir $DocsDir
-_ensureDir $CtxDir
+# --- Timestamp + release dir
+$ts = Get-Date -Format "yyyy-MM-dd_HHmmss"
+$RelName    = "${ts}-${Name}"
+$OutRoot    = Join-Path $RootDir "docs\releases"
+$ReleaseDir = Join-Path $OutRoot $RelName
+New-Item -ItemType Directory -Force -Path $ReleaseDir | Out-Null
 
-# -----------------------------
-# Timestamp + diretório release
-# -----------------------------
-$ts        = Get-Date -Format "yyyy-MM-dd_HHmmss"
-$RelName   = "${ts}-${Name}"
-$OutRoot   = Join-Path $DocsDir "releases"
-$ReleaseDir= Join-Path $OutRoot $RelName
-_ensureDir $OutRoot
-_ensureDir $ReleaseDir
-
-# -----------------------------
-# Metadados GIT
-# -----------------------------
-$hash     = _git @("-C",$RootDir,"rev-parse","--short","HEAD"); if (-not $hash) { $hash = "nohash" }
-$branch   = _git @("-C",$RootDir,"rev-parse","--abbrev-ref","HEAD"); if (-not $branch) { $branch = "unknown" }
-$describe = _git @("-C",$RootDir,"describe","--tags","--abbrev=7","--always"); if (-not $describe) { $describe = $hash }
-$lastTag  = _git @("-C",$RootDir,"describe","--tags","--abbrev=0")
-$lastTagStr = if ([string]::IsNullOrWhiteSpace($lastTag)) { "n/a" } else { $lastTag }
-
-# -----------------------------
-# Geração do Context (PG aware)
-# -----------------------------
-_section "Gerando Context Pack (Node)"
-$env:CTX_DEPTH   = "$Depth"
+# --- Gerar contextos (robusto) -> escreve em docs/context/* na RAIZ
+Write-Host "➡️  Gerando contextos (full)..." -ForegroundColor Cyan
+$env:CTX_DEPTH   = $Depth
 $env:CTX_SYMBOLS = ($Symbols.IsPresent ? "1" : "0")
 $env:CTX_IMPORTS = ($Imports.IsPresent ? "1" : "0")
+node "scripts\gen-context.js" --full | Out-Null
 
-if (-not $env:DATABASE_URL) {
-  Write-Host "⚠️  DATABASE_URL não está definido. Artefatos de DB serão omitidos." -ForegroundColor Yellow
-}
-
-# Executa generator (v7) — produz db-* quando DATABASE_URL estiver setado
-node "scripts\gen-context.js" | Out-Null
-
-# -----------------------------
-# Verificação (se arquivo existir)
-# -----------------------------
-$verifyMjs = Join-Path $ScriptDir "verify-context.mjs"
-if (Test-Path $verifyMjs) {
-  _section "Verificando artefatos (verify-context.mjs)"
-  node $verifyMjs
-  if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Verificação falhou. Interrompendo." -ForegroundColor Red
-    exit 1
-  }
-} else {
-  Write-Host "ℹ️  verify-context.mjs não encontrado — prosseguindo sem verificação" -ForegroundColor DarkYellow
-}
-
-# -----------------------------
-# Copiar artefatos p/ Release
-# -----------------------------
-_section "Copiando artefatos para o release"
-$filesCore = @(
+# --- Copiar principais artefatos para o release
+$CtxDir = Join-Path $RootDir "docs\context"
+$filesToCopy = @(
   "context-pack.txt",
   "API.md",
   "data-summary.json",
+  "symbol-index.json",
+  "deps.txt",
   "changes-since.txt",
   "endpoints-contracts.json",
   "env-usage.json",
@@ -119,110 +50,109 @@ $filesCore = @(
   "route-history.json",
   "todos.json",
   "openapi.json"
-)
-$filesOptional = @(
-  "symbol-index.json",   # se CTX_SYMBOLS=1
-  "deps.txt"             # se CTX_IMPORTS=1
-)
-$filesPg = @(
-  "db-tables.json",
-  "db-schema.sql",
-  "db-indexes.json",
-  "db-views.json",
-  "db-enums.json",
-  "db-extensions.json",
-  "db-stats.json",
-  "db-counts.txt"
-)
+) | ForEach-Object { Join-Path $CtxDir $_ } | Where-Object { Test-Path $_ }
+foreach ($f in $filesToCopy) { Copy-Item $f $ReleaseDir -Force }
 
-$toCopy = @()
-foreach ($f in $filesCore)     { $p = Join-Path $CtxDir $f; if (Test-Path $p) { $toCopy += $p } else { Write-Host "⚠️  Ausente: $f" -ForegroundColor Yellow } }
-foreach ($f in $filesOptional) { $p = Join-Path $CtxDir $f; if (Test-Path $p) { $toCopy += $p } }
-foreach ($f in $filesPg)       { $p = Join-Path $CtxDir $f; if (Test-Path $p) { $toCopy += $p } else { if ($env:DATABASE_URL) { Write-Host "⚠️  Artefato PG ausente: $f" -ForegroundColor Yellow } } }
-
-foreach ($src in $toCopy) { Copy-Item $src $ReleaseDir -Force }
-
-# -----------------------------
-# Dump completo via pg_dump (opcional)
-# -----------------------------
-if ($PgDump) {
-  _section "pg_dump opcional"
-  $pgDump = Get-Command "pg_dump" -ErrorAction SilentlyContinue
-  if ($pgDump -and $env:DATABASE_URL) {
-    $dumpPath = Join-Path $ReleaseDir "db-dump.sql"
-    Write-Host "Executando pg_dump → $dumpPath"
-    & $pgDump.Source " --no-owner --no-privileges --format=plain --file `"$dumpPath`" `"$env:DATABASE_URL`"" | Out-Null
-    if (Test-Path $dumpPath) {
-      Write-Host "OK: db-dump.sql" -ForegroundColor Green
-    } else {
-      Write-Host "⚠️  pg_dump não gerou arquivo (verifique credenciais/SSL)." -ForegroundColor Yellow
-    }
-  } else {
-    if (-not $pgDump) { Write-Host "⚠️  pg_dump não encontrado no PATH." -ForegroundColor Yellow }
-    if (-not $env:DATABASE_URL) { Write-Host "⚠️  DATABASE_URL ausente." -ForegroundColor Yellow }
-  }
-}
-
-# -----------------------------
-# Extras úteis do repo
-# -----------------------------
-_section "Incluindo metadados do repo"
-$extras = @(".gitattributes", ".gitignore", "package.json", "package-lock.json") `
+# --- Incluir metadados úteis do repo
+$extra = @(".gitattributes", ".gitignore", "package.json") `
   | ForEach-Object { Join-Path $RootDir $_ } `
   | Where-Object { Test-Path $_ }
-foreach ($f in $extras) { Copy-Item $f $ReleaseDir -Force }
+foreach ($f in $extra) { Copy-Item $f $ReleaseDir -Force }
 
-# -----------------------------
-# README do pacote
-# -----------------------------
+# --- DB: dumps (schema / tables / counts + JSON rico)
+$Sqlite = "C:\sqlite\sqlite3.exe"
+$DbPath = Join-Path $ServerDir "db\database.sqlite"
+
+if ( (Test-Path $Sqlite) -and (Test-Path $DbPath) ) {
+  Write-Host "📄 Extraindo schema/tables/counts do SQLite..." -ForegroundColor DarkCyan
+
+  $schemaOut = Join-Path $ReleaseDir "db-schema.sql"
+  $tablesOut = Join-Path $ReleaseDir "db-tables.txt"
+  $countsOut = Join-Path $ReleaseDir "db-counts.txt"
+  $tablesJson = Join-Path $ReleaseDir "db-tables.json"
+
+  & $Sqlite $DbPath ".schema"  | Out-File -Encoding utf8 $schemaOut
+  & $Sqlite $DbPath ".tables"  | Out-File -Encoding utf8 $tablesOut
+
+  $tablesRaw = & $Sqlite $DbPath ".tables"
+  $tables = @()
+  if ($tablesRaw) { $tables = ($tablesRaw -join ' ') -split '\s+' | Where-Object { $_ -match '^\w+$' } }
+
+  $counts = New-Object System.Collections.Generic.List[string]
+  $tablesInfo = @()
+
+  foreach ($t in $tables) {
+    try {
+      $n = & $Sqlite $DbPath "SELECT COUNT(*) FROM [$t];"
+      $line = "{0,-30} {1,12}" -f $t, $n
+    } catch {
+      $pad  = ' ' * ([Math]::Max(1, 30 - $t.Length))
+      $line = "$t$pad (erro ao contar)"
+      $n = $null
+    }
+    $counts.Add($line)
+
+    # PRAGMA table_info + foreign_key_list
+    $cols = & $Sqlite $DbPath "PRAGMA table_info([$t]);"
+    $fks  = & $Sqlite $DbPath "PRAGMA foreign_key_list([$t]);"
+
+    $tablesInfo += [pscustomobject]@{
+      table = $t
+      count = $n
+      columns = $cols
+      foreign_keys = $fks
+    }
+  }
+  $counts | Out-File -Encoding utf8 $countsOut
+  $tablesInfo | ConvertTo-Json -Depth 6 | Out-File -Encoding utf8 $tablesJson
+} else {
+  Write-Host "⚠️  SQLite não encontrado em C:\sqlite\sqlite3.exe ou DB ausente. Pulando dumps." -ForegroundColor Yellow
+}
+
+# --- README com instruções
 $Readme = @()
-$Readme += "AFK Miners — Release Context Pack (PG-only)"
-$Readme += "-------------------------------------------"
+$Readme += "AFK Miners — Release Context Pack"
+$Readme += "--------------------------------"
 $Readme += "Pasta: docs/releases/$RelName"
 $Readme += ""
-$Readme += "Git:"
-$Readme += "  - Commit : $hash"
-$Readme += "  - Branch : $branch"
-$Readme += "  - Describe: $describe"
-$Readme += "  - LastTag: $lastTagStr"
+$Readme += "Como usar em uma conversa nova:"
+$Readme += "1) Informe: Commit curto (git rev-parse --short HEAD) e Tag (se houver)."
+$Readme += "2) Cole as 10–30 primeiras linhas de context-pack.txt (ou anexe o arquivo)."
+$Readme += "3) Se mudar data/, cite data-summary.json."
 $Readme += ""
-$Readme += "Como usar em conversa nova:"
-$Readme += "  1) Informe o commit curto e (se houver) a tag."
-$Readme += "  2) Cole as 10–30 primeiras linhas de context-pack.txt ou anexe o arquivo."
-$Readme += "  3) Se dados mudaram, cite data-summary.json."
+$Readme += "Arquivos principais neste pacote:"
+$Readme += " - API.md                   → documentação legível (payloads, erros, env, respostas)"
+$Readme += " - context-pack.txt         → estrutura, rotas, inventário, maiores arquivos, HTML/YAML/JSON"
+$Readme += " - endpoints-contracts.json → rotas com exemplos de params/query/body"
+$Readme += " - responses-sample.json    → exemplos de sucesso por rota"
+$Readme += " - error-map.json           → mapa de status/mensagens por rota"
+$Readme += " - env-usage.json           → todas as process.env + defaults detectados"
+$Readme += " - function-signatures.json → assinaturas (nome/params/arquivo/linha)"
+$Readme += " - deps-graph.json          → grafo de imports (JSON)"
+$Readme += " - route-history.json       → rotas alteradas desde a última tag"
+$Readme += " - openapi.json             → OpenAPI inferido (importável em Postman/Insomnia)"
+$Readme += " - symbol-index.json        → símbolos (se CTX_SYMBOLS=1)"
+$Readme += " - deps.txt                 → import graph (se CTX_IMPORTS=1)"
+$Readme += " - data-summary.json        → resumo YAML/JSON"
+$Readme += " - changes-since.txt        → diff desde a última tag (se houver)"
+$Readme += " - db-schema.sql / db-tables.txt / db-counts.txt / db-tables.json"
+$Readme += " - .gitattributes / .gitignore / package.json (root)"
 $Readme += ""
-$Readme += "Principais arquivos:"
-$Readme += "  - API.md / context-pack.txt / endpoints-contracts.json / responses-sample.json"
-$Readme += "  - error-map.json / env-usage.json / function-signatures.json"
-$Readme += "  - deps-graph.json / route-history.json / todos.json / openapi.json"
-$Readme += "  - symbol-index.json (se CTX_SYMBOLS=1) / deps.txt (se CTX_IMPORTS=1)"
-$Readme += "  - db-schema.sql / db-tables.json / db-indexes.json / db-views.json / db-enums.json / db-extensions.json"
-$Readme += "  - db-stats.json (tamanhos/linhas estimadas) / db-counts.txt (contagem exata por tabela)"
-$Readme += "  - db-dump.sql (se -PgDump)"
-$Readme += ""
-$Readme += "Gerado por: server/scripts/make-context-pack.ps1 (v7 — PG-only)"
-$ReadmePath = Join-Path $ReleaseDir "README.txt"
-$Readme | Out-File -Encoding utf8 $ReadmePath
+$Readme += "Gerado por: scripts/make-context-pack.ps1"
+$Readme | Out-File -Encoding utf8 (Join-Path $ReleaseDir "README.txt")
 
-# -----------------------------
-# Zip opcional
-# -----------------------------
+# --- Zipar se pedido
 if ($Zip) {
-  _section "Compactando ZIP"
   $zipPath = "$ReleaseDir.zip"
   if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+  Write-Host "🧩 Compactando ZIP..." -ForegroundColor Cyan
   Compress-Archive -Path (Join-Path $ReleaseDir "*") -DestinationPath $zipPath
   Write-Host "ZIP: $zipPath"
 }
 
-# -----------------------------
-# Info final
-# -----------------------------
-Write-Host ""
-Write-Host "✅ OK: pacote gerado em $ReleaseDir" -ForegroundColor Green
+# --- Info final
+$describe = (git -C $RootDir describe --tags --abbrev=7 --always) 2>$null
+if (-not $describe) { $describe = (git -C $RootDir rev-parse --short HEAD) }
+
+Write-Host "OK: pacote gerado em $ReleaseDir" -ForegroundColor Green
 Write-Host "Commit: $describe"
-if ($env:DATABASE_URL) {
-  Write-Host "DB:    Artefatos PG gerados (verifique db-*.json, db-schema.sql, db-counts.txt)" -ForegroundColor Green
-} else {
-  Write-Host "DB:    DATABASE_URL ausente — artefatos de banco podem não ter sido criados." -ForegroundColor Yellow
-}
