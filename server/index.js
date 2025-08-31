@@ -180,6 +180,10 @@ app.use('/api/skills', requireAuth, skillsRoutes);
 app.use('/api/afk', requireAuth, afkRoutes);
 app.use('/api/farm', requireAuth, farmRoutes);
 
+// Combat   <<<<<<<<<<<<<<<<<<<<<<  AQUI
+const combatRoutes = require('./combat/routes');
+app.use('/api/combat', requireAuth, combatRoutes);
+
 /* ========= Helpers (Treino) ========= */
 async function resolveSkillType(weaponOrSkill) {
   if (!weaponOrSkill) return null;
