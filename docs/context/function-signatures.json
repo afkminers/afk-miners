@@ -933,7 +933,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 30,
+    "line": 31,
     "kind": "function",
     "name": "inferSpriteKind",
     "params": [
@@ -943,7 +943,53 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 45,
+    "line": 42,
+    "kind": "function",
+    "name": "firstExistingPath",
+    "params": [
+      "paths"
+    ]
+  },
+  {
+    "file": "server\\content\\loader.js",
+    "line": 55,
+    "kind": "function",
+    "name": "resolveMonstersIndex",
+    "params": [
+      "root"
+    ]
+  },
+  {
+    "file": "server\\content\\loader.js",
+    "line": 62,
+    "kind": "function",
+    "name": "resolveItemsIndex",
+    "params": [
+      "root"
+    ]
+  },
+  {
+    "file": "server\\content\\loader.js",
+    "line": 69,
+    "kind": "function",
+    "name": "resolveSpritesBase",
+    "params": [
+      "root"
+    ]
+  },
+  {
+    "file": "server\\content\\loader.js",
+    "line": 76,
+    "kind": "function",
+    "name": "resolveMapFile",
+    "params": [
+      "root",
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\content\\loader.js",
+    "line": 90,
     "kind": "function",
     "name": "loadMonsters",
     "params": [
@@ -953,7 +999,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 109,
+    "line": 158,
     "kind": "function",
     "name": "loadItems",
     "params": [
@@ -963,7 +1009,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 152,
+    "line": 204,
     "kind": "function",
     "name": "loadSprites",
     "params": [
@@ -973,7 +1019,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 244,
+    "line": 294,
     "kind": "function",
     "name": "loadMap",
     "params": [
@@ -984,7 +1030,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 340,
+    "line": 387,
     "kind": "function",
     "name": "loadAll",
     "params": [

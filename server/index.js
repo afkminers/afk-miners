@@ -22,6 +22,9 @@ const farmRoutes = require('./routes/farm');
 
 const K = require('./balance/config');
 const buildStarterRouter = require('./starter/routes');
+// server/index.js  (ADICIONE JUNTO DOS OUTROS REQUIRES DO SERVER)
+const { startRespawnLoop, stopRespawnLoop } = require('./respawn/worker');
+
 
 // ======== Pipeline de Conteúdo ========
 const { loadAll, loadMap } = require('./content/loader');
@@ -537,7 +540,10 @@ let wss = null;
           if (token) {
             try {
               const payload = jwt.verify(token, JWT_SECRET);
-              ws._player = { id: String(payload.id || payload.playerId || ''), name: String(payload.name || payload.username || payload.displayName || 'Anon') };
+              ws._player = {
+                id: String(payload.id || payload.playerId || ''),
+                name: String(payload.name || payload.username || payload.displayName || 'Anon')
+              };
               console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
             } catch (err) {
               console.log('[ws] jwt verify failed', err && err.message);
@@ -566,7 +572,6 @@ let wss = null;
             const raw = String(data.text || '').trim().slice(0, 800);
             if (!raw) return;
 
-            // persist em PG (colunas minúsculas)
             try {
               if (scope === 'global') {
                 await run(
@@ -622,7 +627,15 @@ let wss = null;
     server.listen(PORT, () => {
       console.log(`server listening on ${PORT} ${useWebSocket ? '(ws enabled)' : '(ws disabled)'}`);
       console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
+
+      // >>> INÍCIO DO LOOP DE RESPAWN <<<
+      startRespawnLoop({ all, run });
     });
+
+    // Encerramento limpo do loop de respawn (Ctrl+C / kill)
+    process.on('SIGINT',  () => { try { stopRespawnLoop(); } finally { process.exit(0); } });
+    process.on('SIGTERM', () => { try { stopRespawnLoop(); } finally { process.exit(0); } });
+
   } catch (err) {
     console.error('Fatal start error:', err);
     process.exit(1);

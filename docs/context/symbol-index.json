@@ -1166,6 +1166,7 @@
   {
     "file": "server\\content\\loader.js",
     "symbols": [
+      "firstExistingPath",
       "inferSpriteKind",
       "list",
       "listRecursive",
@@ -1175,6 +1176,10 @@
       "loadMonsters",
       "loadSprites",
       "read",
+      "resolveItemsIndex",
+      "resolveMapFile",
+      "resolveMonstersIndex",
+      "resolveSpritesBase",
       "sha1"
     ]
   },
