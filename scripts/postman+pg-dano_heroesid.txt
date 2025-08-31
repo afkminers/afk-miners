@@ -13,6 +13,9 @@ FROM monster_instances
 ORDER BY created_at DESC
 LIMIT 5;
 
+
+
+
 -- ver a instância que você está batendo
 SELECT id, hp, max_hp, state
 FROM monster_instances
@@ -91,3 +94,15 @@ SELECT skill_type, level, tries_progress
 FROM player_hero_skills
 WHERE hero_id = '<HERO_ID>'
 ORDER BY skill_type;
+
+
+attack monstro postman
+{
+  "attackerHeroId": "4211bed8-ce57-41c8-9459-3fdb60ce6bf1",
+  "targetInstanceId": "5a6518ee-d417-4774-9d84-3c0905f12a61",
+  "weaponType": "sword"
+}
+
+
+http://localhost:3000/api/combat/hit postman post
+

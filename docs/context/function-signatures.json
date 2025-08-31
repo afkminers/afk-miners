@@ -713,7 +713,7 @@
   },
   {
     "file": "server\\respawn\\worker.js",
-    "line": 12,
+    "line": 20,
     "kind": "function",
     "name": "respawnTick",
     "params": [
@@ -723,7 +723,7 @@
   },
   {
     "file": "server\\respawn\\worker.js",
-    "line": 42,
+    "line": 70,
     "kind": "function",
     "name": "startRespawnLoop",
     "params": [
@@ -732,7 +732,7 @@
   },
   {
     "file": "server\\respawn\\worker.js",
-    "line": 51,
+    "line": 79,
     "kind": "function",
     "name": "stopRespawnLoop",
     "params": []

@@ -7,6 +7,9 @@ const TICK_MS = Number(process.env.RESPAWN_TICK_MS || 5000);
 // Se quiser ver logs de cada tick (mesmo quando não revive), ligue: RESPAWN_DEBUG=1
 const DEBUG = String(process.env.RESPAWN_DEBUG || '').trim() === '1';
 
+// WS bus (para avisar clientes)
+const { broadcast } = require('../ws/bus');
+
 /**
  * Um passo do respawn:
  * - Pega instâncias MORTAS cujo prazo já venceu (now() >= respawn_at)
@@ -14,7 +17,7 @@ const DEBUG = String(process.env.RESPAWN_DEBUG || '').trim() === '1';
  *
  * HP preferências (na ordem):
  *  1) monster_instances.max_hp (se existir)
- *  2) monsters_master."healthMax" via join com spawns -> "monsterKey"
+ *  2) monsters_master."healthMax" (join via spawns -> "monsterKey")
  *  3) 1 (fallback para não ficar 0)
  */
 async function respawnTick({ all, run }) {
@@ -23,10 +26,11 @@ async function respawnTick({ all, run }) {
   const due = await all(`
     SELECT
       mi.id,
-      mi.max_hp            AS mi_max_hp,
+      mi.max_hp                   AS mi_max_hp,
       mi.spawn_id,
       mi.map_key,
       s."monsterKey",
+      s.x, s.y,
       COALESCE(mm."healthMax", 0) AS health_max
     FROM monster_instances mi
     JOIN spawns s
@@ -51,15 +55,31 @@ async function respawnTick({ all, run }) {
 
     await run(
       `UPDATE monster_instances
-          SET state        = 'ALIVE',
-              hp           = $2,
-              respawn_at   = NULL,
+          SET state            = 'ALIVE',
+              hp               = $2,
+              respawn_at       = NULL,
               last_hit_hero_id = NULL,
-              last_hit_at  = NULL,
-              updated_at   = now()
+              last_hit_at      = NULL,
+              updated_at       = now()
         WHERE id = $1`,
       [r.id, hpFull]
     );
+
+    // Notifica frontend que a instância renasceu
+    try {
+      broadcast({
+        type: 'monster_respawned',
+        id: r.id,
+        mapKey: r.map_key,
+        monsterKey: r.monsterKey,
+        hp: hpFull,
+        maxHp: hpFull,
+        x: r.x ?? null,
+        y: r.y ?? null
+      });
+    } catch (e) {
+      if (DEBUG) console.warn('[respawn] broadcast failed:', e?.message);
+    }
   }
 
   if (due.length) {

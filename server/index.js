@@ -25,6 +25,9 @@ const buildStarterRouter = require('./starter/routes');
 // server/index.js  (ADICIONE JUNTO DOS OUTROS REQUIRES DO SERVER)
 const { startRespawnLoop, stopRespawnLoop } = require('./respawn/worker');
 
+//ws bus
+const { attach: attachWsBus } = require('./ws/bus');
+
 
 // ======== Pipeline de Conteúdo ========
 const { loadAll, loadMap } = require('./content/loader');
@@ -520,7 +523,7 @@ let wss = null;
     if (useWebSocket) {
       const WebSocketServer = WebSocketLib.Server;
       wss = new WebSocketServer({ server, path: '/ws' });
-
+      attachWsBus(wss);
       setupRedis(wss).catch(() => {});
 
       const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;

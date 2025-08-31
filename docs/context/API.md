@@ -19,6 +19,8 @@
 - `PG_DUMP_PATH`
 - `PORT` (defaults: 3000)
 - `REDIS_URL` (defaults: null)
+- `RESPAWN_DEBUG` (defaults: )
+- `RESPAWN_TICK_MS` (defaults: 5000)
 - `SESSION_COOKIE_NAME` (defaults: process.env.COOKIE_NAME, token)
 - `WORKER_TICK_SECONDS` (defaults: 3)
 
