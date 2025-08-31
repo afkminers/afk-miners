@@ -58,6 +58,7 @@
     "{ok:true,item_type,amount:Number(amount) || 0 }"
   ],
   "GET /heroes/master": [],
+  "POST /hit": [],
   "GET /list": [
     "{canSelect:!row }",
     "{ok:true,id,heroKey }"

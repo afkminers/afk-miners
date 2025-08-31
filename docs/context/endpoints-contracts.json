@@ -3,7 +3,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 392,
+    "line": 396,
     "sample": {
       "params": {
         "key": "value"
@@ -37,7 +37,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 367,
+    "line": 371,
     "sample": {
       "params": {
         "key": "value"
@@ -79,7 +79,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 379,
+    "line": 383,
     "sample": {
       "params": {
         "key": "value"
@@ -117,7 +117,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 356,
+    "line": 360,
     "sample": {
       "query": {
         "map": "value"
@@ -160,7 +160,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 326,
+    "line": 330,
     "sample": {
       "query": {
         "map": "value"
@@ -215,7 +215,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 402,
+    "line": 406,
     "sample": {
       "query": {
         "map": "value"
@@ -238,7 +238,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 337,
+    "line": 341,
     "sample": {
       "query": {
         "map": "value"
@@ -289,7 +289,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 346,
+    "line": 350,
     "sample": {
       "query": {
         "map": "value"
@@ -336,7 +336,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 631,
+    "line": 635,
     "sample": {
       "query": {
         "limit": 1
@@ -367,7 +367,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 654,
+    "line": 658,
     "sample": {},
     "errors": [
       {
@@ -398,12 +398,7 @@
         "heroClass": "value"
       }
     },
-    "errors": [
-      {
-        "status": 400,
-        "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
-      }
-    ]
+    "errors": []
   },
   {
     "method": "GET",
@@ -717,7 +712,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 419,
+    "line": 423,
     "sample": {},
     "errors": []
   },
@@ -788,6 +783,29 @@
       {
         "status": 500,
         "body": "{error:'Falha ao listar heróis' }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/hit",
+    "file": "server\\combat\\routes.js",
+    "line": 10,
+    "sample": {
+      "body": {
+        "try {\n    const { attackerHeroId": 1,
+        "targetInstanceId": 1,
+        "weaponType": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,message:'attackerHeroId,targetInstanceId,weaponType são obrigatórios' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,message:e.message }"
       }
     ]
   },

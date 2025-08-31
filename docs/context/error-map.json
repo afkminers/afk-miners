@@ -211,12 +211,7 @@
       "body": "{error:err.message }"
     }
   ],
-  "GET /api/csrf": [
-    {
-      "status": 400,
-      "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
-    }
-  ],
+  "GET /api/csrf": [],
   "GET /assets/items": [
     {
       "status": 500,
@@ -410,6 +405,16 @@
     {
       "status": 500,
       "body": "{error:'Falha ao listar heróis' }"
+    }
+  ],
+  "POST /hit": [
+    {
+      "status": 400,
+      "body": "{ok:false,message:'attackerHeroId,targetInstanceId,weaponType são obrigatórios' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,message:e.message }"
     }
   ],
   "GET /list": [

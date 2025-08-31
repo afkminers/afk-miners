@@ -70,7 +70,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14572
+        "index": 14714
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -273,7 +273,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14479
+        "index": 14621
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -399,7 +399,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14429
+        "index": 14571
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -416,7 +416,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14537
+        "index": 14679
       },
       {
         "file": "server\\auth\\middleware.js",

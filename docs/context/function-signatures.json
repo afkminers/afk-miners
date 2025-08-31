@@ -151,7 +151,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 184,
+    "line": 188,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -160,7 +160,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 413,
+    "line": 417,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -169,7 +169,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 457,
+    "line": 461,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -178,7 +178,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 469,
+    "line": 473,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -990,6 +990,55 @@
     "params": [
       "db",
       "root"
+    ]
+  },
+  {
+    "file": "server\\combat\\service.js",
+    "line": 6,
+    "kind": "function",
+    "name": "resolveSkillFromWeapon",
+    "params": [
+      "weaponType"
+    ]
+  },
+  {
+    "file": "server\\combat\\service.js",
+    "line": 15,
+    "kind": "function",
+    "name": "computeDamage",
+    "params": [
+      "baseAtk",
+      "defFallback = K.MONSTER_DEF_FALLBACK",
+      "variance = K.DAMAGE_VARIANCE"
+    ]
+  },
+  {
+    "file": "server\\combat\\service.js",
+    "line": 22,
+    "kind": "function",
+    "name": "getHeroStats",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "server\\combat\\service.js",
+    "line": 35,
+    "kind": "function",
+    "name": "getInstance",
+    "params": [
+      "instanceId"
+    ]
+  },
+  {
+    "file": "server\\combat\\service.js",
+    "line": 46,
+    "kind": "function",
+    "name": "applyHit",
+    "params": [
+      "{ attackerHeroId",
+      "targetInstanceId",
+      "weaponType }"
     ]
   },
   {

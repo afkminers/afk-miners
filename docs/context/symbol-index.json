@@ -1154,6 +1154,16 @@
     ]
   },
   {
+    "file": "server\\combat\\service.js",
+    "symbols": [
+      "applyHit",
+      "computeDamage",
+      "getHeroStats",
+      "getInstance",
+      "resolveSkillFromWeapon"
+    ]
+  },
+  {
     "file": "server\\content\\loader.js",
     "symbols": [
       "inferSpriteKind",

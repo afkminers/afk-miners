@@ -26,13 +26,13 @@
 
 ### GET /
 
-Arquivo: `server\index.js:419`
+Arquivo: `server\index.js:423`
 
 _Sem payload inferido_
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:392`
+Arquivo: `server\index.js:396`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -60,7 +60,7 @@ Arquivo: `server\index.js:392`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:367`
+Arquivo: `server\index.js:371`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -90,7 +90,7 @@ Arquivo: `server\index.js:367`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:379`
+Arquivo: `server\index.js:383`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -119,7 +119,7 @@ Arquivo: `server\index.js:379`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:356`
+Arquivo: `server\index.js:360`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -144,7 +144,7 @@ Arquivo: `server\index.js:356`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:326`
+Arquivo: `server\index.js:330`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -172,7 +172,7 @@ Arquivo: `server\index.js:326`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:337`
+Arquivo: `server\index.js:341`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -199,7 +199,7 @@ Arquivo: `server\index.js:337`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:346`
+Arquivo: `server\index.js:350`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -225,7 +225,7 @@ Arquivo: `server\index.js:346`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:631`
+Arquivo: `server\index.js:635`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -260,9 +260,6 @@ Arquivo: `server\index.js:43`
   "heroClass": "value"
 }
 ```
-
-**Erros conhecidos:**
-- `HTTP 400` → {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
 
 ### GET /assets/items
 
@@ -569,7 +566,7 @@ Arquivo: `server\gacha\routes.js:144`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:402`
+Arquivo: `server\index.js:406`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -589,7 +586,7 @@ Arquivo: `server\index.js:402`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:654`
+Arquivo: `server\index.js:658`
 
 _Sem payload inferido_
 
@@ -745,6 +742,24 @@ Arquivo: `server\routes\farm.js:181`
 - `HTTP 500` → {error:'harvest_failed' }
 - `HTTP 403` → {error:'forbidden' }
 - `HTTP 500` → {error:'debug_grant_failed' }
+
+### POST /hit
+
+Arquivo: `server\combat\routes.js:10`
+
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "try {\n    const { attackerHeroId": 1,
+  "targetInstanceId": 1,
+  "weaponType": "value"
+}
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {ok:false,message:'attackerHeroId,targetInstanceId,weaponType são obrigatórios' }
+- `HTTP 500` → {ok:false,message:e.message }
 
 ### POST /login
 
@@ -1020,7 +1035,6 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 400: {error:'Mensagem vazia' }
   - HTTP 500: {error:err.message }
 - **GET /api/csrf**
-  - HTTP 400: {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
 - **GET /assets/items**
   - HTTP 500: {error:"Falha ao listar items" }
 - **GET /assets/sprites**
@@ -1160,6 +1174,9 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 500: {error:'harvest_failed' }
   - HTTP 403: {error:'forbidden' }
   - HTTP 500: {error:'debug_grant_failed' }
+- **POST /hit**
+  - HTTP 400: {ok:false,message:'attackerHeroId,targetInstanceId,weaponType são obrigatórios' }
+  - HTTP 500: {ok:false,message:e.message }
 - **POST /login**
   - HTTP 401: {error:'Credenciais inválidas' }
   - HTTP 401: {error:'Credenciais inválidas' }
