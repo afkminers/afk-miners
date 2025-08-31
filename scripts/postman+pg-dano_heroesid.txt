@@ -1,0 +1,93 @@
+Bora fechar a FASE B com um check-list ✅
+1) Dano reduzindo HP
+
+ POST /api/combat/hit está voltando ok: true e damage > 0.
+
+ monster_instances.hp cai a cada hit.
+
+Comandos de conferência:
+
+-- ver as últimas instâncias (só pra escolher a certa)
+SELECT id, hp, max_hp, state, created_at
+FROM monster_instances
+ORDER BY created_at DESC
+LIMIT 5;
+
+-- ver a instância que você está batendo
+SELECT id, hp, max_hp, state
+FROM monster_instances
+WHERE id = 'e971f8cd-fb94-415e-bd3e-3b96160a438c';
+
+2) Skill subindo por hit (Tibia-like)
+
+Você já viu a skill SWORD subir. Para conferir sempre:
+
+SELECT skill_type, level, tries_progress
+FROM player_hero_skills
+WHERE hero_id = '4211bed8-ce57-41c8-9459-3fdb60ce6bf1'
+ORDER BY skill_type;
+
+3) Teste de “matar” o monstro
+
+Se quiser simular morte rapidinho:
+
+-- deixa o bicho quase morrendo
+UPDATE monster_instances
+SET hp = 3, state = 'ALIVE'
+WHERE id = 'e971f8cd-fb94-415e-bd3e-3b96160a438c';
+
+-- dá um hit pelo Postman e espera dead: true
+
+
+Depois confira:
+
+SELECT id, hp, state
+FROM monster_instances
+WHERE id = 'e971f8cd-fb94-415e-bd3e-3b96160a438c';
+-- deve mostrar hp = 0 e state = DEAD
+
+Presets/Resets úteis (pra testar sem dor)
+Criar uma instância viva do primeiro monstro
+INSERT INTO monster_instances (monster_id, map_key, max_hp, hp)
+SELECT id, 'house', COALESCE("healthMax",50), COALESCE("healthMax",50)
+FROM monsters_master
+ORDER BY id
+LIMIT 1
+RETURNING id, hp, max_hp;
+
+Resetar uma instância para “cheia”
+UPDATE monster_instances
+SET hp = max_hp, state = 'ALIVE'
+WHERE id = 'e971f8cd-fb94-415e-bd3e-3b96160a438c';
+
+“Buff” temporário no herói (só pra ver número de dano)
+UPDATE player_heroes
+SET attack = 12, defense = 10
+WHERE id = '4211bed8-ce57-41c8-9459-3fdb60ce6bf1';
+
+
+Consultas de verificação rápidas
+
+Mortos prontos pra renascer:
+
+SELECT id, respawn_at, (now() >= respawn_at) AS due
+FROM monster_instances
+WHERE state='DEAD'
+ORDER BY respawn_at NULLS LAST;
+
+
+Vivos gerados por spawn:
+
+SELECT id, state, spawn_id, map_key
+FROM monster_instances
+WHERE state='ALIVE' AND spawn_id IS NOT NULL
+ORDER BY created_at DESC
+LIMIT 5;
+
+
+Progresso de skill do herói:
+
+SELECT skill_type, level, tries_progress
+FROM player_hero_skills
+WHERE hero_id = '<HERO_ID>'
+ORDER BY skill_type;

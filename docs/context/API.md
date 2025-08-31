@@ -26,13 +26,13 @@
 
 ### GET /
 
-Arquivo: `server\index.js:423`
+Arquivo: `server\index.js:426`
 
 _Sem payload inferido_
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:396`
+Arquivo: `server\index.js:399`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -60,7 +60,7 @@ Arquivo: `server\index.js:396`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:371`
+Arquivo: `server\index.js:374`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -90,7 +90,7 @@ Arquivo: `server\index.js:371`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:383`
+Arquivo: `server\index.js:386`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -119,7 +119,7 @@ Arquivo: `server\index.js:383`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:360`
+Arquivo: `server\index.js:363`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -144,7 +144,7 @@ Arquivo: `server\index.js:360`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:330`
+Arquivo: `server\index.js:333`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -172,7 +172,7 @@ Arquivo: `server\index.js:330`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:341`
+Arquivo: `server\index.js:344`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -199,7 +199,7 @@ Arquivo: `server\index.js:341`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:350`
+Arquivo: `server\index.js:353`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -225,7 +225,7 @@ Arquivo: `server\index.js:350`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:635`
+Arquivo: `server\index.js:648`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -249,7 +249,7 @@ Arquivo: `server\index.js:635`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:43`
+Arquivo: `server\index.js:46`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -566,7 +566,7 @@ Arquivo: `server\gacha\routes.js:144`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:406`
+Arquivo: `server\index.js:409`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -586,7 +586,7 @@ Arquivo: `server\index.js:406`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:658`
+Arquivo: `server\index.js:671`
 
 _Sem payload inferido_
 

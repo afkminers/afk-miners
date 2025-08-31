@@ -84,6 +84,12 @@
     "text": "/ FIXME');"
   },
   {
+    "file": "server\\combat\\worker.js",
+    "line": 11,
+    "tag": "TODO",
+    "text": "pegar spawn info original (monsterKey, hp, etc)"
+  },
+  {
     "file": "server\\scripts\\gen-context.js",
     "line": 168,
     "tag": "NOTE",

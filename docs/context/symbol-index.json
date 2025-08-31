@@ -1159,8 +1159,18 @@
       "applyHit",
       "computeDamage",
       "getHeroStats",
-      "getInstance",
-      "resolveSkillFromWeapon"
+      "getInstanceWithMonster",
+      "getRespawnSeconds",
+      "giveXp",
+      "persistDrops",
+      "resolveSkillFromWeapon",
+      "rollLoot"
+    ]
+  },
+  {
+    "file": "server\\combat\\worker.js",
+    "symbols": [
+      "respawnTick"
     ]
   },
   {
@@ -1235,6 +1245,14 @@
       "loadMapJson",
       "loadMapObjects",
       "rlAllow"
+    ]
+  },
+  {
+    "file": "server\\respawn\\worker.js",
+    "symbols": [
+      "respawnTick",
+      "startRespawnLoop",
+      "stopRespawnLoop"
     ]
   },
   {

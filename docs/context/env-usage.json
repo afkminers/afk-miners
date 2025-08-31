@@ -26,7 +26,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 975
+        "index": 1118
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -70,7 +70,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14714
+        "index": 14857
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -273,7 +273,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14621
+        "index": 14764
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -309,7 +309,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1103
+        "index": 1246
       },
       {
         "file": "server\\skills\\routes.js",
@@ -377,7 +377,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1162
+        "index": 1305
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -399,7 +399,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14571
+        "index": 14714
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -416,7 +416,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 14679
+        "index": 14822
       },
       {
         "file": "server\\auth\\middleware.js",

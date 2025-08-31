@@ -1,39 +1,67 @@
 // server/respawn/worker.js
 let TIMER = null;
-const TICK_MS = 5000; // roda a cada 5s
+
+// Frequência do worker (ms). Pode ajustar por ENV: RESPAWN_TICK_MS=2000
+const TICK_MS = Number(process.env.RESPAWN_TICK_MS || 5000);
+
+// Se quiser ver logs de cada tick (mesmo quando não revive), ligue: RESPAWN_DEBUG=1
+const DEBUG = String(process.env.RESPAWN_DEBUG || '').trim() === '1';
 
 /**
  * Um passo do respawn:
  * - Pega instâncias MORTAS cujo prazo já venceu (now() >= respawn_at)
- * - Marca como ALIVE e limpa o respawn_at
- * Obs: o HP atual é mantido no mínimo 1; se quiser restaurar pro máximo,
- *      traga esse valor do seu pipeline/monsters_master e use aqui.
+ * - Marca como ALIVE, zera respawn_at e restaura o HP
+ *
+ * HP preferências (na ordem):
+ *  1) monster_instances.max_hp (se existir)
+ *  2) monsters_master."healthMax" via join com spawns -> "monsterKey"
+ *  3) 1 (fallback para não ficar 0)
  */
 async function respawnTick({ all, run }) {
+  if (DEBUG) console.log('[respawn] tick...');
+
   const due = await all(`
-    SELECT mi.id, mi.spawn_id, mi.map_key, s."monsterKey",
-           s.x, s.y
-      FROM monster_instances mi
-      JOIN spawns s ON s.id = mi.spawn_id
-     WHERE mi.state = 'DEAD'
-       AND mi.respawn_at IS NOT NULL
-       AND now() >= mi.respawn_at
-     ORDER BY mi.respawn_at ASC
-     LIMIT 50
+    SELECT
+      mi.id,
+      mi.max_hp            AS mi_max_hp,
+      mi.spawn_id,
+      mi.map_key,
+      s."monsterKey",
+      COALESCE(mm."healthMax", 0) AS health_max
+    FROM monster_instances mi
+    JOIN spawns s
+      ON s.id = mi.spawn_id
+    LEFT JOIN monsters_master mm
+      ON mm.key = s."monsterKey"
+    WHERE mi.state = 'DEAD'
+      AND mi.respawn_at IS NOT NULL
+      AND now() >= mi.respawn_at
+    ORDER BY mi.respawn_at ASC
+    LIMIT 50
   `);
 
+  if (DEBUG) console.log('[respawn] due count =', due.length);
+
   for (const r of due) {
-    // Sobe o bicho: volta a viver e limpa o agendamento
+    // HP que vamos usar pra voltar:
+    const hpFull =
+      (r.mi_max_hp && Number(r.mi_max_hp) > 0) ? Number(r.mi_max_hp)
+      : (r.health_max && Number(r.health_max) > 0) ? Number(r.health_max)
+      : 1;
+
     await run(
       `UPDATE monster_instances
-          SET state='ALIVE',
-              hp = GREATEST(hp, 1),
-              updated_at = now(),
-              respawn_at = NULL
+          SET state        = 'ALIVE',
+              hp           = $2,
+              respawn_at   = NULL,
+              last_hit_hero_id = NULL,
+              last_hit_at  = NULL,
+              updated_at   = now()
         WHERE id = $1`,
-      [r.id]
+      [r.id, hpFull]
     );
   }
+
   if (due.length) {
     console.log(`[respawn] revived ${due.length} instance(s)`);
   }
