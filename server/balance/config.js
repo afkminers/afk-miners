@@ -28,4 +28,11 @@ module.exports = {
   // === Combate (para dano simples) ===
   DAMAGE_VARIANCE: envNum('DAMAGE_VARIANCE', 0.20), // 20%
   MONSTER_DEF_FALLBACK: envNum('MONSTER_DEF_FALLBACK', 6),
+
+  WEAPON_SPEED_MS: {
+    SWORD: 900,   // 0.9s
+    AXE: 1100,
+    CLUB: 1100,
+    BOW: 700
+  }
 };

@@ -2,6 +2,12 @@
 <meta charset="utf-8">
 <title>Play</title>
 
+<style>
+  html, body { margin:0; height:100%; background:#0b1020; color:#e5e7eb; font-family: system-ui, sans-serif; }
+  #view { display:block; margin: 8px auto; outline:none; background:#0f172a; border:1px solid #1f2937; }
+  #hud { width:960px; margin:0 auto; font-size:12px; opacity:0.85; }
+</style>
+
 <canvas id="view" width="960" height="540"></canvas>
 <div id="hud"></div>
 
@@ -12,5 +18,51 @@
 <script src="/js/engine/player_controller.js"></script>
 <script src="/js/engine/click_to_move.js"></script>
 
-<!-- Cena principal -->
+<!-- Cena principal (clássico) -->
 <script src="/js/play.js"></script>
+
+<!-- Combate (MÓDULOS) -->
+<script type="module">
+  import { connectCombatWS, combatState } from '/js/combat/ws-combat.js';
+  import { drawHpBar, drawTargetBox, updateAndDrawFloaters } from '/js/combat/render-combat.js';
+  import { startAttack, stopAttack } from '/js/combat/attack-controls.js';
+
+  // Conecta WS assim que a página carrega
+  connectCombatWS();
+
+  // UI de combate desenhada por cima da cena
+  // play.js chama window.CombatUI.render(ctx, camera, dt)
+  window.CombatUI = {
+    render(ctx, camera, dt) {
+      if (!window.GameScene || !window.GameScene.canvas) return;
+
+      // Desenho no espaço do mundo
+      ctx.save();
+      if (window.GameScene.camera && typeof window.GameScene.camera.apply === 'function') {
+        window.GameScene.camera.apply(ctx, () => {
+          for (const m of combatState.monsters.values()) {
+            if (typeof m.x === 'number' && typeof m.y === 'number') {
+              drawHpBar(ctx, m);
+            }
+          }
+          drawTargetBox(ctx);
+        });
+      } else {
+        // fallback (sem camera)
+        for (const m of combatState.monsters.values()) {
+          if (typeof m.x === 'number' && typeof m.y === 'number') {
+            drawHpBar(ctx, m);
+          }
+        }
+        drawTargetBox(ctx);
+      }
+      ctx.restore();
+
+      // Floaters (coords de tela)
+      updateAndDrawFloaters(ctx, dt * 1000);
+    }
+  };
+
+  // Expor helpers ao console, se quiser brincar:
+  window.Attack = { startAttack, stopAttack };
+</script>

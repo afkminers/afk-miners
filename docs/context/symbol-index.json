@@ -1338,6 +1338,13 @@
     ]
   },
   {
+    "file": "server\\ws\\bus.js",
+    "symbols": [
+      "attach",
+      "broadcast"
+    ]
+  },
+  {
     "file": "tools\\extract-sprite.js",
     "symbols": [
       "parseArgs",

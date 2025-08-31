@@ -27,6 +27,7 @@ const { startRespawnLoop, stopRespawnLoop } = require('./respawn/worker');
 
 //ws bus
 const { attach: attachWsBus } = require('./ws/bus');
+const { listAliveMonsters } = require('./ws/initial_monsters');
 
 
 // ======== Pipeline de Conteúdo ========
@@ -527,6 +528,7 @@ let wss = null;
       setupRedis(wss).catch(() => {});
 
       const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
+      const { listAliveMonsters } = require('./ws/initial_monsters');
 
       wss.on('connection', (ws, req) => {
         const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
@@ -555,6 +557,18 @@ let wss = null;
         } catch (e) {
           console.warn('[ws] cookie parse error', e && e.message);
         }
+
+        // <<< NOVO: snapshot inicial de monstros vivos >>>
+        (async () => {
+          try {
+            const msgs = await listAliveMonsters();
+            for (const m of msgs) {
+              try { ws.send(JSON.stringify(m)); } catch {}
+            }
+          } catch (e) {
+            console.warn('[ws] init monsters failed:', e?.message);
+          }
+        })();
 
         ws.on('message', async (msg) => {
           let data;
@@ -644,6 +658,7 @@ let wss = null;
     process.exit(1);
   }
 })();
+
 
 /* ========= Chat HTTP API ========= */
 

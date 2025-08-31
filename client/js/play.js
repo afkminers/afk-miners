@@ -1,4 +1,3 @@
-// client/js/play.js
 // Cena jogável genérica (House/PvP): usa ?map=<key> (padrão house).
 // Input (WASD/Numpad/Mouse) + PlayerController + Camera2D + AStarGrid + ClickToMove.
 // CSRF robusto, loader tolerante de tileset, respawn, sprites via YAML, sync de posição com seq/clientTs.
@@ -7,7 +6,10 @@ const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
 const TILE = 32;
 
-/* =============== Canvas/HUD flexível (querystring + auto) =============== */
+// ----------------- NOVO: namespace público para outros módulos -----------------
+window.GameScene = window.GameScene || {};
+
+// =============== Canvas/HUD flexível (querystring + auto) ===============
 function pickElByIds(prefIds = [], fallbackSelectors = []) {
   for (const id of prefIds) { if (!id) continue; const el = document.getElementById(id); if (el) return el; }
   for (const sel of fallbackSelectors) { const el = document.querySelector(sel); if (el) return el; }
@@ -25,6 +27,10 @@ if (!canvas) {
   throw new Error('Canvas not found');
 }
 const ctx = canvas.getContext('2d');
+
+// NOVO: expõe cedo para módulos externos
+window.GameScene.canvas = canvas;
+window.GameScene.ctx = ctx;
 
 // garante foco p/ WASD e click-to-move em todos os navegadores
 try { canvas.setAttribute('tabindex', '0'); } catch {}
@@ -60,7 +66,7 @@ async function jpost(url, body) {
   const r = await fetch(url, {
     method: 'POST',
     credentials: 'include',
-    referrerPolicy: 'strict-origin-when-cross-origin', // ajuda Origin/Referer quando houver
+    referrerPolicy: 'strict-origin-when-cross-origin',
     headers: {
       'Content-Type': 'application/json',
       'X-CSRF-Token': tok,
@@ -395,7 +401,7 @@ function buildCollisionGridFromTiled(json) {
   const grid = new Uint8Array(cols * rows);
   const collisionLayer = (json.layers || []).find(l => l.type === 'tilelayer' && l.name && l.name.toLowerCase().includes('collision'));
   if (collisionLayer && collisionLayer.data) {
-    for (let i=0; i<collisionLayer.data.length; i++) if (collisionLayer.data[i]) grid[i] = 1;
+    for (let i=0; i<collisionLayer.data.length; i++) if (i < grid.length && collisionLayer.data[i]) grid[i] = 1;
   }
   return { grid, cols, rows };
 }
@@ -593,6 +599,11 @@ function updateRespawns(now) {
     onMoved: (x,y) => postPosThrottled(MAP_KEY, x, y)
   });
 
+  // NOVO: expõe câmera e controller
+  window.GameScene.camera = camera;
+  window.GameScene.controller = controller;
+  window.GameScene.mapKey = MAP_KEY;
+
   const astar = new AStarGrid(grid, cols, rows);
   const clickMove = new ClickToMove({ canvas, camera, controller, grid });
   clickMove.setAStar(astar);
@@ -626,6 +637,9 @@ function updateRespawns(now) {
     while (s.liveIds.size < s.want) s.liveIds.add(addMobFromSpawn(s.def));
     s.nextAt = now0 + s.respawnMs;
   }
+
+  // NOVO: sinaliza que a cena está pronta (outros módulos podem iniciar)
+  window.dispatchEvent(new CustomEvent('game:ready', { detail: { canvas, ctx, camera, controller } }));
 
   // Loop principal
   let last = performance.now();
@@ -670,16 +684,26 @@ function updateRespawns(now) {
       }
     }
 
-    // Respawn
+    // Respawn local (placeholder visual)
     updateRespawns(now);
 
-    // Render
+    // Render (mundo)
     clear();
     camera.apply(ctx, () => {
       drawGround(camera);
-      for (const m of mobs) drawMob(m);
+      for (const m of mobs) {
+        drawMob(m);
+      }
       drawPlayer(controller);
     });
+
+    // NOVO: Hook de render do módulo de combate (se existir)
+    if (window.CombatUI && typeof window.CombatUI.render === 'function') {
+      try { window.CombatUI.render(ctx, camera, dt); } catch (e) { /* silencia para não quebrar o jogo */ }
+    }
+
+    // NOVO: evento por frame (útil para animações de dano/floaters)
+    window.dispatchEvent(new CustomEvent('game:frame', { detail: { ctx, camera, dt } }));
 
     // HUD
     if (hud) {
@@ -700,3 +724,4 @@ function updateRespawns(now) {
   console.error(err);
   if (hud) hud.textContent = "Erro: " + err.message;
 });
+  

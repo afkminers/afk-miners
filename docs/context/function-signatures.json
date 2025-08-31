@@ -144,14 +144,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 52,
+    "line": 55,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 191,
+    "line": 194,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -160,7 +160,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 420,
+    "line": 423,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -169,7 +169,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 464,
+    "line": 467,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -178,11 +178,29 @@
   },
   {
     "file": "server\\index.js",
-    "line": 476,
+    "line": 479,
     "kind": "function",
     "name": "setupRedis",
     "params": [
       "wss"
+    ]
+  },
+  {
+    "file": "server\\ws\\bus.js",
+    "line": 4,
+    "kind": "function",
+    "name": "attach",
+    "params": [
+      "serverWss"
+    ]
+  },
+  {
+    "file": "server\\ws\\bus.js",
+    "line": 6,
+    "kind": "function",
+    "name": "broadcast",
+    "params": [
+      "obj"
     ]
   },
   {
@@ -713,7 +731,7 @@
   },
   {
     "file": "server\\respawn\\worker.js",
-    "line": 20,
+    "line": 23,
     "kind": "function",
     "name": "respawnTick",
     "params": [
@@ -723,7 +741,7 @@
   },
   {
     "file": "server\\respawn\\worker.js",
-    "line": 70,
+    "line": 90,
     "kind": "function",
     "name": "startRespawnLoop",
     "params": [
@@ -732,7 +750,7 @@
   },
   {
     "file": "server\\respawn\\worker.js",
-    "line": 79,
+    "line": 99,
     "kind": "function",
     "name": "stopRespawnLoop",
     "params": []
@@ -1076,7 +1094,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 7,
+    "line": 10,
     "kind": "function",
     "name": "computeDamage",
     "params": [
@@ -1087,7 +1105,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 14,
+    "line": 17,
     "kind": "function",
     "name": "resolveSkillFromWeapon",
     "params": [
@@ -1096,7 +1114,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 24,
+    "line": 27,
     "kind": "function",
     "name": "getHeroStats",
     "params": [
@@ -1105,7 +1123,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 38,
+    "line": 41,
     "kind": "function",
     "name": "getInstanceWithMonster",
     "params": [
@@ -1114,7 +1132,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 52,
+    "line": 55,
     "kind": "function",
     "name": "getRespawnSeconds",
     "params": [
@@ -1123,7 +1141,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 62,
+    "line": 65,
     "kind": "function",
     "name": "rollLoot",
     "params": [
@@ -1132,7 +1150,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 81,
+    "line": 84,
     "kind": "function",
     "name": "giveXp",
     "params": [
@@ -1142,7 +1160,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 92,
+    "line": 95,
     "kind": "function",
     "name": "persistDrops",
     "params": [
@@ -1153,7 +1171,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 110,
+    "line": 113,
     "kind": "function",
     "name": "applyHit",
     "params": [
