@@ -73,6 +73,33 @@
     ]
   },
   {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "symbols": [
+      "fetchCsrf",
+      "getWorldFromEvent",
+      "hitTestMonster",
+      "pickMonsterAt",
+      "resolveHeroId",
+      "startAttack",
+      "stopAttack"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "symbols": [
+      "drawHpBar"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\ws-combat.js",
+    "symbols": [
+      "combatState",
+      "createFloaterForMonster",
+      "onWsMessage",
+      "wsUrl"
+    ]
+  },
+  {
     "file": "client\\js\\dock.js",
     "symbols": [
       "bringToFront",
@@ -1154,6 +1181,16 @@
     ]
   },
   {
+    "file": "server\\combat\\autoloop.js",
+    "symbols": [
+      "cooldownFor",
+      "isTargetAlive",
+      "start",
+      "stop",
+      "stopAll"
+    ]
+  },
+  {
     "file": "server\\combat\\service.js",
     "symbols": [
       "applyHit",
@@ -1342,6 +1379,12 @@
     "symbols": [
       "attach",
       "broadcast"
+    ]
+  },
+  {
+    "file": "server\\ws\\initial_monsters.js",
+    "symbols": [
+      "listAliveMonsters"
     ]
   },
   {

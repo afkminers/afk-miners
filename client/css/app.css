@@ -94,7 +94,11 @@ html,body{
 .hud{
   position:absolute; left:10px; top:10px;
   background:#0e1628; border:1px solid var(--border); padding:6px 10px; border-radius:8px; font-size:12px;
+  /* HUD só desenha; não deve receber cliques */
+  pointer-events: none;
 }
+#hud { pointer-events: none; }
+
 
 /* ===================== Painéis Dockados ===================== */
 .panel{

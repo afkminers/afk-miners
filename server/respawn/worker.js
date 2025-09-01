@@ -10,10 +10,18 @@ const DEBUG = String(process.env.RESPAWN_DEBUG || '').trim() === '1';
 // WS bus (para avisar clientes)
 const { broadcast } = require('../ws/bus');
 
+// Integração com o loop de AI (para ele conhecer a posição inicial)
+let seedAI = null;
+try {
+  // importa de forma “tolerante” (não quebra se ainda não existir)
+  seedAI = require('../combat/ai-mobs').seedPosition;
+} catch { /* noop */ }
+
 /**
  * Um passo do respawn:
  * - Pega instâncias MORTAS cujo prazo já venceu (now() >= respawn_at)
- * - Marca como ALIVE, zera respawn_at e restaura o HP
+ * - Sorteia x/y dentro do retângulo do spawn
+ * - Marca como ALIVE, zera respawn_at, restaura HP e salva x/y
  *
  * HP preferências (na ordem):
  *  1) monster_instances.max_hp (se existir)
@@ -30,7 +38,7 @@ async function respawnTick({ all, run }) {
       mi.spawn_id,
       mi.map_key,
       s."monsterKey",
-      s.x, s.y,
+      s.x, s.y, COALESCE(s.w,32) AS w, COALESCE(s.h,32) AS h,
       COALESCE(mm."healthMax", 0) AS health_max
     FROM monster_instances mi
     JOIN spawns s
@@ -47,11 +55,15 @@ async function respawnTick({ all, run }) {
   if (DEBUG) console.log('[respawn] due count =', due.length);
 
   for (const r of due) {
-    // HP que vamos usar pra voltar:
+    // HP cheio para voltar
     const hpFull =
       (r.mi_max_hp && Number(r.mi_max_hp) > 0) ? Number(r.mi_max_hp)
       : (r.health_max && Number(r.health_max) > 0) ? Number(r.health_max)
       : 1;
+
+    // Sorteia nova posição dentro do retângulo do spawn
+    const nx = Math.round((Number(r.x) || 0) + Math.random() * Math.max(1, Number(r.w)));
+    const ny = Math.round((Number(r.y) || 0) + Math.random() * Math.max(1, Number(r.h)));
 
     await run(
       `UPDATE monster_instances
@@ -60,12 +72,14 @@ async function respawnTick({ all, run }) {
               respawn_at       = NULL,
               last_hit_hero_id = NULL,
               last_hit_at      = NULL,
+              x                = $3,
+              y                = $4,
               updated_at       = now()
         WHERE id = $1`,
-      [r.id, hpFull]
+      [r.id, hpFull, nx, ny]
     );
 
-    // Notifica frontend que a instância renasceu
+    // Notifica frontend que a instância renasceu (com posição)
     try {
       broadcast({
         type: 'monster_respawned',
@@ -74,17 +88,29 @@ async function respawnTick({ all, run }) {
         monsterKey: r.monsterKey,
         hp: hpFull,
         maxHp: hpFull,
-        x: r.x ?? null,
-        y: r.y ?? null
+        x: nx,
+        y: ny
       });
     } catch (e) {
       if (DEBUG) console.warn('[respawn] broadcast failed:', e?.message);
     }
+
+    // Semeia a posição no AI (para começar a andar)
+    try {
+      if (typeof seedAI === 'function') {
+        seedAI({
+          id: r.id,
+          x: nx, y: ny,
+          mapKey: r.map_key,
+          spawnRect: { x: Number(r.x) || 0, y: Number(r.y) || 0, w: Number(r.w) || 32, h: Number(r.h) || 32 }
+        });
+      }
+    } catch (e) {
+      if (DEBUG) console.warn('[respawn] seed AI failed:', e?.message);
+    }
   }
 
-  if (due.length) {
-    console.log(`[respawn] revived ${due.length} instance(s)`);
-  }
+  if (due.length) console.log(`[respawn] revived ${due.length} instance(s)`);
 }
 
 function startRespawnLoop(db) {

@@ -250,6 +250,34 @@
       "body": "{error:'collect_failed' }"
     }
   ],
+  "POST /attack/start": [
+    {
+      "status": 400,
+      "body": "{ok:false,message:'heroId e targetInstanceId são obrigatórios' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,message:e.message }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,message:'heroId é obrigatório' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,message:e.message }"
+    }
+  ],
+  "POST /attack/stop": [
+    {
+      "status": 400,
+      "body": "{ok:false,message:'heroId é obrigatório' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,message:e.message }"
+    }
+  ],
   "GET /class-rates": [
     {
       "status": 500,
@@ -410,7 +438,23 @@
   "POST /hit": [
     {
       "status": 400,
-      "body": "{ok:false,message:'attackerHeroId,targetInstanceId,weaponType são obrigatórios' }"
+      "body": "{ok:false,message:'attackerHeroId e targetInstanceId são obrigatórios' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,message:e.message }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,message:'heroId e targetInstanceId são obrigatórios' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,message:e.message }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,message:'heroId é obrigatório' }"
     },
     {
       "status": 500,

@@ -1,18 +1,19 @@
 // client/js/combat/ws-combat.js
 console.log('[combat] ws module loaded');
 
-// Resolve ws:// ou wss:// baseado na página atual
 function wsUrl() {
   const loc = window.location;
   const proto = loc.protocol === 'https:' ? 'wss' : 'ws';
   return `${proto}://${loc.host}/ws`;
 }
 
+// Estado global do combate
 export const combatState = {
-  monsters: new Map(),  // id -> { id, x, y, hp, maxHp, mapKey, monsterKey }
-  floaters: [],         // [{x,y,text,ttl,vy}]
+  monsters: new Map(),   // id -> { id, x, y, hp, maxHp, mapKey, monsterKey }
+  floaters: [],          // [{x,y,text,ttl,vy}]
   selectedTargetId: null
 };
+window.combatState = combatState;
 
 let ws;
 
@@ -26,10 +27,7 @@ export function connectCombatWS() {
   }
 
   ws.onopen = () => console.log('[ws] open');
-  ws.onclose = () => {
-    console.log('[ws] closed, retrying...');
-    setTimeout(connectCombatWS, 1500);
-  };
+  ws.onclose = () => { console.log('[ws] closed, retrying...'); setTimeout(connectCombatWS, 1500); };
   ws.onerror = (e) => console.warn('[ws] error', e);
   ws.onmessage = onWsMessage;
 }
@@ -39,64 +37,85 @@ function onWsMessage(e) {
   try { msg = JSON.parse(e.data); } catch { return; }
 
   switch (msg.type) {
-    case 'monster_hp': {
-      const m = combatState.monsters.get(msg.id) || { id: msg.id };
-      const prevHp = (typeof m.hp === 'number') ? m.hp : null;
-
+    case 'monster_respawned': {
+      // { id, mapKey, monsterKey, hp, maxHp, x, y }
+      const id = String(msg.id);
+      const m = combatState.monsters.get(id) || { id };
+      m.mapKey = msg.mapKey || m.mapKey || null;
+      m.monsterKey = msg.monsterKey || m.monsterKey || null;
       m.hp = Number(msg.hp ?? m.hp ?? 1);
       m.maxHp = Number(msg.maxHp ?? m.maxHp ?? m.hp ?? 1);
       if (typeof msg.x === 'number') m.x = msg.x;
       if (typeof msg.y === 'number') m.y = msg.y;
+      combatState.monsters.set(id, m);
 
-      combatState.monsters.set(m.id, m);
+      // Notifica a cena para criar/atualizar sprite
+      window.dispatchEvent(new CustomEvent('combat:monster_respawned', { detail: {
+        id, monsterKey: m.monsterKey, x: m.x, y: m.y
+      }}));
+
+      createFloater(m, 'respawn', { ttl: 600, vy: -0.03 });
+      break;
+    }
+
+    case 'monster_move': {
+      // { id, x, y } — enviado pelo servidor a cada tick de movimento
+      const id = String(msg.id);
+      const m = combatState.monsters.get(id);
+      if (!m) break;
+      if (typeof msg.x === 'number') m.x = msg.x;
+      if (typeof msg.y === 'number') m.y = msg.y;
+      combatState.monsters.set(id, m);
+
+      // Notifica a cena para mover sprite
+      window.dispatchEvent(new CustomEvent('combat:monster_move', { detail: { id, x: m.x, y: m.y }}));
+      break;
+    }
+
+    case 'monster_hp': {
+      // { id, hp, maxHp?, dmg?, x?, y? }
+      const id = String(msg.id);
+      const m = combatState.monsters.get(id) || { id };
+      const prevHp = (typeof m.hp === 'number') ? m.hp : null;
+
+      m.hp = Number(msg.hp);
+      m.maxHp = Number(msg.maxHp ?? m.maxHp ?? msg.hp ?? 1);
+      if (typeof msg.x === 'number') m.x = msg.x;
+      if (typeof msg.y === 'number') m.y = msg.y;
+
+      combatState.monsters.set(id, m);
 
       const dmg = (typeof msg.dmg === 'number')
         ? msg.dmg
         : (prevHp != null ? Math.max(0, prevHp - m.hp) : 0);
-
-      if (dmg > 0) createFloaterForMonster(m, `-${dmg}`);
+      if (dmg > 0) createFloater(m, `-${dmg}`);
       break;
     }
 
     case 'monster_dead': {
-      const m = combatState.monsters.get(msg.id);
+      // { id, xp? }
+      const id = String(msg.id);
+      const m = combatState.monsters.get(id);
       if (m) {
         m.hp = 0;
-        combatState.monsters.set(m.id, m);
-        if (typeof msg.xp === 'number') createFloaterForMonster(m, `+${msg.xp}xp`);
+        combatState.monsters.set(id, m);
+        if (typeof msg.xp === 'number') createFloater(m, `+${msg.xp}xp`);
+        window.dispatchEvent(new CustomEvent('combat:monster_dead', { detail: { id } }));
       }
       break;
     }
 
-    case 'monster_respawned': {
-      // { id, mapKey, monsterKey, hp, maxHp, x, y }
-      const m = combatState.monsters.get(msg.id) || { id: msg.id };
-      m.hp = Number(msg.hp || 1);
-      m.maxHp = Number(msg.maxHp || m.hp || 1);
-      m.mapKey = msg.mapKey || m.mapKey || null;
-      m.monsterKey = msg.monsterKey || m.monsterKey || null;
-      if (typeof msg.x === 'number') m.x = msg.x;
-      if (typeof msg.y === 'number') m.y = msg.y;
-      combatState.monsters.set(m.id, m);
-
-      createFloaterForMonster(m, 'respawn');
-      break;
-    }
+    // demais mensagens do servidor são ignoradas aqui
   }
 }
 
-function createFloaterForMonster(m, text) {
-  if (typeof m.x !== 'number' || typeof m.y !== 'number') return;
+function createFloater(m, text, opts = {}) {
+  if (typeof m?.x !== 'number' || typeof m?.y !== 'number') return;
   combatState.floaters.push({
-    x: m.x + 16,   // centro do tile 32x32
+    x: m.x + 16,
     y: m.y - 8,
     text,
-    ttl: 900,      // ms
-    vy: -0.035     // px/ms
+    ttl: opts.ttl ?? 900,
+    vy: opts.vy ?? -0.035
   });
 }
-
-/** Expor no escopo global para facilitar debug no console */
-window.Combat = window.Combat || {};
-window.Combat.state = combatState;
-window.Combat.connect = connectCombatWS;

@@ -3,7 +3,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 402,
+    "line": 403,
     "sample": {
       "params": {
         "key": "value"
@@ -37,7 +37,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 377,
+    "line": 378,
     "sample": {
       "params": {
         "key": "value"
@@ -79,7 +79,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 389,
+    "line": 390,
     "sample": {
       "params": {
         "key": "value"
@@ -117,7 +117,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 366,
+    "line": 367,
     "sample": {
       "query": {
         "map": "value"
@@ -160,7 +160,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 336,
+    "line": 337,
     "sample": {
       "query": {
         "map": "value"
@@ -215,7 +215,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 412,
+    "line": 413,
     "sample": {
       "query": {
         "map": "value"
@@ -238,7 +238,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 347,
+    "line": 348,
     "sample": {
       "query": {
         "map": "value"
@@ -289,7 +289,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 356,
+    "line": 357,
     "sample": {
       "query": {
         "map": "value"
@@ -336,7 +336,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 651,
+    "line": 666,
     "sample": {
       "query": {
         "limit": 1
@@ -367,7 +367,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 674,
+    "line": 689,
     "sample": {},
     "errors": [
       {
@@ -390,7 +390,7 @@
     "method": "GET",
     "path": "/api/csrf",
     "file": "server\\index.js",
-    "line": 49,
+    "line": 50,
     "sample": {
       "body": {
         "try {\n    const { heroId": 1,
@@ -471,6 +471,77 @@
       {
         "status": 200,
         "body": "{ok:true,added:total }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/attack/start",
+    "file": "server\\combat\\routes.js",
+    "line": 43,
+    "sample": {
+      "body": {
+        "heroId": 1,
+        "attackerHeroId": 1,
+        "targetInstanceId": 1,
+        "targetId": 1,
+        "weaponType": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,message:'heroId e targetInstanceId são obrigatórios' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,message:e.message }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,message:'heroId é obrigatório' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,message:e.message }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/attack/stop",
+    "file": "server\\combat\\routes.js",
+    "line": 70,
+    "sample": {
+      "body": {
+        "heroId": 1,
+        "attackerHeroId": 1
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,message:'heroId é obrigatório' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,message:e.message }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true }"
       }
     ]
   },
@@ -712,7 +783,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 429,
+    "line": 430,
     "sample": {},
     "errors": []
   },
@@ -790,22 +861,51 @@
     "method": "POST",
     "path": "/hit",
     "file": "server\\combat\\routes.js",
-    "line": 10,
+    "line": 16,
     "sample": {
       "body": {
-        "try {\n    const { attackerHeroId": 1,
+        "heroId": 1,
+        "attackerHeroId": 1,
         "targetInstanceId": 1,
-        "weaponType": "value"
+        "targetId": 1,
+        "weaponType": "value",
+        "try {\n    const { attackerHeroId": 1
       }
     },
     "errors": [
       {
         "status": 400,
-        "body": "{ok:false,message:'attackerHeroId,targetInstanceId,weaponType são obrigatórios' }"
+        "body": "{ok:false,message:'attackerHeroId e targetInstanceId são obrigatórios' }"
       },
       {
         "status": 500,
         "body": "{ok:false,message:e.message }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,message:'heroId e targetInstanceId são obrigatórios' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,message:e.message }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,message:'heroId é obrigatório' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,message:e.message }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
       }
     ]
   },

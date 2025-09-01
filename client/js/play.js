@@ -1,12 +1,14 @@
+// client/js/play.js
 // Cena jogável genérica (House/PvP): usa ?map=<key> (padrão house).
 // Input (WASD/Numpad/Mouse) + PlayerController + Camera2D + AStarGrid + ClickToMove.
-// CSRF robusto, loader tolerante de tileset, respawn, sprites via YAML, sync de posição com seq/clientTs.
+// CSRF robusto, loader tolerante de tileset, sprites via YAML, sync de posição com seq/clientTs.
+// AGORA: mobs são 100% dirigidos pelo servidor (eventos WS), sem IA/respawn local.
 
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
 const TILE = 32;
 
-// ----------------- NOVO: namespace público para outros módulos -----------------
+// ----------------- namespace público para outros módulos -----------------
 window.GameScene = window.GameScene || {};
 
 // =============== Canvas/HUD flexível (querystring + auto) ===============
@@ -28,11 +30,11 @@ if (!canvas) {
 }
 const ctx = canvas.getContext('2d');
 
-// NOVO: expõe cedo para módulos externos
+// expõe cedo
 window.GameScene.canvas = canvas;
 window.GameScene.ctx = ctx;
 
-// garante foco p/ WASD e click-to-move em todos os navegadores
+// foco para WASD e click-to-move
 try { canvas.setAttribute('tabindex', '0'); } catch {}
 canvas.addEventListener('mousedown', () => { try { canvas.focus(); } catch {} });
 canvas.addEventListener('touchstart', () => { try { canvas.focus(); } catch {} });
@@ -40,7 +42,7 @@ canvas.addEventListener('touchstart', () => { try { canvas.focus(); } catch {} }
 // helper DOM
 const $ = (s) => document.querySelector(s);
 
-// camera hoisted (evita TDZ)
+// camera hoisted
 let camera;
 
 /* =========================== CSRF / HTTP ============================ */
@@ -67,10 +69,7 @@ async function jpost(url, body) {
     method: 'POST',
     credentials: 'include',
     referrerPolicy: 'strict-origin-when-cross-origin',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': tok,
-    },
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': tok },
     body: JSON.stringify(body || {})
   });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
@@ -88,8 +87,6 @@ function assetUrl(p, { asTileset = false } = {}) {
   if (!s.startsWith('/')) s = asTileset ? '/img/' + s : '/' + s;
   return s;
 }
-
-// --- loader de tileset compatível com teu caminho antigo do Tiled
 function normalizeTilesetPath(p) {
   let s = String(p || '');
   s = s.replace(/^(\.\.\/)+/, '/');
@@ -97,7 +94,6 @@ function normalizeTilesetPath(p) {
   s = s.replace(/^\/client\//, '/');
   return s;
 }
-
 async function loadTilesetImage(rawPath) {
   const primary = normalizeTilesetPath(rawPath);
   const base = primary.split('/').pop();
@@ -178,25 +174,20 @@ function normKey(s) {
     .toLowerCase()
     .trim();
 }
-
 function indexSpriteMeta(obj) {
   SPRITE_INDEX.clear();
   for (const [key, data] of Object.entries(obj || {})) {
     const nk = normKey(key);
     SPRITE_INDEX.set(nk, data);
     if (data?.image) SPRITE_INDEX.set(normKey(data.image), data);
-    if (Array.isArray(data?.aliases)) {
-      for (const a of data.aliases) SPRITE_INDEX.set(normKey(a), data);
-    }
+    if (Array.isArray(data?.aliases)) for (const a of data.aliases) SPRITE_INDEX.set(normKey(a), data);
   }
 }
-
 async function loadSpriteMeta() {
   const list = await jget('/api/assets/sprites'); // [{ key, kind, data }]
   SPRITES_META = Object.fromEntries(list.map(e => [e.key, e.data]));
   indexSpriteMeta(SPRITES_META);
 }
-
 function findMetaFor(spawnKey) {
   const tries = [spawnKey, String(spawnKey || '').toLowerCase(), String(spawnKey || '').replace(/[\s_]+/g,'-'), normKey(spawnKey)];
   for (const t of tries) {
@@ -207,7 +198,6 @@ function findMetaFor(spawnKey) {
   for (const [k, m] of SPRITE_INDEX.entries()) if (k.includes(nk)) return m;
   return null;
 }
-
 function buildMonsterCandidates(kindNorm, meta) {
   const base = normKey(kindNorm);
   const fromMeta = meta?.image ? assetUrl(meta.image) : null;
@@ -222,7 +212,6 @@ function buildMonsterCandidates(kindNorm, meta) {
     `/${base}.png`
   ].filter(Boolean);
 }
-
 async function loadMonsterImg(kindNorm, meta) {
   const candidates = buildMonsterCandidates(kindNorm, meta);
   for (const url of candidates) {
@@ -241,12 +230,57 @@ let tilesetImg = null;
 let groundLayer = null;
 
 let starts = [];
-let spawns = [];
 
-/* ========================= Spawners / Mobs ======================== */
-const spawners = [];
-const mobs = [];
-let mobAutoId = 1;
+/* ========================= Mobs (server-driven) ======================== */
+const mobs = [];                           // lista para render
+window.GameScene.mobs = mobs;              // (mantido por compatibilidade)
+const mobsById = new Map();                // instanceId -> mob
+
+function upsertMobFromServer({ id, monsterKey, x, y }) {
+  const key = String(monsterKey || 'goblin');
+  let m = mobsById.get(String(id));
+  if (!m) {
+    const kindNorm = normKey(key);
+    const meta = findMetaFor(key);
+    m = {
+      id: String(id),
+      instanceId: String(id),
+      kind: kindNorm,
+      x: Number(x || 0),
+      y: Number(y || 0),
+      w: 32, h: 32,
+      face: 'south',
+      img: null,
+      meta: meta || null,
+      dead: false,
+    };
+    loadMonsterImg(kindNorm, meta).then(img => { if (img) m.img = img; });
+    mobsById.set(m.id, m);
+    mobs.push(m);
+  } else {
+    if (typeof x === 'number') m.x = x;
+    if (typeof y === 'number') m.y = y;
+    m.dead = false;
+  }
+}
+
+// integra com os eventos disparados pelo módulo ws-combat.js
+window.addEventListener('combat:monster_respawned', (ev) => {
+  upsertMobFromServer(ev.detail || {});
+});
+window.addEventListener('combat:monster_dead', (ev) => {
+  const id = String(ev.detail?.id || '');
+  const m = mobsById.get(id);
+  if (m) m.dead = true; // opcional: pode remover da lista se preferir
+});
+// NOVO: aplica movimentos imediatamente
+window.addEventListener('combat:monster_move', (ev) => {
+  const { id, x, y } = ev.detail || {};
+  const m = mobsById.get(String(id));
+  if (!m) return;
+  if (Number.isFinite(x)) m.x = x;
+  if (Number.isFinite(y)) m.y = y;
+});
 
 /* ========================= Player Visual ========================== */
 const playerVis = { w: 32, h: 32, img: null, heroKey: null };
@@ -342,12 +376,12 @@ function drawMob(m) {
 /* ======================= Posição Persistente ======================= */
 let POS_SYNC_ENABLED = true;
 let lastSaveAt = 0;
-let posSeq = 0; // ajuda o servidor a ordenar e bloquear replay
+let posSeq = 0;
 
 async function postPosThrottled(mapKey, x, y) {
   if (!POS_SYNC_ENABLED) return;
   const now = performance.now();
-  if (now - lastSaveAt < 1200) return; // 1.2s pra reduzir chamadas
+  if (now - lastSaveAt < 1200) return;
   lastSaveAt = now;
   try {
     posSeq += 1;
@@ -362,13 +396,12 @@ async function postPosThrottled(mapKey, x, y) {
     const msg = String(e.message || '');
     if (msg.includes('403') || msg.includes('csrf-missing') ||
         msg.includes('429') || msg.includes('409')) {
-      POS_SYNC_ENABLED = false; // desliga após 1a falha de auth/csrf/rate/replay
+      POS_SYNC_ENABLED = false;
     } else {
       console.warn('pos sync failed:', msg);
     }
   }
 }
-
 async function getSavedPos() {
   try {
     const p = await jget(`/api/player/pos?map=${encodeURIComponent(MAP_KEY)}`);
@@ -377,7 +410,7 @@ async function getSavedPos() {
   return null;
 }
 
-/* ==================== Colisão e Spawns do Tiled ==================== */
+/* ==================== Colisão e objetos do Tiled ==================== */
 function buildCollisionGridFromObjects(mapW, mapH, objs) {
   const cols = Math.floor(mapW / TILE);
   const rows = Math.floor(mapH / TILE);
@@ -395,7 +428,6 @@ function buildCollisionGridFromObjects(mapW, mapH, objs) {
   }
   return { grid, cols, rows };
 }
-
 function buildCollisionGridFromTiled(json) {
   const cols = json.width, rows = json.height;
   const grid = new Uint8Array(cols * rows);
@@ -406,116 +438,58 @@ function buildCollisionGridFromTiled(json) {
   return { grid, cols, rows };
 }
 
-function mapSpawnsFromTiledJSON(json) {
-  const layer = (json.layers || []).find(
-    (l) => l.type === "objectgroup" && l.name && l.name.toLowerCase() === "spawn"
-  );
-  if (!layer) return [];
-  return (layer.objects || [])
-    .filter((o) => ((o.class || o.type || "") + "").toLowerCase() === "spawn")
-    .map((o) => {
-      const p = {}; (o.properties || []).forEach((kv) => { p[kv.name] = kv.value; });
-      const monsterKey = String(p.monsterKey || p.monster || "goblin");
-      const count = Number(p.count || 1) || 1;
-      const respawnSec = Number(p.respawnSec || p.respawn || 20) || 20;
-      const w = o.width  > 0 ? o.width  : TILE;
-      const h = o.height > 0 ? o.height : TILE;
-      return { monsterKey, count, respawnSec, x: o.x || 0, y: o.y || 0, w, h };
-    });
-}
-
 /* ===================== Resolução de Sprite Player ===================== */
 async function resolvePlayerSprite() {
   try {
     const me = await jget('/api/player/me');
     const heroes = Array.isArray(me.heroes) ? me.heroes : [];
     const starter = heroes.find(h => h.isStarter === 1 || h.isStarter === true) || heroes[0];
+
+    // >>> PATCH: salva heroId globalmente <<<
+    if (starter) {
+      const hid = starter.id ?? starter.heroId ?? null;
+      if (hid) {
+        window.MyHeroId = String(hid);
+        try { localStorage.setItem('myHeroId', String(hid)); } catch {}
+      }
+    }
+    // <<< fim do patch >>>
+
     if (starter) {
       playerVis.heroKey = starter.heroKey || starter.key || null;
-      const candidate = playerVis.heroKey ? `/sprites/characters/${playerVis.heroKey}.png` : null;
+      const candidate = playerVis.heroKey
+        ? `/sprites/characters/${playerVis.heroKey}.png`
+        : null;
       if (candidate) {
         playerVis.img = loadImg(candidate);
-        await ensureImgLoaded(playerVis.img).catch(()=>{});
+        await ensureImgLoaded(playerVis.img).catch(() => {});
         if (imgReady(playerVis.img)) return;
       }
       if (starter.imageUrl) {
         playerVis.img = loadImg(starter.imageUrl);
-        await ensureImgLoaded(playerVis.img).catch(()=>{});
+        await ensureImgLoaded(playerVis.img).catch(() => {});
         if (imgReady(playerVis.img)) return;
       }
     }
-  } catch (e) { console.warn('resolvePlayerSprite:', e.message); }
-  playerVis.img = loadImg("/sprites/characters/player.png");
-  ensureImgLoaded(playerVis.img).catch(()=>{});
-}
-
-/* =========================== Respawn Manager ========================== */
-function addMobFromSpawn(spDef) {
-  const rawKey  = spDef.monsterKey || spDef.monster || "goblin";
-  const kindNorm = normKey(rawKey);
-  const meta = findMetaFor(rawKey);
-
-  const m = {
-    id: mobAutoId++,
-    kind: kindNorm,
-    x: (spDef.x || 0) + Math.random() * (spDef.w || TILE),
-    y: (spDef.y || 0) + Math.random() * (spDef.h || TILE),
-    w: 32, h: 32,
-    speed: 40 + Math.random() * 20,
-    dirX: 0, dirY: 0, changeAt: 0,
-    face: 'east',
-    img: null, meta: meta || null,
-    bound: (spDef.w || spDef.h) ? { x: spDef.x || 0, y: spDef.y || 0, w: spDef.w || TILE, h: spDef.h || TILE } : null,
-  };
-
-  loadMonsterImg(kindNorm, meta).then(img => { if (img) m.img = img; });
-  mobs.push(m);
-  return m.id;
-}
-
-function buildSpawnersFromDefs(defs) {
-  spawners.length = 0;
-  defs.forEach(d => {
-    const want = Math.max(1, Number(d.count || 1));
-    const respawnMs = Math.max(1, Number(d.respawnSec || d.respawn || 20)) * 1000;
-    spawners.push({
-      def: d,
-      want,
-      respawnMs,
-      nextAt: performance.now(),
-      area: { x: d.x||0, y: d.y||0, w: d.w||TILE, h: d.h||TILE },
-      liveIds: new Set()
-    });
-  });
-}
-
-function updateRespawns(now) {
-  for (const sp of spawners) {
-    for (const id of Array.from(sp.liveIds)) {
-      if (!mobs.some(m => m.id === id)) sp.liveIds.delete(id);
-    }
-    while (sp.liveIds.size < sp.want && now >= sp.nextAt) {
-      const id = addMobFromSpawn(sp.def);
-      sp.liveIds.add(id);
-      sp.nextAt = now + sp.respawnMs;
-    }
+  } catch (e) {
+    console.warn('resolvePlayerSprite:', e.message);
   }
+
+  // fallback se não achou nada
+  playerVis.img = loadImg("/sprites/characters/player.png");
+  ensureImgLoaded(playerVis.img).catch(() => {});
 }
+
 
 /* ================================ Boot ================================ */
 (async function main() {
-  // pega CSRF e cookies antes de qualquer POST
   await fetchCsrf().catch(()=>{});
-
   await loadSpriteMeta();
-
-  // aplica tamanho inicial
   resize();
 
   const maps = await jget("/api/admin/content/maps");
   if (!maps.some((m) => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
 
-  // helper para normalizar payloads que podem vir string/array/obj
   function normalizeApiJson(payload) {
     let v = payload;
     if (Array.isArray(v)) v = v[0];
@@ -529,12 +503,11 @@ function updateRespawns(now) {
   const objArr = Array.isArray(objsNorm)
     ? objsNorm
     : (objsNorm && Array.isArray(objsNorm.objects) ? objsNorm.objects : []);
-  starts = objArr.filter(o => (o.type || '').toLowerCase() === 'start');
+  const starts = objArr.filter(o => (o.type || '').toLowerCase() === 'start');
 
   // Data (tiles)
   const rawMap = await jget(`/api/admin/content/map/${MAP_KEY}/data`);
   mapData = normalizeApiJson(rawMap);
-
   tileset = (mapData && mapData.tilesets && mapData.tilesets[0]) || null;
 
   if (!tileset || !tileset.image) {
@@ -547,7 +520,7 @@ function updateRespawns(now) {
     (l) => l.type === "tilelayer" && l.name && l.name.toLowerCase() === "ground"
   );
 
-  // Colisão (objetos sólidos preferidos; fallback layer "collision")
+  // Colisão
   const mapW = (mapData.width || 64) * TILE;
   const mapH = (mapData.height || 64) * TILE;
 
@@ -570,7 +543,7 @@ function updateRespawns(now) {
     worldHeight: worldH
   });
 
-  // Polyfills e zoom + apply
+  // Polyfills/zoom
   if (typeof camera.getZoom !== 'function') camera.getZoom = () => (camera.zoom && Number(camera.zoom)) || 1;
   if (typeof camera.setZoom !== 'function') camera.setZoom = (z) => { camera.zoom = Number(z) || 1; };
   if (typeof camera.screenToWorld !== 'function') camera.screenToWorld = (sx, sy) => {
@@ -599,7 +572,7 @@ function updateRespawns(now) {
     onMoved: (x,y) => postPosThrottled(MAP_KEY, x, y)
   });
 
-  // NOVO: expõe câmera e controller
+  // expõe para módulos
   window.GameScene.camera = camera;
   window.GameScene.controller = controller;
   window.GameScene.mapKey = MAP_KEY;
@@ -621,24 +594,7 @@ function updateRespawns(now) {
   camera.follow(controller);
   await resolvePlayerSprite();
 
-  // Spawns de mobs
-  try { spawns = await jget(`/api/admin/content/map/${MAP_KEY}/spawns`); } catch { spawns = []; }
-  if (!Array.isArray(spawns) || spawns.length === 0) {
-    spawns = mapSpawnsFromTiledJSON(mapData);
-    console.log("spawns fallback (JSON):", spawns);
-  } else {
-    console.log("spawns do servidor:", spawns);
-  }
-
-  // Monta respawners e popula inicial
-  buildSpawnersFromDefs(spawns);
-  const now0 = performance.now();
-  for (const s of spawners) {
-    while (s.liveIds.size < s.want) s.liveIds.add(addMobFromSpawn(s.def));
-    s.nextAt = now0 + s.respawnMs;
-  }
-
-  // NOVO: sinaliza que a cena está pronta (outros módulos podem iniciar)
+  // Sinaliza que a cena está pronta (módulos como CombatUI podem iniciar)
   window.dispatchEvent(new CustomEvent('game:ready', { detail: { canvas, ctx, camera, controller } }));
 
   // Loop principal
@@ -647,72 +603,63 @@ function updateRespawns(now) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
-    // Click-to-move
+    // Click-to-move (pula se o ataque consumiu o clique)
     const m = Input.getMouse();
     if (Input.consumeClick()) {
-      const rect = canvas.getBoundingClientRect();
-      clickMove.handleClick(m.x - rect.left, m.y - rect.top);
+      const now = performance.now();
+      if (!window.__suppressClickToMoveUntil || now > window.__suppressClickToMoveUntil) {
+        const rect = canvas.getBoundingClientRect();
+        clickMove.handleClick(m.x - rect.left, m.y - rect.top);
+      }
     }
+
 
     // Teclado
     const dir = Input.getDir();
     controller.update(dt, dir);
     camera.update(dt);
 
-    // AI placeholder dos mobs
-    for (const mob of mobs) {
-      if (now >= mob.changeAt) {
-        const ang = Math.random() * Math.PI * 2;
-        mob.dirX = Math.cos(ang);
-        mob.dirY = Math.sin(ang);
-        mob.changeAt = now + 700 + Math.random() * 1300;
-      }
-      mob.x += mob.dirX * mob.speed * dt;
-      mob.y += mob.dirY * mob.speed * dt;
-
-      const mag = Math.hypot(mob.dirX, mob.dirY);
-      if (mag > 0.1) {
-        if (Math.abs(mob.dirX) >= Math.abs(mob.dirY)) mob.face = mob.dirX >= 0 ? 'east' : 'west';
-        else mob.face = mob.dirY >= 0 ? 'south' : 'north';
-      }
-      if (mob.bound) {
-        const { x, y, w, h } = mob.bound;
-        if (mob.x < x)   { mob.x = x;   mob.dirX *= -1; }
-        if (mob.y < y)   { mob.y = y;   mob.dirY *= -1; }
-        if (mob.x > x+w) { mob.x = x+w; mob.dirX *= -1; }
-        if (mob.y > y+h) { mob.y = y+h; mob.dirY *= -1; }
-      }
-    }
-
-    // Respawn local (placeholder visual)
-    updateRespawns(now);
-
     // Render (mundo)
     clear();
     camera.apply(ctx, () => {
       drawGround(camera);
-      for (const m of mobs) {
-        drawMob(m);
+      for (const mob of mobs) {
+        if (mob.dead) continue; // opcional: ocultar mortos
+        drawMob(mob);
       }
       drawPlayer(controller);
     });
 
-    // NOVO: Hook de render do módulo de combate (se existir)
-    if (window.CombatUI && typeof window.CombatUI.render === 'function') {
-      try { window.CombatUI.render(ctx, camera, dt); } catch (e) { /* silencia para não quebrar o jogo */ }
+    // Sincroniza POSIÇÃO da sprite com o estado do WS (correção)
+    if (window.combatState?.monsters) {
+      for (const [id, st] of window.combatState.monsters) {
+        const mob = mobsById.get(String(id));
+        if (mob) {
+          if (Number.isFinite(st.x)) mob.x = st.x;
+          if (Number.isFinite(st.y)) mob.y = st.y;
+        }
+      }
     }
 
-    // NOVO: evento por frame (útil para animações de dano/floaters)
+    // UI de combate por cima (hp bars, target, floaters)
+    if (window.CombatUI && typeof window.CombatUI.render === 'function') {
+      try { window.CombatUI.render(ctx, camera, dt); } catch (e) {}
+    }
+
+    // evento por frame (para animações externas)
     window.dispatchEvent(new CustomEvent('game:frame', { detail: { ctx, camera, dt } }));
 
-    // HUD
+    // HUD (conta vindo do estado WS; fallback lista local)
     if (hud) {
       const p = controller.getPosition();
+      const wsCount = (window.combatState?.monsters?.size) ?? null;
+      const mobCount = (typeof wsCount === 'number') ? wsCount : mobs.length;
+
       hud.innerHTML = `
         <div>map: ${MAP_KEY}</div>
         <div>Move: Click-to-move • WASD/Setas/Numpad</div>
         <div>pos: ${Math.round(p.x)}, ${Math.round(p.y)}</div>
-        <div>mobs: ${mobs.length} • spawns: ${spawners.length}</div>
+        <div>mobs: ${mobCount}</div>
       `;
     }
 
@@ -724,4 +671,3 @@ function updateRespawns(now) {
   console.error(err);
   if (hud) hud.textContent = "Erro: " + err.message;
 });
-  

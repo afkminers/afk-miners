@@ -3,6 +3,9 @@
 // Abre Skills/Heroes/Inventory sempre dockado (sem cobrir a área jogável).
 import { openSkills, openHeroes, openInventory, openSummonPanel } from './app_panels.js';
 
+// ===== DEBUG =====
+const DEBUG_WS = false; // troque para true se quiser ver logs do chat WS
+
 /* ---------- HTTP helpers + CSRF ---------- */
 let CSRF = null;
 async function getCsrf(){
@@ -255,7 +258,7 @@ btnLogout?.addEventListener('click', async ()=>{
     const chatForm   = document.getElementById('chatForm');
 
     if (!chatBox || !chatInput || !chatSend || !btnDefault || !btnGlobal || !chatForm) {
-      console.warn('[chat] elementos do DOM ausentes — verifique client/app.html');
+      if (DEBUG_WS) console.warn('[chat] elementos do DOM ausentes — verifique client/app.html');
       return;
     }
 
@@ -263,7 +266,10 @@ btnLogout?.addEventListener('click', async ()=>{
     let myId = '';
     let myName = 'Você';
 
-    function log(...args){ try{ console.log('[chat]', ...args); }catch{} }
+    function log(...args){
+      if (!DEBUG_WS) return;
+      try{ console.log('[chat]', ...args); }catch{}
+    }
 
     function connectWS() {
       try {
@@ -299,6 +305,7 @@ btnLogout?.addEventListener('click', async ()=>{
       ws.addEventListener('message', (evt) => {
         try {
           const d = JSON.parse(evt.data);
+          // só loga se DEBUG_WS=true
           log('ws message', d);
           if (d.type === 'chat' && d.scope === 'global') {
             appendChatRow({ fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });

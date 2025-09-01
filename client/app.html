@@ -107,46 +107,15 @@
     <!-- Combate (MÓDULOS) — executa por cima da cena renderizada pelo play.js -->
     <script type="module">
       import { connectCombatWS, combatState } from '/js/combat/ws-combat.js';
-      import { drawHpBar, drawTargetBox, updateAndDrawFloaters } from '/js/combat/render-combat.js';
+      import '/js/combat/render-combat.js';   // já define window.CombatUI
       import '/js/combat/attack-controls.js'; // registra clique/ESC
 
       // Conecta WS assim que a página carrega
       connectCombatWS();
 
-      // UI de combate desenhada por cima da cena
-      // o play.js chama window.CombatUI.render(ctx, camera, dt) a cada frame
-      window.CombatUI = {
-        render(ctx, camera, dt) {
-          if (!(window.GameScene && window.GameScene.canvas)) return;
-
-          // Desenho no espaço do mundo (usa a mesma câmera da cena)
-          if (window.GameScene.camera?.apply) {
-            window.GameScene.camera.apply(ctx, () => {
-              for (const m of combatState.monsters.values()) {
-                if (typeof m.x === 'number' && typeof m.y === 'number') {
-                  drawHpBar(ctx, m);
-                }
-              }
-              drawTargetBox(ctx);
-            });
-          } else {
-            // fallback sem câmera (não deve acontecer aqui)
-            for (const m of combatState.monsters.values()) {
-              if (typeof m.x === 'number' && typeof m.y === 'number') drawHpBar(ctx, m);
-            }
-            drawTargetBox(ctx);
-          }
-
-          // Floaters (coordenadas de tela; dt em ms)
-          updateAndDrawFloaters(ctx, dt * 1000);
-        }
-      };
-
-      // Util para testar pelo console:
-      //   Attack.start('heroId', 'monsterInstanceId')
-      //   Attack.stop('heroId')
-      import { startAttack, stopAttack } from '/js/combat/attack-controls.js';
-      window.Attack = { start: startAttack, stop: stopAttack };
+      // Para debug no console
+      window.CombatState = combatState;
     </script>
   </body>
 </html>
+

@@ -36,6 +36,13 @@
     "{ok:true }",
     "{ok:true,added:total }"
   ],
+  "POST /attack/start": [
+    "{ok:true }",
+    "{ok:true }"
+  ],
+  "POST /attack/stop": [
+    "{ok:true }"
+  ],
   "GET /class-rates": [],
   "POST /collect": [
     "{ok:true,added:total }"
@@ -58,7 +65,10 @@
     "{ok:true,item_type,amount:Number(amount) || 0 }"
   ],
   "GET /heroes/master": [],
-  "POST /hit": [],
+  "POST /hit": [
+    "{ok:true }",
+    "{ok:true }"
+  ],
   "GET /list": [
     "{canSelect:!row }",
     "{ok:true,id,heroKey }"
