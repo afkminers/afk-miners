@@ -29,13 +29,13 @@
 
 ### GET /
 
-Arquivo: `server\index.js:430`
+Arquivo: `server\index.js:436`
 
 _Sem payload inferido_
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:403`
+Arquivo: `server\index.js:409`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -63,7 +63,7 @@ Arquivo: `server\index.js:403`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:378`
+Arquivo: `server\index.js:384`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -93,7 +93,7 @@ Arquivo: `server\index.js:378`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:390`
+Arquivo: `server\index.js:396`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -122,7 +122,7 @@ Arquivo: `server\index.js:390`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:367`
+Arquivo: `server\index.js:373`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -147,7 +147,7 @@ Arquivo: `server\index.js:367`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:337`
+Arquivo: `server\index.js:343`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -175,7 +175,7 @@ Arquivo: `server\index.js:337`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:348`
+Arquivo: `server\index.js:354`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -202,7 +202,7 @@ Arquivo: `server\index.js:348`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:357`
+Arquivo: `server\index.js:363`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -228,7 +228,7 @@ Arquivo: `server\index.js:357`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:666`
+Arquivo: `server\index.js:696`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -252,17 +252,9 @@ Arquivo: `server\index.js:666`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:50`
+Arquivo: `server\index.js:53`
 
-**Payloads (exemplos inferidos):**
-- body:
-```json
-{
-  "try {\n    const { heroId": 1,
-  "weaponOrSkill": "value",
-  "heroClass": "value"
-}
-```
+_Sem payload inferido_
 
 ### GET /assets/items
 
@@ -282,6 +274,45 @@ _Sem payload inferido_
 **Erros conhecidos:**
 - `HTTP 500` → {error:"Falha ao listar sprites" }
 - `HTTP 500` → {error:"Falha ao listar items" }
+
+### GET /characters/mine
+
+Arquivo: `server\routes\player.js:90`
+
+**Payloads (exemplos inferidos):**
+- query:
+```json
+{
+  "map": "value"
+}
+```
+- body:
+```json
+{
+  "const { mapKey": "value",
+  "x": "value",
+  "y": "value",
+  "const { seq": "value",
+  "type": "value",
+  "tx": "value",
+  "ty": "value",
+  "mapKey": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,heroId }
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:e.message }
+- `HTTP 400` → {error:'heroId requerido' }
+- `HTTP 403` → {error:'forbidden' }
+- `HTTP 500` → {error:e.message }
+- `HTTP 400` → {error:'coords inválidas' }
+- `HTTP 409` → {error:'old-seq' }
+- `HTTP 400` → {error:'too-fast' }
 
 ### GET /class-rates
 
@@ -350,6 +381,134 @@ Arquivo: `server\skills\routes.js:10`
 - `HTTP 500` → {error:'Falha ao listar skills do herói' }
 - `HTTP 400` → {error:'heroId e skillType são obrigatórios' }
 - `HTTP 500` → {error:'Falha ao aplicar ganho' }
+
+### GET /hero/active
+
+Arquivo: `server\routes\player.js:65`
+
+**Payloads (exemplos inferidos):**
+- query:
+```json
+{
+  "map": "value"
+}
+```
+- body:
+```json
+{
+  "const { mapKey": "value",
+  "x": "value",
+  "y": "value",
+  "const { seq": "value",
+  "type": "value",
+  "tx": "value",
+  "ty": "value",
+  "mapKey": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,heroId }
+```
+
+**Erros conhecidos:**
+- `HTTP 404` → {error:'no-heroes' }
+- `HTTP 500` → {error:'server-error' }
+- `HTTP 404` → {error:'no-heroes' }
+- `HTTP 500` → {error:e.message }
+- `HTTP 500` → {error:e.message }
+- `HTTP 400` → {error:'heroId requerido' }
+- `HTTP 403` → {error:'forbidden' }
+- `HTTP 500` → {error:e.message }
+- `HTTP 400` → {error:'coords inválidas' }
+- `HTTP 409` → {error:'old-seq' }
+- `HTTP 400` → {error:'too-fast' }
+
+### GET /hero/mine
+
+Arquivo: `server\routes\player.js:78`
+
+**Payloads (exemplos inferidos):**
+- query:
+```json
+{
+  "map": "value"
+}
+```
+- body:
+```json
+{
+  "const { mapKey": "value",
+  "x": "value",
+  "y": "value",
+  "const { seq": "value",
+  "type": "value",
+  "tx": "value",
+  "ty": "value",
+  "mapKey": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,heroId }
+```
+
+**Erros conhecidos:**
+- `HTTP 404` → {error:'no-heroes' }
+- `HTTP 500` → {error:e.message }
+- `HTTP 500` → {error:e.message }
+- `HTTP 400` → {error:'heroId requerido' }
+- `HTTP 403` → {error:'forbidden' }
+- `HTTP 500` → {error:e.message }
+- `HTTP 400` → {error:'coords inválidas' }
+- `HTTP 409` → {error:'old-seq' }
+- `HTTP 400` → {error:'too-fast' }
+
+### GET /heroes
+
+Arquivo: `server\routes\player.js:54`
+
+**Payloads (exemplos inferidos):**
+- query:
+```json
+{
+  "map": "value"
+}
+```
+- body:
+```json
+{
+  "const { mapKey": "value",
+  "x": "value",
+  "y": "value",
+  "const { seq": "value",
+  "type": "value",
+  "tx": "value",
+  "ty": "value",
+  "mapKey": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,heroId }
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:'server-error' }
+- `HTTP 404` → {error:'no-heroes' }
+- `HTTP 500` → {error:'server-error' }
+- `HTTP 404` → {error:'no-heroes' }
+- `HTTP 500` → {error:e.message }
+- `HTTP 500` → {error:e.message }
+- `HTTP 400` → {error:'heroId requerido' }
+- `HTTP 403` → {error:'forbidden' }
+- `HTTP 500` → {error:e.message }
+- `HTTP 400` → {error:'coords inválidas' }
+- `HTTP 409` → {error:'old-seq' }
+- `HTTP 400` → {error:'too-fast' }
 
 ### GET /heroes/master
 
@@ -451,7 +610,7 @@ Arquivo: `server\routes\afk.js:7`
 
 ### GET /pos
 
-Arquivo: `server\routes\player.js:12`
+Arquivo: `server\routes\player.js:143`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -569,7 +728,7 @@ Arquivo: `server\gacha\routes.js:144`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:413`
+Arquivo: `server\index.js:419`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -589,7 +748,7 @@ Arquivo: `server\index.js:413`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:689`
+Arquivo: `server\index.js:719`
 
 _Sem payload inferido_
 
@@ -799,6 +958,44 @@ Arquivo: `server\routes\farm.js:181`
 - `HTTP 403` → {error:'forbidden' }
 - `HTTP 500` → {error:'debug_grant_failed' }
 
+### POST /hero/select
+
+Arquivo: `server\routes\player.js:100`
+
+**Payloads (exemplos inferidos):**
+- query:
+```json
+{
+  "map": "value"
+}
+```
+- body:
+```json
+{
+  "const { mapKey": "value",
+  "x": "value",
+  "y": "value",
+  "const { seq": "value",
+  "type": "value",
+  "tx": "value",
+  "ty": "value",
+  "mapKey": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,heroId }
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {error:'heroId requerido' }
+- `HTTP 403` → {error:'forbidden' }
+- `HTTP 500` → {error:e.message }
+- `HTTP 400` → {error:'coords inválidas' }
+- `HTTP 409` → {error:'old-seq' }
+- `HTTP 400` → {error:'too-fast' }
+
 ### POST /hit
 
 Arquivo: `server\combat\routes.js:16`
@@ -870,7 +1067,7 @@ _Sem payload inferido_
 
 ### POST /move
 
-Arquivo: `server\routes\player.js:44`
+Arquivo: `server\routes\player.js:173`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -969,7 +1166,7 @@ Arquivo: `server\routes\farm.js:101`
 
 ### POST /pos
 
-Arquivo: `server\routes\player.js:23`
+Arquivo: `server\routes\player.js:154`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1110,6 +1307,14 @@ Arquivo: `server\starter\routes.js:92`
 - **GET /assets/sprites**
   - HTTP 500: {error:"Falha ao listar sprites" }
   - HTTP 500: {error:"Falha ao listar items" }
+- **GET /characters/mine**
+  - HTTP 500: {error:e.message }
+  - HTTP 400: {error:'heroId requerido' }
+  - HTTP 403: {error:'forbidden' }
+  - HTTP 500: {error:e.message }
+  - HTTP 400: {error:'coords inválidas' }
+  - HTTP 409: {error:'old-seq' }
+  - HTTP 400: {error:'too-fast' }
 - **GET /class-rates**
   - HTTP 500: {error:'Falha ao listar rates' }
   - HTTP 400: {error:'heroId é obrigatório' }
@@ -1126,6 +1331,41 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 500: {error:'Falha ao listar skills do herói' }
   - HTTP 400: {error:'heroId e skillType são obrigatórios' }
   - HTTP 500: {error:'Falha ao aplicar ganho' }
+- **GET /hero/active**
+  - HTTP 404: {error:'no-heroes' }
+  - HTTP 500: {error:'server-error' }
+  - HTTP 404: {error:'no-heroes' }
+  - HTTP 500: {error:e.message }
+  - HTTP 500: {error:e.message }
+  - HTTP 400: {error:'heroId requerido' }
+  - HTTP 403: {error:'forbidden' }
+  - HTTP 500: {error:e.message }
+  - HTTP 400: {error:'coords inválidas' }
+  - HTTP 409: {error:'old-seq' }
+  - HTTP 400: {error:'too-fast' }
+- **GET /hero/mine**
+  - HTTP 404: {error:'no-heroes' }
+  - HTTP 500: {error:e.message }
+  - HTTP 500: {error:e.message }
+  - HTTP 400: {error:'heroId requerido' }
+  - HTTP 403: {error:'forbidden' }
+  - HTTP 500: {error:e.message }
+  - HTTP 400: {error:'coords inválidas' }
+  - HTTP 409: {error:'old-seq' }
+  - HTTP 400: {error:'too-fast' }
+- **GET /heroes**
+  - HTTP 500: {error:'server-error' }
+  - HTTP 404: {error:'no-heroes' }
+  - HTTP 500: {error:'server-error' }
+  - HTTP 404: {error:'no-heroes' }
+  - HTTP 500: {error:e.message }
+  - HTTP 500: {error:e.message }
+  - HTTP 400: {error:'heroId requerido' }
+  - HTTP 403: {error:'forbidden' }
+  - HTTP 500: {error:e.message }
+  - HTTP 400: {error:'coords inválidas' }
+  - HTTP 409: {error:'old-seq' }
+  - HTTP 400: {error:'too-fast' }
 - **GET /heroes/master**
   - HTTP 500: {error:'Falha ao listar heróis' }
 - **GET /list**
@@ -1143,14 +1383,6 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 500: {error:'Falha ao listar skills do herói' }
   - HTTP 400: {error:'heroId e skillType são obrigatórios' }
   - HTTP 500: {error:'Falha ao aplicar ganho' }
-  - HTTP 500: {error:'pos-read-failed' }
-  - HTTP 429: {error:'rate-limited' }
-  - HTTP 400: {error:'invalid-pos' }
-  - HTTP 400: {error:'out-of-bounds' }
-  - HTTP 400: {error:'inside-solid' }
-  - HTTP 409: {error:'stale-seq' }
-  - HTTP 202: {ok:false,reason:'too-fast' }
-  - HTTP 500: {error:'pos-write-failed' }
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
 - **GET /ping**
@@ -1166,14 +1398,6 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 400: {error:'coords inválidas' }
   - HTTP 409: {error:'old-seq' }
   - HTTP 400: {error:'too-fast' }
-  - HTTP 500: {error:'pos-read-failed' }
-  - HTTP 429: {error:'rate-limited' }
-  - HTTP 400: {error:'invalid-pos' }
-  - HTTP 400: {error:'out-of-bounds' }
-  - HTTP 400: {error:'inside-solid' }
-  - HTTP 409: {error:'stale-seq' }
-  - HTTP 202: {ok:false,reason:'too-fast' }
-  - HTTP 500: {error:'pos-write-failed' }
 - **GET /state**
   - HTTP 500: {error:'farm_state_failed' }
   - HTTP 500: {error:'plot_create_failed' }
@@ -1252,6 +1476,13 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 500: {error:'harvest_failed' }
   - HTTP 403: {error:'forbidden' }
   - HTTP 500: {error:'debug_grant_failed' }
+- **POST /hero/select**
+  - HTTP 400: {error:'heroId requerido' }
+  - HTTP 403: {error:'forbidden' }
+  - HTTP 500: {error:e.message }
+  - HTTP 400: {error:'coords inválidas' }
+  - HTTP 409: {error:'old-seq' }
+  - HTTP 400: {error:'too-fast' }
 - **POST /hit**
   - HTTP 400: {ok:false,message:'attackerHeroId e targetInstanceId são obrigatórios' }
   - HTTP 500: {ok:false,message:e.message }
@@ -1305,13 +1536,6 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 400: {error:'coords inválidas' }
   - HTTP 409: {error:'old-seq' }
   - HTTP 400: {error:'too-fast' }
-  - HTTP 429: {error:'rate-limited' }
-  - HTTP 400: {error:'invalid-pos' }
-  - HTTP 400: {error:'out-of-bounds' }
-  - HTTP 400: {error:'inside-solid' }
-  - HTTP 409: {error:'stale-seq' }
-  - HTTP 202: {ok:false,reason:'too-fast' }
-  - HTTP 500: {error:'pos-write-failed' }
 - **POST /register**
   - HTTP 400: {error:v.msg }
   - HTTP 400: {error:vp.msg }

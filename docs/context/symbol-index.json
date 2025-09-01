@@ -75,10 +75,19 @@
   {
     "file": "client\\js\\combat\\attack-controls.js",
     "symbols": [
+      "attachListeners",
+      "cacheHeroId",
+      "cachedHeroId",
       "fetchCsrf",
-      "getWorldFromEvent",
-      "hitTestMonster",
-      "pickMonsterAt",
+      "getCanvas",
+      "getHitbox",
+      "getInstanceId",
+      "getMobArrays",
+      "handleDown",
+      "pageToWorld",
+      "pickHeroFrom",
+      "pickMobAt",
+      "postJson",
       "resolveHeroId",
       "startAttack",
       "stopAttack"
@@ -87,14 +96,24 @@
   {
     "file": "client\\js\\combat\\render-combat.js",
     "symbols": [
-      "drawHpBar"
+      "candidatePathsFor",
+      "drawHpBar",
+      "drawMonster",
+      "drawTargetBox",
+      "ensureLoaded",
+      "imgReady",
+      "loadImg",
+      "normKey",
+      "render",
+      "resolveMonsterImage",
+      "updateAndDrawFloaters"
     ]
   },
   {
     "file": "client\\js\\combat\\ws-combat.js",
     "symbols": [
       "combatState",
-      "createFloaterForMonster",
+      "createFloater",
       "onWsMessage",
       "wsUrl"
     ]
@@ -274,14 +293,12 @@
   {
     "file": "client\\js\\play.js",
     "symbols": [
-      "addMobFromSpawn",
       "applyCameraZoom",
       "applySmoothing",
       "assetUrl",
       "buildCollisionGridFromObjects",
       "buildCollisionGridFromTiled",
       "buildMonsterCandidates",
-      "buildSpawnersFromDefs",
       "clear",
       "drawGround",
       "drawMob",
@@ -300,7 +317,6 @@
       "loadMonsterImg",
       "loadSpriteMeta",
       "loadTilesetImage",
-      "mapSpawnsFromTiledJSON",
       "normKey",
       "normalizeApiJson",
       "normalizeTilesetPath",
@@ -308,7 +324,7 @@
       "postPosThrottled",
       "resize",
       "resolvePlayerSprite",
-      "updateRespawns"
+      "upsertMobFromServer"
     ]
   },
   {
@@ -1181,6 +1197,18 @@
     ]
   },
   {
+    "file": "server\\combat\\ai-mobs.js",
+    "symbols": [
+      "clampToRect",
+      "forget",
+      "nearestPlayerPos",
+      "seedPosition",
+      "start",
+      "stop",
+      "tick"
+    ]
+  },
+  {
     "file": "server\\combat\\autoloop.js",
     "symbols": [
       "cooldownFor",
@@ -1188,6 +1216,12 @@
       "start",
       "stop",
       "stopAll"
+    ]
+  },
+  {
+    "file": "server\\combat\\seed.js",
+    "symbols": [
+      "seedIfEmpty"
     ]
   },
   {
@@ -1271,20 +1305,6 @@
     ]
   },
   {
-    "file": "server\\player\\routes.js",
-    "symbols": [
-      "buildCollisionGridFromObjects",
-      "buildCollisionGridFromTiled",
-      "getMapCollision",
-      "hasSolidProp",
-      "inWorld",
-      "isSolidAt",
-      "loadMapJson",
-      "loadMapObjects",
-      "rlAllow"
-    ]
-  },
-  {
     "file": "server\\respawn\\worker.js",
     "symbols": [
       "respawnTick",
@@ -1303,7 +1323,9 @@
     "file": "server\\routes\\player.js",
     "symbols": [
       "clamp",
-      "dist"
+      "dist",
+      "norm",
+      "queryHeroesFor"
     ]
   },
   {

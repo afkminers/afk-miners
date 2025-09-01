@@ -43,6 +43,13 @@
   "POST /attack/stop": [
     "{ok:true }"
   ],
+  "GET /characters/mine": [
+    "{ok:true,heroId }",
+    "{x:row.x,y:row.y }",
+    "{x:64,y:64 }",
+    "{ok:true }",
+    "{ok:true,x,y,seq }"
+  ],
   "GET /class-rates": [],
   "POST /collect": [
     "{ok:true,added:total }"
@@ -64,7 +71,34 @@
     "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }",
     "{ok:true,item_type,amount:Number(amount) || 0 }"
   ],
+  "GET /hero/active": [
+    "{ok:true,heroId }",
+    "{x:row.x,y:row.y }",
+    "{x:64,y:64 }",
+    "{ok:true }",
+    "{ok:true,x,y,seq }"
+  ],
+  "GET /hero/mine": [
+    "{ok:true,heroId }",
+    "{x:row.x,y:row.y }",
+    "{x:64,y:64 }",
+    "{ok:true }",
+    "{ok:true,x,y,seq }"
+  ],
+  "POST /hero/select": [
+    "{ok:true,heroId }",
+    "{x:row.x,y:row.y }",
+    "{x:64,y:64 }",
+    "{ok:true }",
+    "{ok:true,x,y,seq }"
+  ],
   "GET /heroes/master": [],
+  "GET /heroes": [
+    "{ok:true,heroId }",
+    "{x:row.x,y:row.y }",
+    "{x:64,y:64 }",
+    "{ok:true }"
+  ],
   "POST /hit": [
     "{ok:true }",
     "{ok:true }"
@@ -106,11 +140,14 @@
     "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }"
   ],
   "GET /pos": [
-    "{x:null,y:null,seq:0,updatedAt:null }",
-    "{ok:true }"
+    "{x:row.x,y:row.y }",
+    "{x:64,y:64 }",
+    "{ok:true }",
+    "{ok:true,x,y,seq }"
   ],
   "POST /pos": [
-    "{ok:true }"
+    "{ok:true }",
+    "{ok:true,x,y,seq }"
   ],
   "POST /": [
     "{cost:SUMMON_COST_COINS,pulls,newBalance:updated }"
