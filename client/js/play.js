@@ -6,7 +6,7 @@ const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
 const TILE = 32;
 
-// ----------------- NOVO: namespace público para outros módulos -----------------
+// ----------------- namespace público p/ outros módulos -----------------
 window.GameScene = window.GameScene || {};
 
 // =============== Canvas/HUD flexível (querystring + auto) ===============
@@ -28,11 +28,11 @@ if (!canvas) {
 }
 const ctx = canvas.getContext('2d');
 
-// NOVO: expõe cedo para módulos externos
+// expõe cedo para módulos externos
 window.GameScene.canvas = canvas;
 window.GameScene.ctx = ctx;
 
-// garante foco p/ WASD e click-to-move em todos os navegadores
+// garante foco p/ WASD e click-to-move
 try { canvas.setAttribute('tabindex', '0'); } catch {}
 canvas.addEventListener('mousedown', () => { try { canvas.focus(); } catch {} });
 canvas.addEventListener('touchstart', () => { try { canvas.focus(); } catch {} });
@@ -246,6 +246,7 @@ let spawns = [];
 /* ========================= Spawners / Mobs ======================== */
 const spawners = [];
 const mobs = [];
+window.GameScene.mobs = mobs;
 let mobAutoId = 1;
 
 /* ========================= Player Visual ========================== */
@@ -599,7 +600,7 @@ function updateRespawns(now) {
     onMoved: (x,y) => postPosThrottled(MAP_KEY, x, y)
   });
 
-  // NOVO: expõe câmera e controller
+  // expõe camera/controller/mapKey p/ outros módulos (combate, etc.)
   window.GameScene.camera = camera;
   window.GameScene.controller = controller;
   window.GameScene.mapKey = MAP_KEY;
@@ -622,11 +623,13 @@ function updateRespawns(now) {
   await resolvePlayerSprite();
 
   // Spawns de mobs
-  try { spawns = await jget(`/api/admin/content/map/${MAP_KEY}/spawns`); } catch { spawns = []; }
-  if (!Array.isArray(spawns) || spawns.length === 0) {
+  let spawnsList;
+  try { spawnsList = await jget(`/api/admin/content/map/${MAP_KEY}/spawns`); } catch { spawnsList = []; }
+  if (!Array.isArray(spawnsList) || spawnsList.length === 0) {
     spawns = mapSpawnsFromTiledJSON(mapData);
     console.log("spawns fallback (JSON):", spawns);
   } else {
+    spawns = spawnsList;
     console.log("spawns do servidor:", spawns);
   }
 
@@ -638,7 +641,7 @@ function updateRespawns(now) {
     s.nextAt = now0 + s.respawnMs;
   }
 
-  // NOVO: sinaliza que a cena está pronta (outros módulos podem iniciar)
+  // sinaliza que a cena está pronta (outros módulos podem iniciar)
   window.dispatchEvent(new CustomEvent('game:ready', { detail: { canvas, ctx, camera, controller } }));
 
   // Loop principal
@@ -691,18 +694,16 @@ function updateRespawns(now) {
     clear();
     camera.apply(ctx, () => {
       drawGround(camera);
-      for (const m of mobs) {
-        drawMob(m);
-      }
+      for (const m of mobs) drawMob(m);
       drawPlayer(controller);
     });
 
-    // NOVO: Hook de render do módulo de combate (se existir)
+    // Hook de render do módulo de combate (HP bar, target box, floaters)
     if (window.CombatUI && typeof window.CombatUI.render === 'function') {
-      try { window.CombatUI.render(ctx, camera, dt); } catch (e) { /* silencia para não quebrar o jogo */ }
+      try { window.CombatUI.render(ctx, camera, dt); } catch (e) { /* não quebrar jogo */ }
     }
 
-    // NOVO: evento por frame (útil para animações de dano/floaters)
+    // evento por frame (útil para animações extras)
     window.dispatchEvent(new CustomEvent('game:frame', { detail: { ctx, camera, dt } }));
 
     // HUD
@@ -724,4 +725,3 @@ function updateRespawns(now) {
   console.error(err);
   if (hud) hud.textContent = "Erro: " + err.message;
 });
-  

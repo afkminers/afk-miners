@@ -4,6 +4,7 @@
 
 - `APP_ORIGIN`
 - `APP_ORIGINS` (defaults: process.env.APP_ORIGIN)
+- `COMBAT_DEBUG` (defaults: )
 - `CONTENT_PIPELINE` (defaults: off)
 - `COOKIE_DOMAIN` (defaults: undefined)
 - `COOKIE_NAME` (defaults: sid)
@@ -28,13 +29,13 @@
 
 ### GET /
 
-Arquivo: `server\index.js:429`
+Arquivo: `server\index.js:430`
 
 _Sem payload inferido_
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:402`
+Arquivo: `server\index.js:403`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -62,7 +63,7 @@ Arquivo: `server\index.js:402`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:377`
+Arquivo: `server\index.js:378`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -92,7 +93,7 @@ Arquivo: `server\index.js:377`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:389`
+Arquivo: `server\index.js:390`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -121,7 +122,7 @@ Arquivo: `server\index.js:389`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:366`
+Arquivo: `server\index.js:367`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -146,7 +147,7 @@ Arquivo: `server\index.js:366`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:336`
+Arquivo: `server\index.js:337`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -174,7 +175,7 @@ Arquivo: `server\index.js:336`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:347`
+Arquivo: `server\index.js:348`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -201,7 +202,7 @@ Arquivo: `server\index.js:347`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:356`
+Arquivo: `server\index.js:357`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -227,7 +228,7 @@ Arquivo: `server\index.js:356`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:651`
+Arquivo: `server\index.js:666`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -251,7 +252,7 @@ Arquivo: `server\index.js:651`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:49`
+Arquivo: `server\index.js:50`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -568,7 +569,7 @@ Arquivo: `server\gacha\routes.js:144`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:412`
+Arquivo: `server\index.js:413`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -588,7 +589,7 @@ Arquivo: `server\index.js:412`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:674`
+Arquivo: `server\index.js:689`
 
 _Sem payload inferido_
 
@@ -629,6 +630,59 @@ Arquivo: `server\routes\afk.js:65`
 - `HTTP 404` → {error:'box_not_found' }
 - `HTTP 500` → {error:'assign_failed' }
 - `HTTP 500` → {error:'collect_failed' }
+
+### POST /attack/start
+
+Arquivo: `server\combat\routes.js:43`
+
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "heroId": 1,
+  "attackerHeroId": 1,
+  "targetInstanceId": 1,
+  "targetId": 1,
+  "weaponType": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{
+  "ok": true
+}
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {ok:false,message:'heroId e targetInstanceId são obrigatórios' }
+- `HTTP 500` → {ok:false,message:e.message }
+- `HTTP 400` → {ok:false,message:'heroId é obrigatório' }
+- `HTTP 500` → {ok:false,message:e.message }
+
+### POST /attack/stop
+
+Arquivo: `server\combat\routes.js:70`
+
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "heroId": 1,
+  "attackerHeroId": 1
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{
+  "ok": true
+}
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {ok:false,message:'heroId é obrigatório' }
+- `HTTP 500` → {ok:false,message:e.message }
 
 ### POST /collect
 
@@ -747,20 +801,34 @@ Arquivo: `server\routes\farm.js:181`
 
 ### POST /hit
 
-Arquivo: `server\combat\routes.js:10`
+Arquivo: `server\combat\routes.js:16`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "try {\n    const { attackerHeroId": 1,
+  "heroId": 1,
+  "attackerHeroId": 1,
   "targetInstanceId": 1,
-  "weaponType": "value"
+  "targetId": 1,
+  "weaponType": "value",
+  "try {\n    const { attackerHeroId": 1
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{
+  "ok": true
 }
 ```
 
 **Erros conhecidos:**
-- `HTTP 400` → {ok:false,message:'attackerHeroId,targetInstanceId,weaponType são obrigatórios' }
+- `HTTP 400` → {ok:false,message:'attackerHeroId e targetInstanceId são obrigatórios' }
+- `HTTP 500` → {ok:false,message:e.message }
+- `HTTP 400` → {ok:false,message:'heroId e targetInstanceId são obrigatórios' }
+- `HTTP 500` → {ok:false,message:e.message }
+- `HTTP 400` → {ok:false,message:'heroId é obrigatório' }
 - `HTTP 500` → {ok:false,message:e.message }
 
 ### POST /login
@@ -1151,6 +1219,14 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 404: {error:'box_not_found' }
   - HTTP 500: {error:'assign_failed' }
   - HTTP 500: {error:'collect_failed' }
+- **POST /attack/start**
+  - HTTP 400: {ok:false,message:'heroId e targetInstanceId são obrigatórios' }
+  - HTTP 500: {ok:false,message:e.message }
+  - HTTP 400: {ok:false,message:'heroId é obrigatório' }
+  - HTTP 500: {ok:false,message:e.message }
+- **POST /attack/stop**
+  - HTTP 400: {ok:false,message:'heroId é obrigatório' }
+  - HTTP 500: {ok:false,message:e.message }
 - **POST /collect**
   - HTTP 500: {error:'collect_failed' }
 - **POST /create-worker**
@@ -1177,7 +1253,11 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 403: {error:'forbidden' }
   - HTTP 500: {error:'debug_grant_failed' }
 - **POST /hit**
-  - HTTP 400: {ok:false,message:'attackerHeroId,targetInstanceId,weaponType são obrigatórios' }
+  - HTTP 400: {ok:false,message:'attackerHeroId e targetInstanceId são obrigatórios' }
+  - HTTP 500: {ok:false,message:e.message }
+  - HTTP 400: {ok:false,message:'heroId e targetInstanceId são obrigatórios' }
+  - HTTP 500: {ok:false,message:e.message }
+  - HTTP 400: {ok:false,message:'heroId é obrigatório' }
   - HTTP 500: {ok:false,message:e.message }
 - **POST /login**
   - HTTP 401: {error:'Credenciais inválidas' }

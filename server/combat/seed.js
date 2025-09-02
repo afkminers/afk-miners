@@ -1,32 +1,72 @@
 // server/combat/seed.js
-async function seedIfEmpty({ all, get, run }) {
-  const row = await get(`SELECT COUNT(*)::int AS n FROM monster_instances`);
-  const count = row ? row.n : 0;
-  if (count > 0) {
-    console.log(`[seed] monster_instances já tem ${count} registro(s) — ok`);
+// Ensures monster_instances has at least a couple of rows.
+
+let db = null;
+try { db = require('../models/db'); } catch {}
+
+async function exists(table) {
+  if (!db || !db.get) return false;
+  try {
+    const pg = await db.get?.(`SELECT to_regclass($1)::text AS t`, [table]);
+    if (pg && pg.t) return true;
+  } catch {}
+  try {
+    const row = await db.get?.(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, [table]);
+    return !!row;
+  } catch {}
+  return false;
+}
+
+async function seedIfEmpty() {
+  if (!db || !db.get || !db.run) {
+    console.warn('[seed] db helpers missing; skipping');
     return;
   }
 
-  console.log('[seed] monster_instances vazio — semeando a partir de spawns…');
+  // Create table if not exists (works in SQLite; for PG assume migrations already created)
+  try {
+    await db.run(`
+      CREATE TABLE IF NOT EXISTS monster_instances(
+        id TEXT PRIMARY KEY,
+        monster_key TEXT,
+        x INTEGER, y INTEGER,
+        hp INTEGER DEFAULT 100,
+        hp_max INTEGER DEFAULT 100,
+        alive BOOLEAN DEFAULT TRUE
+      )
+    `, []);
+  } catch {}
 
-  const inserted = await all(`
-    INSERT INTO monster_instances (spawn_id, map_key, state, hp, max_hp, respawn_at, x, y)
-    SELECT
-      s.id,
-      s."mapKey",
-      'DEAD',
-      COALESCE(mm."healthMax", 1),
-      COALESCE(mm."healthMax", 1),
-      now(),
-      (s.x + floor(random() * GREATEST(1, COALESCE(s.w, 32)))),
-      (s.y + floor(random() * GREATEST(1, COALESCE(s.h, 32))))
-    FROM spawns s
-    LEFT JOIN monsters_master mm ON mm.key = s."monsterKey"
-    CROSS JOIN generate_series(1, GREATEST(1, s.count)) g
-    RETURNING id
-  `);
+  let count = 0;
+  try {
+    const row = await db.get(`SELECT COUNT(*) AS c FROM monster_instances`, []);
+    count = +row?.c || 0;
+  } catch (e) {
+    console.warn('[seed] count failed', e.message);
+  }
 
-  console.log(`[seed] inseridas ${inserted.length} instância(s) — respawn começará já`);
+  if (count > 0) {
+    console.log('[seed] monster_instances already populated:', count);
+    return;
+  }
+
+  const demo = [
+    { id: 'demo-1', key: 'goblin', x: 8*32,  y: 6*32,  hp: 100, hp_max: 100 },
+    { id: 'demo-2', key: 'skeleton', x: 12*32, y: 10*32, hp: 80,  hp_max: 80 },
+  ];
+
+  for (const m of demo) {
+    try {
+      await db.run(
+        `INSERT INTO monster_instances(id, monster_key, x, y, hp, hp_max, alive)
+         VALUES ($1,$2,$3,$4,$5,$6,TRUE)`,
+        [m.id, m.key, m.x, m.y, m.hp, m.hp_max]
+      );
+    } catch (e) {
+      console.warn('[seed] insert failed', e.message);
+    }
+  }
+  console.log('[seed] seeded demo monsters:', demo.length);
 }
 
 module.exports = { seedIfEmpty };

@@ -624,6 +624,133 @@
         }
       }
     },
+    "/attack/start": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "heroId": {
+                    "type": "number"
+                  },
+                  "attackerHeroId": {
+                    "type": "number"
+                  },
+                  "targetInstanceId": {
+                    "type": "number"
+                  },
+                  "targetId": {
+                    "type": "number"
+                  },
+                  "weaponType": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attack/stop": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "heroId": {
+                    "type": "number"
+                  },
+                  "attackerHeroId": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/class-rates": {
       "get": {
         "responses": {
@@ -1153,7 +1280,19 @@
       "post": {
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Error 400 (inferred)",
@@ -1183,14 +1322,23 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "try {\n    const { attackerHeroId": {
+                  "heroId": {
+                    "type": "number"
+                  },
+                  "attackerHeroId": {
                     "type": "number"
                   },
                   "targetInstanceId": {
                     "type": "number"
                   },
+                  "targetId": {
+                    "type": "number"
+                  },
                   "weaponType": {
                     "type": "string"
+                  },
+                  "try {\n    const { attackerHeroId": {
+                    "type": "number"
                   }
                 }
               }

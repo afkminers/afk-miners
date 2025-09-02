@@ -7,7 +7,6 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "serve": "node index.js",
-
     "git:add": "git add -A",
     "git:commit": "git commit -m \"update\"",
     "git:push": "git push -u origin HEAD",
@@ -15,9 +14,7 @@
     "push:main": "git push origin main",
     "branch": "git rev-parse --abbrev-ref HEAD",
     "deploy": "npm run git:add && npm run git:commit && npm run git:push",
-
     "pg:migrate": "node -e \"(async()=>{await require('./models/migrate').migrate();console.log('✅ pg:migrate ok')})().catch(e=>{console.error(e);process.exit(1)})\"",
-
     "ctx:pack": "node scripts/gen-context.js",
     "ctx:print:win": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/print-context.ps1",
     "ctx:snapshot:win": "scripts\\snapshot.bat",
@@ -25,10 +22,8 @@
     "ctx:zip": "npm run ctx:bundle:win -- -Name auto -Symbols -Imports -Depth 4 -Zip",
     "ctx:tag": "git tag -a v-am-%npm_config_name% -m \"snapshot: %npm_config_name%\" && git push origin --tags",
     "ctx:verify": "node scripts/verify-context.mjs",
-
     "backup:pre": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/backup-repo.ps1 -Label pre",
     "backup:post": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/backup-repo.ps1 -Label post",
-
     "save": "node -e \"console.log('🚀 Salvando alterações no GitHub...')\" && npm run backup:pre && npm run deploy && npm run backup:post && node -e \"console.log('📦 Gerando snapshot zipado...')\" && npm run ctx:zip && node -e \"console.log('✅ Pronto! Agora só mandar o zip em nova conversa.')\""
   },
   "dependencies": {
@@ -41,7 +36,7 @@
     "jsonwebtoken": "9.0.2",
     "pg": "^8.16.3",
     "redis": "5.8.0",
-    "ws": "8.18.0",
+    "ws": "^8.18.0",
     "yaml": "2.8.0",
     "zod": "3.23.8"
   },

@@ -1,8 +1,8 @@
 // server/index.js
 require('dotenv').config();
 
-const express = require('express');
 const path = require('path');
+const express = require('express');
 const cors = require('cors');
 const http = require('http');
 
@@ -22,13 +22,11 @@ const farmRoutes = require('./routes/farm');
 
 const K = require('./balance/config');
 const buildStarterRouter = require('./starter/routes');
-// server/index.js  (ADICIONE JUNTO DOS OUTROS REQUIRES DO SERVER)
 const { startRespawnLoop, stopRespawnLoop } = require('./respawn/worker');
 
-//ws bus
+// ws bus
 const { attach: attachWsBus } = require('./ws/bus');
 const { listAliveMonsters } = require('./ws/initial_monsters');
-
 
 // ======== Pipeline de Conteúdo ========
 const { loadAll, loadMap } = require('./content/loader');
@@ -175,8 +173,10 @@ async function bootstrapContentTables() {
 // públicas / auth
 app.use('/api/auth', authRoutes);
 
-// catálogos públicos
-app.use('/api', catalogRoutes);
+// >>>>>>>>> COLOQUEI AQUI (ANTES DO /api GENÉRICO) <<<<<<<<<
+// Combat protegido (se quiser testar aberto, remova requireAuth aqui)
+const combatRoutes = require('./combat/routes');
+app.use('/api/combat', combatRoutes);
 
 // protegidas
 app.use('/api/player', requireAuth, playerRoutes);
@@ -186,10 +186,6 @@ app.use('/api/skills', requireAuth, skillsRoutes);
 // AFK / Farm
 app.use('/api/afk', requireAuth, afkRoutes);
 app.use('/api/farm', requireAuth, farmRoutes);
-
-// Combat   <<<<<<<<<<<<<<<<<<<<<<  AQUI
-const combatRoutes = require('./combat/routes');
-app.use('/api/combat', requireAuth, combatRoutes);
 
 /* ========= Helpers (Treino) ========= */
 async function resolveSkillType(weaponOrSkill) {
@@ -369,7 +365,7 @@ app.get('/api/admin/content/maps', async (_req, res) => {
     const rows = await all(
       `SELECT key, length(("dataJSON"::text)) AS bytes, updated_at FROM maps ORDER BY key`
     );
-    res.json(rows);
+  res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -426,6 +422,9 @@ function safeParse(s) { try { return typeof s === 'object' ? s : JSON.parse(s ||
 // starter
 app.use('/api/starter', requireAuth, buildStarterRouter({ all, get, run }));
 
+// <<<<<<<<<<<<< SOMENTE AGORA o catálago genérico /api >>>>>>>>>>>>>>
+app.use('/api', catalogRoutes);
+
 // ---- Raiz pública
 app.get('/', (_req, res) => {
   res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
@@ -449,7 +448,7 @@ try {
   useWebSocket = !!WebSocketLib && !!WebSocketLib.Server;
   if (!useWebSocket) console.warn('[ws] package loaded but Server not available');
 } catch (err) {
-  console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run \`npm install ws\` to enable.');
+  console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run `npm install ws` to enable.');
   WebSocketLib = null;
   useWebSocket = false;
 }
@@ -528,12 +527,10 @@ let wss = null;
       setupRedis(wss).catch(() => {});
 
       const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
-      const { listAliveMonsters } = require('./ws/initial_monsters');
 
       wss.on('connection', (ws, req) => {
         const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
         console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
-
         console.log('[ws] cookies header:', req.headers && req.headers.cookie);
 
         ws._connectedAt = Date.now();
@@ -558,7 +555,7 @@ let wss = null;
           console.warn('[ws] cookie parse error', e && e.message);
         }
 
-        // <<< NOVO: snapshot inicial de monstros vivos >>>
+        // snapshot inicial de monstros vivos (seu loader interno decide a fonte)
         (async () => {
           try {
             const msgs = await listAliveMonsters();
@@ -644,7 +641,6 @@ let wss = null;
     server.listen(PORT, () => {
       console.log(`server listening on ${PORT} ${useWebSocket ? '(ws enabled)' : '(ws disabled)'}`);
       console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
-
       // >>> INÍCIO DO LOOP DE RESPAWN <<<
       startRespawnLoop({ all, run });
     });
@@ -658,7 +654,6 @@ let wss = null;
     process.exit(1);
   }
 })();
-
 
 /* ========= Chat HTTP API ========= */
 

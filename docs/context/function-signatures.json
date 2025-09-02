@@ -144,14 +144,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 55,
+    "line": 56,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 194,
+    "line": 195,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -160,7 +160,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 423,
+    "line": 424,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -169,7 +169,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 467,
+    "line": 468,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -178,12 +178,19 @@
   },
   {
     "file": "server\\index.js",
-    "line": 479,
+    "line": 480,
     "kind": "function",
     "name": "setupRedis",
     "params": [
       "wss"
     ]
+  },
+  {
+    "file": "server\\ws\\initial_monsters.js",
+    "line": 8,
+    "kind": "function",
+    "name": "listAliveMonsters",
+    "params": []
   },
   {
     "file": "server\\ws\\bus.js",
@@ -1179,6 +1186,134 @@
       "targetInstanceId",
       "weaponType }"
     ]
+  },
+  {
+    "file": "server\\combat\\seed.js",
+    "line": 2,
+    "kind": "function",
+    "name": "seedIfEmpty",
+    "params": [
+      "{ all",
+      "get",
+      "run }"
+    ]
+  },
+  {
+    "file": "server\\combat\\autoloop.js",
+    "line": 11,
+    "kind": "function",
+    "name": "cooldownFor",
+    "params": [
+      "weaponType"
+    ]
+  },
+  {
+    "file": "server\\combat\\autoloop.js",
+    "line": 16,
+    "kind": "function",
+    "name": "isTargetAlive",
+    "params": [
+      "instanceId"
+    ]
+  },
+  {
+    "file": "server\\combat\\autoloop.js",
+    "line": 25,
+    "kind": "function",
+    "name": "start",
+    "params": [
+      "heroId",
+      "targetInstanceId",
+      "weaponType = 'SWORD'"
+    ]
+  },
+  {
+    "file": "server\\combat\\autoloop.js",
+    "line": 31,
+    "kind": "arrow",
+    "name": "tick",
+    "params": []
+  },
+  {
+    "file": "server\\combat\\autoloop.js",
+    "line": 58,
+    "kind": "function",
+    "name": "stop",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "server\\combat\\autoloop.js",
+    "line": 66,
+    "kind": "function",
+    "name": "stopAll",
+    "params": []
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 22,
+    "kind": "function",
+    "name": "seedPosition",
+    "params": [
+      "{ id",
+      "x",
+      "y",
+      "mapKey",
+      "spawnRect }"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 36,
+    "kind": "function",
+    "name": "forget",
+    "params": [
+      "id"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 38,
+    "kind": "function",
+    "name": "clampToRect",
+    "params": [
+      "x",
+      "y",
+      "r"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 45,
+    "kind": "function",
+    "name": "nearestPlayerPos",
+    "params": [
+      "mapKey",
+      "x",
+      "y"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 57,
+    "kind": "function",
+    "name": "tick",
+    "params": []
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 97,
+    "kind": "function",
+    "name": "start",
+    "params": []
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 102,
+    "kind": "function",
+    "name": "stop",
+    "params": []
   },
   {
     "file": "server\\balance\\config.js",
@@ -6457,7 +6592,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 11,
+    "line": 13,
     "kind": "function",
     "name": "pickElByIds",
     "params": [
@@ -6467,7 +6602,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 35,
+    "line": 41,
     "kind": "arrow",
     "name": "$",
     "params": [
@@ -6476,14 +6611,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 42,
+    "line": 48,
     "kind": "function",
     "name": "fetchCsrf",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 52,
+    "line": 58,
     "kind": "function",
     "name": "jget",
     "params": [
@@ -6492,7 +6627,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 57,
+    "line": 63,
     "kind": "function",
     "name": "jpost",
     "params": [
@@ -6502,7 +6637,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 75,
+    "line": 81,
     "kind": "function",
     "name": "assetUrl",
     "params": [
@@ -6512,7 +6647,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 87,
+    "line": 93,
     "kind": "function",
     "name": "normalizeTilesetPath",
     "params": [
@@ -6521,7 +6656,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 95,
+    "line": 101,
     "kind": "function",
     "name": "loadTilesetImage",
     "params": [
@@ -6530,21 +6665,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 116,
+    "line": 122,
     "kind": "function",
     "name": "applySmoothing",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 129,
+    "line": 135,
     "kind": "function",
     "name": "resize",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 148,
+    "line": 154,
     "kind": "function",
     "name": "loadImg",
     "params": [
@@ -6553,7 +6688,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 156,
+    "line": 162,
     "kind": "function",
     "name": "imgReady",
     "params": [
@@ -6562,7 +6697,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 157,
+    "line": 163,
     "kind": "function",
     "name": "ensureImgLoaded",
     "params": [
@@ -6571,7 +6706,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 166,
+    "line": 172,
     "kind": "function",
     "name": "normKey",
     "params": [
@@ -6580,7 +6715,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 176,
+    "line": 182,
     "kind": "function",
     "name": "indexSpriteMeta",
     "params": [
@@ -6589,14 +6724,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 188,
+    "line": 194,
     "kind": "function",
     "name": "loadSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 194,
+    "line": 200,
     "kind": "function",
     "name": "findMetaFor",
     "params": [
@@ -6605,7 +6740,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 205,
+    "line": 211,
     "kind": "function",
     "name": "buildMonsterCandidates",
     "params": [
@@ -6615,7 +6750,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 220,
+    "line": 226,
     "kind": "function",
     "name": "loadMonsterImg",
     "params": [
@@ -6625,14 +6760,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 249,
+    "line": 255,
     "kind": "function",
     "name": "clear",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 251,
+    "line": 257,
     "kind": "function",
     "name": "drawGround",
     "params": [
@@ -6641,7 +6776,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 277,
+    "line": 283,
     "kind": "function",
     "name": "drawPlayer",
     "params": [
@@ -6650,7 +6785,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 291,
+    "line": 297,
     "kind": "function",
     "name": "drawMob",
     "params": [
@@ -6659,7 +6794,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 341,
+    "line": 347,
     "kind": "function",
     "name": "postPosThrottled",
     "params": [
@@ -6670,14 +6805,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 366,
+    "line": 372,
     "kind": "function",
     "name": "getSavedPos",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 375,
+    "line": 381,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -6688,7 +6823,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 393,
+    "line": 399,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -6697,7 +6832,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 403,
+    "line": 409,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -6706,14 +6841,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 422,
+    "line": 428,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 447,
+    "line": 453,
     "kind": "function",
     "name": "addMobFromSpawn",
     "params": [
@@ -6722,7 +6857,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 470,
+    "line": 476,
     "kind": "function",
     "name": "buildSpawnersFromDefs",
     "params": [
@@ -6731,7 +6866,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 486,
+    "line": 492,
     "kind": "function",
     "name": "updateRespawns",
     "params": [
@@ -6740,7 +6875,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 513,
+    "line": 519,
     "kind": "function",
     "name": "normalizeApiJson",
     "params": [
@@ -6749,7 +6884,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 548,
+    "line": 554,
     "kind": "function",
     "name": "hasSolidProp",
     "params": [
@@ -6758,14 +6893,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 582,
+    "line": 588,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 632,
+    "line": 646,
     "kind": "function",
     "name": "frame",
     "params": [
@@ -8624,6 +8759,26 @@
     "params": []
   },
   {
+    "file": "client\\js\\engine\\coords.js",
+    "line": 4,
+    "kind": "function",
+    "name": "worldToTile",
+    "params": [
+      "wx",
+      "wy"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\coords.js",
+    "line": 7,
+    "kind": "function",
+    "name": "tileToWorldCenter",
+    "params": [
+      "tx",
+      "ty"
+    ]
+  },
+  {
     "file": "client\\js\\engine\\click_to_move.js",
     "line": 5,
     "kind": "method",
@@ -8763,6 +8918,142 @@
     "name": "if",
     "params": [
       "this.worldH > vh"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\ws-combat.js",
+    "line": 5,
+    "kind": "function",
+    "name": "wsUrl",
+    "params": []
+  },
+  {
+    "file": "client\\js\\combat\\ws-combat.js",
+    "line": 19,
+    "kind": "function",
+    "name": "connectCombatWS",
+    "params": []
+  },
+  {
+    "file": "client\\js\\combat\\ws-combat.js",
+    "line": 37,
+    "kind": "function",
+    "name": "onWsMessage",
+    "params": [
+      "e"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\ws-combat.js",
+    "line": 88,
+    "kind": "function",
+    "name": "createFloaterForMonster",
+    "params": [
+      "m",
+      "text"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 5,
+    "kind": "function",
+    "name": "drawHpBar",
+    "params": [
+      "ctx",
+      "m"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 32,
+    "kind": "function",
+    "name": "drawTargetBox",
+    "params": [
+      "ctx"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 44,
+    "kind": "function",
+    "name": "updateAndDrawFloaters",
+    "params": [
+      "ctx",
+      "dtMs"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 60,
+    "kind": "function",
+    "name": "drawMonsterUI",
+    "params": [
+      "ctx",
+      "m"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 4,
+    "kind": "function",
+    "name": "fetchCsrf",
+    "params": []
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 14,
+    "kind": "function",
+    "name": "resolveHeroId",
+    "params": []
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 24,
+    "kind": "function",
+    "name": "startAttack",
+    "params": [
+      "heroId",
+      "targetInstanceId",
+      "weaponType='SWORD'"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 35,
+    "kind": "function",
+    "name": "stopAttack",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 47,
+    "kind": "function",
+    "name": "getWorldFromEvent",
+    "params": [
+      "ev"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 64,
+    "kind": "function",
+    "name": "hitTestMonster",
+    "params": [
+      "m",
+      "wx",
+      "wy"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 69,
+    "kind": "function",
+    "name": "pickMonsterAt",
+    "params": [
+      "wx",
+      "wy"
     ]
   }
 ]

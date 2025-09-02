@@ -104,49 +104,40 @@
     <script src="/js/engine/click_to_move.js"></script>
     <script src="/js/play.js"></script>
 
-    <!-- Combate (MÓDULOS) — executa por cima da cena renderizada pelo play.js -->
+    <!-- Combate: controles de clique/ESC (auto-inicializa; não exporta nada) -->
+    <script type="module" src="/js/combat/attack-controls.js"></script>
+
+    <!-- WS + overlay de combate -->
     <script type="module">
       import { connectCombatWS, combatState } from '/js/combat/ws-combat.js';
-      import { drawHpBar, drawTargetBox, updateAndDrawFloaters } from '/js/combat/render-combat.js';
-      import '/js/combat/attack-controls.js'; // registra clique/ESC
+      import { drawHpBar, drawTargetBox, updateAndDrawFloaters } from '/js/combat/combat-ui.js';
 
       // Conecta WS assim que a página carrega
       connectCombatWS();
 
-      // UI de combate desenhada por cima da cena
-      // o play.js chama window.CombatUI.render(ctx, camera, dt) a cada frame
+      // Desenho do overlay por cima da cena (o play.js chama window.CombatUI.render)
       window.CombatUI = {
         render(ctx, camera, dt) {
-          if (!(window.GameScene && window.GameScene.canvas)) return;
+          const gs = window.GameScene;
+          if (!gs) return;
 
-          // Desenho no espaço do mundo (usa a mesma câmera da cena)
-          if (window.GameScene.camera?.apply) {
-            window.GameScene.camera.apply(ctx, () => {
-              for (const m of combatState.monsters.values()) {
-                if (typeof m.x === 'number' && typeof m.y === 'number') {
-                  drawHpBar(ctx, m);
-                }
-              }
-              drawTargetBox(ctx);
-            });
-          } else {
-            // fallback sem câmera (não deve acontecer aqui)
+          const drawAll = () => {
             for (const m of combatState.monsters.values()) {
-              if (typeof m.x === 'number' && typeof m.y === 'number') drawHpBar(ctx, m);
+              const x = Number(m.x), y = Number(m.y);
+              if (Number.isFinite(x) && Number.isFinite(y)) {
+                drawHpBar(ctx, m);
+              }
             }
             drawTargetBox(ctx);
-          }
+          };
 
-          // Floaters (coordenadas de tela; dt em ms)
+          if (gs.camera?.apply) gs.camera.apply(ctx, drawAll);
+          else drawAll();
+
+          // Floaters: dt chega em segundos no play.js → converter p/ ms
           updateAndDrawFloaters(ctx, dt * 1000);
         }
       };
-
-      // Util para testar pelo console:
-      //   Attack.start('heroId', 'monsterInstanceId')
-      //   Attack.stop('heroId')
-      import { startAttack, stopAttack } from '/js/combat/attack-controls.js';
-      window.Attack = { start: startAttack, stop: stopAttack };
     </script>
   </body>
 </html>
