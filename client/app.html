@@ -8,6 +8,9 @@
     <style>
       /* segurança: nada de sidebars legadas aparecendo */
       .sidebar, .rightbar { display:none !important; }
+
+      /* garante que overlays absolutos (ex.: barra de HP) ancorem no client */
+      #clientShell { position: relative; }
     </style>
   </head>
 
@@ -37,7 +40,21 @@
         <div id="clientShell">
           <!-- id="scene" é usado pelo play.js -->
           <canvas id="scene" width="960" height="540"></canvas>
+
+          <!-- HUD raiz (já existia) -->
           <div id="hud" class="hud"></div>
+
+          <!-- HUD do alvo (estilo Tibia) -->
+          <div id="targetHud"
+               style="position:absolute;left:0;top:0;display:none;pointer-events:none;transform:translate(-50%,-100%);z-index:9999">
+            <div style="width:48px;height:7px;border:1px solid #000;background:rgba(0,0,0,.35)">
+              <div id="hpFill" style="height:100%;width:100%;background:#c22"></div>
+            </div>
+            <div id="hpText"
+                 style="font:12px/14px monospace;color:#fff;text-shadow:0 1px 2px #000;text-align:center;">--/--
+            </div>
+          </div>
+          <!-- /HUD do alvo -->
         </div>
       </section>
 
@@ -110,7 +127,8 @@
     <!-- WS + overlay de combate (novo) -->
     <script type="module">
       import installCombatOverlay from '/js/combat/render-combat.js';
-      installCombatOverlay(); // conecta o WS e registra window.CombatUI.render
+      // este módulo deve ler #targetHud/#hpFill/#hpText e atualizar conforme nearest/hit
+      installCombatOverlay();
     </script>
   </body>
 </html>

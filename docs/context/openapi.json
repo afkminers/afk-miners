@@ -56,12 +56,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": {
-                    "type": "number"
-                  },
-                  "try {\n    const { targetInstanceId": {
-                    "type": "number"
-                  },
                   "damage": {
                     "type": "string"
                   }
@@ -123,12 +117,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": {
-                    "type": "number"
-                  },
-                  "try {\n    const { targetInstanceId": {
-                    "type": "number"
-                  },
                   "damage": {
                     "type": "string"
                   }
@@ -624,6 +612,16 @@
               }
             }
           },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Error 404 (inferred)",
             "content": {
@@ -807,7 +805,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
                 }
               }
             }
@@ -850,12 +853,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": {
-                    "type": "number"
-                  },
-                  "try {\n    const { targetInstanceId": {
-                    "type": "number"
-                  },
                   "damage": {
                     "type": "string"
                   }
@@ -922,9 +919,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "try {\n    const { targetInstanceId": {
-                    "type": "number"
-                  },
                   "damage": {
                     "type": "string"
                   }
@@ -1511,9 +1505,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "try {\n    const { targetInstanceId": {
-                    "type": "number"
-                  },
                   "damage": {
                     "type": "string"
                   }

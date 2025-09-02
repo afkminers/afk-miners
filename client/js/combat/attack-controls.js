@@ -1,6 +1,6 @@
 // client/js/combat/attack-controls.js
 // ES Module: exporta startAttack/stopAttack e registra controles de ataque.
-// - Clique esquerdo: resolve alvo (servidor primeiro) e inicia ataque
+// - Clique esquerdo: resolve alvo (servidor) e inicia ataque
 // - Clique direito/ESC/blur: para o ataque
 
 const TILE = 32;
@@ -18,21 +18,16 @@ function readCookie(name) {
 }
 
 async function seedCsrfCookie() {
-  try {
-    await fetch('/api/csrf', { credentials: 'include', cache: 'no-store' });
-  } catch {}
+  try { await fetch('/api/csrf', { credentials: 'include', cache: 'no-store' }); } catch {}
 }
 
 async function getFreshCsrf() {
   let tok = readCookie('csrf');
-  if (!tok) {
-    await seedCsrfCookie();
-    tok = readCookie('csrf');
-  }
+  if (!tok) { await seedCsrfCookie(); tok = readCookie('csrf'); }
   return tok;
 }
 
-// SHIM para código legado que ainda chama getCsrf()
+// SHIM legado
 async function getCsrf() { return getFreshCsrf(); }
 
 async function postJSON(url, body) {
@@ -41,14 +36,14 @@ async function postJSON(url, body) {
 
   const doFetch = async (token) => {
     const u = new URL(url, location.origin);
-    u.searchParams.set('csrf', token); // alguns middlewares validam também na query
+    u.searchParams.set('csrf', token);
     return fetch(u.toString(), {
       method: 'POST',
       credentials: 'include',
       referrerPolicy: 'strict-origin-when-cross-origin',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': token,        // header único e estável
+        'X-CSRF-Token': token,
         'X-Requested-With': 'fetch',
       },
       body: JSON.stringify(body || {})
@@ -57,18 +52,14 @@ async function postJSON(url, body) {
 
   let r = await doFetch(tok);
   if (r.status === 403) {
-    // token pode ter sido rotacionado — reseed + retry 1x
     await seedCsrfCookie();
     tok = readCookie('csrf') || tok;
     r = await doFetch(tok);
   }
-
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
-  // alguns endpoints podem devolver "{}"
   return r.headers.get('content-length') === '0' ? {} : r.json();
 }
 
-// helper GET simples
 async function jget(url) {
   const r = await fetch(url, { credentials: 'include', cache: 'no-store' });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
@@ -91,7 +82,13 @@ function screenToWorld(canvas, sx, sy) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width  / rect.width;
   const scaleY = canvas.height / rect.height;
-  return { x: sx * scaleX, y: sy * scaleY };
+  return { x: (sx) * scaleX, y: (sy) * scaleY };
+}
+function worldToScreen(wx, wy) {
+  const cam = pickCamera();
+  if (cam?.worldToScreen) return cam.worldToScreen(wx, wy);
+  // fallback 1:1
+  return { x: Math.round(wx), y: Math.round(wy) };
 }
 function getMouseWorldFromEvent(e, canvas) {
   const rect = canvas.getBoundingClientRect();
@@ -104,9 +101,74 @@ function getMouseWorldFromEvent(e, canvas) {
 const combatState = (window.combatState = window.combatState || {
   monsters: new Map(),   // id => { id,x,y,monsterKey,hp,hpMax }
   targetId: null,
+  targetMeta: null,      // { x, y, monsterKey }
   attacking: false,
   loopHandle: null,
+  hudRAF: 0,
 });
+
+/* ======================= HUD (DOM) ================================ */
+const $hudRoot  = () => document.getElementById('targetHud');
+const $hpFill   = () => document.getElementById('hpFill');
+const $hpText   = () => document.getElementById('hpText');
+
+function renderTargetHud() {
+  const hud = $hudRoot();
+  if (!hud) return;
+  const tId = combatState.targetId;
+  if (!tId || !combatState.targetMeta) { hud.style.display = 'none'; return; }
+
+  const stats = combatState.monsters.get(tId);
+  const hpNow = Number(stats?.hp ?? 0);
+  const hpMax = Math.max(1, Number(stats?.hpMax ?? 1));
+  const pct = Math.max(0, Math.min(1, hpNow / hpMax));
+
+  // posiciona acima do monstro
+  const { x, y } = combatState.targetMeta;
+  const scr = worldToScreen(x, y);
+  hud.style.left = scr.x + 'px';
+  hud.style.top  = (scr.y - 22) + 'px';
+  hud.style.display = 'block';
+
+  if ($hpFill()) $hpFill().style.width = (pct * 100) + '%';
+  if ($hpText()) $hpText().textContent = `${hpNow|0}/${hpMax|0}`;
+}
+function startHudLoop() {
+  const step = () => {
+    renderTargetHud();
+    combatState.hudRAF = window.requestAnimationFrame(step);
+  };
+  if (!combatState.hudRAF) combatState.hudRAF = window.requestAnimationFrame(step);
+}
+function stopHudLoop() {
+  if (combatState.hudRAF) { cancelAnimationFrame(combatState.hudRAF); combatState.hudRAF = 0; }
+  const hud = $hudRoot(); if (hud) hud.style.display = 'none';
+}
+
+/* ============== Dano flutuante (fallback DOM imediato) ============ */
+// Se você já for desenhar no canvas (play.js), pode ignorar este fallback.
+// Esta versão gera uma DIV que sobe e desaparece.
+function spawnFloatDamageDOM(value, wx, wy) {
+  const root = document.getElementById('clientShell');
+  if (!root) return;
+  const p = worldToScreen(wx, wy);
+  const el = document.createElement('div');
+  el.textContent = `-${value}`;
+  el.style.cssText = `
+    position:absolute; left:${p.x}px; top:${p.y - 10}px;
+    transform:translate(-50%,-50%);
+    font:bold 14px monospace; color:#fff; text-shadow:0 1px 2px #000;
+    opacity:1; pointer-events:none; z-index:10000;
+    transition: transform .8s linear, opacity .8s linear;
+  `;
+  root.appendChild(el);
+  // força layout e anima
+  requestAnimationFrame(() => {
+    el.style.transform = `translate(-50%,-80px)`;
+    el.style.opacity = '0';
+  });
+  setTimeout(() => el.remove(), 820);
+}
 
 /* ======================= Seleção de alvo ========================== */
 // tenta pegar do overlay WS (se ele tiver X/Y)
@@ -148,6 +210,7 @@ function pickTargetAt(px, py) {
 
 /**
  * Resolve alvo no servidor (fonte da verdade) — ignora (0,0) de WS
+ * Retorna { id, x, y, monsterKey, hp, maxHp } ou null
  */
 async function resolveServerTarget(px, py) {
   const map = window.GameScene?.mapKey || 'house';
@@ -157,8 +220,9 @@ async function resolveServerTarget(px, py) {
       x: String(Math.round(px)),
       y: String(Math.round(py))
     });
-    const resp = await jget('/api/combat/nearest?' + q.toString());
-    return resp?.id ? String(resp.id) : null;
+    const m = await jget('/api/combat/nearest?' + q.toString());
+    if (!m?.id) return null;
+    return m;
   } catch {
     return null;
   }
@@ -170,14 +234,28 @@ async function doHit() {
   try {
     const resp = await postJSON('/api/combat/hit', {
       targetInstanceId: combatState.targetId,
-      damage: 5
+      damage: 10
     });
-    const m = combatState.monsters.get(resp.targetId) || { id: resp.targetId };
-    m.hp = resp.hpAfter;
-    m.hpMax = Math.max(m.hpMax || 100, resp.hpBefore || 100);
-    combatState.monsters.set(resp.targetId, m);
-    window.dispatchEvent(new CustomEvent('combat:hit', { detail: resp }));
-    if (resp.dead) stopAttack();
+
+    // Compatibilidade de formatos
+    const id      = String(resp.id || resp.targetId || combatState.targetId);
+    const hpNow   = Number(resp.hpAfter ?? resp.hp);
+    const hpPrev  = Number(resp.hpBefore ?? (isFinite(hpNow) ? hpNow + Number(resp.dmg || 0) : NaN));
+    const hpMax   = Number(resp.maxHp) || Math.max(100, Number(combatState.monsters.get(id)?.hpMax || 100));
+    const dmg     = Number(resp.dmg ?? Math.max(0, (isFinite(hpPrev) && isFinite(hpNow)) ? (hpPrev - hpNow) : 0));
+    const isDead  = !!resp.dead || hpNow <= 0;
+
+    // Atualiza stats
+    const m = combatState.monsters.get(id) || { id };
+    if (isFinite(hpNow)) m.hp = Math.max(0, hpNow);
+    m.hpMax = hpMax;
+    combatState.monsters.set(id, m);
+
+    // Dano flutuante (fallback DOM; se tiver versão canvas, ela pode interceptar evento abaixo)
+    spawnFloatDamageDOM(dmg || 0, combatState.targetMeta?.x ?? 0, combatState.targetMeta?.y ?? 0);
+    window.dispatchEvent(new CustomEvent('combat:hit', { detail: { id, dmg, hp: hpNow, maxHp: hpMax, dead: isDead } }));
+
+    if (isDead) stopAttack();
   } catch (e) {
     console.warn('[attack] hit failed', e.message);
   }
@@ -192,14 +270,18 @@ export async function startAttack(targetId) {
   await postJSON('/api/combat/attack/start', { targetInstanceId: targetId });
   combatState.targetId = String(targetId);
   combatState.attacking = true;
-  window.dispatchEvent(new CustomEvent('combat:attack:start', { detail: { targetId: combatState.targetId } }));
   startLoop();
+  startHudLoop();
+  window.dispatchEvent(new CustomEvent('combat:attack:start', { detail: { targetId: combatState.targetId } }));
 }
 export async function stopAttack() {
   combatState.attacking = false;
   combatState.targetId = null;
+  combatState.targetMeta = null;
   if (combatState.loopHandle) { clearInterval(combatState.loopHandle); combatState.loopHandle = null; }
-  try { await postJSON('/api/combat/attack/stop', {}); } catch { /* ignora 403/teardown */ }
+  stopHudLoop();
+  try { await postJSON('/api/combat/attack/stop', {}); } catch {}
+  window.dispatchEvent(new CustomEvent('combat:attack:stop'));
 }
 
 /* ====================== Controles de ponteiro ====================== */
@@ -211,35 +293,34 @@ function attachControls() {
   if (!canvas) return;
 
   // parar com botão direito
-  canvas.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    stopAttack();
-  });
+  canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); stopAttack(); });
 
   const onPointerDown = async (e) => {
     if (e.button != null && e.button !== 0) return; // só esquerdo
     const { x, y } = getMouseWorldFromEvent(e, canvas);
     console.log('[attack] click @', Math.round(x), Math.round(y));
 
-    // 1) resolve alvo no servidor (mais confiável)
-    let targetId = await resolveServerTarget(x, y);
+    // 1) servidor (verdadeiro)
+    let m = await resolveServerTarget(x, y);
 
-    // 2) fallback local/WS se servidor não retornar nada
-    if (!targetId) {
+    // 2) fallback local/WS
+    if (!m) {
       const t = pickTargetAt(x, y);
-      targetId = t?.id || null;
+      if (t) m = { id: t.id, x: t.x, y: t.y, monsterKey: t.monsterKey, hp: 0, maxHp: 100 };
     }
 
-    if (!targetId) {
-      console.log('[attack] nenhum alvo — stop');
-      stopAttack();
-      return;
-    }
-    try {
-      await startAttack(targetId);
-    } catch (err) {
-      console.warn('[attack] start falhou:', err.message);
-    }
+    if (!m?.id) { console.log('[attack] nenhum alvo — stop'); stopAttack(); return; }
+
+    // guarda meta + hp inicial na HUD
+    combatState.targetMeta = { x: Number(m.x)||0, y: Number(m.y)||0, monsterKey: m.monsterKey||null };
+    const stat = combatState.monsters.get(String(m.id)) || { id: String(m.id) };
+    stat.hp = Number(m.hp ?? stat.hp ?? 0);
+    stat.hpMax = Number(m.maxHp ?? stat.hpMax ?? 100);
+    combatState.monsters.set(String(m.id), stat);
+    renderTargetHud();
+
+    try { await startAttack(String(m.id)); }
+    catch (err) { console.warn('[attack] start falhou:', err.message); }
   };
 
   canvas.addEventListener('mousedown', onPointerDown);
@@ -254,7 +335,6 @@ function attachControls() {
 
 /* ====================== Boot (garante ordem) ====================== */
 (async () => {
-  // aquece o cookie CSRF (não quebra se /api/csrf estiver off)
   await seedCsrfCookie().catch(()=>{});
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     setTimeout(attachControls, 0);

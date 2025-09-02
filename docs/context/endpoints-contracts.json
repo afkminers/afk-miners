@@ -3,42 +3,28 @@
     "method": "GET",
     "path": "/_ping",
     "file": "server\\combat\\routes.js",
-    "line": 18,
+    "line": 14,
     "sample": {
       "body": {
-        "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": 1,
-        "try {\n    const { targetInstanceId": 1,
         "damage": "value"
       }
     },
     "errors": [
       {
         "status": 400,
-        "body": "{ok:false,error:'targetInstanceId required' }"
-      },
-      {
-        "status": 404,
-        "body": "{ok:false,error:'target not found' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'internal' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'internal' }"
+        "body": "{ok:false,error:'missing-id' }"
       },
       {
         "status": 400,
-        "body": "{ok:false,error:'targetInstanceId required' }"
+        "body": "{ok:false,error:'bad-id' }"
       },
       {
         "status": 404,
-        "body": "{ok:false,error:'target not found' }"
+        "body": "{ok:false,error:'no-such-alive' }"
       },
       {
         "status": 500,
-        "body": "{ok:false,error:'internal' }"
+        "body": "{ok:false,error:'hit-failed' }"
       }
     ],
     "ok": [
@@ -52,7 +38,7 @@
       },
       {
         "status": 200,
-        "body": "{ok:true,target:{id:String(targetInstanceId) } }"
+        "body": "{ok:true }"
       },
       {
         "status": 200,
@@ -60,7 +46,7 @@
       },
       {
         "status": 200,
-        "body": "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+        "body": "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
       }
     ]
   },
@@ -68,42 +54,28 @@
     "method": "GET",
     "path": "/_routes",
     "file": "server\\combat\\routes.js",
-    "line": 19,
+    "line": 15,
     "sample": {
       "body": {
-        "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": 1,
-        "try {\n    const { targetInstanceId": 1,
         "damage": "value"
       }
     },
     "errors": [
       {
         "status": 400,
-        "body": "{ok:false,error:'targetInstanceId required' }"
-      },
-      {
-        "status": 404,
-        "body": "{ok:false,error:'target not found' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'internal' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'internal' }"
+        "body": "{ok:false,error:'missing-id' }"
       },
       {
         "status": 400,
-        "body": "{ok:false,error:'targetInstanceId required' }"
+        "body": "{ok:false,error:'bad-id' }"
       },
       {
         "status": 404,
-        "body": "{ok:false,error:'target not found' }"
+        "body": "{ok:false,error:'no-such-alive' }"
       },
       {
         "status": 500,
-        "body": "{ok:false,error:'internal' }"
+        "body": "{ok:false,error:'hit-failed' }"
       }
     ],
     "ok": [
@@ -113,7 +85,7 @@
       },
       {
         "status": 200,
-        "body": "{ok:true,target:{id:String(targetInstanceId) } }"
+        "body": "{ok:true }"
       },
       {
         "status": 200,
@@ -121,7 +93,7 @@
       },
       {
         "status": 200,
-        "body": "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+        "body": "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
       }
     ]
   },
@@ -526,8 +498,16 @@
     },
     "errors": [
       {
+        "status": 400,
+        "body": "{error:'bad-coords' }"
+      },
+      {
         "status": 404,
-        "body": "{error:'no-spawns' }"
+        "body": "{error:'no-alive' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'no-alive-near' }"
       },
       {
         "status": 500,
@@ -537,11 +517,7 @@
     "ok": [
       {
         "status": 200,
-        "body": "{id:alive.id,x:Number(alive.x) || 0,y:Number(alive.y) || 0,monsterKey:alive.monsterKey || null,}"
-      },
-      {
-        "status": 200,
-        "body": "{id:instanceId,x:Number(spawn.x) || 0,y:Number(spawn.y) || 0,monsterKey:spawn.monsterKey || null,}"
+        "body": "{id:m.id,x:Number(m.x) || 0,y:Number(m.y) || 0,monsterKey:m.monsterKey || null,hp:Number(m.hp) || 0,maxHp:Number(m.max_hp) || 0,}"
       }
     ]
   },
@@ -631,48 +607,34 @@
     "method": "POST",
     "path": "/attack/start",
     "file": "server\\combat\\routes.js",
-    "line": 124,
+    "line": 22,
     "sample": {
       "body": {
-        "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": 1,
-        "try {\n    const { targetInstanceId": 1,
         "damage": "value"
       }
     },
     "errors": [
       {
         "status": 400,
-        "body": "{ok:false,error:'targetInstanceId required' }"
-      },
-      {
-        "status": 404,
-        "body": "{ok:false,error:'target not found' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'internal' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'internal' }"
+        "body": "{ok:false,error:'missing-id' }"
       },
       {
         "status": 400,
-        "body": "{ok:false,error:'targetInstanceId required' }"
+        "body": "{ok:false,error:'bad-id' }"
       },
       {
         "status": 404,
-        "body": "{ok:false,error:'target not found' }"
+        "body": "{ok:false,error:'no-such-alive' }"
       },
       {
         "status": 500,
-        "body": "{ok:false,error:'internal' }"
+        "body": "{ok:false,error:'hit-failed' }"
       }
     ],
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true,target:{id:String(targetInstanceId) } }"
+        "body": "{ok:true }"
       },
       {
         "status": 200,
@@ -680,7 +642,7 @@
       },
       {
         "status": 200,
-        "body": "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+        "body": "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
       }
     ]
   },
@@ -688,29 +650,28 @@
     "method": "POST",
     "path": "/attack/stop",
     "file": "server\\combat\\routes.js",
-    "line": 142,
+    "line": 23,
     "sample": {
       "body": {
-        "try {\n    const { targetInstanceId": 1,
         "damage": "value"
       }
     },
     "errors": [
       {
-        "status": 500,
-        "body": "{ok:false,error:'internal' }"
+        "status": 400,
+        "body": "{ok:false,error:'missing-id' }"
       },
       {
         "status": 400,
-        "body": "{ok:false,error:'targetInstanceId required' }"
+        "body": "{ok:false,error:'bad-id' }"
       },
       {
         "status": 404,
-        "body": "{ok:false,error:'target not found' }"
+        "body": "{ok:false,error:'no-such-alive' }"
       },
       {
         "status": 500,
-        "body": "{ok:false,error:'internal' }"
+        "body": "{ok:false,error:'hit-failed' }"
       }
     ],
     "ok": [
@@ -720,7 +681,7 @@
       },
       {
         "status": 200,
-        "body": "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+        "body": "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
       }
     ]
   },
@@ -1040,31 +1001,34 @@
     "method": "POST",
     "path": "/hit",
     "file": "server\\combat\\routes.js",
-    "line": 154,
+    "line": 29,
     "sample": {
       "body": {
-        "try {\n    const { targetInstanceId": 1,
         "damage": "value"
       }
     },
     "errors": [
       {
         "status": 400,
-        "body": "{ok:false,error:'targetInstanceId required' }"
+        "body": "{ok:false,error:'missing-id' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'bad-id' }"
       },
       {
         "status": 404,
-        "body": "{ok:false,error:'target not found' }"
+        "body": "{ok:false,error:'no-such-alive' }"
       },
       {
         "status": 500,
-        "body": "{ok:false,error:'internal' }"
+        "body": "{ok:false,error:'hit-failed' }"
       }
     ],
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+        "body": "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
       }
     ]
   },

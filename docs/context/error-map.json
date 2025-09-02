@@ -2,61 +2,37 @@
   "GET /_ping": [
     {
       "status": 400,
-      "body": "{ok:false,error:'targetInstanceId required' }"
-    },
-    {
-      "status": 404,
-      "body": "{ok:false,error:'target not found' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'internal' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'internal' }"
+      "body": "{ok:false,error:'missing-id' }"
     },
     {
       "status": 400,
-      "body": "{ok:false,error:'targetInstanceId required' }"
+      "body": "{ok:false,error:'bad-id' }"
     },
     {
       "status": 404,
-      "body": "{ok:false,error:'target not found' }"
+      "body": "{ok:false,error:'no-such-alive' }"
     },
     {
       "status": 500,
-      "body": "{ok:false,error:'internal' }"
+      "body": "{ok:false,error:'hit-failed' }"
     }
   ],
   "GET /_routes": [
     {
       "status": 400,
-      "body": "{ok:false,error:'targetInstanceId required' }"
-    },
-    {
-      "status": 404,
-      "body": "{ok:false,error:'target not found' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'internal' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'internal' }"
+      "body": "{ok:false,error:'missing-id' }"
     },
     {
       "status": 400,
-      "body": "{ok:false,error:'targetInstanceId required' }"
+      "body": "{ok:false,error:'bad-id' }"
     },
     {
       "status": 404,
-      "body": "{ok:false,error:'target not found' }"
+      "body": "{ok:false,error:'no-such-alive' }"
     },
     {
       "status": 500,
-      "body": "{ok:false,error:'internal' }"
+      "body": "{ok:false,error:'hit-failed' }"
     }
   ],
   "GET /api/admin/content/map/:key/data": [
@@ -273,8 +249,16 @@
   ],
   "GET /api/combat/nearest": [
     {
+      "status": 400,
+      "body": "{error:'bad-coords' }"
+    },
+    {
       "status": 404,
-      "body": "{error:'no-spawns' }"
+      "body": "{error:'no-alive' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'no-alive-near' }"
     },
     {
       "status": 500,
@@ -323,49 +307,37 @@
   "POST /attack/start": [
     {
       "status": 400,
-      "body": "{ok:false,error:'targetInstanceId required' }"
-    },
-    {
-      "status": 404,
-      "body": "{ok:false,error:'target not found' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'internal' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'internal' }"
+      "body": "{ok:false,error:'missing-id' }"
     },
     {
       "status": 400,
-      "body": "{ok:false,error:'targetInstanceId required' }"
+      "body": "{ok:false,error:'bad-id' }"
     },
     {
       "status": 404,
-      "body": "{ok:false,error:'target not found' }"
+      "body": "{ok:false,error:'no-such-alive' }"
     },
     {
       "status": 500,
-      "body": "{ok:false,error:'internal' }"
+      "body": "{ok:false,error:'hit-failed' }"
     }
   ],
   "POST /attack/stop": [
     {
-      "status": 500,
-      "body": "{ok:false,error:'internal' }"
+      "status": 400,
+      "body": "{ok:false,error:'missing-id' }"
     },
     {
       "status": 400,
-      "body": "{ok:false,error:'targetInstanceId required' }"
+      "body": "{ok:false,error:'bad-id' }"
     },
     {
       "status": 404,
-      "body": "{ok:false,error:'target not found' }"
+      "body": "{ok:false,error:'no-such-alive' }"
     },
     {
       "status": 500,
-      "body": "{ok:false,error:'internal' }"
+      "body": "{ok:false,error:'hit-failed' }"
     }
   ],
   "GET /class-rates": [
@@ -528,15 +500,19 @@
   "POST /hit": [
     {
       "status": 400,
-      "body": "{ok:false,error:'targetInstanceId required' }"
+      "body": "{ok:false,error:'missing-id' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'bad-id' }"
     },
     {
       "status": 404,
-      "body": "{ok:false,error:'target not found' }"
+      "body": "{ok:false,error:'no-such-alive' }"
     },
     {
       "status": 500,
-      "body": "{ok:false,error:'internal' }"
+      "body": "{ok:false,error:'hit-failed' }"
     }
   ],
   "GET /list": [

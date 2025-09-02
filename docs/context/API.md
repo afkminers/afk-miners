@@ -34,14 +34,12 @@ _Sem payload inferido_
 
 ### GET /_ping
 
-Arquivo: `server\combat\routes.js:18`
+Arquivo: `server\combat\routes.js:14`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": 1,
-  "try {\n    const { targetInstanceId": 1,
   "damage": "value"
 }
 ```
@@ -52,24 +50,19 @@ Arquivo: `server\combat\routes.js:18`
 ```
 
 **Erros conhecidos:**
-- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
-- `HTTP 404` → {ok:false,error:'target not found' }
-- `HTTP 500` → {ok:false,error:'internal' }
-- `HTTP 500` → {ok:false,error:'internal' }
-- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
-- `HTTP 404` → {ok:false,error:'target not found' }
-- `HTTP 500` → {ok:false,error:'internal' }
+- `HTTP 400` → {ok:false,error:'missing-id' }
+- `HTTP 400` → {ok:false,error:'bad-id' }
+- `HTTP 404` → {ok:false,error:'no-such-alive' }
+- `HTTP 500` → {ok:false,error:'hit-failed' }
 
 ### GET /_routes
 
-Arquivo: `server\combat\routes.js:19`
+Arquivo: `server\combat\routes.js:15`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": 1,
-  "try {\n    const { targetInstanceId": 1,
   "damage": "value"
 }
 ```
@@ -80,13 +73,10 @@ Arquivo: `server\combat\routes.js:19`
 ```
 
 **Erros conhecidos:**
-- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
-- `HTTP 404` → {ok:false,error:'target not found' }
-- `HTTP 500` → {ok:false,error:'internal' }
-- `HTTP 500` → {ok:false,error:'internal' }
-- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
-- `HTTP 404` → {ok:false,error:'target not found' }
-- `HTTP 500` → {ok:false,error:'internal' }
+- `HTTP 400` → {ok:false,error:'missing-id' }
+- `HTTP 400` → {ok:false,error:'bad-id' }
+- `HTTP 404` → {ok:false,error:'no-such-alive' }
+- `HTTP 500` → {ok:false,error:'hit-failed' }
 
 ### GET /api/admin/content/map/:key/data
 
@@ -321,11 +311,13 @@ Arquivo: `server\routes\combat_nearest.js:25`
 
 **Resposta de sucesso (amostra):**
 ```json
-{id:alive.id,x:Number(alive.x) || 0,y:Number(alive.y) || 0,monsterKey:alive.monsterKey || null,}
+{id:m.id,x:Number(m.x) || 0,y:Number(m.y) || 0,monsterKey:m.monsterKey || null,hp:Number(m.hp) || 0,maxHp:Number(m.max_hp) || 0,}
 ```
 
 **Erros conhecidos:**
-- `HTTP 404` → {error:'no-spawns' }
+- `HTTP 400` → {error:'bad-coords' }
+- `HTTP 404` → {error:'no-alive' }
+- `HTTP 404` → {error:'no-alive-near' }
 - `HTTP 500` → {error:'nearest-failed' }
 
 ### GET /api/csrf
@@ -703,41 +695,12 @@ Arquivo: `server\routes\afk.js:65`
 
 ### POST /attack/start
 
-Arquivo: `server\combat\routes.js:124`
+Arquivo: `server\combat\routes.js:22`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": 1,
-  "try {\n    const { targetInstanceId": 1,
-  "damage": "value"
-}
-```
-
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,target:{id:String(targetInstanceId) } }
-```
-
-**Erros conhecidos:**
-- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
-- `HTTP 404` → {ok:false,error:'target not found' }
-- `HTTP 500` → {ok:false,error:'internal' }
-- `HTTP 500` → {ok:false,error:'internal' }
-- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
-- `HTTP 404` → {ok:false,error:'target not found' }
-- `HTTP 500` → {ok:false,error:'internal' }
-
-### POST /attack/stop
-
-Arquivo: `server\combat\routes.js:142`
-
-**Payloads (exemplos inferidos):**
-- body:
-```json
-{
-  "try {\n    const { targetInstanceId": 1,
   "damage": "value"
 }
 ```
@@ -750,10 +713,35 @@ Arquivo: `server\combat\routes.js:142`
 ```
 
 **Erros conhecidos:**
-- `HTTP 500` → {ok:false,error:'internal' }
-- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
-- `HTTP 404` → {ok:false,error:'target not found' }
-- `HTTP 500` → {ok:false,error:'internal' }
+- `HTTP 400` → {ok:false,error:'missing-id' }
+- `HTTP 400` → {ok:false,error:'bad-id' }
+- `HTTP 404` → {ok:false,error:'no-such-alive' }
+- `HTTP 500` → {ok:false,error:'hit-failed' }
+
+### POST /attack/stop
+
+Arquivo: `server\combat\routes.js:23`
+
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "damage": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{
+  "ok": true
+}
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {ok:false,error:'missing-id' }
+- `HTTP 400` → {ok:false,error:'bad-id' }
+- `HTTP 404` → {ok:false,error:'no-such-alive' }
+- `HTTP 500` → {ok:false,error:'hit-failed' }
 
 ### POST /collect
 
@@ -872,26 +860,26 @@ Arquivo: `server\routes\farm.js:181`
 
 ### POST /hit
 
-Arquivo: `server\combat\routes.js:154`
+Arquivo: `server\combat\routes.js:29`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "try {\n    const { targetInstanceId": 1,
   "damage": "value"
 }
 ```
 
 **Resposta de sucesso (amostra):**
 ```json
-{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }
+{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}
 ```
 
 **Erros conhecidos:**
-- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
-- `HTTP 404` → {ok:false,error:'target not found' }
-- `HTTP 500` → {ok:false,error:'internal' }
+- `HTTP 400` → {ok:false,error:'missing-id' }
+- `HTTP 400` → {ok:false,error:'bad-id' }
+- `HTTP 404` → {ok:false,error:'no-such-alive' }
+- `HTTP 500` → {ok:false,error:'hit-failed' }
 
 ### POST /login
 
@@ -1114,21 +1102,15 @@ Arquivo: `server\starter\routes.js:92`
 
 - **GET /**
 - **GET /_ping**
-  - HTTP 400: {ok:false,error:'targetInstanceId required' }
-  - HTTP 404: {ok:false,error:'target not found' }
-  - HTTP 500: {ok:false,error:'internal' }
-  - HTTP 500: {ok:false,error:'internal' }
-  - HTTP 400: {ok:false,error:'targetInstanceId required' }
-  - HTTP 404: {ok:false,error:'target not found' }
-  - HTTP 500: {ok:false,error:'internal' }
+  - HTTP 400: {ok:false,error:'missing-id' }
+  - HTTP 400: {ok:false,error:'bad-id' }
+  - HTTP 404: {ok:false,error:'no-such-alive' }
+  - HTTP 500: {ok:false,error:'hit-failed' }
 - **GET /_routes**
-  - HTTP 400: {ok:false,error:'targetInstanceId required' }
-  - HTTP 404: {ok:false,error:'target not found' }
-  - HTTP 500: {ok:false,error:'internal' }
-  - HTTP 500: {ok:false,error:'internal' }
-  - HTTP 400: {ok:false,error:'targetInstanceId required' }
-  - HTTP 404: {ok:false,error:'target not found' }
-  - HTTP 500: {ok:false,error:'internal' }
+  - HTTP 400: {ok:false,error:'missing-id' }
+  - HTTP 400: {ok:false,error:'bad-id' }
+  - HTTP 404: {ok:false,error:'no-such-alive' }
+  - HTTP 500: {ok:false,error:'hit-failed' }
 - **GET /api/admin/content/map/:key/data**
   - HTTP 404: {error:'map not found' }
   - HTTP 500: {error:err.message }
@@ -1183,7 +1165,9 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 400: {error:'Mensagem vazia' }
   - HTTP 500: {error:err.message }
 - **GET /api/combat/nearest**
-  - HTTP 404: {error:'no-spawns' }
+  - HTTP 400: {error:'bad-coords' }
+  - HTTP 404: {error:'no-alive' }
+  - HTTP 404: {error:'no-alive-near' }
   - HTTP 500: {error:'nearest-failed' }
 - **GET /api/csrf**
 - **GET /assets/items**
@@ -1301,18 +1285,15 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 500: {error:'assign_failed' }
   - HTTP 500: {error:'collect_failed' }
 - **POST /attack/start**
-  - HTTP 400: {ok:false,error:'targetInstanceId required' }
-  - HTTP 404: {ok:false,error:'target not found' }
-  - HTTP 500: {ok:false,error:'internal' }
-  - HTTP 500: {ok:false,error:'internal' }
-  - HTTP 400: {ok:false,error:'targetInstanceId required' }
-  - HTTP 404: {ok:false,error:'target not found' }
-  - HTTP 500: {ok:false,error:'internal' }
+  - HTTP 400: {ok:false,error:'missing-id' }
+  - HTTP 400: {ok:false,error:'bad-id' }
+  - HTTP 404: {ok:false,error:'no-such-alive' }
+  - HTTP 500: {ok:false,error:'hit-failed' }
 - **POST /attack/stop**
-  - HTTP 500: {ok:false,error:'internal' }
-  - HTTP 400: {ok:false,error:'targetInstanceId required' }
-  - HTTP 404: {ok:false,error:'target not found' }
-  - HTTP 500: {ok:false,error:'internal' }
+  - HTTP 400: {ok:false,error:'missing-id' }
+  - HTTP 400: {ok:false,error:'bad-id' }
+  - HTTP 404: {ok:false,error:'no-such-alive' }
+  - HTTP 500: {ok:false,error:'hit-failed' }
 - **POST /collect**
   - HTTP 500: {error:'collect_failed' }
 - **POST /create-worker**
@@ -1339,9 +1320,10 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 403: {error:'forbidden' }
   - HTTP 500: {error:'debug_grant_failed' }
 - **POST /hit**
-  - HTTP 400: {ok:false,error:'targetInstanceId required' }
-  - HTTP 404: {ok:false,error:'target not found' }
-  - HTTP 500: {ok:false,error:'internal' }
+  - HTTP 400: {ok:false,error:'missing-id' }
+  - HTTP 400: {ok:false,error:'bad-id' }
+  - HTTP 404: {ok:false,error:'no-such-alive' }
+  - HTTP 500: {ok:false,error:'hit-failed' }
 - **POST /login**
   - HTTP 401: {error:'Credenciais inválidas' }
   - HTTP 401: {error:'Credenciais inválidas' }

@@ -501,18 +501,6 @@
     ]
   },
   {
-    "file": "server\\combat\\routes.js",
-    "symbols": [
-      "clamp",
-      "ensureDemo",
-      "getMonster",
-      "saveMonsterHp",
-      "tableExists",
-      "tryGetMonsterWith",
-      "tryRun"
-    ]
-  },
-  {
     "file": "server\\combat\\seed.js",
     "symbols": [
       "exists",

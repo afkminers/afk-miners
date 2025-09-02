@@ -2,15 +2,15 @@
   "GET /_ping": [
     "{ok:true,ts:Date.now() }",
     "{routes:list }",
-    "{ok:true,target:{id:String(targetInstanceId) } }",
     "{ok:true }",
-    "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+    "{ok:true }",
+    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
   ],
   "GET /_routes": [
     "{routes:list }",
-    "{ok:true,target:{id:String(targetInstanceId) } }",
     "{ok:true }",
-    "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+    "{ok:true }",
+    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
   ],
   "GET /api/admin/content/map/:key/data": [
     "{ok:true,reloaded:mapKey }"
@@ -43,8 +43,7 @@
     "{ok:true }"
   ],
   "GET /api/combat/nearest": [
-    "{id:alive.id,x:Number(alive.x) || 0,y:Number(alive.y) || 0,monsterKey:alive.monsterKey || null,}",
-    "{id:instanceId,x:Number(spawn.x) || 0,y:Number(spawn.y) || 0,monsterKey:spawn.monsterKey || null,}"
+    "{id:m.id,x:Number(m.x) || 0,y:Number(m.y) || 0,monsterKey:m.monsterKey || null,hp:Number(m.hp) || 0,maxHp:Number(m.max_hp) || 0,}"
   ],
   "GET /api/csrf": [],
   "GET /assets/items": [],
@@ -54,13 +53,13 @@
     "{ok:true,added:total }"
   ],
   "POST /attack/start": [
-    "{ok:true,target:{id:String(targetInstanceId) } }",
     "{ok:true }",
-    "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+    "{ok:true }",
+    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
   ],
   "POST /attack/stop": [
     "{ok:true }",
-    "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
   ],
   "GET /class-rates": [],
   "POST /collect": [
@@ -85,7 +84,7 @@
   ],
   "GET /heroes/master": [],
   "POST /hit": [
-    "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
   ],
   "GET /list": [
     "{canSelect:!row }",
