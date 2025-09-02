@@ -308,7 +308,7 @@ Arquivo: `server\index.js:664`
 
 ### GET /api/combat/nearest
 
-Arquivo: `server\routes\combat_nearest.js:12`
+Arquivo: `server\routes\combat_nearest.js:22`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -322,13 +322,14 @@ Arquivo: `server\routes\combat_nearest.js:12`
 
 **Resposta de sucesso (amostra):**
 ```json
-{id:row.id,x:row.x,y:row.y }
+{id:alive.id,x:Number(alive.x) || 0,y:Number(alive.y) || 0,monsterKey:alive.monsterKey || null,}
 ```
 
 **Erros conhecidos:**
-- `HTTP 400` → {error:'bad_request' }
-- `HTTP 404` → {error:'no_monsters' }
-- `HTTP 500` → {error:'server_error' }
+- `HTTP 400` → {error:'bad-coord' }
+- `HTTP 404` → {error:'no-spawns' }
+- `HTTP 500` → {error:'monster-master-missing',monsterKey:spawn.monsterKey }
+- `HTTP 500` → {error:'nearest-failed' }
 
 ### GET /api/csrf
 
@@ -1185,9 +1186,10 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 400: {error:'Mensagem vazia' }
   - HTTP 500: {error:err.message }
 - **GET /api/combat/nearest**
-  - HTTP 400: {error:'bad_request' }
-  - HTTP 404: {error:'no_monsters' }
-  - HTTP 500: {error:'server_error' }
+  - HTTP 400: {error:'bad-coord' }
+  - HTTP 404: {error:'no-spawns' }
+  - HTTP 500: {error:'monster-master-missing',monsterKey:spawn.monsterKey }
+  - HTTP 500: {error:'nearest-failed' }
 - **GET /api/csrf**
 - **GET /assets/items**
   - HTTP 500: {error:"Falha ao listar items" }

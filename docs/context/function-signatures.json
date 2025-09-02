@@ -748,17 +748,6 @@
     ]
   },
   {
-    "file": "server\\routes\\combat_nearest.js",
-    "line": 6,
-    "kind": "function",
-    "name": "requireAuth",
-    "params": [
-      "req",
-      "res",
-      "next"
-    ]
-  },
-  {
     "file": "server\\routes\\catalog.js",
     "line": 8,
     "kind": "arrow",

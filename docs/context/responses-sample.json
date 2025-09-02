@@ -43,7 +43,8 @@
     "{ok:true }"
   ],
   "GET /api/combat/nearest": [
-    "{id:row.id,x:row.x,y:row.y }"
+    "{id:alive.id,x:Number(alive.x) || 0,y:Number(alive.y) || 0,monsterKey:alive.monsterKey || null,}",
+    "{id:instanceId,x:Number(spawn.x) || 0,y:Number(spawn.y) || 0,monsterKey:spawn.monsterKey || null,}"
   ],
   "GET /api/csrf": [],
   "GET /assets/items": [],

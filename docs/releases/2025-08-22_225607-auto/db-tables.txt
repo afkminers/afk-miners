@@ -1,4 +1,0 @@
-class_skill_rates   inventory           monsters_master     skill_curves      
-content_files       items_master        player_hero_skills  spawns            
-hero_training       map_objects         player_heroes       sprites_master    
-heroes_master       maps                players             weapon_skill_map  

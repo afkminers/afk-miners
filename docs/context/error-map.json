@@ -274,15 +274,19 @@
   "GET /api/combat/nearest": [
     {
       "status": 400,
-      "body": "{error:'bad_request' }"
+      "body": "{error:'bad-coord' }"
     },
     {
       "status": 404,
-      "body": "{error:'no_monsters' }"
+      "body": "{error:'no-spawns' }"
     },
     {
       "status": 500,
-      "body": "{error:'server_error' }"
+      "body": "{error:'monster-master-missing',monsterKey:spawn.monsterKey }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'nearest-failed' }"
     }
   ],
   "GET /api/csrf": [],

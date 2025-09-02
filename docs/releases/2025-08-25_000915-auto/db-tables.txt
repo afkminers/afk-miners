@@ -1,5 +1,0 @@
-chat_messages       inventory           player_hero_skills  spawns            
-class_skill_rates   items_master        player_heroes       sprites_master    
-content_files       map_objects         player_positions    starters_pool     
-hero_training       maps                players             weapon_skill_map  
-heroes_master       monsters_master     skill_curves      

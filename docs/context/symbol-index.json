@@ -1375,12 +1375,6 @@
     ]
   },
   {
-    "file": "server\\routes\\combat_nearest.js",
-    "symbols": [
-      "requireAuth"
-    ]
-  },
-  {
     "file": "server\\routes\\farm.js",
     "symbols": [
       "computeStage",
