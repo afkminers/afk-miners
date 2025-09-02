@@ -1,6 +1,6 @@
 // client/js/combat/attack-controls.js
 // ES Module: exporta startAttack/stopAttack e registra controles de ataque.
-// - Clique esquerdo: seleciona alvo (WS ou mob local) e inicia ataque
+// - Clique esquerdo: resolve alvo (servidor primeiro) e inicia ataque
 // - Clique direito/ESC/blur: para o ataque
 
 const TILE = 32;
@@ -48,7 +48,7 @@ async function postJSON(url, body) {
       referrerPolicy: 'strict-origin-when-cross-origin',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': token,        // use um único header estável
+        'X-CSRF-Token': token,        // header único e estável
         'X-Requested-With': 'fetch',
       },
       body: JSON.stringify(body || {})
@@ -63,6 +63,14 @@ async function postJSON(url, body) {
     r = await doFetch(tok);
   }
 
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
+  // alguns endpoints podem devolver "{}"
+  return r.headers.get('content-length') === '0' ? {} : r.json();
+}
+
+// helper GET simples
+async function jget(url) {
+  const r = await fetch(url, { credentials: 'include', cache: 'no-store' });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
   return r.json();
 }
@@ -138,6 +146,24 @@ function pickTargetAt(px, py) {
   return findClosestLocalMonster(px, py);
 }
 
+/**
+ * Resolve alvo no servidor (fonte da verdade) — ignora (0,0) de WS
+ */
+async function resolveServerTarget(px, py) {
+  const map = window.GameScene?.mapKey || 'house';
+  try {
+    const q = new URLSearchParams({
+      map,
+      x: String(Math.round(px)),
+      y: String(Math.round(py))
+    });
+    const resp = await jget('/api/combat/nearest?' + q.toString());
+    return resp?.id ? String(resp.id) : null;
+  } catch {
+    return null;
+  }
+}
+
 /* ========================== Loop de ataque ========================= */
 async function doHit() {
   if (!combatState.attacking || !combatState.targetId) return;
@@ -166,14 +192,14 @@ export async function startAttack(targetId) {
   await postJSON('/api/combat/attack/start', { targetInstanceId: targetId });
   combatState.targetId = String(targetId);
   combatState.attacking = true;
-  window.dispatchEvent(new CustomEvent('combat:attack:start'));
+  window.dispatchEvent(new CustomEvent('combat:attack:start', { detail: { targetId: combatState.targetId } }));
   startLoop();
 }
 export async function stopAttack() {
   combatState.attacking = false;
   combatState.targetId = null;
   if (combatState.loopHandle) { clearInterval(combatState.loopHandle); combatState.loopHandle = null; }
-  try { await postJSON('/api/combat/attack/stop', {}); } catch (e) { /* ignora 403 em teardown */ }
+  try { await postJSON('/api/combat/attack/stop', {}); } catch { /* ignora 403/teardown */ }
 }
 
 /* ====================== Controles de ponteiro ====================== */
@@ -194,14 +220,23 @@ function attachControls() {
     if (e.button != null && e.button !== 0) return; // só esquerdo
     const { x, y } = getMouseWorldFromEvent(e, canvas);
     console.log('[attack] click @', Math.round(x), Math.round(y));
-    const target = pickTargetAt(x, y);
-    if (!target) {
+
+    // 1) resolve alvo no servidor (mais confiável)
+    let targetId = await resolveServerTarget(x, y);
+
+    // 2) fallback local/WS se servidor não retornar nada
+    if (!targetId) {
+      const t = pickTargetAt(x, y);
+      targetId = t?.id || null;
+    }
+
+    if (!targetId) {
       console.log('[attack] nenhum alvo — stop');
       stopAttack();
       return;
     }
     try {
-      await startAttack(target.id);
+      await startAttack(targetId);
     } catch (err) {
       console.warn('[attack] start falhou:', err.message);
     }

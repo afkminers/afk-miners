@@ -178,6 +178,9 @@ app.use('/api/auth', authRoutes);
 const combatRoutes = require('./combat/routes');
 app.use('/api/combat', combatRoutes);
 
+const combatNearest = require('./routes/combat_nearest');
+app.use(combatNearest);
+
 // protegidas
 app.use('/api/player', requireAuth, playerRoutes);
 app.use('/api/gacha', requireAuth, gachaRoutes);

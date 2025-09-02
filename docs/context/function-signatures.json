@@ -758,7 +758,16 @@
   },
   {
     "file": "server\\respawn\\worker.js",
-    "line": 23,
+    "line": 16,
+    "kind": "function",
+    "name": "pickPosInSpawnRect",
+    "params": [
+      "spawn"
+    ]
+  },
+  {
+    "file": "server\\respawn\\worker.js",
+    "line": 39,
     "kind": "function",
     "name": "respawnTick",
     "params": [
@@ -768,7 +777,7 @@
   },
   {
     "file": "server\\respawn\\worker.js",
-    "line": 90,
+    "line": 113,
     "kind": "function",
     "name": "startRespawnLoop",
     "params": [
@@ -777,7 +786,7 @@
   },
   {
     "file": "server\\respawn\\worker.js",
-    "line": 99,
+    "line": 122,
     "kind": "function",
     "name": "stopRespawnLoop",
     "params": []
@@ -9151,6 +9160,93 @@
     ]
   },
   {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 19,
+    "kind": "function",
+    "name": "normKey",
+    "params": [
+      "s"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 24,
+    "kind": "function",
+    "name": "borrowLocalPosition",
+    "params": [
+      "monsterId",
+      "monsterKey"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 53,
+    "kind": "function",
+    "name": "ensurePosForMonster",
+    "params": [
+      "m"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 63,
+    "kind": "function",
+    "name": "onWsMessage",
+    "params": [
+      "e"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 115,
+    "kind": "function",
+    "name": "wsUrl",
+    "params": []
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 121,
+    "kind": "function",
+    "name": "connectCombatWS",
+    "params": []
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 132,
+    "kind": "function",
+    "name": "drawHpBar",
+    "params": [
+      "ctx",
+      "m"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 153,
+    "kind": "function",
+    "name": "drawTargetBox",
+    "params": [
+      "ctx"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 164,
+    "kind": "function",
+    "name": "updateAndDrawFloaters",
+    "params": [
+      "ctx",
+      "dtMs"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 189,
+    "kind": "arrow",
+    "name": "drawAll",
+    "params": []
+  },
+  {
     "file": "client\\js\\combat\\combat-ui.js",
     "line": 11,
     "kind": "function",
@@ -9207,29 +9303,6 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 10,
-    "kind": "arrow",
-    "name": "log",
-    "params": [
-      "...a"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\attack-controls.js",
-    "line": 11,
-    "kind": "arrow",
-    "name": "now",
-    "params": []
-  },
-  {
-    "file": "client\\js\\combat\\attack-controls.js",
-    "line": 12,
-    "kind": "arrow",
-    "name": "mapKey",
-    "params": []
-  },
-  {
-    "file": "client\\js\\combat\\attack-controls.js",
     "line": 15,
     "kind": "function",
     "name": "readCookie",
@@ -9239,16 +9312,30 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 22,
+    "line": 20,
     "kind": "function",
-    "name": "ensureCsrf",
+    "name": "seedCsrfCookie",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 29,
+    "line": 26,
     "kind": "function",
-    "name": "postWithCsrf",
+    "name": "getFreshCsrf",
+    "params": []
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 36,
+    "kind": "function",
+    "name": "getCsrf",
+    "params": []
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 38,
+    "kind": "function",
+    "name": "postJSON",
     "params": [
       "url",
       "body"
@@ -9256,95 +9343,122 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 57,
-    "kind": "function",
-    "name": "getPlayerPos",
-    "params": []
-  },
-  {
-    "file": "client\\js\\combat\\attack-controls.js",
-    "line": 63,
-    "kind": "function",
-    "name": "listServerMonsters",
-    "params": []
-  },
-  {
-    "file": "client\\js\\combat\\attack-controls.js",
-    "line": 82,
-    "kind": "function",
-    "name": "listLocalMobs",
-    "params": []
-  },
-  {
-    "file": "client\\js\\combat\\attack-controls.js",
-    "line": 87,
-    "kind": "function",
-    "name": "pickNearest",
+    "line": 42,
+    "kind": "arrow",
+    "name": "doFetch",
     "params": [
-      "list",
-      "x",
-      "y",
-      "max = 96"
+      "token"
     ]
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 97,
+    "line": 71,
     "kind": "function",
-    "name": "worldFromCanvas",
+    "name": "pickCanvas",
+    "params": []
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 77,
+    "kind": "function",
+    "name": "pickCamera",
+    "params": []
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 80,
+    "kind": "function",
+    "name": "screenToWorld",
     "params": [
-      "ev",
       "canvas",
-      "camera"
+      "sx",
+      "sy"
     ]
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 108,
+    "line": 88,
+    "kind": "function",
+    "name": "getMouseWorldFromEvent",
+    "params": [
+      "e",
+      "canvas"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 105,
+    "kind": "function",
+    "name": "findWsMonsterNear",
+    "params": [
+      "px",
+      "py"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 121,
+    "kind": "function",
+    "name": "findClosestLocalMonster",
+    "params": [
+      "px",
+      "py"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 135,
+    "kind": "function",
+    "name": "pickTargetAt",
+    "params": [
+      "px",
+      "py"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 142,
     "kind": "function",
     "name": "doHit",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 125,
+    "line": 159,
     "kind": "function",
     "name": "startLoop",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 126,
+    "line": 165,
     "kind": "function",
-    "name": "stopLoop",
-    "params": []
+    "name": "startAttack",
+    "params": [
+      "targetId"
+    ]
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 128,
+    "line": 172,
     "kind": "function",
     "name": "stopAttack",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 144,
+    "line": 180,
     "kind": "function",
-    "name": "startAttack",
-    "params": [
-      "targetSid",
-      "clickX",
-      "clickY"
-    ]
+    "name": "attachControls",
+    "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 190,
-    "kind": "function",
-    "name": "attach",
+    "line": 193,
+    "kind": "arrow",
+    "name": "onPointerDown",
     "params": [
-      "canvas",
-      "camera"
+      "e"
     ]
   }
 ]

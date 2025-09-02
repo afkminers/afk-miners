@@ -75,20 +75,22 @@
   {
     "file": "client\\js\\combat\\attack-controls.js",
     "symbols": [
-      "attach",
+      "attachControls",
       "doHit",
-      "ensureCsrf",
-      "getPlayerPos",
-      "listLocalMobs",
-      "listServerMonsters",
-      "pickNearest",
-      "postWithCsrf",
+      "findClosestLocalMonster",
+      "findWsMonsterNear",
+      "getCsrf",
+      "getFreshCsrf",
+      "getMouseWorldFromEvent",
+      "pickCamera",
+      "pickCanvas",
+      "pickTargetAt",
+      "postJSON",
       "readCookie",
+      "screenToWorld",
+      "seedCsrfCookie",
       "startAttack",
-      "startLoop",
-      "stopAttack",
-      "stopLoop",
-      "worldFromCanvas"
+      "startLoop"
     ]
   },
   {
@@ -103,7 +105,16 @@
   {
     "file": "client\\js\\combat\\render-combat.js",
     "symbols": [
-      "installCombatOverlay"
+      "borrowLocalPosition",
+      "connectCombatWS",
+      "drawHpBar",
+      "drawTargetBox",
+      "ensurePosForMonster",
+      "installCombatOverlay",
+      "normKey",
+      "onWsMessage",
+      "updateAndDrawFloaters",
+      "wsUrl"
     ]
   },
   {
@@ -1355,6 +1366,7 @@
   {
     "file": "server\\respawn\\worker.js",
     "symbols": [
+      "pickPosInSpawnRect",
       "respawnTick",
       "startRespawnLoop",
       "stopRespawnLoop"
