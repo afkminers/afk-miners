@@ -516,7 +516,7 @@
     "method": "GET",
     "path": "/api/combat/nearest",
     "file": "server\\routes\\combat_nearest.js",
-    "line": 22,
+    "line": 25,
     "sample": {
       "query": {
         "map": "value",
@@ -526,16 +526,8 @@
     },
     "errors": [
       {
-        "status": 400,
-        "body": "{error:'bad-coord' }"
-      },
-      {
         "status": 404,
         "body": "{error:'no-spawns' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'monster-master-missing',monsterKey:spawn.monsterKey }"
       },
       {
         "status": 500,

@@ -273,16 +273,8 @@
   ],
   "GET /api/combat/nearest": [
     {
-      "status": 400,
-      "body": "{error:'bad-coord' }"
-    },
-    {
       "status": 404,
       "body": "{error:'no-spawns' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'monster-master-missing',monsterKey:spawn.monsterKey }"
     },
     {
       "status": 500,

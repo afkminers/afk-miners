@@ -7,7 +7,7 @@
 - `COMBAT_DEBUG` (defaults: )
 - `CONTENT_PIPELINE` (defaults: off)
 - `COOKIE_DOMAIN` (defaults: undefined)
-- `COOKIE_NAME` (defaults: sid)
+- `COOKIE_NAME`
 - `COOKIE_SAME_SITE` (defaults: Lax)
 - `COOKIE_SECURE` (defaults: false)
 - `CSRF_COOKIE` (defaults: csrf)
@@ -22,8 +22,7 @@
 - `REDIS_URL` (defaults: null)
 - `RESPAWN_DEBUG` (defaults: )
 - `RESPAWN_TICK_MS` (defaults: 5000)
-- `SESSION_COOKIE_NAME` (defaults: process.env.COOKIE_NAME, token)
-- `WORKER_TICK_SECONDS` (defaults: 3)
+- `SESSION_COOKIE_NAME` (defaults: process.env.COOKIE_NAME)
 
 ## Endpoints
 
@@ -308,7 +307,7 @@ Arquivo: `server\index.js:664`
 
 ### GET /api/combat/nearest
 
-Arquivo: `server\routes\combat_nearest.js:22`
+Arquivo: `server\routes\combat_nearest.js:25`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -326,9 +325,7 @@ Arquivo: `server\routes\combat_nearest.js:22`
 ```
 
 **Erros conhecidos:**
-- `HTTP 400` → {error:'bad-coord' }
 - `HTTP 404` → {error:'no-spawns' }
-- `HTTP 500` → {error:'monster-master-missing',monsterKey:spawn.monsterKey }
 - `HTTP 500` → {error:'nearest-failed' }
 
 ### GET /api/csrf
@@ -1186,9 +1183,7 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 400: {error:'Mensagem vazia' }
   - HTTP 500: {error:err.message }
 - **GET /api/combat/nearest**
-  - HTTP 400: {error:'bad-coord' }
   - HTTP 404: {error:'no-spawns' }
-  - HTTP 500: {error:'monster-master-missing',monsterKey:spawn.monsterKey }
   - HTTP 500: {error:'nearest-failed' }
 - **GET /api/csrf**
 - **GET /assets/items**

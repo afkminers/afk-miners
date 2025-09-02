@@ -624,16 +624,6 @@
               }
             }
           },
-          "400": {
-            "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
           "404": {
             "description": "Error 404 (inferred)",
             "content": {

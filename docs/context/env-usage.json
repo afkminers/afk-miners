@@ -39,19 +39,9 @@
       {
         "file": "server\\index.js",
         "index": 1178
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
-        "index": 781
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\index.js",
-        "index": 797
       }
     ],
     "defaults": [
-      "off",
-      "off",
       "off"
     ]
   },
@@ -61,19 +51,9 @@
       {
         "file": "server\\auth\\middleware.js",
         "index": 652
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
-        "index": 564
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\auth\\middleware.js",
-        "index": 564
       }
     ],
     "defaults": [
-      "undefined",
-      "undefined",
       "undefined"
     ]
   },
@@ -87,20 +67,9 @@
       {
         "file": "server\\auth\\middleware.js",
         "index": 503
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
-        "index": 348
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\auth\\middleware.js",
-        "index": 348
       }
     ],
-    "defaults": [
-      "sid",
-      "sid"
-    ]
+    "defaults": []
   },
   {
     "key": "COOKIE_SAME_SITE",
@@ -108,19 +77,9 @@
       {
         "file": "server\\auth\\middleware.js",
         "index": 587
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
-        "index": 502
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\auth\\middleware.js",
-        "index": 502
       }
     ],
     "defaults": [
-      "Lax",
-      "Lax",
       "Lax"
     ]
   },
@@ -130,19 +89,9 @@
       {
         "file": "server\\auth\\middleware.js",
         "index": 1318
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
-        "index": 412
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\auth\\middleware.js",
-        "index": 412
       }
     ],
     "defaults": [
-      "false",
-      "false",
       "false"
     ]
   },
@@ -152,19 +101,9 @@
       {
         "file": "server\\auth\\middleware.js",
         "index": 718
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
-        "index": 625
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\auth\\middleware.js",
-        "index": 625
       }
     ],
     "defaults": [
-      "csrf",
-      "csrf",
       "csrf"
     ]
   },
@@ -174,19 +113,9 @@
       {
         "file": "server\\scripts\\gen-context.js",
         "index": 2164
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-        "index": 1036
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-        "index": 1036
       }
     ],
     "defaults": [
-      "4",
-      "4",
       "4"
     ]
   },
@@ -200,22 +129,6 @@
       {
         "file": "server\\scripts\\gen-context.js",
         "index": 49831
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-        "index": 22539
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-        "index": 26458
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-        "index": 22539
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-        "index": 26458
       }
     ],
     "defaults": []
@@ -230,22 +143,6 @@
       {
         "file": "server\\scripts\\gen-context.js",
         "index": 49440
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-        "index": 22385
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\scripts\\gen-context.js",
-        "index": 26075
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-        "index": 22385
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\scripts\\gen-context.js",
-        "index": 26075
       }
     ],
     "defaults": []
@@ -290,29 +187,10 @@
       {
         "file": "server\\auth\\middleware.js",
         "index": 362
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
-        "index": 14527
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\routes.js",
-        "index": 3145
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
-        "index": 279
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\auth\\middleware.js",
-        "index": 279
       }
     ],
     "defaults": [
       "changeme",
-      "CHANGE_ME_DEV_ONLY",
-      "changeme",
-      "CHANGE_ME_DEV_ONLY",
       "CHANGE_ME_DEV_ONLY"
     ]
   },
@@ -334,37 +212,9 @@
       {
         "file": "server\\auth\\middleware.js",
         "index": 303
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
-        "index": 948
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\routes.js",
-        "index": 3380
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\routes.js",
-        "index": 3460
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\middleware.js",
-        "index": 220
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\index.js",
-        "index": 975
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\auth\\middleware.js",
-        "index": 220
       }
     ],
     "defaults": [
-      "development",
-      "development",
-      "development",
-      "development",
       "development",
       "development",
       "development"
@@ -390,19 +240,9 @@
       {
         "file": "server\\index.js",
         "index": 1365
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
-        "index": 1008
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\index.js",
-        "index": 1050
       }
     ],
     "defaults": [
-      "3000",
-      "3000",
       "3000"
     ]
   },
@@ -412,14 +252,9 @@
       {
         "file": "server\\index.js",
         "index": 14981
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
-        "index": 14446
       }
     ],
     "defaults": [
-      "null",
       "null"
     ]
   },
@@ -457,38 +292,11 @@
       {
         "file": "server\\auth\\middleware.js",
         "index": 465
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
-        "index": 14586
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\auth\\routes.js",
-        "index": 3289
       }
     ],
     "defaults": [
       "process.env.COOKIE_NAME",
-      "process.env.COOKIE_NAME",
-      "token",
-      "token"
-    ]
-  },
-  {
-    "key": "WORKER_TICK_SECONDS",
-    "occurrences": [
-      {
-        "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
-        "index": 1134
-      },
-      {
-        "file": "docs\\backups\\2025-08-24_143136-post-main-e6ab269\\server\\index.js",
-        "index": 1180
-      }
-    ],
-    "defaults": [
-      "3",
-      "3"
+      "process.env.COOKIE_NAME"
     ]
   }
 ]
