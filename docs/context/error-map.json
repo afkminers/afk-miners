@@ -250,64 +250,6 @@
       "body": "{error:'collect_failed' }"
     }
   ],
-  "POST /attack/start": [
-    {
-      "status": 400,
-      "body": "{ok:false,message:'heroId e targetInstanceId são obrigatórios' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,message:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,message:'heroId é obrigatório' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,message:e.message }"
-    }
-  ],
-  "POST /attack/stop": [
-    {
-      "status": 400,
-      "body": "{ok:false,message:'heroId é obrigatório' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,message:e.message }"
-    }
-  ],
-  "GET /characters/mine": [
-    {
-      "status": 500,
-      "body": "{error:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'heroId requerido' }"
-    },
-    {
-      "status": 403,
-      "body": "{error:'forbidden' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'coords inválidas' }"
-    },
-    {
-      "status": 409,
-      "body": "{error:'old-seq' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'too-fast' }"
-    }
-  ],
   "GET /class-rates": [
     {
       "status": 500,
@@ -459,192 +401,16 @@
       "body": "{error:'debug_grant_failed' }"
     }
   ],
-  "GET /hero/active": [
-    {
-      "status": 404,
-      "body": "{error:'no-heroes' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'server-error' }"
-    },
-    {
-      "status": 404,
-      "body": "{error:'no-heroes' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'heroId requerido' }"
-    },
-    {
-      "status": 403,
-      "body": "{error:'forbidden' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'coords inválidas' }"
-    },
-    {
-      "status": 409,
-      "body": "{error:'old-seq' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'too-fast' }"
-    }
-  ],
-  "GET /hero/mine": [
-    {
-      "status": 404,
-      "body": "{error:'no-heroes' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'heroId requerido' }"
-    },
-    {
-      "status": 403,
-      "body": "{error:'forbidden' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'coords inválidas' }"
-    },
-    {
-      "status": 409,
-      "body": "{error:'old-seq' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'too-fast' }"
-    }
-  ],
-  "POST /hero/select": [
-    {
-      "status": 400,
-      "body": "{error:'heroId requerido' }"
-    },
-    {
-      "status": 403,
-      "body": "{error:'forbidden' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'coords inválidas' }"
-    },
-    {
-      "status": 409,
-      "body": "{error:'old-seq' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'too-fast' }"
-    }
-  ],
   "GET /heroes/master": [
     {
       "status": 500,
       "body": "{error:'Falha ao listar heróis' }"
     }
   ],
-  "GET /heroes": [
-    {
-      "status": 500,
-      "body": "{error:'server-error' }"
-    },
-    {
-      "status": 404,
-      "body": "{error:'no-heroes' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'server-error' }"
-    },
-    {
-      "status": 404,
-      "body": "{error:'no-heroes' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'heroId requerido' }"
-    },
-    {
-      "status": 403,
-      "body": "{error:'forbidden' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'coords inválidas' }"
-    },
-    {
-      "status": 409,
-      "body": "{error:'old-seq' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'too-fast' }"
-    }
-  ],
   "POST /hit": [
     {
       "status": 400,
-      "body": "{ok:false,message:'attackerHeroId e targetInstanceId são obrigatórios' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,message:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,message:'heroId e targetInstanceId são obrigatórios' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,message:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,message:'heroId é obrigatório' }"
+      "body": "{ok:false,message:'attackerHeroId,targetInstanceId,weaponType são obrigatórios' }"
     },
     {
       "status": 500,
@@ -737,6 +503,38 @@
     {
       "status": 500,
       "body": "{error:'Falha ao aplicar ganho' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'pos-read-failed' }"
+    },
+    {
+      "status": 429,
+      "body": "{error:'rate-limited' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid-pos' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'out-of-bounds' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'inside-solid' }"
+    },
+    {
+      "status": 409,
+      "body": "{error:'stale-seq' }"
+    },
+    {
+      "status": 202,
+      "body": "{ok:false,reason:'too-fast' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'pos-write-failed' }"
     },
     {
       "status": 404,
@@ -919,6 +717,38 @@
     {
       "status": 400,
       "body": "{error:'too-fast' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'pos-read-failed' }"
+    },
+    {
+      "status": 429,
+      "body": "{error:'rate-limited' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid-pos' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'out-of-bounds' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'inside-solid' }"
+    },
+    {
+      "status": 409,
+      "body": "{error:'stale-seq' }"
+    },
+    {
+      "status": 202,
+      "body": "{ok:false,reason:'too-fast' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'pos-write-failed' }"
     }
   ],
   "POST /pos": [
@@ -933,6 +763,34 @@
     {
       "status": 400,
       "body": "{error:'too-fast' }"
+    },
+    {
+      "status": 429,
+      "body": "{error:'rate-limited' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'invalid-pos' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'out-of-bounds' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'inside-solid' }"
+    },
+    {
+      "status": 409,
+      "body": "{error:'stale-seq' }"
+    },
+    {
+      "status": 202,
+      "body": "{ok:false,reason:'too-fast' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'pos-write-failed' }"
     }
   ],
   "POST /": [

@@ -483,6 +483,27 @@
           "200": {
             "description": "OK"
           }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "try {\n    const { heroId": {
+                    "type": "number"
+                  },
+                  "weaponOrSkill": {
+                    "type": "string"
+                  },
+                  "heroClass": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -601,235 +622,6 @@
             }
           }
         }
-      }
-    },
-    "/attack/start": {
-      "post": {
-        "responses": {
-          "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "heroId": {
-                    "type": "number"
-                  },
-                  "attackerHeroId": {
-                    "type": "number"
-                  },
-                  "targetInstanceId": {
-                    "type": "number"
-                  },
-                  "targetId": {
-                    "type": "number"
-                  },
-                  "weaponType": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/attack/stop": {
-      "post": {
-        "responses": {
-          "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "heroId": {
-                    "type": "number"
-                  },
-                  "attackerHeroId": {
-                    "type": "number"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/characters/mine": {
-      "get": {
-        "responses": {
-          "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error 403 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error 409 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "const { mapKey": {
-                    "type": "string"
-                  },
-                  "x": {
-                    "type": "string"
-                  },
-                  "y": {
-                    "type": "string"
-                  },
-                  "const { seq": {
-                    "type": "string"
-                  },
-                  "type": {
-                    "type": "string"
-                  },
-                  "tx": {
-                    "type": "string"
-                  },
-                  "ty": {
-                    "type": "string"
-                  },
-                  "mapKey": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "map",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
       }
     },
     "/class-rates": {
@@ -1338,332 +1130,6 @@
         }
       }
     },
-    "/hero/active": {
-      "get": {
-        "responses": {
-          "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error 403 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error 404 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error 409 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "const { mapKey": {
-                    "type": "string"
-                  },
-                  "x": {
-                    "type": "string"
-                  },
-                  "y": {
-                    "type": "string"
-                  },
-                  "const { seq": {
-                    "type": "string"
-                  },
-                  "type": {
-                    "type": "string"
-                  },
-                  "tx": {
-                    "type": "string"
-                  },
-                  "ty": {
-                    "type": "string"
-                  },
-                  "mapKey": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "map",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/hero/mine": {
-      "get": {
-        "responses": {
-          "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error 403 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error 404 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error 409 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "const { mapKey": {
-                    "type": "string"
-                  },
-                  "x": {
-                    "type": "string"
-                  },
-                  "y": {
-                    "type": "string"
-                  },
-                  "const { seq": {
-                    "type": "string"
-                  },
-                  "type": {
-                    "type": "string"
-                  },
-                  "tx": {
-                    "type": "string"
-                  },
-                  "ty": {
-                    "type": "string"
-                  },
-                  "mapKey": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "map",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/hero/select": {
-      "post": {
-        "responses": {
-          "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error 403 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error 409 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "const { mapKey": {
-                    "type": "string"
-                  },
-                  "x": {
-                    "type": "string"
-                  },
-                  "y": {
-                    "type": "string"
-                  },
-                  "const { seq": {
-                    "type": "string"
-                  },
-                  "type": {
-                    "type": "string"
-                  },
-                  "tx": {
-                    "type": "string"
-                  },
-                  "ty": {
-                    "type": "string"
-                  },
-                  "mapKey": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "map",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
     "/heroes/master": {
       "get": {
         "responses": {
@@ -1683,135 +1149,11 @@
         }
       }
     },
-    "/heroes": {
-      "get": {
-        "responses": {
-          "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error 403 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error 404 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error 409 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "const { mapKey": {
-                    "type": "string"
-                  },
-                  "x": {
-                    "type": "string"
-                  },
-                  "y": {
-                    "type": "string"
-                  },
-                  "const { seq": {
-                    "type": "string"
-                  },
-                  "type": {
-                    "type": "string"
-                  },
-                  "tx": {
-                    "type": "string"
-                  },
-                  "ty": {
-                    "type": "string"
-                  },
-                  "mapKey": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "map",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
     "/hit": {
       "post": {
         "responses": {
           "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              }
-            }
+            "description": "OK"
           },
           "400": {
             "description": "Error 400 (inferred)",
@@ -1841,23 +1183,14 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "heroId": {
-                    "type": "number"
-                  },
-                  "attackerHeroId": {
+                  "try {\n    const { attackerHeroId": {
                     "type": "number"
                   },
                   "targetInstanceId": {
                     "type": "number"
                   },
-                  "targetId": {
-                    "type": "number"
-                  },
                   "weaponType": {
                     "type": "string"
-                  },
-                  "try {\n    const { attackerHeroId": {
-                    "type": "number"
                   }
                 }
               }
@@ -2022,6 +1355,16 @@
               }
             }
           },
+          "202": {
+            "description": "Error 202 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
           "400": {
             "description": "Error 400 (inferred)",
             "content": {
@@ -2034,6 +1377,26 @@
           },
           "404": {
             "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2060,19 +1423,19 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "router.post('/gain/dev'": {
+                  "mapKey": {
                     "type": "string"
                   },
-                  "async (req": {
+                  "x": {
                     "type": "string"
                   },
-                  "res) => {\n    try {\n      const { heroId": {
-                    "type": "number"
-                  },
-                  "heroClass": {
+                  "y": {
                     "type": "string"
                   },
-                  "skillType": {
+                  "seq": {
+                    "type": "string"
+                  },
+                  "clientTs": {
                     "type": "string"
                   }
                 }
@@ -2082,11 +1445,11 @@
         },
         "parameters": [
           {
-            "name": "heroId",
+            "name": "map",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "number"
+              "type": "string"
             }
           }
         ]
@@ -2408,6 +1771,30 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "string"
+                    },
+                    "y": {
+                      "type": "string"
+                    },
+                    "seq": {
+                      "type": "number"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Error 202 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
                   "type": "object"
                 }
               }
@@ -2432,6 +1819,26 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Error 429 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -2441,7 +1848,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "const { mapKey": {
+                  "mapKey": {
                     "type": "string"
                   },
                   "x": {
@@ -2450,19 +1857,10 @@
                   "y": {
                     "type": "string"
                   },
-                  "const { seq": {
+                  "seq": {
                     "type": "string"
                   },
-                  "type": {
-                    "type": "string"
-                  },
-                  "tx": {
-                    "type": "string"
-                  },
-                  "ty": {
-                    "type": "string"
-                  },
-                  "mapKey": {
+                  "clientTs": {
                     "type": "string"
                   }
                 }
@@ -2498,6 +1896,16 @@
               }
             }
           },
+          "202": {
+            "description": "Error 202 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
           "400": {
             "description": "Error 400 (inferred)",
             "content": {
@@ -2517,6 +1925,26 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Error 429 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -2526,7 +1954,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "const { mapKey": {
+                  "mapKey": {
                     "type": "string"
                   },
                   "x": {
@@ -2535,19 +1963,10 @@
                   "y": {
                     "type": "string"
                   },
-                  "const { seq": {
+                  "seq": {
                     "type": "string"
                   },
-                  "type": {
-                    "type": "string"
-                  },
-                  "tx": {
-                    "type": "string"
-                  },
-                  "ty": {
-                    "type": "string"
-                  },
-                  "mapKey": {
+                  "clientTs": {
                     "type": "string"
                   }
                 }

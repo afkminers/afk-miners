@@ -2,55 +2,37 @@
 const { all } = require('../models/db');
 
 /**
- * Retorna duas coisas:
- * - msgs: array de mensagens {type:'monster_respawned', id, mapKey, monsterKey, hp, maxHp, x, y}
- * - seeds: array de seeds p/ IA { id, x, y, mapKey, spawnRect:{x,y,w,h} }
+ * Retorna uma lista de mensagens prontas para enviar via WS,
+ * descrevendo todos os monstros VIVOS atualmente.
  */
 async function listAliveMonsters() {
   const rows = await all(`
     SELECT
-      mi.id::text            AS id,
-      mi.map_key             AS "mapKey",
+      mi.id,
       mi.hp,
-      COALESCE(mi.max_hp, mm."healthMax", 1) AS "maxHp",
-      s."monsterKey"         AS "monsterKey",
-      -- usamos a área de spawn como posição inicial
-      s.x, s.y, s.w, s.h
+      mi.max_hp,
+      mi.map_key,
+      mi.spawn_id,
+      s."monsterKey",
+      s.x, s.y
     FROM monster_instances mi
-    JOIN spawns s          ON s.id = mi.spawn_id
-    LEFT JOIN monsters_master mm ON mm.key = s."monsterKey"
+    JOIN spawns s
+      ON s.id = mi.spawn_id
     WHERE mi.state = 'ALIVE'
-    ORDER BY mi.id
+    ORDER BY mi.created_at ASC
+    LIMIT 500
   `);
 
-  const msgs = [];
-  const seeds = [];
-
-  for (const r of rows) {
-    const hp   = Number(r.hp || 1);
-    const maxH = Number(r.maxHp || hp || 1);
-    const x = Number(r.x || 0), y = Number(r.y || 0);
-    const w = Number(r.w || 32), h = Number(r.h || 32);
-
-    msgs.push({
-      type: 'monster_respawned',
-      id: r.id,
-      mapKey: r.mapKey,
-      monsterKey: r.monsterKey,
-      hp,
-      maxHp: maxH,
-      x, y
-    });
-
-    seeds.push({
-      id: r.id,
-      x, y,
-      mapKey: r.mapKey,
-      spawnRect: { x, y, w, h }
-    });
-  }
-
-  return { msgs, seeds };
+  return rows.map(r => ({
+    type: 'monster_respawned',   // mesmo shape que o worker usa
+    id: r.id,
+    mapKey: r.map_key,
+    monsterKey: r.monsterKey,
+    hp: typeof r.hp === 'number' ? r.hp : (r.max_hp ?? 1),
+    maxHp: typeof r.max_hp === 'number' ? r.max_hp : (r.hp ?? 1),
+    x: r.x ?? null,
+    y: r.y ?? null
+  }));
 }
 
 module.exports = { listAliveMonsters };

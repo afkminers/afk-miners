@@ -10,28 +10,25 @@ const { all, get, run } = require('./models/db'); // PG helpers
 const { migrate } = require('./models/migrate');
 const { cookieParser, requireAuth, requireCsrf, csrfRoute } = require('./auth/middleware');
 
-const authRoutes   = require('./auth/routes');
-const playerRoutes = require('./routes/player'); // <- o NOVO
-const gachaRoutes  = require('./gacha/routes');
-const catalogRoutes= require('./routes/catalog');
+const authRoutes = require('./auth/routes');
+const playerRoutes = require('./player/routes'); // mantém seu caminho atual
+const gachaRoutes = require('./gacha/routes');
+const catalogRoutes = require('./routes/catalog');
 const skillsRoutes = require('./skills/routes');
-const mobAI        = require('./combat/ai-mobs');
 
 // AFK & Farm
-const afkRoutes  = require('./routes/afk');
+const afkRoutes = require('./routes/afk');
 const farmRoutes = require('./routes/farm');
 
 const K = require('./balance/config');
 const buildStarterRouter = require('./starter/routes');
-
-// Respawn worker
+// server/index.js  (ADICIONE JUNTO DOS OUTROS REQUIRES DO SERVER)
 const { startRespawnLoop, stopRespawnLoop } = require('./respawn/worker');
 
-// WS bus
+//ws bus
 const { attach: attachWsBus } = require('./ws/bus');
+const { listAliveMonsters } = require('./ws/initial_monsters');
 
-// Seeder (semeia monster_instances quando vazio)
-const { seedIfEmpty } = require('./combat/seed');
 
 // ======== Pipeline de Conteúdo ========
 const { loadAll, loadMap } = require('./content/loader');
@@ -58,6 +55,7 @@ app.use(requireCsrf);
 /* ========= Bootstrap: tabelas do pipeline (Postgres) ========= */
 async function bootstrapContentTables() {
   try {
+    // content_files
     await run(`
       CREATE TABLE IF NOT EXISTS content_files (
         path TEXT PRIMARY KEY,
@@ -66,6 +64,7 @@ async function bootstrapContentTables() {
       )
     `);
 
+    // monsters_master
     await run(`
       CREATE TABLE IF NOT EXISTS monsters_master (
         id BIGSERIAL PRIMARY KEY,
@@ -84,6 +83,7 @@ async function bootstrapContentTables() {
       )
     `);
 
+    // items_master
     await run(`
       CREATE TABLE IF NOT EXISTS items_master (
         id BIGSERIAL PRIMARY KEY,
@@ -93,6 +93,7 @@ async function bootstrapContentTables() {
       )
     `);
 
+    // sprites_master
     await run(`
       CREATE TABLE IF NOT EXISTS sprites_master (
         id BIGSERIAL PRIMARY KEY,
@@ -103,6 +104,7 @@ async function bootstrapContentTables() {
       )
     `);
 
+    // maps
     await run(`
       CREATE TABLE IF NOT EXISTS maps (
         key TEXT PRIMARY KEY,
@@ -111,6 +113,7 @@ async function bootstrapContentTables() {
       )
     `);
 
+    // map_objects
     await run(`
       CREATE TABLE IF NOT EXISTS map_objects (
         id BIGSERIAL PRIMARY KEY,
@@ -121,6 +124,7 @@ async function bootstrapContentTables() {
       )
     `);
 
+    // spawns
     await run(`
       CREATE TABLE IF NOT EXISTS spawns (
         id BIGSERIAL PRIMARY KEY,
@@ -132,6 +136,7 @@ async function bootstrapContentTables() {
       )
     `);
 
+    // chat_messages — nomes MINÚSCULOS
     await run(`
       CREATE TABLE IF NOT EXISTS chat_messages (
         id BIGSERIAL PRIMARY KEY,
@@ -146,6 +151,7 @@ async function bootstrapContentTables() {
     try { await run(`ALTER TABLE chat_messages RENAME COLUMN "fromName" TO fromname`); } catch(_) {}
     await run(`CREATE INDEX IF NOT EXISTS chat_scope_id_idx ON chat_messages (scope, id DESC)`);
 
+    // posição do player por mapa
     await run(`
       CREATE TABLE IF NOT EXISTS player_last_pos (
         player_id BIGINT NOT NULL,
@@ -157,18 +163,6 @@ async function bootstrapContentTables() {
         PRIMARY KEY (player_id, map_key)
       )
     `);
-
-    await run(`
-      CREATE TABLE IF NOT EXISTS player_heroes (
-        id BIGSERIAL PRIMARY KEY,
-        player_id  TEXT NOT NULL,
-        is_starter BOOLEAN DEFAULT FALSE,
-        name       TEXT,
-        hero_key   TEXT,
-        created_at TIMESTAMPTZ DEFAULT now()
-      )
-    `);
-    await run(`CREATE INDEX IF NOT EXISTS player_heroes_player_idx ON player_heroes (player_id)`);
 
     console.log('[content] tables ready (bootstrap)');
   } catch (e) {
@@ -185,15 +179,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api', catalogRoutes);
 
 // protegidas
-app.use('/api/player', requireAuth, playerRoutes); // <- já cobre heroes e pos/move
-app.use('/api/gacha',  requireAuth, gachaRoutes);
+app.use('/api/player', requireAuth, playerRoutes);
+app.use('/api/gacha', requireAuth, gachaRoutes);
 app.use('/api/skills', requireAuth, skillsRoutes);
 
 // AFK / Farm
-app.use('/api/afk',  requireAuth, afkRoutes);
+app.use('/api/afk', requireAuth, afkRoutes);
 app.use('/api/farm', requireAuth, farmRoutes);
 
-// Combat
+// Combat   <<<<<<<<<<<<<<<<<<<<<<  AQUI
 const combatRoutes = require('./combat/routes');
 app.use('/api/combat', requireAuth, combatRoutes);
 
@@ -455,7 +449,7 @@ try {
   useWebSocket = !!WebSocketLib && !!WebSocketLib.Server;
   if (!useWebSocket) console.warn('[ws] package loaded but Server not available');
 } catch (err) {
-  console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run `npm install ws` to enable.');
+  console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run \`npm install ws\` to enable.');
   WebSocketLib = null;
   useWebSocket = false;
 }
@@ -525,9 +519,6 @@ let wss = null;
       await loadAll({ all, get, run }, path.join(__dirname, '..'));
     }
 
-    // <<< Semear instâncias se estiver vazio >>>
-    await seedIfEmpty({ all, get, run });
-
     server = http.createServer(app);
 
     if (useWebSocket) {
@@ -537,15 +528,17 @@ let wss = null;
       setupRedis(wss).catch(() => {});
 
       const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
+      const { listAliveMonsters } = require('./ws/initial_monsters');
 
       wss.on('connection', (ws, req) => {
         const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
         console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
 
+        console.log('[ws] cookies header:', req.headers && req.headers.cookie);
+
         ws._connectedAt = Date.now();
         ws._player = null;
 
-        // valida sessão por cookie (se existir)
         try {
           const cookies = parseCookies(req.headers.cookie || '');
           const token = cookies[COOKIE_NAME] || null;
@@ -554,7 +547,7 @@ let wss = null;
               const payload = jwt.verify(token, JWT_SECRET);
               ws._player = {
                 id: String(payload.id || payload.playerId || ''),
-                name: String(payload.name || payload.username || payload.displayName || 'Anon'),
+                name: String(payload.name || payload.username || payload.displayName || 'Anon')
               };
               console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
             } catch (err) {
@@ -565,22 +558,12 @@ let wss = null;
           console.warn('[ws] cookie parse error', e && e.message);
         }
 
-        // >>> Snapshot inicial de monstros vivos + seed da IA <<<
+        // <<< NOVO: snapshot inicial de monstros vivos >>>
         (async () => {
           try {
-            const { listAliveMonsters } = require('./ws/initial_monsters');
-            const mobAI = require('./combat/ai-mobs');
-
-            const { msgs, seeds } = await listAliveMonsters();
-
-            // manda o snapshot para ESTE cliente
+            const msgs = await listAliveMonsters();
             for (const m of msgs) {
               try { ws.send(JSON.stringify(m)); } catch {}
-            }
-
-            // semeia a IA com as áreas/posições dos vivos
-            try { seeds.forEach(s => mobAI.seedPosition(s)); } catch (e) {
-              console.warn('[ws] seed IA failed:', e?.message);
             }
           } catch (e) {
             console.warn('[ws] init monsters failed:', e?.message);
@@ -589,22 +572,17 @@ let wss = null;
 
         ws.on('message', async (msg) => {
           let data;
-          try {
-            data = JSON.parse(msg.toString());
-          } catch {
-            console.warn('[ws] malformed json from', addr);
-            return;
-          }
+          try { data = JSON.parse(msg.toString()); } catch { console.warn('[ws] malformed json from', addr); return; }
 
           if (data.type === 'auth') {
             ws._player = { id: String(data.id || ''), name: String(data.name || 'Anonymous') };
-            try { ws.send(JSON.stringify({ type: 'auth_ok', id: ws._player.id })); } catch {}
+            try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
             return;
           }
 
           if (data.type === 'chat') {
             if (!ws._player) {
-              try { ws.send(JSON.stringify({ type: 'error', message: 'not-authenticated' })); } catch {}
+              try { ws.send(JSON.stringify({ type:'error', message:'not-authenticated' })); } catch {}
               return;
             }
             const scope = String(data.scope || 'global').toLowerCase();
@@ -618,9 +596,7 @@ let wss = null;
                   ['global', ws._player.id, ws._player.name, raw]
                 );
               }
-            } catch (e) {
-              console.warn('[chat] persist error', e && e.message);
-            }
+            } catch (e) { console.warn('[chat] persist error', e && e.message); }
 
             const out = {
               type: 'chat',
@@ -629,7 +605,7 @@ let wss = null;
               fromName: ws._player.name,
               text: raw,
               ts: Date.now(),
-              origin: instanceId,
+              origin: instanceId
             };
 
             const outStr = JSON.stringify(out);
@@ -646,13 +622,7 @@ let wss = null;
           }
 
           if (data.type === 'pos') {
-            const out = {
-              type: 'pos',
-              id: String(data.id || ''),
-              x: Number(data.x || 0),
-              y: Number(data.y || 0),
-              name: String(data.name || ''),
-            };
+            const out = { type:'pos', id:String(data.id||''), x:Number(data.x||0), y:Number(data.y||0), name:String(data.name||'') };
             wss.clients.forEach(c => {
               if (c !== ws && c.readyState === WebSocketLib.OPEN) {
                 try { c.send(JSON.stringify(out)); } catch {}
@@ -675,20 +645,20 @@ let wss = null;
       console.log(`server listening on ${PORT} ${useWebSocket ? '(ws enabled)' : '(ws disabled)'}`);
       console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
 
-      // >>> INÍCIO DOS LOOPS <<<
-      startRespawnLoop({ all, run }); // revive mortos quando respawn_at <= now()
-      mobAI.start();                  // IA simples de movimento/agro
+      // >>> INÍCIO DO LOOP DE RESPAWN <<<
+      startRespawnLoop({ all, run });
     });
 
-    // Encerramento limpo
-    process.on('SIGINT',  () => { try { stopRespawnLoop(); mobAI.stop(); } finally { process.exit(0); } });
-    process.on('SIGTERM', () => { try { stopRespawnLoop(); mobAI.stop(); } finally { process.exit(0); } });
+    // Encerramento limpo do loop de respawn (Ctrl+C / kill)
+    process.on('SIGINT',  () => { try { stopRespawnLoop(); } finally { process.exit(0); } });
+    process.on('SIGTERM', () => { try { stopRespawnLoop(); } finally { process.exit(0); } });
 
   } catch (err) {
     console.error('Fatal start error:', err);
     process.exit(1);
   }
 })();
+
 
 /* ========= Chat HTTP API ========= */
 
@@ -715,7 +685,7 @@ app.get('/api/chat/global', requireAuth, async (req, res) => {
   }
 });
 
-// Enviar mensagem (HTTP)
+// Enviar mensagem (HTTP, opcional — WS já envia em tempo real)
 app.post('/api/chat/global', requireAuth, async (req, res) => {
   try {
     const text = (req.body?.text || '').trim();

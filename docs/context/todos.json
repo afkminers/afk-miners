@@ -1,7 +1,7 @@
 [
   {
     "file": "client\\js\\app.js",
-    "line": 288,
+    "line": 282,
     "tag": "NOTE",
     "text": "endpoint retorna { profile: {...} })"
   },

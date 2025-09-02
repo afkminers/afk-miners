@@ -106,9 +106,5 @@
   {
     "from": "client\\js\\app.js",
     "to": "./app_panels.js"
-  },
-  {
-    "from": "client\\js\\combat\\attack-controls.js",
-    "to": "./ws-combat.js"
   }
 ]

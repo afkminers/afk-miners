@@ -22,23 +22,11 @@
     ]
   },
   {
-    "key": "COMBAT_DEBUG",
-    "occurrences": [
-      {
-        "file": "server\\combat\\autoloop.js",
-        "index": 180
-      }
-    ],
-    "defaults": [
-      ""
-    ]
-  },
-  {
     "key": "CONTENT_PIPELINE",
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1272
+        "index": 1181
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -82,7 +70,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15194
+        "index": 14920
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -285,7 +273,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15101
+        "index": 14827
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -321,7 +309,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1400
+        "index": 1309
       },
       {
         "file": "server\\skills\\routes.js",
@@ -389,7 +377,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1459
+        "index": 1368
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -411,7 +399,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15051
+        "index": 14777
       },
       {
         "file": "docs\\backups\\2025-08-24_193249-post-main-ec40d70\\server\\index.js",
@@ -452,7 +440,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15159
+        "index": 14885
       },
       {
         "file": "server\\auth\\middleware.js",
