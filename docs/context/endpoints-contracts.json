@@ -129,7 +129,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 399,
+    "line": 402,
     "sample": {
       "params": {
         "key": "value"
@@ -163,7 +163,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 374,
+    "line": 377,
     "sample": {
       "params": {
         "key": "value"
@@ -205,7 +205,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 386,
+    "line": 389,
     "sample": {
       "params": {
         "key": "value"
@@ -243,7 +243,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 363,
+    "line": 366,
     "sample": {
       "query": {
         "map": "value"
@@ -286,7 +286,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 333,
+    "line": 336,
     "sample": {
       "query": {
         "map": "value"
@@ -341,7 +341,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 409,
+    "line": 412,
     "sample": {
       "query": {
         "map": "value"
@@ -364,7 +364,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 344,
+    "line": 347,
     "sample": {
       "query": {
         "map": "value"
@@ -415,7 +415,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 353,
+    "line": 356,
     "sample": {
       "query": {
         "map": "value"
@@ -462,7 +462,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 661,
+    "line": 664,
     "sample": {
       "query": {
         "limit": 1
@@ -493,7 +493,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 684,
+    "line": 687,
     "sample": {},
     "errors": [
       {
@@ -514,22 +514,44 @@
   },
   {
     "method": "GET",
-    "path": "/api/csrf",
-    "file": "server\\index.js",
-    "line": 48,
+    "path": "/api/combat/nearest",
+    "file": "server\\routes\\combat_nearest.js",
+    "line": 12,
     "sample": {
-      "body": {
-        "try {\n    const { heroId": 1,
-        "weaponOrSkill": "value",
-        "heroClass": "value"
+      "query": {
+        "map": "value",
+        "x": "value",
+        "y": "value"
       }
     },
     "errors": [
       {
         "status": 400,
-        "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
+        "body": "{error:'bad_request' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'no_monsters' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'server_error' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{id:row.id,x:row.x,y:row.y }"
       }
     ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/csrf",
+    "file": "server\\index.js",
+    "line": 48,
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
@@ -940,7 +962,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 429,
+    "line": 432,
     "sample": {},
     "errors": []
   },

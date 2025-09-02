@@ -271,12 +271,21 @@
       "body": "{error:err.message }"
     }
   ],
-  "GET /api/csrf": [
+  "GET /api/combat/nearest": [
     {
       "status": 400,
-      "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
+      "body": "{error:'bad_request' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'no_monsters' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'server_error' }"
     }
   ],
+  "GET /api/csrf": [],
   "GET /assets/items": [
     {
       "status": 500,

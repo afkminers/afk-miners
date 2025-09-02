@@ -611,11 +611,18 @@
         }
       }
     },
-    "/api/csrf": {
+    "/api/combat/nearest": {
       "get": {
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           },
           "400": {
             "description": "Error 400 (inferred)",
@@ -626,27 +633,61 @@
                 }
               }
             }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "try {\n    const { heroId": {
-                    "type": "number"
-                  },
-                  "weaponOrSkill": {
-                    "type": "string"
-                  },
-                  "heroClass": {
-                    "type": "string"
-                  }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "map",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "y",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/csrf": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }

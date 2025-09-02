@@ -82,11 +82,13 @@
       "getCsrf",
       "getFreshCsrf",
       "getMouseWorldFromEvent",
+      "jget",
       "pickCamera",
       "pickCanvas",
       "pickTargetAt",
       "postJSON",
       "readCookie",
+      "resolveServerTarget",
       "screenToWorld",
       "seedCsrfCookie",
       "startAttack",
@@ -1370,6 +1372,12 @@
       "respawnTick",
       "startRespawnLoop",
       "stopRespawnLoop"
+    ]
+  },
+  {
+    "file": "server\\routes\\combat_nearest.js",
+    "symbols": [
+      "requireAuth"
     ]
   },
   {

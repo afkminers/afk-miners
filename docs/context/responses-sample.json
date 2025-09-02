@@ -42,6 +42,9 @@
   "POST /api/chat/global": [
     "{ok:true }"
   ],
+  "GET /api/combat/nearest": [
+    "{id:row.id,x:row.x,y:row.y }"
+  ],
   "GET /api/csrf": [],
   "GET /assets/items": [],
   "GET /assets/sprites": [],

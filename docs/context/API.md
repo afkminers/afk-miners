@@ -29,7 +29,7 @@
 
 ### GET /
 
-Arquivo: `server\index.js:429`
+Arquivo: `server\index.js:432`
 
 _Sem payload inferido_
 
@@ -91,7 +91,7 @@ Arquivo: `server\combat\routes.js:19`
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:399`
+Arquivo: `server\index.js:402`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -119,7 +119,7 @@ Arquivo: `server\index.js:399`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:374`
+Arquivo: `server\index.js:377`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -149,7 +149,7 @@ Arquivo: `server\index.js:374`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:386`
+Arquivo: `server\index.js:389`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -178,7 +178,7 @@ Arquivo: `server\index.js:386`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:363`
+Arquivo: `server\index.js:366`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -203,7 +203,7 @@ Arquivo: `server\index.js:363`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:333`
+Arquivo: `server\index.js:336`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -231,7 +231,7 @@ Arquivo: `server\index.js:333`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:344`
+Arquivo: `server\index.js:347`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -258,7 +258,7 @@ Arquivo: `server\index.js:344`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:353`
+Arquivo: `server\index.js:356`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -284,7 +284,7 @@ Arquivo: `server\index.js:353`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:661`
+Arquivo: `server\index.js:664`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -306,22 +306,35 @@ Arquivo: `server\index.js:661`
 - `HTTP 400` → {error:'Mensagem vazia' }
 - `HTTP 500` → {error:err.message }
 
+### GET /api/combat/nearest
+
+Arquivo: `server\routes\combat_nearest.js:12`
+
+**Payloads (exemplos inferidos):**
+- query:
+```json
+{
+  "map": "value",
+  "x": "value",
+  "y": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{id:row.id,x:row.x,y:row.y }
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {error:'bad_request' }
+- `HTTP 404` → {error:'no_monsters' }
+- `HTTP 500` → {error:'server_error' }
+
 ### GET /api/csrf
 
 Arquivo: `server\index.js:48`
 
-**Payloads (exemplos inferidos):**
-- body:
-```json
-{
-  "try {\n    const { heroId": 1,
-  "weaponOrSkill": "value",
-  "heroClass": "value"
-}
-```
-
-**Erros conhecidos:**
-- `HTTP 400` → {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
+_Sem payload inferido_
 
 ### GET /assets/items
 
@@ -628,7 +641,7 @@ Arquivo: `server\gacha\routes.js:144`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:409`
+Arquivo: `server\index.js:412`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -648,7 +661,7 @@ Arquivo: `server\index.js:409`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:684`
+Arquivo: `server\index.js:687`
 
 _Sem payload inferido_
 
@@ -1171,8 +1184,11 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 500: {error:err.message }
   - HTTP 400: {error:'Mensagem vazia' }
   - HTTP 500: {error:err.message }
+- **GET /api/combat/nearest**
+  - HTTP 400: {error:'bad_request' }
+  - HTTP 404: {error:'no_monsters' }
+  - HTTP 500: {error:'server_error' }
 - **GET /api/csrf**
-  - HTTP 400: {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
 - **GET /assets/items**
   - HTTP 500: {error:"Falha ao listar items" }
 - **GET /assets/sprites**

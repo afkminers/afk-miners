@@ -151,7 +151,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 191,
+    "line": 194,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -160,7 +160,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 420,
+    "line": 423,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -169,7 +169,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 467,
+    "line": 470,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -178,7 +178,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 479,
+    "line": 482,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -745,6 +745,17 @@
     "name": "computeStage",
     "params": [
       "plot"
+    ]
+  },
+  {
+    "file": "server\\routes\\combat_nearest.js",
+    "line": 6,
+    "kind": "function",
+    "name": "requireAuth",
+    "params": [
+      "req",
+      "res",
+      "next"
     ]
   },
   {
@@ -9352,21 +9363,30 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 71,
+    "line": 72,
+    "kind": "function",
+    "name": "jget",
+    "params": [
+      "url"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 79,
     "kind": "function",
     "name": "pickCanvas",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 77,
+    "line": 85,
     "kind": "function",
     "name": "pickCamera",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 80,
+    "line": 88,
     "kind": "function",
     "name": "screenToWorld",
     "params": [
@@ -9377,7 +9397,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 88,
+    "line": 96,
     "kind": "function",
     "name": "getMouseWorldFromEvent",
     "params": [
@@ -9387,7 +9407,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 105,
+    "line": 113,
     "kind": "function",
     "name": "findWsMonsterNear",
     "params": [
@@ -9397,7 +9417,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 121,
+    "line": 129,
     "kind": "function",
     "name": "findClosestLocalMonster",
     "params": [
@@ -9407,7 +9427,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 135,
+    "line": 143,
     "kind": "function",
     "name": "pickTargetAt",
     "params": [
@@ -9417,21 +9437,31 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 142,
+    "line": 152,
+    "kind": "function",
+    "name": "resolveServerTarget",
+    "params": [
+      "px",
+      "py"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 168,
     "kind": "function",
     "name": "doHit",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 159,
+    "line": 185,
     "kind": "function",
     "name": "startLoop",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 165,
+    "line": 191,
     "kind": "function",
     "name": "startAttack",
     "params": [
@@ -9440,21 +9470,21 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 172,
+    "line": 198,
     "kind": "function",
     "name": "stopAttack",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 180,
+    "line": 206,
     "kind": "function",
     "name": "attachControls",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 193,
+    "line": 219,
     "kind": "arrow",
     "name": "onPointerDown",
     "params": [
