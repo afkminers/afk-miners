@@ -43,36 +43,68 @@ const $ = (s) => document.querySelector(s);
 // camera hoisted (evita TDZ)
 let camera;
 
-/* =========================== CSRF / HTTP ============================ */
+/* =========================== CSRF / HTTP (robusto) ============================ */
 let CSRF_TOKEN = null;
+
+function readCookie(name) {
+  const hit = document.cookie.split('; ').find(v => v.startsWith(name + '='));
+  return hit ? decodeURIComponent(hit.split('=')[1]) : null;
+}
+
 async function fetchCsrf() {
   if (CSRF_TOKEN) return CSRF_TOKEN;
-  const r = await fetch('/api/csrf', { credentials: 'include' });
-  const headerTok = r.headers.get('x-csrf-token') || r.headers.get('X-CSRF-Token');
-  let bodyTok = null;
-  try { const j = await r.json(); bodyTok = j.token || j.csrf || j.csrfToken || j.csrf_token || null; } catch {}
-  CSRF_TOKEN = headerTok || bodyTok;
+  try {
+    const r = await fetch('/api/csrf', { credentials: 'include', cache: 'no-store' });
+    const hdr = r.headers.get('x-csrf-token') || r.headers.get('X-CSRF-Token');
+    let bodyTok = null;
+    try {
+      // usa clone() para não consumir o body se não for JSON
+      const j = await r.clone().json();
+      bodyTok = j.token || j.csrf || j.csrfToken || j.csrf_token || null;
+    } catch {}
+    CSRF_TOKEN = hdr || bodyTok || readCookie('csrf') || null;
+  } catch {
+    // sem /api/csrf? tenta direto do cookie
+    CSRF_TOKEN = readCookie('csrf') || null;
+  }
   return CSRF_TOKEN;
 }
 
+function csrfHeaders(tok) {
+  // manda em várias chaves para cobrir implementações diferentes
+  return {
+    'X-CSRF-Token': tok,
+    'x-csrf-token': tok,
+    'x-csrf': tok,
+    'X-XSRF-Token': tok,
+  };
+}
+
 async function jget(url) {
-  const r = await fetch(url, { credentials: "include" });
+  const r = await fetch(url, { credentials: 'include' });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
   return r.json();
 }
+
 async function jpost(url, body) {
-  const tok = await fetchCsrf().catch(()=>null);
+  const tok = await fetchCsrf();
   if (!tok) throw new Error('csrf-missing');
-  const r = await fetch(url, {
+
+  // opcional: acrescenta ?csrf=... como fallback (não atrapalha se o servidor ignorar)
+  const u = new URL(url, location.origin);
+  if (!u.searchParams.has('csrf')) u.searchParams.set('csrf', tok);
+
+  const r = await fetch(u.toString(), {
     method: 'POST',
     credentials: 'include',
     referrerPolicy: 'strict-origin-when-cross-origin',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRF-Token': tok,
+      ...csrfHeaders(tok),
     },
     body: JSON.stringify(body || {})
   });
+
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
   return r.json();
 }

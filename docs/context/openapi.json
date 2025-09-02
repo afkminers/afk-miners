@@ -5,6 +5,140 @@
     "version": "0.0.1"
   },
   "paths": {
+    "/_ping": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": {
+                    "type": "number"
+                  },
+                  "try {\n    const { targetInstanceId": {
+                    "type": "number"
+                  },
+                  "damage": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/_routes": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": {
+                    "type": "number"
+                  },
+                  "try {\n    const { targetInstanceId": {
+                    "type": "number"
+                  },
+                  "damage": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/content/map/:key/data": {
       "get": {
         "responses": {
@@ -482,6 +616,16 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -632,18 +776,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  }
+                  "type": "object"
                 }
               }
             }
           },
           "400": {
             "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -670,19 +819,13 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "heroId": {
+                  "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": {
                     "type": "number"
                   },
-                  "attackerHeroId": {
+                  "try {\n    const { targetInstanceId": {
                     "type": "number"
                   },
-                  "targetInstanceId": {
-                    "type": "number"
-                  },
-                  "targetId": {
-                    "type": "number"
-                  },
-                  "weaponType": {
+                  "damage": {
                     "type": "string"
                   }
                 }
@@ -720,6 +863,16 @@
               }
             }
           },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Error 500 (inferred)",
             "content": {
@@ -738,11 +891,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "heroId": {
+                  "try {\n    const { targetInstanceId": {
                     "type": "number"
                   },
-                  "attackerHeroId": {
-                    "type": "number"
+                  "damage": {
+                    "type": "string"
                   }
                 }
               }
@@ -1284,18 +1437,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  }
+                  "type": "object"
                 }
               }
             }
           },
           "400": {
             "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1322,23 +1480,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "heroId": {
+                  "try {\n    const { targetInstanceId": {
                     "type": "number"
                   },
-                  "attackerHeroId": {
-                    "type": "number"
-                  },
-                  "targetInstanceId": {
-                    "type": "number"
-                  },
-                  "targetId": {
-                    "type": "number"
-                  },
-                  "weaponType": {
+                  "damage": {
                     "type": "string"
-                  },
-                  "try {\n    const { attackerHeroId": {
-                    "type": "number"
                   }
                 }
               }

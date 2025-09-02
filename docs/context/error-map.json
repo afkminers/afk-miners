@@ -1,4 +1,64 @@
 {
+  "GET /_ping": [
+    {
+      "status": 400,
+      "body": "{ok:false,error:'targetInstanceId required' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'target not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'internal' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'internal' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'targetInstanceId required' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'target not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'internal' }"
+    }
+  ],
+  "GET /_routes": [
+    {
+      "status": 400,
+      "body": "{ok:false,error:'targetInstanceId required' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'target not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'internal' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'internal' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'targetInstanceId required' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'target not found' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'internal' }"
+    }
+  ],
   "GET /api/admin/content/map/:key/data": [
     {
       "status": 404,
@@ -211,7 +271,12 @@
       "body": "{error:err.message }"
     }
   ],
-  "GET /api/csrf": [],
+  "GET /api/csrf": [
+    {
+      "status": 400,
+      "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
+    }
+  ],
   "GET /assets/items": [
     {
       "status": 500,
@@ -253,29 +318,49 @@
   "POST /attack/start": [
     {
       "status": 400,
-      "body": "{ok:false,message:'heroId e targetInstanceId são obrigatórios' }"
+      "body": "{ok:false,error:'targetInstanceId required' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'target not found' }"
     },
     {
       "status": 500,
-      "body": "{ok:false,message:e.message }"
+      "body": "{ok:false,error:'internal' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'internal' }"
     },
     {
       "status": 400,
-      "body": "{ok:false,message:'heroId é obrigatório' }"
+      "body": "{ok:false,error:'targetInstanceId required' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'target not found' }"
     },
     {
       "status": 500,
-      "body": "{ok:false,message:e.message }"
+      "body": "{ok:false,error:'internal' }"
     }
   ],
   "POST /attack/stop": [
     {
+      "status": 500,
+      "body": "{ok:false,error:'internal' }"
+    },
+    {
       "status": 400,
-      "body": "{ok:false,message:'heroId é obrigatório' }"
+      "body": "{ok:false,error:'targetInstanceId required' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'target not found' }"
     },
     {
       "status": 500,
-      "body": "{ok:false,message:e.message }"
+      "body": "{ok:false,error:'internal' }"
     }
   ],
   "GET /class-rates": [
@@ -438,27 +523,15 @@
   "POST /hit": [
     {
       "status": 400,
-      "body": "{ok:false,message:'attackerHeroId e targetInstanceId são obrigatórios' }"
+      "body": "{ok:false,error:'targetInstanceId required' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'target not found' }"
     },
     {
       "status": 500,
-      "body": "{ok:false,message:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,message:'heroId e targetInstanceId são obrigatórios' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,message:e.message }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,message:'heroId é obrigatório' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,message:e.message }"
+      "body": "{ok:false,error:'internal' }"
     }
   ],
   "GET /list": [

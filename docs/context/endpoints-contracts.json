@@ -1,9 +1,135 @@
 [
   {
     "method": "GET",
+    "path": "/_ping",
+    "file": "server\\combat\\routes.js",
+    "line": 18,
+    "sample": {
+      "body": {
+        "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": 1,
+        "try {\n    const { targetInstanceId": 1,
+        "damage": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,error:'targetInstanceId required' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'target not found' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'internal' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'internal' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'targetInstanceId required' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'target not found' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'internal' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,ts:Date.now() }"
+      },
+      {
+        "status": 200,
+        "body": "{routes:list }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,target:{id:String(targetInstanceId) } }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/_routes",
+    "file": "server\\combat\\routes.js",
+    "line": 19,
+    "sample": {
+      "body": {
+        "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": 1,
+        "try {\n    const { targetInstanceId": 1,
+        "damage": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,error:'targetInstanceId required' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'target not found' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'internal' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'internal' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'targetInstanceId required' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'target not found' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'internal' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{routes:list }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,target:{id:String(targetInstanceId) } }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 403,
+    "line": 399,
     "sample": {
       "params": {
         "key": "value"
@@ -37,7 +163,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 378,
+    "line": 374,
     "sample": {
       "params": {
         "key": "value"
@@ -79,7 +205,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 390,
+    "line": 386,
     "sample": {
       "params": {
         "key": "value"
@@ -117,7 +243,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 367,
+    "line": 363,
     "sample": {
       "query": {
         "map": "value"
@@ -160,7 +286,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 337,
+    "line": 333,
     "sample": {
       "query": {
         "map": "value"
@@ -215,7 +341,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 413,
+    "line": 409,
     "sample": {
       "query": {
         "map": "value"
@@ -238,7 +364,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 348,
+    "line": 344,
     "sample": {
       "query": {
         "map": "value"
@@ -289,7 +415,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 357,
+    "line": 353,
     "sample": {
       "query": {
         "map": "value"
@@ -336,7 +462,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 666,
+    "line": 661,
     "sample": {
       "query": {
         "limit": 1
@@ -367,7 +493,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 689,
+    "line": 684,
     "sample": {},
     "errors": [
       {
@@ -390,7 +516,7 @@
     "method": "GET",
     "path": "/api/csrf",
     "file": "server\\index.js",
-    "line": 50,
+    "line": 48,
     "sample": {
       "body": {
         "try {\n    const { heroId": 1,
@@ -398,7 +524,12 @@
         "heroClass": "value"
       }
     },
-    "errors": []
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
+      }
+    ]
   },
   {
     "method": "GET",
@@ -478,42 +609,56 @@
     "method": "POST",
     "path": "/attack/start",
     "file": "server\\combat\\routes.js",
-    "line": 43,
+    "line": 124,
     "sample": {
       "body": {
-        "heroId": 1,
-        "attackerHeroId": 1,
-        "targetInstanceId": 1,
-        "targetId": 1,
-        "weaponType": "value"
+        "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": 1,
+        "try {\n    const { targetInstanceId": 1,
+        "damage": "value"
       }
     },
     "errors": [
       {
         "status": 400,
-        "body": "{ok:false,message:'heroId e targetInstanceId são obrigatórios' }"
+        "body": "{ok:false,error:'targetInstanceId required' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'target not found' }"
       },
       {
         "status": 500,
-        "body": "{ok:false,message:e.message }"
+        "body": "{ok:false,error:'internal' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'internal' }"
       },
       {
         "status": 400,
-        "body": "{ok:false,message:'heroId é obrigatório' }"
+        "body": "{ok:false,error:'targetInstanceId required' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'target not found' }"
       },
       {
         "status": 500,
-        "body": "{ok:false,message:e.message }"
+        "body": "{ok:false,error:'internal' }"
       }
     ],
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true }"
+        "body": "{ok:true,target:{id:String(targetInstanceId) } }"
       },
       {
         "status": 200,
         "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
       }
     ]
   },
@@ -521,27 +666,39 @@
     "method": "POST",
     "path": "/attack/stop",
     "file": "server\\combat\\routes.js",
-    "line": 70,
+    "line": 142,
     "sample": {
       "body": {
-        "heroId": 1,
-        "attackerHeroId": 1
+        "try {\n    const { targetInstanceId": 1,
+        "damage": "value"
       }
     },
     "errors": [
       {
+        "status": 500,
+        "body": "{ok:false,error:'internal' }"
+      },
+      {
         "status": 400,
-        "body": "{ok:false,message:'heroId é obrigatório' }"
+        "body": "{ok:false,error:'targetInstanceId required' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'target not found' }"
       },
       {
         "status": 500,
-        "body": "{ok:false,message:e.message }"
+        "body": "{ok:false,error:'internal' }"
       }
     ],
     "ok": [
       {
         "status": 200,
         "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
       }
     ]
   },
@@ -783,7 +940,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 430,
+    "line": 429,
     "sample": {},
     "errors": []
   },
@@ -861,51 +1018,31 @@
     "method": "POST",
     "path": "/hit",
     "file": "server\\combat\\routes.js",
-    "line": 16,
+    "line": 154,
     "sample": {
       "body": {
-        "heroId": 1,
-        "attackerHeroId": 1,
-        "targetInstanceId": 1,
-        "targetId": 1,
-        "weaponType": "value",
-        "try {\n    const { attackerHeroId": 1
+        "try {\n    const { targetInstanceId": 1,
+        "damage": "value"
       }
     },
     "errors": [
       {
         "status": 400,
-        "body": "{ok:false,message:'attackerHeroId e targetInstanceId são obrigatórios' }"
+        "body": "{ok:false,error:'targetInstanceId required' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'target not found' }"
       },
       {
         "status": 500,
-        "body": "{ok:false,message:e.message }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,message:'heroId e targetInstanceId são obrigatórios' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,message:e.message }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,message:'heroId é obrigatório' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,message:e.message }"
+        "body": "{ok:false,error:'internal' }"
       }
     ],
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
+        "body": "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
       }
     ]
   },

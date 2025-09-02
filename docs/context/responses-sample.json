@@ -1,4 +1,17 @@
 {
+  "GET /_ping": [
+    "{ok:true,ts:Date.now() }",
+    "{routes:list }",
+    "{ok:true,target:{id:String(targetInstanceId) } }",
+    "{ok:true }",
+    "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+  ],
+  "GET /_routes": [
+    "{routes:list }",
+    "{ok:true,target:{id:String(targetInstanceId) } }",
+    "{ok:true }",
+    "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
+  ],
   "GET /api/admin/content/map/:key/data": [
     "{ok:true,reloaded:mapKey }"
   ],
@@ -37,11 +50,13 @@
     "{ok:true,added:total }"
   ],
   "POST /attack/start": [
+    "{ok:true,target:{id:String(targetInstanceId) } }",
     "{ok:true }",
-    "{ok:true }"
+    "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
   ],
   "POST /attack/stop": [
-    "{ok:true }"
+    "{ok:true }",
+    "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
   ],
   "GET /class-rates": [],
   "POST /collect": [
@@ -66,8 +81,7 @@
   ],
   "GET /heroes/master": [],
   "POST /hit": [
-    "{ok:true }",
-    "{ok:true }"
+    "{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }"
   ],
   "GET /list": [
     "{canSelect:!row }",

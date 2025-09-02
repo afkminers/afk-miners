@@ -104,40 +104,13 @@
     <script src="/js/engine/click_to_move.js"></script>
     <script src="/js/play.js"></script>
 
-    <!-- Combate: controles de clique/ESC (auto-inicializa; não exporta nada) -->
+    <!-- Combate: controles de clique/ESC -->
     <script type="module" src="/js/combat/attack-controls.js"></script>
 
-    <!-- WS + overlay de combate -->
+    <!-- WS + overlay de combate (novo) -->
     <script type="module">
-      import { connectCombatWS, combatState } from '/js/combat/ws-combat.js';
-      import { drawHpBar, drawTargetBox, updateAndDrawFloaters } from '/js/combat/combat-ui.js';
-
-      // Conecta WS assim que a página carrega
-      connectCombatWS();
-
-      // Desenho do overlay por cima da cena (o play.js chama window.CombatUI.render)
-      window.CombatUI = {
-        render(ctx, camera, dt) {
-          const gs = window.GameScene;
-          if (!gs) return;
-
-          const drawAll = () => {
-            for (const m of combatState.monsters.values()) {
-              const x = Number(m.x), y = Number(m.y);
-              if (Number.isFinite(x) && Number.isFinite(y)) {
-                drawHpBar(ctx, m);
-              }
-            }
-            drawTargetBox(ctx);
-          };
-
-          if (gs.camera?.apply) gs.camera.apply(ctx, drawAll);
-          else drawAll();
-
-          // Floaters: dt chega em segundos no play.js → converter p/ ms
-          updateAndDrawFloaters(ctx, dt * 1000);
-        }
-      };
+      import installCombatOverlay from '/js/combat/render-combat.js';
+      installCombatOverlay(); // conecta o WS e registra window.CombatUI.render
     </script>
   </body>
 </html>

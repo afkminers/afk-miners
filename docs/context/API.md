@@ -29,13 +29,69 @@
 
 ### GET /
 
-Arquivo: `server\index.js:430`
+Arquivo: `server\index.js:429`
 
 _Sem payload inferido_
 
+### GET /_ping
+
+Arquivo: `server\combat\routes.js:18`
+
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": 1,
+  "try {\n    const { targetInstanceId": 1,
+  "damage": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,ts:Date.now() }
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
+- `HTTP 404` → {ok:false,error:'target not found' }
+- `HTTP 500` → {ok:false,error:'internal' }
+- `HTTP 500` → {ok:false,error:'internal' }
+- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
+- `HTTP 404` → {ok:false,error:'target not found' }
+- `HTTP 500` → {ok:false,error:'internal' }
+
+### GET /_routes
+
+Arquivo: `server\combat\routes.js:19`
+
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": 1,
+  "try {\n    const { targetInstanceId": 1,
+  "damage": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{routes:list }
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
+- `HTTP 404` → {ok:false,error:'target not found' }
+- `HTTP 500` → {ok:false,error:'internal' }
+- `HTTP 500` → {ok:false,error:'internal' }
+- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
+- `HTTP 404` → {ok:false,error:'target not found' }
+- `HTTP 500` → {ok:false,error:'internal' }
+
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:403`
+Arquivo: `server\index.js:399`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -63,7 +119,7 @@ Arquivo: `server\index.js:403`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:378`
+Arquivo: `server\index.js:374`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -93,7 +149,7 @@ Arquivo: `server\index.js:378`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:390`
+Arquivo: `server\index.js:386`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -122,7 +178,7 @@ Arquivo: `server\index.js:390`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:367`
+Arquivo: `server\index.js:363`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -147,7 +203,7 @@ Arquivo: `server\index.js:367`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:337`
+Arquivo: `server\index.js:333`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -175,7 +231,7 @@ Arquivo: `server\index.js:337`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:348`
+Arquivo: `server\index.js:344`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -202,7 +258,7 @@ Arquivo: `server\index.js:348`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:357`
+Arquivo: `server\index.js:353`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -228,7 +284,7 @@ Arquivo: `server\index.js:357`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:666`
+Arquivo: `server\index.js:661`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -252,7 +308,7 @@ Arquivo: `server\index.js:666`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:50`
+Arquivo: `server\index.js:48`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -263,6 +319,9 @@ Arquivo: `server\index.js:50`
   "heroClass": "value"
 }
 ```
+
+**Erros conhecidos:**
+- `HTTP 400` → {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
 
 ### GET /assets/items
 
@@ -569,7 +628,7 @@ Arquivo: `server\gacha\routes.js:144`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:413`
+Arquivo: `server\index.js:409`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -589,7 +648,7 @@ Arquivo: `server\index.js:413`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:689`
+Arquivo: `server\index.js:684`
 
 _Sem payload inferido_
 
@@ -633,43 +692,42 @@ Arquivo: `server\routes\afk.js:65`
 
 ### POST /attack/start
 
-Arquivo: `server\combat\routes.js:43`
+Arquivo: `server\combat\routes.js:124`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "heroId": 1,
-  "attackerHeroId": 1,
-  "targetInstanceId": 1,
-  "targetId": 1,
-  "weaponType": "value"
+  "try {\n    const playerId = req.user?.id || 'dev-player';\n    const { targetInstanceId": 1,
+  "try {\n    const { targetInstanceId": 1,
+  "damage": "value"
 }
 ```
 
 **Resposta de sucesso (amostra):**
 ```json
-{
-  "ok": true
-}
+{ok:true,target:{id:String(targetInstanceId) } }
 ```
 
 **Erros conhecidos:**
-- `HTTP 400` → {ok:false,message:'heroId e targetInstanceId são obrigatórios' }
-- `HTTP 500` → {ok:false,message:e.message }
-- `HTTP 400` → {ok:false,message:'heroId é obrigatório' }
-- `HTTP 500` → {ok:false,message:e.message }
+- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
+- `HTTP 404` → {ok:false,error:'target not found' }
+- `HTTP 500` → {ok:false,error:'internal' }
+- `HTTP 500` → {ok:false,error:'internal' }
+- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
+- `HTTP 404` → {ok:false,error:'target not found' }
+- `HTTP 500` → {ok:false,error:'internal' }
 
 ### POST /attack/stop
 
-Arquivo: `server\combat\routes.js:70`
+Arquivo: `server\combat\routes.js:142`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "heroId": 1,
-  "attackerHeroId": 1
+  "try {\n    const { targetInstanceId": 1,
+  "damage": "value"
 }
 ```
 
@@ -681,8 +739,10 @@ Arquivo: `server\combat\routes.js:70`
 ```
 
 **Erros conhecidos:**
-- `HTTP 400` → {ok:false,message:'heroId é obrigatório' }
-- `HTTP 500` → {ok:false,message:e.message }
+- `HTTP 500` → {ok:false,error:'internal' }
+- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
+- `HTTP 404` → {ok:false,error:'target not found' }
+- `HTTP 500` → {ok:false,error:'internal' }
 
 ### POST /collect
 
@@ -801,35 +861,26 @@ Arquivo: `server\routes\farm.js:181`
 
 ### POST /hit
 
-Arquivo: `server\combat\routes.js:16`
+Arquivo: `server\combat\routes.js:154`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "heroId": 1,
-  "attackerHeroId": 1,
-  "targetInstanceId": 1,
-  "targetId": 1,
-  "weaponType": "value",
-  "try {\n    const { attackerHeroId": 1
+  "try {\n    const { targetInstanceId": 1,
+  "damage": "value"
 }
 ```
 
 **Resposta de sucesso (amostra):**
 ```json
-{
-  "ok": true
-}
+{ok:true,targetId:String(targetInstanceId),damage:dmg,hpBefore,hpAfter,dead:hpAfter <= 0 }
 ```
 
 **Erros conhecidos:**
-- `HTTP 400` → {ok:false,message:'attackerHeroId e targetInstanceId são obrigatórios' }
-- `HTTP 500` → {ok:false,message:e.message }
-- `HTTP 400` → {ok:false,message:'heroId e targetInstanceId são obrigatórios' }
-- `HTTP 500` → {ok:false,message:e.message }
-- `HTTP 400` → {ok:false,message:'heroId é obrigatório' }
-- `HTTP 500` → {ok:false,message:e.message }
+- `HTTP 400` → {ok:false,error:'targetInstanceId required' }
+- `HTTP 404` → {ok:false,error:'target not found' }
+- `HTTP 500` → {ok:false,error:'internal' }
 
 ### POST /login
 
@@ -1051,6 +1102,22 @@ Arquivo: `server\starter\routes.js:92`
 ## Tabela sintética de erros por rota
 
 - **GET /**
+- **GET /_ping**
+  - HTTP 400: {ok:false,error:'targetInstanceId required' }
+  - HTTP 404: {ok:false,error:'target not found' }
+  - HTTP 500: {ok:false,error:'internal' }
+  - HTTP 500: {ok:false,error:'internal' }
+  - HTTP 400: {ok:false,error:'targetInstanceId required' }
+  - HTTP 404: {ok:false,error:'target not found' }
+  - HTTP 500: {ok:false,error:'internal' }
+- **GET /_routes**
+  - HTTP 400: {ok:false,error:'targetInstanceId required' }
+  - HTTP 404: {ok:false,error:'target not found' }
+  - HTTP 500: {ok:false,error:'internal' }
+  - HTTP 500: {ok:false,error:'internal' }
+  - HTTP 400: {ok:false,error:'targetInstanceId required' }
+  - HTTP 404: {ok:false,error:'target not found' }
+  - HTTP 500: {ok:false,error:'internal' }
 - **GET /api/admin/content/map/:key/data**
   - HTTP 404: {error:'map not found' }
   - HTTP 500: {error:err.message }
@@ -1105,6 +1172,7 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 400: {error:'Mensagem vazia' }
   - HTTP 500: {error:err.message }
 - **GET /api/csrf**
+  - HTTP 400: {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
 - **GET /assets/items**
   - HTTP 500: {error:"Falha ao listar items" }
 - **GET /assets/sprites**
@@ -1220,13 +1288,18 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 500: {error:'assign_failed' }
   - HTTP 500: {error:'collect_failed' }
 - **POST /attack/start**
-  - HTTP 400: {ok:false,message:'heroId e targetInstanceId são obrigatórios' }
-  - HTTP 500: {ok:false,message:e.message }
-  - HTTP 400: {ok:false,message:'heroId é obrigatório' }
-  - HTTP 500: {ok:false,message:e.message }
+  - HTTP 400: {ok:false,error:'targetInstanceId required' }
+  - HTTP 404: {ok:false,error:'target not found' }
+  - HTTP 500: {ok:false,error:'internal' }
+  - HTTP 500: {ok:false,error:'internal' }
+  - HTTP 400: {ok:false,error:'targetInstanceId required' }
+  - HTTP 404: {ok:false,error:'target not found' }
+  - HTTP 500: {ok:false,error:'internal' }
 - **POST /attack/stop**
-  - HTTP 400: {ok:false,message:'heroId é obrigatório' }
-  - HTTP 500: {ok:false,message:e.message }
+  - HTTP 500: {ok:false,error:'internal' }
+  - HTTP 400: {ok:false,error:'targetInstanceId required' }
+  - HTTP 404: {ok:false,error:'target not found' }
+  - HTTP 500: {ok:false,error:'internal' }
 - **POST /collect**
   - HTTP 500: {error:'collect_failed' }
 - **POST /create-worker**
@@ -1253,12 +1326,9 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 403: {error:'forbidden' }
   - HTTP 500: {error:'debug_grant_failed' }
 - **POST /hit**
-  - HTTP 400: {ok:false,message:'attackerHeroId e targetInstanceId são obrigatórios' }
-  - HTTP 500: {ok:false,message:e.message }
-  - HTTP 400: {ok:false,message:'heroId e targetInstanceId são obrigatórios' }
-  - HTTP 500: {ok:false,message:e.message }
-  - HTTP 400: {ok:false,message:'heroId é obrigatório' }
-  - HTTP 500: {ok:false,message:e.message }
+  - HTTP 400: {ok:false,error:'targetInstanceId required' }
+  - HTTP 404: {ok:false,error:'target not found' }
+  - HTTP 500: {ok:false,error:'internal' }
 - **POST /login**
   - HTTP 401: {error:'Credenciais inválidas' }
   - HTTP 401: {error:'Credenciais inválidas' }
