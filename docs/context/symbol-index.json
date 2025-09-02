@@ -75,20 +75,21 @@
   {
     "file": "client\\js\\combat\\attack-controls.js",
     "symbols": [
-      "attachControls",
+      "attach",
       "doHit",
-      "findClosestLocalMonster",
-      "findWsMonsterNear",
-      "getCsrf",
-      "getMouseWorld",
-      "pickCamera",
-      "pickCanvas",
-      "pickTargetAt",
-      "postJSON",
-      "readCookie",
-      "screenToWorld",
+      "getCombatState",
+      "getPlayerPos",
+      "guessTargetFromLocal",
+      "listServerMonsters",
+      "log",
+      "need",
+      "onPointerDown",
+      "pickNearest",
       "startAttack",
-      "startLoop"
+      "startHitLoop",
+      "stopAttack",
+      "stopHitLoop",
+      "worldFromCanvas"
     ]
   },
   {
@@ -115,6 +116,17 @@
       "ensureFloaters",
       "onWsMessage",
       "wsUrl"
+    ]
+  },
+  {
+    "file": "client\\js\\csrf.js",
+    "symbols": [
+      "ensureCsrfCookie",
+      "fetchCsrf",
+      "getCsrfToken",
+      "jget",
+      "jpost",
+      "readCookie"
     ]
   },
   {
@@ -307,12 +319,12 @@
       "buildMonsterCandidates",
       "buildSpawnersFromDefs",
       "clear",
-      "csrfHeaders",
       "drawGround",
       "drawMob",
       "drawPlayer",
       "ensureImgLoaded",
       "fetchCsrf",
+      "fetchCsrfToken",
       "findMetaFor",
       "frame",
       "getSavedPos",
