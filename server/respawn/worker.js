@@ -10,6 +10,22 @@ const DEBUG = String(process.env.RESPAWN_DEBUG || '').trim() === '1';
 // WS bus (para avisar clientes)
 const { broadcast } = require('../ws/bus');
 
+// Mundo em pixels (o cliente usa 32px por tile)
+const TILE = 32;
+
+function pickPosInSpawnRect(spawn) {
+  // x,y do Tiled já vêm em pixels (top-left). w,h podem ser 0/NULL → usar TILE como fallback.
+  const x0 = Number(spawn.x) || 0;
+  const y0 = Number(spawn.y) || 0;
+  const w  = Number(spawn.w) || TILE;
+  const h  = Number(spawn.h) || TILE;
+
+  return {
+    x: x0 + Math.random() * w,
+    y: y0 + Math.random() * h,
+  };
+}
+
 /**
  * Um passo do respawn:
  * - Pega instâncias MORTAS cujo prazo já venceu (now() >= respawn_at)
@@ -30,7 +46,9 @@ async function respawnTick({ all, run }) {
       mi.spawn_id,
       mi.map_key,
       s."monsterKey",
-      s.x, s.y,
+      s.x, s.y,                   -- top-left do retângulo do spawn (px)
+      COALESCE(s.w, 0) AS w,
+      COALESCE(s.h, 0) AS h,
       COALESCE(mm."healthMax", 0) AS health_max
     FROM monster_instances mi
     JOIN spawns s
@@ -53,6 +71,9 @@ async function respawnTick({ all, run }) {
       : (r.health_max && Number(r.health_max) > 0) ? Number(r.health_max)
       : 1;
 
+    // Escolhe uma posição dentro da área do spawn (em pixels)
+    const pos = pickPosInSpawnRect(r);
+
     await run(
       `UPDATE monster_instances
           SET state            = 'ALIVE',
@@ -65,18 +86,20 @@ async function respawnTick({ all, run }) {
       [r.id, hpFull]
     );
 
-    // Notifica frontend que a instância renasceu
+    // Notifica frontend que a instância renasceu, COM x,y em pixels
     try {
-      broadcast({
+      const payload = {
         type: 'monster_respawned',
         id: r.id,
         mapKey: r.map_key,
         monsterKey: r.monsterKey,
         hp: hpFull,
         maxHp: hpFull,
-        x: r.x ?? null,
-        y: r.y ?? null
-      });
+        x: pos.x,
+        y: pos.y,
+      };
+      if (DEBUG) console.log('[respawn] broadcast', payload);
+      broadcast(payload);
     } catch (e) {
       if (DEBUG) console.warn('[respawn] broadcast failed:', e?.message);
     }

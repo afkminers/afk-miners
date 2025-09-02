@@ -1,238 +1,230 @@
-// /js/combat/attack-controls.js
-// Clique no canvas para atacar. Robusto contra WS sem posição e diferenças
-// de payload do backend. Também cuida de CSRF (header + query).
+// client/js/combat/attack-controls.js
+// ES Module: exporta startAttack/stopAttack e registra controles de ataque.
+// - Clique esquerdo: seleciona alvo (WS ou mob local) e inicia ataque
+// - Clique direito/ESC/blur: para o ataque
 
-(() => {
-  if (window.__AttackControlsInstalled) return;
-  window.__AttackControlsInstalled = true;
+const TILE = 32;
 
-  // ---------- utils ----------
-  const log = (...a) => { try { console.log("[attack]", ...a); } catch {} };
-  const now = () => Date.now();
-  const mapKey = () => (window.GameScene?.mapKey || "house");
+/* =========================== CSRF / HTTP ============================ */
+/**
+ * Estratégia CSRF: double-submit cookie
+ * - Lemos o token SEMPRE do cookie "csrf".
+ * - Se não houver cookie, chamamos /api/csrf para semear.
+ * - Em 403, resemeamos e tentamos 1x de novo.
+ */
+function readCookie(name) {
+  const hit = document.cookie.split('; ').find(v => v.startsWith(name + '='));
+  return hit ? decodeURIComponent(hit.split('=')[1]) : null;
+}
 
-  // Lê cookie simples
-  function readCookie(name) {
-    const m = document.cookie.split("; ").find(r => r.startsWith(name + "="));
-    return m ? decodeURIComponent(m.split("=")[1]) : "";
+async function seedCsrfCookie() {
+  try {
+    await fetch('/api/csrf', { credentials: 'include', cache: 'no-store' });
+  } catch {}
+}
+
+async function getFreshCsrf() {
+  let tok = readCookie('csrf');
+  if (!tok) {
+    await seedCsrfCookie();
+    tok = readCookie('csrf');
   }
+  return tok;
+}
 
-  // Garante cookie/header de CSRF disponível
-  let __csrfReady = false;
-  async function ensureCsrf() {
-    if (__csrfReady && readCookie("csrf")) return;
-    try { await fetch("/api/csrf", { credentials: "include" }); } catch {}
-    __csrfReady = true;
-  }
+// SHIM para código legado que ainda chama getCsrf()
+async function getCsrf() { return getFreshCsrf(); }
 
-  // POST com CSRF (header + query string)
-  async function postWithCsrf(url, body) {
-    await ensureCsrf();
-    const token = readCookie("csrf") || "";
+async function postJSON(url, body) {
+  let tok = await getFreshCsrf();
+  if (!tok) throw new Error('csrf-missing');
+
+  const doFetch = async (token) => {
     const u = new URL(url, location.origin);
-    if (token) u.searchParams.set("csrf", token);
-
-    const res = await fetch(u.toString(), {
-      method: "POST",
-      credentials: "include",
+    u.searchParams.set('csrf', token); // alguns middlewares validam também na query
+    return fetch(u.toString(), {
+      method: 'POST',
+      credentials: 'include',
+      referrerPolicy: 'strict-origin-when-cross-origin',
       headers: {
-        "Content-Type": "application/json",
-        ...(token ? { "X-Csrf-Token": token } : {}),
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': token,        // use um único header estável
+        'X-Requested-With': 'fetch',
       },
-      body: JSON.stringify(body || {}),
+      body: JSON.stringify(body || {})
     });
+  };
 
-    // Tenta decodificar JSON sempre que possível
-    let data = null;
-    const txt = await res.text().catch(() => "");
-    try { data = txt ? JSON.parse(txt) : null; } catch { data = null; }
+  let r = await doFetch(tok);
+  if (r.status === 403) {
+    // token pode ter sido rotacionado — reseed + retry 1x
+    await seedCsrfCookie();
+    tok = readCookie('csrf') || tok;
+    r = await doFetch(tok);
+  }
 
-    if (!res.ok) {
-      const msg = `${res.status} ${res.statusText} @ ${url}`;
-      throw new Error(data?.error ? `${msg} — ${data.error}` : msg);
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
+  return r.json();
+}
+
+/* ==================== Canvas / Câmera helpers ==================== */
+function pickCanvas() {
+  return (window.GameScene && window.GameScene.canvas)
+      || document.getElementById('scene')
+      || document.getElementById('view')
+      || document.querySelector('canvas');
+}
+function pickCamera() {
+  return (window.GameScene && window.GameScene.camera) || null;
+}
+function screenToWorld(canvas, sx, sy) {
+  const cam = pickCamera();
+  if (cam?.screenToWorld) return cam.screenToWorld(sx, sy);
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return { x: sx * scaleX, y: sy * scaleY };
+}
+function getMouseWorldFromEvent(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const cx = (e.clientX ?? (e.touches && e.touches[0]?.clientX)) || 0;
+  const cy = (e.clientY ?? (e.touches && e.touches[0]?.clientY)) || 0;
+  return screenToWorld(canvas, cx - rect.left, cy - rect.top);
+}
+
+/* ======================= Estado compartilhado ====================== */
+const combatState = (window.combatState = window.combatState || {
+  monsters: new Map(),   // id => { id,x,y,monsterKey,hp,hpMax }
+  targetId: null,
+  attacking: false,
+  loopHandle: null,
+});
+
+/* ======================= Seleção de alvo ========================== */
+// tenta pegar do overlay WS (se ele tiver X/Y)
+function findWsMonsterNear(px, py) {
+  const R = 28; // px
+  try {
+    const st = window.CombatUI?.getState?.();
+    const list = Array.isArray(st?.monsters) ? st.monsters : [];
+    for (const m of list) {
+      const x = Number(m.x), y = Number(m.y);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+      const dx = x - px, dy = y - py;
+      if (dx*dx + dy*dy <= R*R) return { id: String(m.id), x, y, monsterKey: m.key || m.monsterKey || null };
     }
-    return data ?? {};
+  } catch {}
+  return null;
+}
+
+// mobs locais renderizados pela cena (sempre têm X/Y)
+function findClosestLocalMonster(px, py) {
+  const mobs = (window.GameScene && window.GameScene.mobs) || [];
+  if (!mobs.length) return null;
+  let best = null, bestD = Infinity;
+  for (const m of mobs) {
+    const dx = (m.x || 0) - px, dy = (m.y || 0) - py;
+    const d = dx * dx + dy * dy;
+    if (d < bestD) { bestD = d; best = m; }
   }
+  if (!best) return null;
+  if (!best.id) best.id = 'local-' + Math.random().toString(36).slice(2);
+  return { id: String(best.id), x: best.x, y: best.y, monsterKey: best.kind || best.key || null };
+}
 
-  function getPlayerPos() {
-    const p = window.GameScene?.controller?.getPosition?.() || { x: 0, y: 0 };
-    return { x: Math.round(p.x), y: Math.round(p.y) };
+function pickTargetAt(px, py) {
+  const ws = findWsMonsterNear(px, py);
+  if (ws) return ws;
+  return findClosestLocalMonster(px, py);
+}
+
+/* ========================== Loop de ataque ========================= */
+async function doHit() {
+  if (!combatState.attacking || !combatState.targetId) return;
+  try {
+    const resp = await postJSON('/api/combat/hit', {
+      targetInstanceId: combatState.targetId,
+      damage: 5
+    });
+    const m = combatState.monsters.get(resp.targetId) || { id: resp.targetId };
+    m.hp = resp.hpAfter;
+    m.hpMax = Math.max(m.hpMax || 100, resp.hpBefore || 100);
+    combatState.monsters.set(resp.targetId, m);
+    window.dispatchEvent(new CustomEvent('combat:hit', { detail: resp }));
+    if (resp.dead) stopAttack();
+  } catch (e) {
+    console.warn('[attack] hit failed', e.message);
   }
+}
+function startLoop() {
+  if (combatState.loopHandle) return;
+  combatState.loopHandle = setInterval(doHit, 600);
+}
 
-  // Estado exposto pelo módulo render-combat.js
-  function listServerMonsters() {
-    const C = window.CombatUI;
-    try {
-      if (C?.getState) {
-        const st = C.getState();
-        if (Array.isArray(st?.monsters)) {
-          return st.monsters.map(m => ({
-            id: String(m.id ?? m.sid ?? m.uuid ?? ""),
-            key: String(m.key ?? m.monsterKey ?? "monster"),
-            x: Number(m.x ?? 0),
-            y: Number(m.y ?? 0),
-          })).filter(m => m.id);
-        }
-      }
-    } catch {}
-    return [];
-  }
+/* =========================== API exportada ========================= */
+export async function startAttack(targetId) {
+  await postJSON('/api/combat/attack/start', { targetInstanceId: targetId });
+  combatState.targetId = String(targetId);
+  combatState.attacking = true;
+  window.dispatchEvent(new CustomEvent('combat:attack:start'));
+  startLoop();
+}
+export async function stopAttack() {
+  combatState.attacking = false;
+  combatState.targetId = null;
+  if (combatState.loopHandle) { clearInterval(combatState.loopHandle); combatState.loopHandle = null; }
+  try { await postJSON('/api/combat/attack/stop', {}); } catch (e) { /* ignora 403 em teardown */ }
+}
 
-  // Mobs locais (sem id) – só para achar posição clicada
-  function listLocalMobs() {
-    const arr = Array.isArray(window.GameScene?.mobs) ? window.GameScene.mobs : [];
-    return arr.map(m => ({ x: m.x | 0, y: m.y | 0, key: m.kind || "monster" }));
-  }
+/* ====================== Controles de ponteiro ====================== */
+function attachControls() {
+  if (window.__ATTACK_CONTROLS_ATTACHED__) return; // evita duplicar
+  window.__ATTACK_CONTROLS_ATTACHED__ = true;
 
-  function pickNearest(list, x, y, max = 96) {
-    let best = null, bestD2 = max * max;
-    for (const it of list) {
-      const dx = x - (it.x | 0), dy = y - (it.y | 0);
-      const d2 = dx * dx + dy * dy;
-      if (d2 <= bestD2) { bestD2 = d2; best = it; }
-    }
-    return best;
-  }
+  const canvas = pickCanvas();
+  if (!canvas) return;
 
-  function worldFromCanvas(ev, canvas, camera) {
-    const r = canvas.getBoundingClientRect();
-    const sx = ev.clientX - r.left, sy = ev.clientY - r.top;
-    return camera?.screenToWorld
-      ? camera.screenToWorld(sx, sy)
-      : { x: (camera?.x || 0) + sx, y: (camera?.y || 0) + sy };
-  }
-
-  // ---------- ciclo de ataque ----------
-  const S = { attacking: false, targetSid: null, seq: 0, loop: null };
-
-  async function doHit() {
-    if (!S.attacking || !S.targetSid) return;
-    S.seq++;
-    try {
-      await postWithCsrf("/api/combat/hit", {
-        targetId: S.targetSid,
-        mapKey: mapKey(),
-        seq: S.seq,
-        clientTs: now(),
-      });
-    } catch (e) {
-      const msg = String(e?.message || "");
-      console.warn("[attack] hit falhou:", msg);
-      if (msg.includes("403")) stopAttack();
-    }
-  }
-
-  function startLoop() { stopLoop(); S.loop = setInterval(doHit, 150); }
-  function stopLoop() { if (S.loop) { clearInterval(S.loop); S.loop = null; } }
-
-  async function stopAttack() {
-    stopLoop();
-    if (!S.attacking || !S.targetSid) { S.attacking = false; S.targetSid = null; return; }
-    const sid = S.targetSid;
-    S.attacking = false;
-    S.targetSid = null;
-    try {
-      await postWithCsrf("/api/combat/attack/stop", {
-        targetId: sid,
-        mapKey: mapKey(),
-        clientTs: now(),
-      });
-    } catch {}
-  }
-
-  // Tenta vários formatos de payload até um passar (evita 400 por chaves divergentes)
-  async function startAttack(targetSid, clickX, clickY) {
-    if (!targetSid) { console.warn("[attack] start: sem targetSid"); return; }
-
-    await stopAttack();
-    const p = getPlayerPos();
-    const mk = mapKey();
-
-    const candidates = [
-      // formato mais completo
-      { targetId: targetSid, mapKey: mk, playerX: p.x, playerY: p.y, clickX: Math.round(clickX), clickY: Math.round(clickY), clientTs: now() },
-      // nomes alternativos comuns
-      { monsterId: targetSid, mapKey: mk, x: Math.round(clickX), y: Math.round(clickY), clientTs: now() },
-      { id: targetSid, map: mk, x: Math.round(clickX), y: Math.round(clickY), clientTs: now() },
-      { target: targetSid, mapKey: mk, clientTs: now() },
-      { targetId: targetSid, mapKey: mk },
-      { monsterId: targetSid, mapKey: mk },
-      { id: targetSid, mapKey: mk },
-    ];
-
-    let ok = false, lastErr = "";
-    for (const body of candidates) {
-      try {
-        await postWithCsrf("/api/combat/attack/start", body);
-        ok = true;
-        break;
-      } catch (e) {
-        lastErr = String(e?.message || "");
-        // Se for 403, tenta garantir CSRF e repetir a sequência do zero
-        if (lastErr.includes("403")) { await ensureCsrf(); }
-        // Continua tentando próximo formato
-      }
-    }
-
-    if (!ok) {
-      console.warn("[attack] start falhou:", lastErr || "sem resposta");
-      return;
-    }
-
-    S.attacking = true;
-    S.targetSid = targetSid;
-    S.seq = 0;
-    startLoop();
-    log("start OK →", targetSid);
-  }
-
-  // ---------- input ----------
-  function attach(canvas, camera) {
-    if (!canvas || canvas.__attackBound) return;
-    canvas.__attackBound = true;
-
-    canvas.addEventListener("pointerdown", (ev) => {
-      try { canvas.focus(); } catch {}
-      const w = worldFromCanvas(ev, canvas, camera);
-      log(`click @ ${Math.round(w.x)}, ${Math.round(w.y)}`);
-
-      const server = listServerMonsters();
-      let chosen = null;
-
-      // 1) Se o WS trouxer x,y válidos, escolhe o mais perto
-      const withPos = server.filter(m => (m.x || m.y));
-      if (withPos.length) {
-        const best = pickNearest(withPos, w.x, w.y, 96);
-        if (best) chosen = { sid: best.id, x: best.x, y: best.y };
-      }
-
-      // 2) Fallback: usa posição do mob local + QUALQUER id do WS
-      if (!chosen && server.length) {
-        const local = pickNearest(listLocalMobs(), w.x, w.y, 96);
-        if (local) chosen = { sid: server[0].id, x: local.x, y: local.y };
-      }
-
-      if (chosen) {
-        startAttack(chosen.sid, chosen.x, chosen.y);
-      } else {
-        log("nenhum alvo — stop");
-        stopAttack();
-      }
-    }, { capture: true });
-
-    window.addEventListener("keydown", (e) => { if (e.key === "Escape") stopAttack(); });
-    log("controls ready");
-  }
-
-  // Sinal “game:ready” da cena
-  window.addEventListener("game:ready", (ev) => {
-    const { canvas, camera } = ev?.detail || {};
-    attach(canvas || window.GameScene?.canvas, camera || window.GameScene?.camera);
+  // parar com botão direito
+  canvas.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    stopAttack();
   });
 
-  // Fallback: tentar anexar em 1s caso o evento não chegue
-  setTimeout(() => {
-    if (!window.GameScene) return;
-    attach(window.GameScene.canvas, window.GameScene.camera);
-  }, 1000);
+  const onPointerDown = async (e) => {
+    if (e.button != null && e.button !== 0) return; // só esquerdo
+    const { x, y } = getMouseWorldFromEvent(e, canvas);
+    console.log('[attack] click @', Math.round(x), Math.round(y));
+    const target = pickTargetAt(x, y);
+    if (!target) {
+      console.log('[attack] nenhum alvo — stop');
+      stopAttack();
+      return;
+    }
+    try {
+      await startAttack(target.id);
+    } catch (err) {
+      console.warn('[attack] start falhou:', err.message);
+    }
+  };
+
+  canvas.addEventListener('mousedown', onPointerDown);
+  canvas.addEventListener('touchstart', onPointerDown, { passive: true });
+
+  // para ataque em situações de perda de foco
+  window.addEventListener('blur', () => stopAttack());
+  window.addEventListener('beforeunload', () => stopAttack());
+
+  console.log('[attack] controls ready');
+}
+
+/* ====================== Boot (garante ordem) ====================== */
+(async () => {
+  // aquece o cookie CSRF (não quebra se /api/csrf estiver off)
+  await seedCsrfCookie().catch(()=>{});
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(attachControls, 0);
+  } else {
+    window.addEventListener('DOMContentLoaded', attachControls);
+  }
+  window.addEventListener('game:ready', attachControls);
 })();
