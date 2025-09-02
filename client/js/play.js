@@ -43,7 +43,7 @@ const $ = (s) => document.querySelector(s);
 // camera hoisted (evita TDZ)
 let camera;
 
-/* =========================== CSRF / HTTP (robusto) ============================ */
+/* =========================== CSRF / HTTP ============================ */
 let CSRF_TOKEN = null;
 
 function readCookie(name) {
@@ -51,34 +51,25 @@ function readCookie(name) {
   return hit ? decodeURIComponent(hit.split('=')[1]) : null;
 }
 
-async function fetchCsrf() {
-  if (CSRF_TOKEN) return CSRF_TOKEN;
+async function fetchCsrfToken(force = false) {
+  if (!force && CSRF_TOKEN) return CSRF_TOKEN;
   try {
-    const r = await fetch('/api/csrf', { credentials: 'include', cache: 'no-store' });
+    const r = await fetch('/api/csrf', { credentials: 'include' });
     const hdr = r.headers.get('x-csrf-token') || r.headers.get('X-CSRF-Token');
     let bodyTok = null;
     try {
-      // usa clone() para não consumir o body se não for JSON
       const j = await r.clone().json();
       bodyTok = j.token || j.csrf || j.csrfToken || j.csrf_token || null;
     } catch {}
     CSRF_TOKEN = hdr || bodyTok || readCookie('csrf') || null;
   } catch {
-    // sem /api/csrf? tenta direto do cookie
     CSRF_TOKEN = readCookie('csrf') || null;
   }
   return CSRF_TOKEN;
 }
 
-function csrfHeaders(tok) {
-  // manda em várias chaves para cobrir implementações diferentes
-  return {
-    'X-CSRF-Token': tok,
-    'x-csrf-token': tok,
-    'x-csrf': tok,
-    'X-XSRF-Token': tok,
-  };
-}
+// alias p/ compatibilidade com código antigo
+async function fetchCsrf() { return fetchCsrfToken(); }
 
 async function jget(url) {
   const r = await fetch(url, { credentials: 'include' });
@@ -86,28 +77,45 @@ async function jget(url) {
   return r.json();
 }
 
-async function jpost(url, body) {
-  const tok = await fetchCsrf();
-  if (!tok) throw new Error('csrf-missing');
+async function jpost(url, body, extraOpts = {}) {
+  // garante token
+  let tok = await fetchCsrfToken();
 
-  // opcional: acrescenta ?csrf=... como fallback (não atrapalha se o servidor ignorar)
-  const u = new URL(url, location.origin);
-  if (!u.searchParams.has('csrf')) u.searchParams.set('csrf', tok);
+  const doPost = async (token) => {
+    const r = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': token || '',
+        'X-Requested-With': 'fetch',
+        ...(extraOpts.headers || {})
+      },
+      body: JSON.stringify(body || {}),
+      referrerPolicy: 'strict-origin-when-cross-origin',
+      ...extraOpts
+    });
+    if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
+    return r.json();
+  };
 
-  const r = await fetch(u.toString(), {
-    method: 'POST',
-    credentials: 'include',
-    referrerPolicy: 'strict-origin-when-cross-origin',
-    headers: {
-      'Content-Type': 'application/json',
-      ...csrfHeaders(tok),
-    },
-    body: JSON.stringify(body || {})
-  });
-
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
-  return r.json();
+  try {
+    return await doPost(tok);
+  } catch (e) {
+    // Se 403/419, tenta renovar e refazer 1x
+    const msg = String(e.message || '');
+    if (msg.startsWith('403') || msg.startsWith('419')) {
+      tok = await fetchCsrfToken(true);
+      return await doPost(tok);
+    }
+    throw e;
+  }
 }
+
+// expõe no global para debug
+window.fetchCsrfToken = fetchCsrfToken;
+window.jget = jget;
+window.jpost = jpost;
 
 /* ===================== Assets: normalização de paths ===================== */
 function assetUrl(p, { asTileset = false } = {}) {
@@ -538,7 +546,7 @@ function updateRespawns(now) {
 /* ================================ Boot ================================ */
 (async function main() {
   // pega CSRF e cookies antes de qualquer POST
-  await fetchCsrf().catch(()=>{});
+  await fetchCsrfToken().catch(()=>{});
 
   await loadSpriteMeta();
 

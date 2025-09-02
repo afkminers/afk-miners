@@ -85,9 +85,19 @@
       "pickCanvas",
       "pickTargetAt",
       "postJSON",
+      "readCookie",
       "screenToWorld",
       "startAttack",
       "startLoop"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\combat-ui.js",
+    "symbols": [
+      "drawHpBar",
+      "ensurePos",
+      "getLocalMobs",
+      "nearestLocal"
     ]
   },
   {
@@ -100,7 +110,9 @@
     "file": "client\\js\\combat\\ws-combat.js",
     "symbols": [
       "combatState",
+      "createFloater",
       "createFloaterForMonster",
+      "ensureFloaters",
       "onWsMessage",
       "wsUrl"
     ]
@@ -295,6 +307,7 @@
       "buildMonsterCandidates",
       "buildSpawnersFromDefs",
       "clear",
+      "csrfHeaders",
       "drawGround",
       "drawMob",
       "drawPlayer",
@@ -318,6 +331,7 @@
       "normalizeTilesetPath",
       "pickElByIds",
       "postPosThrottled",
+      "readCookie",
       "resize",
       "resolvePlayerSprite",
       "updateRespawns"

@@ -110,5 +110,9 @@
   {
     "from": "client\\js\\combat\\render-combat.js",
     "to": "./ws-combat.js"
+  },
+  {
+    "from": "client\\js\\combat\\combat-ui.js",
+    "to": "./ws-combat.js"
   }
 ]
