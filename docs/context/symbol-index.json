@@ -88,11 +88,16 @@
       "pickTargetAt",
       "postJSON",
       "readCookie",
+      "renderTargetHud",
       "resolveServerTarget",
       "screenToWorld",
       "seedCsrfCookie",
+      "spawnFloatDamageDOM",
       "startAttack",
-      "startLoop"
+      "startHudLoop",
+      "startLoop",
+      "stopHudLoop",
+      "worldToScreen"
     ]
   },
   {

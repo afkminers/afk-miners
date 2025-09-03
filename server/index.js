@@ -33,6 +33,14 @@ const { loadAll, loadMap } = require('./content/loader');
 const CONTENT_PIPELINE = process.env.CONTENT_PIPELINE || 'off';
 // =====================================
 
+// === Sync automático de instâncias de spawn (opcional) ===
+let syncSpawns = async () => {};
+try {
+  ({ syncSpawns } = require('./jobs/sync_spawns'));
+} catch {
+  // ok em dev: se o arquivo não existir, segue sem quebrar
+}
+
 // ========= CONFIG =========
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const PORT = Number(process.env.PORT || 3000);
@@ -173,8 +181,7 @@ async function bootstrapContentTables() {
 // públicas / auth
 app.use('/api/auth', authRoutes);
 
-// >>>>>>>>> COLOQUEI AQUI (ANTES DO /api GENÉRICO) <<<<<<<<<
-// Combat protegido (se quiser testar aberto, remova requireAuth aqui)
+// Combat (mantém como está)
 const combatRoutes = require('./combat/routes');
 app.use('/api/combat', combatRoutes);
 
@@ -413,6 +420,7 @@ app.post('/api/admin/content/reload-map', async (req, res) => {
   try {
     const mapKey = (req.query.map || 'house').toString();
     await loadMap({ all, get, run }, path.join(__dirname, '..'), mapKey);
+    await syncSpawns(); // garante instâncias após recarregar o mapa
     res.json({ ok: true, reloaded: mapKey });
   } catch (e) {
     console.error('[content] reload-map error:', e.message);
@@ -451,7 +459,8 @@ try {
   useWebSocket = !!WebSocketLib && !!WebSocketLib.Server;
   if (!useWebSocket) console.warn('[ws] package loaded but Server not available');
 } catch (err) {
-  console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run `npm install ws` to enable.');
+  // REMOVIDOS backticks do texto (evita false positive de parser)
+  console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run npm install ws to enable.');
   WebSocketLib = null;
   useWebSocket = false;
 }
@@ -521,6 +530,10 @@ let wss = null;
       await loadAll({ all, get, run }, path.join(__dirname, '..'));
     }
 
+    // Garante instâncias de todos os spawns (e mantém atualizadas periodicamente)
+    try { await syncSpawns(); } catch (e) { console.warn('[sync_spawns] initial failed:', e?.message); }
+    setInterval(() => syncSpawns().catch(()=>{}), 60_000);
+
     server = http.createServer(app);
 
     if (useWebSocket) {
@@ -558,7 +571,7 @@ let wss = null;
           console.warn('[ws] cookie parse error', e && e.message);
         }
 
-        // snapshot inicial de monstros vivos (seu loader interno decide a fonte)
+        // snapshot inicial de monstros vivos
         (async () => {
           try {
             const msgs = await listAliveMonsters();
