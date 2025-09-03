@@ -9,6 +9,83 @@ const TILE = 32;
 // ----------------- namespace público p/ outros módulos -----------------
 window.GameScene = window.GameScene || {};
 
+// ==== BINDING ESTÁVEL (sem gambiarra): instanceId <-> sprite; spawnId -> Set<sprites> ====
+const MOB_BY_INSTANCE = new Map();        // instanceId (UUID) -> sprite (obj do array mobs)
+const MOB_SPRITES_BY_SPAWN = new Map();   // spawnId (int) -> Set<sprite>
+
+window.GameScene.getMobByInstanceId = (id) => MOB_BY_INSTANCE.get(String(id)) || null;
+
+// === bind por monsterKey quando não tiver spawnId do servidor ===
+window.GameScene.bindInstanceToAnySpriteByKey = (instanceId, monsterKey) => {
+  const want = String(monsterKey || '').trim().toLowerCase();
+  let best = null;
+  for (const s of window.GameScene.mobs || []) {
+    const sameKind =
+      (String(s.kind || s.key || '').toLowerCase() === want) ||
+      (String(s.meta?.image || '').toLowerCase().includes(want));
+    if (!sameKind) continue;
+    if (!s.instanceId) { best = s; break; }           // preferir livre
+    if (!best && (s.dead || s.hidden)) best = s;      // senão, reaproveitar
+  }
+  if (!best) return null;
+
+  best.instanceId = String(instanceId);
+  best.dead = false;
+  best.hidden = false;
+  best._animFrozen = false;
+  best._animFrozenFrame = 0;
+
+  // garantir lookup
+  MOB_BY_INSTANCE.set(String(instanceId), best);
+  return best;
+};
+
+
+window.GameScene.registerMobSprite = (sprite, meta = {}) => {
+  if (!sprite) return;
+  if (Number.isFinite(meta.spawnId)) {
+    sprite.spawnId = Number(meta.spawnId);
+    if (!MOB_SPRITES_BY_SPAWN.has(sprite.spawnId)) MOB_SPRITES_BY_SPAWN.set(sprite.spawnId, new Set());
+    MOB_SPRITES_BY_SPAWN.get(sprite.spawnId).add(sprite);
+  }
+  if (meta.instanceId) {
+    sprite.instanceId = String(meta.instanceId);
+    MOB_BY_INSTANCE.set(sprite.instanceId, sprite);
+  }
+};
+
+// escolhe uma sprite “livre” daquele spawn (sem instanceId ou marcada morta/oculta)
+function pickFreeSpriteForSpawn(spawnId) {
+  const set = MOB_SPRITES_BY_SPAWN.get(Number(spawnId));
+  if (!set || set.size === 0) return null;
+  // preferência: sem vínculo; depois mortas; depois qualquer uma
+  let candidate = null;
+  for (const s of set) { if (!s.instanceId) return s; if (!candidate && (s.dead || s.hidden)) candidate = s; }
+  return candidate || [...set][0];
+}
+
+window.GameScene.bindInstanceToSpawn = (instanceId, spawnId) => {
+  const s = pickFreeSpriteForSpawn(spawnId);
+  if (!s) return null;
+  // limpa estado de morte/oculto e congelações
+  s.instanceId = String(instanceId);
+  s.dead = false;
+  s.hidden = false;
+  s._animFrozen = false;
+  s._animFrozenFrame = 0;
+  MOB_BY_INSTANCE.set(String(instanceId), s);
+  return s;
+};
+
+window.GameScene.onMonsterDead = (instanceId) => {
+  const s = MOB_BY_INSTANCE.get(String(instanceId));
+  if (!s) return;
+  s.dead = true;            // congela AI/movimento
+  s._animFrozen = true;     // congela animação no 1º frame
+  s._animFrozenFrame = 0;
+  MOB_BY_INSTANCE.delete(String(instanceId)); // solta vínculo da instância (respawn reusa a sprite)
+};
+
 // =============== Canvas/HUD flexível (querystring + auto) ===============
 function pickElByIds(prefIds = [], fallbackSelectors = []) {
   for (const id of prefIds) { if (!id) continue; const el = document.getElementById(id); if (el) return el; }
@@ -336,23 +413,40 @@ function drawPlayer(controller) {
 }
 
 function drawMob(m) {
+  if (m.hidden) return;
+
   if (m.meta && imgReady(m.img)) {
     const meta   = m.meta;
-    const frameW = meta.frame?.width  ?? 32;
-    const frameH = meta.frame?.height ?? 32;
+    let frameW = meta.frame?.width  ?? 32;
+    let frameH = meta.frame?.height ?? 32;
     const cols   = meta.grid?.cols ?? 1;
     const rows   = meta.grid?.rows ?? 1;
 
-    const anim = meta.anims?.walk || { fps: 8, frames: cols, row: 0, startCol: 0 };
-    const fps      = anim.fps || 8;
-    const frames   = anim.frames || cols;
-    const startCol = anim.startCol || 0;
+    // animações
+    const animWalk = meta.anims?.walk || { fps: 8, frames: cols, row: 0, startCol: 0 };
+    const animDead = meta.anims?.dead || null;
 
-    let row = typeof anim.row === 'number' ? anim.row : 0;
-    if (anim.rowByDir && m.face && anim.rowByDir[m.face] != null) row = anim.rowByDir[m.face];
+    // base
+    let fps      = animWalk.fps || 8;
+    let frames   = animWalk.frames || cols;
+    let startCol = animWalk.startCol || 0;
+    let row      = typeof animWalk.row === 'number' ? animWalk.row : 0;
+    if (animWalk.rowByDir && m.face && animWalk.rowByDir[m.face] != null) row = animWalk.rowByDir[m.face];
+
+    // estado morto: congela em 1 frame; usa linha de 'dead' se existir
+    if (m.dead) {
+      if (animDead) {
+        row = animDead.row ?? row;
+        startCol = animDead.startCol ?? 0;
+      }
+      fps = 0;
+      frames = 1;
+      m._animFrozen = true;
+      m._animFrozenFrame = 0;
+    }
 
     const t = performance.now() / 1000;
-    const f = Math.floor(t * fps) % frames;
+    const f = m._animFrozen ? m._animFrozenFrame : Math.floor(t * fps) % Math.max(1, frames);
     const col = startCol + f;
 
     const sx = (col % cols) * frameW;
@@ -364,9 +458,10 @@ function drawMob(m) {
     const ox = Math.round(m.x - dw * anchorX);
     const oy = Math.round(m.y - dh * anchorY);
 
-    const canFlipX = !anim.rowByDir && rows === 1 && m.face === 'west';
+    const canFlipX = !animWalk.rowByDir && rows === 1 && m.face === 'west';
 
     ctx.save();
+    if (m.dead) ctx.globalAlpha = 0.55;
     if (canFlipX) { ctx.translate(ox + dw, oy); ctx.scale(-1, 1); ctx.drawImage(m.img, sx, sy, frameW, frameH, 0, 0, dw, dh); }
     else { ctx.drawImage(m.img, sx, sy, frameW, frameH, ox, oy, dw, dh); }
     ctx.restore();
@@ -374,10 +469,12 @@ function drawMob(m) {
   }
 
   // Fallback: dot vermelho
-  ctx.save();
-  ctx.fillStyle = "#ef4444";
-  ctx.beginPath(); ctx.arc(m.x, m.y, 7, 0, Math.PI * 2); ctx.fill();
-  ctx.restore();
+  if (!m.dead) {
+    ctx.save();
+    ctx.fillStyle = "#ef4444";
+    ctx.beginPath(); ctx.arc(m.x, m.y, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
 }
 
 /* ======================= Posição Persistente ======================= */
@@ -461,9 +558,14 @@ function mapSpawnsFromTiledJSON(json) {
       const respawnSec = Number(p.respawnSec || p.respawn || 20) || 20;
       const w = o.width  > 0 ? o.width  : TILE;
       const h = o.height > 0 ? o.height : TILE;
-      return { monsterKey, count, respawnSec, x: o.x || 0, y: o.y || 0, w, h };
+      return {
+        id: Number(o.id),               // <<< AQUI é o id correto do Tiled
+        monsterKey, count, respawnSec,
+        x: o.x || 0, y: o.y || 0, w, h
+      };
     });
 }
+
 
 /* ===================== Resolução de Sprite Player ===================== */
 async function resolvePlayerSprite() {
@@ -507,10 +609,23 @@ function addMobFromSpawn(spDef) {
     face: 'east',
     img: null, meta: meta || null,
     bound: (spDef.w || spDef.h) ? { x: spDef.x || 0, y: spDef.y || 0, w: spDef.w || TILE, h: spDef.h || TILE } : null,
+    spawnId: Number(spDef.id || spDef.spawn_id || spDef.spawnId || 0) || null,
+    instanceId: null,
+    dead: false,
+    hidden: false,
+    _animFrozen: false,
+    _animFrozenFrame: 0,
   };
 
   loadMonsterImg(kindNorm, meta).then(img => { if (img) m.img = img; });
+
   mobs.push(m);
+
+  // registra sprite no índice por spawn (para o overlay “adotar” a instância WS deste spawn)
+  if (m.spawnId != null) {
+    window.GameScene.registerMobSprite(m, { spawnId: m.spawnId });
+  }
+
   return m.id;
 }
 
@@ -532,9 +647,11 @@ function buildSpawnersFromDefs(defs) {
 
 function updateRespawns(now) {
   for (const sp of spawners) {
+    // remove ids que não existem mais (por segurança)
     for (const id of Array.from(sp.liveIds)) {
       if (!mobs.some(m => m.id === id)) sp.liveIds.delete(id);
     }
+    // mantém quantidade visual (não cria sprite nova quando existem mortas; mantém o total)
     while (sp.liveIds.size < sp.want && now >= sp.nextAt) {
       const id = addMobFromSpawn(sp.def);
       sp.liveIds.add(id);
@@ -704,6 +821,7 @@ function updateRespawns(now) {
 
     // AI placeholder dos mobs
     for (const mob of mobs) {
+      if (mob.hidden || mob.dead) continue; // morto/oculto não anda
       if (now >= mob.changeAt) {
         const ang = Math.random() * Math.PI * 2;
         mob.dirX = Math.cos(ang);

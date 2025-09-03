@@ -571,6 +571,12 @@
     ]
   },
   {
+    "file": "server\\jobs\\sync_spawns.js",
+    "symbols": [
+      "syncSpawns"
+    ]
+  },
+  {
     "file": "server\\models\\db.js",
     "symbols": [
       "all",

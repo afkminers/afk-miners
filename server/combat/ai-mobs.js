@@ -5,7 +5,7 @@
 const { get } = require('../models/db');
 const bus = require('../ws/bus'); // { broadcast }
 
-const TICK_MS      = 250;  // ms entre passos
+const TICK_MS      = 350;  // ms entre passos
 const WANDER_SPEED = 40;   // px/s quando à toa
 const CHASE_SPEED  = 60;   // px/s quando em agro
 const AGGRO_RANGE  = 160;  // px

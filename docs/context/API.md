@@ -28,7 +28,7 @@
 
 ### GET /
 
-Arquivo: `server\index.js:432`
+Arquivo: `server\index.js:440`
 
 _Sem payload inferido_
 
@@ -80,7 +80,7 @@ Arquivo: `server\combat\routes.js:15`
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:402`
+Arquivo: `server\index.js:409`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -108,7 +108,7 @@ Arquivo: `server\index.js:402`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:377`
+Arquivo: `server\index.js:384`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -138,7 +138,7 @@ Arquivo: `server\index.js:377`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:389`
+Arquivo: `server\index.js:396`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -167,7 +167,7 @@ Arquivo: `server\index.js:389`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:366`
+Arquivo: `server\index.js:373`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -192,7 +192,7 @@ Arquivo: `server\index.js:366`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:336`
+Arquivo: `server\index.js:343`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -220,7 +220,7 @@ Arquivo: `server\index.js:336`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:347`
+Arquivo: `server\index.js:354`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -247,7 +247,7 @@ Arquivo: `server\index.js:347`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:356`
+Arquivo: `server\index.js:363`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -273,7 +273,7 @@ Arquivo: `server\index.js:356`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:664`
+Arquivo: `server\index.js:677`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -322,9 +322,17 @@ Arquivo: `server\routes\combat_nearest.js:25`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:48`
+Arquivo: `server\index.js:56`
 
-_Sem payload inferido_
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "try {\n    const { heroId": 1,
+  "weaponOrSkill": "value",
+  "heroClass": "value"
+}
+```
 
 ### GET /assets/items
 
@@ -631,7 +639,7 @@ Arquivo: `server\gacha\routes.js:144`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:412`
+Arquivo: `server\index.js:419`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -651,7 +659,7 @@ Arquivo: `server\index.js:412`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:687`
+Arquivo: `server\index.js:700`
 
 _Sem payload inferido_
 

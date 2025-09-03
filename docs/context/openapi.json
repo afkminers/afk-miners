@@ -677,6 +677,27 @@
           "200": {
             "description": "OK"
           }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "try {\n    const { heroId": {
+                    "type": "number"
+                  },
+                  "weaponOrSkill": {
+                    "type": "string"
+                  },
+                  "heroClass": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },

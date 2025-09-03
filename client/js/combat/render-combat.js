@@ -1,126 +1,14 @@
 // client/js/combat/render-combat.js
-// Conecta WS + overlay de combate (HP bar, target box, floaters)
-// Agora desenha SOMENTE a barra do ALVO selecionado (Tibia-like).
+// Overlay único de combate: hp bar, target box e floaters.
+// NUNCA "adivinha" posição. Só desenha se houver sprite vinculada via GameScene.
 
-const RADIUS_CLICK = 24; // não crítico aqui
 let ws = null;
 
-// Estado interno (visível via window.CombatUI.getState())
 const state = {
-  monsters: new Map(), // id -> { id, key, x, y, hp, maxHp, dead }
+  monsters: new Map(), // id -> { id, key, hp, maxHp, spawnId? }
   floaters: [],
-  lastTs: 0
+  selectedTargetId: null,
 };
-
-// Índice auxiliar para "emprestar" posição local a WS monsters sem x,y
-const claimedLocalMobIds = new Map(); // monsterId -> localMobId
-
-function normKey(s) {
-  return String(s || '').trim().toLowerCase();
-}
-
-// Tenta achar um mob local não-alegado ainda, preferindo o mesmo "monsterKey"
-function borrowLocalPosition(monsterId, monsterKey) {
-  const mobs = (window.GameScene && window.GameScene.mobs) || [];
-  if (!mobs.length) return null;
-
-  // Evitar re-usar o mesmo mob pra vários WS ids
-  const alreadyClaimed = new Set(claimedLocalMobIds.values());
-
-  let best = null, bestScore = -1;
-  const want = normKey(monsterKey || '');
-
-  for (const m of mobs) {
-    if (!m) continue;
-    if (alreadyClaimed.has(m.id)) continue; // já foi usado
-    if (m.hidden || m.dead) continue;
-
-    const keyOk = want ? (normKey(m.kind || m.key) === want) : true;
-    const score = keyOk ? 2 : 1; // preferir match de key
-    if (score > bestScore) { bestScore = score; best = m; }
-  }
-
-  if (!best) return null;
-  claimedLocalMobIds.set(monsterId, best.id);
-  return { x: best.x, y: best.y };
-}
-
-function ensurePosForMonster(m) {
-  const xOk = Number.isFinite(m.x) && m.x !== 0;
-  const yOk = Number.isFinite(m.y) && m.y !== 0;
-  if (xOk && yOk) return m;
-
-  // se o jogo expuser a sprite por id, preferir ela
-  const mobById = window.GameScene?.getMobByInstanceId?.(m.id);
-  if (mobById && Number.isFinite(mobById.x) && Number.isFinite(mobById.y)) {
-    m.x = mobById.x; m.y = mobById.y;
-    return m;
-  }
-
-  const pos = borrowLocalPosition(m.id, m.key);
-  if (pos) { m.x = pos.x; m.y = pos.y; }
-  return m;
-}
-
-function onWsMessage(e) {
-  let msg;
-  try { msg = JSON.parse(e.data); } catch { return; }
-
-  if (msg.type === 'monster_respawned') {
-    const m = state.monsters.get(msg.id) || { id: msg.id };
-    m.key = msg.monsterKey || m.key || 'monster';
-    m.dead = false;
-    m.hp = Number(msg.hp ?? m.hp ?? 1);
-    m.maxHp = Number(msg.maxHp ?? m.maxHp ?? m.hp ?? 1);
-    if (Number.isFinite(msg.x)) m.x = Number(msg.x);
-    if (Number.isFinite(msg.y)) m.y = Number(msg.y);
-
-    ensurePosForMonster(m);
-    state.monsters.set(m.id, m);
-
-    // liberar qualquer binding antigo e reemprestar quando necessário
-    claimedLocalMobIds.delete(m.id);
-
-  } else if (msg.type === 'monster_hp') {
-    const m = state.monsters.get(msg.id) || { id: msg.id };
-    m.key = msg.monsterKey || m.key || 'monster';
-    const prevHp = (typeof m.hp === 'number') ? m.hp : null;
-
-    m.dead = false;
-    m.hp = Number(msg.hp ?? m.hp ?? 1);
-    m.maxHp = Number(msg.maxHp ?? m.maxHp ?? m.hp ?? 1);
-    if (Number.isFinite(msg.x)) m.x = Number(msg.x);
-    if (Number.isFinite(msg.y)) m.y = Number(msg.y);
-
-    ensurePosForMonster(m);
-    state.monsters.set(m.id, m);
-
-    // floater de dano (opcional)
-    const dmg = (typeof msg.dmg === 'number')
-      ? msg.dmg
-      : (prevHp != null ? Math.max(0, prevHp - m.hp) : 0);
-    if (dmg > 0 && Number.isFinite(m.x) && Number.isFinite(m.y)) {
-      state.floaters.push({
-        x: m.x + 16, y: m.y - 8,
-        text: `-${dmg}`, ttl: 900, vy: -0.035
-      });
-    }
-
-  } else if (msg.type === 'monster_dead') {
-    const m = state.monsters.get(msg.id);
-    if (m) {
-      m.hp = 0;
-      m.dead = true;
-      state.monsters.set(m.id, m);
-      // solta binding para não “reciclar” a mesma sprite
-      claimedLocalMobIds.delete(m.id);
-
-      if (Number.isFinite(m.x) && Number.isFinite(m.y) && Number.isFinite(msg.xp)) {
-        state.floaters.push({ x: m.x + 16, y: m.y - 8, text: `+${msg.xp}xp`, ttl: 900, vy: -0.035 });
-      }
-    }
-  }
-}
 
 function wsUrl() {
   const loc = window.location;
@@ -128,61 +16,21 @@ function wsUrl() {
   return `${proto}://${loc.host}/ws`;
 }
 
-function connectCombatWS() {
-  try { ws = new WebSocket(wsUrl()); }
-  catch (e) { console.warn('[combat] ws open failed:', e?.message); setTimeout(connectCombatWS, 1500); return; }
+// --------------- Floater ---------------
+function pushFloaterAtSprite(sprite, text, ttl = 900) {
+  if (!sprite) return;
 
-  ws.onopen = () => console.log('[combat] ws module loaded');
-  ws.onclose = () => { setTimeout(connectCombatWS, 1500); };
-  ws.onerror = (e) => console.warn('[combat] ws error', e);
-  ws.onmessage = onWsMessage;
-}
+  const meta   = sprite.meta || {};
+  const frameW = meta.frame?.width  ?? 32;
+  const frameH = meta.frame?.height ?? 32;
+  const ax     = meta.anchor?.x ?? 0.5;
+  const ay     = meta.anchor?.y ?? 0.9;
 
-// =================== DRAW HELPERS ===================
-function drawHpBar(ctx, m) {
-  if (!m || m.dead) return;
-  if (m.hp == null || m.maxHp == null) return;
+  // centraliza na largura do frame e sobe um pouco acima da cabeça
+  const x = Math.round(sprite.x - frameW * ax + frameW * 0.5);
+  const y = Math.round(sprite.y - frameH * ay - 8);
 
-  // usa posição da sprite se existir
-  const mobById = window.GameScene?.getMobByInstanceId?.(m.id);
-  const px = Number.isFinite(mobById?.x) ? mobById.x : m.x;
-  const py = Number.isFinite(mobById?.y) ? mobById.y : m.y;
-
-  if (!Number.isFinite(px) || !Number.isFinite(py)) return;
-
-  const w = 28, h = 4;
-  const x = Math.round(px + 2);
-  const y = Math.round(py - 6);
-
-  // fundo
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.fillRect(x, y, w, h);
-
-  // hp (vermelho tibia-like)
-  const pct = Math.max(0, Math.min(1, m.hp / (m.maxHp || 1)));
-  const wHp = Math.round(w * pct);
-  ctx.fillStyle = '#d11';
-  ctx.fillRect(x, y, wHp, h);
-
-  // borda
-  ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(x, y, w, h);
-}
-
-function drawTargetBox(ctx, m) {
-  if (!m || m.dead) return;
-
-  // idem: segue a sprite se existir
-  const mobById = window.GameScene?.getMobByInstanceId?.(m.id);
-  const px = Number.isFinite(mobById?.x) ? mobById.x : m.x;
-  const py = Number.isFinite(mobById?.y) ? mobById.y : m.y;
-
-  if (!Number.isFinite(px) || !Number.isFinite(py)) return;
-
-  ctx.strokeStyle = 'red';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(Math.round(px), Math.round(py), 32, 32);
+  state.floaters.push({ x, y, text, ttl, vy: -0.035 });
 }
 
 function updateAndDrawFloaters(ctx, dtMs) {
@@ -200,45 +48,177 @@ function updateAndDrawFloaters(ctx, dtMs) {
   }
 }
 
-// =================== INSTALL ===================
+// --------------- Bind helpers (do GameScene) ---------------
+function getSpriteFor(id) {
+  return window.GameScene?.getMobByInstanceId?.(String(id)) || null;
+}
+
+function bindBySpawn(id, spawnId) {
+  return window.GameScene?.bindInstanceToSpawn?.(String(id), Number(spawnId)) || null;
+}
+
+function bindByKey(id, monsterKey) {
+  return window.GameScene?.bindInstanceToAnySpriteByKey?.(String(id), String(monsterKey)) || null;
+}
+
+// --------------- WS handler ---------------
+function onWsMessage(e) {
+  let msg;
+  try { msg = JSON.parse(e.data); } catch { return; }
+
+  if (msg.type === 'monster_respawned') {
+    const id = String(msg.id);
+    const key = String(msg.monsterKey || 'monster');
+    const maxHp = Number(msg.maxHp ?? msg.hp ?? 1);
+    const hp = Number(msg.hp ?? maxHp);
+    const spawnId = (msg.spawnId != null) ? Number(msg.spawnId) : null;
+
+    const m = state.monsters.get(id) || { id };
+    m.key = key; m.maxHp = maxHp; m.hp = hp; if (spawnId != null) m.spawnId = spawnId;
+    state.monsters.set(id, m);
+
+    // (re)vincula sprite se necessário
+    let s = getSpriteFor(id);
+    if (!s) {
+      s = (spawnId != null) ? bindBySpawn(id, spawnId) : bindByKey(id, key);
+    }
+    if (s) {
+      // garantia: sprite viva
+      s.dead = false;
+      s.hidden = false;
+      s._animFrozen = false;
+      s._animFrozenFrame = 0;
+    }
+
+  } else if (msg.type === 'monster_hp') {
+    const id = String(msg.id);
+    const m = state.monsters.get(id) || { id };
+    const prevHp = (typeof m.hp === 'number') ? m.hp : null;
+
+    m.key = String(msg.monsterKey || m.key || 'monster');
+    m.maxHp = Number(msg.maxHp ?? m.maxHp ?? msg.hp ?? 1);
+    m.hp = Number(msg.hp ?? m.hp ?? m.maxHp);
+    state.monsters.set(id, m);
+
+    // floater de dano ancorado na sprite correta
+    const s = getSpriteFor(id);
+    const dmg = (typeof msg.dmg === 'number')
+      ? msg.dmg
+      : (prevHp != null ? Math.max(0, prevHp - m.hp) : 0);
+    if (dmg > 0 && s) pushFloaterAtSprite(s, `-${dmg}`);
+
+  } else if (msg.type === 'monster_dead') {
+    const id = String(msg.id);
+    const xp = Number(msg.xp || 0);
+
+    const m = state.monsters.get(id) || { id };
+    m.hp = 0;
+    state.monsters.set(id, m);
+
+    // congela sprite e mostra xp
+    const s = getSpriteFor(id);
+    if (s) {
+      if (xp > 0) pushFloaterAtSprite(s, `+${xp}xp`, 1100);
+      window.GameScene?.onMonsterDead?.(id);
+    }
+
+    // remove do overlay p/ não sobrar barra
+    setTimeout(() => state.monsters.delete(id), 0);
+  }
+}
+
+function connectCombatWS() {
+  try { ws = new WebSocket(wsUrl()); }
+  catch (e) { console.warn('[combat] ws open failed:', e?.message); setTimeout(connectCombatWS, 1500); return; }
+
+  ws.onopen = () => console.log('[combat] ws overlay connected');
+  ws.onclose = () => setTimeout(connectCombatWS, 1500);
+  ws.onerror  = (e) => console.warn('[combat] ws error', e);
+  ws.onmessage = onWsMessage;
+}
+
+// --------------- Draw helpers (sempre na posição da sprite vinculada) ---------------
+function drawHpBarAtSprite(ctx, sprite, hp, maxHp) {
+  if (!sprite) return;
+
+  const meta   = sprite.meta || {};
+  const frameW = meta.frame?.width  ?? 32;
+  const frameH = meta.frame?.height ?? 32;
+  const ax     = meta.anchor?.x ?? 0.5;
+  const ay     = meta.anchor?.y ?? 0.9;
+
+  const w = frameW - 4;
+  const h = 4;
+  const x = Math.round(sprite.x - frameW * ax + 2);
+  const y = Math.round(sprite.y - frameH * ay - 6);
+
+  // fundo
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillRect(x, y, w, h);
+
+  // barra (vermelha)
+  const pct = Math.max(0, Math.min(1, (maxHp > 0 ? hp / maxHp : 0)));
+  const wHp = Math.round(w * pct);
+  ctx.fillStyle = '#d33';
+  ctx.fillRect(x, y, wHp, h);
+
+  // borda
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, w, h);
+}
+
+function drawTargetBox(ctx) {
+  const id = (window.combatState && (window.combatState.selectedTargetId || window.combatState.targetId)) || null;
+  if (!id) return;
+  const s = getSpriteFor(id);
+  if (!s) return;
+
+  const meta   = s.meta || {};
+  const frameW = meta.frame?.width  ?? 32;
+  const frameH = meta.frame?.height ?? 32;
+  const ax     = meta.anchor?.x ?? 0.5;
+  const ay     = meta.anchor?.y ?? 0.9;
+
+  const ox = Math.round(s.x - frameW * ax);
+  const oy = Math.round(s.y - frameH * ay);
+
+  ctx.strokeStyle = 'red';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(ox, oy, frameW, frameH);
+}
+
+// --------------- Install API ---------------
 export default function installCombatOverlay() {
   connectCombatWS();
 
+  // manter selectedTargetId em dia (caso seu startAttack/stop disparem eventos)
+  window.addEventListener('combat:attack:start', () => {
+    if (window.combatState?.targetId) state.selectedTargetId = window.combatState.targetId;
+  });
+  window.addEventListener('combat:attack:stop', () => { state.selectedTargetId = null; });
+
   window.CombatUI = {
     render(ctx, camera, dt) {
-      const gs = window.GameScene;
-      if (!gs) return;
-
-      const targetId =
-        window.combatState?.targetId ||
-        window.combatState?.selectedTargetId ||
-        null;
-
-      const drawOnlyTarget = () => {
-        if (targetId) {
-          const m = state.monsters.get(String(targetId));
-          if (m) {
-            drawHpBar(ctx, m);
-            drawTargetBox(ctx, m);
-          }
+      const drawAll = () => {
+        // desenha HP somente se houver sprite vinculada e o bicho estiver vivo
+        for (const m of state.monsters.values()) {
+          if (m.hp <= 0) continue;
+          const s = getSpriteFor(m.id);
+          if (s) drawHpBarAtSprite(ctx, s, m.hp, m.maxHp);
         }
+        drawTargetBox(ctx);
       };
 
-      if (gs.camera?.apply) gs.camera.apply(ctx, drawOnlyTarget);
-      else drawOnlyTarget();
+      if (camera?.apply) camera.apply(ctx, drawAll);
+      else drawAll();
 
       updateAndDrawFloaters(ctx, dt * 1000);
-      state.lastTs = performance.now();
     },
     getState() {
-      // array plana (debug)
       return {
         ts: Date.now(),
-        monsters: Array.from(state.monsters.values()).map(m => ({
-          id: m.id, key: m.key || 'monster',
-          x: m.x ?? 0, y: m.y ?? 0,
-          hp: m.hp, maxHp: m.maxHp, dead: !!m.dead
-        }))
+        monsters: Array.from(state.monsters.values())
       };
     }
   };

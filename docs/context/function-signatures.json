@@ -144,14 +144,21 @@
   },
   {
     "file": "server\\index.js",
-    "line": 54,
+    "line": 37,
+    "kind": "arrow",
+    "name": "syncSpawns",
+    "params": []
+  },
+  {
+    "file": "server\\index.js",
+    "line": 62,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 194,
+    "line": 201,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -160,7 +167,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 423,
+    "line": 431,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -169,7 +176,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 470,
+    "line": 479,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -178,7 +185,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 482,
+    "line": 491,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -937,6 +944,13 @@
     "line": 46,
     "kind": "arrow",
     "name": "shutdown",
+    "params": []
+  },
+  {
+    "file": "server\\jobs\\sync_spawns.js",
+    "line": 7,
+    "kind": "function",
+    "name": "syncSpawns",
     "params": []
   },
   {
@@ -4240,7 +4254,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 19,
+    "line": 18,
     "kind": "function",
     "name": "normKey",
     "params": [
@@ -4249,7 +4263,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 24,
+    "line": 23,
     "kind": "function",
     "name": "borrowLocalPosition",
     "params": [
@@ -4259,7 +4273,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 53,
+    "line": 48,
     "kind": "function",
     "name": "ensurePosForMonster",
     "params": [
@@ -4268,7 +4282,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 63,
+    "line": 65,
     "kind": "function",
     "name": "onWsMessage",
     "params": [
@@ -4277,21 +4291,21 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 115,
+    "line": 125,
     "kind": "function",
     "name": "wsUrl",
     "params": []
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 121,
+    "line": 131,
     "kind": "function",
     "name": "connectCombatWS",
     "params": []
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 132,
+    "line": 142,
     "kind": "function",
     "name": "drawHpBar",
     "params": [
@@ -4301,16 +4315,17 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 153,
+    "line": 173,
     "kind": "function",
     "name": "drawTargetBox",
     "params": [
-      "ctx"
+      "ctx",
+      "m"
     ]
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 164,
+    "line": 188,
     "kind": "function",
     "name": "updateAndDrawFloaters",
     "params": [
@@ -4320,9 +4335,9 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 189,
+    "line": 217,
     "kind": "arrow",
-    "name": "drawAll",
+    "name": "drawOnlyTarget",
     "params": []
   },
   {
