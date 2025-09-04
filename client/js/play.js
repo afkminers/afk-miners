@@ -93,10 +93,10 @@ function pickElByIds(prefIds = [], fallbackSelectors = []) {
   return null;
 }
 const preferCanvasId = QS.get('canvas'); // ex: ?canvas=scene
-const preferHudId    = QS.get('hud');    // ex: ?hud=hud
+const preferHudId = QS.get('hud');    // ex: ?hud=hud
 
 const canvas = pickElByIds([preferCanvasId, 'view', 'scene'], ['canvas#view', 'canvas#scene', 'canvas']);
-const hud    = pickElByIds([preferHudId, 'hud', 'app-hud'],    ['#hud', '#app-hud']);
+const hud = pickElByIds([preferHudId, 'hud', 'app-hud'], ['#hud', '#app-hud']);
 
 if (!canvas) {
   console.error('play.js: canvas não encontrado (#view ou #scene).');
@@ -110,9 +110,9 @@ window.GameScene.canvas = canvas;
 window.GameScene.ctx = ctx;
 
 // garante foco p/ WASD e click-to-move
-try { canvas.setAttribute('tabindex', '0'); } catch {}
-canvas.addEventListener('mousedown', () => { try { canvas.focus(); } catch {} });
-canvas.addEventListener('touchstart', () => { try { canvas.focus(); } catch {} });
+try { canvas.setAttribute('tabindex', '0'); } catch { }
+canvas.addEventListener('mousedown', () => { try { canvas.focus(); } catch { } });
+canvas.addEventListener('touchstart', () => { try { canvas.focus(); } catch { } });
 
 // helper DOM
 const $ = (s) => document.querySelector(s);
@@ -137,7 +137,7 @@ async function fetchCsrfToken(force = false) {
     try {
       const j = await r.clone().json();
       bodyTok = j.token || j.csrf || j.csrfToken || j.csrf_token || null;
-    } catch {}
+    } catch { }
     CSRF_TOKEN = hdr || bodyTok || readCookie('csrf') || null;
   } catch {
     CSRF_TOKEN = readCookie('csrf') || null;
@@ -237,14 +237,13 @@ async function loadTilesetImage(rawPath) {
 
 /* ============================= Settings (patch mínimo) ============================= */
 function applySmoothing(){
-  const s = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
-  const smooth = !s.pixelArt; // pixelArt=true => smoothing OFF
   try {
-    ctx.imageSmoothingEnabled = smooth;
-    ctx.mozImageSmoothingEnabled = smooth;
-    ctx.webkitImageSmoothingEnabled = smooth;
+    ctx.imageSmoothingEnabled = false;
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.webkitImageSmoothingEnabled = false;
   } catch {}
 }
+
 applySmoothing();
 document.addEventListener('settings:changed', () => { applySmoothing(); resize(); });
 
@@ -252,12 +251,12 @@ document.addEventListener('settings:changed', () => { applySmoothing(); resize()
 function resize() {
   const shell = document.querySelector('#clientShell') || canvas.parentElement;
   const rect = shell ? shell.getBoundingClientRect() : { width: window.innerWidth * 0.9, height: window.innerHeight * 0.9 };
-  const wCSS = Math.max(320, Math.floor(rect.width  || window.innerWidth  * 0.9));
+  const wCSS = Math.max(320, Math.floor(rect.width || window.innerWidth * 0.9));
   const hCSS = Math.max(200, Math.floor(rect.height || window.innerHeight * 0.9));
   const st = (window.GameSettings?.get?.() || window.GameSettings?.getState?.()) || {};
   const dprBase = window.devicePixelRatio || 1;
   const dpr = Math.min(dprBase, Number(st.dprCap || dprBase));
-  canvas.style.width  = wCSS + 'px';
+  canvas.style.width = wCSS + 'px';
   canvas.style.height = hCSS + 'px';
   const w = Math.round(wCSS * dpr);
   const h = Math.round(hCSS * dpr);
@@ -277,6 +276,7 @@ function loadImg(src) {
   return img;
 }
 function imgReady(img) { return img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0; }
+
 async function ensureImgLoaded(img) {
   if (imgReady(img)) return true;
   try { await img.decode(); return imgReady(img); } catch { return imgReady(img); }
@@ -300,13 +300,19 @@ function indexSpriteMeta(obj) {
   SPRITE_INDEX.clear();
   for (const [key, data] of Object.entries(obj || {})) {
     const nk = normKey(key);
+    // indexa por key normalizada
     SPRITE_INDEX.set(nk, data);
+
+    // indexa também por caminho da imagem do YAML
     if (data?.image) SPRITE_INDEX.set(normKey(data.image), data);
+
+    // apelidos opcionais
     if (Array.isArray(data?.aliases)) {
       for (const a of data.aliases) SPRITE_INDEX.set(normKey(a), data);
     }
   }
 }
+
 
 async function loadSpriteMeta() {
   const list = await jget('/api/assets/sprites'); // [{ key, kind, data }]
@@ -315,33 +321,61 @@ async function loadSpriteMeta() {
 }
 
 function findMetaFor(spawnKey) {
-  const tries = [spawnKey, String(spawnKey || '').toLowerCase(), String(spawnKey || '').replace(/[\s_]+/g,'-'), normKey(spawnKey)];
+  const k = String(spawnKey || '').trim();
+  if (!k) return null;
+  const tries = [
+    k,
+    k.toLowerCase(),
+    k.replace(/[\s_]+/g, '-'),
+    k.replace(/[\s\-]+/g, '_'),
+  ];
   for (const t of tries) {
     const m = SPRITE_INDEX.get(normKey(t));
     if (m) return m;
   }
-  const nk = normKey(spawnKey);
-  for (const [k, m] of SPRITE_INDEX.entries()) if (k.includes(nk)) return m;
+  const nk = normKey(k);
+  for (const [idx, m] of SPRITE_INDEX.entries()) {
+    if (idx.includes(nk)) return m;
+  }
   return null;
 }
 
-function buildMonsterCandidates(kindNorm, meta) {
-  const base = normKey(kindNorm);
-  const fromMeta = meta?.image ? assetUrl(meta.image) : null;
-  const metaBase = fromMeta ? fromMeta.replace(/^(\.\/)+/,'') : null;
-  return [
-    fromMeta,
-    metaBase,
-    `/sprites/monsters/${base}.png`,
-    `/sprites/${base}.png`,
-    `/img/monsters/${base}.png`,
-    `/img/${base}.png`,
-    `/${base}.png`
-  ].filter(Boolean);
+
+
+function buildMonsterCandidates(kindNorm, meta, rawKey) {
+  const list = [];
+
+  // 1) Caminho explícito do YAML (prioritário)
+  if (meta?.image) {
+    const p = meta.image.replace(/^(\.\/)+/, '');
+    list.push('/' + p); // ex: /sprites/monsters/cave_rat.png
+    list.push(p);       // ex: sprites/monsters/cave_rat.png
+  }
+
+  // 2) Fallbacks: gera variações de nome
+  const vKebab = String(kindNorm || '').trim();                 // ex: cave-rat
+  const vRaw = String(rawKey || '').trim();                   // ex: cave_rat
+  const vUnder = vRaw.toLowerCase().replace(/[\s\-]+/g, '_');   // ex: cave_rat
+  const vKebabFromRaw = vRaw.toLowerCase().replace(/[\s_]+/g, '-'); // ex: cave-rat
+
+  const variants = [...new Set([vKebab, vUnder, vKebabFromRaw])];
+
+  for (const v of variants) {
+    list.push(`/sprites/monsters/${v}.png`);
+    list.push(`/sprites/${v}.png`);
+    list.push(`/img/monsters/${v}.png`);
+    list.push(`/img/${v}.png`);
+    list.push(`/${v}.png`);
+  }
+
+  // remove duplicatas mantendo a ordem
+  return [...new Set(list)];
 }
 
-async function loadMonsterImg(kindNorm, meta) {
-  const candidates = buildMonsterCandidates(kindNorm, meta);
+
+
+async function loadMonsterImg(kindNorm, meta, rawKey) {
+  const candidates = buildMonsterCandidates(kindNorm, meta, rawKey);
   for (const url of candidates) {
     const img = loadImg(url);
     const ok = await ensureImgLoaded(img);
@@ -350,6 +384,55 @@ async function loadMonsterImg(kindNorm, meta) {
   console.warn(`[mob sprite] falhou carregar: ${kindNorm}. Tentativas:`, candidates);
   return null;
 }
+
+// Auto-meta: tenta 64x64 → 48x32 → 32x32 e define animações padrão
+function inferMetaFromImage(img, rawKey) {
+  if (!img || !img.naturalWidth || !img.naturalHeight) return null;
+
+  // ordem de tentativa de frame size
+  const candidates = [
+    { w: 64, h: 64 },
+    { w: 48, h: 32 },
+    { w: 32, h: 32 },
+  ];
+
+  // escolhe o 1º que divide exatamente a imagem
+  let fw = 32, fh = 32;
+  for (const c of candidates) {
+    if (img.naturalWidth % c.w === 0 && img.naturalHeight % c.h === 0) {
+      fw = c.w; fh = c.h; break;
+    }
+  }
+
+  const cols = Math.max(1, Math.floor(img.naturalWidth / fw));
+  const rows = Math.max(1, Math.floor(img.naturalHeight / fh));
+
+  return {
+    key: String(rawKey || '').trim(),
+    kind: 'monster',
+    image: img.src.replace(location.origin, ''),
+    frame: { width: fw, height: fh, margin: 0, spacing: 0, bleedFix: 0.25 },
+    grid: { cols, rows },
+    anchor: { x: 0.5, y: fw === 64 && fh === 64 ? 0.85 : 0.9 }, // levemente mais baixo p/ 64x64
+    anims: {
+      walk: {
+        fps: 8,
+        frames: Math.min(4, cols),
+        startCol: 0,
+        rowByDir:
+          (rows >= 5)
+            ? { south: 1, west: 2, east: 3, north: 4 }
+            : (rows >= 4) ? { south: 0, west: 1, east: 2, north: 3 } : null,
+        row: 0,
+        loop: true
+      },
+      dead: (rows >= 6)
+        ? { row: 5, frames: Math.min(4, cols), startCol: 0, loop: false }
+        : null
+    }
+  };
+}
+
 
 /* ========================= Estado do Mapa ========================= */
 let mapData = null;
@@ -415,67 +498,144 @@ function drawPlayer(controller) {
 function drawMob(m) {
   if (m.hidden) return;
 
-  if (m.meta && imgReady(m.img)) {
-    const meta   = m.meta;
-    let frameW = meta.frame?.width  ?? 32;
-    let frameH = meta.frame?.height ?? 32;
-    const cols   = meta.grid?.cols ?? 1;
-    const rows   = meta.grid?.rows ?? 1;
+  // Auto-meta se só a imagem carregou
+  if ((!m.meta || !m.meta.frame || !m.meta.grid) && imgReady(m.img)) {
+    const auto = inferMetaFromImage(m.img, m.rawKey || m.kind);
+    if (auto) m.meta = auto;
+  }
 
-    // animações
-    const animWalk = meta.anims?.walk || { fps: 8, frames: cols, row: 0, startCol: 0 };
-    const animDead = meta.anims?.dead || null;
-
-    // base
-    let fps      = animWalk.fps || 8;
-    let frames   = animWalk.frames || cols;
-    let startCol = animWalk.startCol || 0;
-    let row      = typeof animWalk.row === 'number' ? animWalk.row : 0;
-    if (animWalk.rowByDir && m.face && animWalk.rowByDir[m.face] != null) row = animWalk.rowByDir[m.face];
-
-    // estado morto: congela em 1 frame; usa linha de 'dead' se existir
-    if (m.dead) {
-      if (animDead) {
-        row = animDead.row ?? row;
-        startCol = animDead.startCol ?? 0;
-      }
-      fps = 0;
-      frames = 1;
-      m._animFrozen = true;
-      m._animFrozenFrame = 0;
+  if (!(m.meta && imgReady(m.img))) {
+    if (!m.dead) {
+      ctx.save();
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath(); ctx.arc(m.x, m.y, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
     }
-
-    const t = performance.now() / 1000;
-    const f = m._animFrozen ? m._animFrozenFrame : Math.floor(t * fps) % Math.max(1, frames);
-    const col = startCol + f;
-
-    const sx = (col % cols) * frameW;
-    const sy = (row % rows) * frameH;
-
-    const anchorX = (meta.anchor?.x ?? 0.5);
-    const anchorY = (meta.anchor?.y ?? 0.9);
-    const dw = frameW, dh = frameH;
-    const ox = Math.round(m.x - dw * anchorX);
-    const oy = Math.round(m.y - dh * anchorY);
-
-    const canFlipX = !animWalk.rowByDir && rows === 1 && m.face === 'west';
-
-    ctx.save();
-    if (m.dead) ctx.globalAlpha = 0.55;
-    if (canFlipX) { ctx.translate(ox + dw, oy); ctx.scale(-1, 1); ctx.drawImage(m.img, sx, sy, frameW, frameH, 0, 0, dw, dh); }
-    else { ctx.drawImage(m.img, sx, sy, frameW, frameH, ox, oy, dw, dh); }
-    ctx.restore();
     return;
   }
 
-  // Fallback: dot vermelho
-  if (!m.dead) {
-    ctx.save();
-    ctx.fillStyle = "#ef4444";
-    ctx.beginPath(); ctx.arc(m.x, m.y, 7, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
+  const meta = m.meta;
+
+  // frame & grid
+  const frameW  = Number(meta.frame?.width)  || 32;
+  const frameH  = Number(meta.frame?.height) || 32;
+  const margin  = Number(meta.frame?.margin)  || 0;
+  const spacing = Number(meta.frame?.spacing) || 0;
+  const cols    = Math.max(1, Number(meta.grid?.cols) || 1);
+  const rows    = Math.max(1, Number(meta.grid?.rows) || 1);
+  const EPS     = Number.isFinite(Number(meta.frame?.bleedFix)) ? Number(meta.frame?.bleedFix) : 0.25;
+
+  // animações
+  const animIdle = meta.anims?.idle || null;
+  const animWalk = meta.anims?.walk || { fps: 8, frames: cols, row: 0, startCol: 0, loop: true };
+  const animDead = meta.anims?.dead || null;
+
+  // escolher anima
+  const movingMag = Math.hypot(m.dirX || 0, m.dirY || 0);
+  let anim = animWalk;
+  if (m.dead && animDead) anim = animDead;
+  //else if (!m.dead && animIdle && movingMag < 0.12) anim = animIdle;
+
+  // parâmetros base
+  let fps = Number(anim.fps); if (!Number.isFinite(fps) || fps < 0) fps = 8;
+
+  let seq = Array.isArray(anim.seq) ? anim.seq.slice() : null;
+  let frames = Number(anim.frames);
+  let startCol = Number(anim.startCol);
+  if (!Number.isFinite(frames) || frames <= 0) frames = cols;
+  if (!Number.isFinite(startCol) || startCol < 0) startCol = 0;
+
+  // direção (linha/frames/startCol/seq)
+  const face = m.face || 'south';
+  let row = Number(anim.row); if (!Number.isFinite(row)) row = 0;
+
+  if (anim.rowByDir && anim.rowByDir[face] != null) {
+    const r = Number(anim.rowByDir[face]); if (Number.isFinite(r)) row = r;
   }
+  if (anim.framesByDir && anim.framesByDir[face] != null) {
+    const fd = Number(anim.framesByDir[face]); if (Number.isFinite(fd) && fd > 0) frames = fd;
+  }
+  if (anim.startColByDir && anim.startColByDir[face] != null) {
+    const sd = Number(anim.startColByDir[face]); if (Number.isFinite(sd) && sd >= 0) startCol = sd;
+  }
+  if (!seq && anim.seqByDir && Array.isArray(anim.seqByDir[face])) {
+    seq = anim.seqByDir[face].slice();
+  }
+
+  // clamp do row ao grid
+  row = Math.max(0, Math.min(rows - 1, row));
+
+  // estado morto: congelar 1º frame
+  if (m.dead && animDead) {
+    fps = 0;
+    frames = 1;
+    if (Number.isFinite(animDead.startCol)) startCol = Number(animDead.startCol);
+    if (Number.isFinite(animDead.row)) row = Math.max(0, Math.min(rows - 1, Number(animDead.row)));
+    seq = null;
+    m._animFrozen = true;
+    m._animFrozenFrame = 0;
+  }
+
+  // calcular frame atual (usa comprimento da seq quando houver)
+  const t = performance.now() / 1000;
+  const baseLen = Math.max(1, seq ? seq.length : frames);
+  let f;
+  if (anim.loop === false) {
+    const idx = Math.floor(t * Math.max(0, fps));
+    f = Math.min(idx, baseLen - 1);      // <- usa baseLen aqui
+  } else {
+    f = m._animFrozen ? m._animFrozenFrame : Math.floor(t * Math.max(0, fps)) % baseLen;
+  }
+
+  // coluna
+  let col;
+  if (seq && seq.length > 0) {
+    const pick = Number(seq[f]);
+    col = Number.isFinite(pick) ? Math.max(0, Math.min(cols - 1, pick)) : 0;
+  } else {
+    const rowCols = cols;
+    if (startCol < 0) startCol = 0;
+    if (startCol >= rowCols) startCol = Math.max(0, rowCols - 1);
+    const maxFromStart = Math.max(1, rowCols - startCol);
+    frames = Math.min(Math.max(1, frames), maxFromStart);
+    col = startCol + f;
+    if (col >= rowCols) col = rowCols - 1;
+    if (col < 0) col = 0;
+  }
+
+  // recorte
+  const sx = margin + col * (frameW + spacing) + EPS;
+  const sy = margin + row * (frameH + spacing) + EPS;
+  const sw = frameW - EPS * 2;
+  const sh = frameH - EPS * 2;
+
+  // âncora
+  const anchorX = (meta.anchor?.x ?? 0.5);
+  const anchorY = (meta.anchor?.y ?? 0.9);
+  const dw = frameW, dh = frameH;
+  const ox = Math.round(m.x - dw * anchorX);
+  const oy = Math.round(m.y - dh * anchorY);
+
+  // flipX (1 linha, sem rowByDir)
+  const canFlipX = !anim.rowByDir && rows === 1 && face === 'west';
+
+  ctx.save();
+  if (m.dead) ctx.globalAlpha = 0.55;
+
+  if (canFlipX) {
+    ctx.translate(ox + dw, oy);
+    ctx.scale(-1, 1);
+    ctx.drawImage(m.img, sx, sy, sw, sh, 0, 0, dw, dh);
+  } else {
+    ctx.drawImage(m.img, sx, sy, sw, sh, ox, oy, dw, dh);
+  }
+  ctx.restore();
 }
+
+
+
+
+
 
 /* ======================= Posição Persistente ======================= */
 let POS_SYNC_ENABLED = true;
@@ -499,7 +659,7 @@ async function postPosThrottled(mapKey, x, y) {
   } catch (e) {
     const msg = String(e.message || '');
     if (msg.includes('403') || msg.includes('csrf-missing') ||
-        msg.includes('429') || msg.includes('409')) {
+      msg.includes('429') || msg.includes('409')) {
       POS_SYNC_ENABLED = false; // desliga após 1a falha de auth/csrf/rate/replay
     } else {
       console.warn('pos sync failed:', msg);
@@ -511,7 +671,7 @@ async function getSavedPos() {
   try {
     const p = await jget(`/api/player/pos?map=${encodeURIComponent(MAP_KEY)}`);
     if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) return { x: p.x, y: p.y };
-  } catch {}
+  } catch { }
   return null;
 }
 
@@ -525,10 +685,10 @@ function buildCollisionGridFromObjects(mapW, mapH, objs) {
     const isSolid = oType === 'solid' || (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1));
     if (!isSolid) continue;
     const x0 = Math.floor(o.x / TILE), y0 = Math.floor(o.y / TILE);
-    const x1 = Math.floor((o.x + o.width  - 1) / TILE);
+    const x1 = Math.floor((o.x + o.width - 1) / TILE);
     const y1 = Math.floor((o.y + o.height - 1) / TILE);
-    for (let cy=y0; cy<=y1; cy++) for (let cx=x0; cx<=x1; cx++) {
-      if (cx>=0 && cy>=0 && cx<cols && cy<rows) grid[cy*cols + cx] = 1;
+    for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
+      if (cx >= 0 && cy >= 0 && cx < cols && cy < rows) grid[cy * cols + cx] = 1;
     }
   }
   return { grid, cols, rows };
@@ -539,7 +699,7 @@ function buildCollisionGridFromTiled(json) {
   const grid = new Uint8Array(cols * rows);
   const collisionLayer = (json.layers || []).find(l => l.type === 'tilelayer' && l.name && l.name.toLowerCase().includes('collision'));
   if (collisionLayer && collisionLayer.data) {
-    for (let i=0; i<collisionLayer.data.length; i++) if (i < grid.length && collisionLayer.data[i]) grid[i] = 1;
+    for (let i = 0; i < collisionLayer.data.length; i++) if (i < grid.length && collisionLayer.data[i]) grid[i] = 1;
   }
   return { grid, cols, rows };
 }
@@ -556,7 +716,7 @@ function mapSpawnsFromTiledJSON(json) {
       const monsterKey = String(p.monsterKey || p.monster || "goblin");
       const count = Number(p.count || 1) || 1;
       const respawnSec = Number(p.respawnSec || p.respawn || 20) || 20;
-      const w = o.width  > 0 ? o.width  : TILE;
+      const w = o.width > 0 ? o.width : TILE;
       const h = o.height > 0 ? o.height : TILE;
       return {
         id: Number(o.id),               // <<< AQUI é o id correto do Tiled
@@ -578,36 +738,38 @@ async function resolvePlayerSprite() {
       const candidate = playerVis.heroKey ? `/sprites/characters/${playerVis.heroKey}.png` : null;
       if (candidate) {
         playerVis.img = loadImg(candidate);
-        await ensureImgLoaded(playerVis.img).catch(()=>{});
+        await ensureImgLoaded(playerVis.img).catch(() => { });
         if (imgReady(playerVis.img)) return;
       }
       if (starter.imageUrl) {
         playerVis.img = loadImg(starter.imageUrl);
-        await ensureImgLoaded(playerVis.img).catch(()=>{});
+        await ensureImgLoaded(playerVis.img).catch(() => { });
         if (imgReady(playerVis.img)) return;
       }
     }
   } catch (e) { console.warn('resolvePlayerSprite:', e.message); }
   playerVis.img = loadImg("/sprites/characters/player.png");
-  ensureImgLoaded(playerVis.img).catch(()=>{});
+  ensureImgLoaded(playerVis.img).catch(() => { });
 }
 
 /* =========================== Respawn Manager ========================== */
 function addMobFromSpawn(spDef) {
-  const rawKey  = spDef.monsterKey || spDef.monster || "goblin";
+  const rawKey = spDef.monsterKey || spDef.monster || "goblin";
   const kindNorm = normKey(rawKey);
-  const meta = findMetaFor(rawKey);
+  let meta = findMetaFor(rawKey); // tenta YAML normalmente
 
   const m = {
     id: mobAutoId++,
     kind: kindNorm,
+    rawKey,                       // <-- guardamos
     x: (spDef.x || 0) + Math.random() * (spDef.w || TILE),
     y: (spDef.y || 0) + Math.random() * (spDef.h || TILE),
     w: 32, h: 32,
     speed: 40 + Math.random() * 20,
     dirX: 0, dirY: 0, changeAt: 0,
     face: 'east',
-    img: null, meta: meta || null,
+    img: null,
+    meta: meta || null,           // se não veio do YAML, fica null e inferimos depois
     bound: (spDef.w || spDef.h) ? { x: spDef.x || 0, y: spDef.y || 0, w: spDef.w || TILE, h: spDef.h || TILE } : null,
     spawnId: Number(spDef.id || spDef.spawn_id || spDef.spawnId || 0) || null,
     instanceId: null,
@@ -617,11 +779,18 @@ function addMobFromSpawn(spDef) {
     _animFrozenFrame: 0,
   };
 
-  loadMonsterImg(kindNorm, meta).then(img => { if (img) m.img = img; });
+  loadMonsterImg(kindNorm, meta, rawKey).then(img => {
+    if (!img) return;
+    m.img = img;
+    // Se não veio meta via YAML, inferimos agora com a imagem em mãos
+    if (!m.meta || !m.meta.frame || !m.meta.grid) {
+      const auto = inferMetaFromImage(img, rawKey);
+      if (auto) m.meta = auto;
+    }
+  });
 
   mobs.push(m);
 
-  // registra sprite no índice por spawn (para o overlay “adotar” a instância WS deste spawn)
   if (m.spawnId != null) {
     window.GameScene.registerMobSprite(m, { spawnId: m.spawnId });
   }
@@ -639,7 +808,7 @@ function buildSpawnersFromDefs(defs) {
       want,
       respawnMs,
       nextAt: performance.now(),
-      area: { x: d.x||0, y: d.y||0, w: d.w||TILE, h: d.h||TILE },
+      area: { x: d.x || 0, y: d.y || 0, w: d.w || TILE, h: d.h || TILE },
       liveIds: new Set()
     });
   });
@@ -663,7 +832,7 @@ function updateRespawns(now) {
 /* ================================ Boot ================================ */
 (async function main() {
   // pega CSRF e cookies antes de qualquer POST
-  await fetchCsrfToken().catch(()=>{});
+  await fetchCsrfToken().catch(() => { });
 
   await loadSpriteMeta();
 
@@ -677,7 +846,7 @@ function updateRespawns(now) {
   function normalizeApiJson(payload) {
     let v = payload;
     if (Array.isArray(v)) v = v[0];
-    if (typeof v === 'string') { try { v = JSON.parse(v); } catch {} }
+    if (typeof v === 'string') { try { v = JSON.parse(v); } catch { } }
     return v;
   }
 
@@ -709,8 +878,8 @@ function updateRespawns(now) {
   const mapW = (mapData.width || 64) * TILE;
   const mapH = (mapData.height || 64) * TILE;
 
-  function hasSolidProp(o){ return (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1)); }
-  const collBuild = objArr.some(o => String(o.type||'').toLowerCase()==='solid' || hasSolidProp(o))
+  function hasSolidProp(o) { return (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1)); }
+  const collBuild = objArr.some(o => String(o.type || '').toLowerCase() === 'solid' || hasSolidProp(o))
     ? buildCollisionGridFromObjects(mapW, mapH, objArr)
     : buildCollisionGridFromTiled(mapData);
 
@@ -743,7 +912,7 @@ function updateRespawns(now) {
     camera.apply = (ctx, draw) => { ctx.save(); ctx.translate(-camera.x, -camera.y); draw(); ctx.restore(); };
   }
 
-  function applyCameraZoom(){
+  function applyCameraZoom() {
     const st = (window.GameSettings?.getState && window.GameSettings.getState()) || { zoom: 1 };
     if (typeof camera.setZoom === 'function') camera.setZoom(Number(st.zoom || 1));
   }
@@ -754,7 +923,7 @@ function updateRespawns(now) {
     speed: 140,
     collisionGrid: grid,
     cols, rows,
-    onMoved: (x,y) => postPosThrottled(MAP_KEY, x, y)
+    onMoved: (x, y) => postPosThrottled(MAP_KEY, x, y)
   });
 
   // expõe camera/controller/mapKey p/ outros módulos (combate, etc.)
@@ -774,7 +943,7 @@ function updateRespawns(now) {
   const saved = await getSavedPos();
   if (saved) controller.setPosition(saved.x, saved.y);
   else if (starts[0]) controller.setPosition(starts[0].x, starts[0].y);
-  else controller.setPosition(TILE*2 + TILE/2, TILE*2 + TILE/2);
+  else controller.setPosition(TILE * 2 + TILE / 2, TILE * 2 + TILE / 2);
 
   camera.follow(controller);
   await resolvePlayerSprite();
@@ -838,10 +1007,10 @@ function updateRespawns(now) {
       }
       if (mob.bound) {
         const { x, y, w, h } = mob.bound;
-        if (mob.x < x)   { mob.x = x;   mob.dirX *= -1; }
-        if (mob.y < y)   { mob.y = y;   mob.dirY *= -1; }
-        if (mob.x > x+w) { mob.x = x+w; mob.dirX *= -1; }
-        if (mob.y > y+h) { mob.y = y+h; mob.dirY *= -1; }
+        if (mob.x < x) { mob.x = x; mob.dirX *= -1; }
+        if (mob.y < y) { mob.y = y; mob.dirY *= -1; }
+        if (mob.x > x + w) { mob.x = x + w; mob.dirX *= -1; }
+        if (mob.y > y + h) { mob.y = y + h; mob.dirY *= -1; }
       }
     }
 

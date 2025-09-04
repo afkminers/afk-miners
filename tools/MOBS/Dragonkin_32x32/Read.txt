@@ -1,0 +1,38 @@
+Nome: Dragonkin
+HP: 220
+Experiência: 180
+
+Habilidades:
+⚔️ Físico: Mordida e garras (0–60)
+🔥 Magia: Sopro flamejante (0–35)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil, patrulha cavernas vulcânicas.
+Menores que dragões, mas ainda perigosos.
+Não correm quando feridos.
+
+Locais de Respawn:
+- Montanhas vulcânicas
+- Cavernas de lava
+- Túneis próximos a depósitos de cristal
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Skraaah!"
+"Grrrhhh!"
+
+Loot:
+- 15–28 Gold Coins (100%)
+- Dragonkin Scale (15%)
+- Ember Core (5%)
+- Reinforced Bow (2%)
+- Scale Helmet (2%)
+- Storm Javelin (0.8%)
+
+Notas:
+Dragonkins são parentes distantes dos dragões.
+Servem como desafio intermediário antes de enfrentar criaturas lendárias.

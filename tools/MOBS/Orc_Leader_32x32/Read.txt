@@ -1,0 +1,33 @@
+Nome: Orc Leader
+HP: 180
+Experiência: 150
+
+Habilidades:
+⚔️ Físico: Corpo a corpo (0–55)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil. Líder supremo dos Orcs comuns.
+Muito mais perigoso, com bons equipamentos.
+
+Locais de Respawn:
+- Quartéis de Orcs
+- Cavernas sagradas de clãs Orc
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Smash!"
+"Chief!"
+
+Loot:
+- 12–20 Gold Coins (100%)
+- Orc Amulet (3%)
+- War Axe (1%)
+- Scale Armor (2%)
+
+Notas:
+Um dos primeiros inimigos realmente perigosos para grupos de jogadores.
+Orc Leaders representam autoridade tribal.

@@ -1,3 +1,9 @@
 monsters:
   balor: "./balor.yml"
   goblin: "./goblin.yml"
+  cave_rat: "./cave_rat.yml" # ← ADICIONE ESTA
+  rat: "./rat.yml"
+  bear: "./bear.yml"
+  rotmaw: "./rotmaw.yml"
+  deer: "./deer.yml"
+  demon_bonefiend: "./demon_bonefiend.yml"

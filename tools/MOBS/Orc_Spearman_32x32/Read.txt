@@ -1,0 +1,34 @@
+Nome: Orc Spearman
+HP: 85
+Experiência: 65
+
+Habilidades:
+⚔️ Físico: Lança (0–28, distância)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil, mantém distância atacando com lanças.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Fronteiras de acampamentos Orc
+- Torres de vigia improvisadas
+- Colinas rochosas
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Thuk!"
+"Throw spear!"
+
+Loot:
+- 5–10 Gold Coins (100%)
+- Orc Tooth (15%)
+- Hunting Spear (8%)
+- Orc Leather Legs (2%)
+
+Notas:
+Orc Spearman são a primeira ameaça de distância encontrada.
+Jogadores precisam aprender a lidar com ataques à distância aqui.

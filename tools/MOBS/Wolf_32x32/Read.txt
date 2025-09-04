@@ -1,0 +1,34 @@
+Nome: Wolf
+HP: 40
+Experiência: 18
+
+Habilidades:
+⚔️ Físico: Corpo a corpo (0–20)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil. Ataca com mordidas rápidas.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Florestas próximas à Ilha Inicial
+- Campos com presas (Deer)
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Howl!"
+"Grrr!"
+
+Loot:
+- 2–4 Gold Coins (100%)
+- Raw Meat (40%)
+- Wolf Pelt (15%)
+- Wolfhide Cap (2%)
+- Leather Armor (2%)
+
+Notas:
+Os Wolves são um passo acima dos Rats, usados como treino intermediário.
+Se caçados em grupo, podem ser perigosos para iniciantes.

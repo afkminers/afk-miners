@@ -1,0 +1,756 @@
+📖 Capítulo 5 — Bestiário Completo
+🐀 Rat
+
+HP: 20
+
+EXP: 5
+
+Ataques: mordida fraca.
+
+Comportamento: passivo-agressivo, fraco, anda em grupos.
+
+Respawn: casas abandonadas, caves iniciais.
+
+Falas: squeak!
+
+Loot:
+
+1–2 Gold (100%)
+
+Bone Shard (50%)
+
+Moldy Cheese (5%)
+
+Rusted Dagger (1%)
+
+Lore: Primeira praga enfrentada por mineradores.
+
+🐀 Cave Rat
+
+HP: 25
+
+EXP: 7
+
+Ataques: mordida.
+
+Comportamento: espreita em caves escuras.
+
+Respawn: minas próximas à House.
+
+Falas: squeee!
+
+Loot:
+
+1–3 Gold (100%)
+
+Bone Shard (70%)
+
+Leather Scrap (10%)
+
+Rusted Sword (1%)
+
+Lore: Versão adaptada ao subterrâneo, mais resistente.
+
+🐇 Rabbit
+
+HP: 10
+
+EXP: 0
+
+Comportamento: decorativo, corre ao ver jogador.
+
+Respawn: prados perto da House.
+
+Loot: nenhum.
+
+Lore: Criatura pacífica, usada para ambientação.
+
+🦌 Deer
+
+HP: 40
+
+EXP: 10
+
+Comportamento: foge em vez de atacar.
+
+Respawn: campos abertos.
+
+Loot:
+
+Raw Meat (70%)
+
+Deer Hide (20%)
+
+Antler Trinket (2%)
+
+Lore: Fonte inicial de carne e couro leve.
+
+🐺 Wolf
+
+HP: 50
+
+EXP: 15
+
+Comportamento: agressivo em grupo.
+
+Respawn: florestas iniciais.
+
+Falas: grrr!
+
+Loot:
+
+2–4 Gold
+
+Raw Meat (40%)
+
+Wolf Pelt (15%)
+
+Wolfhide Cap (2%)
+
+Leather Armor (2%)
+
+Lore: Caça favorita de mineradores jovens.
+
+🐻 Bear
+
+HP: 90
+
+EXP: 30
+
+Comportamento: agressivo, forte melee.
+
+Respawn: florestas densas.
+
+Falas: roaar!
+
+Loot:
+
+3–6 Gold
+
+Raw Meat (60%)
+
+Bear Fur (10%)
+
+Wooden Club (2%)
+
+Lore: Respeitado como primeiro inimigo realmente perigoso.
+
+👹 Goblin
+
+HP: 55
+
+EXP: 25
+
+Comportamento: agressivo, anda em bandos.
+
+Respawn: caves próximas da House.
+
+Falas: grak brr!
+
+Loot:
+
+2–4 Gold
+
+Goblin Ear (10%)
+
+Rusty Club (5%)
+
+Short Bow (2%)
+
+Lore: Criaturas traiçoeiras que saqueiam caravanas.
+
+👑 Goblin Leader
+
+HP: 120
+
+EXP: 60
+
+Comportamento: comanda goblins menores.
+
+Respawn: cavernas profundas.
+
+Falas: kill them, grak!
+
+Loot:
+
+4–8 Gold
+
+Goblin Talisman (5%)
+
+Iron Sword (2%)
+
+Leather Armor (3%)
+
+Lore: Líder tribal, mais inteligente que os demais.
+
+🕷 Spider
+
+HP: 80
+
+EXP: 35
+
+Comportamento: emboscador, envenena.
+
+Respawn: florestas úmidas.
+
+Loot:
+
+2–4 Gold
+
+Spider Leg (20%)
+
+Sticky Web (10%)
+
+Leather Helmet (2%)
+
+Lore: Primeiro inimigo a causar status (veneno).
+
+🕷 Poison Spider
+
+HP: 110
+
+EXP: 55
+
+Comportamento: mais resistente e venenosa.
+
+Respawn: pântanos.
+
+Loot:
+
+3–6 Gold
+
+Venom Sac (15%)
+
+Sticky Web (20%)
+
+Small Health Potion (5%)
+
+Lore: Fonte primária de veneno para alquimia.
+
+🧟 Troll
+
+HP: 120
+
+EXP: 45
+
+Comportamento: lento, forte, se regenera levemente.
+
+Respawn: cavernas escuras.
+
+Loot:
+
+2–6 Gold
+
+Rotten Meat (40%)
+
+Troll Hide (15%)
+
+Wooden Club (5%)
+
+Stone Maul (1%)
+
+Lore: Velhos inimigos dos mineradores, conhecidos por infestar minas.
+
+🧟 Swamp Troll
+
+HP: 140
+
+EXP: 60
+
+Comportamento: resistente, adaptado a pântanos.
+
+Respawn: áreas pantanosas.
+
+Loot:
+
+3–8 Gold
+
+Swamp Moss (10%)
+
+Swamp Boots (3%)
+
+Lore: Trolls que se adaptaram ao veneno e à podridão.
+
+🪓 Orc
+
+HP: 160
+
+EXP: 70
+
+Comportamento: agressivo, em bandos.
+
+Respawn: vilarejos orc.
+
+Falas: zug zug!
+
+Loot:
+
+4–8 Gold
+
+Orc Tooth (15%)
+
+Crude Club (5%)
+
+Orcish Axe (2%)
+
+Lore: Saqueadores violentos, eternos rivais dos humanos.
+
+
+
+📖 Capítulo 5 — Bestiário (continuação)
+🛡️ Orc Spearman
+
+HP: 180
+
+EXP: 85
+
+Ataques: lança à distância (distance fighting).
+
+Comportamento: ataca de longe, anda em grupos mistos com guerreiros.
+
+Respawn: acampamentos orc.
+
+Falas: grrr zughh!
+
+Loot:
+
+5–10 Gold
+
+Orc Tooth (15%)
+
+Hunting Spear (8%)
+
+Orc Leather Legs (2%)
+
+Lore: Orcs que aprenderam a caçar com lanças.
+
+⚔️ Orc Warrior
+
+HP: 200
+
+EXP: 100
+
+Ataques: melee forte, alto dano físico.
+
+Comportamento: agressivo, serve como linha de frente dos orcs.
+
+Respawn: vilarejos orc e cavernas.
+
+Falas: zuggh wargh!
+
+Loot:
+
+8–12 Gold
+
+Orc Leather (10%)
+
+Battle Axe (2%)
+
+Iron Shield (2%)
+
+Lore: A tropa de choque do exército orc.
+
+👑 Orc Leader
+
+HP: 350
+
+EXP: 250
+
+Ataques: melee forte + grito de liderança (buffa orcs próximos).
+
+Comportamento: raro, comanda grandes grupos.
+
+Respawn: fortalezas orc.
+
+Falas: grrr kill them all!
+
+Loot:
+
+12–20 Gold
+
+Orc Amulet (3%)
+
+War Axe (1%)
+
+Scale Armor (2%)
+
+Lore: Líder tribal, mantém ordem entre os orcs e organiza ataques a vilas humanas.
+
+☠️ Tier 3 — Intermediário (Level 25–40)
+💀 Skeleton
+
+HP: 120
+
+EXP: 65
+
+Ataques: espadada fraca.
+
+Comportamento: agressivo, frágil mas aparece em grupos.
+
+Respawn: cryptas e cemitérios.
+
+Loot:
+
+2–6 Gold
+
+Bone (80%)
+
+Rusty Sword (3%)
+
+Bone Shield (2%)
+
+Lore: Ossos reanimados pela energia dos Núcleos.
+
+🧟 Ghoul
+
+HP: 160
+
+EXP: 90
+
+Ataques: mordida + podridão (causa veneno leve).
+
+Comportamento: lento, mas resistente.
+
+Respawn: cryptas corrompidas.
+
+Loot:
+
+3–7 Gold
+
+Rotten Flesh (50%)
+
+Ghoul Claw (10%)
+
+Chain Armor (2%)
+
+Lore: Mortos vivos carniceiros, atraídos por cheiros de carne.
+
+👻 Ghost
+
+HP: 180
+
+EXP: 110
+
+Ataques: toque espectral, drena mana.
+
+Comportamento: flutua pelas cryptas, atravessa paredes.
+
+Respawn: tumbas antigas.
+
+Loot:
+
+4–10 Gold
+
+Ectoplasm (25%)
+
+Mana Herb (5%)
+
+Spirit Robe (1%)
+
+Lore: Espíritos presos pela influência dos Núcleos.
+
+👩 Amazon
+
+HP: 200
+
+EXP: 120
+
+Ataques: espada curta + arco leve.
+
+Comportamento: agressiva, anda em bandos.
+
+Respawn: acampamentos tribais.
+
+Loot:
+
+5–10 Gold
+
+Cloth Scrap (30%)
+
+Short Sword (3%)
+
+Amazon Bow (2%)
+
+Lore: Guerreiras independentes que rejeitam facções.
+
+⚔️ Valkyrie
+
+HP: 250
+
+EXP: 150
+
+Ataques: lança sagrada.
+
+Comportamento: defensiva, aparece em duplas.
+
+Respawn: templos em ruínas.
+
+Loot:
+
+6–12 Gold
+
+Valkyrie Feather Amulet (5%)
+
+Hunting Spear (3%)
+
+Chain Armor (2%)
+
+Lore: Guardiãs de templos esquecidos.
+
+🧙 Witch
+
+HP: 180
+
+EXP: 140
+
+Ataques: bolas de fogo, paralisia leve.
+
+Comportamento: conjuradora frágil mas perigosa.
+
+Respawn: clareiras sombrias e cavernas ocultas.
+
+Loot:
+
+8–14 Gold
+
+Mana Herb (20%)
+
+Witch Hat (2%)
+
+Crystal Staff (1%)
+
+Lore: Feiticeiras que buscam dominar os núcleos para magia negra.
+
+🪱 Grubshell (ex-Rotworm)
+
+HP: 150
+
+EXP: 80
+
+Ataques: mordida.
+
+Comportamento: vive em cavernas, usado como “farm de recurso”.
+
+Respawn: túneis subterrâneos próximos da House.
+
+Loot:
+
+2–5 Gold
+
+Meat Chunk (60%)
+
+Worm Tooth (10%)
+
+Iron Ore (10%)
+
+Lore: Vermes enormes que devoram pedras e carne.
+
+🪱 Rotmaw (ex-Carrion Worm)
+
+HP: 220
+
+EXP: 130
+
+Ataques: mordida fétida.
+
+Comportamento: agressivo, rasteja em cavernas profundas.
+
+Respawn: minas corrompidas.
+
+Loot:
+
+4–8 Gold
+
+Rotten Meat (40%)
+
+Carrion Claw (10%)
+
+Crystal Shard (5%)
+
+Carrion Club (2%)
+
+Lore: Evolução corrompida dos Grubshell, ainda mais fétidos.
+
+
+Tier 4 (40–70): Bonefiend + Dragonkin.
+
+Tier 5 (70–100+): Ember Imp, Scaled Drake, Infernal Drake, Balor.
+
+📖 Capítulo 5 — Bestiário (Parte Final)
+💀 Bonefiend (ex-Demon Skeleton)
+
+HP: 350
+
+EXP: 220
+
+Ataques: golpes de espada, dano físico alto.
+
+Comportamento: agressivo, raro, aparece em dungeons de ossos.
+
+Respawn: cryptas amaldiçoadas e templos esquecidos.
+
+Loot:
+
+6–12 Gold
+
+Bone (70%)
+
+Crystal Shard (10%)
+
+Darkblade (1%)
+
+Black Shield (1%)
+
+Lore: Guerreiros antigos, reanimados por energia abissal. Ossos envoltos em chamas negras.
+
+
+🐉 Dragonkin (novo)
+
+HP: 450
+
+EXP: 300
+
+Ataques: mordida + baforada de fogo fraca.
+
+Comportamento: répteis alados menores que dragões, mas perigosos.
+
+Respawn: cavernas de lava e penhascos próximos a áreas de dragões.
+
+Loot:
+
+15–28 Gold
+
+Dragonkin Scale (15%)
+
+Ember Core (5%)
+
+Reinforced Bow (2%)
+
+Scale Helmet (2%)
+
+Storm Javelin (0.8%)
+
+Lore: Criaturas descendentes de dragões, usados como “mini-bosses” no mid-game.
+
+🔥 Tier 5 — High-End (Level 70–100+)
+👹 Ember Imp (ex-Fire Devil)
+
+HP: 280
+
+EXP: 220
+
+Ataques: bolas de fogo rápidas.
+
+Comportamento: muito ágil, aparece em grupos pequenos.
+
+Respawn: cavernas de lava, proximidades de dragões.
+
+Loot:
+
+6–12 Gold
+
+Flame Spark (20%)
+
+Fire Rune Fragment (5%)
+
+Flame Wand (1%)
+
+Fire Robe (1%)
+
+Lore: Servos de dragões, fragmentos vivos de chamas.
+
+🐲 Scaled Drake (ex-Dragon)
+
+HP: 800
+
+EXP: 600
+
+Ataques: mordida, cauda, baforada de fogo.
+
+Comportamento: agressivo, roamers em cavernas.
+
+Respawn: Dragon Lairs.
+
+Loot:
+
+20–40 Gold
+
+Dragon Ham (30%)
+
+Dragon Scale (20%)
+
+Dragon Claw (10%)
+
+Dragonbone Sword (1%)
+
+Dragon Shield (1%)
+
+Lore: Dragões adultos que guardam tesouros. Primeiro grande desafio real.
+
+🔥 Infernal Drake (ex-Dragon Lord)
+
+HP: 1200
+
+EXP: 1200
+
+Ataques: mordida, cauda, baforada flamejante devastadora.
+
+Comportamento: extremamente agressivo, boss de áreas de lava.
+
+Respawn: cavernas infernais, áreas finais de dragões.
+
+Loot:
+
+40–80 Gold
+
+Dragon Scale (40%)
+
+Flame Gem (10%)
+
+Diamond Fragment (5%)
+
+Dragon Lord Armor (1%)
+
+Diamond Helm (1%)
+
+Flame Axe (0.8%)
+
+Lore: Dragões ancestrais corrompidos pela energia Carmesim.
+
+👹 Balor (ex-Demon)
+
+HP: 2000
+
+EXP: 2500
+
+Ataques: garras demoníacas, magias abissais, explosão de fogo.
+
+Comportamento: raríssimo, aparece sozinho em áreas abissais.
+
+Respawn: abismos corrompidos, templos infernais.
+
+Falas:
+
+I will burn your soul!
+
+The abyss consumes all!
+
+Loot:
+
+60–120 Gold
+
+Demon Horn (5%)
+
+Abyssal Shard (10%)
+
+Diamond Fragment (10%)
+
+Abyssal Axe (1%)
+
+Demon Horn Shield (1%)
+
+Abyssal Robe (1%)
+
+Ring of the Abyss (0.3%)
+
+Lore: O mais temido dos servos dos Abissais. Uma lenda que sussurra terror nas minas profundas.

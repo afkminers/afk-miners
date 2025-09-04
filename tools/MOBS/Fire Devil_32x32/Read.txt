@@ -1,0 +1,37 @@
+Nome: Ember Imp
+HP: 140
+Experiência: 110
+
+Habilidades:
+⚔️ Físico: Garras (0–25)
+🔥 Magia: Bolas de fogo (0–45)
+Velocidade: Alta
+Paralisa: Não
+
+Comportamento:
+Hostil, pequeno demônio flamejante.
+Corre em direção ao inimigo e ataca com fogo.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Cavernas de lava
+- Planícies vulcânicas
+- Túneis infestados de fogo
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Muahaha!"
+"Burn!"
+
+Loot:
+- 6–12 Gold Coins (100%)
+- Flame Spark (20%)
+- Fire Rune Fragment (5%)
+- Flame Wand (1%)
+- Fire Robe (1%)
+
+Notas:
+Embora pequeno, o Ember Imp é um inimigo perigoso.
+Costuma atacar em grupos, tornando-se uma ameaça séria.

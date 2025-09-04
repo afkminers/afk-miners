@@ -1,0 +1,34 @@
+Nome: Orc
+HP: 70
+Experiência: 50
+
+Habilidades:
+⚔️ Físico: Corpo a corpo (0–25)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil, costuma andar em grupos.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Acampamentos em florestas
+- Colinas próximas de rios
+- Cavernas com tochas
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Ugh!"
+"Grak orc!"
+
+Loot:
+- 4–8 Gold Coins (100%)
+- Orc Tooth (15%)
+- Crude Club (5%)
+- Orcish Axe (2%)
+
+Notas:
+Orcs são guerreiros bárbaros que vivem em acampamentos fortificados.
+Respeitam apenas a força bruta.

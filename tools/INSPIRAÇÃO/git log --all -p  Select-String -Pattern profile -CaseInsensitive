@@ -1,0 +1,81 @@
+[33mcommit 2800064166f01a480f2de94c84312bb8f1d96d22[m
+Author: afkminers <bryangamegg1@gmail.com>
+Date:   Sun Aug 17 11:54:44 2025 -0300
+
+    restore: voltar a versionar client/ e server/
+
+A	client/js/api.js
+A	client/js/auth.js
+A	client/js/boot.js
+A	client/js/gacha.js
+A	client/js/landing_fx.js
+A	client/js/login_fx.js
+A	client/js/ui.js
+
+[33mcommit 97395aed5502cb9f2b3041e3b1d71ebb111f8e78[m
+Author: afkminers <bryangamegg1@gmail.com>
+Date:   Sun Aug 17 11:50:50 2025 -0300
+
+    fix: voltar a rastrear pasta client
+
+D	client/js/api.js
+D	client/js/auth.js
+D	client/js/boot.js
+D	client/js/gacha.js
+D	client/js/landing_fx.js
+D	client/js/login_fx.js
+D	client/js/ui.js
+
+[33mcommit 65412c911e74a7adb60d3a557832d7eb0d134d29[m
+Author: afkminers <bryangamegg1@gmail.com>
+Date:   Sat Aug 16 19:58:28 2025 -0300
+
+    update
+
+M	client/js/landing_fx.js
+
+[33mcommit efd66f49afa364d8874b3dd72d6df5081acb9c53[m
+Author: afkminers <bryangamegg1@gmail.com>
+Date:   Sat Aug 16 18:01:35 2025 -0300
+
+    update
+
+M	client/js/landing_fx.js
+
+[33mcommit af77fd50544542fcd7503e8965ef2af05ff102a3[m
+Author: afkminers <bryangamegg1@gmail.com>
+Date:   Sat Aug 16 14:13:14 2025 -0300
+
+    update
+
+M	client/js/boot.js
+
+[33mcommit 57c41d2bad30a3be46a9db2794a7fe04a1006608[m
+Author: afkminers <bryangamegg1@gmail.com>
+Date:   Sat Aug 16 14:10:31 2025 -0300
+
+    update
+
+M	client/js/boot.js
+
+[33mcommit 25535fe1c3d6d1969b703fd9ecad2915afc99d26[m
+Author: afkminers <bryangamegg1@gmail.com>
+Date:   Sat Aug 16 09:17:31 2025 -0300
+
+    update
+
+M	client/js/boot.js
+
+[33mcommit 7863ff613989a433cd55e05f0bf36cbcbafcc7ba[m
+Author: Tiago <tiagonirello@gmail.com>
+Date:   Fri Aug 15 17:50:46 2025 -0300
+
+    Primeira versão do AFK Miners
+
+A	client/js/api.js
+A	client/js/auth.js
+A	client/js/boot.js
+A	client/js/gacha.js
+A	client/js/landing_fx.js
+A	client/js/login_fx.js
+A	client/js/ui.js

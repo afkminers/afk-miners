@@ -1,0 +1,35 @@
+Nome: Ghoul
+HP: 90
+Experiência: 70
+
+Habilidades:
+⚔️ Físico: Mordida e garras (0–30)
+Velocidade: Média
+Paralisa: Não
+Efeito: Pode causar fome
+
+Comportamento:
+Hostil, anda encurvado e ataca de surpresa.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Catacumbas profundas
+- Caves sombrias
+- Criptas infestadas
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Uhhrrhhh!"
+"Graaah!"
+
+Loot:
+- 3–7 Gold Coins (100%)
+- Rotten Flesh (50%)
+- Ghoul Claw (10%)
+- Chain Armor (2%)
+
+Notas:
+Criaturas deformadas que se alimentam de carne humana.
+São uma ameaça real para jogadores iniciantes em áreas de mortos-vivos.

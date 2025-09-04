@@ -1,0 +1,66 @@
+Estou buscando um artista de pixel art talentoso e experiente para criar uma vasta gama de assets para o meu jogo indie isométrico, 'AFK Miners', inspirado no estilo clássico de Tibia (versões 7.1 e anteriores). O projeto exige atenção aos detalhes e a capacidade de replicar a estética de pixel art retrô, com foco em elementos isométricos.
+
+O objetivo é desenvolver um conjunto completo de gráficos que darão vida ao mundo de jogo, incluindo ambientes, personagens, efeitos e interface de usuário. A inspiração principal é o estilo visual dos jogos RPG isométricos antigos, garantindo uma experiência nostálgica e autêntica.
+OBS: Eu já tenho os personagens com seus nomes, class, roles e a aparencia deles criadas em Card Cartoon pixelado formato digital e todos as outras sprites já tem as referências do próprio Tibia das antigas...
+
+Requisitos de Assets:
+
+1.  Tiles (32x32 pixels) - Total: 31 tiles
+    *  Grama: 5 variações (claro, escuro, flores, pedras, desgaste)
+    *  Terra/Lama: 3 variações (seca, úmida, barrenta)
+    *  Pedra/Calçamento: 4 variações (rachada, musgo, pedras grandes, pequenas)
+    *  Neve: 3 variações (lisa, pegadas, sombra)
+    *  Água: 2 variações animadas (calma, corrente)
+    *  Árvores verdes: 3 variações (fino, grosso, copa larga)
+    *  Árvores secas: 2 variações (torta, reta)
+    *  Árvores cortadas: 2 variações (fino, grosso)
+    *  Árvore com neve: 1 variação
+    *  Pedras soltas: 5 variações
+    *  Arbustos: 3 variações
+
+2.  Mobs (Monstros) - Total: 28 mobs
+    *  Animais: Rato, Rato de Caverna, Coelho (decorativo), Veado, Lobo, Urso
+    *  Insetos: Aranha, Aranha Venenosa
+    *  Mortos-vivos: Esqueleto, Ghoul, Fantasma, Esqueleto Demônio
+    *  Goblins/Orcs: Goblin, Líder Goblin, Orc, Lanceiro Orc, Guerreiro Orc, Líder Orc
+    *  Trolls: Troll, Troll do Pântano
+    *  Humanóides: Amazona, Valquíria, Bruxa
+    *  Caverna: Rotworm, Carrion Worm
+    *  Elemental: Diabo de Fogo
+    *  Chefes (Bosses): Dragão, Lorde Dragão, Demônio
+
+3.  Projéteis/Magias - Total: 7 itens
+    *  Flecha, Flecha de Fogo, Lança, Bola de Fogo, Estilhaço de Gelo, Raio de Veneno, Feixe de Luz
+
+4.  UI (Interface de Usuário) - Total: 20 ícones
+    *  HUD: Moeda, Diamante, HP, Mana, XP, Energia
+    *  Botões: OK, Cancelar, Gacha, Heróis, Loja, Jogar
+    *  Itens: Espada, Machado, Arco, Cajado, Escudo, Elmo, Armadura, Bota, Anel, Amuleto, Poções (HP/Mana/Stamina)
+    *  Fonte: Utilizar a fonte 'Press Start 2P'
+
+5.  Animações - Total: 43 entidades animadas (15 heróis + 28 mobs)
+    *  Cada entidade deve ter as seguintes animações:
+        *  Idle (Parado): 2 frames
+        *  Walk (Andar): 6 frames
+        *  Melee (Ataque Corpo a Corpo): 4 frames
+        *  Ranged (Ataque à Distância): 4 frames
+        *  Death (Morte): 4 frames
+        *  Special (Especial): 6 frames (apenas para elites/heróis)
+
+6.  Objetos/Props - Total: 15 itens
+    *  Portas: 4 variações
+    *  Paredes: 3 variações
+    *  Janelas: 2 variações
+    *  Baús: 2 variações
+    *  Barris: 2 variações
+    *  Caixas: 2 variações
+    *  Fogueira: 1 variação animada
+
+Resumo de Assets:
+*  Tiles: 31
+*  Mobs: 28
+*  Heróis: 15
+*  Projéteis: 7
+*  UI: 20
+*  Entidades animadas: 43
+*  Objetos: 15

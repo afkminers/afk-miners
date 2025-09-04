@@ -1,0 +1,14 @@
+# data/monsters/deer.yml
+key: deer
+name: Deer
+xp: 20
+health:
+  max: 40
+speed: 70
+look:
+  spriteKey: deer
+attacks:
+- type: melee
+  intervalMs: 2000
+  min: 1
+  max: 4

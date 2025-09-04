@@ -1,0 +1,34 @@
+Nome: Grubshell
+HP: 60
+Experiência: 45
+
+Habilidades:
+⚔️ Físico: Mordida (0–22)
+Velocidade: Lenta
+Paralisa: Não
+
+Comportamento:
+Hostil, vive em cavernas subterrâneas.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Caves subterrâneas
+- Túneis próximos a depósitos de minério
+- Áreas infestadas de umidade
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Chhh!"
+"Skrrr!"
+
+Loot:
+- 2–5 Gold Coins (100%)
+- Meat Chunk (60%)
+- Worm Tooth (10%)
+- Iron Ore (10%)
+
+Notas:
+São vermes comuns encontrados por mineradores.
+Apesar de lentos, sua mordida pode ser fatal em grupos.

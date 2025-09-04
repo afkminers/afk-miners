@@ -1,0 +1,35 @@
+Nome: Ghost
+HP: 120
+Experiência: 90
+
+Habilidades:
+⚔️ Físico: Toque espiritual (0–35)
+Velocidade: Alta (flutua)
+Paralisa: Não
+Efeito: Pode atravessar paredes
+
+Comportamento:
+Hostil, vaga por masmorras antigas.
+Difícil de ser atingido.
+
+Locais de Respawn:
+- Mansões assombradas
+- Criptas antigas
+- Túneis místicos
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Woooo..."
+"Shhhh..."
+
+Loot:
+- 4–10 Gold Coins (100%)
+- Ectoplasm (25%)
+- Mana Herb (5%)
+- Spirit Robe (1%)
+
+Notas:
+Fantasmas são perigosos pela dificuldade de acertá-los.
+Exigem atenção e preparo mágico para serem derrotados.

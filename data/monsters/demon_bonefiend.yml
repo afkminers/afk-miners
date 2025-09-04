@@ -1,0 +1,15 @@
+key: demon_bonefiend
+name: Demon Bonefiend
+xp: 400
+health:
+  max: 350
+speed: 70
+
+look:
+  spriteKey: demon_bonefiend
+
+attacks:
+- type: melee
+  intervalMs: 2000
+  min: 40
+  max: 80

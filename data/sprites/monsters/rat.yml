@@ -1,0 +1,67 @@
+# data/sprites/monsters/rat.yml
+key: rat
+kind: monster
+image: "sprites/monsters/rat.png"
+
+frame:
+  width: 48
+  height: 32
+  margin: 0
+  spacing: 0
+
+# seu sheet tem 288x384 → 6 colunas de 48 e 12 linhas de 32
+grid:
+  cols: 6
+  rows: 12
+
+# pivot no centro do 32×32 dentro do 48×32 → (24,16)  =>  0.5, 0.5
+anchor:
+  x: 0.5
+  y: 0.5
+
+anims:
+  # 0 — idle (4)
+  idle:
+    fps: 4
+    frames: 4
+    row: 0
+    startCol: 0
+    loop: true
+
+  # 1..4 — walk (south/west/east com 5; north com 4)
+  walk:
+    fps: 8
+    frames: 5 # valor padrão
+    framesByDir:
+      # ← usa isso p/ ajustar por direção
+      south: 5
+      west: 5
+      east: 5
+      north: 4
+    rowByDir:
+      south: 1
+      west: 2
+      east: 3
+      north: 4
+    startCol: 0
+    loop: true
+
+  # 5 — dead (4)
+  dead:
+    fps: 8
+    frames: 4
+    row: 5
+    startCol: 0
+    loop: false
+
+  # 6..9 — attack (2 por direção)
+  attack:
+    fps: 10
+    frames: 2
+    rowByDir:
+      west: 6
+      east: 7
+      south: 8
+      north: 9
+    startCol: 0
+    loop: false

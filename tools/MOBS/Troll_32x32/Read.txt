@@ -1,0 +1,35 @@
+Nome: Troll
+HP: 60
+Experiência: 30
+
+Habilidades:
+⚔️ Físico: Corpo a corpo (0–18)
+Velocidade: Lenta
+Paralisa: Não
+
+Comportamento:
+Hostil. Trolls atacam com golpes pesados.
+Não correm quando feridos.
+
+Locais de Respawn:
+- Caves rochosas
+- Áreas pantanosas
+- Próximos a rios
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Ugggh!"
+"Grrohh!"
+
+Loot:
+- 2–6 Gold Coins (100%)
+- Rotten Meat (40%)
+- Troll Hide (15%)
+- Wooden Club (5%)
+- Stone Maul (1%)
+
+Notas:
+Trolls são inimigos clássicos, fáceis de encontrar em mapas iniciais.
+Servem como treino para jogadores que já superaram os Goblins.

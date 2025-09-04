@@ -1,0 +1,35 @@
+Nome: Poison Spider
+HP: 55
+Experiência: 35
+
+Habilidades:
+⚔️ Físico: Mordida (0–20)
+Velocidade: Média/Alta
+Paralisa: Não
+Veneno: Forte (dano 2–6 por turno)
+
+Comportamento:
+Hostil, persegue o jogador rapidamente.
+Não corre quando ferida.
+
+Locais de Respawn:
+- Swamps (pântanos)
+- Túneis venenosos
+- Áreas com cogumelos tóxicos
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Hissss!"
+"Chhh!"
+
+Loot:
+- 3–6 Gold Coins (100%)
+- Venom Sac (15%)
+- Sticky Web (20%)
+- Small Health Potion (5%)
+
+Notas:
+Poison Spiders são armadilhas naturais em pântanos.
+Requerem cuidado: podem derrotar jogadores descuidados facilmente com veneno acumulado.

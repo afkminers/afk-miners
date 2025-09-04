@@ -55,7 +55,6 @@ const MonsterYAML = z.object({
   defenses: z.object({
     armor: Int.optional(),
     defense: Int.optional(),
-    // permite qualquer chave em behaviors
     behaviors: z.object({}).catchall(z.any()).optional(),
   }).optional(),
   loot: z.array(z.union([
@@ -86,29 +85,50 @@ const ItemYAML = z.object({
 const SpriteYAML = z.object({
   key: z.string(),
   image: z.string(),
+
+  // opcionais (indexação/fallback)
+  kind: z.string().optional(),
+  aliases: z.array(z.string()).optional(),
+
   frame: z.object({
     width: Int,
     height: Int,
     margin: Int.optional().default(0),
     spacing: Int.optional().default(0),
+    bleedFix: Num.optional(), // usado no drawMob para anti-bleed
   }),
+
   grid: z.object({
     cols: Int,
     rows: Int,
   }),
+
   directions: z.array(z.string()).optional(),
-  anims: z.object({}).catchall(z.object({
-    fps: Num,
-    frames: Int,
-    row: Int.optional(),
-    // rowByDir: { south: 0, west: 1, ... }
-    rowByDir: z.object({}).catchall(Int).optional(),
-    startCol: Int.default(0),
-  })),
+
+  // animações com overrides por direção e sequências explícitas
+  anims: z.object({}).catchall(
+    z.object({
+      fps: Num.optional(),
+      frames: Int.optional(),
+      row: Int.optional(),
+
+      rowByDir: z.object({}).catchall(Int).optional(),
+      framesByDir: z.record(Int).optional(),
+      startCol: Int.optional().default(0),
+      startColByDir: z.record(Int).optional(),
+
+      seq: z.array(Int).optional(),                 // ex.: [0,1]
+      seqByDir: z.record(z.array(Int)).optional(),  // ex.: { south:[0,1], ... }
+
+      loop: Bool.optional(),                         // default tratado no cliente
+    })
+  ),
+
   anchor: z.object({
     x: Num,
     y: Num,
   }).optional(),
+
   shadow: z.string().optional(),
   collision: z.object({
     w: Int,

@@ -1,0 +1,37 @@
+Nome: Scaled Drake
+HP: 300
+Experiência: 220
+
+Habilidades:
+⚔️ Físico: Mordida e garras (0–70)
+🔥 Magia: Sopro de fogo (0–60)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil, dragão verde adulto.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Cavernas dracônicas
+- Montanhas isoladas
+- Covis próximos a tesouros
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Fwoooosh!"
+"Grrrrhh!"
+
+Loot:
+- 20–40 Gold Coins (100%)
+- Dragon Ham (30%)
+- Dragon Scale (20%)
+- Dragon Claw (10%)
+- Dragonbone Sword (1%)
+- Dragon Shield (1%)
+
+Notas:
+Scaled Drakes são dragões clássicos.
+Caçados por loot valioso, mas exigem grupos bem preparados.

@@ -1,0 +1,33 @@
+Nome: Cave Rat
+HP: 30
+Experiência: 10
+
+Habilidades:
+⚔️ Físico: Corpo a corpo (0–10)
+Velocidade: Baixa
+Paralisa: Não
+
+Comportamento:
+Hostil, ataca corpo a corpo. Um pouco mais resistente que os Rats comuns.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Cavernas próximas da Ilha Inicial
+- Túneis rasos conectados a áreas de Goblins
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Screee!"
+"Chhhhhh!"
+
+Loot:
+- 1–3 Gold Coins (100%)
+- Bone Shard (70%)
+- Leather Scrap (10%)
+- Rusted Sword (1%)
+
+Notas:
+Os Cave Rats vivem em fendas úmidas e cavernas rasas.
+São considerados uma praga, mas já oferecem perigo para aventureiros descuidados.

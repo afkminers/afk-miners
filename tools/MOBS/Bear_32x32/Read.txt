@@ -1,0 +1,32 @@
+Nome: Bear
+HP: 70
+Experiência: 35
+
+Habilidades:
+⚔️ Físico: Corpo a corpo (0–40)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil. Ursos atacam qualquer um que se aproxime demais.
+Não correm quando feridos.
+
+Locais de Respawn:
+- Florestas densas ao norte da Ilha Inicial
+- Cavernas de pedra úmidas
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Rooooar!"
+"Grrrhh!"
+
+Loot:
+- 3–6 Gold Coins (100%)
+- Raw Meat (60%)
+- Bear Fur (10%)
+- Wooden Club (2%)
+
+Notas:
+Ursos são criaturas fortes para jogadores de nível inicial, mas oferecem recursos valiosos.

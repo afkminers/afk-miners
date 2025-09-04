@@ -1,0 +1,34 @@
+Nome: Amazon
+HP: 80
+Experiência: 65
+
+Habilidades:
+⚔️ Físico: Espada curta (0–28)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil, guerreira tribal que ataca intrusos.
+Não corre quando ferida.
+
+Locais de Respawn:
+- Florestas densas
+- Ruínas tribais
+- Acampamentos escondidos
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"For the tribe!"
+"Die intruder!"
+
+Loot:
+- 5–10 Gold Coins (100%)
+- Cloth Scrap (30%)
+- Short Sword (3%)
+- Amazon Bow (2%)
+
+Notas:
+As Amazonas são guerreiras ferozes que lutam em grupos.
+Derrotá-las é um desafio até para aventureiros experientes.

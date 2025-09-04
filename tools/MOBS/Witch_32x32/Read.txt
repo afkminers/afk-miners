@@ -1,0 +1,35 @@
+Nome: Witch
+HP: 95
+Experiência: 85
+
+Habilidades:
+⚔️ Físico: Toque (0–10)
+✨ Magia: Bolas de energia mágica (0–30)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil, conjura magias à distância.
+Não corre quando ferida.
+
+Locais de Respawn:
+- Florestas sombrias
+- Torres abandonadas
+- Caves arcanas
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Hahaha!"
+"Feel my power!"
+
+Loot:
+- 8–14 Gold Coins (100%)
+- Mana Herb (20%)
+- Witch Hat (2%)
+- Crystal Staff (1%)
+
+Notas:
+Bruxas usam magia para enfraquecer inimigos antes do ataque direto.
+Perigosas para jogadores despreparados contra feitiços.

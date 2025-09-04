@@ -1,0 +1,34 @@
+Nome: Swamp Troll
+HP: 75
+Experiência: 45
+
+Habilidades:
+⚔️ Físico: Corpo a corpo (0–22)
+Velocidade: Lenta
+Paralisa: Não
+Efeito: Resistência a veneno
+
+Comportamento:
+Hostil, encontrado em pântanos.
+Mais fortes que Trolls comuns.
+Não correm quando feridos.
+
+Locais de Respawn:
+- Pântanos infestados de Poison Spiders
+- Cavernas de musgo
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Grrohh!"
+"Uuuurgh!"
+
+Loot:
+- 3–8 Gold Coins (100%)
+- Swamp Moss (10%)
+- Swamp Boots (3%)
+
+Notas:
+Criatura pantanosa adaptada ao veneno.
+Resistente a ataques de veneno, ideal para ensinar sobre resistências no jogo.

@@ -1,0 +1,32 @@
+Nome: Orc Warrior
+HP: 120
+Experiência: 85
+
+Habilidades:
+⚔️ Físico: Corpo a corpo (0–40)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil, lutador corpo a corpo mais experiente.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Acampamentos Orc fortificados
+- Cavernas profundas de Orcs
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Grrrh!"
+"Kill!"
+
+Loot:
+- 8–12 Gold Coins (100%)
+- Orc Leather (10%)
+- Battle Axe (2%)
+- Iron Shield (2%)
+
+Notas:
+Orc Warriors são a elite da tropa Orc, usados como guardas e líderes de ataque.

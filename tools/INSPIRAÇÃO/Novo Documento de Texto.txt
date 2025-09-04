@@ -1,0 +1,22 @@
+pedir para gerar a logo do afk miners
+arrumar tela de login, lado direito tá curto demais
+criar outras pngs para a tela inicial, background e 1 boss grandão olhando pra frente
+colocar som de fundo com opção de baixar o volume e desligar (perguntar indicação de som para jogos 8bit retro) enquanto o jogador está na tela inicial, login, inventário e gacha, para o mapa de farm será outra musica
+sinto falta de um botão inicio, pra voltar pra tela inicial onde tá as png dos personagens e futuramente onde sera as noticias e patchs, atualizações
+perguntar se a logo pode funcionar como esse botão ou é bom colocar algum outro para fazer essa função de voltar pro inicio
+questionar a classificação das paginas (não sei bem o termo) mas para a tela inicial deveria ser uma pagina, ex: www.afkminers.com/inicio pro logion www.afkminers.com/login ou /register e por ai vai, questionar isso
+não permitir que o jogador clique para sumonar quando não tiver moedas suficientes, porque agora é possível o bau do gacha aparece e fica bugado
+criar uma pagina html especifica para o login, para a página inicial e para o main menu (prioridade)
+criar um background para manter fixo em todos as páginas, menos na página index inicial
+ajuste layout do main menu e de todo o site, sendo que jogaremos o loggout para u hub principal (onde aparece o botão play) colocaremos o loggout no canto superior direito, ao lado dele o botão e icone de configurações
+trazer os 2 botões da esquerda e os dois botões da direita bem alinhados e do lado do botão PLAY
+usar referencia das sprites do tibia 7.1 old school para desenvolver todos os mobs do afk miners
+usar referencia dos itens do tibia old school para criar os itens pixelados 8bit retro do afk miners
+revisar index.html e ver se dá para modular, enviar todos arquivos e ver tb se não tem codigo que deveria estar em outro, enfim, ver com o gpt para organizar o arquivo porque ta ficando muito grande
+
+Mais pra frente, se você quiser usar mapas ou áreas jogáveis, aí sim é melhor o tile horizontal infinito (pra dungeon, farm, etc.). 
+ele trouxe um ponto importante para explorar a mecanica de farm do mapa grnade
+
+https://bombcrypto.substack.com/p/bomb-cryptosenspark-media-kit
+midia kit
+ver com o gpt quando for fazer os mobis, se dá para fazer tipo o sistema de organização e criação dos bichos por arquivo individual, no otserv era por xml se nao me engano, ver possibilidade de cada arquivo que colocar na pasta do servidor ter todas informações por codigo do mobi, status, vida, resistencia, classe, loot, xp, sprites buscando do lugar x, nome do bicho, magias que ele solta, enfim, tudo condizente a criação daquele bicho, ter possibilidade de adicionar ao jogo individualmente, colocando 1 arquivo completo para cada monstro, assim não vou ficar com 1 arquivo gigante e sim varios para cada monstro, facilita até achar.

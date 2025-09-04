@@ -1,0 +1,36 @@
+Nome: Rotmaw
+HP: 90
+Experiência: 75
+
+Habilidades:
+⚔️ Físico: Mordida (0–30)
+Velocidade: Lenta
+Paralisa: Não
+Efeito: Veneno leve
+
+Comportamento:
+Hostil, versão mais podre e mortal dos Grubshells.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Túneis profundos
+- Cavernas de podridão
+- Áreas com gás tóxico
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Skrrrah!"
+"Grrrrh!"
+
+Loot:
+- 4–8 Gold Coins (100%)
+- Rotten Meat (40%)
+- Carrion Claw (10%)
+- Crystal Shard (5%)
+- Carrion Club (2%)
+
+Notas:
+Rotmaws são conhecidos por seu cheiro horrível e dentes afiados.
+Temidos até por mineradores experientes.

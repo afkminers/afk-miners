@@ -1,0 +1,40 @@
+Nome: Balor
+HP: 600
+Experiência: 600
+
+Habilidades:
+⚔️ Físico: Golpes brutais (0–120)
+🔥 Magia: Chamas abissais (0–100)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil, o mais temido dos demônios.
+Altamente agressivo, caça jogadores ativamente.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Abismos infernais
+- Câmaras demoníacas
+- Cavernas esquecidas
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Muahahaha!"
+"Your soul is mine!"
+
+Loot:
+- 60–120 Gold Coins (100%)
+- Demon Horn (5%)
+- Abyssal Shard (10%)
+- Diamond Fragment (10%)
+- Abyssal Axe (1%)
+- Demon Horn Shield (1%)
+- Abyssal Robe (1%)
+- Ring of the Abyss (0.3%)
+
+Notas:
+Balor é a encarnação da corrupção dos Núcleos.
+Derrotá-lo é uma façanha para poucos, representando o ápice do perigo no mundo conhecido.

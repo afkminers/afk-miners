@@ -1,0 +1,6 @@
+"properties": [
+  { "name": "type", "type": "string", "value": "spawn" },
+  { "name": "monsterKey", "type": "string", "value": "rat" },
+  { "name": "count", "type": "int", "value": 1 },
+  { "name": "respawnSec", "type": "int", "value": 30 }
+]

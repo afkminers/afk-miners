@@ -1,0 +1,31 @@
+key: cave_rat
+name: Cave Rat
+xp: 10
+health:
+  max: 30
+speed: 80
+
+look:
+  spriteKey: cave_rat
+  defaultAnim: idle
+
+flags:
+  hostile: true
+
+elements:
+  physical: 0
+
+attacks:
+- type: melee
+  min: 1
+  max: 4
+  intervalMs: 900
+  chancePercent: 100
+  # OBS: teu play.js hoje só usa walk/dead; ataque visual fica pra próxima etapa
+
+defenses:
+  armor: 2
+  defense: 2
+
+loot:
+- { item: gold_coin, chance: 70, min: 1, max: 5 }

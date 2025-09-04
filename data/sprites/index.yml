@@ -2,4 +2,9 @@ sprites:
   knight: "./knight.yml"
   goblin: "./monsters/goblin.yml"
   balor: "./monsters/balor.yml"
-  # ... outros monstros aqui
+  cave_rat: "./monsters/cave_rat.yml"
+  rat: "./monsters/rat.yml"
+  bear: "./monsters/bear.yml"
+  rotmaw: "./monsters/rotmaw.yml"
+  deer: "./monsters/deer.yml"
+  demon_bonefiend: "./monsters/demon_bonefiend.yml"

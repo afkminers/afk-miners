@@ -1,0 +1,60 @@
+key: cave_rat
+kind: monster
+image: "sprites/monsters/cave_rat.png"
+
+frame:
+  width: 48
+  height: 32
+  margin: 0
+  spacing: 0
+
+grid:
+  cols: 4
+  rows: 10
+
+# Teu padrão: pivot no centro do 32×32 dentro do 48×32  → (24,16)
+# Como o anchor é normalizado (0..1), fica 0.5, 0.5
+anchor:
+  x: 0.5
+  y: 0.9
+
+anims:
+  # linha 0: idle (4 colunas, 4 frames)
+  idle:
+    fps: 4
+    frames: 4
+    row: 0
+    startCol: 0
+    loop: true
+
+  # linhas 1..4: walk por direção (cada uma 4 col/frames)
+  walk:
+    fps: 8
+    frames: 4
+    rowByDir:
+      south: 1
+      west: 2
+      east: 3
+      north: 4
+    startCol: 0
+    loop: true
+
+  # linha 5: anima de “morto” (nomeie como 'dead' para bater com teu draw atual)
+  dead:
+    fps: 8
+    frames: 4
+    row: 5
+    startCol: 0
+    loop: false
+
+  # linhas 6..9: ataque por direção (2 col/frames cada)
+  attack:
+    fps: 10
+    frames: 2
+    rowByDir:
+      south: 6
+      west: 7
+      east: 8
+      north: 9
+    startCol: 0
+    loop: false

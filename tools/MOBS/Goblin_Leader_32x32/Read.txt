@@ -1,0 +1,33 @@
+Nome: Goblin Leader
+HP: 90
+Experiência: 55
+
+Habilidades:
+⚔️ Físico: Corpo a corpo (0–25)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Comanda grupos de Goblins.
+Mais forte e agressivo que os demais.
+
+Locais de Respawn:
+- Acampamentos maiores de Goblins
+- Caverna do Bosque Oculto
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Grak! Chief!"
+"Smash them!"
+
+Loot:
+- 4–8 Gold Coins (100%)
+- Goblin Talisman (5%)
+- Iron Sword (2%)
+- Leather Armor (3%)
+
+Notas:
+O Goblin Leader é considerado o “mini-boss” inicial.
+Derrotar um garante recompensas melhores e moral elevada.

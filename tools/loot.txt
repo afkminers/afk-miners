@@ -1,0 +1,798 @@
+eu tenho esse arquivo
+  # AFK Miners — Guia Oficial (Lore + GDD + TDD) v1.1  > **Estado**: Consolidado para referência de equipe. Este documento une **Lore Bible**, **GDD (Explorer/Hunt)** e **TDD** do AFK Miners. Números são **baseline** e devem ser ajustados via `balance.json` e telemetria. > > **Stack atual**: Node.js/Express 5 + SQLite (dev), frontend HTML/CSS/JS (Press Start 2P). Sockets com Socket.IO. Projeto: **AFK Miners** — estética 8‑bit retrô inspirada em Bomb Crypto/Tibia.  ---  ## Sumário  1. Visão Geral & Metas 2. Lore Bible (mundo, facções, NPCs, seasons) 3. Sistemas Core (GDD Explorer/Hunt) 4. Mineração & Workers (mecânica dinâmica) 5. Economia & Itens (durabilidade, crafting, reparos) 6. Party & AI (papéis, comportamento, estados) 7. Mapa House/Lobby & Navegação por NPC 8. UI/HUD & UX Retrô (padrões, layout, acessibilidade) 9. Regras de Morte, Penalidades e Segurança 10. Telemetria, Balanceamento & `balance.json` 11. TDD Backend (DB, rotas REST, eventos Socket) 12. TDD Frontend (módulos, estados, fluxos) 13. Algoritmos (spawn de minas/mobs, pathing simplificado) 14. Conteúdo inicial (heróis, mobs, drops, mapas) 15. Roadmap de Entrega (MVP → Expansões) 16. Padrões de Arte & Pipeline de Assets 17. Operação, Anti‑abuso e Escalabilidade 18. Glossário  ---  ## 1) Visão Geral & Metas  **Pilar criativo**: MMORPG retrô 8‑bit em mundo mineiro‑fantástico. Jogador começa como minerador, invoca heróis via gacha e lidera um time em **Hunts (Explorer)** AFK/assistíveis. **Workers** mineram recursos em minas instáveis pelo mundo.  **Metas**  * Loop central **Tibia‑like** (XP de level, skills por hit, loot, equipamentos, risco x recompensa). * Mineração dinâmica com **Workers** para sustentar economia e crafting. * House como **lobby social** com NPCs, chat global/local, acesso a modos. * Documento vivo: ajustes por dados de telemetria, não por feeling.  ---  ## 2) Lore Bible  ### 2.1 Pitch  Núcleos de Diamante corrompem o subsolo e geram **Minas‑Vivas** e criaturas. Um culto, **Os Abissais**, busca libertá‑los. **A Guilda dos Mineradores** (jogador) recruta novatos; **a Ordem do Núcleo** estuda e invoca; **a Companhia do Trilho** mantém comércio e rotas.  ### 2.2 Facções  * **Guilda dos Mineradores**: heróis e trabalhadores sob comando do jogador. Cores cinza/azul; bandeiras e ferramentas. * **Ordem do Núcleo**: místicos do gacha (túnicas roxas, cristais flutuantes). NPC: **Zoltan**. * **Companhia do Trilho**: mercadores e reparos (vagões, lanternas). NPC: **Rowan** (ferreiro). * **Os Abissais**: culto subterrâneo (capuzes, runas vermelhas). Chefes sazonais.  ### 2.3 Personagens  * **Mestre Brutus** (capataz/tutorial) – dá a primeira picareta. * **Arcanista Zoltan** (altar de gacha) – guia de invocação. * **Barqueiro Orrin** (transporte) – leva a Explorer/Training/Dungeon/PvP. * **Ferreiro Rowan** (craft/reparos) – durabilidade, upgrades. * **Oficial Mira** (missões/diárias) – metas e recompensas. * **Capataz Eldric** (workers) – gestão de mineração.  ### 2.4 Panteão/Forças  Cada Núcleo (Carmesim, Azul, Verde, etc.) influencia regiões, mobs e itens (elementais, buffs/debuffs, progressão de seasons).  ### 2.5 Seasons (linha editorial)  * **S1 — Despertar Carmesim**: dungeon de fogo, boss Guardião Carmesim, crafts flamejantes. * **S2 — Fragmentos Perdidos**: relíquias, arqueólogos, bosses de mundo aberto. * **S3 — Rotas Proibidas**: PvP de mineração em mapa compartilhado. * **S4 — Retorno da Corrupção**: ruínas sombrias, mobs fortes, drops de fragmentos lendários. * **S5 — Eco das Profecias**: facções em guerra, reputações e buffs exclusivos.  ---  ## 3) Sistemas Core (GDD Explorer/Hunt)  ### 3.1 Progressão de Level  * Fórmula base: `XP_to_next = 25 * level^2` (ajustável). * Recompensas por level (por classe):    * **Knight/Guardian**: +HP alto, +Mana baixo.   * **Mage**: +HP baixo, +Mana alto.   * **Ranger**: +HP médio, +Mana médio. * **Level Up**: mensagem retro + som, incremento de atributos base e desbloqueios (ex.: +capacidade Oz leve).  ### 3.2 Skills por Hit (estilo Tibia)  * **Skills**: Sword, Axe, Club, Distance, Shield, Magic Level. * **Ganho**: 1 “try” por evento relevante (acerto de arma, bloqueio com escudo, conjuro mágico causando dano). Sem arma ⇒ sem treino de arma. * **Curva**: `tries_needed(skill) = base * skill^2` (por skill). Multiplicadores por classe (Mage treina Magic mais rápido; Knight quase nada de Magic). * Caps por raridade do herói (ver 14.1).  ### 3.3 Combate AFK  * Tick \~1s (configurável). Por tick, cada herói decide ação (agredir alvo prioritário, curar aliado, bloquear). * **Dano (baseline)**:    ```   atk_total = atk_base + weapon_bonus + f(skill, buffs)   def_total = def_base + armor_bonus + f(shield, buffs)   damage = clamp_min((atk_total - def_total), 1)   crit_chance = base + f(skill, rarity, item)   crit_mult = 1.5 (baseline)   ``` * **AI de alvo (prioridade)**: 1) mob que ataca healer; 2) mob com HP mais baixo no alcance; 3) mob mais próximo do tank. * **Posicionamento**: Tank ocupa frente; Ranger/Mage mantêm distância; Healer busca linha de visão segura. Modos **follow/hold**.  ### 3.4 Loot & Oz  * Mobs droppam: Gold, materiais (Iron Ore, Leather, Wood), equips básicos, drops raros (Crystal Shard, Diamond Fragment). * **Peso (Oz)**: cada item tem peso; cada herói tem capacidade (classe + equips). * **Ordem de Coleta** (configurável no lobby): herói 1 coleta até lotar ⇒ herói 2 ⇒ herói 3. Cheio ⇒ PT segue apenas XP/skills (sem loot extra).  ### 3.5 Morte & Penalidades  * Perda de % do XP do level atual; perda de % de progresso de skills (últimos tries); perda total do loot da sessão. * Percentuais por mapa/dificuldade (ver 9.1).  ### 3.6 Equipamentos  * **Slots**: Helmet, Armor, Legs, Boots, Weapon, Shield, Amulet, Ring. * **Raridades**: Common, Rare, Super Rare, Legendary, Mythic, Ultimate (cores: cinza, azul, roxo, dourado, vermelho, rainbow). * **Durabilidade** (ver 5.2). * **Fontes**: drops, craft em Rowan, reforços com materiais.  ---  ## 4) Mineração & Workers (dinâmica)  ### 4.1 Conceito  Após o tutorial, **não** há mina fixa na House. As minas surgem **aleatoriamente** nos mapas **Explorer**. O jogador encontra a mina, clica e **envia um Worker** para extrair até esgotar.  ### 4.2 Recursos & Uso  * **Iron**: equips básicos, reparos iniciais. * **Crystal**: encantamentos, staffs, reforços médios. * **Diamond**: moeda premium limitada + crafts/armas lendárias. * **Stone/Wood**: construção (boxes, expansão da House) e oficinas. * Futuro: **Obsidian, Mithril** (tiers altos).  ### 4.3 Desafios (AFK, mas com risco)  * **Guardiões de Mina**: iniciar extração pode chamar Slime Miner, Rock Golem, Abissal Scout; PT deve proteger Worker. * **Stamina do Worker**: consome por minuto de extração; reposta com comida (plantio/animais). Sem stamina ⇒ pausa. * **Ataques randômicos**: pequenas incursões subterrâneas que podem expulsar o Worker se não houver proteção.  ### 4.4 Algoritmo de Minas (resumo)  * Cada região mantém `N` minas ativas (target). Ao esgotar uma, agenda respawn com jitter (ex.: 2–5 min). * Tipo da mina por **tabela ponderada** (Iron comum; Diamond raro com anti‑cluster). * Posição respeita **mask de navegação** e distância mínima entre minas.  ---  ## 5) Economia & Itens  ### 5.1 Ouro & Diamante  * **Gold**: obtido via mobs/quests/venda de recursos para a Companhia do Trilho. Uso: reparos, consumíveis, reforços básicos. * **Diamond**: premium raro (drop limitado + compra). Uso: gacha raro, reforços avançados, skins, tickets especiais.  ### 5.2 Durabilidade  * Equip perde 1–3 de DUR por combate prolongado; críticos contra o herói aceleram desgaste do armor/shield. * `eff = base * (1 + reforços) * f(durabilidade)` onde `f(dur)` reduz bônus abaixo de certos thresholds (ex.: <30% DUR −10% efetividade, <10% −30%). * **Reparo**: Rowan cobra Gold + recurso do material (ex.: Iron Ingot, Crystal Dust). Durabilidade máxima não aumenta com reparo; reforço avançado pode.  ### 5.3 Crafting  * Receitas iniciais (exemplos):    * **Iron Sword** = 6× Iron Ingot + 2× Wood Plank + Gold fee.   * **Crystal Staff** = 4× Crystal Shard + 2× Wood + 1× Cloth + Gold fee.   * **Diamond Plate** = 8× Diamond Fragment + 4× Iron Ingot + Gold alto. * **Oficinas** (boxes) refinam Stone→Blocks; Wood→Planks.  ### 5.4 Raridade e Afixos  * Regras base por tier: min/max afixos, chance de crítico, sockets (futuro). Itens superiores exigem materiais superiores.  ---  ## 6) Party & AI  ### 6.1 Papéis  * **Tank (Knight/Guardian)**: aggro, bloqueio, proteção ao Worker. * **DPS (Ranger/Mage/Warrior)**: dano, controle de alvo por prioridade. * **Healer**: cura baseada em mana e Magic Level; prioriza alvo com HP% mais baixo.  ### 6.2 Estados  * **Idle → Follow → Engage → Kite/Retreat → Regroup**. * Triggers: distância ao líder, HP%, presença de guardião, ordem de jogador (hold/follow).  ### 6.3 Prioridade de Alvo (heurística)  1. Ameaça ao healer; 2) HP mais baixo; 3) proximidade do tank; 4) guardião de mina ativo.  ---  ## 7) House/Lobby & Navegação  * **House** é a tela inicial. Renderiza **apenas** heróis do `Team` (3 slots). Movimento WASD/clique. * **NPCs**: Orrin (barco), Zoltan (gacha), Rowan (ferreiro), Mira (diárias), Eldric (workers). * **Chat**: Global (sempre) e Local (mapa/instância). NPCs conversam via chat (“hi → destinos → yes”).  ---  ## 8) UI/HUD & UX Retrô  * Mini‑menu fixo: **Team | Inventory | Summon | Config/Perfil** (pixel art, bordas 2px, gradiente laranja nos botões principais). * Janelas **encaixáveis** com cabeçalho retrô; persistência de layout em `localStorage`. * Mensagens on‑screen (Level Up, Skill Up, Loot) com **Press Start 2P** 12–14px. * Acessibilidade: navegação por teclado, foco visível, contraste mínimo AA.  ---  ## 9) Morte, Penalidades & Segurança  ### 9.1 Penalidades por Mapa (baseline)  * Explorer‑Easy: −5% XP atual, −5% tries recentes, perde loot da sessão. * Explorer‑Normal: −10% XP, −10% tries, perde loot. * Dungeon (season): −15% XP, −10–15% tries, chance de reter 1 item protegido.  ### 9.2 Segurança/Anticheat  * **Servidor autoritativo**: valida posições, dano, drops. * Rate limit de socket (move ≤20Hz, chat ≥800ms entre msgs, burst 3). * Logs de anomalia (ganhos de XP/loot fora de faixa, teleporte inválido). Seeds de RNG e checksum de sessão.  ---  ## 10) Telemetria & Balanceamento  * Métricas: XP/h por mapa, skills/h (por arma), TTK médio por mob, loot/h (gold, recursos), durability/h, morte/h, uso de poções, taxa de reparo, uso de gacha. * **Painel**: agregados por nível/raridade/classe e por mapa. * Ajustes via `balance.json` (hot‑reload opcional).  **`balance.json` (esqueleto)**  ```json {   "xp": { "base": 25, "formula": "25*level^2" },   "skills": {     "baseTries": {"sword": 8, "axe": 8, "club": 8, "distance": 10, "shield": 10, "magic": 12},     "classMultipliers": {"K": {"magic": 0.2}, "M": {"magic": 1.5}, "R": {"distance": 1.3}}   },   "durability": {"thresholds": [{"pct": 0.3, "penalty": 0.1}, {"pct": 0.1, "penalty": 0.3}]},   "death": {"easy": {"xp": 0.05, "skill": 0.05}, "normal": {"xp": 0.1, "skill": 0.1}},   "mines": {     "targets": {"explorer_easy": 6, "explorer_normal": 8},     "weights": {"iron": 60, "crystal": 25, "diamond": 5, "stone": 7, "wood": 3}   },   "lootTables": {     "goblin": {"gold": "2-6", "iron_ore": 0.25, "leather": 0.15, "rusty_dagger": 0.05},     "slime": {"gold": "1-3", "gel": 0.3}   } } ```  ---  ## 11) TDD Backend  ### 11.1 Banco de Dados (SQLite)  **Novas colunas**  * `players.current_map TEXT DEFAULT 'house'` * `players.instance_id TEXT` * `players.pos_x INTEGER DEFAULT 0`, `players.pos_y INTEGER DEFAULT 0`  **Tabelas**  ```sql CREATE TABLE IF NOT EXISTS player_team (   player_id INTEGER NOT NULL,   hero_id INTEGER NOT NULL,   slot INTEGER NOT NULL CHECK(slot BETWEEN 1 AND 3),   PRIMARY KEY (player_id, slot) );  CREATE TABLE IF NOT EXISTS workers (   id INTEGER PRIMARY KEY AUTOINCREMENT,   player_id INTEGER NOT NULL,   name TEXT,   stamina INTEGER DEFAULT 100,   state TEXT DEFAULT 'idle', -- idle|mining|returning   current_mine_id INTEGER,   started_at INTEGER,   FOREIGN KEY(player_id) REFERENCES players(id) );  CREATE TABLE IF NOT EXISTS mines (   id INTEGER PRIMARY KEY AUTOINCREMENT,   map_key TEXT NOT NULL,   instance_id TEXT,   type TEXT NOT NULL, -- iron|crystal|diamond|stone|wood   capacity INTEGER NOT NULL,   pos_x INTEGER NOT NULL,   pos_y INTEGER NOT NULL,   spawned_at INTEGER NOT NULL,   expires_at INTEGER );  CREATE INDEX IF NOT EXISTS idx_mines_map ON mines(map_key, instance_id); ```  > **Nota**: Centralizar conexão SQLite em `server/models/db.js` com `PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;` e reutilizar no `index.js` para evitar `SQLITE_BUSY`.  ### 11.2 Rotas REST (baseline)  * `GET /api/me/world` → `{ current_map, instance_id, pos:{x,y}, team:[...heroes] }` * `POST /api/team` → define time `{ slots:[heroId, ...] }` * `POST /api/workers/send` → `{ workerId, mineId }` (valida distância/mapa) * `GET /api/mines` → lista minas visíveis no mapa/instância atual * `POST /api/npc/:id/chat` → `{ text }` (FSM de diálogo)  ### 11.3 Sockets (Socket.IO)  Eventos (cliente→server):  * `auth:hello { token }` * `world:join { map, instance }` * `world:move { x, y }` (throttle 20Hz) * `chat:send { scope:'global'|'local', text }` (cooldown ≥800ms) * `npc:msg { npcId, text }`  Eventos (server→cliente):  * `chat:msg { scope, from, text, system }` * `world:pos { playerId, x, y }` * `world:teleport { map, instance, x, y }` * `worker:update { workerId, state, mineId, progress }` * `npc:reply { npcId, text }`  ### 11.4 NPC FSM (exemplo barco Orrin)  Estados: `idle → greeted → choosing_dest → confirm → done`  Script (DSL simples JSON):  ```json {   "id": "orrin",   "keywords": {     "hi": "greet",     "adventure": "choose:explorer_1",     "training": "choose:training_1",     "yes": "confirm"   },   "messages": {     "greet": "Olá, viajante! Para onde quer ir? {adventure|training}",     "choose": "Tem certeza que quer ir para {dest}? diga 'yes'",     "confirm": "Boa viagem!"   } } ```  ---  ## 12) TDD Frontend  ### 12.1 Módulos  * `socket.js` (handshake, reconexão, filas) * `hud.js` (Team/Inventory/Summon/Config + eventos) * `house.js` (render PT, WASD/click, follow offsets) * `chat.js` (abas Global/Local, rate limit) * `npc.js` (envelopar mensagens; render balões/system msgs) * `workers.js` (UI de envio/estado; highlight de minas)  ### 12.2 Estados de UI  * **House**: PT visível, NPCs clicáveis, chat nas abas. * **Explorer**: mobs/loot/minas render; painel de workers. * **Modais**: Summon (iframe legado), Inventory, Profile (cards), Team selector.  ### 12.3 Diretrizes Visuais  * **Fonte**: Press Start 2P. * **Botões**: gradiente laranja vibrante; hover com brilho. * **Cards**: moldura pixel 2px; selo de raridade por cor (Common cinza … Ultimate rainbow). * **Efeitos**: halo atrás do herói (centralizado e grande), partículas 8‑bit em camadas sobre retrato.  ---  ## 13) Algoritmos  ### 13.1 Spawn de Minas  ``` function maintainMines(map) {   const target = cfg.mines.targets[map];   const active = countActiveMines(map);   for (let i = 0; i < target - active; i++) spawnMine(map); }  function spawnMine(map) {   const type = weightedPick(cfg.mines.weights);   const pos = pickValidPos(map, minDistBetweenMines);   const capacity = rollCapacityByType(type);   insertMine({map, type, pos, capacity, spawned_at: now}); }  function onMineExhausted(mine) { scheduleRespawn(jitter(120..300s)); } ```  ### 13.2 Spawn de Mobs (baseline)  * `spawn_points` com peso; densidade alvo por região; respawn por timer e ocupação.  ### 13.3 Pathing Simplificado  * Grid 32px; sem A\* no MVP: clique move em linha; colisões básicas; follow mantém offsets (−16, 0, +16, etc.). A\* entra quando cenário tiver obstáculos reais.  ---  ## 14) Conteúdo Inicial  ### 14.1 Heróis (catálogo base)  * **COMMON**: Aric, Lyria, Brokk (1/1/1 caps baixos). * **RARE**: Seraph, Kaelen, Morrin. * **SUPER\_RARE**: Elara, Darrion, Sylva. * **LEGENDARY**: Ragnar, Selene, Tharion. * **MYTHIC**: Auriel (vermelho). * **ULTIMATE**: Zephyr, Arkan (gradiente rainbow).  > Imagens em `/client/img/heroes/*.png`. Nomes em inglês nos cards. Selo de raridade por cor.  ### 14.2 Mobs (iniciais)  * **Goblin**: HP baixo, drop gold 2–6, iron\_ore 25%. * **Slime**: baixa ameaça; drop gel 30%. * **Rock Golem**: tanque; drop stone blocks; chance de Crystal Shard. * **Balor** (boss): alto dano; drops raros (Demon Horn, Flame Gem). * **Dragonkin** (futuro): mapas avançados.  ### 14.3 Mapas  * **House/Lobby**: ilha tropical, NPCs, chat. * **Explorer\_1 (Easy)**: planície com goblins/slimes; minas de Iron predominantes. * **Explorer\_2 (Normal)**: cavernas com golems; Crystal/Diamond raros. * **Training\_Arena**: slimes/dummies (skills por hit). * **Dungeon\_Carmesim** (S1): fogo/raiva; boss Guardião Carmesim.  ---  ## 15) Roadmap de Entrega  1. **MVP House**: menus, render do Team, chat global/local, Orrin com diálogo (sem teleporte real). 2. **Sockets base**: auth, rooms, mensagens, `world:move`. 3. **Explorer\_1**: mobs simples + minas Iron; lista `/api/mines`. 4. **Workers v1**: enviar/retornar; coletar Iron; stamina off. 5. **Core Hunt v1**: XP/level, skills por hit, loot básico, morte leve. 6. **Ferreiro v1**: reparos básicos com Iron; durabilidade ativa. 7. **Expansão**: Crystal/Diamond, guardiões de mina, stamina worker, Dungeon S1. 8. **PvP Mineração** (mapa compartilhado, controle de spots).  ---  ## 16) Padrões de Arte & Pipeline de Assets  * **Resolução**: tiles isométricos 64×32; sprites de herói 32×32 ou 48×48 conforme papel. * **Estilo**: 8‑bit retrô, cores sólidas, outline 1–2px, sombras simples. * **UI**: molduras pixel; gradientes simples; ícones 16×16/24×24. * **Nomes & pastas**: `assets/ui/`, `assets/sprites/heroes/`, `assets/mobs/`, `assets/tiles/`, `assets/sfx/`. * **Export**: PNG com fundo transparente; atlas opcional por cena.  ---  ## 17) Operação, Anti‑abuso, Escalabilidade  * **Conexões**: JWT HttpOnly + CSRF; validar no handshake do socket. * **Rate limits**: movimento 20Hz server‑side; chat cooldown; NPC interação com debounce. * **Logs**: eventos críticos (teleport, drops raros, morte, reparo, craft). * **Backups**: snapshot SQLite diário; plano de migração para Postgres em produção. * **Observabilidade**: métricas XP/h, loot/h, erros API, latência socket; alarmes por outliers.  ---  ## 18) Glossário  * **Hunt/Explorer**: mapa de grind AFK/assistível. * **Worker**: NPC minerador que coleta recursos em minas dinâmicas. * **Oz**: capacidade de carga de itens. * **DUR**: durabilidade do equipamento. * **FSM**: máquina de estados (NPCs, AI).  ---  ### Anexos (snippets úteis)  **Env vars sugeridas**  ``` PORT=3000 SOCKET_THROTTLE_HZ=20 TRIES_PER_MINUTE_BASE=60 WORKER_TICK_SECONDS=5 MAX_SESSION_SECONDS=7200 DEFAULT_START_LEVEL=1 ```  **PRAGMAs SQLite**  ``` PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000; ```  **Contratos de erro (exemplos)**  * `E_TEAM_INVALID_SLOT` / `E_HERO_NOT_OWNED` / `E_MINE_BUSY` / `E_WORKER_NO_STAMINA` / `E_MAP_MISMATCH` / `E_RATE_LIMIT`  ---  > **Nota final**: Este documento é **guia operacional**. Implementações devem seguir o Roadmap e consolidar números no `balance.json`. Toda divergência de UX/arte deve manter a estética 8‑bit retrô e a referência visual Bomb Crypto/Tibia.  
+
+esse tb
+
+📖 AFK Miners — Loot & Itens (Compêndio Oficial)
+1) Regras globais de loot (AFK Miners)
+1.1 Filosofia Tibia 7.4
+
+Drop escasso: o normal é vir gold + “lixo vendável” (bones, cloths, gel, etc.). Equip cai pouco.
+
+Risco x recompensa: áreas fundas e mobs mais perigosos têm melhor loot.
+
+Nada de boss fixo: “mobs fortes” (ex.: Infernal Drake, Balor) são respawn comum, raros e perigosos.
+
+1.2 Raridade e cor
+
+Common (cinza) – base do jogo; drop até 10%.
+
+Uncommon (verde) – 2–6%.
+
+Rare (azul) – 0.5–2%.
+
+Legendary (dourado) – 0.2–1%.
+
+Mythic (vermelho) – ≤0.2%.
+
+Regra: um kill nunca solta mais de 1 equipamento (se rolar mais de um “acerto”, o sistema escolhe 1 por peso).
+
+1.3 Oz (peso) e durabilidade
+
+Todo item equipável tem Oz e durabilidade (DUR).
+
+Atributos começam a perder efetividade abaixo de 30% (-10%) e 10% (-30%).
+
+Reparo com Rowan consome Gold + material do item (Iron/Crystal/Diamond/Leather/etc.).
+
+1.4 Armas e classe
+
+Knight: Sword / Axe / Club(Hammer) + Shield.
+
+Paladin: Bow (+ Arrows) e Spears (lançáveis, com chance de recuperar 50%).
+
+Mage: Staff/Wand (+Magic bônus), Robes/Hats leves.
+
+1.5 Regras de porcentagem
+
+Tabelas abaixo usam % por kill.
+
+Gold “100%” indica sempre com range X–Y.
+
+“Recursos” e “lixo vendável” têm taxas altas para manter a economia viva.
+
+2) Catálogo completo de itens (stats + Oz + descrição)
+
+(✅ Todos com ATK/DEF/ARMOR/Oz, raridade e descrição curta — estilo Tibia.)
+
+📌 [Swords, Axes, Clubs/Hammers, Bows, Spears, Staffs/Wands, Shields, Armors, Helmets, Legs, Boots, Accessories, Recursos & Consumíveis]
+
+(já listados um por um com descrição curta, ex.: Dragonbone Sword, Flame Axe, Abyssal Wand, Demon Horn Shield, Swamp Boots, etc.)
+
+3) Loot por monstro — COMPLETO (com %)
+
+Observação: porcentagens são independentes por categoria. Sistema garante no máx. 1 equipamento por kill.
+
+TIER 1 — Iniciantes (1–15)
+
+Rat → Rusted Dagger.
+
+Cave Rat → Rusted Sword.
+
+Deer/Wolf/Bear → peles, carnes, Wolfhide Cap, Leather Armor.
+
+Goblin/Goblin Leader → Goblin Ear/Talisman, Short Bow, Iron Sword.
+
+TIER 2 — Básico (15–25)
+
+Spider/Poison Spider → Spider Legs, Venom Sac, Small Health Potion, Leather Helmet.
+
+Troll/Swamp Troll → Rotten Meat, Troll Hide, Stone Maul, Swamp Boots.
+
+Orc/Spearman/Warrior/Leader → Orcish Axe, Hunting Spear, Orc Leather Legs, Battle Axe, Iron Shield, War Axe, Scale Armor.
+
+TIER 3 — Intermediário (25–40)
+
+Skeleton → Bone Shield.
+
+Ghoul → Chain Armor.
+
+Ghost → Spirit Robe.
+
+Amazon/Valkyrie → Amazon Bow, Valkyrie Spear.
+
+Witch → Witch Hat, Crystal Staff.
+
+Grubshell (ex-Rotworm) → Iron Ore.
+
+Rotmaw (ex-Carrion Worm) → Carrion Club, Crystal Shard.
+
+TIER 4 — Avançado (40–70)
+
+Bonefiend (ex-Demon Skel) → Darkblade, Black Shield.
+
+Swamp of Decay mobs → Swamp Club, Swamp Boots.
+
+Dragonkin (NOVO) → Dragonkin Scale, Ember Core, Reinforced Bow, Scale Helmet, Storm Javelin (raro).
+
+TIER 5 — High-End (70–100+)
+
+Ember Imp (ex-Fire Devil) → Flame Wand, Fire Robe.
+
+Scaled Drake (ex-Dragon) → Dragonbone Sword, Dragon Shield.
+
+Infernal Drake (ex-Dragon Lord) → Dragon Lord Armor, Diamond Helm, Flame Axe (raro).
+
+Balor (ex-Demon) → Abyssal Axe, Demon Horn Shield, Abyssal Robe, Ring of the Abyss (ultra-raro).
+
+Observações finais de balance
+
+Chances calibradas para “Tibia feeling”: equipamento raro, recurso moderado, junk frequente.
+
+Peso (Oz) limita loot carregado.
+
+Durabilidade mantém ciclo de reparos.
+
+Não há gates por level: aprendizado vem pelo risco.
+
+Dragonkin entra como Tier 4 para Paladin/Knights (meio termo antes dos drakes).
+
+✅ Conclusão
+
+Abaixo está o conteúdo completasso, sem cortes, já autoral e coerente com tudo que definimos (Tibia-like 7.4, AFK Hunters/Explorer, workers, durabilidade, Oz, etc.).
+
+Dividido em 3 blocos:
+
+Regras globais de loot e itens.
+
+Catálogo completo de itens.
+
+Loot por monstro — completo (todos os mobs + Dragonkin incluído).
+
+Lista de sprites a gerar (modelos base)
+Tier 1
+
+Rat (24×24)
+
+Cave Rat (24×24)
+
+Deer (32×32)
+
+Wolf (32×32)
+
+Bear (32×32)
+
+Goblin (24×24)
+
+Goblin Leader (32×32)
+
+Tier 2
+
+Spider (32×32)
+
+Poison Spider (32×32)
+
+Troll (32×32)
+
+Swamp Troll (32×32)
+
+Orc (32×32)
+
+Orc Spearman (32×32)
+
+Orc Warrior (32×32)
+
+Orc Leader (48×48)
+
+Tier 3
+
+Skeleton (32×32)
+
+Ghoul (32×32)
+
+Ghost (32×32)
+
+Amazon (32×32)
+
+Valkyrie (32×32)
+
+Witch (32×32)
+
+Grubshell (ex-Rotworm, 32×32)
+
+Rotmaw (32×32)
+
+Tier 4
+
+Bonefiend (48×48)
+
+Dragonkin (48×48, reptiliano alado autoral)
+
+Tier 5
+
+Ember Imp (32×32)
+
+Scaled Drake (48×48)
+
+Infernal Drake (48×48)
+
+Balor (48×48)
+
+
+Regras globais de loot e itens (como o sistema funciona e escala).
+
+Catálogo completo de itens (todas as armas/escudos/armaduras/acessórios com ATK/DEF/ARMOR/Oz, raridade e descrição curta).
+
+Loot por monstro — completo (TODOS os monstros da tua lista + Dragonkin incluído, com chances %, recursos, consumíveis e equipamentos que caem).
+
+1) Regras globais de loot (AFK Miners)
+1.1 Filosofia Tibia 7.4
+
+Drop escasso: o normal é vir gold + “lixo vendável” (bones, cloths, gel, etc.). Equip cai pouco.
+
+Risco x recompensa: áreas fundas e mobs mais perigosos têm melhor loot.
+
+Nada de boss fixo: “mobs fortes” (ex.: Infernal Drake, Balor) são respawn comum, raros e perigosos.
+
+1.2 Raridade e cor
+
+Common (cinza) – base do jogo; drop até 10%.
+
+Uncommon (verde) – 2–6%.
+
+Rare (azul) – 0.5–2%.
+
+Legendary (dourado) – 0.2–1%.
+
+Mythic (vermelho) – ≤0.2%.
+
+Regra: um kill nunca solta mais de 1 equipamento (se rolar mais de um “acerto”, o sistema escolhe 1 por peso).
+
+1.3 Oz (peso) e durabilidade
+
+Todo item equipável tem Oz e durabilidade (DUR).
+
+Atributos começam a perder efetividade abaixo de 30% (-10%) e 10% (-30%).
+
+Reparo com Rowan consome Gold + material do item (Iron/Crystal/Diamond/Leather/etc.).
+
+1.4 Armas e classe
+
+Knight: Sword / Axe / Club(Hammer) + Shield.
+
+Paladin: Bow (+ Arrows) e Spears (lançáveis, com chance de recuperar 50%).
+
+Mage: Staff/Wand (+Magic bônus), Robes/Hats leves.
+
+1.5 Regras de porcentagem
+
+Tabelas abaixo usam % por kill.
+
+Gold “100%” indica sempre com range X–Y.
+
+“Recursos” e “lixo vendável” têm taxas altas para manter a economia viva.
+
+2) Catálogo completo de itens (stats + Oz + descrição)
+2.1 Armas — Knight
+
+Swords
+
+Rusted Sword — ATK 6, Oz 20, Common
+
+Espada corroída que mal corta.
+
+Iron Sword — ATK 15, Oz 35, Common
+
+Lâmina curta de ferro bruto.
+
+Darkblade — ATK 28, Oz 50, Rare
+
+Metal escurecido por magia sombria.
+
+Dragonbone Sword — ATK 40, Oz 60, Legendary
+
+Forjada a partir de ossos dracônicos.
+
+Axes
+
+Crude Axe — ATK 14, Oz 40, Common
+
+Machado tosco de cabo curto.
+
+Orcish Axe — ATK 18, Oz 40, Common
+
+Lâmina orc rudemente afiada.
+
+Battle Axe — ATK 22, Oz 65, Uncommon
+
+Pesado, exige braços fortes.
+
+War Axe — ATK 25, Oz 65, Rare
+
+Machado de guerra equilibrado.
+
+Flame Axe — ATK 38, Oz 70, Legendary
+
+Lâmina com núcleo ígneo.
+
+Clubs/Hammers
+
+Wooden Club — ATK 12, Oz 25, Common
+
+Pau de porrada “do ofício”.
+
+Stone Maul — ATK 16, Oz 35, Common
+
+Marreta de pedra grosseira.
+
+Carrion Club — ATK 20, Oz 55, Rare
+
+Fétido, coberto de limo e ossos.
+
+Abyssal Hammer — ATK 42, Oz 80, Mythic
+
+Martelo que pulsa energia abissal.
+
+2.2 Armas — Paladin
+
+Bows (usam Arrows)
+
+Short Bow — ATK 10, Oz 30, Common
+
+Arco simples de madeira leve.
+
+Amazon Bow — ATK 18, Oz 30, Uncommon
+
+Fibras bem tensionadas, tiro estável.
+
+Reinforced Bow — ATK 24, Oz 32, Rare
+
+Armaço reforçado com metal.
+
+Skyfang Bow — ATK 32, Oz 34, Legendary
+
+Curvatura perfeita; chiado no ar.
+
+Ammo
+
+Rough Arrow — ATK +2 (por flecha), Oz 0.1 (por unidade)
+
+Hardened Arrow — ATK +4, Oz 0.1
+
+Crystal Arrow — ATK +6, Oz 0.1, Rare
+
+Spears (lançadas; 50% de chance de recuperar)
+
+Hunting Spear — ATK 14, Oz 28, Common
+
+Valkyrie Spear — ATK 20, Oz 30, Uncommon
+
+Storm Javelin — ATK 28, Oz 32, Rare
+
+2.3 Armas — Mage
+
+Crystal Staff — ATK 8, Magic +2, Oz 28, Rare
+
+Canaliza energia prismática.
+
+Flame Wand — ATK 10, Magic +3, Oz 20, Rare
+
+Faíscas vivas na ponta.
+
+Spirit Staff — ATK 12, Magic +3, Oz 26, Rare
+
+Sussurros quando agitada.
+
+Abyssal Wand — ATK 16, Magic +4, Oz 24, Mythic
+
+Luz que parece absorver luz.
+
+2.4 Shields
+
+Wooden Shield — DEF 12, Oz 45, Common
+
+Proteção de emergência.
+
+Bone Shield — DEF 14, Oz 40, Common
+
+Ossos amarrados, surpreendentemente firme.
+
+Iron Shield — DEF 20, Oz 60, Common
+
+Escudo de ferro confiável.
+
+Black Shield — DEF 30, Oz 70, Rare
+
+Negro como carvão, muito resistente.
+
+Dragon Shield — DEF 40, Oz 65, Legendary
+
+Revestido com escamas dracônicas.
+
+Demon Horn Shield — DEF 50, Oz 85, Mythic
+
+Chifres demoníacos incrustados.
+
+2.5 Armaduras (Armor = defesa de torso)
+
+Leather Armor — ARMOR 8, Oz 25, Common
+
+Leve, flexível, pouco protetora.
+
+Trollhide Armor — ARMOR 10, Oz 30, Common
+
+Couro bruto curtido.
+
+Chain Armor — ARMOR 15, Oz 45, Common
+
+Malha de ferro básica.
+
+Scale Armor — ARMOR 25, Oz 55, Rare
+
+Escamas sobrepostas, ótima proteção.
+
+Dragon Lord Armor — ARMOR 40, Oz 70, Legendary
+
+Peitoral com crista ígnea.
+
+Abyssal Robe — ARMOR 15, Magic +3, Oz 20, Mythic
+
+Tecido arcano, leve e poderoso.
+
+2.6 Capacetes
+
+Leather Helmet — ARMOR 5, Oz 18, Common
+
+Wolfhide Cap — ARMOR 3, Oz 15, Common
+
+Scale Helmet — ARMOR 10, Oz 25, Rare
+
+Witch Hat — ARMOR 2, Magic +2, Oz 12, Rare
+
+Diamond Helm — ARMOR 20, Oz 30, Legendary
+
+2.7 Pernas & Botas
+
+Leather Legs — ARMOR 4, Oz 20, Common
+
+Orc Leather Legs — ARMOR 6, Oz 22, Common
+
+Chain Legs — ARMOR 10, Oz 28, Rare
+
+Scale Legs — ARMOR 15, Oz 32, Rare
+
+Dragon Legs — ARMOR 18, Oz 35, Legendary
+
+Ragged Boots — ARMOR 1, Oz 8, Common
+
+Swamp Boots — ARMOR 2, Poison Resist +5%, Oz 12, Rare
+
+Flame Boots — ARMOR 4, Fire Resist +5%, Oz 15, Rare
+
+2.8 Acessórios (queda muito rara)
+
+Goblin Talisman — +1 Luck, Oz 5, Uncommon
+
+Valkyrie Feather Amulet — +2 Distance, Oz 6, Rare
+
+Flame Gem Amulet — +2 Magic, Fire Resist +3%, Oz 6, Legendary
+
+Ring of the Abyss — +2 All Resist, Oz 3, Mythic
+
+2.9 Recursos & consumíveis
+
+Gold (moeda).
+
+Iron Ore — Oz 15.
+
+Crystal Shard — Oz 5.
+
+Diamond Fragment — Oz 8.
+
+Leather — Oz 10.
+
+Stone Block — Oz 20.
+
+Wood Plank — Oz 15.
+
+Gel / Venom Sac / Ectoplasm / Bones / Cloth / Orc Tooth / etc. — junk vendável 1–10 Gold.
+
+Small Health Potion — cura +50 HP, Oz 8.
+
+Mana Herb — +25 Mana, Oz 5.
+
+Cooked Meat — +15 Stamina Worker, Oz 10.
+
+3) Loot por monstro — COMPLETO (com %)
+
+Observação: as porcentagens somadas podem passar de 100% porque são sorteios independentes por categoria (gold, junk, recurso, consumível, equip). O sistema garante no máx. 1 equipamento por kill.
+
+TIER 1 — Iniciantes (1–15)
+Rat (24×24)
+
+Gold: 1–2 (100%)
+
+Junk: Bone Shard (50%, Oz 3) | Moldy Cheese (5%, Oz 5)
+
+Equip: Rusted Dagger (1%, ATK 4, Oz 12, Common)
+
+Cave Rat (24×24)
+
+Gold: 1–3 (100%)
+
+Junk: Bone Shard (70%) | Leather Scrap (10%, Oz 4)
+
+Equip: Rusted Sword (1%, ATK 6, Oz 20, Common)
+
+Rabbit (16×16)
+
+Decorativo, sem loot relevante.
+
+Deer (32×32)
+
+Recursos: Raw Meat (70%, Oz 8) | Deer Hide (20%, Oz 10)
+
+Raro: Antler Trinket (2%, Oz 12, vende bem)
+
+Wolf (32×32)
+
+Gold: 2–4 (100%)
+
+Recursos: Raw Meat (40%, Oz 8) | Wolf Pelt (15%, Oz 8)
+
+Equip: Wolfhide Cap (2%, ARMOR 3, Oz 15) | Leather Armor (2%, ARMOR 8, Oz 25)
+
+Bear (32×32)
+
+Gold: 3–6 (100%)
+
+Recursos: Raw Meat (60%) | Bear Fur (10%, Oz 10)
+
+Equip: Wooden Club (2%, ATK 12, Oz 25)
+
+Goblin (24×24)
+
+Gold: 2–4 (100%)
+
+Junk: Goblin Ear (10%, Oz 2) | Rusty Club (5%, ATK 8)
+
+Equip: Short Bow (2%, ATK 10, Oz 30, Common)
+
+Goblin Leader (32×32)
+
+Gold: 4–8 (100%)
+
+Acessório: Goblin Talisman (5%, +1 Luck)
+
+Equip: Iron Sword (2%, ATK 15, Oz 35) | Leather Armor (3%, ARMOR 8)
+
+TIER 2 — Básico/Intermediário (15–25)
+Spider (32×32)
+
+Gold: 2–4 (100%)
+
+Recursos: Spider Leg (20%, Oz 5) | Sticky Web (10%, Oz 3)
+
+Equip: Leather Helmet (2%, ARMOR 5, Oz 18)
+
+Poison Spider (32×32)
+
+Gold: 3–6 (100%)
+
+Recursos: Venom Sac (15%, Oz 6) | Sticky Web (20%)
+
+Consumível: Small Health Potion (5%, +50 HP, Oz 8)
+
+Troll (32×32)
+
+Gold: 2–6 (100%)
+
+Junk: Rotten Meat (40%) | Troll Hide (15%, Oz 12)
+
+Equip: Wooden Club (5%, ATK 12) | Stone Maul (1%, ATK 16, Oz 35)
+
+Swamp Troll (32×32)
+
+Gold: 3–8 (100%)
+
+Recursos: Swamp Moss (10%, Oz 10)
+
+Equip: Swamp Boots (3%, ARMOR 2, PoisonRes +5%, Oz 12)
+
+Orc (32×32)
+
+Gold: 4–8 (100%)
+
+Junk: Orc Tooth (15%, Oz 3) | Crude Club (5%, ATK 14)
+
+Equip: Orcish Axe (2%, ATK 18, Oz 40)
+
+Orc Spearman (32×32)
+
+Gold: 5–10 (100%)
+
+Junk: Orc Tooth (15%)
+
+Equip: Hunting Spear (8%, ATK 14, Oz 28) | Orc Leather Legs (2%, ARMOR 6, Oz 22)
+
+Orc Warrior (32×32)
+
+Gold: 8–12 (100%)
+
+Recursos: Orc Leather (10%, Oz 12)
+
+Equip: Battle Axe (2%, ATK 22, Oz 65) | Iron Shield (2%, DEF 20, Oz 60)
+
+Orc Leader (48×48)
+
+Gold: 12–20 (100%)
+
+Acessório: Orc Amulet (3%, Oz 8)
+
+Equip: War Axe (1%, ATK 25, Oz 65, Rare) | Scale Armor (2%, ARMOR 25, Oz 55)
+
+TIER 3 — Intermediário (25–40)
+Skeleton (32×32)
+
+Gold: 2–6 (100%)
+
+Junk: Bone (80%) | Rusty Sword (3%)
+
+Equip: Bone Shield (2%, DEF 14, Oz 40)
+
+Ghoul (32×32)
+
+Gold: 3–7 (100%)
+
+Junk: Rotten Flesh (50%) | Ghoul Claw (10%)
+
+Equip: Chain Armor (2%, ARMOR 15, Oz 45)
+
+Ghost (32×32)
+
+Gold: 4–10 (100%)
+
+Recursos: Ectoplasm (25%) | Mana Herb (5%)
+
+Equip: Spirit Robe (1%, ARMOR 12, Magic +2, Oz 20)
+
+Amazon (32×32)
+
+Gold: 5–10 (100%)
+
+Junk: Cloth Scrap (30%)
+
+Equip: Short Sword (3%, ATK 10) | Amazon Bow (2%, ATK 18, Oz 30)
+
+Valkyrie (32×32)
+
+Gold: 6–12 (100%)
+
+Acessório: Valkyrie Feather (5%)
+
+Equip: Hunting Spear (3%, ATK 14) | Chain Armor (2%, ARMOR 15)
+
+Witch (32×32)
+
+Gold: 8–14 (100%)
+
+Recursos: Mana Herb (20%)
+
+Equip: Witch Hat (2%, ARMOR 2, Magic +2) | Crystal Staff (1%, ATK 8, Magic +2, Oz 28)
+
+Grubshell (ex-Rotworm, 32×32)
+
+Gold: 2–5 (100%)
+
+Recursos: Meat Chunk (60%) | Worm Tooth (10%) | Iron Ore (10%, Oz 15)
+
+(Sem equipamentos — mob de recurso/XP)
+
+Rotmaw (ex-Carrion Worm, 32×32)
+
+Gold: 4–8 (100%)
+
+Junk: Rotten Meat (40%) | Carrion Claw (10%)
+
+Recursos: Crystal Shard (5%, Oz 5)
+
+Equip: Carrion Club (2%, ATK 20, Oz 55)
+
+TIER 4 — Avançado (40–70)
+Bonefiend (ex-Demon Skeleton, 48×48)
+
+Gold: 6–12 (100%)
+
+Junk: Bone (70%)
+
+Recursos: Crystal Shard (10%)
+
+Equip: Darkblade (1%, ATK 28, Oz 50) | Black Shield (1%, DEF 30, Oz 70)
+
+Swamp of Decay – mix (Poison Spider + Swamp Troll densos)
+
+Gold: 4–10 (100%)
+
+Recursos: Swamp Moss (15%) | Venom Sac (10%)
+
+Equip: Swamp Club (2%, ATK 18) | Swamp Boots (1%, ARMOR 2, PoisonRes)
+
+Dragonkin (NOVO, 48×48)
+
+Gold: 15–28 (100%)
+
+Recursos: Dragonkin Scale (15%, Oz 8) | Ember Core (5%, Oz 6)
+
+Equip: Reinforced Bow (2%, ATK 24, Oz 32, Rare) | Scale Helmet (2%, ARMOR 10, Oz 25)
+
+Raro: Storm Javelin (0.8%, ATK 28, Oz 32, Rare)
+
+Dragonkin = répteis alados menores que dragons, ótimos para Paladin mid-game.
+
+TIER 5 — High-End (70–100+)
+Ember Imp (ex-Fire Devil, 32×32)
+
+Gold: 6–12 (100%)
+
+Recursos: Flame Spark (20%) | Fire Rune Fragment (5%)
+
+Equip: Flame Wand (1%, ATK 10, Magic +3, Oz 20) | Fire Robe (1%, ARMOR 14, FireRes +5%)
+
+Scaled Drake (ex-Dragon, 48×48)
+
+Gold: 20–40 (100%)
+
+Recursos: Dragon Ham (30%) | Dragon Scale (20%) | Dragon Claw (10%)
+
+Equip: Dragonbone Sword (1%, ATK 40, Oz 60) | Dragon Shield (1%, DEF 40, Oz 65)
+
+Infernal Drake (ex-Dragon Lord, 48×48)
+
+Gold: 40–80 (100%)
+
+Recursos: Dragon Scale (40%) | Flame Gem (10%) | Diamond Fragment (5%)
+
+Equip: Dragon Lord Armor (1%, ARMOR 40, Oz 70) | Diamond Helm (1%, ARMOR 20, Oz 30)
+
+Raro: Flame Axe (0.8%, ATK 38, Oz 70, Legendary)
+
+Balor (ex-Demon, 48×48)
+
+Gold: 60–120 (100%)
+
+Recursos: Demon Horn (5%, Oz 7) | Abyssal Shard (10%, Oz 6) | Diamond Fragment (10%)
+
+Equip: Abyssal Axe (1%, ATK 50, Oz 80, Mythic) | Demon Horn Shield (1%, DEF 50, Oz 85) | Abyssal Robe (1%, ARMOR 15, Magic +3, Oz 20)
+
+Ultra-raro: Ring of the Abyss (0.3%, +2 All Resist, Oz 3, Mythic)
+
+(Opcional) Tabela rápida por classe — onde farmar set
+
+Knight
+
+Early: Iron Sword (Goblin Leader), Leather/Chain (Ghoul/Valkyrie).
+
+Mid: Battle/War Axe (Orc Warrior/Leader), Darkblade & Black Shield (Bonefiend).
+
+High: Dragonbone Sword / Dragon Shield (Scaled Drake), Flame Axe (Infernal Drake), Demon Horn Shield (Balor).
+
+Paladin
+
+Early: Short Bow (Goblin), Hunting Spear (Orc Spearman).
+
+Mid: Amazon Bow (Amazon), Valkyrie Spear (Valkyrie), Reinforced Bow/Storm Javelin (Dragonkin).
+
+High: Skyfang Bow (raro em Dragonkin/Infernal Drake — definível se quiser), Crystal Arrow craft (Crystal Shard).
+
+Mage
+
+Early: Witch Hat, Crystal Staff (Witch).
+
+Mid: Spirit Robe (Ghost), Flame Wand/Fire Robe (Ember Imp).
+
+High: Abyssal Wand/Abyssal Robe (Balor), Diamond Helm (comum a todos como defesa).
+
+Observações finais de balance
+
+As chances estão calibradas para “Tibia feeling”: equipe é raro, recurso é “ok”, junk é frequente.
+
+Peso (Oz) limita quanto a PT carrega, forçando decisões.
+
+Durabilidade mantém o ciclo com Rowan (reparo) e dá valor a Iron/Crystal/Diamond.
+
+Nada de gates por level: o jogador aprende pelo risco.
+
+Dragonkin entra como tier 4/5 de paladin e também alimenta Knight (capacete/escudo em outros mobs) e mage (via Crystal/Flame em Ember Imp/Infernal Drake).
+
+
+eu tenho todas essas informações, contribui para o MVP técnico? e em anexo coloquei o .zip para você analisar tudo, que é o que temos pronto, para comparar com todas informações daqui e que tu ja sabe na sua memória

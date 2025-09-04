@@ -1,0 +1,39 @@
+Nome: Infernal Drake
+HP: 420
+Experiência: 350
+
+Habilidades:
+⚔️ Físico: Mordida e garras (0–90)
+🔥 Magia: Sopro flamejante massivo (0–80)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil, dragão vermelho imponente.
+Considerado um dos guardiões naturais do fogo.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Cavernas infernais
+- Montanhas de lava
+- Salões dracônicos ocultos
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Roooar!"
+"Burn!"
+
+Loot:
+- 40–80 Gold Coins (100%)
+- Dragon Scale (40%)
+- Flame Gem (10%)
+- Diamond Fragment (5%)
+- Dragon Lord Armor (1%)
+- Diamond Helm (1%)
+- Flame Axe (0.8%)
+
+Notas:
+Os Infernal Drakes são as versões supremas dos dragões.
+Poucos aventureiros sobrevivem a um confronto direto.

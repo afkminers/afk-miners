@@ -1,0 +1,67 @@
+Ajuste 0 - suavizar movimento Idle do Rat
+Ajuste 1 - spritesheet Cave : Rat fazer 24x24
+Ajuste 2 - Spritesheet Rat : fazer 24x24 com aparencia menor que o cave rat
+Ajuste 3 - Bear : revisar frames cortados(tem frames que veio cortado e ta cortando a perna dele)
+ajuste 4 - Rotmaw : revisar frames cortados
+Ajuste 5 - Deer : manter padrão igual as outras sprites por linha
+{
+line 0 idle 
+line 1 walk south
+line 2 walk west 
+linha 3 walk east
+line 4 walk north 
+line 5 dead 
+line 6 atk south 
+line 7 atk west  
+line 8 atk east   
+line 9 atk north 
+}
+ 
+Ajuste 6 - Deer : fazer mais 1 frame para Walk South (deixar com 4 frames totais)
+Ajuste 7 - Demon skeleton: manter padrão igual as outras sprites por linha
+{
+line 0 idle 
+line 1 walk south
+line 2 walk west 
+linha 3 walk east
+line 4 walk north 
+line 5 dead 
+line 6 atk south 
+line 7 atk west  
+line 8 atk east   
+line 9 atk north 
+}
+ATENÇÃO: FALTOU ANIMAÇÃO ATK NORTH
+
+AJUSTE 8 -
+ 
+ 
+ 
+ 
+ 
+ 
+Padrão spritesheet:
+ 
+vamos fazer para o 
+
+line 0 idle 4 frames  
+line 1 walk south 6 frames  
+line 2 walk west 6 frames  
+linha 3 walk east 6 frames  
+line 4 walk north 6 frames  
+line 5 dead 3 frames 
+line 6 atk south 4 frames  
+line 7 atk west  4 frames 
+line 8 atk east  4 frames 
+line 9 atk north 4 frames
+
+line 0 idle 
+line 1 walk south
+line 2 walk west 
+linha 3 walk east
+line 4 walk north 
+line 5 dead 
+line 6 atk south 
+line 7 atk west  
+line 8 atk east   
+line 9 atk north 

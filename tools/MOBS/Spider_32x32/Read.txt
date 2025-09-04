@@ -1,0 +1,35 @@
+Nome: Spider
+HP: 35
+Experiência: 20
+
+Habilidades:
+⚔️ Físico: Mordida (0–12)
+Velocidade: Média
+Paralisa: Não
+Veneno: Leve (dano 1–2 por turno)
+
+Comportamento:
+Hostil, se aproxima rapidamente do alvo.
+Não corre quando ferida.
+
+Locais de Respawn:
+- Florestas úmidas
+- Caves com musgo
+- Próximo de rios e lagos
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Hissss!"
+"Chhht!"
+
+Loot:
+- 2–4 Gold Coins (100%)
+- Spider Leg (20%)
+- Sticky Web (10%)
+- Leather Helmet (2%)
+
+Notas:
+Spiders são os primeiros inimigos com veneno do jogo.
+Iniciantes devem levar poções ou curandeiros para enfrentar grupos.

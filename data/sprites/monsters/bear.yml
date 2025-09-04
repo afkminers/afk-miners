@@ -1,0 +1,66 @@
+# data/sprites/monsters/bear.yml
+key: bear
+kind: monster
+image: "sprites/monsters/bear.png"
+
+frame:
+  width: 48
+  height: 32
+  margin: 0
+  spacing: 0
+
+# a imagem é 288x384 → 6 colunas de 48 e 12 linhas de 32
+grid:
+  cols: 6
+  rows: 12
+
+# pivô central (32×32 dentro do 48×32 → 24,16 → 0.5/0.5)
+anchor:
+  x: 0.5
+  y: 0.5
+
+anims:
+  # 0 — idle (5 frames)
+  idle:
+    fps: 4
+    frames: 5
+    row: 0
+    startCol: 0
+    loop: true
+
+  # 1..4 — walk (south/west/east com 5; north com 4)
+  walk:
+    fps: 8
+    frames: 5
+    framesByDir:
+      south: 5
+      west: 5
+      east: 5
+      north: 4
+    rowByDir:
+      south: 1
+      west: 2
+      east: 3
+      north: 4
+    startCol: 0
+    loop: true
+
+  # 5 — dead (3 frames)
+  dead:
+    fps: 8
+    frames: 3
+    row: 5
+    startCol: 0
+    loop: false
+
+  # 6..9 — attack (2 frames por direção — ajuste se o teu sheet tiver outro nº)
+  attack:
+    fps: 10
+    frames: 2
+    rowByDir:
+      south: 6
+      west: 7
+      east: 8
+      north: 9
+    startCol: 0
+    loop: false

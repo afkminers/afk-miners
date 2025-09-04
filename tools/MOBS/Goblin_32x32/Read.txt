@@ -1,0 +1,32 @@
+Nome: Goblin
+HP: 30
+Experiência: 20
+
+Habilidades:
+⚔️ Físico: Corpo a corpo (0–15)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil, ataca em grupos.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Florestas abertas ao redor da Ilha Inicial
+- Acampamentos improvisados próximos a cavernas
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Grak!"
+"Hur hur!"
+
+Loot:
+- 2–4 Gold Coins (100%)
+- Goblin Ear (10%)
+- Rusty Club (5%)
+- Short Bow (2%)
+
+Notas:
+Goblin são fracos individualmente, mas perigosos em hordas.

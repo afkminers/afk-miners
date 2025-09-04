@@ -1,0 +1,14 @@
+# data/monsters/rotmaw.yml
+key: rotmaw
+name: Rotmaw
+xp: 120
+health:
+  max: 160
+speed: 60
+look:
+  spriteKey: rotmaw
+attacks:
+- type: melee
+  intervalMs: 2000
+  min: 8
+  max: 14

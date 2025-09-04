@@ -1,0 +1,33 @@
+Nome: Rat
+HP: 20
+Experiência: 5
+
+Habilidades:
+⚔️ Físico: Corpo a corpo (0–5)
+Velocidade: Muito baixa
+Paralisa: Não
+
+Comportamento:
+Hostil, ataca corpo a corpo. Criatura fraca, usada para iniciantes aprenderem o combate.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Ilha Inicial (perto da House, caves pequenas)
+- Cavernas Rasa próximas de Goblins
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Squeeeak!"
+"Chiiiii!"
+
+Loot:
+- 1–2 Gold Coins (100%)
+- Bone Shard (50%)
+- Moldy Cheese (5%)
+- Rusted Dagger (1%)
+
+Notas:
+Os Rats são os primeiros inimigos enfrentados pelos mineradores.
+Apesar de inofensivos, transmitem a sensação de perigo no início da jornada.

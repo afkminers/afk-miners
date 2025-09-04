@@ -1,0 +1,217 @@
+-- 1) Tabelas necessárias existem?
+SELECT 'has_spawns'            AS check, to_regclass('public.spawns')            IS NOT NULL AS ok
+UNION ALL
+SELECT 'has_monster_instances' AS check, to_regclass('public.monster_instances') IS NOT NULL AS ok
+UNION ALL
+SELECT 'has_monsters_master'   AS check, to_regclass('public.monsters_master')   IS NOT NULL AS ok
+;
+
+-- 2) Colunas esperadas (marca as que estão faltando)
+WITH need(col, tbl) AS (
+  VALUES
+  -- spawns
+  ('id','spawns'),('mapKey','spawns'),('monsterKey','spawns'),
+  ('x','spawns'),('y','spawns'),('w','spawns'),('h','spawns'),
+  ('count','spawns'),('respawnSec','spawns'),
+
+  -- monster_instances
+  ('id','monster_instances'),('spawn_id','monster_instances'),
+  ('state','monster_instances'),('hp','monster_instances'),('max_hp','monster_instances'),
+  ('map_key','monster_instances'),          -- toleramos existir ou não
+  ('respawn_at','monster_instances'),
+  ('created_at','monster_instances'),('updated_at','monster_instances'),
+
+  -- monsters_master
+  ('id','monsters_master'),('key','monsters_master'),('healthMax','monsters_master')
+)
+SELECT n.tbl AS table, n.col AS column, 
+       (SELECT COUNT(*) FROM information_schema.columns c 
+         WHERE c.table_schema='public' AND c.table_name=n.tbl AND c.column_name=n.col) > 0 AS exists
+FROM need n
+ORDER BY table, column
+;
+
+-- 3) Chaves inválidas de spawn (monsterKey nula/vazia ou inexistente no catálogo)
+SELECT s.id, s."mapKey", s."monsterKey", s.x, s.y
+FROM spawns s
+LEFT JOIN monsters_master mm ON mm.key = s."monsterKey"
+WHERE COALESCE(NULLIF(s."monsterKey",''), NULL) IS NULL
+   OR mm.id IS NULL
+ORDER BY s.id;
+
+-- 4) Monstros vivos por mapa e por spawn (panorama)
+SELECT s."mapKey", s.id AS spawn_id, s."monsterKey",
+       COUNT(*) FILTER (WHERE mi.state='ALIVE') AS alive,
+       COUNT(*) FILTER (WHERE mi.state='DEAD')  AS dead
+FROM spawns s
+LEFT JOIN monster_instances mi ON mi.spawn_id = s.id
+GROUP BY s."mapKey", s.id, s."monsterKey"
+ORDER BY s."mapKey", spawn_id;
+
+-- 5) Instâncias órfãs (spawn_id que não existe em spawns)
+SELECT mi.id, mi.spawn_id, mi.state, mi.hp, mi.max_hp
+FROM monster_instances mi
+LEFT JOIN spawns s ON s.id = mi.spawn_id
+WHERE s.id IS NULL;
+
+-- 6) Coerência de HP
+SELECT mi.id, mi.state, mi.hp, mi.max_hp
+FROM monster_instances mi
+WHERE (mi.state='ALIVE' AND mi.hp <= 0)
+   OR (mi.state='DEAD'  AND mi.hp > 0)
+   OR (mi.hp > mi.max_hp);
+
+-- 7) Catálogo mínimo (pelo menos o 'goblin' que você mostrou nos prints)
+SELECT * FROM monsters_master WHERE key IN ('goblin');
+
+-- 8) Teste do “/nearest” (simula click perto do spawn 850,650 no mapa house)
+-- Ajuste $2 e $3 se quiser testar outro ponto.
+SELECT mi.id, mi.hp, mi.max_hp, s.x, s.y, s."monsterKey",
+       ((s.x-850)*(s.x-850)+(s.y-650)*(s.y-650)) AS dist2
+FROM monster_instances mi
+JOIN spawns s ON s.id=mi.spawn_id
+WHERE mi.state='ALIVE' AND s."mapKey"='house'
+ORDER BY dist2 ASC
+LIMIT 1;
+
+
+
+Bora sim — vamos “radiografar” o banco primeiro. Abaixo estão consultas 100% copiáveis (sem placeholders) pra você rodar no pgAdmin. Elas listam conteúdo, acham inconsistências e mostram a situação de instâncias/spawns. Depois deixo scripts seguros de correção (com BEGIN/ROLLBACK pra testar sem estragar nada).
+
+1) O catálogo de monstros
+-- O que existe no catálogo?
+SELECT id, key, "name", "healthMax"
+FROM monsters_master
+ORDER BY key;
+
+2) Spawns por mapa (veja o ‘house’)
+SELECT id, "mapKey", "monsterKey", x, y, w, h, count, "respawnSec"
+FROM spawns
+WHERE "mapKey" = 'house'
+ORDER BY id;
+
+3) Spawns inválidos (monsterKey nula/vazia ou não existe no catálogo)
+-- vazios / nulos
+SELECT id, "mapKey", "monsterKey", x, y
+FROM spawns
+WHERE COALESCE(NULLIF("monsterKey", ''), NULL) IS NULL
+ORDER BY id;
+
+-- não mapeados no catálogo
+SELECT s.id, s."mapKey", s."monsterKey", s.x, s.y
+FROM spawns s
+LEFT JOIN monsters_master mm ON mm.key = s."monsterKey"
+WHERE mm.id IS NULL
+ORDER BY s.id;
+
+4) Panorama por spawn: quantos vivos/mortos
+SELECT
+  s."mapKey",
+  s.id           AS spawn_id,
+  s."monsterKey",
+  COUNT(*) FILTER (WHERE mi.state = 'ALIVE') AS alive,
+  COUNT(*) FILTER (WHERE mi.state = 'DEAD')  AS dead
+FROM spawns s
+LEFT JOIN monster_instances mi ON mi.spawn_id = s.id
+GROUP BY s."mapKey", s.id, s."monsterKey"
+ORDER BY s."mapKey", spawn_id;
+
+5) Instâncias por mapa (join com spawn)
+SELECT mi.id, mi.state, mi.hp, mi.max_hp,
+       s."mapKey", s.x, s.y, s."monsterKey"
+FROM monster_instances mi
+JOIN spawns s ON s.id = mi.spawn_id
+WHERE s."mapKey" = 'house'
+ORDER BY mi.id;
+
+6) Instâncias órfãs (spawn_id não existe mais)
+SELECT mi.id, mi.spawn_id, mi.state, mi.hp, mi.max_hp
+FROM monster_instances mi
+LEFT JOIN spawns s ON s.id = mi.spawn_id
+WHERE s.id IS NULL
+ORDER BY mi.id;
+
+Correções seguras (rode primeiro com ROLLBACK)
+A) Ajustar spawns com monsterKey vazia/nula para ‘goblin’ (exemplo)
+BEGIN;
+
+UPDATE spawns
+   SET "monsterKey" = 'goblin'
+ WHERE "mapKey" = 'house'
+   AND COALESCE(NULLIF("monsterKey", ''), NULL) IS NULL;
+
+-- confira o efeito:
+SELECT id, "mapKey", "monsterKey", x, y
+FROM spawns
+WHERE "mapKey"='house'
+ORDER BY id;
+
+ROLLBACK;  -- troque por COMMIT quando estiver satisfeito
+
+B) Remover spawns “podres” (que referenciam monstros inexistentes no catálogo)
+BEGIN;
+
+-- veja antes
+SELECT s.id, s."mapKey", s."monsterKey", s.x, s.y
+FROM spawns s
+LEFT JOIN monsters_master mm ON mm.key = s."monsterKey"
+WHERE mm.id IS NULL
+ORDER BY s.id;
+
+-- remova só se fizer sentido:
+DELETE FROM spawns s
+USING monsters_master mm
+WHERE mm.id IS NULL
+  AND s."monsterKey" IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM monsters_master mm2 WHERE mm2.key = s."monsterKey");
+
+-- confira depois
+SELECT s.id, s."mapKey", s."monsterKey"
+FROM spawns s
+LEFT JOIN monsters_master mm ON mm.key = s."monsterKey"
+WHERE mm.id IS NULL;
+
+ROLLBACK;  -- troque por COMMIT quando estiver ok
+
+C) (Opcional) Semear 1 instância viva por spawn que ainda não tem nenhuma
+
+Útil agora que o endpoint /api/combat/nearest não cria mais nada automaticamente.
+
+BEGIN;
+
+-- visualize os spawns do mapa que ainda não têm instância
+SELECT s.id AS spawn_id, s."mapKey", s."monsterKey", s.x, s.y
+FROM spawns s
+LEFT JOIN monster_instances mi ON mi.spawn_id = s.id
+WHERE s."mapKey"='house'
+GROUP BY s.id, s."mapKey", s."monsterKey", s.x, s.y
+HAVING COUNT(mi.id) = 0
+ORDER BY s.id;
+
+-- crie uma instância ALIVE com hp do catálogo
+INSERT INTO monster_instances (spawn_id, map_key, state, hp, max_hp, created_at, updated_at)
+SELECT
+  s.id,
+  s."mapKey",
+  'ALIVE',
+  COALESCE(mm."healthMax", 1),
+  COALESCE(mm."healthMax", 1),
+  now(), now()
+FROM spawns s
+JOIN monsters_master mm ON mm.key = s."monsterKey"
+LEFT JOIN monster_instances mi ON mi.spawn_id = s.id
+WHERE s."mapKey"='house'
+GROUP BY s.id, s."mapKey", s."monsterKey", mm."healthMax"
+HAVING COUNT(mi.id) = 0;
+
+-- confira
+SELECT mi.id, mi.state, mi.hp, mi.max_hp, s.id AS spawn_id, s.x, s.y, s."monsterKey"
+FROM monster_instances mi
+JOIN spawns s ON s.id = mi.spawn_id
+WHERE s."mapKey"='house'
+ORDER BY mi.id;
+
+ROLLBACK;  -- troque por COMMIT quando estiver tudo ok
+
+
+

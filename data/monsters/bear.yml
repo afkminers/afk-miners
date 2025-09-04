@@ -1,0 +1,14 @@
+# data/monsters/bear.yml
+key: bear
+name: Bear
+xp: 90
+health:
+  max: 140
+speed: 70
+look:
+  spriteKey: bear
+attacks:
+- type: melee
+  intervalMs: 1800
+  min: 5
+  max: 12

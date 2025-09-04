@@ -1,0 +1,36 @@
+Nome: Bonefiend
+HP: 160
+Experiência: 120
+
+Habilidades:
+⚔️ Físico: Espada sombria (0–55)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil, ronda catacumbas profundas.
+Muito mais forte que esqueletos comuns.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Catacumbas profanas
+- Criptas esquecidas
+- Túneis sombrios
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Rattle!"
+"Skrrhh!"
+
+Loot:
+- 6–12 Gold Coins (100%)
+- Bone (70%)
+- Crystal Shard (10%)
+- Darkblade (1%)
+- Black Shield (1%)
+
+Notas:
+Bonefiends são esqueletos demoníacos, guardiões de necromantes e locais amaldiçoados.
+Seu poder físico assusta até grupos organizados.

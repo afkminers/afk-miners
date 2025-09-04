@@ -1,0 +1,34 @@
+Nome: Skeleton
+HP: 50
+Experiência: 30
+
+Habilidades:
+⚔️ Físico: Espadada (0–20)
+Velocidade: Lenta
+Paralisa: Não
+
+Comportamento:
+Hostil, ronda cavernas e cemitérios.
+Não corre quando ferido.
+
+Locais de Respawn:
+- Catacumbas da Ilha Inicial
+- Criptas abandonadas
+- Cemitérios antigos
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Rattle..."
+"Crack!"
+
+Loot:
+- 2–6 Gold Coins (100%)
+- Bone (80%)
+- Rusty Sword (3%)
+- Bone Shield (2%)
+
+Notas:
+Esqueletos animados por energia sombria.
+São um clássico inimigo de mortos-vivos, fáceis de reconhecer.

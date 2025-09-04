@@ -1,0 +1,32 @@
+Nome: Deer
+HP: 25
+Experiência: 12
+
+Habilidades:
+⚔️ Físico: Nenhum (não ataca)
+Velocidade: Média/Alta
+Paralisa: Não
+
+Comportamento:
+Criatura passiva. Corre ao ser atacada.
+Usada como fonte de recursos (carne e couro).
+
+Locais de Respawn:
+- Campos abertos próximos à Ilha Inicial
+- Florestas rasas das áreas de Wolf e Bear
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"Snort!"
+"Sniff sniff!"
+
+Loot:
+- Raw Meat (70%)
+- Deer Hide (20%)
+- Antler Trinket (2%)
+
+Notas:
+Os Deer são caçados por mineradores em busca de carne e couro.
+Sua natureza pacífica faz deles presas fáceis, mas podem desaparecer rapidamente se não forem derrotados com velocidade.

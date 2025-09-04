@@ -1,0 +1,34 @@
+Nome: Valkyrie
+HP: 100
+Experiência: 80
+
+Habilidades:
+⚔️ Físico: Lança (0–35)
+Velocidade: Média
+Paralisa: Não
+
+Comportamento:
+Hostil, guerreira nórdica que protege ruínas antigas.
+Não corre quando ferida.
+
+Locais de Respawn:
+- Ruínas antigas
+- Montanhas nevadas
+- Campos de batalha esquecidos
+
+Adicionado:
+Season 1 — O Despertar Carmesim
+
+Sons:
+"For honor!"
+"Victory!"
+
+Loot:
+- 6–12 Gold Coins (100%)
+- Valkyrie Feather (5%)
+- Hunting Spear (3%)
+- Chain Armor (2%)
+
+Notas:
+Valquírias são raras, mas recompensadoras de enfrentar.
+Respeitadas como guardiãs místicas em lendas.
