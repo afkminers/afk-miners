@@ -3,13 +3,40 @@
     "method": "GET",
     "path": "/_ping",
     "file": "server\\combat\\routes.js",
-    "line": 14,
+    "line": 24,
     "sample": {
       "body": {
-        "damage": "value"
+        "damage": "value",
+        "try {\n    const { heroId": 1,
+        "targetInstanceId": 1,
+        "weaponType": "value"
       }
     },
     "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-params' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'mob-pos-missing' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'hero-pos-missing' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'start-failed' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-hero' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'stop-failed' }"
+      },
       {
         "status": 400,
         "body": "{ok:false,error:'missing-id' }"
@@ -38,6 +65,18 @@
       },
       {
         "status": 200,
+        "body": "{ok:false,error:'map-diff' }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:false,error:'out_of_range' }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:false,error:'no_los' }"
+      },
+      {
+        "status": 200,
         "body": "{ok:true }"
       },
       {
@@ -54,13 +93,40 @@
     "method": "GET",
     "path": "/_routes",
     "file": "server\\combat\\routes.js",
-    "line": 15,
+    "line": 25,
     "sample": {
       "body": {
-        "damage": "value"
+        "damage": "value",
+        "try {\n    const { heroId": 1,
+        "targetInstanceId": 1,
+        "weaponType": "value"
       }
     },
     "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-params' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'mob-pos-missing' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'hero-pos-missing' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'start-failed' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-hero' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'stop-failed' }"
+      },
       {
         "status": 400,
         "body": "{ok:false,error:'missing-id' }"
@@ -85,6 +151,18 @@
       },
       {
         "status": 200,
+        "body": "{ok:false,error:'map-diff' }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:false,error:'out_of_range' }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:false,error:'no_los' }"
+      },
+      {
+        "status": 200,
         "body": "{ok:true }"
       },
       {
@@ -101,7 +179,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 409,
+    "line": 416,
     "sample": {
       "params": {
         "key": "value"
@@ -135,7 +213,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 384,
+    "line": 391,
     "sample": {
       "params": {
         "key": "value"
@@ -177,7 +255,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 396,
+    "line": 403,
     "sample": {
       "params": {
         "key": "value"
@@ -215,7 +293,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 373,
+    "line": 380,
     "sample": {
       "query": {
         "map": "value"
@@ -258,7 +336,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 343,
+    "line": 350,
     "sample": {
       "query": {
         "map": "value"
@@ -313,7 +391,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 419,
+    "line": 426,
     "sample": {
       "query": {
         "map": "value"
@@ -336,7 +414,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 354,
+    "line": 361,
     "sample": {
       "query": {
         "map": "value"
@@ -387,7 +465,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 363,
+    "line": 370,
     "sample": {
       "query": {
         "map": "value"
@@ -434,7 +512,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 677,
+    "line": 684,
     "sample": {
       "query": {
         "limit": 1
@@ -465,7 +543,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 700,
+    "line": 707,
     "sample": {},
     "errors": [
       {
@@ -488,7 +566,7 @@
     "method": "GET",
     "path": "/api/combat/nearest",
     "file": "server\\routes\\combat_nearest.js",
-    "line": 25,
+    "line": 27,
     "sample": {
       "query": {
         "map": "value",
@@ -513,12 +591,6 @@
         "status": 500,
         "body": "{error:'nearest-failed' }"
       }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{id:m.id,x:Number(m.x) || 0,y:Number(m.y) || 0,monsterKey:m.monsterKey || null,hp:Number(m.hp) || 0,maxHp:Number(m.max_hp) || 0,}"
-      }
     ]
   },
   {
@@ -526,13 +598,7 @@
     "path": "/api/csrf",
     "file": "server\\index.js",
     "line": 56,
-    "sample": {
-      "body": {
-        "try {\n    const { heroId": 1,
-        "weaponOrSkill": "value",
-        "heroClass": "value"
-      }
-    },
+    "sample": {},
     "errors": []
   },
   {
@@ -613,13 +679,40 @@
     "method": "POST",
     "path": "/attack/start",
     "file": "server\\combat\\routes.js",
-    "line": 22,
+    "line": 33,
     "sample": {
       "body": {
-        "damage": "value"
+        "damage": "value",
+        "try {\n    const { heroId": 1,
+        "targetInstanceId": 1,
+        "weaponType": "value"
       }
     },
     "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-params' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'mob-pos-missing' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'hero-pos-missing' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'start-failed' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-hero' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'stop-failed' }"
+      },
       {
         "status": 400,
         "body": "{ok:false,error:'missing-id' }"
@@ -640,6 +733,18 @@
     "ok": [
       {
         "status": 200,
+        "body": "{ok:false,error:'map-diff' }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:false,error:'out_of_range' }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:false,error:'no_los' }"
+      },
+      {
+        "status": 200,
         "body": "{ok:true }"
       },
       {
@@ -656,13 +761,22 @@
     "method": "POST",
     "path": "/attack/stop",
     "file": "server\\combat\\routes.js",
-    "line": 23,
+    "line": 69,
     "sample": {
       "body": {
-        "damage": "value"
+        "damage": "value",
+        "try {\n    const { heroId": 1
       }
     },
     "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-hero' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'stop-failed' }"
+      },
       {
         "status": 400,
         "body": "{ok:false,error:'missing-id' }"
@@ -929,7 +1043,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 440,
+    "line": 447,
     "sample": {},
     "errors": []
   },
@@ -1007,7 +1121,7 @@
     "method": "POST",
     "path": "/hit",
     "file": "server\\combat\\routes.js",
-    "line": 29,
+    "line": 85,
     "sample": {
       "body": {
         "damage": "value"
@@ -1295,7 +1409,7 @@
   {
     "method": "POST",
     "path": "/move",
-    "file": "server\\routes\\player.js",
+    "file": "server\\routes\\player.old.js",
     "line": 44,
     "sample": {
       "body": {
@@ -1573,7 +1687,7 @@
   {
     "method": "GET",
     "path": "/pos",
-    "file": "server\\routes\\player.js",
+    "file": "server\\routes\\player.old.js",
     "line": 12,
     "sample": {
       "query": {
@@ -1688,7 +1802,7 @@
   {
     "method": "POST",
     "path": "/pos",
-    "file": "server\\routes\\player.js",
+    "file": "server\\routes\\player.old.js",
     "line": 23,
     "sample": {
       "body": {

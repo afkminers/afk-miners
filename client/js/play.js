@@ -524,10 +524,10 @@ function drawMob(m) {
   }
 
   // recorte
-  const sx = margin + col * (frameW + spacing) + EPS;
-  const sy = margin + row * (frameH + spacing) + EPS;
-  const sw = frameW - EPS * 2;
-  const sh = frameH - EPS * 2;
+  const sx = margin + col * (frameW + spacing) + 0.25;
+  const sy = margin + row * (frameH + spacing) + 0.25;
+  const sw = frameW - 0.5;
+  const sh = frameH - 0.5;
 
   // âncora
   const anchorX = (meta.anchor?.x ?? 0.5);
@@ -554,72 +554,16 @@ function drawMob(m) {
 
 /* ======================= Posição Persistente ======================= */
 let POS_SYNC_ENABLED = true;
-let lastSaveAt = 0;
+let lastPostAt = 0;
 
 // contador de sequência enviado ao servidor
 let posSeq = 0;
 // marca se já sincronizamos o contador com o servidor
 let posSeqReady = false;
-
-/** Envia posição com rate-limit e seq sincronizado com o servidor */
-async function postPosThrottled(mapKey, x, y) {
-  if (!POS_SYNC_ENABLED) return;
-
-  // se ainda não sincronizou o seq local, tenta uma leitura rápida
-  if (!posSeqReady) {
-    try {
-      const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
-      if (chk && Number.isFinite(chk.seq)) {
-        posSeq = Number(chk.seq);
-        posSeqReady = true;
-      }
-    } catch { /* ignora, vamos tentar enviar assim mesmo */ }
-  }
-
-  // throttle para reduzir chamadas
-  const now = performance.now();
-  if (now - lastSaveAt < 1200) return; // 1.2s
-  lastSaveAt = now;
-
-  // função que faz o POST com o token CSRF já cuidado pelo apiPost
-  const doSend = async () => {
-    posSeq += 1; // sempre seq crescente
-    return apiPost('/api/player/pos', {
-      mapKey,
-      x: Math.round(x),
-      y: Math.round(y),
-      seq: posSeq,
-      clientTs: Date.now()
-    });
-  };
-
-  try {
-    await doSend();
-  } catch (e) {
-    const msg = String(e?.message || '');
-
-    // conflito de sequência: re-sincroniza e tenta UMA vez
-    if (msg.includes('409') || msg.includes('stale-seq')) {
-      try {
-        const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
-        if (chk && Number.isFinite(chk.seq)) {
-          posSeq = Number(chk.seq);    // alinha com o servidor
-          posSeqReady = true;
-          await doSend();              // reenvia uma vez
-          return;
-        }
-      } catch { /* se falhar, cai no fluxo abaixo */ }
-    }
-
-    // outros erros: desliga o sync para não poluir logs/rede
-    if (msg.includes('403') || msg.includes('csrf') ||
-        msg.includes('429') || msg.includes('202')) {
-      POS_SYNC_ENABLED = false;
-    } else {
-      console.warn('pos sync failed:', msg);
-    }
-  }
-}
+// evita posts concorrentes
+let posInFlight = false;
+// evita post quando não mudou
+let lastSent = { x: null, y: null };
 
 /** Lê posição salva do servidor e já sincroniza o seq local */
 async function getSavedPos() {
@@ -638,6 +582,75 @@ async function getSavedPos() {
   return null;
 }
 
+/** Envia posição com rate-limit, dedupe e seq sincronizado com o servidor */
+async function postPosThrottled(mapKey, x, y) {
+  if (!POS_SYNC_ENABLED) return;
+
+  // tenta sincronizar seq uma única vez no 1º envio
+  if (!posSeqReady) {
+    try {
+      const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
+      if (chk && Number.isFinite(chk.seq)) {
+        posSeq = Number(chk.seq);
+        posSeqReady = true;
+      }
+    } catch { /* segue mesmo assim */ }
+  }
+
+  // sem flooding: servidor aceita ~12 vezes por 5s → ~1 a cada 416ms
+  const now = performance.now();
+  if ((now - lastPostAt) < 500) return;
+
+  // não reenvia se não mudou nada
+  const nx = Math.round(x), ny = Math.round(y);
+  if (lastSent.x === nx && lastSent.y === ny) return;
+
+  // sem concorrência
+  if (posInFlight) return;
+  posInFlight = true;
+
+  const doSend = async () => {
+    posSeq += 1;
+    lastPostAt = now;
+    await apiPost('/api/player/pos', {
+      mapKey,
+      x: nx,
+      y: ny,
+      seq: posSeq,
+      clientTs: Date.now()
+    });
+    lastSent = { x: nx, y: ny };
+  };
+
+  try {
+    await doSend();
+  } catch (e) {
+    const msg = String(e?.message || '');
+    // conflito de sequência: rebaseia e tenta UMA vez
+    if (msg.includes('409') || /stale-seq/i.test(msg)) {
+      try {
+        const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
+        if (chk && Number.isFinite(chk.seq)) {
+          posSeq = Number(chk.seq);
+          posSeqReady = true;
+          await doSend();
+        }
+      } catch { /* ignorar - próxima iteração tenta de novo */ }
+    } else if (/429/.test(msg)) {
+      // rate limited: apenas ignore; próxima janela envia
+    } else if (/202/.test(msg)) {
+      // too-fast do anti-speed: não desliga; apenas ignore este tick
+    } else if (/403|csrf/i.test(msg)) {
+      // auth/csrf: desliga para não poluir
+      POS_SYNC_ENABLED = false;
+      console.warn('[pos] desabilitado (auth/csrf):', msg);
+    } else {
+      console.warn('pos sync failed:', msg);
+    }
+  } finally {
+    posInFlight = false;
+  }
+}
 
 /* ==================== Colisão e Spawns do Tiled ==================== */
 function buildCollisionGridFromObjects(mapW, mapH, objs) {
@@ -719,12 +732,12 @@ async function resolvePlayerSprite() {
 function addMobFromSpawn(spDef) {
   const rawKey = spDef.monsterKey || spDef.monster || "goblin";
   const kindNorm = normKey(rawKey);
-  let meta = findMetaFor(rawKey); // tenta YAML normalmente
+  const meta = findMetaFor(rawKey) || null;
 
   const m = {
     id: mobAutoId++,
     kind: kindNorm,
-    rawKey,                       
+    rawKey,
     x: (spDef.x || 0) + Math.random() * (spDef.w || TILE),
     y: (spDef.y || 0) + Math.random() * (spDef.h || TILE),
     w: 32, h: 32,
@@ -732,7 +745,7 @@ function addMobFromSpawn(spDef) {
     dirX: 0, dirY: 0, changeAt: 0,
     face: 'east',
     img: null,
-    meta: meta || null,           
+    meta,
     bound: (spDef.w || spDef.h) ? { x: spDef.x || 0, y: spDef.y || 0, w: spDef.w || TILE, h: spDef.h || TILE } : null,
     spawnId: Number(spDef.id || spDef.spawn_id || spDef.spawnId || 0) || null,
     instanceId: null,

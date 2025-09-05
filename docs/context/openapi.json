@@ -58,6 +58,15 @@
                 "properties": {
                   "damage": {
                     "type": "string"
+                  },
+                  "try {\n    const { heroId": {
+                    "type": "number"
+                  },
+                  "targetInstanceId": {
+                    "type": "number"
+                  },
+                  "weaponType": {
+                    "type": "string"
                   }
                 }
               }
@@ -118,6 +127,15 @@
                 "type": "object",
                 "properties": {
                   "damage": {
+                    "type": "string"
+                  },
+                  "try {\n    const { heroId": {
+                    "type": "number"
+                  },
+                  "targetInstanceId": {
+                    "type": "number"
+                  },
+                  "weaponType": {
                     "type": "string"
                   }
                 }
@@ -603,14 +621,7 @@
       "get": {
         "responses": {
           "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": "OK"
           },
           "400": {
             "description": "Error 400 (inferred)",
@@ -676,27 +687,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "try {\n    const { heroId": {
-                    "type": "number"
-                  },
-                  "weaponOrSkill": {
-                    "type": "string"
-                  },
-                  "heroClass": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
           }
         }
       }
@@ -826,12 +816,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  }
+                  "type": "object"
                 }
               }
             }
@@ -875,6 +860,15 @@
                 "type": "object",
                 "properties": {
                   "damage": {
+                    "type": "string"
+                  },
+                  "try {\n    const { heroId": {
+                    "type": "number"
+                  },
+                  "targetInstanceId": {
+                    "type": "number"
+                  },
+                  "weaponType": {
                     "type": "string"
                   }
                 }
@@ -942,6 +936,9 @@
                 "properties": {
                   "damage": {
                     "type": "string"
+                  },
+                  "try {\n    const { heroId": {
+                    "type": "number"
                   }
                 }
               }

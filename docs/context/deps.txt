@@ -1,4 +1,5 @@
 client\js\player_profile.js -> ./api.js
+client\js\play.js -> ./api.js
 client\js\gacha.js -> ./api.js
 client\js\boot.js -> ./api.js
 client\js\boot.js -> ./auth.js
@@ -7,3 +8,4 @@ client\js\boot.js -> ./login_fx.js
 client\js\boot.js -> ./player_profile.js
 client\js\auth.js -> ./api.js
 client\js\app.js -> ./app_panels.js
+client\js\combat\attack-controls.js -> ../api.js

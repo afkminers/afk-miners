@@ -25,11 +25,20 @@
     "key": "COMBAT_DEBUG",
     "occurrences": [
       {
+        "file": "server\\routes\\combat_nearest.js",
+        "index": 165
+      },
+      {
+        "file": "server\\combat\\routes.js",
+        "index": 599
+      },
+      {
         "file": "server\\combat\\autoloop.js",
-        "index": 180
+        "index": 518
       }
     ],
     "defaults": [
+      "",
       ""
     ]
   },
@@ -62,7 +71,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15379
+        "index": 15582
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -182,7 +191,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15286
+        "index": 15489
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -251,7 +260,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15236
+        "index": 15439
       }
     ],
     "defaults": [
@@ -287,7 +296,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15344
+        "index": 15547
       },
       {
         "file": "server\\auth\\middleware.js",

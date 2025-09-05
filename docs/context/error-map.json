@@ -2,6 +2,30 @@
   "GET /_ping": [
     {
       "status": 400,
+      "body": "{ok:false,error:'missing-params' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'mob-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'hero-pos-missing' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'start-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'stop-failed' }"
+    },
+    {
+      "status": 400,
       "body": "{ok:false,error:'missing-id' }"
     },
     {
@@ -18,6 +42,30 @@
     }
   ],
   "GET /_routes": [
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-params' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'mob-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'hero-pos-missing' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'start-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'stop-failed' }"
+    },
     {
       "status": 400,
       "body": "{ok:false,error:'missing-id' }"
@@ -307,6 +355,30 @@
   "POST /attack/start": [
     {
       "status": 400,
+      "body": "{ok:false,error:'missing-params' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'mob-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'hero-pos-missing' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'start-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'stop-failed' }"
+    },
+    {
+      "status": 400,
       "body": "{ok:false,error:'missing-id' }"
     },
     {
@@ -323,6 +395,14 @@
     }
   ],
   "POST /attack/stop": [
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'stop-failed' }"
+    },
     {
       "status": 400,
       "body": "{ok:false,error:'missing-id' }"

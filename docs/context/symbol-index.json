@@ -15,7 +15,10 @@
   {
     "file": "client\\js\\api.js",
     "symbols": [
-      "API"
+      "API",
+      "buildHeaders",
+      "doFetch",
+      "readCsrfFromHeaders"
     ]
   },
   {
@@ -77,19 +80,15 @@
     "symbols": [
       "attachControls",
       "doHit",
-      "getCsrf",
-      "getFreshCsrf",
+      "ensureActiveHero",
       "getMouseWorldFromEvent",
-      "jget",
       "pickCamera",
       "pickCanvas",
-      "postJSON",
-      "readCookie",
       "resolveServerTarget",
       "screenToWorld",
-      "seedCsrfCookie",
-      "startAttack",
+      "setActiveHero",
       "startLoop",
+      "weaponForClass",
       "worldToScreen"
     ]
   },
@@ -326,8 +325,6 @@
       "drawMob",
       "drawPlayer",
       "ensureImgLoaded",
-      "fetchCsrf",
-      "fetchCsrfToken",
       "findMetaFor",
       "frame",
       "getSavedPos",
@@ -335,8 +332,6 @@
       "imgReady",
       "indexSpriteMeta",
       "inferMetaFromImage",
-      "jget",
-      "jpost",
       "loadImg",
       "loadMonsterImg",
       "loadSpriteMeta",
@@ -348,7 +343,6 @@
       "pickElByIds",
       "pickFreeSpriteForSpawn",
       "postPosThrottled",
-      "readCookie",
       "resize",
       "resolvePlayerSprite",
       "updateRespawns"
@@ -487,10 +481,35 @@
     "file": "server\\combat\\autoloop.js",
     "symbols": [
       "cooldownFor",
+      "getState",
       "isTargetAlive",
       "start",
       "stop",
-      "stopAll"
+      "stopAll",
+      "tickOnce"
+    ]
+  },
+  {
+    "file": "server\\combat\\geom.js",
+    "symbols": [
+      "chebyshevTiles",
+      "inReachPx",
+      "toTile"
+    ]
+  },
+  {
+    "file": "server\\combat\\los.js",
+    "symbols": [
+      "hasLineOfSight"
+    ]
+  },
+  {
+    "file": "server\\combat\\pos.js",
+    "symbols": [
+      "getHeroOwner",
+      "getHeroPos",
+      "getMonsterPos",
+      "getPlayerLastPos"
     ]
   },
   {
@@ -565,6 +584,15 @@
     ]
   },
   {
+    "file": "server\\maps\\grid.js",
+    "symbols": [
+      "buildCollisionFromObjects",
+      "buildCollisionFromTiled",
+      "getGrid",
+      "hasSolidPropRow"
+    ]
+  },
+  {
     "file": "server\\models\\db.js",
     "symbols": [
       "all",
@@ -617,7 +645,7 @@
     ]
   },
   {
-    "file": "server\\routes\\player.js",
+    "file": "server\\routes\\player.old.js",
     "symbols": [
       "clamp",
       "dist"

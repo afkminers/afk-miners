@@ -47,21 +47,21 @@ function buildCollisionGridFromObjects(mapW, mapH, objs) {
     const x0 = Math.floor(o.x / TILE), y0 = Math.floor(o.y / TILE);
     const x1 = Math.floor((o.x + o.w - 1) / TILE);
     const y1 = Math.floor((o.y + o.h - 1) / TILE);
-    for (let cy=y0; cy<=y1; cy++) for (let cx=x0; cx<=x1; cx++) {
-      if (cx>=0 && cy>=0 && cx<cols && cy<rows) grid[cy*cols + cx] = 1;
+    for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
+      if (cx >= 0 && cy >= 0 && cx < cols && cy < rows) grid[cy * cols + cx] = 1;
     }
   }
   return { grid, cols, rows };
 }
 
 function buildCollisionGridFromTiled(json) {
-  const cols = json.width|0, rows = json.height|0;
+  const cols = json.width | 0, rows = json.height | 0;
   const grid = new Uint8Array(cols * rows);
   const layer = (json.layers || []).find(l =>
     l.type === 'tilelayer' && l.name && String(l.name).toLowerCase().includes('collision')
   );
   if (layer && Array.isArray(layer.data)) {
-    for (let i=0;i<layer.data.length;i++) if (layer.data[i]) grid[i]=1;
+    for (let i = 0; i < layer.data.length; i++) if (layer.data[i]) grid[i] = 1;
   }
   return { grid, cols, rows };
 }
@@ -88,13 +88,13 @@ async function getMapCollision(mapKey) {
 function isSolidAt(grid, cols, rows, x, y) {
   const cx = Math.floor(x / TILE);
   const cy = Math.floor(y / TILE);
-  if (cx<0 || cy<0 || cx>=cols || cy>=rows) return true;
-  return !!grid[cy*cols + cx];
+  if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) return true;
+  return !!grid[cy * cols + cx];
 }
 
 function inWorld(cols, rows, x, y) {
-  const w = cols*TILE, h = rows*TILE;
-  return x>=0 && y>=0 && x<w && y<h;
+  const w = cols * TILE, h = rows * TILE;
+  return x >= 0 && y >= 0 && x < w && y < h;
 }
 
 // ---------- Rate Limit simples (fallback sem Redis) ----------
@@ -113,13 +113,63 @@ function rlAllow(playerId) {
   return true;
 }
 
-// ---------- Rotas ----------
+// ---------- ROTAS ----------
+
+/**
+ * GET /api/player/me
+ * -> retorna o usuário + lista de heróis (o client precisa disso p/ achar heroId)
+ */
 router.get('/me', async (req, res) => {
-  // Aqui você pode enriquecer com heroes/itens, mantive o essencial
-  res.json({
-    id: req.user.id,
-    name: req.user.name,
-  });
+  try {
+    const userId = req.user.id;
+
+    // heróis do jogador + classe a partir do catálogo
+    const heroes = await all(
+      `
+      SELECT
+        ph.id,
+        ph."heroKey"           AS "heroKey",
+        ph."isStarter"         AS "isStarter",
+        ph.name                AS "displayName",
+        ph.level,
+        ph.rarity,
+        ph.attack,
+        ph.defense,
+        ph.speed,
+        ph.xp,
+        COALESCE(hm.class, '') AS class
+      FROM player_heroes ph
+      LEFT JOIN heroes_master hm
+             ON hm."heroKey" = ph."heroKey"
+      WHERE ph."playerId" = $1
+      ORDER BY ph."createdAt" ASC
+      `,
+      [userId]
+    );
+
+    const me = {
+      id: userId,
+      name: req.user?.name || req.user?.username || 'player',
+      heroes: heroes.map(h => ({
+        id: String(h.id),
+        heroKey: h.heroKey,
+        class: h.class,                 // <- o client usa isso
+        isStarter: !!h.isStarter,       // <- e isso também
+        name: h.displayName || h.heroKey,
+        level: Number(h.level || 1),
+        rarity: h.rarity || 'COMMON',
+        attack: Number(h.attack || 1),
+        defense: Number(h.defense || 1),
+        speed: Number(h.speed || 1),
+        xp: Number(h.xp || 0),
+      })),
+    };
+
+    res.json(me);
+  } catch (e) {
+    console.error('[player/me] error:', e);
+    res.status(500).json({ error: 'me-failed' });
+  }
 });
 
 router.get('/pos', async (req, res) => {
@@ -182,7 +232,7 @@ router.post('/pos', async (req, res) => {
     if (prev && Number.isFinite(prev.x) && Number.isFinite(prev.y)) {
       // Delta tempo (server-side); se clientTs vier, usamos o menor (fail-safe)
       const dtServer = Math.max(0.05, Math.min(5, (prev.age != null ? Number(prev.age) : 0))); // 0.05–5s
-      const dtClient = (cts ? Math.min(5, Math.max(0.05, (Date.now() - cts)/1000 )) : dtServer);
+      const dtClient = (cts ? Math.min(5, Math.max(0.05, (Date.now() - cts) / 1000)) : dtServer);
       const dt = Math.min(dtServer + 0.15, dtClient + 0.15); // pequena tolerância
 
       const dx = nx - Number(prev.x);
@@ -202,7 +252,7 @@ router.post('/pos', async (req, res) => {
             VALUES ($1, $2, $3, $4, $5, now())
        ON CONFLICT (player_id, map_key)
          DO UPDATE SET x=$3, y=$4, last_seq=$5, updated_at=now()`,
-      [req.user.id, map, Math.round(nx), Math.round(ny), cseq || ((prev?.seq|0)+1)]
+      [req.user.id, map, Math.round(nx), Math.round(ny), cseq || ((prev?.seq | 0) + 1)]
     );
 
     res.json({ ok: true });

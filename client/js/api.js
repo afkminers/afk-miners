@@ -1,17 +1,27 @@
 // client/js/api.js
 // Helpers centralizados para chamadas HTTP com sessão + CSRF
 // - Sempre envia cookies (credentials:'include')
-// - Busca e cacheia o token CSRF
-// - Em caso de 403 por CSRF inválido, renova o token e tenta 1x de novo
+// - Lê o CSRF do cookie 'csrf' (fonte da verdade) e mantém cache só como fallback
+// - Em caso de 403/419 por CSRF inválido/expirado, renova o token e tenta 1x de novo
 
 export const API = ''; // vazio = mesma origem (http://localhost:3000). Ajuste se precisar.
 
-let __csrf = null;
+let __csrfCache = null;        // cache apenas como fallback
 let __csrfFetchedAt = 0;
 
-/** Lê um possível token CSRF de headers diversas. */
+/* ======================== Utils ======================== */
+function readCookie(name) {
+  const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+// token atual preferindo o COOKIE (sempre atualizado pelo servidor)
+function currentCsrf() {
+  return readCookie('csrf') || __csrfCache || null;
+}
+
+/** tenta extrair token de possíveis headers de resposta */
 function readCsrfFromHeaders(res) {
-  // alguns servidores devolvem X-CSRF-Token no header
   return (
     res.headers?.get?.('x-csrf-token') ||
     res.headers?.get?.('X-CSRF-Token') ||
@@ -19,113 +29,123 @@ function readCsrfFromHeaders(res) {
   );
 }
 
-/** Busca e guarda o CSRF do servidor (precisa mandar cookies) */
+/* ======================== CSRF ======================== */
+/** Busca e guarda/atualiza o CSRF no cookie e em cache. */
 export async function getCsrf(force = false) {
-  const FRESH_MS = 60 * 1000; // 1 min de validade local
-  if (__csrf && !force && Date.now() - __csrfFetchedAt < FRESH_MS) {
-    return __csrf;
+  const FRESH_MS = 60 * 1000; // 1 min de “validade” local
+  const fromCookie = currentCsrf();
+
+  if (!force && fromCookie && Date.now() - __csrfFetchedAt < FRESH_MS) {
+    return fromCookie;
   }
 
   const res = await fetch(`${API}/api/csrf`, {
     method: 'GET',
-    credentials: 'include', // ESSENCIAL para setar o cookie "csrf" e manter "sid"
+    credentials: 'include', // essencial para setar/atualizar cookie "csrf"
     cache: 'no-store',
     headers: { 'Accept': 'application/json' }
   });
 
   if (!res.ok) throw new Error(`CSRF fetch failed: ${res.status}`);
 
-  // tenta header primeiro
-  let token = readCsrfFromHeaders(res);
+  // alguns backends devolvem também no header/corpo
+  let headerToken = readCsrfFromHeaders(res);
+  let bodyToken = null;
+  try {
+    const data = await res.clone().json();
+    bodyToken = data?.csrfToken || data?.token || data?.csrf || null;
+  } catch (_) { /* ignore */ }
 
-  // tenta corpo JSON depois
-  if (!token) {
-    try {
-      const data = await res.json();
-      token = data?.csrfToken || data?.token || data?.csrf || null;
-    } catch (_) {
-      // ignore — alguns servidores não mandam corpo
-    }
-  }
+  // depois do /api/csrf o cookie é a fonte da verdade
+  const tok = readCookie('csrf') || headerToken || bodyToken || null;
+  if (!tok) throw new Error('CSRF token ausente');
 
-  if (!token) throw new Error('CSRF token ausente');
-
-  __csrf = token;
+  __csrfCache = tok;
   __csrfFetchedAt = Date.now();
-  return __csrf;
+  return tok;
 }
 
-/** Interno: executa a request e trata erros comuns. */
-async function doFetch(url, options = {}) {
-  const res = await fetch(url, options);
+/* ======================== Fetch genérico ======================== */
+async function doFetch(url, init) {
+  const res = await fetch(url, init);
 
-  // tenta decodificar payload de erro (se houver)
   if (!res.ok) {
     let payload = null;
-    try { payload = await res.clone().json(); } catch (_e) {}
-    const errMsg =
+    try { payload = await res.clone().json(); } catch (_) {}
+    const err = new Error(
       payload?.error ||
       payload?.message ||
-      `${options.method || 'GET'} ${url} -> ${res.status}`;
-
-    const error = new Error(errMsg);
-    error.status = res.status;
-    error.payload = payload;
-    throw error;
+      `${init.method || 'GET'} ${url} -> ${res.status}`
+    );
+    err.status = res.status;
+    err.payload = payload;
+    throw err;
   }
 
-  // pode não ter corpo (204), então só tenta JSON
   try { return await res.json(); } catch { return null; }
 }
 
-/** Interno: monta headers padrão (Accept/JSON + CSRF quando necessário) */
-async function buildHeaders(method, extra = {}) {
+function isJsonBody(body) {
+  return body != null && typeof body !== 'string' && !(body instanceof FormData);
+}
+
+/** Monta headers padrão + CSRF (quando necessário) */
+async function buildHeaders(method, extra = {}, body) {
+  const m = String(method || 'GET').toUpperCase();
   const base = {
     'Accept': 'application/json',
     'X-Requested-With': 'fetch',
     ...extra
   };
 
-  // GET/HEAD/OPTIONS não precisam de CSRF
-  const m = String(method || 'GET').toUpperCase();
-  if (m === 'GET' || m === 'HEAD' || m === 'OPTIONS') return base;
+  // define Content-Type apenas quando for JSON (não para FormData)
+  if (isJsonBody(body) && !base['Content-Type']) {
+    base['Content-Type'] = 'application/json';
+  }
 
-  // Demais métodos: garante CSRF
-  const token = await getCsrf();
-  return { ...base, 'X-CSRF-Token': token, 'Content-Type': base['Content-Type'] || 'application/json' };
+  // Para métodos que modificam estado, envia CSRF do COOKIE
+  if (m !== 'GET' && m !== 'HEAD' && m !== 'OPTIONS') {
+    const tk = currentCsrf() || await getCsrf(); // garante existir
+    if (tk) base['x-csrf-token'] = tk; // header em lowercase (express é case-insensitive)
+  }
+
+  return base;
 }
 
 /**
  * Request genérico (com retry 1x se CSRF inválido/expirado)
  * @param {string} method
  * @param {string} url - pode ser relativo (/api/...)
- * @param {object|null} body - será serializado em JSON
+ * @param {object|string|FormData|null} body
  * @param {object} opts - { headers, noRetry }
  */
 export async function apiRequest(method, url, body = null, opts = {}) {
   const fullUrl = url.startsWith('http') ? url : `${API}${url}`;
-  const headers = await buildHeaders(method, opts.headers || {});
+  const headers = await buildHeaders(method, opts.headers || {}, body);
   const init = {
-    method,
+    method: String(method || 'GET').toUpperCase(),
     credentials: 'include',
     cache: 'no-store',
-    headers,
+    headers
   };
-  if (body != null) init.body = typeof body === 'string' ? body : JSON.stringify(body);
+
+  if (body != null) {
+    init.body = isJsonBody(body) ? JSON.stringify(body) : body;
+  }
 
   try {
     return await doFetch(fullUrl, init);
   } catch (err) {
-    // Se foi 403 por CSRF, tenta renovar uma vez
-    const isCsrfProblem =
+    // Se foi 403/419 (ou mensagem indicando CSRF), renova e tenta 1x
+    const looksLikeCsrf =
       err?.status === 403 ||
       err?.status === 419 ||
       /csrf/i.test(String(err?.message)) ||
       /csrf/i.test(String(err?.payload?.error || ''));
 
-    if (isCsrfProblem && !opts.noRetry) {
-      await getCsrf(true); // força renovar
-      const retryHeaders = await buildHeaders(method, opts.headers || {});
+    if (looksLikeCsrf && !opts.noRetry) {
+      try { await getCsrf(true); } catch (_) {}
+      const retryHeaders = await buildHeaders(method, opts.headers || {}, body);
       const retryInit = { ...init, headers: retryHeaders };
       return doFetch(fullUrl, retryInit);
     }
@@ -133,7 +153,7 @@ export async function apiRequest(method, url, body = null, opts = {}) {
   }
 }
 
-// Atalhos
+/* ======================== Atalhos ======================== */
 export async function apiGet(url, opts = {}) {
   return apiRequest('GET', url, null, opts);
 }
@@ -147,6 +167,5 @@ export async function apiPatch(url, body = {}, opts = {}) {
   return apiRequest('PATCH', url, body, opts);
 }
 export async function apiDelete(url, body = null, opts = {}) {
-  // alguns servidores exigem body em DELETE; se não precisar, passe null
   return apiRequest('DELETE', url, body, opts);
 }

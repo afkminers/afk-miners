@@ -2,12 +2,18 @@
   "GET /_ping": [
     "{ok:true,ts:Date.now() }",
     "{routes:list }",
+    "{ok:false,error:'map-diff' }",
+    "{ok:false,error:'out_of_range' }",
+    "{ok:false,error:'no_los' }",
     "{ok:true }",
     "{ok:true }",
     "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
   ],
   "GET /_routes": [
     "{routes:list }",
+    "{ok:false,error:'map-diff' }",
+    "{ok:false,error:'out_of_range' }",
+    "{ok:false,error:'no_los' }",
     "{ok:true }",
     "{ok:true }",
     "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
@@ -42,9 +48,7 @@
   "POST /api/chat/global": [
     "{ok:true }"
   ],
-  "GET /api/combat/nearest": [
-    "{id:m.id,x:Number(m.x) || 0,y:Number(m.y) || 0,monsterKey:m.monsterKey || null,hp:Number(m.hp) || 0,maxHp:Number(m.max_hp) || 0,}"
-  ],
+  "GET /api/combat/nearest": [],
   "GET /api/csrf": [],
   "GET /assets/items": [],
   "GET /assets/sprites": [],
@@ -53,6 +57,9 @@
     "{ok:true,added:total }"
   ],
   "POST /attack/start": [
+    "{ok:false,error:'map-diff' }",
+    "{ok:false,error:'out_of_range' }",
+    "{ok:false,error:'no_los' }",
     "{ok:true }",
     "{ok:true }",
     "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"

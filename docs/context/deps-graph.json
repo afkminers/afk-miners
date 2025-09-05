@@ -4,6 +4,10 @@
     "to": "./api.js"
   },
   {
+    "from": "client\\js\\play.js",
+    "to": "./api.js"
+  },
+  {
     "from": "client\\js\\gacha.js",
     "to": "./api.js"
   },
@@ -34,5 +38,9 @@
   {
     "from": "client\\js\\app.js",
     "to": "./app_panels.js"
+  },
+  {
+    "from": "client\\js\\combat\\attack-controls.js",
+    "to": "../api.js"
   }
 ]
