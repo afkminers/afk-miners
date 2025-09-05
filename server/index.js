@@ -181,14 +181,20 @@ async function bootstrapContentTables() {
 // públicas / auth
 app.use('/api/auth', authRoutes);
 
-// Combat (mantém como está)
-const combatRoutes = require('./combat/routes');
-app.use('/api/combat', combatRoutes);
+/* ========= ROTAS ========= */
 
+// públicas / auth
+app.use('/api/auth', authRoutes);
+
+// Combat (sempre protegido por auth)
+const combatRoutes = require('./combat/routes');
+app.use('/api/combat', requireAuth, combatRoutes);
+
+// endpoint auxiliar de nearest (se precisar, mantenha aqui)
 const combatNearest = require('./routes/combat_nearest');
 app.use(combatNearest);
 
-// protegidas
+// protegidas (APENAS a rota nova de player!)
 app.use('/api/player', requireAuth, playerRoutes);
 app.use('/api/gacha', requireAuth, gachaRoutes);
 app.use('/api/skills', requireAuth, skillsRoutes);
@@ -196,6 +202,7 @@ app.use('/api/skills', requireAuth, skillsRoutes);
 // AFK / Farm
 app.use('/api/afk', requireAuth, afkRoutes);
 app.use('/api/farm', requireAuth, farmRoutes);
+
 
 /* ========= Helpers (Treino) ========= */
 async function resolveSkillType(weaponOrSkill) {

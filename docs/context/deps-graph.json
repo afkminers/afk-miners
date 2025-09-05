@@ -34,9 +34,5 @@
   {
     "from": "client\\js\\app.js",
     "to": "./app_panels.js"
-  },
-  {
-    "from": "client\\js\\combat\\combat-ui.js",
-    "to": "./ws-combat.js"
   }
 ]

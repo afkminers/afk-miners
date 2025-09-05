@@ -1,7 +1,11 @@
 // server/combat/autoloop.js
 const K = require('../balance/config');
 const { applyHit } = require('./service');
-const { get } = require('../models/db');
+const { getHeroPos, getMonsterPos } = require('./pos');   // posições
+const { inReachPx } = require('./geom');                  // Chebyshev
+const { hasLineOfSight } = require('./los');              // Bresenham
+const { getGrid } = require('../maps/grid');              // colisão server
+const { get } = require('../models/db');                  // já usado no isTargetAlive
 
 const DEBUG = String(process.env.COMBAT_DEBUG || '').trim() === '1';
 
@@ -14,12 +18,40 @@ function cooldownFor(weaponType) {
 }
 
 async function isTargetAlive(instanceId) {
-  // checa estado e HP > 0 (defensivo)
   const row = await get(
     'SELECT state, hp FROM monster_instances WHERE id=$1',
     [instanceId]
   );
   return !!row && row.state === 'ALIVE' && Number(row.hp || 0) > 0;
+}
+
+// Validação “OT-like” por golpe (alcance + LOS em cada tick)
+async function tickOnce(heroId, targetInstanceId, weaponType) {
+  const mobPos = await getMonsterPos(targetInstanceId);
+  if (!mobPos) return { ok:false, reason:'mob-pos-missing' };
+
+  const heroPos = await getHeroPos(heroId, mobPos.map_key);
+  if (!heroPos) return { ok:false, reason:'hero-pos-missing' };
+  if (heroPos.map_key !== mobPos.map_key) return { ok:false, reason:'map-diff' };
+
+  // pega grid linear e passa wrapper com metadata p/ LOS
+  const { grid, cols } = await getGrid(heroPos.map_key);
+  const losGrid = { data: grid, cols };
+
+  if (!inReachPx(heroPos, mobPos, weaponType, K)) {
+    if (DEBUG) console.log('[autoloop] out_of_range');
+    return { ok:false, reason:'out_of_range' };
+  }
+  if (!hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y)) {
+    if (DEBUG) console.log('[autoloop] no_los');
+    return { ok:false, reason:'no_los' };
+  }
+
+  return await applyHit({
+    attackerHeroId: String(heroId),
+    targetInstanceId: String(targetInstanceId),
+    weaponType: String(weaponType || 'SWORD')
+  });
 }
 
 function start(heroId, targetInstanceId, weaponType = 'SWORD') {
@@ -35,11 +67,7 @@ function start(heroId, targetInstanceId, weaponType = 'SWORD') {
         stop(heroId);
         return;
       }
-      const r = await applyHit({
-        attackerHeroId: String(heroId),
-        targetInstanceId: String(targetInstanceId),
-        weaponType: String(weaponType || 'SWORD')
-      });
+      const r = await tickOnce(heroId, targetInstanceId, weaponType);
       if (r?.dead) {
         if (DEBUG) console.log(`[autoloop] target died -> stop hero=${heroId}`);
         stop(heroId);
@@ -62,9 +90,13 @@ function stop(heroId) {
   loops.delete(heroId);
 }
 
-// opcional: utilitário para encerrar tudo ao desligar o servidor
 function stopAll() {
   for (const heroId of loops.keys()) stop(heroId);
 }
 
-module.exports = { start, stop, stopAll, cooldownFor };
+function getState(heroId) {
+  const e = loops.get(heroId);
+  return e ? { targetInstanceId: e.targetInstanceId, weaponType: e.weaponType, cooldownMs: e.cooldownMs } : null;
+}
+
+module.exports = { start, stop, stopAll, cooldownFor, getState, _tickOnce: tickOnce };

@@ -1,6 +1,8 @@
 // Cena jogável genérica (House/PvP): usa ?map=<key> (padrão house).
 // Input (WASD/Numpad/Mouse) + PlayerController + Camera2D + AStarGrid + ClickToMove.
-// CSRF robusto, loader tolerante de tileset, respawn, sprites via YAML, sync de posição com seq/clientTs.
+// Requests HTTP centralizadas em client/js/api.js (CSRF automático).
+
+import { getCsrf, apiGet, apiPost } from './api.js';
 
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
@@ -39,7 +41,6 @@ window.GameScene.bindInstanceToAnySpriteByKey = (instanceId, monsterKey) => {
   MOB_BY_INSTANCE.set(String(instanceId), best);
   return best;
 };
-
 
 window.GameScene.registerMobSprite = (sprite, meta = {}) => {
   if (!sprite) return;
@@ -119,80 +120,6 @@ const $ = (s) => document.querySelector(s);
 
 // camera hoisted (evita TDZ)
 let camera;
-
-/* =========================== CSRF / HTTP ============================ */
-let CSRF_TOKEN = null;
-
-function readCookie(name) {
-  const hit = document.cookie.split('; ').find(v => v.startsWith(name + '='));
-  return hit ? decodeURIComponent(hit.split('=')[1]) : null;
-}
-
-async function fetchCsrfToken(force = false) {
-  if (!force && CSRF_TOKEN) return CSRF_TOKEN;
-  try {
-    const r = await fetch('/api/csrf', { credentials: 'include' });
-    const hdr = r.headers.get('x-csrf-token') || r.headers.get('X-CSRF-Token');
-    let bodyTok = null;
-    try {
-      const j = await r.clone().json();
-      bodyTok = j.token || j.csrf || j.csrfToken || j.csrf_token || null;
-    } catch { }
-    CSRF_TOKEN = hdr || bodyTok || readCookie('csrf') || null;
-  } catch {
-    CSRF_TOKEN = readCookie('csrf') || null;
-  }
-  return CSRF_TOKEN;
-}
-
-// alias p/ compatibilidade com código antigo
-async function fetchCsrf() { return fetchCsrfToken(); }
-
-async function jget(url) {
-  const r = await fetch(url, { credentials: 'include' });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
-  return r.json();
-}
-
-async function jpost(url, body, extraOpts = {}) {
-  // garante token
-  let tok = await fetchCsrfToken();
-
-  const doPost = async (token) => {
-    const r = await fetch(url, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': token || '',
-        'X-Requested-With': 'fetch',
-        ...(extraOpts.headers || {})
-      },
-      body: JSON.stringify(body || {}),
-      referrerPolicy: 'strict-origin-when-cross-origin',
-      ...extraOpts
-    });
-    if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
-    return r.json();
-  };
-
-  try {
-    return await doPost(tok);
-  } catch (e) {
-    // Se 403/419, tenta renovar e refazer 1x
-    const msg = String(e.message || '');
-    if (msg.startsWith('403') || msg.startsWith('419')) {
-      tok = await fetchCsrfToken(true);
-      return await doPost(tok);
-    }
-    throw e;
-  }
-}
-
-// expõe no global para debug
-window.fetchCsrfToken = fetchCsrfToken;
-window.jget = jget;
-window.jpost = jpost;
 
 /* ===================== Assets: normalização de paths ===================== */
 function assetUrl(p, { asTileset = false } = {}) {
@@ -313,9 +240,8 @@ function indexSpriteMeta(obj) {
   }
 }
 
-
 async function loadSpriteMeta() {
-  const list = await jget('/api/assets/sprites'); // [{ key, kind, data }]
+  const list = await apiGet('/api/assets/sprites'); // [{ key, kind, data }]
   SPRITES_META = Object.fromEntries(list.map(e => [e.key, e.data]));
   indexSpriteMeta(SPRITES_META);
 }
@@ -339,8 +265,6 @@ function findMetaFor(spawnKey) {
   }
   return null;
 }
-
-
 
 function buildMonsterCandidates(kindNorm, meta, rawKey) {
   const list = [];
@@ -371,8 +295,6 @@ function buildMonsterCandidates(kindNorm, meta, rawKey) {
   // remove duplicatas mantendo a ordem
   return [...new Set(list)];
 }
-
-
 
 async function loadMonsterImg(kindNorm, meta, rawKey) {
   const candidates = buildMonsterCandidates(kindNorm, meta, rawKey);
@@ -413,7 +335,7 @@ function inferMetaFromImage(img, rawKey) {
     image: img.src.replace(location.origin, ''),
     frame: { width: fw, height: fh, margin: 0, spacing: 0, bleedFix: 0.25 },
     grid: { cols, rows },
-    anchor: { x: 0.5, y: fw === 64 && fh === 64 ? 0.85 : 0.9 }, // levemente mais baixo p/ 64x64
+    anchor: { x: 0.5, y: fw === 64 && fh === 64 ? 0.85 : 0.9 },
     anims: {
       walk: {
         fps: 8,
@@ -432,7 +354,6 @@ function inferMetaFromImage(img, rawKey) {
     }
   };
 }
-
 
 /* ========================= Estado do Mapa ========================= */
 let mapData = null;
@@ -534,7 +455,6 @@ function drawMob(m) {
   const movingMag = Math.hypot(m.dirX || 0, m.dirY || 0);
   let anim = animWalk;
   if (m.dead && animDead) anim = animDead;
-  //else if (!m.dead && animIdle && movingMag < 0.12) anim = animIdle;
 
   // parâmetros base
   let fps = Number(anim.fps); if (!Number.isFinite(fps) || fps < 0) fps = 8;
@@ -576,13 +496,13 @@ function drawMob(m) {
     m._animFrozenFrame = 0;
   }
 
-  // calcular frame atual (usa comprimento da seq quando houver)
+  // calcular frame atual
   const t = performance.now() / 1000;
   const baseLen = Math.max(1, seq ? seq.length : frames);
   let f;
   if (anim.loop === false) {
     const idx = Math.floor(t * Math.max(0, fps));
-    f = Math.min(idx, baseLen - 1);      // <- usa baseLen aqui
+    f = Math.min(idx, baseLen - 1);
   } else {
     f = m._animFrozen ? m._animFrozenFrame : Math.floor(t * Math.max(0, fps)) % baseLen;
   }
@@ -632,48 +552,92 @@ function drawMob(m) {
   ctx.restore();
 }
 
-
-
-
-
-
 /* ======================= Posição Persistente ======================= */
 let POS_SYNC_ENABLED = true;
 let lastSaveAt = 0;
-let posSeq = 0; // ajuda o servidor a ordenar e bloquear replay
 
+// contador de sequência enviado ao servidor
+let posSeq = 0;
+// marca se já sincronizamos o contador com o servidor
+let posSeqReady = false;
+
+/** Envia posição com rate-limit e seq sincronizado com o servidor */
 async function postPosThrottled(mapKey, x, y) {
   if (!POS_SYNC_ENABLED) return;
+
+  // se ainda não sincronizou o seq local, tenta uma leitura rápida
+  if (!posSeqReady) {
+    try {
+      const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
+      if (chk && Number.isFinite(chk.seq)) {
+        posSeq = Number(chk.seq);
+        posSeqReady = true;
+      }
+    } catch { /* ignora, vamos tentar enviar assim mesmo */ }
+  }
+
+  // throttle para reduzir chamadas
   const now = performance.now();
-  if (now - lastSaveAt < 1200) return; // 1.2s pra reduzir chamadas
+  if (now - lastSaveAt < 1200) return; // 1.2s
   lastSaveAt = now;
-  try {
-    posSeq += 1;
-    await jpost('/api/player/pos', {
+
+  // função que faz o POST com o token CSRF já cuidado pelo apiPost
+  const doSend = async () => {
+    posSeq += 1; // sempre seq crescente
+    return apiPost('/api/player/pos', {
       mapKey,
       x: Math.round(x),
       y: Math.round(y),
       seq: posSeq,
       clientTs: Date.now()
     });
+  };
+
+  try {
+    await doSend();
   } catch (e) {
-    const msg = String(e.message || '');
-    if (msg.includes('403') || msg.includes('csrf-missing') ||
-      msg.includes('429') || msg.includes('409')) {
-      POS_SYNC_ENABLED = false; // desliga após 1a falha de auth/csrf/rate/replay
+    const msg = String(e?.message || '');
+
+    // conflito de sequência: re-sincroniza e tenta UMA vez
+    if (msg.includes('409') || msg.includes('stale-seq')) {
+      try {
+        const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
+        if (chk && Number.isFinite(chk.seq)) {
+          posSeq = Number(chk.seq);    // alinha com o servidor
+          posSeqReady = true;
+          await doSend();              // reenvia uma vez
+          return;
+        }
+      } catch { /* se falhar, cai no fluxo abaixo */ }
+    }
+
+    // outros erros: desliga o sync para não poluir logs/rede
+    if (msg.includes('403') || msg.includes('csrf') ||
+        msg.includes('429') || msg.includes('202')) {
+      POS_SYNC_ENABLED = false;
     } else {
       console.warn('pos sync failed:', msg);
     }
   }
 }
 
+/** Lê posição salva do servidor e já sincroniza o seq local */
 async function getSavedPos() {
   try {
-    const p = await jget(`/api/player/pos?map=${encodeURIComponent(MAP_KEY)}`);
-    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) return { x: p.x, y: p.y };
-  } catch { }
+    const p = await apiGet(`/api/player/pos?map=${encodeURIComponent(MAP_KEY)}`);
+    if (p && Number.isFinite(p.seq)) {
+      posSeq = Number(p.seq);
+      posSeqReady = true;
+    }
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
+      return { x: p.x, y: p.y };
+    }
+  } catch {
+    // ok, começa do default
+  }
   return null;
 }
+
 
 /* ==================== Colisão e Spawns do Tiled ==================== */
 function buildCollisionGridFromObjects(mapW, mapH, objs) {
@@ -719,18 +683,17 @@ function mapSpawnsFromTiledJSON(json) {
       const w = o.width > 0 ? o.width : TILE;
       const h = o.height > 0 ? o.height : TILE;
       return {
-        id: Number(o.id),               // <<< AQUI é o id correto do Tiled
+        id: Number(o.id),
         monsterKey, count, respawnSec,
         x: o.x || 0, y: o.y || 0, w, h
       };
     });
 }
 
-
 /* ===================== Resolução de Sprite Player ===================== */
 async function resolvePlayerSprite() {
   try {
-    const me = await jget('/api/player/me');
+    const me = await apiGet('/api/player/me');
     const heroes = Array.isArray(me.heroes) ? me.heroes : [];
     const starter = heroes.find(h => h.isStarter === 1 || h.isStarter === true) || heroes[0];
     if (starter) {
@@ -761,7 +724,7 @@ function addMobFromSpawn(spDef) {
   const m = {
     id: mobAutoId++,
     kind: kindNorm,
-    rawKey,                       // <-- guardamos
+    rawKey,                       
     x: (spDef.x || 0) + Math.random() * (spDef.w || TILE),
     y: (spDef.y || 0) + Math.random() * (spDef.h || TILE),
     w: 32, h: 32,
@@ -769,7 +732,7 @@ function addMobFromSpawn(spDef) {
     dirX: 0, dirY: 0, changeAt: 0,
     face: 'east',
     img: null,
-    meta: meta || null,           // se não veio do YAML, fica null e inferimos depois
+    meta: meta || null,           
     bound: (spDef.w || spDef.h) ? { x: spDef.x || 0, y: spDef.y || 0, w: spDef.w || TILE, h: spDef.h || TILE } : null,
     spawnId: Number(spDef.id || spDef.spawn_id || spDef.spawnId || 0) || null,
     instanceId: null,
@@ -782,7 +745,6 @@ function addMobFromSpawn(spDef) {
   loadMonsterImg(kindNorm, meta, rawKey).then(img => {
     if (!img) return;
     m.img = img;
-    // Se não veio meta via YAML, inferimos agora com a imagem em mãos
     if (!m.meta || !m.meta.frame || !m.meta.grid) {
       const auto = inferMetaFromImage(img, rawKey);
       if (auto) m.meta = auto;
@@ -816,11 +778,9 @@ function buildSpawnersFromDefs(defs) {
 
 function updateRespawns(now) {
   for (const sp of spawners) {
-    // remove ids que não existem mais (por segurança)
     for (const id of Array.from(sp.liveIds)) {
       if (!mobs.some(m => m.id === id)) sp.liveIds.delete(id);
     }
-    // mantém quantidade visual (não cria sprite nova quando existem mortas; mantém o total)
     while (sp.liveIds.size < sp.want && now >= sp.nextAt) {
       const id = addMobFromSpawn(sp.def);
       sp.liveIds.add(id);
@@ -831,15 +791,14 @@ function updateRespawns(now) {
 
 /* ================================ Boot ================================ */
 (async function main() {
-  // pega CSRF e cookies antes de qualquer POST
-  await fetchCsrfToken().catch(() => { });
+  // 1) garante CSRF/cookies antes de qualquer POST
+  await getCsrf().catch(() => {});
 
   await loadSpriteMeta();
 
-  // aplica tamanho inicial
   resize();
 
-  const maps = await jget("/api/admin/content/maps");
+  const maps = await apiGet("/api/admin/content/maps");
   if (!maps.some((m) => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
 
   // helper para normalizar payloads que podem vir string/array/obj
@@ -851,7 +810,7 @@ function updateRespawns(now) {
   }
 
   // Objetos do mapa (starts/solids)
-  const rawObjs = await jget(`/api/admin/content/map/${MAP_KEY}/objects`);
+  const rawObjs = await apiGet(`/api/admin/content/map/${MAP_KEY}/objects`);
   const objsNorm = normalizeApiJson(rawObjs);
   const objArr = Array.isArray(objsNorm)
     ? objsNorm
@@ -859,7 +818,7 @@ function updateRespawns(now) {
   starts = objArr.filter(o => (o.type || '').toLowerCase() === 'start');
 
   // Data (tiles)
-  const rawMap = await jget(`/api/admin/content/map/${MAP_KEY}/data`);
+  const rawMap = await apiGet(`/api/admin/content/map/${MAP_KEY}/data`);
   mapData = normalizeApiJson(rawMap);
 
   tileset = (mapData && mapData.tilesets && mapData.tilesets[0]) || null;
@@ -897,7 +856,6 @@ function updateRespawns(now) {
     worldHeight: worldH
   });
 
-  // Polyfills e zoom + apply
   if (typeof camera.getZoom !== 'function') camera.getZoom = () => (camera.zoom && Number(camera.zoom)) || 1;
   if (typeof camera.setZoom !== 'function') camera.setZoom = (z) => { camera.zoom = Number(z) || 1; };
   if (typeof camera.screenToWorld !== 'function') camera.screenToWorld = (sx, sy) => {
@@ -950,7 +908,7 @@ function updateRespawns(now) {
 
   // Spawns de mobs
   let spawnsList;
-  try { spawnsList = await jget(`/api/admin/content/map/${MAP_KEY}/spawns`); } catch { spawnsList = []; }
+  try { spawnsList = await apiGet(`/api/admin/content/map/${MAP_KEY}/spawns`); } catch { spawnsList = []; }
   if (!Array.isArray(spawnsList) || spawnsList.length === 0) {
     spawns = mapSpawnsFromTiledJSON(mapData);
     console.log("spawns fallback (JSON):", spawns);
@@ -990,7 +948,7 @@ function updateRespawns(now) {
 
     // AI placeholder dos mobs
     for (const mob of mobs) {
-      if (mob.hidden || mob.dead) continue; // morto/oculto não anda
+      if (mob.hidden || mob.dead) continue;
       if (now >= mob.changeAt) {
         const ang = Math.random() * Math.PI * 2;
         mob.dirX = Math.cos(ang);

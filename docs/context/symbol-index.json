@@ -77,49 +77,40 @@
     "symbols": [
       "attachControls",
       "doHit",
-      "findClosestLocalMonster",
-      "findWsMonsterNear",
       "getCsrf",
       "getFreshCsrf",
       "getMouseWorldFromEvent",
       "jget",
       "pickCamera",
       "pickCanvas",
-      "pickTargetAt",
       "postJSON",
       "readCookie",
-      "renderTargetHud",
       "resolveServerTarget",
       "screenToWorld",
       "seedCsrfCookie",
-      "spawnFloatDamageDOM",
       "startAttack",
-      "startHudLoop",
       "startLoop",
-      "stopHudLoop",
       "worldToScreen"
     ]
   },
   {
     "file": "client\\js\\combat\\combat-ui.js",
     "symbols": [
-      "drawHpBar",
-      "ensurePos",
-      "getLocalMobs",
-      "nearestLocal"
+      "drawHpBar"
     ]
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
     "symbols": [
-      "borrowLocalPosition",
+      "bindByKey",
+      "bindBySpawn",
       "connectCombatWS",
-      "drawHpBar",
+      "drawHpBarAtSprite",
       "drawTargetBox",
-      "ensurePosForMonster",
+      "getSpriteFor",
       "installCombatOverlay",
-      "normKey",
       "onWsMessage",
+      "pushFloaterAtSprite",
       "updateAndDrawFloaters",
       "wsUrl"
     ]
@@ -127,12 +118,7 @@
   {
     "file": "client\\js\\combat\\ws-combat.js",
     "symbols": [
-      "combatState",
-      "createFloater",
-      "createFloaterForMonster",
-      "ensureFloaters",
-      "onWsMessage",
-      "wsUrl"
+      "combatState"
     ]
   },
   {
@@ -348,6 +334,7 @@
       "hasSolidProp",
       "imgReady",
       "indexSpriteMeta",
+      "inferMetaFromImage",
       "jget",
       "jpost",
       "loadImg",
@@ -359,6 +346,7 @@
       "normalizeApiJson",
       "normalizeTilesetPath",
       "pickElByIds",
+      "pickFreeSpriteForSpawn",
       "postPosThrottled",
       "readCookie",
       "resize",

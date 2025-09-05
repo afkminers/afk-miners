@@ -2,63 +2,11 @@
 // ES Module: exporta startAttack/stopAttack e registra controles de ataque.
 // Clique ESQUERDO resolve alvo no servidor e inicia ataque.
 // Clique direito/ESC/blur: para o ataque.
-// *** HUD DOM removido: overlay novo (render-combat.js) é o único que desenha ***
+// HUD é desenhado só pelo overlay (render-combat.js)
+
+import { apiGet, apiPost, getCsrf } from '../api.js';
 
 const TILE = 32;
-
-/* =========================== CSRF / HTTP ============================ */
-/** Estratégia CSRF (double-submit cookie): lê token do cookie "csrf".
- *  Semeia com /api/csrf quando necessário e re-tenta uma vez em 403. */
-function readCookie(name) {
-  const hit = document.cookie.split('; ').find(v => v.startsWith(name + '='));
-  return hit ? decodeURIComponent(hit.split('=')[1]) : null;
-}
-async function seedCsrfCookie() {
-  try { await fetch('/api/csrf', { credentials: 'include', cache: 'no-store' }); } catch {}
-}
-async function getFreshCsrf() {
-  let tok = readCookie('csrf');
-  if (!tok) { await seedCsrfCookie(); tok = readCookie('csrf'); }
-  return tok;
-}
-// SHIM legado
-async function getCsrf() { return getFreshCsrf(); }
-
-async function postJSON(url, body) {
-  let tok = await getFreshCsrf();
-  if (!tok) throw new Error('csrf-missing');
-
-  const doFetch = async (token) => {
-    const u = new URL(url, location.origin);
-    u.searchParams.set('csrf', token);
-    return fetch(u.toString(), {
-      method: 'POST',
-      credentials: 'include',
-      referrerPolicy: 'strict-origin-when-cross-origin',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': token,
-        'X-Requested-With': 'fetch',
-      },
-      body: JSON.stringify(body || {})
-    });
-  };
-
-  let r = await doFetch(tok);
-  if (r.status === 403) {
-    await seedCsrfCookie();
-    tok = readCookie('csrf') || tok;
-    r = await doFetch(tok);
-  }
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
-  return r.headers.get('content-length') === '0' ? {} : r.json();
-}
-
-async function jget(url) {
-  const r = await fetch(url, { credentials: 'include', cache: 'no-store' });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
-  return r.json();
-}
 
 /* ==================== Canvas / Câmera helpers ==================== */
 function pickCanvas() {
@@ -76,7 +24,7 @@ function screenToWorld(canvas, sx, sy) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width  / rect.width;
   const scaleY = canvas.height / rect.height;
-  return { x: (sx) * scaleX, y: (sy) * scaleY };
+  return { x: sx * scaleX, y: sy * scaleY };
 }
 function worldToScreen(wx, wy) {
   const cam = pickCamera();
@@ -96,7 +44,48 @@ const combatState = (window.combatState = window.combatState || {
   targetId: null,
   attacking: false,
   loopHandle: null,
+  selectedTargetId: null,
 });
+
+// herói ativo cacheado (obrigatório para atacar)
+let ACTIVE_HERO = {
+  id: null,
+  heroClass: null, // "KNIGHT" | "ARCHER" | "MAGE" | etc
+};
+
+// mapeia classe -> arma padrão (ajuste conforme seu balance/config)
+function weaponForClass(heroClass) {
+  const c = String(heroClass || '').toUpperCase();
+  if (c.includes('ARCH') || c === 'ARCHER' || c === 'HUNTER' || c === 'RANGER') return 'BOW';
+  if (c.includes('MAGE') || c === 'SORCERER' || c === 'WIZARD' || c === 'DRUID') return 'STAFF';
+  return 'SWORD'; // default para Knight/Warrior/qualquer outro
+}
+
+async function ensureActiveHero() {
+  if (ACTIVE_HERO.id) return ACTIVE_HERO;
+
+  // tenta descobrir pelo /api/player/me (já existe no projeto)
+  try {
+    const me = await apiGet('/api/player/me');
+    const heroes = Array.isArray(me?.heroes) ? me.heroes : [];
+    const main = heroes.find(h => h.isStarter === 1 || h.isStarter === true) || heroes[0];
+
+    if (main) {
+      ACTIVE_HERO.id = String(main.id ?? main.heroId);
+      ACTIVE_HERO.heroClass = String(main.class ?? main.heroClass ?? '').toUpperCase() || null;
+    }
+  } catch {
+    // sem herói => será bloqueado na hora do ataque
+  }
+
+  return ACTIVE_HERO;
+}
+
+// permite trocar o herói ativo via UI no futuro
+export function setActiveHero(heroId, heroClass = null) {
+  ACTIVE_HERO.id = heroId ? String(heroId) : null;
+  ACTIVE_HERO.heroClass = heroClass ? String(heroClass).toUpperCase() : ACTIVE_HERO.heroClass;
+}
 
 /* ======================= Resolver alvo (servidor) ================== */
 /** Retorna { id, x, y, monsterKey, hp, maxHp } ou null */
@@ -106,11 +95,10 @@ async function resolveServerTarget(px, py) {
     const q = new URLSearchParams({
       map,
       x: String(Math.round(px)),
-      y: String(Math.round(py))
+      y: String(Math.round(py)),
     });
-    const m = await jget('/api/combat/nearest?' + q.toString());
-    if (!m?.id) return null;
-    return m;
+    const m = await apiGet('/api/combat/nearest?' + q.toString());
+    return m?.id ? m : null;
   } catch {
     return null;
   }
@@ -119,32 +107,42 @@ async function resolveServerTarget(px, py) {
 /* ========================== Loop de ataque ========================= */
 async function doHit() {
   if (!combatState.attacking || !combatState.targetId) return;
+
+  const hero = await ensureActiveHero();
+  if (!hero.id) { // sem herói -> aborta e limpa
+    stopAttack();
+    console.warn('[attack] sem heroId ativo; parei o loop');
+    return;
+  }
+
   try {
-    const resp = await postJSON('/api/combat/hit', {
+    const resp = await apiPost('/api/combat/hit', {
+      // compat: alguns backends aceitam targetId, outros targetInstanceId
       targetInstanceId: combatState.targetId,
+      targetId:         combatState.targetId,
+      heroId:           hero.id,
       damage: 10
     });
 
-    // Compatibilidade de formatos
-    const id      = String(resp.id || resp.targetId || combatState.targetId);
-    const hpNow   = Number(resp.hpAfter ?? resp.hp);
-    const hpPrev  = Number(resp.hpBefore ?? (isFinite(hpNow) ? hpNow + Number(resp.dmg || 0) : NaN));
-    const hpMax   = Number(resp.maxHp) || Math.max(100, Number(combatState.monsters.get(id)?.hpMax || 100));
-    const dmg     = Number(resp.dmg ?? Math.max(0, (isFinite(hpPrev) && isFinite(hpNow)) ? (hpPrev - hpNow) : 0));
-    const isDead  = !!resp.dead || hpNow <= 0;
+    const id     = String(resp.id || resp.targetId || combatState.targetId);
+    const hpNow  = Number(resp.hpAfter ?? resp.hp);
+    const hpPrev = Number(resp.hpBefore ?? (isFinite(hpNow) ? hpNow + Number(resp.dmg || 0) : NaN));
+    const hpMax  = Number(resp.maxHp) || Math.max(100, Number(combatState.monsters.get(id)?.hpMax || 100));
+    const dmg    = Number(resp.dmg ?? Math.max(0, (isFinite(hpPrev) && isFinite(hpNow)) ? (hpPrev - hpNow) : 0));
+    const isDead = !!resp.dead || (isFinite(hpNow) && hpNow <= 0);
 
-    // Atualiza cache simples
     const m = combatState.monsters.get(id) || { id };
     if (isFinite(hpNow)) m.hp = Math.max(0, hpNow);
     m.hpMax = hpMax;
     combatState.monsters.set(id, m);
 
-    // Notifica UI (overlay cuida dos floaters via WS)
-    window.dispatchEvent(new CustomEvent('combat:hit', { detail: { id, dmg, hp: hpNow, maxHp: hpMax, dead: isDead } }));
+    window.dispatchEvent(new CustomEvent('combat:hit', {
+      detail: { id, dmg, hp: hpNow, maxHp: hpMax, dead: isDead }
+    }));
 
     if (isDead) stopAttack();
   } catch (e) {
-    console.warn('[attack] hit failed', e.message);
+    console.warn('[attack] hit failed', e?.message || e);
   }
 }
 function startLoop() {
@@ -154,24 +152,49 @@ function startLoop() {
 
 /* =========================== API exportada ========================= */
 export async function startAttack(targetId) {
-  await postJSON('/api/combat/attack/start', { targetInstanceId: targetId });
+  // garante herói ativo antes de iniciar
+  const hero = await ensureActiveHero();
+  if (!hero.id) {
+    alert('Nenhum herói ativo encontrado para atacar.');
+    return;
+  }
+
+  const weaponType = weaponForClass(hero.heroClass);
+
+  const payload = {
+    heroId:            String(hero.id),     // ← OBRIGATÓRIO
+    weaponType:        String(weaponType),  // usado p/ alcance/velocidade
+    targetInstanceId:  String(targetId),
+    targetId:          String(targetId),    // compat com backends
+  };
+
+  await apiPost('/api/combat/attack/start', payload);
+
   combatState.targetId = String(targetId);
   combatState.attacking = true;
-
-  // ajuda o overlay a travar o box no alvo atual
   window.combatState.selectedTargetId = combatState.targetId;
   startLoop();
 
-  window.dispatchEvent(new CustomEvent('combat:attack:start', { detail: { targetId: combatState.targetId } }));
+  window.dispatchEvent(new CustomEvent('combat:attack:start', {
+    detail: { targetId: combatState.targetId }
+  }));
 }
 
 export async function stopAttack() {
+  const hero = await ensureActiveHero();
+
   combatState.attacking = false;
   combatState.targetId = null;
   window.combatState.selectedTargetId = null;
 
-  if (combatState.loopHandle) { clearInterval(combatState.loopHandle); combatState.loopHandle = null; }
-  try { await postJSON('/api/combat/attack/stop', {}); } catch {}
+  if (combatState.loopHandle) {
+    clearInterval(combatState.loopHandle);
+    combatState.loopHandle = null;
+  }
+  try {
+    // manda heroId para o backend parar exatamente esse loop
+    await apiPost('/api/combat/attack/stop', { heroId: hero?.id || null });
+  } catch {}
   window.dispatchEvent(new CustomEvent('combat:attack:stop'));
 }
 
@@ -188,10 +211,15 @@ function attachControls() {
 
   const onPointerDown = async (e) => {
     if (e.button != null && e.button !== 0) return; // só esquerdo
+
+    // garante herói ativo antes de tentar qualquer coisa
+    const hero = await ensureActiveHero();
+    if (!hero.id) { alert('Nenhum herói ativo encontrado.'); return; }
+
     const { x, y } = getMouseWorldFromEvent(e, canvas);
     console.log('[attack] click @', Math.round(x), Math.round(y));
 
-    // *** ÚNICA fonte de verdade: servidor ***
+    // *** única fonte de verdade: servidor ***
     const m = await resolveServerTarget(x, y);
     if (!m?.id) {
       console.log('[attack] nenhum alvo (server) — stop');
@@ -206,7 +234,7 @@ function attachControls() {
     combatState.monsters.set(String(m.id), stat);
 
     try { await startAttack(String(m.id)); }
-    catch (err) { console.warn('[attack] start falhou:', err.message); }
+    catch (err) { console.warn('[attack] start falhou:', err?.message || err); }
   };
 
   canvas.addEventListener('mousedown', onPointerDown);
@@ -221,7 +249,10 @@ function attachControls() {
 
 /* ====================== Boot (garante ordem) ====================== */
 (async () => {
-  await seedCsrfCookie().catch(()=>{});
+  // semeia CSRF antes do 1º POST
+  await getCsrf().catch(()=>{});
+  // já tenta descobrir o herói para evitar o primeiro alerta
+  await ensureActiveHero().catch(()=>{});
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     setTimeout(attachControls, 0);
   } else {
