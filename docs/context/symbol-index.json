@@ -108,10 +108,12 @@
       "connectCombatWS",
       "drawHpBarAtSprite",
       "drawTargetBox",
+      "ensureSpriteBind",
       "getSpriteFor",
       "installCombatOverlay",
       "onWsMessage",
       "pushFloaterAtSprite",
+      "startRebindLoop",
       "updateAndDrawFloaters",
       "wsUrl"
     ]

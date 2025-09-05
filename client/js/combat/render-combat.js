@@ -31,11 +31,11 @@ function wsUrl() {
 function pushFloaterAtSprite(sprite, text, ttl = 900) {
   if (!sprite) return;
 
-  const meta   = sprite.meta || {};
-  const frameW = meta.frame?.width  ?? 32;
+  const meta = sprite.meta || {};
+  const frameW = meta.frame?.width ?? 32;
   const frameH = meta.frame?.height ?? 32;
-  const ax     = meta.anchor?.x ?? 0.5;
-  const ay     = meta.anchor?.y ?? 0.9;
+  const ax = meta.anchor?.x ?? 0.5;
+  const ay = meta.anchor?.y ?? 0.9;
 
   // centraliza na largura do frame e sobe um pouco acima da cabeça
   const x = Math.round(sprite.x - frameW * ax + frameW * 0.5);
@@ -142,7 +142,7 @@ function connectCombatWS() {
 
   ws.onopen = () => console.log('[combat] ws overlay connected');
   ws.onclose = () => setTimeout(connectCombatWS, 1500);
-  ws.onerror  = (e) => console.warn('[combat] ws error', e);
+  ws.onerror = (e) => console.warn('[combat] ws error', e);
   ws.onmessage = onWsMessage;
 }
 
@@ -168,11 +168,11 @@ function startRebindLoop() {
 function drawHpBarAtSprite(ctx, sprite, hp, maxHp) {
   if (!sprite) return;
 
-  const meta   = sprite.meta || {};
-  const frameW = meta.frame?.width  ?? 32;
+  const meta = sprite.meta || {};
+  const frameW = meta.frame?.width ?? 32;
   const frameH = meta.frame?.height ?? 32;
-  const ax     = meta.anchor?.x ?? 0.5;
-  const ay     = meta.anchor?.y ?? 0.9;
+  const ax = meta.anchor?.x ?? 0.5;
+  const ay = meta.anchor?.y ?? 0.9;
 
   const w = frameW - 4;
   const h = 4;
@@ -201,11 +201,11 @@ function drawTargetBox(ctx) {
   const s = getSpriteFor(id);
   if (!s) return;
 
-  const meta   = s.meta || {};
-  const frameW = meta.frame?.width  ?? 32;
+  const meta = s.meta || {};
+  const frameW = meta.frame?.width ?? 32;
   const frameH = meta.frame?.height ?? 32;
-  const ax     = meta.anchor?.x ?? 0.5;
-  const ay     = meta.anchor?.y ?? 0.9;
+  const ax = meta.anchor?.x ?? 0.5;
+  const ay = meta.anchor?.y ?? 0.9;
 
   const ox = Math.round(s.x - frameW * ax);
   const oy = Math.round(s.y - frameH * ay);
@@ -236,22 +236,35 @@ export default function installCombatOverlay() {
 
   window.CombatUI = {
     render(ctx, camera, dt) {
+      const unbound = new Set();
+
       const drawAll = () => {
         // desenha HP somente se houver sprite vinculada e o bicho estiver vivo
         for (const m of state.monsters.values()) {
           if (m.hp <= 0) continue;
           const s = ensureSpriteBind(m.id, m.key, m.spawnId); // usa o helper
-          if (!s) { unbound.add(m.id); continue; }           // agenda rebind
+          if (!s) { unbound.add(m.id); continue; }            // agenda rebind
           drawHpBarAtSprite(ctx, s, m.hp, m.maxHp);
         }
+
         drawTargetBox(ctx);
+
+        // <<< IMPORTANTE: floaters agora também sob a câmera >>>
+        updateAndDrawFloaters(ctx, dt * 1000);
       };
 
       if (camera?.apply) camera.apply(ctx, drawAll);
       else drawAll();
 
-      updateAndDrawFloaters(ctx, dt * 1000);
+      // tentativa de rebind após o draw (não bloqueia render)
+      if (unbound.size) {
+        for (const id of unbound) {
+          const m = state.monsters.get(id);
+          if (m) ensureSpriteBind(m.id, m.key, m.spawnId);
+        }
+      }
     },
+
     getState() {
       return {
         ts: Date.now(),
@@ -259,4 +272,5 @@ export default function installCombatOverlay() {
       };
     }
   };
+
 }

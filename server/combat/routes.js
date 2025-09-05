@@ -13,6 +13,7 @@ const { getHeroPos, getMonsterPos } = require('./pos');
 const { inReachPx } = require('./geom');
 const { hasLineOfSight } = require('./los');
 const { getGrid } = require('../maps/grid');
+const { broadcast } = require('../ws/bus'); // <<-- NECESSÁRIO para enviar updates em tempo real
 
 // deixe true por enquanto; quando LOS/alcance estiverem 100% a gente liga de novo
 const PERMISSIVE_START = true;
@@ -130,7 +131,7 @@ router.post('/attack/start', express.json(), async (req, res) => {
   }
 });
 
-router.post('/attack/stop', express.json(), async (req, res) => {
+router.post('/attack/stop', express.json(), async (_req, res) => {
   try {
     // const { heroId } = req.body || {};
     // if (heroId) autoloop.stop(heroId);
@@ -198,6 +199,38 @@ router.post('/hit', express.json(), async (req, res) => {
       );
     } else {
       await run(`UPDATE monster_instances SET hp=$2, updated_at=now() WHERE id=$1`, [mi.id, hp]);
+    }
+
+    // === Envia atualizações em tempo real pelo WS ===
+    const cur = await get(`
+      SELECT mi.id,
+             mi.hp,
+             mi.max_hp,
+             mi.state,
+             mi.spawn_id        AS "spawnId",
+             s."monsterKey"     AS "monsterKey"
+        FROM monster_instances mi
+        JOIN spawns s ON s.id = mi.spawn_id
+       WHERE mi.id = $1
+    `, [mi.id]);
+
+    if (cur) {
+      // Evento de HP/dano (faz barra descer e mostra floater)
+      broadcast({
+        type: 'monster_hp',
+        id: String(cur.id),
+        hp: Number(cur.hp),
+        maxHp: Number(cur.max_hp || cur.hp || 1),
+        dmg: Number(DMG),
+        monsterKey: cur.monsterKey,
+        spawnId: Number(cur.spawnId)
+      });
+
+      // Se morreu, também notifica
+      if (String(cur.state) === 'DEAD' || Number(cur.hp) <= 0) {
+        const xp = 0; // se quiser, calcule XP real aqui
+        broadcast({ type: 'monster_dead', id: String(cur.id), xp });
+      }
     }
 
     return res.json({ ok:true, id: mi.id, dmg: DMG, hp, maxHp: Number(mi.max_hp)||0, dead });

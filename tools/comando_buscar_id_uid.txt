@@ -1,0 +1,18 @@
+SELECT id, name
+FROM players
+WHERE name = 'tigasfarm';
+
+
+SELECT ph.id       AS hero_id,
+       ph."heroKey",
+       ph.name,
+       ph.level
+FROM player_heroes ph
+WHERE ph."playerId" = '<ID_DO_PLAYER_DO_PASSO_ACIMA>';
+
+
+SELECT phs.skill_type,
+       phs.level,
+       phs.tries_progress
+FROM player_hero_skills phs
+WHERE phs.hero_id = '<ID_DO_HERO>';
