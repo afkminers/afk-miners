@@ -755,6 +755,34 @@
     ]
   },
   {
+    "file": "server\\routes\\combat_nearest.js",
+    "line": 72,
+    "kind": "function",
+    "name": "pointRectDist2",
+    "params": [
+      "px0",
+      "py0",
+      "rx",
+      "ry",
+      "rw",
+      "rh"
+    ]
+  },
+  {
+    "file": "server\\routes\\combat_nearest.js",
+    "line": 79,
+    "kind": "function",
+    "name": "containsPoint",
+    "params": [
+      "px0",
+      "py0",
+      "rx",
+      "ry",
+      "rw",
+      "rh"
+    ]
+  },
+  {
     "file": "server\\routes\\catalog.js",
     "line": 8,
     "kind": "arrow",
@@ -2134,7 +2162,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 565,
+    "line": 569,
+    "kind": "function",
+    "name": "getSavedPos",
+    "params": []
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 586,
     "kind": "function",
     "name": "postPosThrottled",
     "params": [
@@ -2145,21 +2180,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 585,
+    "line": 612,
     "kind": "arrow",
     "name": "doSend",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 625,
-    "kind": "function",
-    "name": "getSavedPos",
-    "params": []
-  },
-  {
-    "file": "client\\js\\play.js",
-    "line": 643,
+    "line": 656,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -2170,7 +2198,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 661,
+    "line": 674,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -2179,7 +2207,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 671,
+    "line": 684,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -2188,14 +2216,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 694,
+    "line": 707,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 719,
+    "line": 732,
     "kind": "function",
     "name": "addMobFromSpawn",
     "params": [
@@ -2204,7 +2232,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 763,
+    "line": 776,
     "kind": "function",
     "name": "buildSpawnersFromDefs",
     "params": [
@@ -2213,7 +2241,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 779,
+    "line": 792,
     "kind": "function",
     "name": "updateRespawns",
     "params": [
@@ -2222,7 +2250,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 805,
+    "line": 818,
     "kind": "function",
     "name": "normalizeApiJson",
     "params": [
@@ -2231,7 +2259,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 840,
+    "line": 853,
     "kind": "function",
     "name": "hasSolidProp",
     "params": [
@@ -2240,14 +2268,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 873,
+    "line": 886,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 933,
+    "line": 946,
     "kind": "function",
     "name": "frame",
     "params": [
@@ -3759,6 +3787,22 @@
     "file": "client\\js\\api.js",
     "line": 13,
     "kind": "function",
+    "name": "readCookie",
+    "params": [
+      "name"
+    ]
+  },
+  {
+    "file": "client\\js\\api.js",
+    "line": 19,
+    "kind": "function",
+    "name": "currentCsrf",
+    "params": []
+  },
+  {
+    "file": "client\\js\\api.js",
+    "line": 24,
+    "kind": "function",
     "name": "readCsrfFromHeaders",
     "params": [
       "res"
@@ -3766,7 +3810,7 @@
   },
   {
     "file": "client\\js\\api.js",
-    "line": 23,
+    "line": 34,
     "kind": "function",
     "name": "getCsrf",
     "params": [
@@ -3775,27 +3819,37 @@
   },
   {
     "file": "client\\js\\api.js",
-    "line": 59,
+    "line": 69,
     "kind": "function",
     "name": "doFetch",
     "params": [
       "url",
-      "options = {}"
+      "init"
     ]
   },
   {
     "file": "client\\js\\api.js",
-    "line": 82,
+    "line": 88,
+    "kind": "function",
+    "name": "isJsonBody",
+    "params": [
+      "body"
+    ]
+  },
+  {
+    "file": "client\\js\\api.js",
+    "line": 93,
     "kind": "function",
     "name": "buildHeaders",
     "params": [
       "method",
-      "extra = {}"
+      "extra = {}",
+      "body"
     ]
   },
   {
     "file": "client\\js\\api.js",
-    "line": 105,
+    "line": 122,
     "kind": "function",
     "name": "apiRequest",
     "params": [
@@ -3807,7 +3861,7 @@
   },
   {
     "file": "client\\js\\api.js",
-    "line": 137,
+    "line": 157,
     "kind": "function",
     "name": "apiGet",
     "params": [
@@ -3817,7 +3871,7 @@
   },
   {
     "file": "client\\js\\api.js",
-    "line": 140,
+    "line": 160,
     "kind": "function",
     "name": "apiPost",
     "params": [
@@ -3828,7 +3882,7 @@
   },
   {
     "file": "client\\js\\api.js",
-    "line": 143,
+    "line": 163,
     "kind": "function",
     "name": "apiPut",
     "params": [
@@ -3839,7 +3893,7 @@
   },
   {
     "file": "client\\js\\api.js",
-    "line": 146,
+    "line": 166,
     "kind": "function",
     "name": "apiPatch",
     "params": [
@@ -3850,7 +3904,7 @@
   },
   {
     "file": "client\\js\\api.js",
-    "line": 149,
+    "line": 169,
     "kind": "function",
     "name": "apiDelete",
     "params": [
@@ -4535,21 +4589,21 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 12,
+    "line": 11,
     "kind": "function",
     "name": "pickCanvas",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 18,
+    "line": 17,
     "kind": "function",
     "name": "pickCamera",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 21,
+    "line": 18,
     "kind": "function",
     "name": "screenToWorld",
     "params": [
@@ -4560,17 +4614,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 29,
-    "kind": "function",
-    "name": "worldToScreen",
-    "params": [
-      "wx",
-      "wy"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\attack-controls.js",
-    "line": 34,
+    "line": 25,
     "kind": "function",
     "name": "getMouseWorldFromEvent",
     "params": [
@@ -4580,7 +4624,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 57,
+    "line": 33,
     "kind": "function",
     "name": "weaponForClass",
     "params": [
@@ -4589,48 +4633,38 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 64,
+    "line": 39,
     "kind": "function",
     "name": "ensureActiveHero",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 85,
-    "kind": "function",
-    "name": "setActiveHero",
-    "params": [
-      "heroId",
-      "heroClass = null"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\attack-controls.js",
-    "line": 92,
+    "line": 54,
     "kind": "function",
     "name": "resolveServerTarget",
     "params": [
-      "px",
-      "py"
+      "pxClick",
+      "pyClick"
     ]
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 108,
+    "line": 77,
     "kind": "function",
     "name": "doHit",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 148,
+    "line": 106,
     "kind": "function",
     "name": "startLoop",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 154,
+    "line": 108,
     "kind": "function",
     "name": "startAttack",
     "params": [
@@ -4639,21 +4673,21 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 183,
+    "line": 134,
     "kind": "function",
     "name": "stopAttack",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 202,
+    "line": 144,
     "kind": "function",
     "name": "attachControls",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 212,
+    "line": 152,
     "kind": "arrow",
     "name": "onPointerDown",
     "params": [

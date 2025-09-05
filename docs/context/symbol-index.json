@@ -17,7 +17,10 @@
     "symbols": [
       "API",
       "buildHeaders",
+      "currentCsrf",
       "doFetch",
+      "isJsonBody",
+      "readCookie",
       "readCsrfFromHeaders"
     ]
   },
@@ -86,10 +89,9 @@
       "pickCanvas",
       "resolveServerTarget",
       "screenToWorld",
-      "setActiveHero",
+      "startAttack",
       "startLoop",
-      "weaponForClass",
-      "worldToScreen"
+      "weaponForClass"
     ]
   },
   {
@@ -635,6 +637,13 @@
       "respawnTick",
       "startRespawnLoop",
       "stopRespawnLoop"
+    ]
+  },
+  {
+    "file": "server\\routes\\combat_nearest.js",
+    "symbols": [
+      "containsPoint",
+      "pointRectDist2"
     ]
   },
   {

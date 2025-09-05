@@ -9,7 +9,7 @@
       "get": {
         "responses": {
           "200": {
-            "description": "OK (inferred)",
+            "description": "Error 200 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -67,19 +67,64 @@
                   },
                   "weaponType": {
                     "type": "string"
+                  },
+                  "try {\n    // const { heroId": {
+                    "type": "number"
                   }
                 }
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "map",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "y",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "px",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "py",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/_routes": {
       "get": {
         "responses": {
           "200": {
-            "description": "OK (inferred)",
+            "description": "Error 200 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -137,12 +182,57 @@
                   },
                   "weaponType": {
                     "type": "string"
+                  },
+                  "try {\n    // const { heroId": {
+                    "type": "number"
                   }
                 }
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "map",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "y",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "px",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "py",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/api/admin/content/map/:key/data": {
@@ -642,16 +732,6 @@
                 }
               }
             }
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
           }
         },
         "parameters": [
@@ -673,6 +753,22 @@
           },
           {
             "name": "y",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "px",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "py",
             "in": "query",
             "required": false,
             "schema": {
@@ -870,6 +966,9 @@
                   },
                   "weaponType": {
                     "type": "string"
+                  },
+                  "try {\n    // const { heroId": {
+                    "type": "number"
                   }
                 }
               }
@@ -937,7 +1036,7 @@
                   "damage": {
                     "type": "string"
                   },
-                  "try {\n    const { heroId": {
+                  "try {\n    // const { heroId": {
                     "type": "number"
                   }
                 }
@@ -1850,6 +1949,121 @@
             }
           }
         }
+      }
+    },
+    "/nearest": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Error 200 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "damage": {
+                    "type": "string"
+                  },
+                  "try {\n    const { heroId": {
+                    "type": "number"
+                  },
+                  "targetInstanceId": {
+                    "type": "number"
+                  },
+                  "weaponType": {
+                    "type": "string"
+                  },
+                  "try {\n    // const { heroId": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "map",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "y",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "px",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "py",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/ping": {

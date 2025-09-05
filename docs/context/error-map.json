@@ -1,6 +1,22 @@
 {
   "GET /_ping": [
     {
+      "status": 200,
+      "body": "{ok:false,error:'too-far-click' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'no-monster' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'no-monster-in-radius' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'nearest-failed' }"
+    },
+    {
       "status": 400,
       "body": "{ok:false,error:'missing-params' }"
     },
@@ -17,10 +33,6 @@
       "body": "{ok:false,error:'start-failed' }"
     },
     {
-      "status": 400,
-      "body": "{ok:false,error:'missing-hero' }"
-    },
-    {
       "status": 500,
       "body": "{ok:false,error:'stop-failed' }"
     },
@@ -35,14 +47,26 @@
     {
       "status": 404,
       "body": "{ok:false,error:'no-such-alive' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'hit-failed' }"
     }
   ],
   "GET /_routes": [
     {
+      "status": 200,
+      "body": "{ok:false,error:'too-far-click' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'no-monster' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'no-monster-in-radius' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'nearest-failed' }"
+    },
+    {
       "status": 400,
       "body": "{ok:false,error:'missing-params' }"
     },
@@ -59,10 +83,6 @@
       "body": "{ok:false,error:'start-failed' }"
     },
     {
-      "status": 400,
-      "body": "{ok:false,error:'missing-hero' }"
-    },
-    {
       "status": 500,
       "body": "{ok:false,error:'stop-failed' }"
     },
@@ -77,10 +97,6 @@
     {
       "status": 404,
       "body": "{ok:false,error:'no-such-alive' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'hit-failed' }"
     }
   ],
   "GET /api/admin/content/map/:key/data": [
@@ -306,11 +322,7 @@
     },
     {
       "status": 404,
-      "body": "{error:'no-alive-near' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'nearest-failed' }"
+      "body": "{error:'no-alive' }"
     }
   ],
   "GET /api/csrf": [],
@@ -370,10 +382,6 @@
       "body": "{ok:false,error:'start-failed' }"
     },
     {
-      "status": 400,
-      "body": "{ok:false,error:'missing-hero' }"
-    },
-    {
       "status": 500,
       "body": "{ok:false,error:'stop-failed' }"
     },
@@ -395,10 +403,6 @@
     }
   ],
   "POST /attack/stop": [
-    {
-      "status": 400,
-      "body": "{ok:false,error:'missing-hero' }"
-    },
     {
       "status": 500,
       "body": "{ok:false,error:'stop-failed' }"
@@ -684,6 +688,10 @@
     },
     {
       "status": 500,
+      "body": "{error:'me-failed' }"
+    },
+    {
+      "status": 500,
       "body": "{error:'pos-read-failed' }"
     },
     {
@@ -731,6 +739,56 @@
     {
       "status": 400,
       "body": "{error:'too-fast' }"
+    }
+  ],
+  "GET /nearest": [
+    {
+      "status": 200,
+      "body": "{ok:false,error:'too-far-click' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'no-monster' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'no-monster-in-radius' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'nearest-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-params' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'mob-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'hero-pos-missing' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'start-failed' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'stop-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-id' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'bad-id' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'no-such-alive' }"
     }
   ],
   "GET /ping": [

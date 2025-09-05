@@ -26,11 +26,11 @@
     "occurrences": [
       {
         "file": "server\\routes\\combat_nearest.js",
-        "index": 165
+        "index": 177
       },
       {
         "file": "server\\combat\\routes.js",
-        "index": 599
+        "index": 737
       },
       {
         "file": "server\\combat\\autoloop.js",
@@ -38,6 +38,7 @@
       }
     ],
     "defaults": [
+      "",
       "",
       ""
     ]

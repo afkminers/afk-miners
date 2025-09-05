@@ -2,21 +2,21 @@
   "GET /_ping": [
     "{ok:true,ts:Date.now() }",
     "{routes:list }",
+    "{ok:true,id:String(row.id),x:mx,y:my,hp:Number(row.hp),maxHp:Number(row.max_hp),monsterKey:row.monsterKey }",
     "{ok:false,error:'map-diff' }",
     "{ok:false,error:'out_of_range' }",
     "{ok:false,error:'no_los' }",
     "{ok:true }",
-    "{ok:true }",
-    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
+    "{ok:true }"
   ],
   "GET /_routes": [
     "{routes:list }",
+    "{ok:true,id:String(row.id),x:mx,y:my,hp:Number(row.hp),maxHp:Number(row.max_hp),monsterKey:row.monsterKey }",
     "{ok:false,error:'map-diff' }",
     "{ok:false,error:'out_of_range' }",
     "{ok:false,error:'no_los' }",
     "{ok:true }",
-    "{ok:true }",
-    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
+    "{ok:true }"
   ],
   "GET /api/admin/content/map/:key/data": [
     "{ok:true,reloaded:mapKey }"
@@ -62,11 +62,11 @@
     "{ok:false,error:'no_los' }",
     "{ok:true }",
     "{ok:true }",
-    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
+    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp)||0,dead }"
   ],
   "POST /attack/stop": [
     "{ok:true }",
-    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
+    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp)||0,dead }"
   ],
   "GET /class-rates": [],
   "POST /collect": [
@@ -91,7 +91,7 @@
   ],
   "GET /heroes/master": [],
   "POST /hit": [
-    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp) || 0,dead,}"
+    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp)||0,dead }"
   ],
   "GET /list": [
     "{canSelect:!row }",
@@ -111,6 +111,14 @@
   ],
   "POST /move": [
     "{ok:true,x,y,seq }"
+  ],
+  "GET /nearest": [
+    "{ok:true,id:String(row.id),x:mx,y:my,hp:Number(row.hp),maxHp:Number(row.max_hp),monsterKey:row.monsterKey }",
+    "{ok:false,error:'map-diff' }",
+    "{ok:false,error:'out_of_range' }",
+    "{ok:false,error:'no_los' }",
+    "{ok:true }",
+    "{ok:true }"
   ],
   "GET /ping": [
     "{ok:true,ts:Date.now() }",
