@@ -93,6 +93,7 @@ async function respawnTick({ all, run }) {
         id: r.id,
         mapKey: r.map_key,
         monsterKey: r.monsterKey,
+        spawnId: r.spawn_id,      // <-- opcional
         hp: hpFull,
         maxHp: hpFull,
         x: pos.x,

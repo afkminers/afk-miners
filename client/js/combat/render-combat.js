@@ -10,6 +10,17 @@ const state = {
   selectedTargetId: null,
 };
 
+// ===== Rebind helper/estado (NOVO) =====
+const unbound = new Set(); // ids que ainda não têm sprite vinculada
+
+function ensureSpriteBind(id, key, spawnId) {
+  let s = getSpriteFor(id);
+  if (s) return s;
+  if (spawnId != null) s = bindBySpawn(id, spawnId);
+  if (!s && key) s = bindByKey(id, key);
+  return s || null;
+}
+
 function wsUrl() {
   const loc = window.location;
   const proto = loc.protocol === 'https:' ? 'wss' : 'ws';
@@ -78,16 +89,12 @@ function onWsMessage(e) {
     state.monsters.set(id, m);
 
     // (re)vincula sprite se necessário
-    let s = getSpriteFor(id);
-    if (!s) {
-      s = (spawnId != null) ? bindBySpawn(id, spawnId) : bindByKey(id, key);
-    }
+    const s = ensureSpriteBind(id, key, spawnId);
     if (s) {
-      // garantia: sprite viva
-      s.dead = false;
-      s.hidden = false;
-      s._animFrozen = false;
-      s._animFrozenFrame = 0;
+      s.dead = false; s.hidden = false; s._animFrozen = false; s._animFrozenFrame = 0;
+      unbound.delete(id);
+    } else {
+      unbound.add(id);
     }
 
   } else if (msg.type === 'monster_hp') {
@@ -101,7 +108,9 @@ function onWsMessage(e) {
     state.monsters.set(id, m);
 
     // floater de dano ancorado na sprite correta
-    const s = getSpriteFor(id);
+    const s = getSpriteFor(id) || ensureSpriteBind(id, m.key, m.spawnId);
+    if (!s) unbound.add(id);
+
     const dmg = (typeof msg.dmg === 'number')
       ? msg.dmg
       : (prevHp != null ? Math.max(0, prevHp - m.hp) : 0);
@@ -123,7 +132,7 @@ function onWsMessage(e) {
     }
 
     // remove do overlay p/ não sobrar barra
-    setTimeout(() => state.monsters.delete(id), 0);
+    setTimeout(() => { state.monsters.delete(id); unbound.delete(id); }, 0);
   }
 }
 
@@ -135,6 +144,24 @@ function connectCombatWS() {
   ws.onclose = () => setTimeout(connectCombatWS, 1500);
   ws.onerror  = (e) => console.warn('[combat] ws error', e);
   ws.onmessage = onWsMessage;
+}
+
+// ===== Rebind loop (NOVO) =====
+let rebindTimer = null;
+function startRebindLoop() {
+  if (rebindTimer) return;
+  rebindTimer = setInterval(() => {
+    if (!unbound.size) return;
+    for (const id of Array.from(unbound)) {
+      const m = state.monsters.get(id);
+      if (!m || m.hp <= 0) { unbound.delete(id); continue; }
+      const s = ensureSpriteBind(m.id, m.key, m.spawnId);
+      if (s) {
+        s.dead = false; s.hidden = false; s._animFrozen = false; s._animFrozenFrame = 0;
+        unbound.delete(id);
+      }
+    }
+  }, 300);
 }
 
 // --------------- Draw helpers (sempre na posição da sprite vinculada) ---------------
@@ -159,7 +186,7 @@ function drawHpBarAtSprite(ctx, sprite, hp, maxHp) {
   // barra (vermelha)
   const pct = Math.max(0, Math.min(1, (maxHp > 0 ? hp / maxHp : 0)));
   const wHp = Math.round(w * pct);
-  ctx.fillStyle = '#d33';
+  ctx.fillStyle = 'rgba(51, 246, 22, 1)';
   ctx.fillRect(x, y, wHp, h);
 
   // borda
@@ -191,6 +218,15 @@ function drawTargetBox(ctx) {
 // --------------- Install API ---------------
 export default function installCombatOverlay() {
   connectCombatWS();
+  startRebindLoop(); // NOVO
+
+  // opcional: se a GameScene emitir quando terminar de montar sprites, re-tenta bind na hora
+  window.addEventListener('gamescene:ready', () => {
+    for (const m of state.monsters.values()) {
+      const s = ensureSpriteBind(m.id, m.key, m.spawnId);
+      if (s) unbound.delete(m.id); else unbound.add(m.id);
+    }
+  });
 
   // manter selectedTargetId em dia (caso seu startAttack/stop disparem eventos)
   window.addEventListener('combat:attack:start', () => {
@@ -204,8 +240,9 @@ export default function installCombatOverlay() {
         // desenha HP somente se houver sprite vinculada e o bicho estiver vivo
         for (const m of state.monsters.values()) {
           if (m.hp <= 0) continue;
-          const s = getSpriteFor(m.id);
-          if (s) drawHpBarAtSprite(ctx, s, m.hp, m.maxHp);
+          const s = ensureSpriteBind(m.id, m.key, m.spawnId); // usa o helper
+          if (!s) { unbound.add(m.id); continue; }           // agenda rebind
+          drawHpBarAtSprite(ctx, s, m.hp, m.maxHp);
         }
         drawTargetBox(ctx);
       };

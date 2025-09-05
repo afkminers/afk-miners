@@ -940,6 +940,9 @@ function updateRespawns(now) {
 
   // sinaliza que a cena está pronta (outros módulos podem iniciar)
   window.dispatchEvent(new CustomEvent('game:ready', { detail: { canvas, ctx, camera, controller } }));
+  // >>> avisa o overlay de combate para re-vincular barras imediatamente <<<
+  window.dispatchEvent(new Event('gamescene:ready'));
+
 
   // Loop principal
   let last = performance.now();
