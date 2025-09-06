@@ -386,6 +386,7 @@
       "autodetect",
       "clampNum",
       "emit",
+      "get",
       "getState",
       "load",
       "save",

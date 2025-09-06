@@ -1752,7 +1752,7 @@
   },
   {
     "file": "client\\js\\settings.js",
-    "line": 12,
+    "line": 7,
     "kind": "function",
     "name": "clampNum",
     "params": [
@@ -1763,28 +1763,28 @@
   },
   {
     "file": "client\\js\\settings.js",
-    "line": 18,
+    "line": 30,
     "kind": "function",
     "name": "load",
     "params": []
   },
   {
     "file": "client\\js\\settings.js",
-    "line": 35,
+    "line": 56,
     "kind": "function",
     "name": "save",
     "params": []
   },
   {
     "file": "client\\js\\settings.js",
-    "line": 39,
+    "line": 60,
     "kind": "function",
     "name": "emit",
     "params": []
   },
   {
     "file": "client\\js\\settings.js",
-    "line": 45,
+    "line": 66,
     "kind": "function",
     "name": "set",
     "params": [
@@ -1793,14 +1793,23 @@
   },
   {
     "file": "client\\js\\settings.js",
-    "line": 56,
+    "line": 87,
     "kind": "function",
     "name": "getState",
     "params": []
   },
   {
     "file": "client\\js\\settings.js",
-    "line": 58,
+    "line": 88,
+    "kind": "function",
+    "name": "get",
+    "params": [
+      "k"
+    ]
+  },
+  {
+    "file": "client\\js\\settings.js",
+    "line": 91,
     "kind": "function",
     "name": "autodetect",
     "params": []
@@ -2028,14 +2037,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 178,
+    "line": 183,
     "kind": "function",
     "name": "resize",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 197,
+    "line": 207,
     "kind": "function",
     "name": "loadImg",
     "params": [
@@ -2044,7 +2053,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 205,
+    "line": 215,
     "kind": "function",
     "name": "imgReady",
     "params": [
@@ -2053,7 +2062,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 207,
+    "line": 217,
     "kind": "function",
     "name": "ensureImgLoaded",
     "params": [
@@ -2062,7 +2071,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 216,
+    "line": 226,
     "kind": "function",
     "name": "normKey",
     "params": [
@@ -2071,7 +2080,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 226,
+    "line": 236,
     "kind": "function",
     "name": "indexSpriteMeta",
     "params": [
@@ -2080,7 +2089,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 243,
+    "line": 253,
     "kind": "function",
     "name": "asObj",
     "params": [
@@ -2089,14 +2098,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 252,
+    "line": 261,
     "kind": "function",
     "name": "loadSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 262,
+    "line": 269,
     "kind": "function",
     "name": "findMetaFor",
     "params": [
@@ -2105,7 +2114,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 282,
+    "line": 289,
     "kind": "function",
     "name": "buildMonsterCandidates",
     "params": [
@@ -2116,7 +2125,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 312,
+    "line": 319,
     "kind": "function",
     "name": "loadMonsterImg",
     "params": [
@@ -2127,7 +2136,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 324,
+    "line": 331,
     "kind": "function",
     "name": "inferMetaFromImage",
     "params": [
@@ -2137,14 +2146,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 390,
+    "line": 397,
     "kind": "function",
     "name": "clear",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 392,
+    "line": 399,
     "kind": "function",
     "name": "drawGround",
     "params": [
@@ -2153,7 +2162,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 418,
+    "line": 425,
     "kind": "function",
     "name": "drawPlayer",
     "params": [
@@ -2162,7 +2171,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 432,
+    "line": 439,
     "kind": "function",
     "name": "drawMob",
     "params": [
@@ -2171,14 +2180,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 582,
+    "line": 589,
     "kind": "function",
     "name": "getSavedPos",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 599,
+    "line": 606,
     "kind": "function",
     "name": "postPosThrottled",
     "params": [
@@ -2189,14 +2198,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 625,
+    "line": 632,
     "kind": "arrow",
     "name": "doSend",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 669,
+    "line": 676,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -2207,7 +2216,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 687,
+    "line": 694,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -2216,7 +2225,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 697,
+    "line": 704,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -2225,14 +2234,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 720,
+    "line": 727,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 745,
+    "line": 752,
     "kind": "function",
     "name": "addMobFromSpawn",
     "params": [
@@ -2241,7 +2250,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 797,
+    "line": 803,
     "kind": "function",
     "name": "buildSpawnersFromDefs",
     "params": [
@@ -2250,7 +2259,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 813,
+    "line": 819,
     "kind": "function",
     "name": "updateRespawns",
     "params": [
@@ -2259,7 +2268,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 839,
+    "line": 844,
     "kind": "function",
     "name": "normalizeApiJson",
     "params": [
@@ -2268,7 +2277,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 874,
+    "line": 879,
     "kind": "function",
     "name": "hasSolidProp",
     "params": [
@@ -2277,19 +2286,26 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 907,
+    "line": 921,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 970,
+    "line": 999,
     "kind": "function",
     "name": "frame",
     "params": [
       "now"
     ]
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 1086,
+    "kind": "function",
+    "name": "applyCameraZoom",
+    "params": []
   },
   {
     "file": "client\\js\\login_fx.js",

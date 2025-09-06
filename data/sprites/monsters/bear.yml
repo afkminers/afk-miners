@@ -5,16 +5,17 @@ image: "sprites/monsters/bear.png"
 
 frame:
   width: 48
-  height: 32
+  height: 48
   margin: 0
   spacing: 0
+  bleedFix: 0.25 # ajuda a evitar “vazar” pixel do próximo frame
 
-# a imagem é 288x384 → 6 colunas de 48 e 12 linhas de 32
+# A imagem final deve ser 288x624 → 6 colunas de 48 e 13 linhas de 48
 grid:
   cols: 6
-  rows: 12
+  rows: 10
 
-# pivô central (32×32 dentro do 48×32 → 24,16 → 0.5/0.5)
+# pivô um pouco abaixo do centro para “assentar” no chão
 anchor:
   x: 0.5
   y: 0.5
@@ -28,15 +29,10 @@ anims:
     startCol: 0
     loop: true
 
-  # 1..4 — walk (south/west/east com 5; north com 4)
+  # 1..4 — walk (direções em linhas 1 a 4)
   walk:
     fps: 8
     frames: 5
-    framesByDir:
-      south: 5
-      west: 5
-      east: 5
-      north: 4
     rowByDir:
       south: 1
       west: 2
@@ -45,15 +41,15 @@ anims:
     startCol: 0
     loop: true
 
-  # 5 — dead (3 frames)
+  # 12 — dead (3 frames)  ← use a linha correta se for outra
   dead:
     fps: 8
     frames: 3
-    row: 5
+    row: 12
     startCol: 0
     loop: false
 
-  # 6..9 — attack (2 frames por direção — ajuste se o teu sheet tiver outro nº)
+  # 6..9 — attack (2 frames por direção)
   attack:
     fps: 10
     frames: 2
