@@ -3,7 +3,7 @@
     "method": "GET",
     "path": "/_ping",
     "file": "server\\combat\\routes.js",
-    "line": 27,
+    "line": 28,
     "sample": {
       "query": {
         "map": "value",
@@ -109,7 +109,7 @@
     "method": "GET",
     "path": "/_routes",
     "file": "server\\combat\\routes.js",
-    "line": 28,
+    "line": 29,
     "sample": {
       "query": {
         "map": "value",
@@ -709,7 +709,7 @@
     "method": "POST",
     "path": "/attack/start",
     "file": "server\\combat\\routes.js",
-    "line": 101,
+    "line": 102,
     "sample": {
       "body": {
         "damage": "value",
@@ -788,7 +788,7 @@
     "method": "POST",
     "path": "/attack/stop",
     "file": "server\\combat\\routes.js",
-    "line": 133,
+    "line": 134,
     "sample": {
       "body": {
         "damage": "value",
@@ -1144,7 +1144,7 @@
     "method": "POST",
     "path": "/hit",
     "file": "server\\combat\\routes.js",
-    "line": 147,
+    "line": 148,
     "sample": {
       "body": {
         "damage": "value"
@@ -1464,7 +1464,7 @@
     "method": "GET",
     "path": "/nearest",
     "file": "server\\combat\\routes.js",
-    "line": 39,
+    "line": 40,
     "sample": {
       "query": {
         "map": "value",

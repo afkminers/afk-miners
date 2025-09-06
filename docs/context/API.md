@@ -34,7 +34,7 @@ _Sem payload inferido_
 
 ### GET /_ping
 
-Arquivo: `server\combat\routes.js:27`
+Arquivo: `server\combat\routes.js:28`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -79,7 +79,7 @@ Arquivo: `server\combat\routes.js:27`
 
 ### GET /_routes
 
-Arquivo: `server\combat\routes.js:28`
+Arquivo: `server\combat\routes.js:29`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -520,7 +520,7 @@ Arquivo: `server\skills\routes.js:48`
 
 ### GET /nearest
 
-Arquivo: `server\combat\routes.js:39`
+Arquivo: `server\combat\routes.js:40`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -780,7 +780,7 @@ Arquivo: `server\routes\afk.js:65`
 
 ### POST /attack/start
 
-Arquivo: `server\combat\routes.js:101`
+Arquivo: `server\combat\routes.js:102`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -812,7 +812,7 @@ Arquivo: `server\combat\routes.js:101`
 
 ### POST /attack/stop
 
-Arquivo: `server\combat\routes.js:133`
+Arquivo: `server\combat\routes.js:134`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -954,7 +954,7 @@ Arquivo: `server\routes\farm.js:181`
 
 ### POST /hit
 
-Arquivo: `server\combat\routes.js:147`
+Arquivo: `server\combat\routes.js:148`
 
 **Payloads (exemplos inferidos):**
 - body:

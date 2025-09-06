@@ -240,11 +240,24 @@ function indexSpriteMeta(obj) {
   }
 }
 
+function asObj(v) {
+  if (!v) return null;
+  if (typeof v === 'string') {
+    try { return JSON.parse(v); } catch { return null; }
+  }
+  return v;
+}
+
+
 async function loadSpriteMeta() {
   const list = await apiGet('/api/assets/sprites'); // [{ key, kind, data }]
-  SPRITES_META = Object.fromEntries(list.map(e => [e.key, e.data]));
+  SPRITES_META = Object.fromEntries(
+    (list || []).map(e => [e.key, asObj(e.data)])
+  );
   indexSpriteMeta(SPRITES_META);
 }
+
+
 
 function findMetaFor(spawnKey) {
   const k = String(spawnKey || '').trim();
@@ -732,7 +745,9 @@ async function resolvePlayerSprite() {
 function addMobFromSpawn(spDef) {
   const rawKey = spDef.monsterKey || spDef.monster || "goblin";
   const kindNorm = normKey(rawKey);
-  const meta = findMetaFor(rawKey) || null;
+
+  // <<< AQUI: meta sempre como OBJETO (se vier string, fazemos JSON.parse)
+  const meta = asObj(findMetaFor(rawKey)) || null;
 
   const m = {
     id: mobAutoId++,
@@ -740,13 +755,15 @@ function addMobFromSpawn(spDef) {
     rawKey,
     x: (spDef.x || 0) + Math.random() * (spDef.w || TILE),
     y: (spDef.y || 0) + Math.random() * (spDef.h || TILE),
-    w: 32, h: 32,
+    w: 32, h: 32,                              // tamanho visual padrão; o draw usa meta.frame.*
     speed: 40 + Math.random() * 20,
     dirX: 0, dirY: 0, changeAt: 0,
     face: 'east',
     img: null,
-    meta,
-    bound: (spDef.w || spDef.h) ? { x: spDef.x || 0, y: spDef.y || 0, w: spDef.w || TILE, h: spDef.h || TILE } : null,
+    meta,                                      // meta já parseado
+    bound: (spDef.w || spDef.h)
+      ? { x: spDef.x || 0, y: spDef.y || 0, w: spDef.w || TILE, h: spDef.h || TILE }
+      : null,
     spawnId: Number(spDef.id || spDef.spawn_id || spDef.spawnId || 0) || null,
     instanceId: null,
     dead: false,
@@ -755,9 +772,12 @@ function addMobFromSpawn(spDef) {
     _animFrozenFrame: 0,
   };
 
+  // carrega a imagem usando o meta (que pode ter .image correto do YAML)
   loadMonsterImg(kindNorm, meta, rawKey).then(img => {
     if (!img) return;
     m.img = img;
+
+    // Só infere automaticamente se NÃO veio meta válido do YAML
     if (!m.meta || !m.meta.frame || !m.meta.grid) {
       const auto = inferMetaFromImage(img, rawKey);
       if (auto) m.meta = auto;
@@ -772,6 +792,7 @@ function addMobFromSpawn(spDef) {
 
   return m.id;
 }
+
 
 function buildSpawnersFromDefs(defs) {
   spawners.length = 0;

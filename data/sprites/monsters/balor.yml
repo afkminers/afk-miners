@@ -1,0 +1,77 @@
+# data/sprites/monsters/balor.yml
+key: balor
+kind: monster
+image: "sprites/monsters/balor.png"
+
+frame:
+  width: 64
+  height: 64
+  margin: 0
+  spacing: 0
+  bleedFix: 0.25 # ajuda a evitar “vazar” pixels do quadro vizinho
+
+# AJUSTE estes valores ao seu PNG:
+# cols = largura_total_da_imagem / frame.width
+# rows = altura_total_da_imagem  / frame.height
+grid:
+  cols: 5 # precisa de pelo menos 5 por causa do walk south (5 frames)
+  rows: 10 # linhas 0..9
+
+anchor:
+  x: 0.0
+  y: 0.0
+
+anims:
+  # 0 — idle (4 frames)
+  idle:
+    fps: 6
+    row: 0
+    frames: 4
+    startCol: 0
+    # se tiver colunas vazias à direita, fixe a sequência:
+    seq: [ 0, 1, 2, 3 ]
+    loop: true
+
+  # 1..4 — walk (south 5; west/east/north 4)
+  walk:
+    fps: 8
+    startCol: 0
+    frames: 4 # default; vamos especializar por direção
+    rowByDir:
+      south: 1
+      west: 2
+      east: 3
+      north: 4
+    # garante que só percorra as colunas ocupadas em cada linha
+    seqByDir:
+      south: [ 0, 1, 2, 3, 4 ] # 5 frames
+      west: [ 0, 1, 2, 3 ]
+      east: [ 0, 1, 2, 3 ]
+      north: [ 0, 1, 2, 3 ]
+    loop: true
+
+  # 5 — dead (4 frames)
+  dead:
+    fps: 8
+    row: 5
+    frames: 4
+    startCol: 0
+    seq: [ 0, 1, 2, 3 ]
+    loop: false
+
+  # 6..9 — attack (4 frames por direção)
+  attack:
+    fps: 10
+    frames: 4
+    startCol: 0
+    rowByDir:
+      south: 6
+      west: 7
+      east: 8
+      north: 9
+    seqByDir:
+      south: [ 0, 1, 2, 3 ]
+      west: [ 0, 1, 2, 3 ]
+      east: [ 0, 1, 2, 3 ]
+      north: [ 0, 1, 2, 3 ]
+    loop: false

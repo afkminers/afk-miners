@@ -4579,7 +4579,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 239,
+    "line": 241,
     "kind": "arrow",
     "name": "drawAll",
     "params": []
