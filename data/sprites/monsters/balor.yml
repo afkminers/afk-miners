@@ -4,8 +4,8 @@ kind: monster
 image: "sprites/monsters/balor.png"
 
 frame:
-  width: 64
-  height: 64
+  width: 66
+  height: 66
   margin: 0
   spacing: 0
   bleedFix: 0.25 # ajuda a evitar “vazar” pixels do quadro vizinho
