@@ -162,19 +162,24 @@ async function loadTilesetImage(rawPath) {
   return null;
 }
 
-/* ============================= Settings (patch mínimo) ============================= */
-function applySmoothing(){
+/* ============================= Settings (pixel art global) ============================= */
+function applySmoothing() {
   try {
+    // suavização off
     ctx.imageSmoothingEnabled = false;
     ctx.mozImageSmoothingEnabled = false;
     ctx.webkitImageSmoothingEnabled = false;
   } catch {}
+  try {
+    // CSS: pixelado nativo pra todos
+    canvas.style.imageRendering = 'pixelated';       // Chrome/Firefox
+    canvas.style.setProperty('image-rendering', 'pixelated');
+  } catch {}
 }
-
 applySmoothing();
 document.addEventListener('settings:changed', () => { applySmoothing(); resize(); });
 
-/* ============================= Resize ============================= */
+/* ============================= Resize + Zoom por tiles ============================= */
 function resize() {
   const shell = document.querySelector('#clientShell') || canvas.parentElement;
   const rect = shell ? shell.getBoundingClientRect() : { width: window.innerWidth * 0.9, height: window.innerHeight * 0.9 };
@@ -183,12 +188,17 @@ function resize() {
   const st = (window.GameSettings?.get?.() || window.GameSettings?.getState?.()) || {};
   const dprBase = window.devicePixelRatio || 1;
   const dpr = Math.min(dprBase, Number(st.dprCap || dprBase));
+
+  // tamanho CSS (aparência) + tamanho real (resolução)
   canvas.style.width = wCSS + 'px';
   canvas.style.height = hCSS + 'px';
   const w = Math.round(wCSS * dpr);
   const h = Math.round(hCSS * dpr);
   if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
   if (camera?.resize) camera.resize(canvas.width, canvas.height);
+
+  // recalcula zoom baseado na altura do canvas e tiles visíveis
+  applyCameraZoom();
 }
 window.addEventListener('resize', resize);
 
@@ -248,7 +258,6 @@ function asObj(v) {
   return v;
 }
 
-
 async function loadSpriteMeta() {
   const list = await apiGet('/api/assets/sprites'); // [{ key, kind, data }]
   SPRITES_META = Object.fromEntries(
@@ -256,8 +265,6 @@ async function loadSpriteMeta() {
   );
   indexSpriteMeta(SPRITES_META);
 }
-
-
 
 function findMetaFor(spawnKey) {
   const k = String(spawnKey || '').trim();
@@ -291,7 +298,7 @@ function buildMonsterCandidates(kindNorm, meta, rawKey) {
 
   // 2) Fallbacks: gera variações de nome
   const vKebab = String(kindNorm || '').trim();                 // ex: cave-rat
-  const vRaw = String(rawKey || '').trim();                   // ex: cave_rat
+  const vRaw = String(rawKey || '').trim();                     // ex: cave_rat
   const vUnder = vRaw.toLowerCase().replace(/[\s\-]+/g, '_');   // ex: cave_rat
   const vKebabFromRaw = vRaw.toLowerCase().replace(/[\s_]+/g, '-'); // ex: cave-rat
 
@@ -610,7 +617,7 @@ async function postPosThrottled(mapKey, x, y) {
     } catch { /* segue mesmo assim */ }
   }
 
-  // sem flooding: servidor aceita ~12 vezes por 5s → ~1 a cada 416ms
+  // sem flooding: servidor aceita ~12 vezes por 5s → ~1 a cada ~500ms
   const now = performance.now();
   if ((now - lastPostAt) < 500) return;
 
@@ -793,7 +800,6 @@ function addMobFromSpawn(spDef) {
   return m.id;
 }
 
-
 function buildSpawnersFromDefs(defs) {
   spawners.length = 0;
   defs.forEach(d => {
@@ -830,8 +836,7 @@ function updateRespawns(now) {
 
   await loadSpriteMeta();
 
-  resize();
-
+  // cria a câmera
   const maps = await apiGet("/api/admin/content/maps");
   if (!maps.some((m) => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
 
@@ -890,6 +895,7 @@ function updateRespawns(now) {
     worldHeight: worldH
   });
 
+  // Polyfills úteis na câmera
   if (typeof camera.getZoom !== 'function') camera.getZoom = () => (camera.zoom && Number(camera.zoom)) || 1;
   if (typeof camera.setZoom !== 'function') camera.setZoom = (z) => { camera.zoom = Number(z) || 1; };
   if (typeof camera.screenToWorld !== 'function') camera.screenToWorld = (sx, sy) => {
@@ -901,15 +907,40 @@ function updateRespawns(now) {
     return { x: (wx - camera.x) * z, y: (wy - camera.y) * z };
   };
   if (typeof camera.apply !== 'function') {
-    camera.apply = (ctx, draw) => { ctx.save(); ctx.translate(-camera.x, -camera.y); draw(); ctx.restore(); };
+    // IMPORTANTE: aplica translate depois scale para obter (p - cam) * z (pixel art real)
+    camera.apply = (ctx, draw) => {
+      ctx.save();
+      const z = (typeof camera.getZoom === 'function') ? Number(camera.getZoom()) || 1 : 1;
+      ctx.translate(-camera.x, -camera.y);
+      ctx.scale(z, z);
+      draw();
+      ctx.restore();
+    };
   }
 
   function applyCameraZoom() {
-    const st = (window.GameSettings?.getState && window.GameSettings.getState()) || { zoom: 1 };
-    if (typeof camera.setZoom === 'function') camera.setZoom(Number(st.zoom || 1));
+    const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
+
+    // Zoom por quantidade de tiles na altura da tela (estilo Tibia)
+    if (st.zoomByTiles) {
+      const tilesY = Math.max(6, Number(st.tilesY || 13)); // 13 ≈ Tibia clássico
+      const zRaw = canvas.height / (tilesY * TILE);
+      const zMin = Number.isFinite(st.zoomMin) ? st.zoomMin : 0.5;
+      const zMax = Number.isFinite(st.zoomMax) ? st.zoomMax : 4;
+      const zClamped = Math.max(zMin, Math.min(zMax, zRaw));
+      if (typeof camera.setZoom === 'function') camera.setZoom(zClamped);
+    } else {
+      // Modo antigo: zoom numérico direto
+      const zRaw = Number(st.zoom || 1);
+      const zMin = Number.isFinite(st.zoomMin) ? st.zoomMin : 0.5;
+      const zMax = Number.isFinite(st.zoomMax) ? st.zoomMax : 4;
+      const zClamped = Math.max(zMin, Math.min(zMax, zRaw));
+      if (typeof camera.setZoom === 'function') camera.setZoom(zClamped);
+    }
   }
-  applyCameraZoom();
-  document.addEventListener('settings:changed', () => { applyCameraZoom(); resize(); });
+
+  // recalcula tamanho do canvas e zoom já no boot
+  resize();
 
   const controller = new PlayerController({
     speed: 140,
@@ -929,7 +960,6 @@ function updateRespawns(now) {
 
   // Input
   Input.attach(window, canvas);
-  resize();
 
   // Posição inicial
   const saved = await getSavedPos();
@@ -963,7 +993,6 @@ function updateRespawns(now) {
   window.dispatchEvent(new CustomEvent('game:ready', { detail: { canvas, ctx, camera, controller } }));
   // >>> avisa o overlay de combate para re-vincular barras imediatamente <<<
   window.dispatchEvent(new Event('gamescene:ready'));
-
 
   // Loop principal
   let last = performance.now();
@@ -1043,7 +1072,32 @@ function updateRespawns(now) {
   }
 
   requestAnimationFrame(frame);
+
+  // listeners finais (settings/resize já ligados no topo)
+  document.addEventListener('settings:changed', () => { resize(); });
 })().catch((err) => {
   console.error(err);
   if (hud) hud.textContent = "Erro: " + err.message;
 });
+
+/* ============================ util local ============================ */
+// Aplica zoom por tiles sempre que o canvas mudar de tamanho.
+// (Definição repetida aqui para o resize() do topo poder chamá-la)
+function applyCameraZoom() {
+  if (!camera) return;
+  const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
+  if (st.zoomByTiles) {
+    const tilesY = Math.max(6, Number(st.tilesY || 13));
+    const zRaw = canvas.height / (tilesY * TILE);
+    const zMin = Number.isFinite(st.zoomMin) ? st.zoomMin : 0.5;
+    const zMax = Number.isFinite(st.zoomMax) ? st.zoomMax : 4;
+    const zClamped = Math.max(zMin, Math.min(zMax, zRaw));
+    camera.setZoom?.(zClamped);
+  } else {
+    const zRaw = Number(st.zoom || 1);
+    const zMin = Number.isFinite(st.zoomMin) ? st.zoomMin : 0.5;
+    const zMax = Number.isFinite(st.zoomMax) ? st.zoomMax : 4;
+    const zClamped = Math.max(zMin, Math.min(zMax, zRaw));
+    camera.setZoom?.(zClamped);
+  }
+}

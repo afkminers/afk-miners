@@ -2082,12 +2082,21 @@
     "file": "client\\js\\play.js",
     "line": 243,
     "kind": "function",
+    "name": "asObj",
+    "params": [
+      "v"
+    ]
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 252,
+    "kind": "function",
     "name": "loadSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 249,
+    "line": 262,
     "kind": "function",
     "name": "findMetaFor",
     "params": [
@@ -2096,7 +2105,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 269,
+    "line": 282,
     "kind": "function",
     "name": "buildMonsterCandidates",
     "params": [
@@ -2107,7 +2116,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 299,
+    "line": 312,
     "kind": "function",
     "name": "loadMonsterImg",
     "params": [
@@ -2118,7 +2127,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 311,
+    "line": 324,
     "kind": "function",
     "name": "inferMetaFromImage",
     "params": [
@@ -2128,14 +2137,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 377,
+    "line": 390,
     "kind": "function",
     "name": "clear",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 379,
+    "line": 392,
     "kind": "function",
     "name": "drawGround",
     "params": [
@@ -2144,7 +2153,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 405,
+    "line": 418,
     "kind": "function",
     "name": "drawPlayer",
     "params": [
@@ -2153,7 +2162,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 419,
+    "line": 432,
     "kind": "function",
     "name": "drawMob",
     "params": [
@@ -2162,14 +2171,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 569,
+    "line": 582,
     "kind": "function",
     "name": "getSavedPos",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 586,
+    "line": 599,
     "kind": "function",
     "name": "postPosThrottled",
     "params": [
@@ -2180,14 +2189,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 612,
+    "line": 625,
     "kind": "arrow",
     "name": "doSend",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 656,
+    "line": 669,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -2198,7 +2207,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 674,
+    "line": 687,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -2207,7 +2216,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 684,
+    "line": 697,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -2216,14 +2225,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 707,
+    "line": 720,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 732,
+    "line": 745,
     "kind": "function",
     "name": "addMobFromSpawn",
     "params": [
@@ -2232,7 +2241,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 776,
+    "line": 797,
     "kind": "function",
     "name": "buildSpawnersFromDefs",
     "params": [
@@ -2241,7 +2250,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 792,
+    "line": 813,
     "kind": "function",
     "name": "updateRespawns",
     "params": [
@@ -2250,7 +2259,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 818,
+    "line": 839,
     "kind": "function",
     "name": "normalizeApiJson",
     "params": [
@@ -2259,7 +2268,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 853,
+    "line": 874,
     "kind": "function",
     "name": "hasSolidProp",
     "params": [
@@ -2268,14 +2277,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 886,
+    "line": 907,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 949,
+    "line": 970,
     "kind": "function",
     "name": "frame",
     "params": [

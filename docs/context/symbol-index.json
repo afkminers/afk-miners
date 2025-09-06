@@ -319,6 +319,7 @@
       "addMobFromSpawn",
       "applyCameraZoom",
       "applySmoothing",
+      "asObj",
       "assetUrl",
       "buildCollisionGridFromObjects",
       "buildCollisionGridFromTiled",
