@@ -16,6 +16,7 @@ const gachaRoutes = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 const skillsRoutes = require('./skills/routes');
 
+
 // AFK & Farm
 const afkRoutes = require('./routes/afk');
 const farmRoutes = require('./routes/farm');
@@ -202,6 +203,11 @@ app.use('/api/skills', requireAuth, skillsRoutes);
 // AFK / Farm
 app.use('/api/afk', requireAuth, afkRoutes);
 app.use('/api/farm', requireAuth, farmRoutes);
+
+// inventário / equipment
+app.use('/api/inventory', requireAuth, require('./routes/inventory'));
+app.use('/api/equipment', requireAuth, require('./routes/equipment'));
+
 
 
 /* ========= Helpers (Treino) ========= */

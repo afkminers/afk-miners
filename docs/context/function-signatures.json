@@ -1313,6 +1313,26 @@
     "params": []
   },
   {
+    "file": "server\\combat\\routes.js",
+    "line": 48,
+    "kind": "function",
+    "name": "resolveSkillTypeOrClass",
+    "params": [
+      "{ weaponType",
+      "heroId }"
+    ]
+  },
+  {
+    "file": "server\\combat\\routes.js",
+    "line": 80,
+    "kind": "function",
+    "name": "gainSkillFromHit",
+    "params": [
+      "{ heroId",
+      "weaponType }"
+    ]
+  },
+  {
     "file": "server\\combat\\pos.js",
     "line": 5,
     "kind": "function",

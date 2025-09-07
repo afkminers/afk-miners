@@ -1,22 +1,10 @@
 {
   "GET /_ping": [
     "{ok:true,ts:Date.now() }",
-    "{routes:list }",
-    "{ok:true,id:String(row.id),x:mx,y:my,hp:Number(row.hp),maxHp:Number(row.max_hp),monsterKey:row.monsterKey }",
-    "{ok:false,error:'map-diff' }",
-    "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }",
-    "{ok:true }",
-    "{ok:true }"
+    "{routes:list }"
   ],
   "GET /_routes": [
-    "{routes:list }",
-    "{ok:true,id:String(row.id),x:mx,y:my,hp:Number(row.hp),maxHp:Number(row.max_hp),monsterKey:row.monsterKey }",
-    "{ok:false,error:'map-diff' }",
-    "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }",
-    "{ok:true }",
-    "{ok:true }"
+    "{routes:list }"
   ],
   "GET /api/admin/content/map/:key/data": [
     "{ok:true,reloaded:mapKey }"

@@ -7,46 +7,6 @@
     {
       "status": 404,
       "body": "{ok:false,error:'no-monster' }"
-    },
-    {
-      "status": 404,
-      "body": "{ok:false,error:'no-monster-in-radius' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'nearest-failed' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'missing-params' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'mob-pos-missing' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'hero-pos-missing' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'start-failed' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'stop-failed' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'missing-id' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'bad-id' }"
-    },
-    {
-      "status": 404,
-      "body": "{ok:false,error:'no-such-alive' }"
     }
   ],
   "GET /_routes": [
@@ -61,42 +21,6 @@
     {
       "status": 404,
       "body": "{ok:false,error:'no-monster-in-radius' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'nearest-failed' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'missing-params' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'mob-pos-missing' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'hero-pos-missing' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'start-failed' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'stop-failed' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'missing-id' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'bad-id' }"
-    },
-    {
-      "status": 404,
-      "body": "{ok:false,error:'no-such-alive' }"
     }
   ],
   "GET /api/admin/content/map/:key/data": [
@@ -396,10 +320,6 @@
     {
       "status": 404,
       "body": "{ok:false,error:'no-such-alive' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'hit-failed' }"
     }
   ],
   "POST /attack/stop": [

@@ -18,59 +18,12 @@
               }
             }
           },
-          "400": {
-            "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
           "404": {
             "description": "Error 404 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "damage": {
-                    "type": "string"
-                  },
-                  "try {\n    const { heroId": {
-                    "type": "number"
-                  },
-                  "targetInstanceId": {
-                    "type": "number"
-                  },
-                  "weaponType": {
-                    "type": "string"
-                  },
-                  "try {\n    // const { heroId": {
-                    "type": "number"
-                  }
                 }
               }
             }
@@ -133,59 +86,12 @@
               }
             }
           },
-          "400": {
-            "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
           "404": {
             "description": "Error 404 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "damage": {
-                    "type": "string"
-                  },
-                  "try {\n    const { heroId": {
-                    "type": "number"
-                  },
-                  "targetInstanceId": {
-                    "type": "number"
-                  },
-                  "weaponType": {
-                    "type": "string"
-                  },
-                  "try {\n    // const { heroId": {
-                    "type": "number"
-                  }
                 }
               }
             }
@@ -955,6 +861,12 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "heroId": {
+                    "type": "number"
+                  },
+                  "weaponType": {
+                    "type": "string"
+                  },
                   "damage": {
                     "type": "string"
                   },
@@ -962,12 +874,6 @@
                     "type": "number"
                   },
                   "targetInstanceId": {
-                    "type": "number"
-                  },
-                  "weaponType": {
-                    "type": "string"
-                  },
-                  "try {\n    // const { heroId": {
                     "type": "number"
                   }
                 }
@@ -1033,10 +939,16 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "heroId": {
+                    "type": "number"
+                  },
+                  "weaponType": {
+                    "type": "string"
+                  },
                   "damage": {
                     "type": "string"
                   },
-                  "try {\n    // const { heroId": {
+                  "try {\n    const { heroId": {
                     "type": "number"
                   }
                 }
@@ -1622,6 +1534,12 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "heroId": {
+                    "type": "number"
+                  },
+                  "weaponType": {
+                    "type": "string"
+                  },
                   "damage": {
                     "type": "string"
                   }
@@ -2002,19 +1920,16 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "damage": {
+                  "heroId": {
+                    "type": "number"
+                  },
+                  "weaponType": {
                     "type": "string"
                   },
                   "try {\n    const { heroId": {
                     "type": "number"
                   },
                   "targetInstanceId": {
-                    "type": "number"
-                  },
-                  "weaponType": {
-                    "type": "string"
-                  },
-                  "try {\n    // const { heroId": {
                     "type": "number"
                   }
                 }

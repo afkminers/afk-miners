@@ -519,6 +519,13 @@
     ]
   },
   {
+    "file": "server\\combat\\routes.js",
+    "symbols": [
+      "gainSkillFromHit",
+      "resolveSkillTypeOrClass"
+    ]
+  },
+  {
     "file": "server\\combat\\seed.js",
     "symbols": [
       "exists",

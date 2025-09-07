@@ -44,19 +44,52 @@ router.get('/_routes', (_req, res) => {
    Helpers de Skill
    ========================================================================== */
 
-/** Resolve skill_type a partir da arma, senão por classe do herói. */
+/** Resolve weapon_type a partir do equipamento atual do herói (slot WEAPON). */
+async function getEquippedWeaponType(heroId) {
+  const row = await get(
+    `SELECT im.weapon_type
+       FROM hero_equipment he
+       JOIN items_master im ON im.key = he.item_key
+      WHERE he.hero_id = $1 AND he.slot = 'WEAPON'`,
+    [String(heroId)]
+  );
+  return row?.weapon_type ? String(row.weapon_type).toUpperCase() : null;
+}
+
+/** Resolve o skill_type usado para ganhar skill:
+ *  1) Se veio weaponType do cliente, mapeia via weapon_skill_map.
+ *  2) Senão, tenta a arma EQUIPADA do herói (slot WEAPON) e mapeia.
+ *  3) Senão, faz fallback pela classe do herói.
+ *  4) Se nada encontrado, retorna null (não conta skill).
+ */
 async function resolveSkillTypeOrClass({ weaponType, heroId }) {
-  // 1) Se veio weaponType, usa o mapa
-  if (weaponType) {
+  // helper local: arma -> skill (via tabela)
+  async function mapWeaponToSkill(wtype) {
+    if (!wtype) return null;
     const row = await get(
-      `SELECT skill_type FROM weapon_skill_map WHERE lower(weapon_type)=lower($1) LIMIT 1`,
-      [String(weaponType)]
+      `SELECT skill_type
+         FROM weapon_skill_map
+        WHERE lower(weapon_type) = lower($1)
+        LIMIT 1`,
+      [String(wtype)]
     );
-    if (row?.skill_type) return String(row.skill_type);
+    return row?.skill_type ? String(row.skill_type).toUpperCase() : null;
   }
 
-  // 2) Tenta classe do herói
+  // 1) weaponType vindo do client
+  if (weaponType) {
+    const s = await mapWeaponToSkill(weaponType);
+    if (s) return s;
+  }
+
+  // 2) tenta a ARMA EQUIPADA do herói (slot WEAPON)
   if (heroId) {
+    // pega weapon_type da arma equipada (usa seu helper já existente)
+    const equippedWeaponType = await getEquippedWeaponType(heroId);
+    const s2 = await mapWeaponToSkill(equippedWeaponType);
+    if (s2) return s2;
+
+    // 3) fallback por CLASSE (se não houver arma equipada)
     const c = await get(
       `SELECT hm.class
          FROM player_heroes ph
@@ -66,12 +99,12 @@ async function resolveSkillTypeOrClass({ weaponType, heroId }) {
     );
     const heroClass = (c?.class || '').toUpperCase();
 
-    if (heroClass === 'RANGER') return 'DISTANCE';
-    if (heroClass === 'MAGE' || heroClass === 'WIZARD') return 'MAGIC';
-    if (heroClass === 'KNIGHT') return 'SWORD';
+    if (heroClass === 'RANGER' || heroClass === 'PALADIN') return 'DISTANCE';
+    if (heroClass === 'MAGE' || heroClass === 'WIZARD')   return 'MAGIC';
+    if (heroClass === 'KNIGHT' || heroClass === 'GUARDIAN') return 'SWORD';
   }
 
-  // 3) Não sabemos — melhor NÃO contar
+  // 4) não sabemos — não aplicar ganho (melhor do que contaminar de graça)
   return null;
 }
 
@@ -79,6 +112,7 @@ async function resolveSkillTypeOrClass({ weaponType, heroId }) {
 /** Aplica ganho de skill no banco. */
 async function gainSkillFromHit({ heroId, weaponType }) {
   const skillType = await resolveSkillTypeOrClass({ weaponType, heroId });
+  if (!skillType) return { ok: false, reason: 'no-skill-type' };
 
   await run(
     `INSERT INTO player_hero_skills (hero_id, skill_type, level, tries_progress)
@@ -365,10 +399,12 @@ router.post('/hit', express.json(), async (req, res) => {
       }
     }
 
-    // >>>>>>>>>>>> GANHO DE SKILL POR HIT (se soubermos quem é o herói) <<<<<<<<<<<<<
+    // >>>>>>>>>>>> GANHO DE SKILL POR HIT (armas equipadas) <<<<<<<<<<<<<
     if (heroIdFromSess) {
       try {
-        await gainSkillFromHit({ heroId: heroIdFromSess, weaponType: weaponTypeFromSess });
+        // tenta pelo equipamento; se não tiver, gainSkillFromHit cai no fallback por classe
+        const weaponTypeEquipped = await getEquippedWeaponType(heroIdFromSess);
+        await gainSkillFromHit({ heroId: heroIdFromSess, weaponType: weaponTypeEquipped });
       } catch (e) {
         console.warn('[combat] skill gain failed:', e?.message);
       }

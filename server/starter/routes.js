@@ -1,12 +1,11 @@
 // server/starter/routes.js
 const express = require('express');
 const { randomUUID } = require('crypto');
-const { get, all, run } = require('../models/db');
+const { get, run } = require('../models/db');
 const { requireAuth } = require('../auth/middleware');
 
+/** Checa se a coluna "heroKey" de player_heroes é gerada (ALWAYS). */
 async function isHeroKeyGenerated() {
-  // Detecta se a coluna "heroKey" é gerada (ALWAYS) no Postgres
-  // Retorna true/false
   try {
     const row = await get(`
       SELECT is_generated
@@ -25,7 +24,7 @@ function buildStarterRouter() {
   const router = express.Router();
   router.use(requireAuth);
 
-  /* ---------------- Lista de starters (pode migrar p/ BD depois) ---------------- */
+  /* ---------------- Lista de starters (mock; pode migrar p/ BD) ---------------- */
   router.get('/list', async (_req, res) => {
     try {
       const starters = [
@@ -120,7 +119,7 @@ function buildStarterRouter() {
         return res.status(400).json({ error: 'heroKey inválido' });
       }
 
-      // Stats iniciais básicos (ajuste como quiser)
+      // Stats iniciais básicos
       const baseAttack = 1;
       const baseDefense = 1;
       const baseSpeed = 1;
@@ -132,8 +131,7 @@ function buildStarterRouter() {
       const heroKeyIsGenerated = await isHeroKeyGenerated();
 
       if (heroKeyIsGenerated) {
-        // Caso "heroKey" seja GERADA (ALWAYS), NÃO podemos inserir nela.
-        // Estratégia: salvar name = heroKey curto, para a coluna gerada casar.
+        // Se "heroKey" for gerada (ALWAYS), NÃO inserir nela; usamos o name com o heroKey curto.
         await run(
           `INSERT INTO player_heroes
              (id, "playerId", name,     rarity,     attack,     defense,     speed,     level, "createdAt", "updatedAt", "isStarter")
@@ -171,7 +169,41 @@ function buildStarterRouter() {
         );
       }
 
-      // Retorno básico
+      /* ================== AUTO-ENTREGAR E EQUIPAR ARMA DO STARTER ================== */
+      // Mapa heroKey -> item inicial (precisa existir em items_master)
+      const weaponByHeroKey = {
+        lyria: 'short_bow',
+        aric:  'rusty_sword',
+        brokk: 'rusty_sword', // até ter hammer/club iniciais
+      };
+      const starterItem = weaponByHeroKey[String(heroKey).toLowerCase()] || null;
+
+      if (starterItem) {
+        try {
+          // 1) dá 1x no inventário do dono (idempotente)
+          await run(
+            `INSERT INTO player_inventories (player_id, item_key, qty)
+             VALUES ($1, $2, 1)
+             ON CONFLICT (player_id, item_key) DO NOTHING`,
+            [playerId, starterItem]
+          );
+
+          // 2) equipa no slot WEAPON desse herói (upsert)
+          await run(
+            `INSERT INTO hero_equipment (hero_id, slot, item_key)
+             VALUES ($1, 'WEAPON', $2)
+             ON CONFLICT (hero_id, slot)
+             DO UPDATE SET item_key = EXCLUDED.item_key, updated_at = now()`,
+            [id, starterItem]
+          );
+        } catch (e) {
+          // não quebra o fluxo se inventário/equip falhar
+          console.warn('[starter] auto-equip weapon falhou:', e?.message);
+        }
+      }
+      /* ============================================================================ */
+
+      // Retorno
       res.json({ ok: true, id, heroKey });
     } catch (err) {
       // Duplicado (já escolheu starter) ou conflito de unique
@@ -180,7 +212,9 @@ function buildStarterRouter() {
         return res.status(400).json({ error: 'starter já escolhido' });
       }
       if (msg.includes('generated column') || msg.includes('428c9')) {
-        return res.status(400).json({ error: 'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' });
+        return res.status(400).json({
+          error: 'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.'
+        });
       }
       console.error('[starter] select error:', err);
       res.status(500).json({ error: 'erro ao selecionar starter' });

@@ -30,7 +30,7 @@
       },
       {
         "file": "server\\combat\\routes.js",
-        "index": 835
+        "index": 829
       },
       {
         "file": "server\\combat\\autoloop.js",
@@ -307,6 +307,18 @@
     "defaults": [
       "process.env.COOKIE_NAME",
       "process.env.COOKIE_NAME"
+    ]
+  },
+  {
+    "key": "SKILL_TRY_PER_HIT",
+    "occurrences": [
+      {
+        "file": "server\\combat\\routes.js",
+        "index": 1141
+      }
+    ],
+    "defaults": [
+      "1"
     ]
   }
 ]

@@ -8,31 +8,46 @@ const { all, get, run } = require('./db');
  * - "heroKey": TEXT UNIQUE
  * - Campos base_* inteiros
  * - Campos extras (class, role, attack_type, element, weapon_pref)
+ * - created_at / updated_at para auditoria
  */
 async function ensureHeroesSchema() {
   // Tabela base
   await run(`
     CREATE TABLE IF NOT EXISTS heroes_master (
       id UUID PRIMARY KEY,
-      "heroKey" TEXT NOT NULL UNIQUE,
-      name TEXT NOT NULL,
-      rarity TEXT NOT NULL,
+      "heroKey"   TEXT NOT NULL UNIQUE,
+      name        TEXT NOT NULL,
+      rarity      TEXT NOT NULL,
       base_attack INTEGER NOT NULL,
       base_defense INTEGER NOT NULL,
-      base_speed INTEGER NOT NULL
+      base_speed  INTEGER NOT NULL,
+      class       TEXT NOT NULL DEFAULT '',
+      role        TEXT NOT NULL DEFAULT '',
+      attack_type TEXT NOT NULL DEFAULT '',
+      element     TEXT NOT NULL DEFAULT '',
+      weapon_pref TEXT NOT NULL DEFAULT '',
+      created_at  TIMESTAMPTZ DEFAULT now(),
+      updated_at  TIMESTAMPTZ DEFAULT now()
     )
   `);
 
-  // Colunas opcionais (se não existirem)
-  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS class TEXT DEFAULT ''`);
-  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS role TEXT DEFAULT ''`);
-  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS attack_type TEXT DEFAULT ''`);
-  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS element TEXT DEFAULT ''`);
-  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS weapon_pref TEXT DEFAULT ''`);
+  // Índices úteis
+  await run(`CREATE INDEX IF NOT EXISTS idx_heroes_master_key ON heroes_master("heroKey")`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_heroes_master_class ON heroes_master(class)`);
+
+  // Colunas opcionais (garantia defensiva caso a tabela já existisse antiga)
+  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS class TEXT NOT NULL DEFAULT ''`);
+  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT ''`);
+  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS attack_type TEXT NOT NULL DEFAULT ''`);
+  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS element TEXT NOT NULL DEFAULT ''`);
+  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS weapon_pref TEXT NOT NULL DEFAULT ''`);
+  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now()`);
+  await run(`ALTER TABLE heroes_master ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now()`);
 }
 
 /**
  * Insere seed de heróis, caso a tabela esteja vazia.
+ * Mantém o mesmo conteúdo que você já tinha, com upsert seguro.
  */
 async function seedHeroesIfEmpty() {
   const row = await get(`SELECT COUNT(*)::int AS c FROM heroes_master`);
@@ -64,10 +79,21 @@ async function seedHeroesIfEmpty() {
         INSERT INTO heroes_master
           (id, "heroKey", name, rarity,
            base_attack, base_defense, base_speed,
-           class, role, attack_type, element, weapon_pref)
+           class, role, attack_type, element, weapon_pref, created_at, updated_at)
         VALUES
-          ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-        ON CONFLICT ("heroKey") DO NOTHING
+          ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, now(), now())
+        ON CONFLICT ("heroKey") DO UPDATE
+          SET name=$3,
+              rarity=$4,
+              base_attack=$5,
+              base_defense=$6,
+              base_speed=$7,
+              class=$8,
+              role=$9,
+              attack_type=$10,
+              element=$11,
+              weapon_pref=$12,
+              updated_at=now()
         `,
         [
           randomUUID(), h.key, h.name, h.rarity,
@@ -84,4 +110,28 @@ async function seedHeroesIfEmpty() {
   }
 }
 
-module.exports = { ensureHeroesSchema, seedHeroesIfEmpty };
+/**
+ * Utilitários simples (podem ser úteis em outros pontos do projeto)
+ */
+async function getHeroByKey(heroKey) {
+  return get(`SELECT * FROM heroes_master WHERE "heroKey" = $1`, [String(heroKey)]);
+}
+
+async function getHeroClassById(heroId) {
+  // via player_heroes -> heroes_master
+  const row = await get(
+    `SELECT hm.class
+       FROM player_heroes ph
+       JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
+      WHERE ph.id = $1`,
+    [String(heroId)]
+  );
+  return row?.class || '';
+}
+
+module.exports = {
+  ensureHeroesSchema,
+  seedHeroesIfEmpty,
+  getHeroByKey,
+  getHeroClassById
+};

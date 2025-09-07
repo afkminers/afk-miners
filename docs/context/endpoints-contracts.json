@@ -3,7 +3,7 @@
     "method": "GET",
     "path": "/_ping",
     "file": "server\\combat\\routes.js",
-    "line": 28,
+    "line": 35,
     "sample": {
       "query": {
         "map": "value",
@@ -11,13 +11,6 @@
         "y": "value",
         "px": "value",
         "py": "value"
-      },
-      "body": {
-        "damage": "value",
-        "try {\n    const { heroId": 1,
-        "targetInstanceId": 1,
-        "weaponType": "value",
-        "try {\n    // const { heroId": 1
       }
     },
     "errors": [
@@ -28,46 +21,6 @@
       {
         "status": 404,
         "body": "{ok:false,error:'no-monster' }"
-      },
-      {
-        "status": 404,
-        "body": "{ok:false,error:'no-monster-in-radius' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'nearest-failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'missing-params' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'mob-pos-missing' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'hero-pos-missing' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'start-failed' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'stop-failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'missing-id' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'bad-id' }"
-      },
-      {
-        "status": 404,
-        "body": "{ok:false,error:'no-such-alive' }"
       }
     ],
     "ok": [
@@ -78,30 +31,6 @@
       {
         "status": 200,
         "body": "{routes:list }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,id:String(row.id),x:mx,y:my,hp:Number(row.hp),maxHp:Number(row.max_hp),monsterKey:row.monsterKey }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'map-diff' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'out_of_range' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no_los' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
       }
     ]
   },
@@ -109,7 +38,7 @@
     "method": "GET",
     "path": "/_routes",
     "file": "server\\combat\\routes.js",
-    "line": 29,
+    "line": 36,
     "sample": {
       "query": {
         "map": "value",
@@ -117,13 +46,6 @@
         "y": "value",
         "px": "value",
         "py": "value"
-      },
-      "body": {
-        "damage": "value",
-        "try {\n    const { heroId": 1,
-        "targetInstanceId": 1,
-        "weaponType": "value",
-        "try {\n    // const { heroId": 1
       }
     },
     "errors": [
@@ -138,72 +60,12 @@
       {
         "status": 404,
         "body": "{ok:false,error:'no-monster-in-radius' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'nearest-failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'missing-params' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'mob-pos-missing' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'hero-pos-missing' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'start-failed' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'stop-failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'missing-id' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'bad-id' }"
-      },
-      {
-        "status": 404,
-        "body": "{ok:false,error:'no-such-alive' }"
       }
     ],
     "ok": [
       {
         "status": 200,
         "body": "{routes:list }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,id:String(row.id),x:mx,y:my,hp:Number(row.hp),maxHp:Number(row.max_hp),monsterKey:row.monsterKey }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'map-diff' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'out_of_range' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no_los' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
       }
     ]
   },
@@ -709,14 +571,14 @@
     "method": "POST",
     "path": "/attack/start",
     "file": "server\\combat\\routes.js",
-    "line": 102,
+    "line": 217,
     "sample": {
       "body": {
+        "heroId": 1,
+        "weaponType": "value",
         "damage": "value",
         "try {\n    const { heroId": 1,
-        "targetInstanceId": 1,
-        "weaponType": "value",
-        "try {\n    // const { heroId": 1
+        "targetInstanceId": 1
       }
     },
     "errors": [
@@ -751,10 +613,6 @@
       {
         "status": 404,
         "body": "{ok:false,error:'no-such-alive' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'hit-failed' }"
       }
     ],
     "ok": [
@@ -788,11 +646,13 @@
     "method": "POST",
     "path": "/attack/stop",
     "file": "server\\combat\\routes.js",
-    "line": 134,
+    "line": 256,
     "sample": {
       "body": {
+        "heroId": 1,
+        "weaponType": "value",
         "damage": "value",
-        "try {\n    // const { heroId": 1
+        "try {\n    const { heroId": 1
       }
     },
     "errors": [
@@ -1144,9 +1004,11 @@
     "method": "POST",
     "path": "/hit",
     "file": "server\\combat\\routes.js",
-    "line": 148,
+    "line": 274,
     "sample": {
       "body": {
+        "heroId": 1,
+        "weaponType": "value",
         "damage": "value"
       }
     },
@@ -1464,7 +1326,7 @@
     "method": "GET",
     "path": "/nearest",
     "file": "server\\combat\\routes.js",
-    "line": 40,
+    "line": 155,
     "sample": {
       "query": {
         "map": "value",
@@ -1474,11 +1336,10 @@
         "py": "value"
       },
       "body": {
-        "damage": "value",
-        "try {\n    const { heroId": 1,
-        "targetInstanceId": 1,
+        "heroId": 1,
         "weaponType": "value",
-        "try {\n    // const { heroId": 1
+        "try {\n    const { heroId": 1,
+        "targetInstanceId": 1
       }
     },
     "errors": [
