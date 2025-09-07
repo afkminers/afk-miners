@@ -13,12 +13,19 @@ const { getHeroPos, getMonsterPos } = require('./pos');
 const { inReachPx } = require('./geom');
 const { hasLineOfSight } = require('./los');
 const { getGrid } = require('../maps/grid');
-const { broadcast } = require('../ws/bus'); // <<-- NECESSÁRIO para enviar updates em tempo real
+const { broadcast } = require('../ws/bus'); // <- necessário p/ atualizar UI em tempo real
 
 // deixe true por enquanto; quando LOS/alcance estiverem 100% a gente liga de novo
 const PERMISSIVE_START = true;
 
 const DEBUG = String(process.env.COMBAT_DEBUG || '').trim() === '1';
+
+// ===== SESSÕES DE ATAQUE EM MEMÓRIA =====
+// chave: targetInstanceId -> { heroId, weaponType, startedAt }
+const attackSessions = new Map();
+
+// quanto cada hit vale (em "tries"), antes de multiplicar pelos rates de classe
+const BASE_TRY_PER_HIT = Number(process.env.SKILL_TRY_PER_HIT || 1);
 
 router.use((req, _res, next) => {
   if (DEBUG) console.log(`[combat] ${req.method} ${req.originalUrl}`);
@@ -34,8 +41,116 @@ router.get('/_routes', (_req, res) => {
 });
 
 /* =========================================================================
-   /nearest — resolve o monstro vivo mais próximo do clique.
-   Faz "auto-escala": compara em tiles e em pixels (tiles*32) e usa a menor.
+   Helpers de Skill
+   ========================================================================== */
+
+/** Resolve skill_type a partir da arma, senão por classe do herói. */
+async function resolveSkillTypeOrClass({ weaponType, heroId }) {
+  // 1) Se veio weaponType, usa o mapa
+  if (weaponType) {
+    const row = await get(
+      `SELECT skill_type FROM weapon_skill_map WHERE lower(weapon_type)=lower($1) LIMIT 1`,
+      [String(weaponType)]
+    );
+    if (row?.skill_type) return String(row.skill_type);
+  }
+
+  // 2) Tenta classe do herói
+  if (heroId) {
+    const c = await get(
+      `SELECT hm.class
+         FROM player_heroes ph
+         JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
+        WHERE ph.id = $1`,
+      [String(heroId)]
+    );
+    const heroClass = (c?.class || '').toUpperCase();
+
+    if (heroClass === 'RANGER') return 'DISTANCE';
+    if (heroClass === 'MAGE' || heroClass === 'WIZARD') return 'MAGIC';
+    if (heroClass === 'KNIGHT') return 'SWORD';
+  }
+
+  // 3) Não sabemos — melhor NÃO contar
+  return null;
+}
+
+
+/** Aplica ganho de skill no banco. */
+async function gainSkillFromHit({ heroId, weaponType }) {
+  const skillType = await resolveSkillTypeOrClass({ weaponType, heroId });
+
+  await run(
+    `INSERT INTO player_hero_skills (hero_id, skill_type, level, tries_progress)
+     VALUES ($1, $2, 1, 0)
+     ON CONFLICT (hero_id, skill_type) DO NOTHING`,
+    [String(heroId), skillType]
+  );
+
+  const cur = await get(
+    `SELECT level, tries_progress FROM player_hero_skills
+      WHERE hero_id=$1 AND skill_type=$2`,
+    [String(heroId), skillType]
+  );
+  if (!cur) return { ok: false };
+
+  let level = Number(cur.level) || 1;
+  let progress = Number(cur.tries_progress) || 0;
+
+  const klass = await get(
+    `SELECT hm.class
+       FROM player_heroes ph
+       JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
+      WHERE ph.id = $1`,
+    [String(heroId)]
+  );
+  const heroClass = (klass?.class || '').toUpperCase();
+
+  const rateRow = await get(
+    `SELECT rate FROM class_skill_rates
+      WHERE class=$1 AND skill_type=$2`,
+    [heroClass, skillType]
+  );
+  const rate = Number(rateRow?.rate) || 1.0;
+
+  const inc = BASE_TRY_PER_HIT * rate;
+  progress += inc;
+
+  let needRow = await get(
+    `SELECT tries_needed FROM skill_curves WHERE skill_type=$1 AND level=$2`,
+    [skillType, level]
+  );
+  let need = Number(needRow?.tries_needed) || 999999;
+
+  let ups = 0;
+  while (progress >= need) {
+    progress -= need;
+    level += 1;
+    ups += 1;
+    needRow = await get(
+      `SELECT tries_needed FROM skill_curves WHERE skill_type=$1 AND level=$2`,
+      [skillType, level]
+    );
+    need = Number(needRow?.tries_needed) || 999999;
+  }
+
+  await run(
+    `UPDATE player_hero_skills
+        SET level=$3, tries_progress=$4
+      WHERE hero_id=$1 AND skill_type=$2`,
+    [String(heroId), skillType, level, progress]
+  );
+
+  if (DEBUG) {
+    console.log('[skill] hero', heroId, 'skill', skillType, 'inc', inc.toFixed(2), 'lvl', level, 'prog', progress.toFixed(2));
+    if (ups) console.log(`[skill] level up +${ups} (${skillType})`);
+  }
+
+  return { ok: true, heroId, skillType, level, progress, inc };
+}
+
+/* =========================================================================
+   /nearest
    ========================================================================== */
 router.get('/nearest', async (req, res) => {
   try {
@@ -47,7 +162,7 @@ router.get('/nearest', async (req, res) => {
     const px = hasPX ? Math.round(+req.query.px) : null;
     const py = hasPX ? Math.round(+req.query.py) : null;
 
-    const clickMax = Number(K?.CLICK_MAX_DIST_PX) || 280; // tolerante
+    const clickMax = Number(K?.CLICK_MAX_DIST_PX) || 280;
     if (hasPX) {
       const dx = cx - px, dy = cy - py;
       if (dx*dx + dy*dy > clickMax*clickMax) {
@@ -121,6 +236,13 @@ router.post('/attack/start', express.json(), async (req, res) => {
       if (!hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y)) return res.json({ ok:false, error:'no_los' });
     }
 
+    // guarda sessão para /hit
+    attackSessions.set(String(targetInstanceId), {
+      heroId: String(heroId),
+      weaponType: weaponType ? String(weaponType) : null,
+      startedAt: Date.now()
+    });
+
     // ➜ Não usa autoloop do servidor; o cliente já vai bater /combat/hit em loop
     // autoloop.start(heroId, targetInstanceId, weaponType);
 
@@ -131,10 +253,14 @@ router.post('/attack/start', express.json(), async (req, res) => {
   }
 });
 
-router.post('/attack/stop', express.json(), async (_req, res) => {
+router.post('/attack/stop', express.json(), async (req, res) => {
   try {
-    // const { heroId } = req.body || {};
-    // if (heroId) autoloop.stop(heroId);
+    const { heroId } = req.body || {};
+    if (heroId) {
+      for (const [instId, sess] of attackSessions.entries()) {
+        if (sess.heroId === String(heroId)) attackSessions.delete(instId);
+      }
+    }
     return res.json({ ok:true });
   } catch (e) {
     console.error('[combat] /attack/stop error:', e);
@@ -147,8 +273,14 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-
 
 router.post('/hit', express.json(), async (req, res) => {
   try {
+    // pode vir como id, targetInstanceId, ou query ?id
     const raw = req.body?.id ?? req.body?.targetInstanceId ?? req.query?.id;
     if (!raw) return res.status(400).json({ ok:false, error:'missing-id' });
+
+    // tenta descobrir heroId/weaponType da sessão iniciada em /attack/start
+    const sess = attackSessions.get(String(raw)) || null;
+    const heroIdFromSess = sess?.heroId || (req.body?.heroId ? String(req.body.heroId) : null);
+    const weaponTypeFromSess = sess?.weaponType || (req.body?.weaponType ? String(req.body.weaponType) : null);
 
     let mi;
     if (UUID_RE.test(String(raw))) {
@@ -197,11 +329,13 @@ router.post('/hit', express.json(), async (req, res) => {
           WHERE id = $1`,
         [mi.id, secs]
       );
+      // morreu: limpa sessão desse alvo
+      attackSessions.delete(String(mi.id));
     } else {
       await run(`UPDATE monster_instances SET hp=$2, updated_at=now() WHERE id=$1`, [mi.id, hp]);
     }
 
-    // === Envia atualizações em tempo real pelo WS ===
+    // === Envia atualizações em tempo real pelo WS (barra de HP + floater de dano) ===
     const cur = await get(`
       SELECT mi.id,
              mi.hp,
@@ -215,7 +349,6 @@ router.post('/hit', express.json(), async (req, res) => {
     `, [mi.id]);
 
     if (cur) {
-      // Evento de HP/dano (faz barra descer e mostra floater)
       broadcast({
         type: 'monster_hp',
         id: String(cur.id),
@@ -226,10 +359,18 @@ router.post('/hit', express.json(), async (req, res) => {
         spawnId: Number(cur.spawnId)
       });
 
-      // Se morreu, também notifica
       if (String(cur.state) === 'DEAD' || Number(cur.hp) <= 0) {
-        const xp = 0; // se quiser, calcule XP real aqui
+        const xp = 0; // calcule XP real se quiser
         broadcast({ type: 'monster_dead', id: String(cur.id), xp });
+      }
+    }
+
+    // >>>>>>>>>>>> GANHO DE SKILL POR HIT (se soubermos quem é o herói) <<<<<<<<<<<<<
+    if (heroIdFromSess) {
+      try {
+        await gainSkillFromHit({ heroId: heroIdFromSess, weaponType: weaponTypeFromSess });
+      } catch (e) {
+        console.warn('[combat] skill gain failed:', e?.message);
       }
     }
 
