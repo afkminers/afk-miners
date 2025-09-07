@@ -1,76 +1,151 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="utf-8" />
   <title>AFK Miners — Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/css/app.css" />
-
   <style>
-    .sidebar, .rightbar { display: none !important; }
-    #clientShell { position: relative; }
+    .sidebar,
+    .rightbar {
+      display: none !important;
+    }
 
-    /* painel do lado esquerdo onde o Team monta */
+    #clientShell {
+      position: relative;
+    }
+
     #leftStack .panel {
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid rgba(255, 255, 255, .06);
       border-radius: 8px;
       background: #0b1220;
     }
+
     #leftStack .panel header {
       padding: 8px 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
     }
-    #leftStack .panel .body { padding: 8px; }
 
-    /* ===== Drawer de Equipamentos (abre dentro do leftStack) ===== */
-    #leftStack { position: relative; }
+    #leftStack .panel .body {
+      padding: 8px;
+    }
+
+    /* === Drawer de Equipamentos no lado esquerdo === */
+    #leftStack {
+      position: relative;
+    }
 
     .equip-drawer {
       position: absolute;
-      top: 8px; left: 8px; bottom: 8px;
-      width: 360px; max-width: calc(100% - 16px);
-      background: #0b1220; color: #e6eef6;
-      border: 1px solid rgba(255,255,255,.08);
+      top: 8px;
+      left: 8px;
+      bottom: 8px;
+      width: 360px;
+      max-width: calc(100% - 16px);
+      background: #0b1220;
+      color: #e6eef6;
+      border: 1px solid rgba(255, 255, 255, .08);
       border-radius: 12px;
-      box-shadow: 0 12px 30px rgba(0,0,0,.4);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, .4);
       transform: translateX(-110%);
       transition: transform 220ms ease-out;
-      display: flex; flex-direction: column;
+      display: flex;
+      flex-direction: column;
       z-index: 5;
     }
-    .equip-drawer.open { transform: translateX(0); }
+
+    .equip-drawer.open {
+      transform: translateX(0);
+    }
+
     .equip-drawer header {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 10px 12px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
     }
+
     .equip-drawer .content {
-      padding: 12px; overflow: auto; gap: 12px; display: grid; grid-template-rows: auto auto;
+      padding: 12px;
+      overflow: auto;
+      gap: 12px;
+      display: grid;
+      grid-template-rows: auto auto;
     }
+
     .equip-card {
-      border: 1px solid rgba(255,255,255,.06);
-      background: rgba(17,24,39,.6);
+      border: 1px solid rgba(255, 255, 255, .06);
+      background: rgba(17, 24, 39, .6);
       border-radius: 12px;
       padding: 10px;
     }
-    .equip-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
-    .slot, .item {
-      border: 1px solid rgba(255,255,255,.05);
-      background: rgba(2,6,23,.6);
+
+    .equip-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .slot,
+    .item {
+      border: 1px solid rgba(255, 255, 255, .05);
+      background: rgba(2, 6, 23, .6);
       border-radius: 10px;
       padding: 10px;
     }
-    .slot .box, .item .box {
-      height: 64px; border-radius: 8px; background: rgba(15,23,42,.6);
-      display: grid; place-items: center; overflow: hidden;
+
+    .slot .box,
+    .item .box {
+      height: 64px;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, .6);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
     }
 
-    /* anima simples de chegada */
-    @keyframes flyToSlot {
-      from { transform: scale(.9); opacity: .0; }
-      to   { transform: scale(1);  opacity: 1; }
+    /* ==== Barra de Skill (hover animado + % centralizada) ==== */
+    .skill-bar {
+      position: relative;
+      margin-top: 6px;
+      height: 14px; /* era 10px */
+      border-radius: 999px;
+      background: rgba(148, 163, 184, .18);
+      overflow: hidden;
+      transition: transform .15s ease, box-shadow .15s ease;
     }
-    .fly-in { animation: flyToSlot 180ms ease-out; }
+
+    .skill-bar:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        inset 0 6px 16px rgba(0, 0, 0, .25),
+        0 2px 8px rgba(0, 0, 0, .25);
+    }
+
+    .skill-fill {
+      height: 100%;
+      background: #4f46e5;
+      transition: width .35s ease, filter .2s ease;
+      will-change: width;
+    }
+
+    .skill-bar:hover .skill-fill {
+      filter: brightness(1.15) saturate(1.1);
+    }
+
+    .skill-label {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 12px; /* era 11px */
+      color: #cbd5e1;
+      mix-blend-mode: screen;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, .6);
+      pointer-events: none;
+    }
   </style>
 </head>
 
@@ -91,39 +166,48 @@
 
   <!-- Layout estilo Tibia -->
   <main id="tibiaLayout">
-    <!-- LEFT -->
+    <!-- LEFT STACK -->
     <aside id="leftStack" class="stack" aria-label="Left stack">
       <div class="panel" aria-label="Team" style="margin-bottom:10px;">
-        <header><h3 style="color:#e6eef6;margin:0;font-size:14px;">Team</h3></header>
-        <div class="body"><div id="team-root"></div></div>
+        <header>
+          <h3 style="color:#e6eef6;margin:0;font-size:14px;">Team</h3>
+        </header>
+        <div class="body">
+          <div id="team-root"></div>
+        </div>
       </div>
     </aside>
 
     <div id="splitLeft" class="splitter v"></div>
 
-    <!-- CENTER -->
+    <!-- VIEWPORT CENTRAL -->
     <section id="centerStage">
       <div id="clientShell">
         <canvas id="scene" width="960" height="540"></canvas>
 
+        <!-- HUD raiz -->
         <div id="hud" class="hud"></div>
 
         <!-- HUD do alvo -->
-        <div id="targetHud" style="position:absolute;left:0;top:0;display:none;pointer-events:none;transform:translate(-50%,-100%);z-index:9999">
+        <div id="targetHud"
+          style="position:absolute;left:0;top:0;display:none;pointer-events:none;transform:translate(-50%,-100%);z-index:9999">
           <div style="width:48px;height:7px;border:1px solid #000;background:rgba(0,0,0,.35)">
             <div id="hpFill" style="height:100%;width:100%;background:#c22"></div>
           </div>
-          <div id="hpText" style="font:12px/14px monospace;color:#fff;text-shadow:0 1px 2px #000;text-align:center;">--/--</div>
+          <div id="hpText" style="font:12px/14px monospace;color:#fff;text-shadow:0 1px 2px #000;text-align:center;">
+            --/--</div>
         </div>
       </div>
     </section>
 
     <div id="splitRight" class="splitter v"></div>
 
-    <!-- RIGHT -->
+    <!-- RIGHT STACK -->
     <aside id="rightStack" class="stack" aria-label="Right stack">
       <div class="panel mini-map" data-fixed="1" aria-label="Mini map">
-        <header><h3>Mini-Map</h3></header>
+        <header>
+          <h3>Mini-Map</h3>
+        </header>
         <div class="body"><canvas id="miniMap" width="140" height="140"></canvas></div>
       </div>
     </aside>
@@ -133,18 +217,22 @@
       <div class="chat-controls" style="padding:12px;">
         <div class="chat-tabs" style="display:flex; gap:8px; margin-bottom:8px;">
           <button id="btnDefault" class="chat-tab active" type="button" style="padding:4px 8px">Default</button>
-          <button id="btnGlobal"  class="chat-tab"         type="button" style="padding:4px 8px">Global</button>
+          <button id="btnGlobal" class="chat-tab" type="button" style="padding:4px 8px">Global</button>
         </div>
-        <div id="chatBox" class="chat-box" style="height:180px; overflow:auto; background:#07101a; padding:8px; color:#e6eef6; border-radius:4px; border:1px solid rgba(255,255,255,0.03);"></div>
+        <div id="chatBox" class="chat-box"
+          style="height:180px; overflow:auto; background:#07101a; padding:8px; color:#e6eef6; border-radius:4px; border:1px solid rgba(255,255,255,0.03);">
+        </div>
         <form id="chatForm" autocomplete="off" style="display:flex; gap:8px; margin-top:8px;">
-          <input id="chatInput" name="chat" placeholder="Digite uma mensagem…" style="flex:1; padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.04); background:#07121a; color:#fff;" />
-          <button id="chatSend" type="button" style="padding:8px 12px; border-radius:4px; background:#2563eb; color:#fff; border:0;">Enviar</button>
+          <input id="chatInput" name="chat" placeholder="Digite uma mensagem…"
+            style="flex:1; padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.04); background:#07121a; color:#fff;" />
+          <button id="chatSend" type="button"
+            style="padding:8px 12px; border-radius:4px; background:#2563eb; color:#fff; border:0;">Enviar</button>
         </form>
       </div>
     </footer>
   </main>
 
-  <!-- Modal Summon (seu) -->
+  <!-- MODAL SUMMON -->
   <div id="summonModal" class="modal" hidden>
     <div class="window">
       <header>
@@ -155,290 +243,340 @@
     </div>
   </div>
 
-  <!-- ======= Scripts do jogo (os mesmos) ======= -->
+  <!-- ========= SCRIPTS DO JOGO ========= -->
   <script src="/js/afk_panel.js"></script>
   <script src="/js/farm_panel.js"></script>
+
   <script src="/js/settings.js"></script>
   <script src="/js/ui/settings_panel.js"></script>
+
   <script type="module" src="/js/app.js"></script>
+
   <script src="/js/engine/camera2d.js"></script>
   <script src="/js/engine/input.js"></script>
   <script src="/js/engine/pathfinder.js"></script>
   <script src="/js/engine/player_controller.js"></script>
   <script src="/js/engine/click_to_move.js"></script>
   <script src="/js/play.js"></script>
+
   <script type="module" src="/js/combat/attack-controls.js"></script>
   <script type="module">
     import installCombatOverlay from "/js/combat/render-combat.js";
     try { installCombatOverlay(); } catch (e) { console.error("[overlay] init failed:", e); }
   </script>
 
-  <!-- ======= React (CDN) + Babel ======= -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin onerror="console.warn('[react] cdn fail')"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin onerror="console.warn('[react-dom] cdn fail')"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin onerror="console.warn('[babel] cdn fail')"></script>
+  <!-- ========= CDNs obrigatórios ========= -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
 
-  <!-- Guarda: se React não carregar, o jogo segue -->
-  <script type="text/babel">
-    (function(){ if(!(window.React && window.ReactDOM)) return; })();
+  <!-- mensagens estilo Tibia / notificação de avanço de skill -->
+  <script src="/js/ui/skill_notify.js"></script>
+
+  <!-- força o endpoint certo das skills (PG) -->
+  <script>
+    // usa a rota que você já tem no back: GET /api/skills/me?heroId=...
+    window.SKILLS_ENDPOINT = function (id) {
+      return '/api/skills/me?heroId=' + encodeURIComponent(id);
+    };
   </script>
 
-  <!-- ======= Team + Drawer de Equipamentos com animação ======= -->
+  <!-- ========= UI: Team + Skills + Equipamentos ========= -->
   <script type="text/babel">
+    // @ts-nocheck
+
     const { useState, useEffect, useMemo, useRef } = React;
 
-    /* utils */
-    function getCookie(name){
-      const parts = document.cookie.split(";").map(s=>s.trim());
-      for(const p of parts){ if(p.startsWith(name+"=")) return decodeURIComponent(p.substring(name.length+1)); }
+    /* ============== utils ============== */
+    function getCookie(name) {
+      const parts = document.cookie.split(";").map(s => s.trim());
+      for (const p of parts) if (p.startsWith(name + "=")) return decodeURIComponent(p.substring(name.length + 1));
       return "";
     }
-    async function ensureCsrf(){
-      try{ await fetch("/api/auth/csrf",{credentials:"include"});}catch{}
-      try{ await fetch("/api/csrf",{credentials:"include"});}catch{}
+    async function ensureCsrf() {
+      try { await fetch("/api/auth/csrf", { credentials: "include" }); } catch { }
+      try { await fetch("/api/csrf", { credentials: "include" }); } catch { }
     }
-    async function getJSON(url){
-      const r=await fetch(url,{credentials:"include"});
-      if(!r.ok) throw new Error("GET "+url+" -> "+r.status);
+    async function getJSON(url) {
+      const r = await fetch(url, { credentials: "include" });
+      if (!r.ok) throw new Error('GET ' + url + ' -> ' + r.status);
       return r.json();
     }
-    async function postJSON(url, body){
-      const send=()=>fetch(url,{
-        method:"POST", credentials:"include",
-        headers:{ "Content-Type":"application/json", "X-CSRF-Token":getCookie("csrf")||"" },
-        body:JSON.stringify(body||{})
+    async function postJSON(url, body) {
+      const send = () => fetch(url, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": getCookie("csrf") || "" },
+        body: JSON.stringify(body || {})
       });
-      let r=await send();
-      if(r.status===403){ await ensureCsrf(); r=await send(); }
-      if(!r.ok) throw new Error("POST "+url+" -> "+r.status);
+      let r = await send();
+      if (r.status === 403) { await ensureCsrf(); r = await send(); }
+      if (!r.ok) throw new Error('POST ' + url + ' -> ' + r.status);
       return r.json();
     }
 
-    /* animação de “voar” (DOM -> DOM) */
-    function animateFly(fromEl,toEl,imgSrc){
-      if(!fromEl || !toEl) return;
-      const fr=fromEl.getBoundingClientRect(), tr=toEl.getBoundingClientRect();
-      const img=new Image();
-      img.src=imgSrc||""; img.alt="";
-      img.style.position="fixed";
-      img.style.left=(fr.left+fr.width/2-16)+"px";
-      img.style.top =(fr.top +fr.height/2-16)+"px";
-      img.style.width="32px"; img.style.height="32px";
-      img.style.pointerEvents="none"; img.style.zIndex=100000;
-      img.style.transition="transform .38s ease, opacity .38s ease";
-      img.style.transform="translate(0,0) scale(1)";
-      img.style.opacity="1";
+    /* ============== anim “voar” ============== */
+    function animateFly(fromEl, toEl, imgSrc) {
+      if (!fromEl || !toEl) return;
+      const fr = fromEl.getBoundingClientRect();
+      const tr = toEl.getBoundingClientRect();
+      const img = new Image();
+      img.src = imgSrc || ""; img.alt = "";
+      Object.assign(img.style, {
+        position: "fixed",
+        left: (fr.left + fr.width / 2 - 16) + 'px',
+        top: (fr.top + fr.height / 2 - 16) + 'px',
+        width: "32px", height: "32px",
+        pointerEvents: "none", zIndex: 100000,
+        transition: "transform .38s ease, opacity .38s ease",
+        transform: "translate(0,0) scale(1)", opacity: "1",
+      });
       document.body.appendChild(img);
-      const dx=(tr.left+tr.width/2)-(fr.left+fr.width/2);
-      const dy=(tr.top +tr.height/2)-(fr.top +fr.height/2);
-      requestAnimationFrame(()=>{
-        img.style.transform=`translate(${dx}px, ${dy}px) scale(.75)`;
-        img.style.opacity="0.85";
+      const dx = (tr.left + tr.width / 2) - (fr.left + fr.width / 2);
+      const dy = (tr.top + tr.height / 2) - (fr.top + fr.height / 2);
+      requestAnimationFrame(() => {
+        img.style.transform = 'translate(' + dx + 'px, ' + dy + 'px) scale(.75)';
+        img.style.opacity = "0.85";
       });
-      setTimeout(()=>{ img.style.opacity="0"; setTimeout(()=>{ try{document.body.removeChild(img);}catch{} },180); },380);
+      setTimeout(() => { img.style.opacity = "0"; setTimeout(() => { try { document.body.removeChild(img); } catch { } }, 180); }, 380);
     }
 
-    const ORDERED_SLOTS=["AMULET","HELMET","BACKPACK","WEAPON","ARMOR","SHIELD","RING","LEGS","BOOTS"];
+    /* ============== domínio ============== */
+    const ORDERED_SLOTS = ["AMULET", "HELMET", "BACKPACK", "WEAPON", "ARMOR", "SHIELD", "RING", "LEGS", "BOOTS"];
 
-    /* Team */
-    function TeamShell(){
-      const [loading,setLoading]=useState(true);
-      const [heroes,setHeroes]=useState([]);
-      const [openHero,setOpenHero]=useState(null);
-      const [error,setError]=useState("");
+    /* ============== Team (botões Skills/Equips) ============== */
+    function TeamShell() {
+      const [loading, setLoading] = useState(true);
+      const [heroes, setHeroes] = useState([]);
+      const [equipHero, setEquipHero] = useState(null);
+      const [skillsHero, setSkillsHero] = useState(null);
+      const [error, setError] = useState("");
 
-      useEffect(()=>{
-        let live=true;
-        (async()=>{
-          try{
-            const me=await getJSON("/api/player/me");
-            if(!live) return;
-            setHeroes((me.heroes||[]).slice(0,3));
-          }catch(e){ setError(e.message||String(e)); }
-          finally{ setLoading(false); }
+      useEffect(() => {
+        let live = true;
+        (async () => {
+          try {
+            const me = await getJSON("/api/player/me");
+            if (!live) return;
+            setHeroes((me.heroes || []).slice(0, 3));
+          } catch (e) {
+            setError(e.message || String(e));
+          } finally {
+            setLoading(false);
+          }
         })();
-        return()=>{ live=false; };
-      },[]);
+        return () => { live = false; };
+      }, []);
 
-      if(loading) return <div style={{color:"#9aa4b2",fontSize:12}}>carregando team…</div>;
-      if(error)   return <div style={{color:"#ef4444",fontSize:12}}>{error}</div>;
-      if(!heroes.length) return <div style={{color:"#9aa4b2",fontSize:12}}>sem heróis</div>;
+      if (loading) return <div style={{ color: "#9aa4b2", fontSize: 12 }}>carregando team…</div>;
+      if (error) return <div style={{ color: "#ef4444", fontSize: 12 }}>{error}</div>;
+      if (!heroes.length) return <div style={{ color: "#9aa4b2", fontSize: 12 }}>sem heróis</div>;
 
       return (
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          {heroes.map(h=>(
-            <button key={h.id} onClick={()=>setOpenHero(h)}
-              title={`${h.name} (lv.${h.level})`}
-              style={{display:"inline-flex",alignItems:"center",gap:8,borderRadius:14,background:"rgba(31,41,55,.8)",
-                      padding:"6px 10px",boxShadow:"0 2px 8px rgba(0,0,0,.25)",color:"#fff",border:"1px solid rgba(255,255,255,.06)"}}>
-              <div style={{height:40,width:40,borderRadius:999,background:"linear-gradient(135deg,#818cf8,#3730a3)",
-                           display:"grid",placeItems:"center",boxShadow:"inset 0 2px 6px rgba(0,0,0,.25)"}}>
-                <span style={{fontSize:12,fontWeight:700,textShadow:"0 1px 2px #000"}}>{(h.class||"?").slice(0,1)}</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {heroes.map(h => (
+            <div key={h.id}
+              style={{
+                display: "flex", alignItems: "center", gap: 10, borderRadius: 14, background: "rgba(31,41,55,.8)",
+                padding: "8px 10px", boxShadow: "0 2px 8px rgba(0,0,0,.25)", color: "#fff",
+                border: "1px solid rgba(255,255,255,.06)"
+              }}>
+              <div style={{
+                height: 36, width: 36, borderRadius: 999, background: "linear-gradient(135deg,#818cf8,#3730a3)",
+                display: "grid", placeItems: "center", boxShadow: "inset 0 2px 6px rgba(0,0,0,.25)"
+              }}>
+                <span style={{ fontSize: 12, fontWeight: 700, textShadow: "0 1px 2px #000" }}>{(h.class || "?").slice(0, 1)}</span>
               </div>
-              <div style={{textAlign:"left"}}>
-                <div style={{fontSize:13,fontWeight:700,lineHeight:"16px",maxWidth:150,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.name}</div>
-                <div style={{fontSize:11,opacity:.8}}>{(h.class||"-").toLowerCase()} • lv {h.level}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 13, fontWeight: 700, lineHeight: "16px", overflow: "hidden",
+                  textOverflow: "ellipsis", whiteSpace: "nowrap"
+                }}>{h.name}</div>
+                <div style={{ fontSize: 11, opacity: .8 }}>{(h.class || "-").toLowerCase()} • lv {h.level}</div>
               </div>
-            </button>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button onClick={() => setSkillsHero(h)} title="Skills"
+                  style={{ fontSize: 11, padding: "4px 8px", borderRadius: 8, background: "#0ea5e9", color: "#002", border: "0", fontWeight: 700 }}>
+                  Skills
+                </button>
+                <button onClick={() => setEquipHero(h)} title="Equipamentos"
+                  style={{ fontSize: 11, padding: "4px 8px", borderRadius: 8, background: "#4f46e5", color: "#fff", border: "0", fontWeight: 700 }}>
+                  Equips
+                </button>
+              </div>
+            </div>
           ))}
-          <EquipmentDrawer open={!!openHero} hero={openHero} onClose={()=>setOpenHero(null)} />
+
+          {/* Drawer de Equipamentos no leftStack (não esconde nada) */}
+          <EquipmentDrawer open={!!equipHero} hero={equipHero} onClose={() => setEquipHero(null)} />
+
+          {skillsHero && <SkillsDrawer hero={skillsHero} onClose={() => setSkillsHero(null)} />}
         </div>
       );
     }
 
-    /* Drawer de Equipamentos (lado esquerdo) */
-    function EquipmentDrawer({open, hero, onClose}){
-      const [equip,setEquip]=useState([]);
-      const [inventory,setInventory]=useState([]);
-      const [busy,setBusy]=useState(false);
-      const [err,setErr]=useState("");
-      const rootRef=useRef(null);
+    /* ============== Drawer de Equipamentos (lado esquerdo) ============== */
+    function EquipmentDrawer({ open, hero, onClose }) {
+      const [equip, setEquip] = useState([]);
+      const [inventory, setInventory] = useState([]);
+      const [busy, setBusy] = useState(false);
+      const [err, setErr] = useState("");
+      const rootRef = useRef(null);
 
-      const equipBySlot=useMemo(()=>{
-        const m=new Map(); (equip||[]).forEach(r=>m.set(String(r.slot).toUpperCase(),r)); return m;
-      },[equip]);
+      const equipBySlot = useMemo(() => {
+        const m = new Map(); (equip || []).forEach(r => m.set(String(r.slot).toUpperCase(), r)); return m;
+      }, [equip]);
 
-      useEffect(()=>{
-        if(!open || !hero) return;
-        let live=true;
-        (async()=>{
-          try{
-            const [eq,inv]=await Promise.all([ getJSON(`/api/equipment/${hero.id}`), getJSON(`/api/inventory`) ]);
-            if(!live) return;
-            setEquip(eq.equipment||[]);
-            setInventory(inv.items||[]);
-          }catch(e){ setErr(e.message||String(e)); }
+      useEffect(() => {
+        if (!open || !hero) return;
+        let live = true;
+        (async () => {
+          try {
+            const [eq, inv] = await Promise.all([
+              getJSON('/api/equipment/' + hero.id),
+              getJSON('/api/inventory')
+            ]);
+            if (!live) return;
+            setEquip(eq.equipment || []);
+            setInventory(inv.items || []);
+          } catch (e) { setErr(e.message || String(e)); }
         })();
-        return()=>{ live=false; };
-      },[open, hero?.id]);
+        return () => { live = false; };
+      }, [open, hero?.id]);
 
-      async function refreshBoth(){
-        const [eq,inv]=await Promise.all([ getJSON(`/api/equipment/${hero.id}`), getJSON(`/api/inventory`) ]);
-        setEquip(eq.equipment||[]); setInventory(inv.items||[]);
+      async function refreshBoth() {
+        const [eq, inv] = await Promise.all([
+          getJSON('/api/equipment/' + hero.id),
+          getJSON('/api/inventory')
+        ]);
+        setEquip(eq.equipment || []); setInventory(inv.items || []);
       }
 
-      // helpers de inventário
-      const invIndex=(arr,key)=>arr.findIndex(x=>String(x.item_key)===String(key));
-      function invDec(arr,key){
-        const i=invIndex(arr,key); if(i===-1) return arr.slice();
-        const next=arr.slice(); const cur={...next[i]};
-        cur.qty=Math.max(0,Number(cur.qty||0)-1); if(cur.qty<=0) next.splice(i,1); else next[i]=cur;
+      // helpers inventário
+      const invIndex = (arr, key) => arr.findIndex(x => String(x.item_key) === String(key));
+      function invDec(arr, key) {
+        const i = invIndex(arr, key); if (i === -1) return arr.slice();
+        const next = arr.slice(); const cur = { ...next[i] };
+        cur.qty = Math.max(0, Number(cur.qty || 0) - 1); if (cur.qty <= 0) next.splice(i, 1); else next[i] = cur;
         return next;
       }
-      function invInc(arr,key,meta){
-        const i=invIndex(arr,key);
-        if(i===-1) return [...arr, meta?{...meta,item_key:key,qty:1}:{item_key:key,qty:1,name:key,slot:"MISC"}];
-        const next=arr.slice(); const cur={...next[i]}; cur.qty=Number(cur.qty||0)+1; next[i]=cur; return next;
+      function invInc(arr, key, meta) {
+        const i = invIndex(arr, key);
+        if (i === -1) return [...arr, meta ? { ...meta, item_key: key, qty: 1 } : { item_key: key, qty: 1, name: key, slot: "MISC" }];
+        const next = arr.slice(); const cur = { ...next[i] }; cur.qty = Number(cur.qty || 0) + 1; next[i] = cur; return next;
       }
-      function setSlot(arr, slot, rowOrNull){
-        const SLOT=String(slot).toUpperCase(); const next=(arr||[]).slice();
-        const idx=next.findIndex(r=>String(r.slot).toUpperCase()===SLOT);
-        if(rowOrNull){
-          const newRow={
-            slot:SLOT, item_key:rowOrNull.item_key||rowOrNull.key||null,
-            name:rowOrNull.name||rowOrNull.item_key||rowOrNull.key||null,
-            sprite:rowOrNull.sprite||null, weapon_type:rowOrNull.weapon_type||null,
-            atk:rowOrNull.atk||0, def:rowOrNull.def||0,
+      function setSlot(arr, slot, rowOrNull) {
+        const SLOT = String(slot).toUpperCase(); const next = (arr || []).slice();
+        const idx = next.findIndex(r => String(r.slot).toUpperCase() === SLOT);
+        if (rowOrNull) {
+          const newRow = {
+            slot: SLOT, item_key: rowOrNull.item_key || rowOrNull.key || null,
+            name: rowOrNull.name || rowOrNull.item_key || rowOrNull.key || null,
+            sprite: rowOrNull.sprite || null, weapon_type: rowOrNull.weapon_type || null,
+            atk: rowOrNull.atk || 0, def: rowOrNull.def || 0,
           };
-          if(idx===-1) next.push(newRow); else next[idx]={...next[idx],...newRow};
-        }else{
-          if(idx===-1) next.push({slot:SLOT,item_key:null}); else next[idx]={slot:SLOT,item_key:null};
+          if (idx === -1) next.push(newRow); else next[idx] = { ...next[idx], ...newRow };
+        } else {
+          if (idx === -1) next.push({ slot: SLOT, item_key: null }); else next[idx] = { slot: SLOT, item_key: null };
         }
         return next;
       }
 
-      function findInvPic(key){ return rootRef.current?.querySelector(`[data-inv-item-key="${CSS.escape(String(key))}"] .inv-pic`)||null; }
-      function findSlotPic(slot){ return rootRef.current?.querySelector(`[data-eq-slot="${CSS.escape(String(slot).toUpperCase())}"] .eq-pic`)||null; }
+      function findInvPic(key) { return rootRef.current?.querySelector('[data-inv-item-key="' + CSS.escape(String(key)) + '"] .inv-pic') || null; }
+      function findSlotPic(slot) { return rootRef.current?.querySelector('[data-eq-slot="' + CSS.escape(String(slot).toUpperCase()) + '"] .eq-pic') || null; }
 
-      async function onEquip(slot,itemKey){
-        if(busy) return; setBusy(true); setErr("");
-        const SLOT=String(slot).toUpperCase();
-        const prev=equipBySlot.get(SLOT); const prevKey=prev?.item_key||null;
-        const meta=inventory.find(x=>String(x.item_key)===String(itemKey))||null;
+      async function onEquip(slot, itemKey) {
+        if (busy) return; setBusy(true); setErr("");
+        const SLOT = String(slot).toUpperCase();
+        const prev = equipBySlot.get(SLOT); const prevKey = prev?.item_key || null;
+        const meta = inventory.find(x => String(x.item_key) === String(itemKey)) || null;
 
-        const from=findInvPic(itemKey), to=findSlotPic(SLOT), sprite=meta?.sprite||"";
+        const from = findInvPic(itemKey), to = findSlotPic(SLOT), sprite = meta?.sprite || "";
 
         // otimista
-        setEquip(cur=>setSlot(cur,SLOT, meta||{item_key:itemKey,name:itemKey}));
-        setInventory(cur=>invDec(cur,itemKey));
-        if(prevKey) setInventory(cur=>invInc(cur,prevKey,prev));
+        setEquip(cur => setSlot(cur, SLOT, meta || { item_key: itemKey, name: itemKey }));
+        setInventory(cur => invDec(cur, itemKey));
+        if (prevKey) setInventory(cur => invInc(cur, prevKey, prev));
 
-        try{ if(from&&to) animateFly(from,to,sprite); }catch{}
+        try { if (from && to) animateFly(from, to, sprite); } catch { }
 
-        try{
-          await postJSON("/api/equipment/equip",{heroId:hero.id,slot:SLOT,itemKey});
+        try {
+          await postJSON("/api/equipment/equip", { heroId: hero.id, slot: SLOT, itemKey });
           await refreshBoth();
-        }catch(e){
-          setErr(e.message||String(e));
+        } catch (e) {
+          setErr(e.message || String(e));
           // rollback
-          setEquip(cur=>{ let next=setSlot(cur,SLOT,null); if(prevKey) next=setSlot(next,SLOT,prev); return next; });
-          setInventory(cur=>invInc(cur,itemKey,meta));
-          if(prevKey) setInventory(cur=>invDec(cur,prevKey));
-        }finally{ setBusy(false); }
+          setEquip(cur => { let next = setSlot(cur, SLOT, null); if (prevKey) next = setSlot(next, SLOT, prev); return next; });
+          setInventory(cur => invInc(cur, itemKey, meta));
+          if (prevKey) setInventory(cur => invDec(cur, prevKey));
+        } finally { setBusy(false); }
       }
 
-      async function onUnequip(slot){
-        if(busy) return; setBusy(true); setErr("");
-        const SLOT=String(slot).toUpperCase();
-        const prev=equipBySlot.get(SLOT); const prevKey=prev?.item_key||null;
-        if(!prevKey){ setBusy(false); return; }
+      async function onUnequip(slot) {
+        if (busy) return; setBusy(true); setErr("");
+        const SLOT = String(slot).toUpperCase();
+        const prev = equipBySlot.get(SLOT); const prevKey = prev?.item_key || null;
+        if (!prevKey) { setBusy(false); return; }
 
-        const from=findSlotPic(SLOT);
-        const invContainer=rootRef.current?.querySelector("[data-inv-container]");
-        const to=invContainer||rootRef.current; const sprite=prev?.sprite||"";
+        const from = findSlotPic(SLOT);
+        const invContainer = rootRef.current?.querySelector("[data-inv-container]");
+        const to = invContainer || rootRef.current; const sprite = prev?.sprite || "";
 
         // otimista
-        setEquip(cur=>setSlot(cur,SLOT,null));
-        setInventory(cur=>invInc(cur,prevKey,prev));
-        try{ if(from&&to) animateFly(from,to,sprite); }catch{}
+        setEquip(cur => setSlot(cur, SLOT, null));
+        setInventory(cur => invInc(cur, prevKey, prev));
+        try { if (from && to) animateFly(from, to, sprite); } catch { }
 
-        try{
-          await postJSON("/api/equipment/equip",{heroId:hero.id,slot:SLOT,itemKey:null});
+        try {
+          await postJSON("/api/equipment/equip", { heroId: hero.id, slot: SLOT, itemKey: null });
           await refreshBoth();
-        }catch(e){
-          setErr(e.message||String(e));
+        } catch (e) {
+          setErr(e.message || String(e));
           // rollback
-          setEquip(cur=>setSlot(cur,SLOT,prev));
-          setInventory(cur=>invDec(cur,prevKey));
-        }finally{ setBusy(false); }
+          setEquip(cur => setSlot(cur, SLOT, prev));
+          setInventory(cur => invDec(cur, prevKey));
+        } finally { setBusy(false); }
       }
 
       return (
-        <div ref={rootRef} className={"equip-drawer "+(open?"open":"")} aria-hidden={!open}>
+        <div ref={rootRef} className={"equip-drawer " + (open ? "open" : "")} aria-hidden={!open}>
           <header>
             <div>
-              <div style={{fontWeight:700}}>{hero?.name || "Hero"}</div>
-              <div style={{fontSize:12,opacity:.75}}>class: {(hero?.class||"-").toLowerCase()} • lv {hero?.level ?? 1}</div>
+              <div style={{ fontWeight: 700 }}>{hero?.name || "Hero"}</div>
+              <div style={{ fontSize: 12, opacity: .75 }}>class: {(hero?.class || "-").toLowerCase()} • lv {hero?.level ?? 1}</div>
             </div>
-            <button onClick={onClose} style={{padding:"6px 10px",borderRadius:8,background:"#111827",color:"#e6eef6",border:"1px solid rgba(255,255,255,.08)"}} disabled={!open || busy}>Fechar</button>
+            <button onClick={onClose}
+              style={{ padding: "6px 10px", borderRadius: 8, background: "#111827", color: "#e6eef6", border: "1px solid rgba(255,255,255,.08)" }}
+              disabled={!open || busy}>
+              Fechar
+            </button>
           </header>
 
-          {err && <div style={{padding:"8px 12px",color:"#fda4af",fontSize:13}}>{err}</div>}
+          {err && <div style={{ padding: "8px 12px", color: "#fda4af", fontSize: 13 }}>{err}</div>}
 
           <div className="content">
             {/* Equipamentos */}
             <div className="equip-card">
-              <div style={{marginBottom:8,fontSize:14,opacity:.85}}>Equipamentos</div>
+              <div style={{ marginBottom: 8, fontSize: 14, opacity: .85 }}>Equipamentos</div>
               <div className="equip-grid">
-                {ORDERED_SLOTS.map(slot=>{
-                  const row=equipBySlot.get(slot);
+                {ORDERED_SLOTS.map(slot => {
+                  const row = equipBySlot.get(slot);
                   return (
                     <div key={slot} data-eq-slot={slot} className="slot">
-                      <div style={{fontSize:11,color:"#9aa4b2",marginBottom:6}}>{slot.toLowerCase()}</div>
+                      <div style={{ fontSize: 11, color: "#9aa4b2", marginBottom: 6 }}>{slot.toLowerCase()}</div>
                       <div className="box eq-pic">
                         {row?.sprite
-                          ? <img src={row.sprite} alt={row.name||row.item_key} style={{maxHeight:64,objectFit:"contain"}}/>
+                          ? <img src={row.sprite} alt={row.name || row.item_key} style={{ maxHeight: 64, objectFit: "contain" }} />
                           : row?.item_key
-                            ? <span style={{fontSize:10,color:"#cbd5e1"}}>{row.name||row.item_key}</span>
-                            : <span style={{fontSize:10,color:"#64748b"}}>vazio</span>}
+                            ? <span style={{ fontSize: 10, color: "#cbd5e1" }}>{row.name || row.item_key}</span>
+                            : <span style={{ fontSize: 10, color: "#64748b" }}>vazio</span>}
                       </div>
-                      <div style={{marginTop:8}}>
+                      <div style={{ marginTop: 8 }}>
                         {row?.item_key
-                          ? <button onClick={()=>onUnequip(slot)} disabled={busy}
-                                    style={{fontSize:12,padding:"4px 8px",borderRadius:6,background:"#374151",color:"#e6eef6",border:"1px solid rgba(255,255,255,.06)",opacity:busy?.6:1}}>
-                              Unequip
-                            </button>
-                          : <span style={{fontSize:11,color:"#6b7280"}}>—</span>}
+                          ? <button onClick={() => onUnequip(slot)} disabled={busy}
+                            style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, background: "#374151", color: "#e6eef6", border: "1px solid rgba(255,255,255,.06)", opacity: busy ? .6 : 1 }}>
+                            Unequip
+                          </button>
+                          : <span style={{ fontSize: 11, color: "#6b7280" }}>—</span>}
                       </div>
                     </div>
                   );
@@ -448,29 +586,30 @@
 
             {/* Inventário */}
             <div className="equip-card" data-inv-container>
-              <div style={{marginBottom:8,fontSize:14,opacity:.85}}>Inventário da Conta</div>
+              <div style={{ marginBottom: 8, fontSize: 14, opacity: .85 }}>Inventário da Conta</div>
               <div className="equip-grid">
-                {(inventory||[]).map(it=>{
-                  const slot=String(it.slot||"").toUpperCase();
-                  const canEquip=ORDERED_SLOTS.includes(slot);
+                {(inventory || []).map(it => {
+                  const slot = String(it.slot || "").toUpperCase();
+                  const canEquip = ORDERED_SLOTS.includes(slot);
                   return (
                     <div key={it.item_key} data-inv-item-key={it.item_key} className="item">
-                      <div title={it.name||it.item_key} style={{fontSize:11,color:"#9aa4b2",marginBottom:6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                      <div title={it.name || it.item_key}
+                        style={{ fontSize: 11, color: "#9aa4b2", marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {it.name || it.item_key}
                       </div>
                       <div className="box inv-pic">
                         {it.sprite
-                          ? <img src={it.sprite} alt={it.name||it.item_key} style={{maxHeight:64,objectFit:"contain"}}/>
-                          : <span style={{fontSize:10,color:"#64748b"}}>no sprite</span>}
+                          ? <img src={it.sprite} alt={it.name || it.item_key} style={{ maxHeight: 64, objectFit: "contain" }} />
+                          : <span style={{ fontSize: 10, color: "#64748b" }}>no sprite</span>}
                       </div>
-                      <div style={{marginTop:8,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
-                        <span style={{fontSize:10,color:"#94a3b8"}}>qty {it.qty}</span>
+                      <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                        <span style={{ fontSize: 10, color: "#94a3b8" }}>qty {it.qty}</span>
                         {canEquip
-                          ? <button onClick={()=>onEquip(slot,it.item_key)} disabled={busy || Number(it.qty)<=0}
-                                    style={{fontSize:12,padding:"4px 8px",borderRadius:6,background:"#4f46e5",color:"#fff",border:0,opacity:busy?.6:1}}>
-                              Equipar
-                            </button>
-                          : <span style={{fontSize:10,color:"#6b7280"}}>—</span>}
+                          ? <button onClick={() => onEquip(slot, it.item_key)} disabled={busy || Number(it.qty) <= 0}
+                            style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, background: "#4f46e5", color: "#fff", border: 0, opacity: busy ? .6 : 1 }}>
+                            Equipar
+                          </button>
+                          : <span style={{ fontSize: 10, color: "#6b7280" }}>—</span>}
                       </div>
                     </div>
                   );
@@ -482,16 +621,177 @@
       );
     }
 
-    /* mount */
-    function TeamAndEquipUI(){ return <div style={{padding:"4px 6px"}}><TeamShell/></div>; }
-    (async()=>{
-      try{ await ensureCsrf(); }catch{}
-      const mount=document.getElementById("team-root");
-      if(mount && window.React && window.ReactDOM){
-        try{ ReactDOM.createRoot(mount).render(<TeamAndEquipUI/>); }
-        catch(e){ console.warn("[team-ui] render falhou:", e); }
+    /* ============== Skills Drawer (polling + botão fixo) ============== */
+    function SkillsDrawer({ hero, onClose }) {
+      const [rows, setRows] = useState([]);
+      const [err, setErr] = useState("");
+      const ref = useRef(null);
+
+      // endpoint escolhido e timer de polling
+      const endpointRef = useRef(null);
+      const pollRef = useRef(null);
+
+      const SKILL_ENDPOINTS = [
+        (id) => '/api/skills/hero/' + id,
+        (id) => '/api/skills?heroId=' + encodeURIComponent(id),
+        (id) => '/api/hero/' + id + '/skills',
+        (id) => '/api/heroes/' + id + '/skills',
+        (id) => '/api/player/hero/' + id + '/skills',
+      ];
+
+      function normalizeSkillsPayload(data) {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data.skills)) return data.skills;
+        if (Array.isArray(data.rows)) return data.rows;
+        if (data && Array.isArray(data.data)) return data.data;
+        return [];
       }
+
+      async function fetchSkillsOnce() {
+        const url = endpointRef.current;
+        if (!url) return;
+        const r = await fetch(url, { credentials: "include" });
+        if (!r.ok) return;
+        const list = normalizeSkillsPayload(await r.json());
+        setRows(list);
+        // >>> dispara monitor de avanço
+        try { window.SkillAdvance?.monitor.update(hero.id, hero.name, list); } catch {}
+      }
+
+      useEffect(() => {
+        let live = true;
+
+        (async () => {
+          try {
+            // 1) definir endpoint
+            if (typeof window.SKILLS_ENDPOINT === "function") {
+              endpointRef.current = window.SKILLS_ENDPOINT(hero.id);
+              await fetchSkillsOnce();
+            } else {
+              for (const build of SKILL_ENDPOINTS) {
+                const url = build(hero.id);
+                const r = await fetch(url, { credentials: "include" });
+                if (r.status === 404) continue;
+                if (!r.ok) throw new Error('GET ' + url + ' -> ' + r.status);
+                endpointRef.current = url;
+                const list = normalizeSkillsPayload(await r.json());
+                if (!live) return;
+                setRows(list);
+                // >>> dispara monitor também na primeira carga
+                try { window.SkillAdvance?.monitor.update(hero.id, hero.name, list); } catch {}
+                break;
+              }
+            }
+            if (!endpointRef.current) {
+              endpointRef.current = '/api/skills/me?heroId=' + encodeURIComponent(hero.id);
+              await fetchSkillsOnce();
+            }
+          } catch (e) {
+            if (!live) return;
+            setErr(e.message || String(e));
+          }
+        })();
+
+        // 2) ligar polling enquanto aberto
+        pollRef.current = setInterval(fetchSkillsOnce, 1500);
+
+        return () => {
+          live = false;
+          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+        };
+      }, [hero && hero.id]);
+
+      // animação de slide-in
+      useEffect(() => {
+        const el = ref.current; if (!el) return;
+        el.style.transform = "translateX(-100%)";
+        requestAnimationFrame(() => { el.style.transform = "translateX(0)"; });
+        return () => { try { el.style.transform = "translateX(-100%)"; } catch { } };
+      }, []);
+
+      return (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,.35)" }}
+          onClick={onClose}>
+          <div ref={ref} onClick={e => e.stopPropagation()}
+            style={{
+              position: "absolute", top: 0, left: 0, height: "100%", width: 360, background: "#0b1220", color: "#e6eef6",
+              borderRight: "1px solid rgba(255,255,255,.08)", boxShadow: "0 10px 30px rgba(0,0,0,.45)",
+              transition: "transform .25s ease"
+            }}>
+            {/* Cabeçalho com botão fixo/visível */}
+            <div style={{
+              position: "relative",
+              display: "flex", alignItems: "center",
+              padding: "12px 14px", paddingRight: 86,
+              borderBottom: "1px solid rgba(255,255,255,.08)"
+            }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>Skills — {hero?.name}</div>
+                <div style={{ fontSize: 11, opacity: .75 }}>{(hero?.class || "-").toLowerCase()} • lv {hero?.level}</div>
+              </div>
+              <button onClick={onClose}
+                style={{
+                  position: "absolute", right: 12, top: 10,
+                  fontSize: 12, padding: "4px 8px", borderRadius: 8, background: "#111827",
+                  color: "#e6eef6", border: "1px solid rgba(255,255,255,.06)"
+                }}>
+                Fechar
+              </button>
+            </div>
+
+            {err && <div style={{ padding: 12, color: "#fda4af", fontSize: 13, whiteSpace: "pre-wrap" }}>{err}</div>}
+
+            <div style={{ padding: 12, display: "grid", gap: 8 }}>
+              {(rows || []).map((r, i) => {
+                const name = String(r.skill_type || r.type || r.name || "unknown").toUpperCase();
+                const lvl = Number(r.level ?? r.lvl ?? 1);
+                const cur = Number(r.tries_progress ?? r.progress ?? 0);
+                const need = Number(r.tries_needed ?? r.needed ?? (r.max || 0));
+                const pct = need > 0 ? Math.max(0, Math.min(100, Math.floor((cur / need) * 100))) : 0;
+
+                return (
+                  <div key={name + "-" + i}
+                    style={{
+                      padding: 10, borderRadius: 10, background: "rgba(2,6,23,.6)",
+                      border: "1px solid rgba(255,255,255,.05)"
+                    }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>{name}</div>
+                      <div style={{ fontSize: 12, opacity: .8 }}>lv {lvl}</div>
+                    </div>
+
+                    {/* Barra com label de porcentagem e hover animado */}
+                    <div className="skill-bar" title={pct + "%"}>
+                      <div className="skill-fill" style={{ width: pct + "%" }} />
+                      <div className="skill-label">{pct}%</div>
+                    </div>
+                  </div>
+                );
+              })}
+              {!rows?.length && !err && (
+                <div style={{ fontSize: 12, color: "#9aa4b2" }}>sem skills para exibir</div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ============== Mount ============== */
+    function TeamAndEquipDemo() {
+      return <div style={{ padding: "4px 6px", background: "transparent" }}><TeamShell /></div>;
+    }
+
+    (async () => {
+      try { await ensureCsrf(); } catch { }
+      const mount = document.getElementById("team-root");
+      if (!(window.React && window.ReactDOM)) { console.warn("[team-ui] React/ReactDOM indisponíveis"); return; }
+      if (!mount) { console.warn("[team-ui] #team-root não encontrado"); return; }
+      try { ReactDOM.createRoot(mount).render(<TeamAndEquipDemo />); }
+      catch (e) { console.warn("[team-ui] render falhou:", e); }
     })();
   </script>
 </body>
+
 </html>

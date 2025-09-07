@@ -1,26 +1,38 @@
 {
-  "GET /_ping": [
+  "GET /_ping": [],
+  "GET /_routes": [],
+  "GET /:heroId": [
     {
-      "status": 200,
-      "body": "{ok:false,error:'too-far-click' }"
+      "status": 500,
+      "body": "{ok:false,error:'equipment-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-params' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'bad-slot' }"
     },
     {
       "status": 404,
-      "body": "{ok:false,error:'no-monster' }"
-    }
-  ],
-  "GET /_routes": [
-    {
-      "status": 200,
-      "body": "{ok:false,error:'too-far-click' }"
+      "body": "{ok:false,error:'hero-not-found' }"
     },
     {
       "status": 404,
-      "body": "{ok:false,error:'no-monster' }"
+      "body": "{ok:false,error:'no-such-item' }"
     },
     {
-      "status": 404,
-      "body": "{ok:false,error:'no-monster-in-radius' }"
+      "status": 400,
+      "body": "{ok:false,error:'slot-mismatch' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'no-stock' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'equip-failed' }"
     }
   ],
   "GET /api/admin/content/map/:key/data": [
@@ -450,6 +462,36 @@
       "body": "{error:'debug_grant_failed' }"
     }
   ],
+  "POST /equip": [
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-params' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'bad-slot' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'hero-not-found' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'no-such-item' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'slot-mismatch' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'no-stock' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'equip-failed' }"
+    }
+  ],
   "POST /gain/dev": [
     {
       "status": 400,
@@ -460,7 +502,12 @@
       "body": "{error:'Falha ao aplicar ganho' }"
     }
   ],
-  "GET /": [],
+  "GET /": [
+    {
+      "status": 500,
+      "body": "{ok:false,error:'inventory-failed',detail:String(e.message || e) }"
+    }
+  ],
   "POST /harvest": [
     {
       "status": 400,
@@ -539,18 +586,6 @@
     {
       "status": 400,
       "body": "{error:'heroKey inválido' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'starter já escolhido' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'erro ao selecionar starter' }"
     }
   ],
   "POST /login": [

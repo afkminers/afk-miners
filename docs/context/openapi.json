@@ -9,17 +9,7 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Error 200 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error 404 (inferred)",
+            "description": "OK (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -77,17 +67,7 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Error 200 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error 404 (inferred)",
+            "description": "OK (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -136,6 +116,83 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/:heroId": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "const { heroId": {
+                    "type": "number"
+                  },
+                  "slot": {
+                    "type": "string"
+                  },
+                  "itemKey": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "heroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number"
             }
           }
         ]
@@ -1284,6 +1341,78 @@
         }
       }
     },
+    "/equip": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "const { heroId": {
+                    "type": "number"
+                  },
+                  "slot": {
+                    "type": "string"
+                  },
+                  "itemKey": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/gain/dev": {
       "post": {
         "responses": {
@@ -1338,7 +1467,24 @@
       "get": {
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         }
       },

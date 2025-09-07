@@ -48,7 +48,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1178
+        "index": 1179
       }
     ],
     "defaults": [
@@ -72,7 +72,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15582
+        "index": 15753
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -192,7 +192,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15489
+        "index": 15660
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -209,7 +209,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1531
+        "index": 1532
       },
       {
         "file": "server\\skills\\routes.js",
@@ -249,7 +249,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1590
+        "index": 1591
       }
     ],
     "defaults": [
@@ -261,7 +261,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15439
+        "index": 15610
       }
     ],
     "defaults": [
@@ -297,7 +297,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15547
+        "index": 15718
       },
       {
         "file": "server\\auth\\middleware.js",

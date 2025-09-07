@@ -144,21 +144,21 @@
   },
   {
     "file": "server\\index.js",
-    "line": 37,
+    "line": 38,
     "kind": "arrow",
     "name": "syncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 62,
+    "line": 63,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 208,
+    "line": 214,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -167,7 +167,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 438,
+    "line": 444,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -176,7 +176,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 486,
+    "line": 492,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -185,7 +185,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 498,
+    "line": 504,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -239,14 +239,14 @@
   },
   {
     "file": "server\\starter\\routes.js",
-    "line": 7,
+    "line": 8,
     "kind": "function",
     "name": "isHeroKeyGenerated",
     "params": []
   },
   {
     "file": "server\\starter\\routes.js",
-    "line": 24,
+    "line": 23,
     "kind": "function",
     "name": "buildStarterRouter",
     "params": []
@@ -755,6 +755,27 @@
     ]
   },
   {
+    "file": "server\\routes\\equipment.js",
+    "line": 33,
+    "kind": "function",
+    "name": "begin",
+    "params": []
+  },
+  {
+    "file": "server\\routes\\equipment.js",
+    "line": 36,
+    "kind": "function",
+    "name": "commit",
+    "params": []
+  },
+  {
+    "file": "server\\routes\\equipment.js",
+    "line": 37,
+    "kind": "function",
+    "name": "rollback",
+    "params": []
+  },
+  {
     "file": "server\\routes\\combat_nearest.js",
     "line": 72,
     "kind": "function",
@@ -924,18 +945,93 @@
     "params": []
   },
   {
+    "file": "server\\models\\hero_extra.js",
+    "line": 15,
+    "kind": "function",
+    "name": "ensureHeroEquipRows",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "server\\models\\hero_extra.js",
+    "line": 40,
+    "kind": "function",
+    "name": "ensureHeroSkills",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "server\\models\\hero_extra.js",
+    "line": 56,
+    "kind": "function",
+    "name": "getHeroMeta",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "server\\models\\hero_extra.js",
+    "line": 67,
+    "kind": "function",
+    "name": "decideStarterWeapon",
+    "params": [
+      "{ heroKey",
+      "klass }"
+    ]
+  },
+  {
+    "file": "server\\models\\hero_extra.js",
+    "line": 82,
+    "kind": "function",
+    "name": "autoEquipStarterWeapon",
+    "params": [
+      "{ playerId",
+      "heroId }"
+    ]
+  },
+  {
     "file": "server\\models\\heroes.js",
-    "line": 12,
+    "line": 13,
     "kind": "function",
     "name": "ensureHeroesSchema",
     "params": []
   },
   {
     "file": "server\\models\\heroes.js",
-    "line": 37,
+    "line": 52,
     "kind": "function",
     "name": "seedHeroesIfEmpty",
     "params": []
+  },
+  {
+    "file": "server\\models\\heroes.js",
+    "line": 76,
+    "kind": "method",
+    "class": "TEXT",
+    "name": "for",
+    "params": [
+      "const h of seed"
+    ]
+  },
+  {
+    "file": "server\\models\\heroes.js",
+    "line": 116,
+    "kind": "function",
+    "name": "getHeroByKey",
+    "params": [
+      "heroKey"
+    ]
+  },
+  {
+    "file": "server\\models\\heroes.js",
+    "line": 120,
+    "kind": "function",
+    "name": "getHeroClassById",
+    "params": [
+      "heroId"
+    ]
   },
   {
     "file": "server\\models\\db.js",
@@ -1316,6 +1412,15 @@
     "file": "server\\combat\\routes.js",
     "line": 48,
     "kind": "function",
+    "name": "getEquippedWeaponType",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "server\\combat\\routes.js",
+    "line": 65,
+    "kind": "function",
     "name": "resolveSkillTypeOrClass",
     "params": [
       "{ weaponType",
@@ -1324,7 +1429,16 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 80,
+    "line": 67,
+    "kind": "function",
+    "name": "mapWeaponToSkill",
+    "params": [
+      "wtype"
+    ]
+  },
+  {
+    "file": "server\\combat\\routes.js",
+    "line": 113,
     "kind": "function",
     "name": "gainSkillFromHit",
     "params": [

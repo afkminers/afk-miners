@@ -29,9 +29,44 @@
 
 ### GET /
 
-Arquivo: `server\index.js:447`
+Arquivo: `server\index.js:453`
 
 _Sem payload inferido_
+
+### GET /:heroId
+
+Arquivo: `server\routes\equipment.js:11`
+
+**Payloads (exemplos inferidos):**
+- params:
+```json
+{
+  "heroId": 1
+}
+```
+- body:
+```json
+{
+  "const { heroId": 1,
+  "slot": "value",
+  "itemKey": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,equipment:rows }
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {ok:false,error:'equipment-failed' }
+- `HTTP 400` → {ok:false,error:'missing-params' }
+- `HTTP 400` → {ok:false,error:'bad-slot' }
+- `HTTP 404` → {ok:false,error:'hero-not-found' }
+- `HTTP 404` → {ok:false,error:'no-such-item' }
+- `HTTP 400` → {ok:false,error:'slot-mismatch' }
+- `HTTP 400` → {ok:false,error:'no-stock' }
+- `HTTP 500` → {ok:false,error:'equip-failed' }
 
 ### GET /_ping
 
@@ -54,10 +89,6 @@ Arquivo: `server\combat\routes.js:35`
 {ok:true,ts:Date.now() }
 ```
 
-**Erros conhecidos:**
-- `HTTP 200` → {ok:false,error:'too-far-click' }
-- `HTTP 404` → {ok:false,error:'no-monster' }
-
 ### GET /_routes
 
 Arquivo: `server\combat\routes.js:36`
@@ -79,14 +110,9 @@ Arquivo: `server\combat\routes.js:36`
 {routes:list }
 ```
 
-**Erros conhecidos:**
-- `HTTP 200` → {ok:false,error:'too-far-click' }
-- `HTTP 404` → {ok:false,error:'no-monster' }
-- `HTTP 404` → {ok:false,error:'no-monster-in-radius' }
-
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:416`
+Arquivo: `server\index.js:422`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -114,7 +140,7 @@ Arquivo: `server\index.js:416`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:391`
+Arquivo: `server\index.js:397`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -144,7 +170,7 @@ Arquivo: `server\index.js:391`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:403`
+Arquivo: `server\index.js:409`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -173,7 +199,7 @@ Arquivo: `server\index.js:403`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:380`
+Arquivo: `server\index.js:386`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -198,7 +224,7 @@ Arquivo: `server\index.js:380`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:350`
+Arquivo: `server\index.js:356`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -226,7 +252,7 @@ Arquivo: `server\index.js:350`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:361`
+Arquivo: `server\index.js:367`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -253,7 +279,7 @@ Arquivo: `server\index.js:361`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:370`
+Arquivo: `server\index.js:376`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -279,7 +305,7 @@ Arquivo: `server\index.js:370`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:684`
+Arquivo: `server\index.js:690`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -324,7 +350,7 @@ Arquivo: `server\routes\combat_nearest.js:28`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:56`
+Arquivo: `server\index.js:57`
 
 _Sem payload inferido_
 
@@ -426,7 +452,7 @@ _Sem payload inferido_
 
 ### GET /list
 
-Arquivo: `server\starter\routes.js:29`
+Arquivo: `server\starter\routes.js:28`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -447,9 +473,6 @@ Arquivo: `server\starter\routes.js:29`
 - `HTTP 400` → {error:'heroKey é obrigatório' }
 - `HTTP 400` → {error:'starter já escolhido' }
 - `HTTP 400` → {error:'heroKey inválido' }
-- `HTTP 400` → {error:'starter já escolhido' }
-- `HTTP 400` → {error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }
-- `HTTP 500` → {error:'erro ao selecionar starter' }
 
 ### GET /me
 
@@ -482,7 +505,7 @@ Arquivo: `server\skills\routes.js:48`
 
 ### GET /nearest
 
-Arquivo: `server\combat\routes.js:155`
+Arquivo: `server\combat\routes.js:189`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -629,7 +652,7 @@ Arquivo: `server\routes\farm.js:71`
 
 ### GET /status
 
-Arquivo: `server\starter\routes.js:74`
+Arquivo: `server\starter\routes.js:73`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -677,7 +700,7 @@ Arquivo: `server\gacha\routes.js:144`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:426`
+Arquivo: `server\index.js:432`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -697,7 +720,7 @@ Arquivo: `server\index.js:426`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:707`
+Arquivo: `server\index.js:713`
 
 _Sem payload inferido_
 
@@ -741,7 +764,7 @@ Arquivo: `server\routes\afk.js:65`
 
 ### POST /attack/start
 
-Arquivo: `server\combat\routes.js:217`
+Arquivo: `server\combat\routes.js:251`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -772,7 +795,7 @@ Arquivo: `server\combat\routes.js:217`
 
 ### POST /attack/stop
 
-Arquivo: `server\combat\routes.js:256`
+Arquivo: `server\combat\routes.js:290`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -867,6 +890,36 @@ Arquivo: `server\routes\farm.js:240`
 - `HTTP 403` → {error:'forbidden' }
 - `HTTP 500` → {error:'debug_grant_failed' }
 
+### POST /equip
+
+Arquivo: `server\routes\equipment.js:30`
+
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "const { heroId": 1,
+  "slot": "value",
+  "itemKey": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{
+  "ok": true
+}
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {ok:false,error:'missing-params' }
+- `HTTP 400` → {ok:false,error:'bad-slot' }
+- `HTTP 404` → {ok:false,error:'hero-not-found' }
+- `HTTP 404` → {ok:false,error:'no-such-item' }
+- `HTTP 400` → {ok:false,error:'slot-mismatch' }
+- `HTTP 400` → {ok:false,error:'no-stock' }
+- `HTTP 500` → {ok:false,error:'equip-failed' }
+
 ### POST /gain/dev
 
 Arquivo: `server\skills\routes.js:91`
@@ -916,7 +969,7 @@ Arquivo: `server\routes\farm.js:181`
 
 ### POST /hit
 
-Arquivo: `server\combat\routes.js:274`
+Arquivo: `server\combat\routes.js:308`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1133,7 +1186,7 @@ _Sem payload inferido_
 
 ### POST /select
 
-Arquivo: `server\starter\routes.js:92`
+Arquivo: `server\starter\routes.js:91`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1159,13 +1212,18 @@ Arquivo: `server\starter\routes.js:92`
 ## Tabela sintética de erros por rota
 
 - **GET /**
+  - HTTP 500: {ok:false,error:'inventory-failed',detail:String(e.message || e) }
+- **GET /:heroId**
+  - HTTP 500: {ok:false,error:'equipment-failed' }
+  - HTTP 400: {ok:false,error:'missing-params' }
+  - HTTP 400: {ok:false,error:'bad-slot' }
+  - HTTP 404: {ok:false,error:'hero-not-found' }
+  - HTTP 404: {ok:false,error:'no-such-item' }
+  - HTTP 400: {ok:false,error:'slot-mismatch' }
+  - HTTP 400: {ok:false,error:'no-stock' }
+  - HTTP 500: {ok:false,error:'equip-failed' }
 - **GET /_ping**
-  - HTTP 200: {ok:false,error:'too-far-click' }
-  - HTTP 404: {ok:false,error:'no-monster' }
 - **GET /_routes**
-  - HTTP 200: {ok:false,error:'too-far-click' }
-  - HTTP 404: {ok:false,error:'no-monster' }
-  - HTTP 404: {ok:false,error:'no-monster-in-radius' }
 - **GET /api/admin/content/map/:key/data**
   - HTTP 404: {error:'map not found' }
   - HTTP 500: {error:err.message }
@@ -1253,9 +1311,6 @@ Arquivo: `server\starter\routes.js:92`
   - HTTP 400: {error:'heroKey é obrigatório' }
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 400: {error:'heroKey inválido' }
-  - HTTP 400: {error:'starter já escolhido' }
-  - HTTP 400: {error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }
-  - HTTP 500: {error:'erro ao selecionar starter' }
 - **GET /me**
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
@@ -1380,6 +1435,14 @@ Arquivo: `server\starter\routes.js:92`
 - **POST /debug/grant-seed**
   - HTTP 403: {error:'forbidden' }
   - HTTP 500: {error:'debug_grant_failed' }
+- **POST /equip**
+  - HTTP 400: {ok:false,error:'missing-params' }
+  - HTTP 400: {ok:false,error:'bad-slot' }
+  - HTTP 404: {ok:false,error:'hero-not-found' }
+  - HTTP 404: {ok:false,error:'no-such-item' }
+  - HTTP 400: {ok:false,error:'slot-mismatch' }
+  - HTTP 400: {ok:false,error:'no-stock' }
+  - HTTP 500: {ok:false,error:'equip-failed' }
 - **POST /gain/dev**
   - HTTP 400: {error:'heroId e skillType são obrigatórios' }
   - HTTP 500: {error:'Falha ao aplicar ganho' }

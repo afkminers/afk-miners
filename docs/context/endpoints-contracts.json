@@ -13,16 +13,7 @@
         "py": "value"
       }
     },
-    "errors": [
-      {
-        "status": 200,
-        "body": "{ok:false,error:'too-far-click' }"
-      },
-      {
-        "status": 404,
-        "body": "{ok:false,error:'no-monster' }"
-      }
-    ],
+    "errors": [],
     "ok": [
       {
         "status": 200,
@@ -48,20 +39,7 @@
         "py": "value"
       }
     },
-    "errors": [
-      {
-        "status": 200,
-        "body": "{ok:false,error:'too-far-click' }"
-      },
-      {
-        "status": 404,
-        "body": "{ok:false,error:'no-monster' }"
-      },
-      {
-        "status": 404,
-        "body": "{ok:false,error:'no-monster-in-radius' }"
-      }
-    ],
+    "errors": [],
     "ok": [
       {
         "status": 200,
@@ -71,9 +49,77 @@
   },
   {
     "method": "GET",
+    "path": "/:heroId",
+    "file": "server\\routes\\equipment.js",
+    "line": 11,
+    "sample": {
+      "params": {
+        "heroId": 1
+      },
+      "body": {
+        "const { heroId": 1,
+        "slot": "value",
+        "itemKey": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{ok:false,error:'equipment-failed' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-params' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'bad-slot' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'hero-not-found' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'no-such-item' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'slot-mismatch' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'no-stock' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'equip-failed' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,equipment:rows }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,unequipped:prevItem }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,equipped:desiredKey,swappedFrom:prevItem || null }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 416,
+    "line": 422,
     "sample": {
       "params": {
         "key": "value"
@@ -107,7 +153,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 391,
+    "line": 397,
     "sample": {
       "params": {
         "key": "value"
@@ -149,7 +195,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 403,
+    "line": 409,
     "sample": {
       "params": {
         "key": "value"
@@ -187,7 +233,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 380,
+    "line": 386,
     "sample": {
       "query": {
         "map": "value"
@@ -230,7 +276,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 350,
+    "line": 356,
     "sample": {
       "query": {
         "map": "value"
@@ -285,7 +331,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 426,
+    "line": 432,
     "sample": {
       "query": {
         "map": "value"
@@ -308,7 +354,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 361,
+    "line": 367,
     "sample": {
       "query": {
         "map": "value"
@@ -359,7 +405,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 370,
+    "line": 376,
     "sample": {
       "query": {
         "map": "value"
@@ -406,7 +452,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 684,
+    "line": 690,
     "sample": {
       "query": {
         "limit": 1
@@ -437,7 +483,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 707,
+    "line": 713,
     "sample": {},
     "errors": [
       {
@@ -489,7 +535,7 @@
     "method": "GET",
     "path": "/api/csrf",
     "file": "server\\index.js",
-    "line": 56,
+    "line": 57,
     "sample": {},
     "errors": []
   },
@@ -571,7 +617,7 @@
     "method": "POST",
     "path": "/attack/start",
     "file": "server\\combat\\routes.js",
-    "line": 217,
+    "line": 251,
     "sample": {
       "body": {
         "heroId": 1,
@@ -635,10 +681,6 @@
       {
         "status": 200,
         "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp)||0,dead }"
       }
     ]
   },
@@ -646,7 +688,7 @@
     "method": "POST",
     "path": "/attack/stop",
     "file": "server\\combat\\routes.js",
-    "line": 256,
+    "line": 290,
     "sample": {
       "body": {
         "heroId": 1,
@@ -901,6 +943,63 @@
   },
   {
     "method": "POST",
+    "path": "/equip",
+    "file": "server\\routes\\equipment.js",
+    "line": 30,
+    "sample": {
+      "body": {
+        "const { heroId": 1,
+        "slot": "value",
+        "itemKey": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-params' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'bad-slot' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'hero-not-found' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'no-such-item' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'slot-mismatch' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'no-stock' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'equip-failed' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,unequipped:prevItem }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,equipped:desiredKey,swappedFrom:prevItem || null }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
     "path": "/gain/dev",
     "file": "server\\skills\\routes.js",
     "line": 91,
@@ -926,9 +1025,28 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 447,
+    "line": 453,
     "sample": {},
     "errors": []
+  },
+  {
+    "method": "GET",
+    "path": "/",
+    "file": "server\\routes\\inventory.js",
+    "line": 16,
+    "sample": {},
+    "errors": [
+      {
+        "status": 500,
+        "body": "{ok:false,error:'inventory-failed',detail:String(e.message || e) }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,items:rows }"
+      }
+    ]
   },
   {
     "method": "POST",
@@ -1004,7 +1122,7 @@
     "method": "POST",
     "path": "/hit",
     "file": "server\\combat\\routes.js",
-    "line": 274,
+    "line": 308,
     "sample": {
       "body": {
         "heroId": 1,
@@ -1041,7 +1159,7 @@
     "method": "GET",
     "path": "/list",
     "file": "server\\starter\\routes.js",
-    "line": 29,
+    "line": 28,
     "sample": {
       "body": {
         "try {\n      const playerId = req.user.id;\n      const { heroKey": 1
@@ -1067,28 +1185,12 @@
       {
         "status": 400,
         "body": "{error:'heroKey inválido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'starter já escolhido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'erro ao selecionar starter' }"
       }
     ],
     "ok": [
       {
         "status": 200,
         "body": "{canSelect:!row }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,id,heroKey }"
       }
     ]
   },
@@ -1326,7 +1428,7 @@
     "method": "GET",
     "path": "/nearest",
     "file": "server\\combat\\routes.js",
-    "line": 155,
+    "line": 189,
     "sample": {
       "query": {
         "map": "value",
@@ -1972,7 +2074,7 @@
     "method": "POST",
     "path": "/select",
     "file": "server\\starter\\routes.js",
-    "line": 92,
+    "line": 91,
     "sample": {
       "body": {
         "try {\n      const playerId = req.user.id;\n      const { heroKey": 1
@@ -2170,7 +2272,7 @@
     "method": "GET",
     "path": "/status",
     "file": "server\\starter\\routes.js",
-    "line": 74,
+    "line": 73,
     "sample": {
       "body": {
         "try {\n      const playerId = req.user.id;\n      const { heroKey": 1

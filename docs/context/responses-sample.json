@@ -6,6 +6,12 @@
   "GET /_routes": [
     "{routes:list }"
   ],
+  "GET /:heroId": [
+    "{ok:true,equipment:rows }",
+    "{ok:true }",
+    "{ok:true,unequipped:prevItem }",
+    "{ok:true,equipped:desiredKey,swappedFrom:prevItem || null }"
+  ],
   "GET /api/admin/content/map/:key/data": [
     "{ok:true,reloaded:mapKey }"
   ],
@@ -49,8 +55,7 @@
     "{ok:false,error:'out_of_range' }",
     "{ok:false,error:'no_los' }",
     "{ok:true }",
-    "{ok:true }",
-    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp)||0,dead }"
+    "{ok:true }"
   ],
   "POST /attack/stop": [
     "{ok:true }",
@@ -71,8 +76,15 @@
   "POST /debug/grant-seed": [
     "{ok:true,item_type,amount:Number(amount) || 0 }"
   ],
+  "POST /equip": [
+    "{ok:true }",
+    "{ok:true,unequipped:prevItem }",
+    "{ok:true,equipped:desiredKey,swappedFrom:prevItem || null }"
+  ],
   "POST /gain/dev": [],
-  "GET /": [],
+  "GET /": [
+    "{ok:true,items:rows }"
+  ],
   "POST /harvest": [
     "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }",
     "{ok:true,item_type,amount:Number(amount) || 0 }"
@@ -82,8 +94,7 @@
     "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp)||0,dead }"
   ],
   "GET /list": [
-    "{canSelect:!row }",
-    "{ok:true,id,heroKey }"
+    "{canSelect:!row }"
   ],
   "POST /login": [
     "{ok:true }",

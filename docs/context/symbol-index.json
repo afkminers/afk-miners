@@ -522,6 +522,8 @@
     "file": "server\\combat\\routes.js",
     "symbols": [
       "gainSkillFromHit",
+      "getEquippedWeaponType",
+      "mapWeaponToSkill",
       "resolveSkillTypeOrClass"
     ]
   },
@@ -614,9 +616,22 @@
     ]
   },
   {
+    "file": "server\\models\\hero_extra.js",
+    "symbols": [
+      "autoEquipStarterWeapon",
+      "decideStarterWeapon",
+      "ensureHeroEquipRows",
+      "ensureHeroSkills",
+      "getHeroMeta"
+    ]
+  },
+  {
     "file": "server\\models\\heroes.js",
     "symbols": [
+      "TEXT",
       "ensureHeroesSchema",
+      "getHeroByKey",
+      "getHeroClassById",
       "seedHeroesIfEmpty"
     ]
   },
@@ -655,6 +670,14 @@
     "symbols": [
       "containsPoint",
       "pointRectDist2"
+    ]
+  },
+  {
+    "file": "server\\routes\\equipment.js",
+    "symbols": [
+      "begin",
+      "commit",
+      "rollback"
     ]
   },
   {
