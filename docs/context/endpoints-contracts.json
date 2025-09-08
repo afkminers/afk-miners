@@ -734,7 +734,7 @@
     "method": "GET",
     "path": "/class-rates",
     "file": "server\\skills\\routes.js",
-    "line": 33,
+    "line": 40,
     "sample": {
       "query": {
         "heroId": 1
@@ -766,11 +766,29 @@
       },
       {
         "status": 400,
+        "body": "{error:'heroId é obrigatório' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'Herói não encontrado' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao listar skills do herói' }"
+      },
+      {
+        "status": 400,
         "body": "{error:'heroId e skillType são obrigatórios' }"
       },
       {
         "status": 500,
         "body": "{error:'Falha ao aplicar ganho' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{skills:rows }"
       }
     ]
   },
@@ -858,7 +876,7 @@
     "method": "GET",
     "path": "/curves",
     "file": "server\\skills\\routes.js",
-    "line": 10,
+    "line": 14,
     "sample": {
       "query": {
         "skill": "value",
@@ -899,6 +917,18 @@
       },
       {
         "status": 400,
+        "body": "{error:'heroId é obrigatório' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'Herói não encontrado' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao listar skills do herói' }"
+      },
+      {
+        "status": 400,
         "body": "{error:'heroId e skillType são obrigatórios' }"
       },
       {
@@ -910,6 +940,10 @@
       {
         "status": 200,
         "body": "{skill_type:skill,rows }"
+      },
+      {
+        "status": 200,
+        "body": "{skills:rows }"
       }
     ]
   },
@@ -1002,7 +1036,7 @@
     "method": "POST",
     "path": "/gain/dev",
     "file": "server\\skills\\routes.js",
-    "line": 91,
+    "line": 148,
     "sample": {
       "body": {
         "try {\n      const { heroId": 1,
@@ -1102,6 +1136,46 @@
       {
         "status": 200,
         "body": "{ok:true,item_type,amount:Number(amount) || 0 }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hero/:id",
+    "file": "server\\skills\\routes.js",
+    "line": 121,
+    "sample": {
+      "params": {
+        "id": 1
+      },
+      "body": {
+        "router.post('/gain/dev'": "value",
+        "async (req": "value",
+        "res) => {\n    try {\n      const { heroId": 1,
+        "heroClass": "value",
+        "skillType": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:'heroId é obrigatório' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'Herói não encontrado' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao listar skills do herói' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'heroId e skillType são obrigatórios' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao aplicar ganho' }"
       }
     ]
   },
@@ -1268,7 +1342,7 @@
     "method": "GET",
     "path": "/me",
     "file": "server\\skills\\routes.js",
-    "line": 48,
+    "line": 94,
     "sample": {
       "query": {
         "heroId": 1
@@ -1296,11 +1370,29 @@
       },
       {
         "status": 400,
+        "body": "{error:'heroId é obrigatório' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'Herói não encontrado' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'Falha ao listar skills do herói' }"
+      },
+      {
+        "status": 400,
         "body": "{error:'heroId e skillType são obrigatórios' }"
       },
       {
         "status": 500,
         "body": "{error:'Falha ao aplicar ganho' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{skills:rows }"
       }
     ]
   },

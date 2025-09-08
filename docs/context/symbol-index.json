@@ -424,6 +424,33 @@
     ]
   },
   {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "symbols": [
+      "ensureContainer",
+      "ensureContext",
+      "escapeHtml",
+      "fetchSkillsForHero",
+      "flashBadge",
+      "getGameRoot",
+      "getJSON",
+      "init",
+      "loadBuffer",
+      "monitorUpdate",
+      "normalizeSkillsPayload",
+      "notifySkill",
+      "play",
+      "pollOnce",
+      "primeSilent",
+      "push",
+      "setVolume",
+      "showNext",
+      "skillLabel",
+      "startPolling",
+      "stopPolling",
+      "unlockOnGesture"
+    ]
+  },
+  {
     "file": "fix-camel-columns.js",
     "symbols": [
       "applyReplacements",
@@ -753,6 +780,12 @@
       "getClassRate",
       "triesBase",
       "triesNeeded"
+    ]
+  },
+  {
+    "file": "server\\skills\\routes.js",
+    "symbols": [
+      "fetchAllHeroSkills"
     ]
   },
   {

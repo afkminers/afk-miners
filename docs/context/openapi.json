@@ -1019,7 +1019,14 @@
       "get": {
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           },
           "400": {
             "description": "Error 400 (inferred)",
@@ -1608,6 +1615,82 @@
             }
           }
         }
+      }
+    },
+    "/hero/:id": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "router.post('/gain/dev'": {
+                    "type": "string"
+                  },
+                  "async (req": {
+                    "type": "string"
+                  },
+                  "res) => {\n    try {\n      const { heroId": {
+                    "type": "number"
+                  },
+                  "heroClass": {
+                    "type": "string"
+                  },
+                  "skillType": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ]
       }
     },
     "/heroes/master": {

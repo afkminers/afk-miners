@@ -375,7 +375,7 @@ _Sem payload inferido_
 
 ### GET /class-rates
 
-Arquivo: `server\skills\routes.js:33`
+Arquivo: `server\skills\routes.js:40`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -395,8 +395,16 @@ Arquivo: `server\skills\routes.js:33`
 }
 ```
 
+**Resposta de sucesso (amostra):**
+```json
+{skills:rows }
+```
+
 **Erros conhecidos:**
 - `HTTP 500` → {error:'Falha ao listar rates' }
+- `HTTP 400` → {error:'heroId é obrigatório' }
+- `HTTP 404` → {error:'Herói não encontrado' }
+- `HTTP 500` → {error:'Falha ao listar skills do herói' }
 - `HTTP 400` → {error:'heroId é obrigatório' }
 - `HTTP 404` → {error:'Herói não encontrado' }
 - `HTTP 500` → {error:'Falha ao listar skills do herói' }
@@ -405,7 +413,7 @@ Arquivo: `server\skills\routes.js:33`
 
 ### GET /curves
 
-Arquivo: `server\skills\routes.js:10`
+Arquivo: `server\skills\routes.js:14`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -435,6 +443,38 @@ Arquivo: `server\skills\routes.js:10`
 - `HTTP 400` → {error:'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC',}
 - `HTTP 500` → {error:'Falha ao listar curvas' }
 - `HTTP 500` → {error:'Falha ao listar rates' }
+- `HTTP 400` → {error:'heroId é obrigatório' }
+- `HTTP 404` → {error:'Herói não encontrado' }
+- `HTTP 500` → {error:'Falha ao listar skills do herói' }
+- `HTTP 400` → {error:'heroId é obrigatório' }
+- `HTTP 404` → {error:'Herói não encontrado' }
+- `HTTP 500` → {error:'Falha ao listar skills do herói' }
+- `HTTP 400` → {error:'heroId e skillType são obrigatórios' }
+- `HTTP 500` → {error:'Falha ao aplicar ganho' }
+
+### GET /hero/:id
+
+Arquivo: `server\skills\routes.js:121`
+
+**Payloads (exemplos inferidos):**
+- params:
+```json
+{
+  "id": 1
+}
+```
+- body:
+```json
+{
+  "router.post('/gain/dev'": "value",
+  "async (req": "value",
+  "res) => {\n    try {\n      const { heroId": 1,
+  "heroClass": "value",
+  "skillType": "value"
+}
+```
+
+**Erros conhecidos:**
 - `HTTP 400` → {error:'heroId é obrigatório' }
 - `HTTP 404` → {error:'Herói não encontrado' }
 - `HTTP 500` → {error:'Falha ao listar skills do herói' }
@@ -476,7 +516,7 @@ Arquivo: `server\starter\routes.js:28`
 
 ### GET /me
 
-Arquivo: `server\skills\routes.js:48`
+Arquivo: `server\skills\routes.js:94`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -496,7 +536,15 @@ Arquivo: `server\skills\routes.js:48`
 }
 ```
 
+**Resposta de sucesso (amostra):**
+```json
+{skills:rows }
+```
+
 **Erros conhecidos:**
+- `HTTP 400` → {error:'heroId é obrigatório' }
+- `HTTP 404` → {error:'Herói não encontrado' }
+- `HTTP 500` → {error:'Falha ao listar skills do herói' }
 - `HTTP 400` → {error:'heroId é obrigatório' }
 - `HTTP 404` → {error:'Herói não encontrado' }
 - `HTTP 500` → {error:'Falha ao listar skills do herói' }
@@ -922,7 +970,7 @@ Arquivo: `server\routes\equipment.js:30`
 
 ### POST /gain/dev
 
-Arquivo: `server\skills\routes.js:91`
+Arquivo: `server\skills\routes.js:148`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1292,12 +1340,24 @@ Arquivo: `server\starter\routes.js:91`
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
   - HTTP 500: {error:'Falha ao listar skills do herói' }
+  - HTTP 400: {error:'heroId é obrigatório' }
+  - HTTP 404: {error:'Herói não encontrado' }
+  - HTTP 500: {error:'Falha ao listar skills do herói' }
   - HTTP 400: {error:'heroId e skillType são obrigatórios' }
   - HTTP 500: {error:'Falha ao aplicar ganho' }
 - **GET /curves**
   - HTTP 400: {error:'informe ?skill=SWORD|AXE|CLUB|DISTANCE|SHIELD|MAGIC',}
   - HTTP 500: {error:'Falha ao listar curvas' }
   - HTTP 500: {error:'Falha ao listar rates' }
+  - HTTP 400: {error:'heroId é obrigatório' }
+  - HTTP 404: {error:'Herói não encontrado' }
+  - HTTP 500: {error:'Falha ao listar skills do herói' }
+  - HTTP 400: {error:'heroId é obrigatório' }
+  - HTTP 404: {error:'Herói não encontrado' }
+  - HTTP 500: {error:'Falha ao listar skills do herói' }
+  - HTTP 400: {error:'heroId e skillType são obrigatórios' }
+  - HTTP 500: {error:'Falha ao aplicar ganho' }
+- **GET /hero/:id**
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
   - HTTP 500: {error:'Falha ao listar skills do herói' }
@@ -1312,6 +1372,9 @@ Arquivo: `server\starter\routes.js:91`
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 400: {error:'heroKey inválido' }
 - **GET /me**
+  - HTTP 400: {error:'heroId é obrigatório' }
+  - HTTP 404: {error:'Herói não encontrado' }
+  - HTTP 500: {error:'Falha ao listar skills do herói' }
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
   - HTTP 500: {error:'Falha ao listar skills do herói' }

@@ -10,7 +10,7 @@ const state = {
   selectedTargetId: null,
 };
 
-// ===== Rebind helper/estado (NOVO) =====
+// ===== Rebind helper/estado =====
 const unbound = new Set(); // ids que ainda não têm sprite vinculada
 
 function ensureSpriteBind(id, key, spawnId) {
@@ -27,7 +27,7 @@ function wsUrl() {
   return `${proto}://${loc.host}/ws`;
 }
 
-// --------------- Floater ---------------
+/* ---------------- Floater (dano/xp) ---------------- */
 function pushFloaterAtSprite(sprite, text, ttl = 900) {
   if (!sprite) return;
 
@@ -37,7 +37,7 @@ function pushFloaterAtSprite(sprite, text, ttl = 900) {
   const ax = meta.anchor?.x ?? 0.5;
   const ay = meta.anchor?.y ?? 0.9;
 
-  // centraliza na largura do frame e sobe um pouco acima da cabeça
+  // centraliza e sobe um pouco acima da cabeça
   const x = Math.round(sprite.x - frameW * ax + frameW * 0.5);
   const y = Math.round(sprite.y - frameH * ay - 8);
 
@@ -59,7 +59,7 @@ function updateAndDrawFloaters(ctx, dtMs) {
   }
 }
 
-// --------------- Bind helpers (do GameScene) ---------------
+/* --------------- Bind helpers (GameScene) --------------- */
 function getSpriteFor(id) {
   return window.GameScene?.getMobByInstanceId?.(String(id)) || null;
 }
@@ -72,10 +72,13 @@ function bindByKey(id, monsterKey) {
   return window.GameScene?.bindInstanceToAnySpriteByKey?.(String(id), String(monsterKey)) || null;
 }
 
-// --------------- WS handler ---------------
+/* --------------- WS handler --------------- */
 function onWsMessage(e) {
   let msg;
   try { msg = JSON.parse(e.data); } catch { return; }
+
+  // Propaga toda msg do WS pra quem quiser ouvir (play.js/loot, etc.)
+  window.dispatchEvent(new CustomEvent('ws:message', { detail: { msg } }));
 
   if (msg.type === 'monster_respawned') {
     const id = String(msg.id);
@@ -146,7 +149,7 @@ function connectCombatWS() {
   ws.onmessage = onWsMessage;
 }
 
-// ===== Rebind loop (NOVO) =====
+/* ===== Rebind loop ===== */
 let rebindTimer = null;
 function startRebindLoop() {
   if (rebindTimer) return;
@@ -164,7 +167,7 @@ function startRebindLoop() {
   }, 300);
 }
 
-// --------------- Draw helpers (sempre na posição da sprite vinculada) ---------------
+/* --------------- Draw helpers (sempre na posição da sprite vinculada) --------------- */
 function drawHpBarAtSprite(ctx, sprite, hp, maxHp) {
   if (!sprite) return;
 
@@ -183,7 +186,7 @@ function drawHpBarAtSprite(ctx, sprite, hp, maxHp) {
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.fillRect(x, y, w, h);
 
-  // barra (vermelha)
+  // barra (verde de HP)
   const pct = Math.max(0, Math.min(1, (maxHp > 0 ? hp / maxHp : 0)));
   const wHp = Math.round(w * pct);
   ctx.fillStyle = 'rgba(51, 246, 22, 1)';
@@ -196,7 +199,7 @@ function drawHpBarAtSprite(ctx, sprite, hp, maxHp) {
 }
 
 function drawTargetBox(ctx) {
-  const id = (window.combatState && (window.combatState.selectedTargetId || window.combatState.targetId)) || null;
+  const id = (window.combatState && (window.combatState.selectedTargetId || window.combatState.targetId)) || state.selectedTargetId || null;
   if (!id) return;
   const s = getSpriteFor(id);
   if (!s) return;
@@ -215,12 +218,12 @@ function drawTargetBox(ctx) {
   ctx.strokeRect(ox, oy, frameW, frameH);
 }
 
-// --------------- Install API ---------------
+/* --------------- Install API --------------- */
 export default function installCombatOverlay() {
   connectCombatWS();
-  startRebindLoop(); // NOVO
+  startRebindLoop();
 
-  // opcional: se a GameScene emitir quando terminar de montar sprites, re-tenta bind na hora
+  // re-tenta bind quando a GameScene sinaliza que terminou seu boot
   window.addEventListener('gamescene:ready', () => {
     for (const m of state.monsters.values()) {
       const s = ensureSpriteBind(m.id, m.key, m.spawnId);
@@ -234,31 +237,76 @@ export default function installCombatOverlay() {
   });
   window.addEventListener('combat:attack:stop', () => { state.selectedTargetId = null; });
 
+  // ---------- Seleção por clique e Espaço para atacar ----------
+  function pickMobAtWorld(pt) {
+    const all = Array.from(state.monsters.values());
+    for (const m of all) {
+      const s = getSpriteFor(m.id);
+      if (!s || s.hidden || s.dead) continue;
+      const meta = s.meta || {};
+      const frameW = meta.frame?.width ?? 32;
+      const frameH = meta.frame?.height ?? 32;
+      const ax = meta.anchor?.x ?? 0.5;
+      const ay = meta.anchor?.y ?? 0.9;
+      const ox = Math.round(s.x - frameW * ax);
+      const oy = Math.round(s.y - frameH * ay);
+      if (pt.x >= ox && pt.x <= ox + frameW && pt.y >= oy && pt.y <= oy + frameH) return m.id;
+    }
+    return null;
+  }
+
+  const canvas = window.GameScene?.canvas;
+  if (canvas) {
+    canvas.addEventListener('mouseup', (e) => {
+      if (e.button !== 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+      const world = window.GameScene?.camera?.screenToWorld?.(sx, sy) || { x: sx, y: sy };
+      const id = pickMobAtWorld(world);
+      if (id) {
+        state.selectedTargetId = String(id);
+        if (!window.combatState) window.combatState = {};
+        window.combatState.targetId = state.selectedTargetId;
+        window.dispatchEvent(new CustomEvent('combat:attack:target', { detail: { id: state.selectedTargetId } }));
+      }
+    });
+
+    // Tecla espaço para atacar o alvo selecionado
+    window.addEventListener('keydown', (e) => {
+      if (e.code !== 'Space') return;
+      const id = state.selectedTargetId || (window.combatState && window.combatState.targetId);
+      if (id && window.CombatActions?.startAttack) {
+        window.CombatActions.startAttack(id);
+      }
+    });
+  }
+
+  // ---------- API pública do overlay ----------
   window.CombatUI = {
     render(ctx, camera, dt) {
-      const unbound = new Set();
+      const needRebind = new Set();
 
       const drawAll = () => {
         // desenha HP somente se houver sprite vinculada e o bicho estiver vivo
         for (const m of state.monsters.values()) {
           if (m.hp <= 0) continue;
-          const s = ensureSpriteBind(m.id, m.key, m.spawnId); // usa o helper
-          if (!s) { unbound.add(m.id); continue; }            // agenda rebind
+          const s = ensureSpriteBind(m.id, m.key, m.spawnId);
+          if (!s) { needRebind.add(m.id); continue; }
           drawHpBarAtSprite(ctx, s, m.hp, m.maxHp);
         }
 
         drawTargetBox(ctx);
 
-        // <<< IMPORTANTE: floaters agora também sob a câmera >>>
+        // floaters sob a câmera
         updateAndDrawFloaters(ctx, dt * 1000);
       };
 
       if (camera?.apply) camera.apply(ctx, drawAll);
       else drawAll();
 
-      // tentativa de rebind após o draw (não bloqueia render)
-      if (unbound.size) {
-        for (const id of unbound) {
+      // tentativa de rebind pós-draw
+      if (needRebind.size) {
+        for (const id of needRebind) {
           const m = state.monsters.get(id);
           if (m) ensureSpriteBind(m.id, m.key, m.spawnId);
         }
@@ -272,5 +320,4 @@ export default function installCombatOverlay() {
       };
     }
   };
-
 }

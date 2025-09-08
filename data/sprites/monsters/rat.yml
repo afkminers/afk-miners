@@ -1,4 +1,3 @@
-# data/sprites/monsters/rat.yml
 key: rat
 kind: monster
 image: "sprites/monsters/rat.png"
@@ -9,18 +8,15 @@ frame:
   margin: 0
   spacing: 0
 
-# seu sheet tem 288x384 → 6 colunas de 48 e 12 linhas de 32
 grid:
   cols: 6
   rows: 12
 
-# pivot no centro do 32×32 dentro do 48×32 → (24,16)  =>  0.5, 0.5
 anchor:
   x: 0.5
   y: 0.5
 
 anims:
-  # 0 — idle (4)
   idle:
     fps: 4
     frames: 4
@@ -28,12 +24,10 @@ anims:
     startCol: 0
     loop: true
 
-  # 1..4 — walk (south/west/east com 5; north com 4)
   walk:
     fps: 8
-    frames: 5 # valor padrão
+    frames: 5
     framesByDir:
-      # ← usa isso p/ ajustar por direção
       south: 5
       west: 5
       east: 5
@@ -46,7 +40,6 @@ anims:
     startCol: 0
     loop: true
 
-  # 5 — dead (4)
   dead:
     fps: 8
     frames: 4
@@ -54,7 +47,6 @@ anims:
     startCol: 0
     loop: false
 
-  # 6..9 — attack (2 por direção)
   attack:
     fps: 10
     frames: 2
@@ -65,3 +57,33 @@ anims:
       north: 9
     startCol: 0
     loop: false
+
+# --- extra (servidor) ---
+stats:
+  level: 2
+  hp: 18
+  exp: 8
+loot:
+- item_key: gold_coin
+  chance: 1.0
+  min: 1
+  max: 2
+- item_key: bone_shard
+  chance: 0.50
+  min: 1
+  max: 2
+- item_key: moldy_cheese
+  chance: 0.05
+  min: 1
+  max: 1
+# Se quiser usar a adaga enferrujada (garanti o SQL acima):
+- item_key: rusty_dagger
+  chance: 0.01
+  min: 1
+  max: 1
+
+# Caso prefira reutilizar o que já existia, troque por rusty_sword:
+# - item_key: rusty_sword
+#   chance: 0.01
+#   min: 1
+#   max: 1

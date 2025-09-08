@@ -3,6 +3,8 @@
 // Requests HTTP centralizadas em client/js/api.js (CSRF automático).
 
 import { getCsrf, apiGet, apiPost } from './api.js';
+import { CombatActions } from './combat/actions.js';
+
 
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
@@ -390,6 +392,28 @@ const mobs = [];
 window.GameScene.mobs = mobs;
 let mobAutoId = 1;
 
+/* ========================= Loot (estado) ========================== */
+const loots = new Map(); // id -> { id, x, y, items:[...] }
+window.GameScene.loots = loots;
+
+function lootAtWorld(x, y) {
+  for (const l of loots.values()) {
+    if (Math.abs(x - l.x) <= 16 && Math.abs(y - l.y) <= 16) return l;
+  }
+  return null;
+}
+
+function drawLoot(l) {
+  // desenho simples (você pode trocar por sprite/baú depois)
+  ctx.save();
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = '#d97706'; // âmbar
+  ctx.fillRect(l.x - 6, l.y - 10, 12, 10);
+  ctx.fillStyle = '#92400e';
+  ctx.fillRect(l.x - 6, l.y - 6, 12, 6);
+  ctx.restore();
+}
+
 /* ========================= Player Visual ========================== */
 const playerVis = { w: 32, h: 32, img: null, heroKey: null };
 
@@ -472,9 +496,7 @@ function drawMob(m) {
   const animDead = meta.anims?.dead || null;
 
   // escolher anima
-  const movingMag = Math.hypot(m.dirX || 0, m.dirY || 0);
-  let anim = animWalk;
-  if (m.dead && animDead) anim = animDead;
+  let anim = m.dead && animDead ? animDead : (animIdle && m._animFrozen ? animIdle : animWalk);
 
   // parâmetros base
   let fps = Number(anim.fps); if (!Number.isFinite(fps) || fps < 0) fps = 8;
@@ -989,6 +1011,17 @@ function updateRespawns(now) {
     s.nextAt = now0 + s.respawnMs;
   }
 
+  // === WS → loot (o seu ws-combat.js deve disparar 'ws:message' com {detail:{msg}})
+  window.addEventListener('ws:message', (ev) => {
+    const msg = ev.detail?.msg;
+    if (!msg || !msg.type) return;
+    if (msg.type === 'loot_spawned') {
+      loots.set(String(msg.id), { id: String(msg.id), x: msg.x, y: msg.y, items: msg.items || [] });
+    } else if (msg.type === 'loot_removed') {
+      loots.delete(String(msg.id));
+    }
+  });
+
   // sinaliza que a cena está pronta (outros módulos podem iniciar)
   window.dispatchEvent(new CustomEvent('game:ready', { detail: { canvas, ctx, camera, controller } }));
   // >>> avisa o overlay de combate para re-vincular barras imediatamente <<<
@@ -1000,41 +1033,114 @@ function updateRespawns(now) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
-    // Click-to-move
+    // Click-to-move (PRIORIZA LOOT)
     const m = Input.getMouse();
     if (Input.consumeClick()) {
       const rect = canvas.getBoundingClientRect();
-      clickMove.handleClick(m.x - rect.left, m.y - rect.top);
+      const sx = m.x - rect.left, sy = m.y - rect.top;
+      const w = camera.screenToWorld(sx, sy);
+      const loot = lootAtWorld(w.x, w.y);
+      if (loot) {
+        try { CombatActions?.pickupLoot?.(loot.id); } catch {}
+      } else {
+        clickMove.handleClick(sx, sy);
+      }
     }
 
-    // Teclado
-    const dir = Input.getDir();
-    controller.update(dt, dir);
+    // Teclado: 1 passo de 32x32 por tecla (N/S/L/O)
+    const step = Input.getStepIntent && Input.getStepIntent();
+    if (step) window.GameScene?.controller?.requestStep?.(step);
+    window.GameScene?.controller?.update?.(dt, null);
+
+    // Camera
     camera.update(dt);
 
-    // AI placeholder dos mobs
+    // ===== IA dos mobs em passos de 32x32 (apenas N/S/L/O) =====
+    const TILE = 32;
+    const hasGrid = !!grid && Number.isFinite(cols) && Number.isFinite(rows);
+    const cellOf   = (wx, wy) => ({ cx: Math.floor(wx / TILE), cy: Math.floor(wy / TILE) });
+    const centerOf = (cx, cy) => ({ x: cx * TILE + TILE / 2, y: cy * TILE + TILE / 2 });
+    const isBlocked = (cx, cy) => {
+      if (!hasGrid) return false;
+      if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) return true;
+      return grid[cy * cols + cx] === 1;
+    };
+    // Bound inteligente: área <= 1 SQM => não limita o mob
+    const inBound = (mob, cx, cy) => {
+      if (!mob.bound) return true;
+      const { x, y, w, h } = mob.bound;
+      if (w <= TILE && h <= TILE) return true;
+      const wx = cx * TILE + TILE / 2;
+      const wy = cy * TILE + TILE / 2;
+      return (wx >= x && wy >= y && wx <= x + w && wy <= y + h);
+    };
+    const faceFrom = (dx, dy) => (dx === 1 ? 'east' : dx === -1 ? 'west' : dy === 1 ? 'south' : 'north');
+
     for (const mob of mobs) {
       if (mob.hidden || mob.dead) continue;
-      if (now >= mob.changeAt) {
-        const ang = Math.random() * Math.PI * 2;
-        mob.dirX = Math.cos(ang);
-        mob.dirY = Math.sin(ang);
-        mob.changeAt = now + 700 + Math.random() * 1300;
-      }
-      mob.x += mob.dirX * mob.speed * dt;
-      mob.y += mob.dirY * mob.speed * dt;
 
-      const mag = Math.hypot(mob.dirX, mob.dirY);
-      if (mag > 0.1) {
-        if (Math.abs(mob.dirX) >= Math.abs(mob.dirY)) mob.face = mob.dirX >= 0 ? 'east' : 'west';
-        else mob.face = mob.dirY >= 0 ? 'south' : 'north';
-      }
-      if (mob.bound) {
-        const { x, y, w, h } = mob.bound;
-        if (mob.x < x) { mob.x = x; mob.dirX *= -1; }
-        if (mob.y < y) { mob.y = y; mob.dirY *= -1; }
-        if (mob.x > x + w) { mob.x = x + w; mob.dirX *= -1; }
-        if (mob.y > y + h) { mob.y = y + h; mob.dirY *= -1; }
+      // estado interno do passo
+      if (!mob._step) mob._step = { moving: false, tx: 0, ty: 0, nextAt: 0 };
+      const st = mob._step;
+
+      if (!st.moving) {
+        // congela animação quando parado
+        mob._animFrozen = true;
+        mob._animFrozenFrame = 0;
+
+        if (now >= st.nextAt) {
+          // tenta uma direção válida entre N/S/L/O
+          const dirs = [
+            { dx: 0, dy: -1 }, // N
+            { dx: 0, dy:  1 }, // S
+            { dx: -1, dy: 0 }, // L
+            { dx:  1, dy: 0 }, // O
+          ];
+          // embaralhar (Fisher–Yates simples)
+          for (let i = dirs.length - 1; i > 0; i--) {
+            const j = (Math.random() * (i + 1)) | 0;
+            [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
+          }
+          const c = cellOf(mob.x, mob.y);
+          let pick = null;
+          for (const d of dirs) {
+            const nx = c.cx + d.dx, ny = c.cy + d.dy;
+            if (isBlocked(nx, ny)) continue;
+            if (!inBound(mob, nx, ny)) continue;
+            pick = d; break;
+          }
+          if (pick) {
+            const tgt = centerOf(c.cx + pick.dx, c.cy + pick.dy);
+            st.tx = tgt.x; st.ty = tgt.y; st.moving = true;
+            mob.face = faceFrom(pick.dx, pick.dy);
+            // destrava anima para “walk”
+            mob._animFrozen = false;
+          } else {
+            // sem passo válido agora: espera um pouco e tenta de novo
+            st.nextAt = now + 400 + Math.random() * 400;
+          }
+        }
+      } else {
+        // movendo: destrava anima
+        mob._animFrozen = false;
+
+        const vx = st.tx - mob.x, vy = st.ty - mob.y;
+        const dist = Math.hypot(vx, vy);
+        const spd = Math.max(60, Number(mob.speed) || 60);
+        if (dist <= 1.0) {
+          // chegou no centro do tile
+          mob.x = Math.round(st.tx);
+          mob.y = Math.round(st.ty);
+          st.moving = false;
+          st.nextAt = now + 120 + Math.random() * 120;
+          // após chegar, congela até escolher o próximo passo
+          mob._animFrozen = true;
+          mob._animFrozenFrame = 0;
+        } else {
+          const ux = vx / (dist || 1), uy = vy / (dist || 1);
+          mob.x += ux * spd * dt;
+          mob.y += uy * spd * dt;
+        }
       }
     }
 
@@ -1045,16 +1151,18 @@ function updateRespawns(now) {
     clear();
     camera.apply(ctx, () => {
       drawGround(camera);
+      // desenha loots antes dos mobs
+      for (const l of loots.values()) drawLoot(l);
       for (const m of mobs) drawMob(m);
       drawPlayer(controller);
     });
 
-    // Hook de render do módulo de combate (HP bar, target box, floaters)
+    // Overlay de combate
     if (window.CombatUI && typeof window.CombatUI.render === 'function') {
       try { window.CombatUI.render(ctx, camera, dt); } catch (e) { /* não quebrar jogo */ }
     }
 
-    // evento por frame (útil para animações extras)
+    // evento por frame
     window.dispatchEvent(new CustomEvent('game:frame', { detail: { ctx, camera, dt } }));
 
     // HUD
@@ -1062,9 +1170,9 @@ function updateRespawns(now) {
       const p = controller.getPosition();
       hud.innerHTML = `
         <div>map: ${MAP_KEY}</div>
-        <div>Move: Click-to-move • WASD/Setas/Numpad</div>
+        <div>Move: Click-to-move • WASD/Setas/Numpad (1 SQM)</div>
         <div>pos: ${Math.round(p.x)}, ${Math.round(p.y)}</div>
-        <div>mobs: ${mobs.length} • spawns: ${spawners.length}</div>
+        <div>mobs: ${mobs.length} • spawns: ${spawners.length} • loots: ${loots.size}</div>
       `;
     }
 

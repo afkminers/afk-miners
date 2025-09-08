@@ -252,6 +252,15 @@
     "params": []
   },
   {
+    "file": "server\\skills\\routes.js",
+    "line": 60,
+    "kind": "function",
+    "name": "fetchAllHeroSkills",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
     "file": "server\\skills\\engine.js",
     "line": 5,
     "kind": "function",
@@ -4137,6 +4146,205 @@
     "line": 196,
     "kind": "function",
     "name": "attachButton",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 28,
+    "kind": "arrow",
+    "name": "AudioEngine",
+    "params": [
+      "("
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 34,
+    "kind": "function",
+    "name": "ensureContext",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 49,
+    "kind": "function",
+    "name": "setVolume",
+    "params": [
+      "v"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 55,
+    "kind": "function",
+    "name": "loadBuffer",
+    "params": [
+      "url"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 64,
+    "kind": "function",
+    "name": "primeSilent",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 74,
+    "kind": "function",
+    "name": "unlockOnGesture",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 75,
+    "kind": "arrow",
+    "name": "handler",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 87,
+    "kind": "function",
+    "name": "init",
+    "params": [
+      "url"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 105,
+    "kind": "function",
+    "name": "play",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 143,
+    "kind": "function",
+    "name": "getGameRoot",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 152,
+    "kind": "function",
+    "name": "ensureContainer",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 242,
+    "kind": "function",
+    "name": "flashBadge",
+    "params": [
+      "text = \"Advanced!\""
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 254,
+    "kind": "function",
+    "name": "showNext",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 283,
+    "kind": "function",
+    "name": "push",
+    "params": [
+      "htmlOrText",
+      "aliveMs"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 289,
+    "kind": "function",
+    "name": "skillLabel",
+    "params": [
+      "skillType"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 295,
+    "kind": "function",
+    "name": "notifySkill",
+    "params": [
+      "heroName",
+      "skillType",
+      "newLevel"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 308,
+    "kind": "function",
+    "name": "monitorUpdate",
+    "params": [
+      "heroId",
+      "heroName",
+      "rows"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 330,
+    "kind": "function",
+    "name": "escapeHtml",
+    "params": [
+      "s"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 343,
+    "kind": "function",
+    "name": "getJSON",
+    "params": [
+      "url"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 348,
+    "kind": "function",
+    "name": "normalizeSkillsPayload",
+    "params": [
+      "data"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 356,
+    "kind": "function",
+    "name": "fetchSkillsForHero",
+    "params": [
+      "hero"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 381,
+    "kind": "function",
+    "name": "pollOnce",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 394,
+    "kind": "function",
+    "name": "startPolling",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\skill_notify.js",
+    "line": 399,
+    "kind": "function",
+    "name": "stopPolling",
     "params": []
   },
   {

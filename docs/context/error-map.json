@@ -375,6 +375,18 @@
     },
     {
       "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Herói não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar skills do herói' }"
+    },
+    {
+      "status": 400,
       "body": "{error:'heroId e skillType são obrigatórios' }"
     },
     {
@@ -430,6 +442,18 @@
     {
       "status": 500,
       "body": "{error:'Falha ao listar rates' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Herói não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar skills do herói' }"
     },
     {
       "status": 400,
@@ -542,6 +566,28 @@
       "body": "{error:'debug_grant_failed' }"
     }
   ],
+  "GET /hero/:id": [
+    {
+      "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Herói não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar skills do herói' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'heroId e skillType são obrigatórios' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao aplicar ganho' }"
+    }
+  ],
   "GET /heroes/master": [
     {
       "status": 500,
@@ -621,6 +667,18 @@
     }
   ],
   "GET /me": [
+    {
+      "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'Herói não encontrado' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'Falha ao listar skills do herói' }"
+    },
     {
       "status": 400,
       "body": "{error:'heroId é obrigatório' }"

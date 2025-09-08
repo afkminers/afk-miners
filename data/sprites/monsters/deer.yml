@@ -1,4 +1,3 @@
-# data/sprites/monsters/deer.yml
 key: deer
 kind: monster
 image: "sprites/monsters/deer.png"
@@ -8,19 +7,17 @@ frame:
   height: 32
   margin: 0
   spacing: 0
-  bleedFix: 0.0 # opcional: se vazar pixels, suba p/ 0.25 (o código usa EPS interno)
+  bleedFix: 0.0
 
 grid:
   cols: 6
   rows: 12
 
-# pivô centrado no 32×32 dentro do 48×32
 anchor:
   x: 0.5
   y: 0.5
 
 anims:
-  # 0 — idle (4)
   idle:
     fps: 4
     frames: 4
@@ -28,10 +25,9 @@ anims:
     startCol: 0
     loop: true
 
-  # 1..4 — walk (south 3; east/west/north 4)
   walk:
     fps: 8
-    frames: 4 # default exigido pelo schema
+    frames: 4
     framesByDir:
       south: 3
       east: 4
@@ -42,13 +38,11 @@ anims:
       east: 2
       west: 3
       north: 4
-    # Sequência específica p/ SOUTH (3 quadros). Evita pedir um 4º frame vazio.
     seqByDir:
       south: [ 0, 1, 2 ]
     startCol: 0
     loop: true
 
-  # 5 — dead (3)
   dead:
     fps: 8
     frames: 3
@@ -56,7 +50,6 @@ anims:
     startCol: 0
     loop: false
 
-  # 6..9 — attack (2 por direção)
   attack:
     fps: 10
     frames: 2
@@ -67,3 +60,26 @@ anims:
       north: 9
     startCol: 0
     loop: false
+
+# --- extra (usado pelo servidor/jogo, não interfere no draw) ---
+stats:
+  level: 3
+  hp: 30
+  exp: 18
+loot:
+- item_key: gold_coin # gold sempre 100%, range pequeno
+  chance: 1.0
+  min: 1
+  max: 3
+- item_key: raw_meat
+  chance: 0.70
+  min: 1
+  max: 1
+- item_key: deer_hide
+  chance: 0.20
+  min: 1
+  max: 1
+- item_key: antler_trinket # raro, bom pra vender
+  chance: 0.02
+  min: 1
+  max: 1

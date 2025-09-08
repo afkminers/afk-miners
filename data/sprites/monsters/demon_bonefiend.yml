@@ -1,4 +1,3 @@
-# data/sprites/monsters/demon_bonefiend.yml
 key: demon_bonefiend
 kind: monster
 image: "sprites/monsters/demon_bonefiend.png"
@@ -8,9 +7,8 @@ frame:
   height: 64
   margin: 0
   spacing: 0
-  bleedFix: 0.5 # pode subir pra 0.5 se ver “vazamento” de pixels
+  bleedFix: 0.5
 
-# 384x640 => 6 colunas × 10 linhas
 grid:
   cols: 6
   rows: 10
@@ -20,7 +18,6 @@ anchor:
   y: 0.85
 
 anims:
-  # line 0 — idle (2 frames nas colunas 0 e 1)
   idle:
     fps: 4
     row: 0
@@ -29,7 +26,6 @@ anims:
     seq: [ 0, 1 ]
     loop: true
 
-  # lines 1..4 — walk (2 frames, sempre colunas 0 e 1)
   walk:
     fps: 8
     frames: 2
@@ -46,7 +42,6 @@ anims:
       north: [ 0, 1 ]
     loop: true
 
-  # attacks — 2 frames, também só nas colunas 0 e 1
   attack:
     fps: 10
     frames: 2
@@ -63,7 +58,6 @@ anims:
       north: [ 0, 1 ]
     loop: false
 
-  # dead — 4 frames na linha 7
   dead:
     fps: 8
     row: 8
@@ -71,3 +65,27 @@ anims:
     startCol: 0
     seq: [ 0, 1, 2, 3 ]
     loop: false
+
+# --- extra (servidor) ---
+stats:
+  level: 52
+  hp: 1100
+  exp: 720
+loot:
+- item_key: gold_coin
+  chance: 1.0
+  min: 6
+  max: 12
+- item_key: bone_shard
+  chance: 0.70
+  min: 2
+  max: 5
+# Itens “signature” (garantidos no SQL acima):
+- item_key: darkblade
+  chance: 0.01
+  min: 1
+  max: 1
+- item_key: black_shield
+  chance: 0.01
+  min: 1
+  max: 1
