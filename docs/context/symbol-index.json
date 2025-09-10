@@ -65,6 +65,18 @@
     ]
   },
   {
+    "file": "client\\js\\backpack\\ui.js",
+    "symbols": [
+      "bindContextOpen",
+      "findPanel",
+      "getItemsIndex",
+      "iconFor",
+      "open",
+      "render",
+      "renderGrid"
+    ]
+  },
+  {
     "file": "client\\js\\boot.js",
     "symbols": [
       "closeMobileMenu",
@@ -370,6 +382,7 @@
       "animateProgressBars",
       "bindProfileModal",
       "close",
+      "ensureEquipHandlers",
       "fetchEquip",
       "fetchPlayerMeOnce",
       "fillEquip",
@@ -382,7 +395,8 @@
       "refreshEquip",
       "renderHeroSkills",
       "renderTrainBars",
-      "resolveCard"
+      "resolveCard",
+      "spriteUrlFromMeta"
     ]
   },
   {
@@ -562,7 +576,8 @@
       "gainSkillFromHit",
       "getEquippedWeaponType",
       "mapWeaponToSkill",
-      "resolveSkillTypeOrClass"
+      "resolveSkillTypeOrClass",
+      "rollSimpleLoot"
     ]
   },
   {
@@ -595,9 +610,9 @@
   {
     "file": "server\\content\\loader.js",
     "symbols": [
+      "ensureItemColumns",
       "firstExistingPath",
       "inferSpriteKind",
-      "list",
       "listRecursive",
       "loadAll",
       "loadItems",
@@ -610,6 +625,15 @@
       "resolveMonstersIndex",
       "resolveSpritesBase",
       "sha1"
+    ]
+  },
+  {
+    "file": "server\\content\\monsters\\index.js",
+    "symbols": [
+      "getAll",
+      "getByKey",
+      "loadAll",
+      "reload"
     ]
   },
   {
@@ -779,6 +803,32 @@
     ]
   },
   {
+    "file": "server\\services\\backpack.js",
+    "symbols": [
+      "_firstEmptySlot",
+      "_getEquippedBackpackKey",
+      "_getItemData",
+      "_isStackable",
+      "_tryStack",
+      "getBackpackSpec",
+      "listBackpack",
+      "putInBackpack",
+      "putLootItemsForHero"
+    ]
+  },
+  {
+    "file": "server\\services\\loot.js",
+    "symbols": [
+      "cleanupExpiredOnce",
+      "createLootFromKill",
+      "ensureMap",
+      "getMapLoot",
+      "nowMs",
+      "pickupLoot",
+      "startCleanupLoop"
+    ]
+  },
+  {
     "file": "server\\skills\\engine.js",
     "symbols": [
       "applyTries",
@@ -810,7 +860,12 @@
     "file": "server\\ws\\bus.js",
     "symbols": [
       "attach",
-      "broadcast"
+      "broadcast",
+      "broadcastToMap",
+      "isOpen",
+      "joinMapSocket",
+      "moveSocketToMap",
+      "roomOf"
     ]
   },
   {

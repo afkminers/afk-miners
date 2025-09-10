@@ -6,6 +6,13 @@
   "GET /_routes": [
     "{routes:list }"
   ],
+  "POST /:heroId/deposit": [
+    "{ok:true,placed }"
+  ],
+  "GET /:heroId/slots": [
+    "{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key,}",
+    "{ok:true,placed }"
+  ],
   "GET /:heroId": [
     "{ok:true,equipment:rows }",
     "{ok:true }",
@@ -58,8 +65,7 @@
     "{ok:true }"
   ],
   "POST /attack/stop": [
-    "{ok:true }",
-    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp)||0,dead }"
+    "{ok:true }"
   ],
   "GET /class-rates": [
     "{skills:rows }"
@@ -108,6 +114,12 @@
   "POST /logout": [
     "{ok:true }",
     "{profile }"
+  ],
+  "POST /loot/pickup": [
+    "{ok:true,placed,leftover,backpack:snapshot }"
+  ],
+  "GET /map/:mapKey/loot": [
+    "{ok:true,placed,leftover,backpack:snapshot }"
   ],
   "GET /me": [
     "{profile }"

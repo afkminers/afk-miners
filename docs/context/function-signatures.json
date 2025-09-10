@@ -144,21 +144,21 @@
   },
   {
     "file": "server\\index.js",
-    "line": 38,
+    "line": 43,
     "kind": "arrow",
     "name": "syncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 63,
+    "line": 76,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 214,
+    "line": 237,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -167,7 +167,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 444,
+    "line": 467,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -176,7 +176,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 492,
+    "line": 519,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -185,7 +185,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 504,
+    "line": 531,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -221,7 +221,25 @@
   },
   {
     "file": "server\\ws\\bus.js",
-    "line": 4,
+    "line": 9,
+    "kind": "function",
+    "name": "isOpen",
+    "params": [
+      "sock"
+    ]
+  },
+  {
+    "file": "server\\ws\\bus.js",
+    "line": 14,
+    "kind": "function",
+    "name": "roomOf",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\ws\\bus.js",
+    "line": 21,
     "kind": "function",
     "name": "attach",
     "params": [
@@ -230,10 +248,47 @@
   },
   {
     "file": "server\\ws\\bus.js",
-    "line": 6,
+    "line": 26,
     "kind": "function",
     "name": "broadcast",
     "params": [
+      "obj"
+    ]
+  },
+  {
+    "file": "server\\ws\\bus.js",
+    "line": 37,
+    "kind": "function",
+    "name": "joinMapSocket",
+    "params": [
+      "mapKey",
+      "ws"
+    ]
+  },
+  {
+    "file": "server\\ws\\bus.js",
+    "line": 45,
+    "kind": "arrow",
+    "name": "onClose",
+    "params": []
+  },
+  {
+    "file": "server\\ws\\bus.js",
+    "line": 62,
+    "kind": "function",
+    "name": "moveSocketToMap",
+    "params": [
+      "a",
+      "b"
+    ]
+  },
+  {
+    "file": "server\\ws\\bus.js",
+    "line": 75,
+    "kind": "function",
+    "name": "broadcastToMap",
+    "params": [
+      "mapKey",
       "obj"
     ]
   },
@@ -362,6 +417,174 @@
       "{ heroId",
       "heroClass",
       "context = 'COMBAT' }"
+    ]
+  },
+  {
+    "file": "server\\services\\loot.js",
+    "line": 17,
+    "kind": "function",
+    "name": "nowMs",
+    "params": []
+  },
+  {
+    "file": "server\\services\\loot.js",
+    "line": 18,
+    "kind": "function",
+    "name": "ensureMap",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\services\\loot.js",
+    "line": 27,
+    "kind": "function",
+    "name": "createLootFromKill",
+    "params": [
+      "{ mapKey",
+      "x",
+      "y",
+      "items }"
+    ]
+  },
+  {
+    "file": "server\\services\\loot.js",
+    "line": 50,
+    "kind": "function",
+    "name": "pickupLoot",
+    "params": [
+      "lootId",
+      "heroId"
+    ]
+  },
+  {
+    "file": "server\\services\\loot.js",
+    "line": 72,
+    "kind": "function",
+    "name": "getMapLoot",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\services\\loot.js",
+    "line": 84,
+    "kind": "function",
+    "name": "cleanupExpiredOnce",
+    "params": []
+  },
+  {
+    "file": "server\\services\\loot.js",
+    "line": 96,
+    "kind": "function",
+    "name": "startCleanupLoop",
+    "params": []
+  },
+  {
+    "file": "server\\services\\backpack.js",
+    "line": 10,
+    "kind": "arrow",
+    "name": "asInt",
+    "params": [
+      "v",
+      "d = 0"
+    ]
+  },
+  {
+    "file": "server\\services\\backpack.js",
+    "line": 14,
+    "kind": "arrow",
+    "name": "asBool",
+    "params": [
+      "v",
+      "d = false"
+    ]
+  },
+  {
+    "file": "server\\services\\backpack.js",
+    "line": 23,
+    "kind": "function",
+    "name": "_getEquippedBackpackKey",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "server\\services\\backpack.js",
+    "line": 43,
+    "kind": "function",
+    "name": "_getItemData",
+    "params": [
+      "key"
+    ]
+  },
+  {
+    "file": "server\\services\\backpack.js",
+    "line": 75,
+    "kind": "function",
+    "name": "getBackpackSpec",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "server\\services\\backpack.js",
+    "line": 85,
+    "kind": "function",
+    "name": "listBackpack",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "server\\services\\backpack.js",
+    "line": 113,
+    "kind": "function",
+    "name": "_isStackable",
+    "params": [
+      "itemKey"
+    ]
+  },
+  {
+    "file": "server\\services\\backpack.js",
+    "line": 119,
+    "kind": "function",
+    "name": "_tryStack",
+    "params": [
+      "heroId",
+      "itemKey",
+      "amount"
+    ]
+  },
+  {
+    "file": "server\\services\\backpack.js",
+    "line": 146,
+    "kind": "function",
+    "name": "_firstEmptySlot",
+    "params": [
+      "heroId",
+      "capacity"
+    ]
+  },
+  {
+    "file": "server\\services\\backpack.js",
+    "line": 175,
+    "kind": "function",
+    "name": "putInBackpack",
+    "params": [
+      "heroId",
+      "itemKey",
+      "qty"
+    ]
+  },
+  {
+    "file": "server\\services\\backpack.js",
+    "line": 208,
+    "kind": "function",
+    "name": "putLootItemsForHero",
+    "params": [
+      "heroId",
+      "items"
     ]
   },
   {
@@ -1178,17 +1401,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 10,
-    "kind": "function",
-    "name": "list",
-    "params": [
-      "dir",
-      "ext"
-    ]
-  },
-  {
-    "file": "server\\content\\loader.js",
-    "line": 19,
+    "line": 12,
     "kind": "function",
     "name": "listRecursive",
     "params": [
@@ -1198,7 +1411,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 31,
+    "line": 24,
     "kind": "function",
     "name": "inferSpriteKind",
     "params": [
@@ -1208,7 +1421,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 42,
+    "line": 35,
     "kind": "function",
     "name": "firstExistingPath",
     "params": [
@@ -1217,7 +1430,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 55,
+    "line": 41,
     "kind": "function",
     "name": "resolveMonstersIndex",
     "params": [
@@ -1226,7 +1439,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 62,
+    "line": 48,
     "kind": "function",
     "name": "resolveItemsIndex",
     "params": [
@@ -1235,7 +1448,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 69,
+    "line": 55,
     "kind": "function",
     "name": "resolveSpritesBase",
     "params": [
@@ -1244,12 +1457,21 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 76,
+    "line": 62,
     "kind": "function",
     "name": "resolveMapFile",
     "params": [
       "root",
       "mapKey"
+    ]
+  },
+  {
+    "file": "server\\content\\loader.js",
+    "line": 72,
+    "kind": "function",
+    "name": "ensureItemColumns",
+    "params": [
+      "db"
     ]
   },
   {
@@ -1264,7 +1486,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 158,
+    "line": 151,
     "kind": "function",
     "name": "loadItems",
     "params": [
@@ -1274,7 +1496,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 204,
+    "line": 229,
     "kind": "function",
     "name": "loadSprites",
     "params": [
@@ -1284,7 +1506,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 294,
+    "line": 310,
     "kind": "function",
     "name": "loadMap",
     "params": [
@@ -1295,13 +1517,43 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 387,
+    "line": 388,
     "kind": "function",
     "name": "loadAll",
     "params": [
       "db",
       "root"
     ]
+  },
+  {
+    "file": "server\\content\\monsters\\index.js",
+    "line": 10,
+    "kind": "function",
+    "name": "loadAll",
+    "params": []
+  },
+  {
+    "file": "server\\content\\monsters\\index.js",
+    "line": 23,
+    "kind": "function",
+    "name": "getAll",
+    "params": []
+  },
+  {
+    "file": "server\\content\\monsters\\index.js",
+    "line": 28,
+    "kind": "function",
+    "name": "getByKey",
+    "params": [
+      "key"
+    ]
+  },
+  {
+    "file": "server\\content\\monsters\\index.js",
+    "line": 32,
+    "kind": "function",
+    "name": "reload",
+    "params": []
   },
   {
     "file": "server\\combat\\worker.js",
@@ -1419,7 +1671,7 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 48,
+    "line": 51,
     "kind": "function",
     "name": "getEquippedWeaponType",
     "params": [
@@ -1428,7 +1680,7 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 65,
+    "line": 68,
     "kind": "function",
     "name": "resolveSkillTypeOrClass",
     "params": [
@@ -1438,7 +1690,7 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 67,
+    "line": 69,
     "kind": "function",
     "name": "mapWeaponToSkill",
     "params": [
@@ -1447,12 +1699,21 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 113,
+    "line": 108,
     "kind": "function",
     "name": "gainSkillFromHit",
     "params": [
       "{ heroId",
       "weaponType }"
+    ]
+  },
+  {
+    "file": "server\\combat\\routes.js",
+    "line": 300,
+    "kind": "function",
+    "name": "rollSimpleLoot",
+    "params": [
+      "monsterKey"
     ]
   },
   {
@@ -1986,7 +2247,16 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 57,
+    "line": 61,
+    "kind": "function",
+    "name": "spriteUrlFromMeta",
+    "params": [
+      "meta"
+    ]
+  },
+  {
+    "file": "client\\js\\player_profile.js",
+    "line": 68,
     "kind": "function",
     "name": "paintEquipGrid",
     "params": [
@@ -1995,7 +2265,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 86,
+    "line": 100,
     "kind": "function",
     "name": "fetchPlayerMeOnce",
     "params": [
@@ -2004,7 +2274,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 104,
+    "line": 118,
     "kind": "function",
     "name": "loadHeroSkills",
     "params": [
@@ -2014,7 +2284,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 151,
+    "line": 165,
     "kind": "function",
     "name": "renderTrainBars",
     "params": [
@@ -2023,7 +2293,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 171,
+    "line": 184,
     "kind": "function",
     "name": "renderHeroSkills",
     "params": [
@@ -2032,14 +2302,21 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 199,
+    "line": 212,
+    "kind": "function",
+    "name": "ensureEquipHandlers",
+    "params": []
+  },
+  {
+    "file": "client\\js\\player_profile.js",
+    "line": 293,
     "kind": "function",
     "name": "bindProfileModal",
     "params": []
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 220,
+    "line": 314,
     "kind": "function",
     "name": "fillHeader",
     "params": [
@@ -2048,7 +2325,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 240,
+    "line": 334,
     "kind": "function",
     "name": "fillSkillsArea",
     "params": [
@@ -2058,14 +2335,14 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 280,
+    "line": 373,
     "kind": "function",
     "name": "fillEquip",
     "params": []
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 285,
+    "line": 379,
     "kind": "function",
     "name": "open",
     "params": [
@@ -2074,14 +2351,14 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 305,
+    "line": 409,
     "kind": "function",
     "name": "close",
     "params": []
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 313,
+    "line": 420,
     "kind": "function",
     "name": "refreshEquip",
     "params": [
@@ -2090,14 +2367,14 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 319,
+    "line": 426,
     "kind": "function",
     "name": "refreshAll",
     "params": []
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 342,
+    "line": 449,
     "kind": "function",
     "name": "setupInventoryOpen",
     "params": [
@@ -2108,7 +2385,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 343,
+    "line": 450,
     "kind": "function",
     "name": "resolveCard",
     "params": [
@@ -5225,6 +5502,69 @@
     "name": "onPointerDown",
     "params": [
       "e"
+    ]
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 12,
+    "kind": "function",
+    "name": "getItemsIndex",
+    "params": []
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 26,
+    "kind": "function",
+    "name": "findPanel",
+    "params": []
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 28,
+    "kind": "function",
+    "name": "iconFor",
+    "params": [
+      "itemKey",
+      "itemsIndex"
+    ]
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 34,
+    "kind": "function",
+    "name": "renderGrid",
+    "params": [
+      "container",
+      "payload",
+      "itemsIndex"
+    ]
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 100,
+    "kind": "function",
+    "name": "render",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 125,
+    "kind": "function",
+    "name": "bindContextOpen",
+    "params": [
+      "getHeroId"
+    ]
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 135,
+    "kind": "function",
+    "name": "open",
+    "params": [
+      "heroId",
+      "opts"
     ]
   }
 ]

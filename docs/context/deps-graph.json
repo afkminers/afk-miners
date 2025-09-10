@@ -32,10 +32,6 @@
     "to": "./login_fx.js"
   },
   {
-    "from": "client\\js\\boot.js",
-    "to": "./player_profile.js"
-  },
-  {
     "from": "client\\js\\auth.js",
     "to": "./api.js"
   },
@@ -49,6 +45,10 @@
   },
   {
     "from": "client\\js\\combat\\actions.js",
+    "to": "../api.js"
+  },
+  {
+    "from": "client\\js\\backpack\\ui.js",
     "to": "../api.js"
   }
 ]

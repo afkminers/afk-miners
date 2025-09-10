@@ -30,7 +30,7 @@
       },
       {
         "file": "server\\combat\\routes.js",
-        "index": 829
+        "index": 926
       },
       {
         "file": "server\\combat\\autoloop.js",
@@ -48,7 +48,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1179
+        "index": 1387
       }
     ],
     "defaults": [
@@ -72,7 +72,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15753
+        "index": 16749
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -192,7 +192,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15660
+        "index": 16656
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -205,11 +205,35 @@
     ]
   },
   {
+    "key": "LOOT_CLEANUP_EVERY_SECONDS",
+    "occurrences": [
+      {
+        "file": "server\\services\\loot.js",
+        "index": 393
+      }
+    ],
+    "defaults": [
+      "30"
+    ]
+  },
+  {
+    "key": "LOOT_EXPIRE_SECONDS",
+    "occurrences": [
+      {
+        "file": "server\\services\\loot.js",
+        "index": 309
+      }
+    ],
+    "defaults": [
+      "120"
+    ]
+  },
+  {
     "key": "NODE_ENV",
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1532
+        "index": 1928
       },
       {
         "file": "server\\skills\\routes.js",
@@ -249,7 +273,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1591
+        "index": 1987
       }
     ],
     "defaults": [
@@ -261,7 +285,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15610
+        "index": 16606
       }
     ],
     "defaults": [
@@ -297,7 +321,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 15718
+        "index": 16714
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -314,7 +338,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\routes.js",
-        "index": 1141
+        "index": 1238
       }
     ],
     "defaults": [

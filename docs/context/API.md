@@ -16,6 +16,8 @@
 - `CTX_SYMBOLS`
 - `DATABASE_URL`
 - `JWT_SECRET` (defaults: changeme, CHANGE_ME_DEV_ONLY)
+- `LOOT_CLEANUP_EVERY_SECONDS` (defaults: 30)
+- `LOOT_EXPIRE_SECONDS` (defaults: 120)
 - `NODE_ENV` (defaults: development)
 - `PG_DUMP_PATH`
 - `PORT` (defaults: 3000)
@@ -29,7 +31,7 @@
 
 ### GET /
 
-Arquivo: `server\index.js:453`
+Arquivo: `server\index.js:476`
 
 _Sem payload inferido_
 
@@ -68,9 +70,32 @@ Arquivo: `server\routes\equipment.js:11`
 - `HTTP 400` → {ok:false,error:'no-stock' }
 - `HTTP 500` → {ok:false,error:'equip-failed' }
 
+### GET /:heroId/slots
+
+Arquivo: `server\routes\backpack.js:8`
+
+**Payloads (exemplos inferidos):**
+- params:
+```json
+{
+  "heroId": 1
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key,}
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {error:'heroId required' }
+- `HTTP 500` → {error:'backpack-list-failed' }
+- `HTTP 400` → {error:'bad-args' }
+- `HTTP 500` → {error:'backpack-deposit-failed' }
+
 ### GET /_ping
 
-Arquivo: `server\combat\routes.js:35`
+Arquivo: `server\combat\routes.js:38`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -89,9 +114,12 @@ Arquivo: `server\combat\routes.js:35`
 {ok:true,ts:Date.now() }
 ```
 
+**Erros conhecidos:**
+- `HTTP 200` → {ok:false,error:'too-far-click' }
+
 ### GET /_routes
 
-Arquivo: `server\combat\routes.js:36`
+Arquivo: `server\combat\routes.js:39`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -110,9 +138,12 @@ Arquivo: `server\combat\routes.js:36`
 {routes:list }
 ```
 
+**Erros conhecidos:**
+- `HTTP 200` → {ok:false,error:'too-far-click' }
+
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:422`
+Arquivo: `server\index.js:445`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -140,7 +171,7 @@ Arquivo: `server\index.js:422`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:397`
+Arquivo: `server\index.js:420`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -170,7 +201,7 @@ Arquivo: `server\index.js:397`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:409`
+Arquivo: `server\index.js:432`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -199,7 +230,7 @@ Arquivo: `server\index.js:409`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:386`
+Arquivo: `server\index.js:409`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -224,7 +255,7 @@ Arquivo: `server\index.js:386`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:356`
+Arquivo: `server\index.js:379`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -252,7 +283,7 @@ Arquivo: `server\index.js:356`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:367`
+Arquivo: `server\index.js:390`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -279,7 +310,7 @@ Arquivo: `server\index.js:367`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:376`
+Arquivo: `server\index.js:399`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -305,7 +336,7 @@ Arquivo: `server\index.js:376`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:690`
+Arquivo: `server\index.js:742`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -350,7 +381,7 @@ Arquivo: `server\routes\combat_nearest.js:28`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:57`
+Arquivo: `server\index.js:70`
 
 _Sem payload inferido_
 
@@ -514,6 +545,37 @@ Arquivo: `server\starter\routes.js:28`
 - `HTTP 400` → {error:'starter já escolhido' }
 - `HTTP 400` → {error:'heroKey inválido' }
 
+### GET /map/:mapKey/loot
+
+Arquivo: `server\routes\loot.js:14`
+
+**Payloads (exemplos inferidos):**
+- params:
+```json
+{
+  "mapKey": "value"
+}
+```
+- body:
+```json
+{
+  "try {\n    const { heroId": 1,
+  "lootId": 1
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,placed,leftover,backpack:snapshot }
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:'loot-list-failed' }
+- `HTTP 400` → {error:'bad-args' }
+- `HTTP 400` → {error:'no-backpack' }
+- `HTTP 404` → {error:'loot-not-found' }
+- `HTTP 500` → {error:'loot-pickup-failed' }
+
 ### GET /me
 
 Arquivo: `server\skills\routes.js:94`
@@ -553,7 +615,7 @@ Arquivo: `server\skills\routes.js:94`
 
 ### GET /nearest
 
-Arquivo: `server\combat\routes.js:189`
+Arquivo: `server\combat\routes.js:184`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -592,8 +654,6 @@ Arquivo: `server\combat\routes.js:189`
 - `HTTP 500` → {ok:false,error:'start-failed' }
 - `HTTP 500` → {ok:false,error:'stop-failed' }
 - `HTTP 400` → {ok:false,error:'missing-id' }
-- `HTTP 400` → {ok:false,error:'bad-id' }
-- `HTTP 404` → {ok:false,error:'no-such-alive' }
 
 ### GET /ping
 
@@ -720,9 +780,6 @@ Arquivo: `server\starter\routes.js:73`
 - `HTTP 400` → {error:'heroKey é obrigatório' }
 - `HTTP 400` → {error:'starter já escolhido' }
 - `HTTP 400` → {error:'heroKey inválido' }
-- `HTTP 400` → {error:'starter já escolhido' }
-- `HTTP 400` → {error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }
-- `HTTP 500` → {error:'erro ao selecionar starter' }
 
 ### POST /
 
@@ -746,9 +803,30 @@ Arquivo: `server\gacha\routes.js:144`
 - `HTTP 400` → {error:r.error,cost:SUMMON_COST_COINS,pulls }
 - `HTTP 500` → {error:'Falha ao girar gacha' }
 
+### POST /:heroId/deposit
+
+Arquivo: `server\routes\backpack.js:30`
+
+**Payloads (exemplos inferidos):**
+- params:
+```json
+{
+  "heroId": 1
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,placed }
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {error:'bad-args' }
+- `HTTP 500` → {error:'backpack-deposit-failed' }
+
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:432`
+Arquivo: `server\index.js:455`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -768,7 +846,7 @@ Arquivo: `server\index.js:432`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:713`
+Arquivo: `server\index.js:765`
 
 _Sem payload inferido_
 
@@ -812,7 +890,7 @@ Arquivo: `server\routes\afk.js:65`
 
 ### POST /attack/start
 
-Arquivo: `server\combat\routes.js:251`
+Arquivo: `server\combat\routes.js:246`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -843,7 +921,7 @@ Arquivo: `server\combat\routes.js:251`
 
 ### POST /attack/stop
 
-Arquivo: `server\combat\routes.js:290`
+Arquivo: `server\combat\routes.js:281`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -868,7 +946,6 @@ Arquivo: `server\combat\routes.js:290`
 - `HTTP 400` → {ok:false,error:'missing-id' }
 - `HTTP 400` → {ok:false,error:'bad-id' }
 - `HTTP 404` → {ok:false,error:'no-such-alive' }
-- `HTTP 500` → {ok:false,error:'hit-failed' }
 
 ### POST /collect
 
@@ -1017,7 +1094,7 @@ Arquivo: `server\routes\farm.js:181`
 
 ### POST /hit
 
-Arquivo: `server\combat\routes.js:308`
+Arquivo: `server\combat\routes.js:321`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1076,6 +1153,30 @@ _Sem payload inferido_
 **Erros conhecidos:**
 - `HTTP 404` → {error:'Jogador não encontrado' }
 - `HTTP 500` → {error:'Falha ao obter perfil' }
+
+### POST /loot/pickup
+
+Arquivo: `server\routes\loot.js:38`
+
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "try {\n    const { heroId": 1,
+  "lootId": 1
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,placed,leftover,backpack:snapshot }
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {error:'bad-args' }
+- `HTTP 400` → {error:'no-backpack' }
+- `HTTP 404` → {error:'loot-not-found' }
+- `HTTP 500` → {error:'loot-pickup-failed' }
 
 ### POST /move
 
@@ -1270,8 +1371,15 @@ Arquivo: `server\starter\routes.js:91`
   - HTTP 400: {ok:false,error:'slot-mismatch' }
   - HTTP 400: {ok:false,error:'no-stock' }
   - HTTP 500: {ok:false,error:'equip-failed' }
+- **GET /:heroId/slots**
+  - HTTP 400: {error:'heroId required' }
+  - HTTP 500: {error:'backpack-list-failed' }
+  - HTTP 400: {error:'bad-args' }
+  - HTTP 500: {error:'backpack-deposit-failed' }
 - **GET /_ping**
+  - HTTP 200: {ok:false,error:'too-far-click' }
 - **GET /_routes**
+  - HTTP 200: {ok:false,error:'too-far-click' }
 - **GET /api/admin/content/map/:key/data**
   - HTTP 404: {error:'map not found' }
   - HTTP 500: {error:err.message }
@@ -1371,6 +1479,12 @@ Arquivo: `server\starter\routes.js:91`
   - HTTP 400: {error:'heroKey é obrigatório' }
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 400: {error:'heroKey inválido' }
+- **GET /map/:mapKey/loot**
+  - HTTP 500: {error:'loot-list-failed' }
+  - HTTP 400: {error:'bad-args' }
+  - HTTP 400: {error:'no-backpack' }
+  - HTTP 404: {error:'loot-not-found' }
+  - HTTP 500: {error:'loot-pickup-failed' }
 - **GET /me**
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
@@ -1402,8 +1516,6 @@ Arquivo: `server\starter\routes.js:91`
   - HTTP 500: {ok:false,error:'start-failed' }
   - HTTP 500: {ok:false,error:'stop-failed' }
   - HTTP 400: {ok:false,error:'missing-id' }
-  - HTTP 400: {ok:false,error:'bad-id' }
-  - HTTP 404: {ok:false,error:'no-such-alive' }
 - **GET /ping**
   - HTTP 500: {error:'afk_state_failed' }
   - HTTP 400: {error:'produce_type required' }
@@ -1452,13 +1564,13 @@ Arquivo: `server\starter\routes.js:91`
   - HTTP 400: {error:'heroKey é obrigatório' }
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 400: {error:'heroKey inválido' }
-  - HTTP 400: {error:'starter já escolhido' }
-  - HTTP 400: {error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }
-  - HTTP 500: {error:'erro ao selecionar starter' }
 - **POST /**
   - HTTP 400: {error:result.error,cost:SUMMON_COST_COINS }
   - HTTP 400: {error:r.error,cost:SUMMON_COST_COINS,pulls }
   - HTTP 500: {error:'Falha ao girar gacha' }
+- **POST /:heroId/deposit**
+  - HTTP 400: {error:'bad-args' }
+  - HTTP 500: {error:'backpack-deposit-failed' }
 - **POST /api/admin/content/reload-map**
   - HTTP 500: {error:e.message }
 - **POST /api/chat/global**
@@ -1484,7 +1596,6 @@ Arquivo: `server\starter\routes.js:91`
   - HTTP 400: {ok:false,error:'missing-id' }
   - HTTP 400: {ok:false,error:'bad-id' }
   - HTTP 404: {ok:false,error:'no-such-alive' }
-  - HTTP 500: {ok:false,error:'hit-failed' }
 - **POST /collect**
   - HTTP 500: {error:'collect_failed' }
 - **POST /create-worker**
@@ -1532,6 +1643,11 @@ Arquivo: `server\starter\routes.js:91`
 - **POST /logout**
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
+- **POST /loot/pickup**
+  - HTTP 400: {error:'bad-args' }
+  - HTTP 400: {error:'no-backpack' }
+  - HTTP 404: {error:'loot-not-found' }
+  - HTTP 500: {error:'loot-pickup-failed' }
 - **POST /move**
   - HTTP 409: {error:'old-seq' }
   - HTTP 400: {error:'too-fast' }

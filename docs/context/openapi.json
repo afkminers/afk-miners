@@ -9,7 +9,7 @@
       "get": {
         "responses": {
           "200": {
-            "description": "OK (inferred)",
+            "description": "Error 200 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -67,7 +67,7 @@
       "get": {
         "responses": {
           "200": {
-            "description": "OK (inferred)",
+            "description": "Error 200 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -116,6 +116,98 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/:heroId/deposit": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "heroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ]
+      }
+    },
+    "/:heroId/slots": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "heroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number"
             }
           }
         ]
@@ -1920,6 +2012,144 @@
             }
           }
         }
+      }
+    },
+    "/loot/pickup": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "try {\n    const { heroId": {
+                    "type": "number"
+                  },
+                  "lootId": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/map/:mapKey/loot": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "try {\n    const { heroId": {
+                    "type": "number"
+                  },
+                  "lootId": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "mapKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/me": {
