@@ -7,15 +7,8 @@ const { MonsterYAML, ItemYAML, SpriteYAML, TiledMapJSON } = require('./schemas')
 
 function sha1(buf) { return crypto.createHash('sha1').update(buf).digest('hex'); }
 function read(file) { return fs.readFileSync(file, 'utf-8'); }
-function list(dir, ext) {
-  return fs.existsSync(dir)
-    ? fs.readdirSync(dir)
-        .filter(f => f.toLowerCase().endsWith(ext))
-        .map(f => path.join(dir, f))
-    : [];
-}
 
-// ---- helpers extra ----
+/* ---------------- helpers de listagem ---------------- */
 function listRecursive(dir, ext) {
   const out = [];
   if (!fs.existsSync(dir)) return out;
@@ -38,20 +31,13 @@ function inferSpriteKind(filePath, data) {
   return 'sprite';
 }
 
-/** Retorna o 1º caminho que existir entre as opções dadas */
+/** Retorna o 1º caminho existente entre as opções */
 function firstExistingPath(paths) {
-  for (const p of paths) {
-    if (fs.existsSync(p)) return p;
-  }
+  for (const p of paths) if (fs.existsSync(p)) return p;
   return null;
 }
 
-/**
- * Caminhos PADRÃO (unificados):
- *   - data/monsters, data/items, data/sprites, data/maps
- * Fallbacks (compatibilidade):
- *   - server/content/data/*, content/data/*, content/* (apenas maps)
- */
+/* ---------------- resolutores de caminhos ---------------- */
 function resolveMonstersIndex(root) {
   return firstExistingPath([
     path.join(root, 'data/monsters/index.yml'),
@@ -75,18 +61,32 @@ function resolveSpritesBase(root) {
 }
 function resolveMapFile(root, mapKey) {
   return firstExistingPath([
-    path.join(root, `data/maps/${mapKey}.json`),               // NOVO (preferido)
-    path.join(root, `server/content/data/maps/${mapKey}.json`),// fallback antigo
-    path.join(root, `content/data/maps/${mapKey}.json`),       // fallback antigo
-    path.join(root, `content/maps/${mapKey}.json`),            // fallback muito antigo
+    path.join(root, `data/maps/${mapKey}.json`),               // preferido
+    path.join(root, `server/content/data/maps/${mapKey}.json`),
+    path.join(root, `content/data/maps/${mapKey}.json`),
+    path.join(root, `content/maps/${mapKey}.json`),
   ]);
 }
 
-/**
- * OBS: Este loader usa um adaptador com as funções { all, get, run } — não o objeto sqlite.
- * Passe { all, get, run } em index.js: await loadAll({ all, get, run }, root)
- */
+/* ---------------- garantias de esquema (idempotentes) ---------------- */
+async function ensureItemColumns(db) {
+  const { run } = db;
+  // As migrações para jsonb já ficaram no SQL manual; aqui só garantimos colunas planas.
+  await run(`
+    ALTER TABLE items_master
+      ADD COLUMN IF NOT EXISTS name         TEXT,
+      ADD COLUMN IF NOT EXISTS slot         TEXT,
+      ADD COLUMN IF NOT EXISTS kind         TEXT,
+      ADD COLUMN IF NOT EXISTS weapon_type  TEXT,
+      ADD COLUMN IF NOT EXISTS sprite       TEXT,
+      ADD COLUMN IF NOT EXISTS atk          INTEGER,
+      ADD COLUMN IF NOT EXISTS def          INTEGER,
+      ADD COLUMN IF NOT EXISTS slots        INTEGER,
+      ADD COLUMN IF NOT EXISTS stackable    BOOLEAN
+  `);
+}
 
+/* ============================== LOADERS =============================== */
 async function loadMonsters(db, root) {
   const { get, run } = db;
   const idx = resolveMonstersIndex(root);
@@ -95,28 +95,26 @@ async function loadMonsters(db, root) {
   const index = YAML.parse(read(idx));
   const entries = Object.entries(index.monsters || {});
   for (const [key, rel] of entries) {
-    const rootsToTry = [
+    const file = firstExistingPath([
       path.join(root, 'data/monsters', rel),
       path.join(root, 'server/content/data/monsters', rel),
       path.join(root, 'content/data/monsters', rel),
-    ];
-    const file = firstExistingPath(rootsToTry);
+    ]);
     if (!file) { console.warn('[monsters] não achei arquivo para', key, rel); continue; }
 
     const src = read(file);
     const sum = sha1(src);
 
-    const seen = await get(`SELECT checksum FROM content_files WHERE path=$1`, [file]).catch(() => null);
-    if (seen && seen.checksum === sum) continue;
+    // Consulta o checksum, mas NÃO damos continue; sempre fazemos UPSERT para manter colunas denormalizadas atualizadas
+    await get(`SELECT checksum FROM content_files WHERE path=$1`, [file]).catch(() => null);
 
     const data = MonsterYAML.parse(YAML.parse(src));
 
-    await run(
-      `
+    await run(`
       INSERT INTO monsters_master
         (key, name, xp, "healthMax", speed,
-        "flagsJSON", "elementsJSON", "attacksJSON", "defensesJSON", "lootJSON", "lookJSON",
-        updated_at)
+         "flagsJSON","elementsJSON","attacksJSON","defensesJSON","lootJSON","lookJSON",
+         updated_at)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, now())
       ON CONFLICT (key) DO UPDATE SET
         name=EXCLUDED.name,
@@ -130,33 +128,31 @@ async function loadMonsters(db, root) {
         "lootJSON"=EXCLUDED."lootJSON",
         "lookJSON"=EXCLUDED."lookJSON",
         updated_at=now()
-      `,
-      [
-        data.key, data.name, data.xp, data.health.max, data.speed,
-        JSON.stringify(data.flags || {}),
-        JSON.stringify(data.elements || {}),
-        JSON.stringify(data.attacks || []),
-        JSON.stringify(data.defenses || {}),
-        JSON.stringify(data.loot || []),
-        JSON.stringify(data.look || {})
-      ]
-    );
+    `, [
+      data.key, data.name, data.xp, data.health.max, data.speed,
+      JSON.stringify(data.flags || {}),
+      JSON.stringify(data.elements || {}),
+      JSON.stringify(data.attacks || []),
+      JSON.stringify(data.defenses || {}),
+      JSON.stringify(data.loot || []),
+      JSON.stringify(data.look || {})
+    ]);
 
-    await run(
-      `
+    await run(`
       INSERT INTO content_files(path, checksum, updated_at)
       VALUES ($1, $2, now())
       ON CONFLICT (path) DO UPDATE SET
         checksum=EXCLUDED.checksum,
         updated_at=now()
-      `,
-      [file, sum]
-    );
+    `, [file, sum]);
   }
 }
 
 async function loadItems(db, root) {
   const { get, run } = db;
+
+  await ensureItemColumns(db); // garante colunas planas
+
   const idx = resolveItemsIndex(root);
   if (!idx) return;
 
@@ -172,32 +168,61 @@ async function loadItems(db, root) {
     const src = read(file);
     const sum = sha1(src);
 
-    const seen = await get(`SELECT checksum FROM content_files WHERE path=$1`, [file]).catch(() => null);
-    if (seen && seen.checksum === sum) continue;
+    // Consulta o checksum, mas NÃO fazemos early-continue
+    await get(`SELECT checksum FROM content_files WHERE path=$1`, [file]).catch(() => null);
 
-    const data = ItemYAML.parse(YAML.parse(src)); // contém .key
+    // valida pelo schema; se falhar, segue permissivo
+    let raw = null, data = null;
+    try {
+      raw = YAML.parse(src);
+      data = ItemYAML.parse(raw);
+    } catch (e) {
+      console.warn('[items] schema warning (fallback permissivo):', file, e.message);
+      raw = raw || YAML.parse(src);
+      data = Object.assign({}, raw);
+      if (!data.key) data.key = String(key);
+    }
 
-    await run(
-      `
-      INSERT INTO items_master(key, "dataJSON", updated_at)
-      VALUES ($1, $2::jsonb, now())
+    // denormalizações p/ front
+    const name        = String(data.name || data.key || key);
+    const slot        = (data.slot || data.kind || '').toString().toUpperCase() || null; // p/ bag: BACK
+    const weapon_type = data.weapon_type ? String(data.weapon_type) : null;
+    const sprite      = data.icon ? String(data.icon) : (data.sprite ? String(data.sprite) : null);
+    const atk         = Number.isFinite(+data.atk) ? +data.atk : null;
+    const def         = Number.isFinite(+data.def) ? +data.def : null;
+    const kind        = data.kind ? String(data.kind) : null;
+    const slots       = Number.isFinite(+data.slots) ? +data.slots : null;
+    const stackable   = (typeof data.stackable === 'boolean') ? data.stackable : null;
+
+    await run(`
+      INSERT INTO items_master(
+        key, "dataJSON", name, slot, kind, weapon_type, sprite, atk, def, slots, stackable, updated_at
+      )
+      VALUES ($1, $2::jsonb, $3, $4, $5, $6, $7, $8, $9, $10, $11, now())
       ON CONFLICT (key) DO UPDATE SET
-        "dataJSON"=EXCLUDED."dataJSON",
-        updated_at=now()
-      `,
-      [data.key, JSON.stringify(data)]
-    );
+        "dataJSON"  = EXCLUDED."dataJSON",
+        name        = EXCLUDED.name,
+        slot        = EXCLUDED.slot,
+        kind        = EXCLUDED.kind,
+        weapon_type = EXCLUDED.weapon_type,
+        sprite      = EXCLUDED.sprite,
+        atk         = EXCLUDED.atk,
+        def         = EXCLUDED.def,
+        slots       = EXCLUDED.slots,
+        stackable   = EXCLUDED.stackable,
+        updated_at  = now()
+    `, [
+      data.key, JSON.stringify(data),
+      name, slot, kind, weapon_type, sprite, atk, def, slots, stackable
+    ]);
 
-    await run(
-      `
+    await run(`
       INSERT INTO content_files(path, checksum, updated_at)
       VALUES ($1, $2, now())
       ON CONFLICT (path) DO UPDATE SET
         checksum=EXCLUDED.checksum,
         updated_at=now()
-      `,
-      [file, sum]
-    );
+    `, [file, sum]);
   }
 }
 
@@ -206,7 +231,7 @@ async function loadSprites(db, root) {
   const base = resolveSpritesBase(root);
   if (!base) return;
 
-  // 1) Tenta índices
+  // 1) tenta índice
   let indexEntries = null;
   const idxFiles = [
     path.join(root, 'data/sprites.yml'),
@@ -233,7 +258,7 @@ async function loadSprites(db, root) {
     }
   }
 
-  // 2) Sem índice, varre tudo
+  // 2) sem índice, varre tudo
   let filesToLoad = [];
   if (indexEntries) {
     filesToLoad = indexEntries;
@@ -252,69 +277,58 @@ async function loadSprites(db, root) {
     const src = read(file);
     const sum = sha1(src);
 
-    const seen = await get(`SELECT checksum FROM content_files WHERE path=$1`, [file]).catch(() => null);
-    if (seen && seen.checksum === sum) continue;
+    // Consulta o checksum, mas NÃO fazemos early-continue
+    await get(`SELECT checksum FROM content_files WHERE path=$1`, [file]).catch(() => null);
 
     const parsed = YAML.parse(src);
     const data = SpriteYAML.parse(parsed);
 
     const key = (ent.key && String(ent.key)) || String(data.key);
-    if (!key) {
-      console.warn('[sprites] ignorado (sem key):', file);
-      continue;
-    }
+    if (!key) { console.warn('[sprites] ignorado (sem key):', file); continue; }
 
     const kind = inferSpriteKind(file, data);
 
-    await run(
-      `
+    await run(`
       INSERT INTO sprites_master(key, kind, "dataJSON", updated_at)
       VALUES ($1, $2, $3::jsonb, now())
       ON CONFLICT (key) DO UPDATE SET
         kind=EXCLUDED.kind,
         "dataJSON"=EXCLUDED."dataJSON",
         updated_at=now()
-      `,
-      [key, kind, JSON.stringify(data)]
-    );
+    `, [key, kind, JSON.stringify(data)]);
 
-    await run(
-      `
+    await run(`
       INSERT INTO content_files(path, checksum, updated_at)
       VALUES ($1, $2, now())
       ON CONFLICT (path) DO UPDATE SET
         checksum=EXCLUDED.checksum,
         updated_at=now()
-      `,
-      [file, sum]
-    );
+    `, [file, sum]);
   }
 }
 
 async function loadMap(db, root, mapKey) {
   const { get, run } = db;
   const file = resolveMapFile(root, mapKey);
-  if (!file) return; // nada a carregar
+  if (!file) return;
 
   const src = read(file);
   const sum = sha1(src);
 
+  // Para mapas, manter o early-return (custoso reprocessar e não temos denormalizações aqui)
   const seen = await get(`SELECT checksum FROM content_files WHERE path=$1`, [file]).catch(() => null);
   if (seen && seen.checksum === sum) return;
 
   const json = JSON.parse(src);
   TiledMapJSON.parse(json);
 
-  await run(
-    `
+  await run(`
     INSERT INTO maps(key, "dataJSON", updated_at)
     VALUES ($1, $2::jsonb, now())
     ON CONFLICT (key) DO UPDATE SET
       "dataJSON"=EXCLUDED."dataJSON",
       updated_at=now()
-    `,
-    [mapKey, JSON.stringify(json)]
-  );
+  `, [mapKey, JSON.stringify(json)]);
 
   // reseta objetos/spawns daquele mapa
   await run(`DELETE FROM map_objects WHERE "mapKey"=$1`, [mapKey]);
@@ -327,91 +341,72 @@ async function loadMap(db, root, mapKey) {
     const isSpawnLayer = (lname === 'spawn' || lname === 'spawns');
 
     if (isSpawnLayer) {
-      // grava somente objetos de spawn
       for (const o of layer.objects) {
         const otype = ((o.class || o.type || '') + '').toLowerCase();
         if (otype && otype !== 'spawn') continue;
 
         const props = Object.fromEntries((o.properties || []).map(p => [p.name, p.value]));
-        await run(
-          `
+        await run(`
           INSERT INTO spawns(
             "mapKey","monsterKey", x, y, w, h,
             count, "respawnSec", "levelMin", "levelMax"
           )
           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-          `,
-          [
-            mapKey, props.monsterKey || '',
-            Math.round(o.x || 0), Math.round(o.y || 0),
-            Math.round(o.width  || 0), Math.round(o.height || 0),
-            Number(props.count || 1), Number(props.respawnSec || 60),
-            Number(props.levelMin || 1), Number(props.levelMax || 999)
-          ]
-        );
+        `, [
+          mapKey, props.monsterKey || '',
+          Math.round(o.x || 0), Math.round(o.y || 0),
+          Math.round(o.width  || 0), Math.round(o.height || 0),
+          Number(props.count || 1), Number(props.respawnSec || 60),
+          Number(props.levelMin || 1), Number(props.levelMax || 999)
+        ]);
       }
     } else {
-      // demais objetos (ex.: start)
       for (const o of layer.objects) {
         const props = Object.fromEntries((o.properties || []).map(p => [p.name, p.value]));
-        await run(
-          `
-          INSERT INTO map_objects(
-            "mapKey", type, x, y, w, h, "propsJSON"
-          )
+        await run(`
+          INSERT INTO map_objects("mapKey", type, x, y, w, h, "propsJSON")
           VALUES ($1,$2,$3,$4,$5,$6,$7)
-          `,
-          [
-            mapKey, lname,
-            Math.round(o.x || 0), Math.round(o.y || 0),
-            Math.round(o.width || 0), Math.round(o.height || 0),
-            JSON.stringify(props)
-          ]
-        );
+        `, [
+          mapKey, lname,
+          Math.round(o.x || 0), Math.round(o.y || 0),
+          Math.round(o.width || 0), Math.round(o.height || 0),
+          JSON.stringify(props)
+        ]);
       }
     }
   }
 
-  await run(
-    `
+  await run(`
     INSERT INTO content_files(path, checksum, updated_at)
     VALUES ($1, $2, now())
     ON CONFLICT (path) DO UPDATE SET
       checksum=EXCLUDED.checksum,
       updated_at=now()
-    `,
-    [file, sum]
-  );
+  `, [file, sum]);
 }
 
 async function loadAll(db, root) {
   await loadMonsters(db, root);
   await loadItems(db, root);
   await loadSprites(db, root);
-  await loadMap(db, root, 'house'); // carrega house.json se existir
+  await loadMap(db, root, 'house');
 
   console.log('[content] Finished loadAll()');
 
   try {
     const monsters = await db.all(`SELECT key,name,xp FROM monsters_master ORDER BY id LIMIT 10`);
     console.log('[content] monsters:', monsters);
-  } catch (e) {
-    console.error('[content] query error (monsters):', e.message);
-  }
+  } catch (e) { console.error('[content] query error (monsters):', e.message); }
 
   try {
     const items = await db.all(`SELECT key FROM items_master ORDER BY key LIMIT 10`);
     console.log('[content] items:', items);
-  } catch (e) {
-    console.error('[content] query error (items):', e.message);
-  }
+  } catch (e) { console.error('[content] query error (items):', e.message); }
 
   try {
     const sprites = await db.all(`SELECT key FROM sprites_master ORDER BY key LIMIT 10`);
     console.log('[content] sprites:', sprites);
-  } catch (e) {
-    console.error('[content] query error (sprites):', e.message);
-  }
+  } catch (e) { console.error('[content] query error (sprites):', e.message); }
 }
 
 module.exports = { loadAll, loadMap };

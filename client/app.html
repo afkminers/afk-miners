@@ -110,7 +110,7 @@
     .skill-bar {
       position: relative;
       margin-top: 6px;
-      height: 14px; /* era 10px */
+      height: 14px;
       border-radius: 999px;
       background: rgba(148, 163, 184, .18);
       overflow: hidden;
@@ -140,12 +140,17 @@
       inset: 0;
       display: grid;
       place-items: center;
-      font-size: 12px; /* era 11px */
+      font-size: 12px;
       color: #cbd5e1;
       mix-blend-mode: screen;
       text-shadow: 0 1px 1px rgba(0, 0, 0, .6);
       pointer-events: none;
     }
+
+    /* BACKPACK-ONLY: desativa Inventário da Conta na interface */
+    #btnInventory { display: none !important; }        /* some o botão do topo */
+    .equip-card[data-inv-container] { display: none !important; } /* some o card */
+
   </style>
 </head>
 
@@ -158,7 +163,7 @@
       <button id="btnFarm" class="dock-btn">Farm</button>
       <button id="btnHeroes">Heroes</button>
       <button id="btnInventory">Inventory</button>
-      <button id="btnSummon">Summon</button>
+      <button id="btnSummon" class="dock-btn">Summon</button>
       <button id="btnSettings">Settings</button>
       <button id="btnLogout" class="danger">Logout</button>
     </nav>
@@ -281,8 +286,11 @@
     };
   </script>
 
+  <!-- Backpack UI (grade de slots da mochila) -->
+  <script type="module" src="/js/backpack/ui.js"></script>
+
   <!-- ========= UI: Team + Skills + Equipamentos ========= -->
-  <script type="text/babel">
+  <script type="text/babel" data-presets="react,env">
     // @ts-nocheck
 
     const { useState, useEffect, useMemo, useRef } = React;
@@ -341,7 +349,9 @@
     }
 
     /* ============== domínio ============== */
-    const ORDERED_SLOTS = ["AMULET", "HELMET", "BACKPACK", "WEAPON", "ARMOR", "SHIELD", "RING", "LEGS", "BOOTS"];
+    const ORDERED_SLOTS = ["AMULET", "HELMET", "BACK", "WEAPON", "ARMOR", "SHIELD", "RING", "LEGS", "BOOTS"];
+    const prettySlot = (s) => s === "BACK" ? "backpack" : s.toLowerCase();
+
 
     /* ============== Team (botões Skills/Equips) ============== */
     function TeamShell() {
@@ -382,7 +392,7 @@
               }}>
               <div style={{
                 height: 36, width: 36, borderRadius: 999, background: "linear-gradient(135deg,#818cf8,#3730a3)",
-                display: "grid", placeItems: "center", boxShadow: "inset 0 2px 6px rgba(0,0,0,.25)"
+                display: "grid", placeItems: "center", boxShadow: "inset 0 2px 6px rgba(0, 0, 0, .25)"
               }}>
                 <span style={{ fontSize: 12, fontWeight: 700, textShadow: "0 1px 2px #000" }}>{(h.class || "?").slice(0, 1)}</span>
               </div>
@@ -423,7 +433,9 @@
       const rootRef = useRef(null);
 
       const equipBySlot = useMemo(() => {
-        const m = new Map(); (equip || []).forEach(r => m.set(String(r.slot).toUpperCase(), r)); return m;
+        const m = new Map();
+        (equip || []).forEach(r => m.set(String(r.slot).toUpperCase(), r));
+        return m;
       }, [equip]);
 
       useEffect(() => {
@@ -438,17 +450,20 @@
             if (!live) return;
             setEquip(eq.equipment || []);
             setInventory(inv.items || []);
-          } catch (e) { setErr(e.message || String(e)); }
+          } catch (e) {
+            setErr(e.message || String(e));
+          }
         })();
         return () => { live = false; };
-      }, [open, hero?.id]);
+      }, [open, (hero && hero.id)]);
 
       async function refreshBoth() {
         const [eq, inv] = await Promise.all([
           getJSON('/api/equipment/' + hero.id),
           getJSON('/api/inventory')
         ]);
-        setEquip(eq.equipment || []); setInventory(inv.items || []);
+        setEquip(eq.equipment || []);
+        setInventory(inv.items || []);
       }
 
       // helpers inventário
@@ -456,23 +471,31 @@
       function invDec(arr, key) {
         const i = invIndex(arr, key); if (i === -1) return arr.slice();
         const next = arr.slice(); const cur = { ...next[i] };
-        cur.qty = Math.max(0, Number(cur.qty || 0) - 1); if (cur.qty <= 0) next.splice(i, 1); else next[i] = cur;
+        cur.qty = Math.max(0, Number(cur.qty || 0) - 1);
+        if (cur.qty <= 0) next.splice(i, 1); else next[i] = cur;
         return next;
       }
       function invInc(arr, key, meta) {
         const i = invIndex(arr, key);
-        if (i === -1) return [...arr, meta ? { ...meta, item_key: key, qty: 1 } : { item_key: key, qty: 1, name: key, slot: "MISC" }];
-        const next = arr.slice(); const cur = { ...next[i] }; cur.qty = Number(cur.qty || 0) + 1; next[i] = cur; return next;
+        if (i === -1)
+          return [...arr, meta ? { ...meta, item_key: key, qty: 1 } : { item_key: key, qty: 1, name: key, slot: "MISC" }];
+        const next = arr.slice(); const cur = { ...next[i] };
+        cur.qty = Number(cur.qty || 0) + 1; next[i] = cur;
+        return next;
       }
       function setSlot(arr, slot, rowOrNull) {
-        const SLOT = String(slot).toUpperCase(); const next = (arr || []).slice();
+        const SLOT = String(slot).toUpperCase();
+        const next = (arr || []).slice();
         const idx = next.findIndex(r => String(r.slot).toUpperCase() === SLOT);
         if (rowOrNull) {
           const newRow = {
-            slot: SLOT, item_key: rowOrNull.item_key || rowOrNull.key || null,
+            slot: SLOT,
+            item_key: rowOrNull.item_key || rowOrNull.key || null,
             name: rowOrNull.name || rowOrNull.item_key || rowOrNull.key || null,
-            sprite: rowOrNull.sprite || null, weapon_type: rowOrNull.weapon_type || null,
-            atk: rowOrNull.atk || 0, def: rowOrNull.def || 0,
+            sprite: rowOrNull.sprite || null,
+            weapon_type: rowOrNull.weapon_type || null,
+            atk: rowOrNull.atk || 0,
+            def: rowOrNull.def || 0,
           };
           if (idx === -1) next.push(newRow); else next[idx] = { ...next[idx], ...newRow };
         } else {
@@ -481,8 +504,12 @@
         return next;
       }
 
-      function findInvPic(key) { return rootRef.current?.querySelector('[data-inv-item-key="' + CSS.escape(String(key)) + '"] .inv-pic') || null; }
-      function findSlotPic(slot) { return rootRef.current?.querySelector('[data-eq-slot="' + CSS.escape(String(slot).toUpperCase()) + '"] .eq-pic') || null; }
+      function findInvPic(key) {
+        return rootRef.current?.querySelector('[data-inv-item-key="' + CSS.escape(String(key)) + '"] .inv-pic') || null;
+      }
+      function findSlotPic(slot) {
+        return rootRef.current?.querySelector('[data-eq-slot="' + CSS.escape(String(slot).toUpperCase()) + '"] .eq-pic') || null;
+      }
 
       async function onEquip(slot, itemKey) {
         if (busy) return; setBusy(true); setErr("");
@@ -537,16 +564,28 @@
         } finally { setBusy(false); }
       }
 
+      // Liga a Backpack UI quando o drawer abre
+      useEffect(() => {
+        if (!open || !hero) return;
+        try { window.ActiveHeroId = String(hero.id); } catch { }
+        try { window.BackpackUI?.render(hero.id); } catch { }
+        try { window.BackpackUI?.bindContextOpen(() => hero.id); } catch { }
+      }, [open, (hero && hero.id), (equip ? equip.length : 0)]);
+
       return (
         <div ref={rootRef} className={"equip-drawer " + (open ? "open" : "")} aria-hidden={!open}>
           <header>
             <div>
               <div style={{ fontWeight: 700 }}>{hero?.name || "Hero"}</div>
-              <div style={{ fontSize: 12, opacity: .75 }}>class: {(hero?.class || "-").toLowerCase()} • lv {hero?.level ?? 1}</div>
+              <div style={{ fontSize: 12, opacity: .75 }}>
+                class: {(hero?.class || "-").toLowerCase()} • lv {hero?.level ?? 1}
+              </div>
             </div>
-            <button onClick={onClose}
+            <button
+              onClick={onClose}
               style={{ padding: "6px 10px", borderRadius: 8, background: "#111827", color: "#e6eef6", border: "1px solid rgba(255,255,255,.08)" }}
-              disabled={!open || busy}>
+              disabled={!open || busy}
+            >
               Fechar
             </button>
           </header>
@@ -562,7 +601,9 @@
                   const row = equipBySlot.get(slot);
                   return (
                     <div key={slot} data-eq-slot={slot} className="slot">
-                      <div style={{ fontSize: 11, color: "#9aa4b2", marginBottom: 6 }}>{slot.toLowerCase()}</div>
+                      <div style={{ fontSize: 11, color: "#9aa4b2", marginBottom: 6 }}>
+                        {prettySlot(slot)}
+                      </div>
                       <div className="box eq-pic">
                         {row?.sprite
                           ? <img src={row.sprite} alt={row.name || row.item_key} style={{ maxHeight: 64, objectFit: "contain" }} />
@@ -572,8 +613,11 @@
                       </div>
                       <div style={{ marginTop: 8 }}>
                         {row?.item_key
-                          ? <button onClick={() => onUnequip(slot)} disabled={busy}
-                            style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, background: "#374151", color: "#e6eef6", border: "1px solid rgba(255,255,255,.06)", opacity: busy ? .6 : 1 }}>
+                          ? <button
+                            onClick={() => onUnequip(slot)}
+                            disabled={busy}
+                            style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, background: "#374151", color: "#e6eef6", border: "1px solid rgba(255,255,255,.06)", opacity: busy ? .6 : 1 }}
+                          >
                             Unequip
                           </button>
                           : <span style={{ fontSize: 11, color: "#6b7280" }}>—</span>}
@@ -584,7 +628,21 @@
               </div>
             </div>
 
-            {/* Inventário */}
+            {/* Backpack (renderizada pela BackpackUI) */}
+            <div className="equip-card">
+              <div style={{ marginBottom: 8, fontSize: 14, opacity: .85 }}>Backpack</div>
+              <div
+                id="app-inventory"
+                style={{
+                  marginTop: 6,
+                  background: "rgba(2,6,23,.6)",
+                  border: "1px solid rgba(255,255,255,.05)",
+                  borderRadius: 10
+                }}
+              />
+            </div>
+
+            {/* Inventário da conta */}
             <div className="equip-card" data-inv-container>
               <div style={{ marginBottom: 8, fontSize: 14, opacity: .85 }}>Inventário da Conta</div>
               <div className="equip-grid">
@@ -593,8 +651,10 @@
                   const canEquip = ORDERED_SLOTS.includes(slot);
                   return (
                     <div key={it.item_key} data-inv-item-key={it.item_key} className="item">
-                      <div title={it.name || it.item_key}
-                        style={{ fontSize: 11, color: "#9aa4b2", marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div
+                        title={it.name || it.item_key}
+                        style={{ fontSize: 11, color: "#9aa4b2", marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      >
                         {it.name || it.item_key}
                       </div>
                       <div className="box inv-pic">
@@ -605,8 +665,11 @@
                       <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                         <span style={{ fontSize: 10, color: "#94a3b8" }}>qty {it.qty}</span>
                         {canEquip
-                          ? <button onClick={() => onEquip(slot, it.item_key)} disabled={busy || Number(it.qty) <= 0}
-                            style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, background: "#4f46e5", color: "#fff", border: 0, opacity: busy ? .6 : 1 }}>
+                          ? <button
+                            onClick={() => onEquip(slot, it.item_key)}
+                            disabled={busy || Number(it.qty) <= 0}
+                            style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, background: "#4f46e5", color: "#fff", border: 0, opacity: busy ? .6 : 1 }}
+                          >
                             Equipar
                           </button>
                           : <span style={{ fontSize: 10, color: "#6b7280" }}>—</span>}
@@ -620,6 +683,7 @@
         </div>
       );
     }
+
 
     /* ============== Skills Drawer (polling + botão fixo) ============== */
     function SkillsDrawer({ hero, onClose }) {
@@ -655,8 +719,7 @@
         if (!r.ok) return;
         const list = normalizeSkillsPayload(await r.json());
         setRows(list);
-        // >>> dispara monitor de avanço
-        try { window.SkillAdvance?.monitor.update(hero.id, hero.name, list); } catch {}
+        try { window.SkillAdvance?.monitor.update(hero.id, hero.name, list); } catch { }
       }
 
       useEffect(() => {
@@ -664,7 +727,6 @@
 
         (async () => {
           try {
-            // 1) definir endpoint
             if (typeof window.SKILLS_ENDPOINT === "function") {
               endpointRef.current = window.SKILLS_ENDPOINT(hero.id);
               await fetchSkillsOnce();
@@ -678,8 +740,7 @@
                 const list = normalizeSkillsPayload(await r.json());
                 if (!live) return;
                 setRows(list);
-                // >>> dispara monitor também na primeira carga
-                try { window.SkillAdvance?.monitor.update(hero.id, hero.name, list); } catch {}
+                try { window.SkillAdvance?.monitor.update(hero.id, hero.name, list); } catch { }
                 break;
               }
             }
@@ -693,7 +754,6 @@
           }
         })();
 
-        // 2) ligar polling enquanto aberto
         pollRef.current = setInterval(fetchSkillsOnce, 1500);
 
         return () => {
@@ -702,7 +762,6 @@
         };
       }, [hero && hero.id]);
 
-      // animação de slide-in
       useEffect(() => {
         const el = ref.current; if (!el) return;
         el.style.transform = "translateX(-100%)";
@@ -792,6 +851,43 @@
       catch (e) { console.warn("[team-ui] render falhou:", e); }
     })();
   </script>
+
+  <!-- ===== Clique-direito no slot BACK abre a mochila ===== -->
+  <script>
+    (function () {
+      // Resolve sempre o heroId ativo mais confiável
+      function getHeroId() {
+        return (
+          window.ActiveHeroId ||
+          (window.Team && typeof Team.getActiveHeroId === 'function' && Team.getActiveHeroId()) ||
+          (window.GameScene && GameScene.activeHeroId) ||
+          (window.Player && Player.activeHeroId) ||
+          window.CurrentHeroId ||
+          null
+        );
+      }
+
+      // Intercepta contextmenu apenas quando o alvo é um slot BACK
+      document.addEventListener('contextmenu', function (ev) {
+        const slot = ev.target.closest('.slot[data-eq-slot="BACK"], .slot[data-slot="back"], .pf-equip .slot[data-slot="back"]');
+        if (!slot) return;
+
+        ev.preventDefault(); // bloqueia o menu do navegador
+
+        const heroId = getHeroId();
+        if (!heroId) return;
+
+        try {
+          // Preferir open(), senão render()
+          if (window.BackpackUI?.open) window.BackpackUI.open(heroId);
+          else if (window.BackpackUI?.render) window.BackpackUI.render(heroId);
+        } catch (e) {
+          console.warn('[backpack] open/render falhou:', e?.message || e);
+        }
+      }, { capture: true });
+    })();
+  </script>
+
 </body>
 
 </html>

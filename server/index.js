@@ -16,6 +16,11 @@ const gachaRoutes = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 const skillsRoutes = require('./skills/routes');
 
+// Loot (pickup + listar loots)
+const lootRoutes = require('./routes/loot'); // <<-- novo
+
+// Backpack (modelo Tibia-like)
+const backpackRoutes = require('./routes/backpack');
 
 // AFK & Farm
 const afkRoutes = require('./routes/afk');
@@ -26,7 +31,7 @@ const buildStarterRouter = require('./starter/routes');
 const { startRespawnLoop, stopRespawnLoop } = require('./respawn/worker');
 
 // ws bus
-const { attach: attachWsBus } = require('./ws/bus');
+const { attach: attachWsBus, joinMapSocket, moveSocketToMap } = require('./ws/bus');
 const { listAliveMonsters } = require('./ws/initial_monsters');
 
 // ======== Pipeline de Conteúdo ========
@@ -40,6 +45,14 @@ try {
   ({ syncSpawns } = require('./jobs/sync_spawns'));
 } catch {
   // ok em dev: se o arquivo não existir, segue sem quebrar
+}
+
+// (Opcional) cleanup do loot expirado
+let startLootCleanupLoop = null;
+try {
+  ({ startLootCleanupLoop } = require('./loot/cleanup'));
+} catch {
+  // se não existir, segue sem cleanup
 }
 
 // ========= CONFIG =========
@@ -171,16 +184,22 @@ async function bootstrapContentTables() {
       )
     `);
 
+    // hero_backpack_slots — conteúdo da mochila por herói (modelo Tibia-like)
+    await run(`
+      CREATE TABLE IF NOT EXISTS hero_backpack_slots (
+        hero_id    TEXT  NOT NULL,
+        slot_index INTEGER NOT NULL,
+        item_key   TEXT,
+        qty        INTEGER,
+        PRIMARY KEY (hero_id, slot_index)
+      )
+    `);
+
     console.log('[content] tables ready (bootstrap)');
   } catch (e) {
     console.error('[content] bootstrap error:', e.message);
   }
 }
-
-/* ========= ROTAS ========= */
-
-// públicas / auth
-app.use('/api/auth', authRoutes);
 
 /* ========= ROTAS ========= */
 
@@ -195,7 +214,7 @@ app.use('/api/combat', requireAuth, combatRoutes);
 const combatNearest = require('./routes/combat_nearest');
 app.use(combatNearest);
 
-// protegidas (APENAS a rota nova de player!)
+// protegidas
 app.use('/api/player', requireAuth, playerRoutes);
 app.use('/api/gacha', requireAuth, gachaRoutes);
 app.use('/api/skills', requireAuth, skillsRoutes);
@@ -208,7 +227,11 @@ app.use('/api/farm', requireAuth, farmRoutes);
 app.use('/api/inventory', requireAuth, require('./routes/inventory'));
 app.use('/api/equipment', requireAuth, require('./routes/equipment'));
 
+// Loot (pickup + listar loots)
+app.use('/api', requireAuth, lootRoutes); // <<-- novo (expõe: POST /api/loot/pickup e GET /api/map/:mapKey/loot)
 
+// backpack (modelo Tibia-like)
+app.use('/api/backpack', requireAuth, backpackRoutes);
 
 /* ========= Helpers (Treino) ========= */
 async function resolveSkillType(weaponOrSkill) {
@@ -388,7 +411,7 @@ app.get('/api/admin/content/maps', async (_req, res) => {
     const rows = await all(
       `SELECT key, length(("dataJSON"::text)) AS bytes, updated_at FROM maps ORDER BY key`
     );
-  res.json(rows);
+    res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -453,6 +476,10 @@ app.use('/api', catalogRoutes);
 app.get('/', (_req, res) => {
   res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
 });
+
+// ========= STATIC
+// servir sprites direto da pasta client/sprites
+app.use('/sprites', express.static(path.join(__dirname, '../client/sprites')));
 
 // ========= STATIC
 app.use(express.static(CLIENT_ROOT_DIR));
@@ -584,6 +611,26 @@ let wss = null;
           console.warn('[ws] cookie parse error', e && e.message);
         }
 
+        // >>> Coloca o socket na sala do mapa do jogador (fallback: 'house')
+        (async () => {
+          try {
+            let mapKey = 'house';
+            if (ws._player?.id) {
+              const row = await get(
+                `SELECT map_key FROM player_last_pos
+                   WHERE player_id = $1
+                   ORDER BY updated_at DESC
+                   LIMIT 1`,
+                [ws._player.id]
+              );
+              if (row?.map_key) mapKey = row.map_key;
+            }
+            joinMapSocket(mapKey, ws);
+          } catch {
+            joinMapSocket('house', ws);
+          }
+        })();
+
         // snapshot inicial de monstros vivos
         (async () => {
           try {
@@ -672,6 +719,11 @@ let wss = null;
       console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
       // >>> INÍCIO DO LOOP DE RESPAWN <<<
       startRespawnLoop({ all, run });
+
+      // opcional: inicia cleanup do loot expirado (se existir)
+      if (typeof startLootCleanupLoop === 'function') {
+        try { startLootCleanupLoop({ run }); } catch {}
+      }
     });
 
     // Encerramento limpo do loop de respawn (Ctrl+C / kill)

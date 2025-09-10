@@ -1,0 +1,10 @@
+# content/items/backpack_brown.yaml
+key: backpack_brown
+name: Leather Backpack
+kind: backpack
+slots: 20 # capacidade da mochila
+slot: back
+stackable: false
+icon: /sprites/items/backpack_brown.png
+description: >
+  A simple leather backpack with 20 slots.

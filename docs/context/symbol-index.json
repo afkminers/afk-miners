@@ -79,6 +79,12 @@
     ]
   },
   {
+    "file": "client\\js\\combat\\actions.js",
+    "symbols": [
+      "CombatActions"
+    ]
+  },
+  {
     "file": "client\\js\\combat\\attack-controls.js",
     "symbols": [
       "attachControls",
@@ -112,6 +118,7 @@
       "getSpriteFor",
       "installCombatOverlay",
       "onWsMessage",
+      "pickMobAtWorld",
       "pushFloaterAtSprite",
       "startRebindLoop",
       "updateAndDrawFloaters",
@@ -175,6 +182,8 @@
   {
     "file": "client\\js\\engine\\input.js",
     "symbols": [
+      "_edgeDown",
+      "_onKeyUp",
       "clamp1",
       "dirFromKeys"
     ]
@@ -327,6 +336,7 @@
       "buildSpawnersFromDefs",
       "clear",
       "drawGround",
+      "drawLoot",
       "drawMob",
       "drawPlayer",
       "ensureImgLoaded",
@@ -341,6 +351,7 @@
       "loadMonsterImg",
       "loadSpriteMeta",
       "loadTilesetImage",
+      "lootAtWorld",
       "mapSpawnsFromTiledJSON",
       "normKey",
       "normalizeApiJson",

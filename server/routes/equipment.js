@@ -40,8 +40,9 @@ router.post('/equip', express.json(), async (req, res) => {
     const { heroId, slot, itemKey } = req.body || {};
     if (!heroId || !slot) return res.status(400).json({ ok:false, error:'missing-params' });
 
+    // Normaliza o slot em UMA única forma (MAIÚSCULO)
     const SLOT = String(slot).toUpperCase();
-    const SLOTS = new Set(['AMULET','HELMET','BACKPACK','WEAPON','ARMOR','SHIELD','RING','LEGS','BOOTS']);
+    const SLOTS = new Set(['AMULET','HELMET','BACK','WEAPON','ARMOR','SHIELD','RING','LEGS','BOOTS']);
     if (!SLOTS.has(SLOT)) return res.status(400).json({ ok:false, error:'bad-slot' });
 
     // descobre o player dono do herói
@@ -49,9 +50,12 @@ router.post('/equip', express.json(), async (req, res) => {
     if (!hero) return res.status(404).json({ ok:false, error:'hero-not-found' });
     const playerId = String(hero.playerId);
 
-    // qual item está equipado nesse slot?
+    // qual item está equipado nesse slot? (tolerante a registros antigos com case diferente)
     const cur = await get(
-      `SELECT item_key FROM hero_equipment WHERE hero_id=$1 AND slot=$2`,
+      `SELECT item_key
+         FROM hero_equipment
+        WHERE hero_id = $1
+          AND LOWER(slot) = LOWER($2)`,
       [String(heroId), SLOT]
     );
     const prevItem = cur?.item_key || null;
@@ -63,7 +67,7 @@ router.post('/equip', express.json(), async (req, res) => {
       }
       await begin();
 
-      // limpa slot
+      // limpa slot (sempre gravando SLOT MAIÚSCULO)
       await run(
         `INSERT INTO hero_equipment (hero_id, slot, item_key)
          VALUES ($1,$2,NULL)
@@ -115,7 +119,7 @@ router.post('/equip', express.json(), async (req, res) => {
       [playerId, desiredKey]
     );
 
-    // equipa (upsert no slot)
+    // equipa (upsert no slot) — sempre gravando SLOT MAIÚSCULO
     await run(
       `INSERT INTO hero_equipment (hero_id, slot, item_key)
        VALUES ($1,$2,$3)

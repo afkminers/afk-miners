@@ -15,6 +15,9 @@ const { hasLineOfSight } = require('./los');
 const { getGrid } = require('../maps/grid');
 const { broadcast } = require('../ws/bus'); // <- necessário p/ atualizar UI em tempo real
 
+// >>> loot service (em memória)
+const { createLootFromKill } = require('../services/loot');
+
 // deixe true por enquanto; quando LOS/alcance estiverem 100% a gente liga de novo
 const PERMISSIVE_START = true;
 
@@ -63,7 +66,6 @@ async function getEquippedWeaponType(heroId) {
  *  4) Se nada encontrado, retorna null (não conta skill).
  */
 async function resolveSkillTypeOrClass({ weaponType, heroId }) {
-  // helper local: arma -> skill (via tabela)
   async function mapWeaponToSkill(wtype) {
     if (!wtype) return null;
     const row = await get(
@@ -76,20 +78,16 @@ async function resolveSkillTypeOrClass({ weaponType, heroId }) {
     return row?.skill_type ? String(row.skill_type).toUpperCase() : null;
   }
 
-  // 1) weaponType vindo do client
   if (weaponType) {
     const s = await mapWeaponToSkill(weaponType);
     if (s) return s;
   }
 
-  // 2) tenta a ARMA EQUIPADA do herói (slot WEAPON)
   if (heroId) {
-    // pega weapon_type da arma equipada (usa seu helper já existente)
     const equippedWeaponType = await getEquippedWeaponType(heroId);
     const s2 = await mapWeaponToSkill(equippedWeaponType);
     if (s2) return s2;
 
-    // 3) fallback por CLASSE (se não houver arma equipada)
     const c = await get(
       `SELECT hm.class
          FROM player_heroes ph
@@ -103,11 +101,8 @@ async function resolveSkillTypeOrClass({ weaponType, heroId }) {
     if (heroClass === 'MAGE' || heroClass === 'WIZARD')   return 'MAGIC';
     if (heroClass === 'KNIGHT' || heroClass === 'GUARDIAN') return 'SWORD';
   }
-
-  // 4) não sabemos — não aplicar ganho (melhor do que contaminar de graça)
   return null;
 }
-
 
 /** Aplica ganho de skill no banco. */
 async function gainSkillFromHit({ heroId, weaponType }) {
@@ -208,7 +203,7 @@ router.get('/nearest', async (req, res) => {
       `WITH cand AS (
          SELECT mi.id, mi.x, mi.y, mi.hp, mi.max_hp, s."monsterKey",
                 ((mi.x - $2)*(mi.x - $2) + (mi.y - $3)*(mi.y - $3)) AS d_px,
-                (((mi.x*32) - $2)*((mi.x*32) - $2) + ((mi.y*32) - $3)*((mi.y*32) - $3)) AS d_tile
+                (((mi.x*32) - $2)*((mi.x*32) - $3)*1 + ((mi.y*32) - $3)*((mi.y*32) - $3)) AS d_tile
            FROM monster_instances mi
            JOIN spawns s ON s.id = mi.spawn_id
           WHERE mi.state = 'ALIVE'
@@ -270,15 +265,11 @@ router.post('/attack/start', express.json(), async (req, res) => {
       if (!hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y)) return res.json({ ok:false, error:'no_los' });
     }
 
-    // guarda sessão para /hit
     attackSessions.set(String(targetInstanceId), {
       heroId: String(heroId),
       weaponType: weaponType ? String(weaponType) : null,
       startedAt: Date.now()
     });
-
-    // ➜ Não usa autoloop do servidor; o cliente já vai bater /combat/hit em loop
-    // autoloop.start(heroId, targetInstanceId, weaponType);
 
     return res.json({ ok:true });
   } catch (e) {
@@ -304,6 +295,28 @@ router.post('/attack/stop', express.json(), async (req, res) => {
 
 // ====== HIT (debug DB-only) ===============================================
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+// roll de loot super simples por monsterKey (apenas para visualizar drop)
+function rollSimpleLoot(monsterKey) {
+  const k = String(monsterKey || '').toLowerCase();
+  // ajuste os item keys conforme seu items_master (ou deixe como placeholders)
+  if (k.includes('rat')) {
+    // 50% 1 cheese, 20% até 3 gold
+    const out = [];
+    if (Math.random() < 0.5) out.push({ key: 'cheese', amount: 1 });
+    if (Math.random() < 0.2) out.push({ key: 'gold_coin', amount: 1 + Math.floor(Math.random() * 3) });
+    return out;
+  }
+  if (k.includes('deer')) {
+    const out = [];
+    if (Math.random() < 0.6) out.push({ key: 'meat', amount: 1 });
+    if (Math.random() < 0.15) out.push({ key: 'antlers', amount: 1 });
+    return out;
+  }
+  // genérico: chance pequena de gold
+  if (Math.random() < 0.1) return [{ key: 'gold_coin', amount: 1 }];
+  return [];
+}
 
 router.post('/hit', express.json(), async (req, res) => {
   try {
@@ -396,13 +409,30 @@ router.post('/hit', express.json(), async (req, res) => {
       if (String(cur.state) === 'DEAD' || Number(cur.hp) <= 0) {
         const xp = 0; // calcule XP real se quiser
         broadcast({ type: 'monster_dead', id: String(cur.id), xp });
+
+        // >>>>>>>>>>>>> DROP DE LOOT <<<<<<<<<<<<<<
+        try {
+          // posição atual do monstro em PX + map
+          const pos = await getMonsterPos(cur.id);
+          // rolagem simples por tipo
+          const items = rollSimpleLoot(cur.monsterKey);
+          if (pos && items && items.length > 0) {
+            await createLootFromKill({
+              mapKey: pos.map_key || pos.mapKey || 'house',
+              x: Math.round(pos.x),
+              y: Math.round(pos.y),
+              items
+            });
+          }
+        } catch (e) {
+          console.warn('[loot] drop failed:', e?.message);
+        }
       }
     }
 
     // >>>>>>>>>>>> GANHO DE SKILL POR HIT (armas equipadas) <<<<<<<<<<<<<
     if (heroIdFromSess) {
       try {
-        // tenta pelo equipamento; se não tiver, gainSkillFromHit cai no fallback por classe
         const weaponTypeEquipped = await getEquippedWeaponType(heroIdFromSess);
         await gainSkillFromHit({ heroId: heroIdFromSess, weaponType: weaponTypeEquipped });
       } catch (e) {

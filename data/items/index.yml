@@ -1,3 +1,6 @@
 items:
   bronze_sword: "./bronze_sword.yml"
   potion_small: "./potion_small.yml"
+  backpack_brown: "./backpack_brown.yml"
+  gold_coin: "./gold_coin.yml"
+  bag_brown: "./bag_brown.yml"

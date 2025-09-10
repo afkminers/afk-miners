@@ -8,3 +8,4 @@ sprites:
   rotmaw: "./monsters/rotmaw.yml"
   deer: "./monsters/deer.yml"
   demon_bonefiend: "./monsters/demon_bonefiend.yml"
+  teste: "./monsters/teste.yml"

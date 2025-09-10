@@ -3,7 +3,7 @@ import { API, getCsrf, apiGet } from './api.js';
 import { doLogin, doRegister, doLogout } from './auth.js';
 import { bindGachaUI } from './gacha.js';
 import { initLoginFx, stopLoginFx, celebrate } from './login_fx.js';
-import { bindProfileModal, setupInventoryOpen } from './player_profile.js';
+// (removido) import { bindProfileModal, setupInventoryOpen } from './player_profile.js';
 
 // UI base
 const authScreen = document.getElementById('authScreen');

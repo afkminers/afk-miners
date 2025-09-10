@@ -1,0 +1,9 @@
+key: bag_brown
+name: Small Bag
+kind: bag
+slot: BACK # <- importante: esse item ocupa o slot BACK
+slots: 8 # <- capacidade da bag
+stackable: false
+icon: /sprites/items/bag_brown.png
+description: >
+  A small cloth bag tied with a string, useful to carry a few items. It has 8 slots.

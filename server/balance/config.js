@@ -51,4 +51,8 @@ module.exports = {
     DISTANCE: envNum('DISTANCE_RANGE_TILES', envNum('BOW_RANGE_TILES', 5)),
     MAGIC:    envNum('MAGIC_RANGE_TILES', 8),
   },
+
+  // === Loot no chão ===
+  LOOT_EXPIRE_SECONDS: envNum('LOOT_EXPIRE_SECONDS', 600),          // 600s = 10 min
+  LOOT_CLEANUP_EVERY_SECONDS: envNum('LOOT_CLEANUP_EVERY_SECONDS', 60), // varredura a cada 60s
 };

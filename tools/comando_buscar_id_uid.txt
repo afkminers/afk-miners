@@ -2,7 +2,8 @@ SELECT id, name
 FROM players
 WHERE name = 'tigasfarm';
 
-
+tigasfarm8 = 6dddd50d-3f7d-4991-a07f-59d02725ac4a
+tigasfarm13 = c00b7c48-a1e7-4e3c-8824-2fc88e4b1457
 SELECT ph.id       AS hero_id,
        ph."heroKey",
        ph.name,
@@ -16,3 +17,79 @@ SELECT phs.skill_type,
        phs.tries_progress
 FROM player_hero_skills phs
 WHERE phs.hero_id = '<ID_DO_HERO>';
+
+
+
+1) Pegar o player_id pela conta (nome de usuário)
+SELECT id AS player_id, name
+FROM players
+WHERE name = 'tigasfarm';
+
+2) Listar os heróis desse player e pegar o hero_id
+
+Use aspas em "playerId", "heroKey" e "createdAt".
+
+SELECT
+  ph.id            AS hero_id,
+  ph."heroKey",
+  ph.name,
+  hm.class         AS hero_class,
+  ph."createdAt"
+FROM player_heroes ph
+JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
+WHERE ph."playerId" = (
+  SELECT id FROM players WHERE name = 'tigasfarm'
+)
+ORDER BY ph."createdAt" DESC, ph.name;
+
+
+Se quiser só o mais recente (para copiar o hero_id):
+
+SELECT ph.id AS hero_id
+FROM player_heroes ph
+WHERE ph."playerId" = (SELECT id FROM players WHERE name = 'tigasfarm')
+ORDER BY ph."createdAt" DESC
+LIMIT 1;
+
+3) Ver as skills do herói (confirmar se está aumentando)
+
+Troque HERO_ID_AQUI pelo valor retornado acima.
+
+SELECT
+  phs.skill_type,
+  phs.level,
+  phs.tries_progress
+FROM player_hero_skills phs
+WHERE phs.hero_id = 'HERO_ID_AQUI'
+ORDER BY phs.skill_type;
+
+
+Dica: rode essa query antes de bater num monstro, dê alguns hits, rode de novo e compare tries_progress (e level quando passar do necessário).
+
+4) (Opcional) Ver quanto falta para próximo nível de cada skill
+
+Junta com a curva para você entender os thresholds:
+
+SELECT
+  phs.skill_type,
+  phs.level,
+  phs.tries_progress,
+  sc.tries_needed,
+  GREATEST(sc.tries_needed - phs.tries_progress, 0) AS tries_to_next
+FROM player_hero_skills phs
+LEFT JOIN skill_curves sc
+  ON sc.skill_type = phs.skill_type
+ AND sc.level      = phs.level
+WHERE phs.hero_id = 'HERO_ID_AQUI'
+ORDER BY phs.skill_type;
+
+consultar tabelas
+SELECT table_schema, table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+ORDER BY table_name;
+
+
+
+consultar bp
+http://localhost:3000/api/backpack/0035a9f1-2fee-4d73-a161-123a418ea6b7/slots

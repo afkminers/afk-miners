@@ -47,18 +47,18 @@ async function migrate() {
 
   // posições por mapa (usada em /api/player/pos)
   await run(`
-    CREATE TABLE IF NOT EXISTS player_positions ("playerId" TEXT NOT NULL,
+    CREATE TABLE IF NOT EXISTS player_positions (
+      "playerId" TEXT NOT NULL,
       mapKey   TEXT NOT NULL,
       x INTEGER NOT NULL,
       y INTEGER NOT NULL,
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      PRIMARY KEY (playerId, mapKey),
-      FOREIGN KEY (playerId) REFERENCES players(id)
+      PRIMARY KEY ("playerId", mapKey),
+      FOREIGN KEY ("playerId") REFERENCES players(id)
     )
   `);
 
-  // ---- (opcional) crie aqui outras tabelas que seu app já usa: ----
-  // skills básicas do herói
+  // ---- Skills (básico) ----
   await run(`
     CREATE TABLE IF NOT EXISTS player_hero_skills (
       hero_id TEXT NOT NULL,
@@ -111,7 +111,7 @@ async function migrate() {
     )
   `);
 
-  // pipeline de conteúdo (monstros/itens/sprites/mapas)
+  // ---------- Conteúdo (pipeline) ----------
   await run(`
     CREATE TABLE IF NOT EXISTS content_files (
       path TEXT PRIMARY KEY,
@@ -138,13 +138,63 @@ async function migrate() {
     )
   `);
 
+  // === items_master: preparado para YAML ===
   await run(`
     CREATE TABLE IF NOT EXISTS items_master (
       id SERIAL PRIMARY KEY,
       key TEXT UNIQUE,
-      dataJSON TEXT,
+      -- jsonb para metadados (ex.: { icon, slots, stackable, ... })
+      "dataJSON" JSONB DEFAULT '{}'::jsonb,
+      -- colunas planas úteis para consultas/UI
+      name TEXT,
+      kind TEXT,
+      slot TEXT,
+      sprite TEXT,
+      weapon_type TEXT,
+      atk INTEGER,
+      def INTEGER,
+      slots INTEGER,
+      stackable BOOLEAN,
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )
+  `);
+
+  // Caso exista como TEXT em algum ambiente, converte pra JSONB
+  await run(`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1
+          FROM information_schema.columns
+         WHERE table_name='items_master'
+           AND column_name='dataJSON'
+           AND data_type <> 'jsonb'
+      ) THEN
+        ALTER TABLE items_master
+        ALTER COLUMN "dataJSON" TYPE jsonb USING "dataJSON"::jsonb;
+      END IF;
+    END$$;
+  `);
+
+  // Trigger: sempre que dataJSON tiver "icon", espelha em sprite (ajuda a UI)
+  await run(`
+    CREATE OR REPLACE FUNCTION items_master_sync_sprite()
+    RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+      IF NEW."dataJSON" ? 'icon' THEN
+        NEW.sprite := COALESCE(NEW.sprite, NEW."dataJSON"->>'icon');
+      END IF;
+      RETURN NEW;
+    END$$;
+  `);
+
+  await run(`
+    DROP TRIGGER IF EXISTS trg_items_master_sync_sprite ON items_master;
+    CREATE TRIGGER trg_items_master_sync_sprite
+      BEFORE INSERT OR UPDATE OF "dataJSON"
+      ON items_master
+      FOR EACH ROW
+      EXECUTE FUNCTION items_master_sync_sprite();
   `);
 
   await run(`
@@ -188,7 +238,7 @@ async function migrate() {
     )
   `);
 
-  // chat (usado pelo WS)
+  // ---------- Chat ----------
   await run(`
     CREATE TABLE IF NOT EXISTS chat_messages (
       id BIGSERIAL PRIMARY KEY,
@@ -200,7 +250,7 @@ async function migrate() {
     )
   `);
 
-  // AFK (workers/boxes/inventário)
+  // ---------- AFK ----------
   await run(`
     CREATE TABLE IF NOT EXISTS afk_workers (
       id TEXT PRIMARY KEY,
@@ -238,7 +288,27 @@ async function migrate() {
     )
   `);
 
-  // Farm (plots)
+  // ---------- (Opcional) Infra de equipamento/inventário do jogo ----------
+  await run(`
+    CREATE TABLE IF NOT EXISTS hero_equipment (
+      hero_id TEXT NOT NULL,
+      slot TEXT NOT NULL,
+      item_key TEXT,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      PRIMARY KEY (hero_id, slot)
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS player_inventories (
+      player_id TEXT NOT NULL,
+      item_key TEXT NOT NULL,
+      qty INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (player_id, item_key)
+    )
+  `);
+
+  // ---------- Farm ----------
   await run(`
     CREATE TABLE IF NOT EXISTS farm_plots (
       id TEXT PRIMARY KEY,

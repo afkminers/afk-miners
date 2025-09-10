@@ -1,0 +1,33 @@
+# data/sprites/monsters/teste.yml
+key: teste
+kind: monster
+image: "sprites/monsters/teste.png"
+
+frame:
+  width: 64
+  height: 64
+  margin: 0
+  spacing: 0
+  bleedFix: 0.25 # ajuda a evitar “vazar” pixels do quadro vizinho
+
+# AJUSTE estes valores ao seu PNG:
+# cols = largura_total_da_imagem / frame.width
+# rows = altura_total_da_imagem  / frame.height
+grid:
+  cols: 4 # precisa de pelo menos 5 por causa do walk south (5 frames)
+  rows: 1 # linhas 0..9
+
+anchor:
+  x: 0.0
+  y: 0.0
+
+anims:
+  # 0 — idle (4 frames)
+  idle:
+    fps: 6
+    row: 0
+    frames: 4
+    startCol: 0
+    # se tiver colunas vazias à direita, fixe a sequência:
+    seq: [ 0, 1, 2, 3 ]
+    loop: true

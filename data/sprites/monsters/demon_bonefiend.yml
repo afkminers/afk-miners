@@ -3,15 +3,15 @@ kind: monster
 image: "sprites/monsters/demon_bonefiend.png"
 
 frame:
-  width: 64
-  height: 64
-  margin: 0
-  spacing: 0
+  width: 48
+  height: 48
+  margin: 2
+  spacing: 4
   bleedFix: 0.5
 
 grid:
   cols: 6
-  rows: 10
+  rows: 12
 
 anchor:
   x: 0.5
@@ -21,14 +21,14 @@ anims:
   idle:
     fps: 4
     row: 0
-    frames: 2
+    frames: 4
     startCol: 0
-    seq: [ 0, 1 ]
+    seq: [ 0, 1, 2, 3 ]
     loop: true
 
   walk:
     fps: 8
-    frames: 2
+    frames: 4
     startCol: 0
     rowByDir:
       south: 1
@@ -36,31 +36,31 @@ anims:
       west: 3
       north: 4
     seqByDir:
-      south: [ 0, 1 ]
-      east: [ 0, 1 ]
-      west: [ 0, 1 ]
-      north: [ 0, 1 ]
+      south: [ 0, 1, 2, 3 ]
+      east: [ 0, 1, 2, 3 ]
+      west: [ 0, 1, 2, 3 ]
+      north: [ 0, 1, 2, 3 ]
     loop: true
 
   attack:
     fps: 10
-    frames: 2
+    frames: 4 # ← 4 frames de ataque
     startCol: 0
     rowByDir:
-      south: 5
-      east: 6
+      south: 7
+      east: 7
       west: 8
       north: 9
     seqByDir:
-      south: [ 0, 1 ]
-      east: [ 0, 1 ]
-      west: [ 0, 1 ]
-      north: [ 0, 1 ]
+      south: [ 0, 1, 2, 3 ]
+      east: [ 0, 1, 2, 3 ]
+      west: [ 0, 1, 2, 3 ]
+      north: [ 0, 1, 2, 3 ]
     loop: false
 
   dead:
     fps: 8
-    row: 8
+    row: 5
     frames: 4
     startCol: 0
     seq: [ 0, 1, 2, 3 ]

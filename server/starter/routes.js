@@ -203,6 +203,32 @@ function buildStarterRouter() {
       }
       /* ============================================================================ */
 
+      /* ================== AUTO-ENTREGAR + EQUIPAR BAG (BACKPACK) ================== */
+      // Garante que o herói já comece com capacidade para coletar loot
+      const STARTER_BAG_KEY = 'bag_brown'; // deve existir em items_master com slot: BACK e slots: 8
+
+      try {
+        // opcional: manter consistência e registrar 1x no inventário (não usado pelo drop, mas não atrapalha)
+        await run(
+          `INSERT INTO player_inventories (player_id, item_key, qty)
+           VALUES ($1, $2, 1)
+           ON CONFLICT (player_id, item_key) DO NOTHING`,
+          [playerId, STARTER_BAG_KEY]
+        );
+
+        // equipa no slot BACK desse herói (upsert)
+        await run(
+          `INSERT INTO hero_equipment (hero_id, slot, item_key)
+           VALUES ($1, 'BACK', $2)
+           ON CONFLICT (hero_id, slot)
+           DO UPDATE SET item_key = EXCLUDED.item_key, updated_at = now()`,
+          [id, STARTER_BAG_KEY]
+        );
+      } catch (e) {
+        console.warn('[starter] auto-equip bag falhou:', e?.message);
+      }
+      /* ============================================================================ */
+
       // Retorno
       res.json({ ok: true, id, heroKey });
     } catch (err) {

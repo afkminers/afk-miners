@@ -1,3 +1,4 @@
+// server/content/schemas.js
 const { z } = require("zod");
 
 /** Coerções utilitárias */
@@ -66,20 +67,46 @@ const MonsterYAML = z.object({
     }),
     z.object({ table: z.string() }),
   ])).default([]),
-});
+}).catchall(z.any());
 
-/** YAML de Item */
+/** YAML de Item
+ *  Tornado flexível para aceitar campos usados pelo jogo:
+ *  - slot (BACK/WEAPON/...)
+ *  - kind (bag/weapon/consumable/...)
+ *  - icon (ícone estático), sprite (fallback)
+ *  - weapon_type, atk, def
+ *  - slots (capacidade de bag), stackable
+ *  - description, rarity, effects, stackMax, value
+ */
 const ItemYAML = z.object({
   key: z.string(),
   name: z.string(),
-  slot: z.string().optional(),
-  type: z.string().optional(),
-  icon: z.string().optional(),
-  value: z.any().optional(),
-  stackMax: Int.optional(),
-  effects: z.any().optional(),
+
+  // classificação/uso
+  slot: z.string().optional(),       // ex.: "BACK", "WEAPON"
+  kind: z.string().optional(),       // ex.: "bag", "weapon", "consumable"
+
+  // arte
+  icon: z.string().optional(),       // caminho do ícone (preferido)
+  sprite: z.string().optional(),     // fallback se houver
+
+  description: z.string().optional(),
   rarity: z.string().optional(),
-});
+
+  // atributos de item de combate
+  weapon_type: z.string().optional(),
+  atk: Int.optional(),
+  def: Int.optional(),
+
+  // mochila / empilhamento
+  slots: Int.optional(),             // capacidade de bag/backpack
+  stackable: Bool.optional(),        // se empilha
+  stackMax: Int.optional(),
+
+  // qualquer payload extra
+  value: z.any().optional(),
+  effects: z.any().optional(),
+}).catchall(z.any());
 
 /** YAML de Sprite */
 const SpriteYAML = z.object({
@@ -134,7 +161,7 @@ const SpriteYAML = z.object({
     w: Int,
     h: Int,
   }).optional(),
-});
+}).catchall(z.any());
 
 /** JSON exportado do Tiled */
 const TiledMapJSON = z.object({
@@ -147,6 +174,6 @@ const TiledMapJSON = z.object({
     type: z.string(),
     objects: z.array(z.any()).optional(),
   })),
-});
+}).catchall(z.any());
 
 module.exports = { MonsterYAML, ItemYAML, SpriteYAML, TiledMapJSON };

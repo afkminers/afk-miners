@@ -938,52 +938,7 @@
     window.showView = window.showView || showView;
   </script>
 
-  <!-- Profile / Equip Modal -->
-  <div id="profileModal" class="pf-overlay" aria-hidden="true" style="display:none">
-    <div class="pf-dialog" role="dialog" aria-modal="true">
-      <button class="pf-close" aria-label="Close">✕</button>
-
-      <div class="pf-header pf-header-3cols">
-        <div class="pf-leftcol">
-          <div class="pf-portrait"><img id="pf-img" alt="hero portrait"></div>
-          <div class="pf-info">
-            <div id="pf-level"  class="pf-level">Lvl 1 (0%)</div>
-            <div id="pf-rarity" class="pf-rarity">COMMON</div>
-          </div>
-          <div id="pf-mini-meta" class="pf-mini-meta">—</div>
-          <div class="pf-stats-row">
-            <div class="pf-stat pill"><span>⚔</span><b id="pf-atk">0</b></div>
-            <div class="pf-stat pill"><span>🛡</span><b id="pf-def">0</b></div>
-            <div class="pf-stat pill"><span>⚡</span><b id="pf-spd">0</b></div>
-          </div>
-        </div>
-
-        <div class="pf-equip">
-          <div class="slot" data-slot="helmet"  title="Helmet"></div>
-          <div class="slot" data-slot="amulet"  title="Amulet"></div>
-          <div class="slot" data-slot="back"    title="Back"></div>
-
-          <div class="slot" data-slot="weapon"  title="Weapon"></div>
-          <div class="slot" data-slot="armor"   title="Armor"></div>
-          <div class="slot" data-slot="shield"  title="Shield"></div>
-
-          <div class="slot" data-slot="ring1"   title="Ring 1"></div>
-          <div class="slot" data-slot="legs"    title="Legs"></div>
-          <div class="slot" data-slot="ring2"   title="Ring 2"></div>
-
-          <div class="slot" data-slot="boots"   title="Boots"></div>
-        </div>
-
-        <section class="pf-skill-side">
-          <div id="pf-skills-placeholder" class="pf-skill-scroll"></div>
-        </section>
-      </div>
-
-      <div class="pf-footer">
-        <button id="pf-ok" class="pf-btn">OK</button>
-      </div>
-    </div>
-  </div>
+  <!-- (Modal legado de perfil removido nesta versão) -->
 
   <!-- rodapé -->
   <footer class="retro-footer">
@@ -1033,6 +988,9 @@
   <script type="module" src="js/boot.js"></script>
   <!-- FX da LANDING -->
   <script type="module" src="js/landing_fx.js"></script>
+
+  <!-- Backpack UI (grade de slots da mochila) -->
+  <script type="module" src="js/backpack/ui.js"></script>
 
   <!-- Scripts utilitários inline (landing/menu/HUD/safePlay) -->
   <script>

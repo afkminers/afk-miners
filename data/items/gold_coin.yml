@@ -1,0 +1,7 @@
+# content/items/gold_coin.yaml
+key: gold_coin
+name: Gold Coin
+kind: currency
+stackable: true
+icon: "sprites/items/gold_coin.png"
+description: The common currency.

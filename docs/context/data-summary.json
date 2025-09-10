@@ -1,5 +1,9 @@
 [
   {
+    "file": "docs\\releases\\2025-09-07_203156-auto\\ctx.yml",
+    "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
+  },
+  {
     "file": "docs\\releases\\2025-09-07_025128-auto\\ctx.yml",
     "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
   },
@@ -176,7 +180,7 @@
   {
     "file": "data\\sprites\\monsters\\rat.yml",
     "kind": "object",
-    "size": 7,
+    "size": 9,
     "topKeys": [
       "key",
       "kind",
@@ -184,7 +188,9 @@
       "frame",
       "grid",
       "anchor",
-      "anims"
+      "anims",
+      "stats",
+      "loot"
     ]
   },
   {
@@ -204,7 +210,7 @@
   {
     "file": "data\\sprites\\monsters\\demon_bonefiend.yml",
     "kind": "object",
-    "size": 7,
+    "size": 9,
     "topKeys": [
       "key",
       "kind",
@@ -212,13 +218,15 @@
       "frame",
       "grid",
       "anchor",
-      "anims"
+      "anims",
+      "stats",
+      "loot"
     ]
   },
   {
     "file": "data\\sprites\\monsters\\deer.yml",
     "kind": "object",
-    "size": 7,
+    "size": 9,
     "topKeys": [
       "key",
       "kind",
@@ -226,7 +234,9 @@
       "frame",
       "grid",
       "anchor",
-      "anims"
+      "anims",
+      "stats",
+      "loot"
     ]
   },
   {

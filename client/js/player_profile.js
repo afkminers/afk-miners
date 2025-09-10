@@ -1,5 +1,5 @@
 // client/js/player_profile.js
-import { API } from './api.js';
+import { API, apiPost } from './api.js';
 
 /* =========================
    Caches leves (com TTL)
@@ -9,7 +9,7 @@ const cache = {
   playerLevel:  null,   // { level, xp, next, progress }
   lastFetch:    0,
 
-  equip:        null,   // { equipment:{slot->itemKey}, equipped:[{itemKey,name,slot,icon}], bag:[...] }
+  equip:        null,   // { equipment:{slot->itemKey}, equipped:[{itemKey,name,slot,icon,sprite}], bag:[...] }
   lastEquip:    0
 };
 const TTL_ME = 15_000; // 15s
@@ -54,6 +54,17 @@ async function fetchEquip(force=false){
   return cache.equip;
 }
 
+/** Resolve URL da sprite do item.
+ *  - Se vier absoluta (/algo… ou http…), usa como está
+ *  - Se vier relativa (ex.: 'items/backpack_brown.png'), prefixa /sprites/
+ */
+function spriteUrlFromMeta(meta){
+  const sprite = meta?.sprite || meta?.icon || ''; // compat
+  if (!sprite) return '';
+  if (sprite.startsWith('/') || sprite.startsWith('http')) return sprite;
+  return `/sprites/${sprite}`;
+}
+
 function paintEquipGrid(data){
   const slots = ['helmet','amulet','back','armor','weapon','shield','legs','ring1','ring2','boots','belt'];
   const byKey = Object.fromEntries((data?.equipped||[]).map(x => [x.itemKey, x]));
@@ -67,8 +78,11 @@ function paintEquipGrid(data){
 
     const key  = data?.equipment?.[s];
     const meta = key && byKey[key];
-    if (meta?.icon){
-      el.style.backgroundImage    = `url(${meta.icon})`;
+
+    const url = meta ? spriteUrlFromMeta(meta) : '';
+
+    if (meta && url){
+      el.style.backgroundImage    = `url(${url})`;
       el.style.backgroundSize     = 'contain';
       el.style.backgroundRepeat   = 'no-repeat';
       el.style.backgroundPosition = 'center';
@@ -167,7 +181,6 @@ function renderTrainBars(skills){
   }).join('');
 }
 
-
 function renderHeroSkills(list){
   if (!list?.length) return `<div class="pf-skill-null">No hero skills</div>`;
 
@@ -191,6 +204,87 @@ function renderHeroSkills(list){
   }).join('');
 }
 
+/* =========================
+   Equip actions (opcional)
+   ========================= */
+// === troque APENAS esta função ===
+let equipHandlersBound = false;
+function ensureEquipHandlers(){
+  if (equipHandlersBound) return;
+  const grid = document.querySelector('.pf-equip');
+  if (!grid) return;
+
+  // Unequip (como já estava)
+  grid.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-action="unequip"]');
+    if (!btn) return;
+
+    const slotEl = btn.closest('.slot[data-slot]');
+    if (!slotEl) return;
+
+    e.preventDefault();
+
+    const slot = (slotEl.getAttribute('data-slot') || '').toUpperCase();
+    const heroId = window.ActiveHeroId || openState.currentHero?.id;
+    if (!heroId) return;
+
+    const currentKey = cache.equip?.equipment?.[slot.toLowerCase()] || null;
+
+    try {
+      await apiPost('/api/equipment/equip', {
+        heroId,
+        slot,
+        // seu backend aceita itemKey nulo => unequip
+        itemKey: currentKey || null
+      });
+      await fetchEquip(true);
+      paintEquipGrid(cache.equip);
+      document.dispatchEvent(new CustomEvent('equip-updated'));
+    } catch (err) {
+      console.error('equip error', err);
+    }
+  });
+
+  // *** NOVO: clique direito no slot BACK abre a mochila ***
+  grid.addEventListener('contextmenu', (e) => {
+    const slotEl = e.target.closest('.slot[data-slot]');
+    if (!slotEl) return;
+
+    const slot = String(slotEl.getAttribute('data-slot') || '').toUpperCase();
+    if (slot !== 'BACK') return; // só interessa o slot da mochila
+
+    e.preventDefault(); // impede o menu do navegador
+
+    // Resolve heroId “vivo” na tela
+    const heroId =
+      window.ActiveHeroId ||
+      openState.currentHero?.id ||
+      (window.Team && typeof Team.getActiveHeroId === 'function' && Team.getActiveHeroId()) ||
+      (window.GameScene && GameScene.activeHeroId) ||
+      (window.Player && Player.activeHeroId) ||
+      window.CurrentHeroId ||
+      null;
+
+    if (!heroId) return;
+
+    try {
+      // Abre a UI da mochila (qualquer uma das duas APIs, conforme o que existir)
+      if (window.BackpackUI?.open) window.BackpackUI.open(heroId);
+      else if (window.BackpackUI?.render) window.BackpackUI.render(heroId);
+    } catch (err) {
+      console.warn('[backpack] open/render falhou:', err?.message || err);
+    }
+  });
+
+  // Opcional: evita seleção de texto acidental nos slots
+  grid.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.pf-equip .slot')) {
+      e.target.closest('.pf-equip .slot').style.userSelect = 'none';
+    }
+  });
+
+  equipHandlersBound = true;
+}
 
 
 /* =========================
@@ -276,10 +370,10 @@ export function bindProfileModal() {
     animateProgressBars(el.skillsBox);
   }
 
-
   async function fillEquip(){
     const eq = await fetchEquip(); // cache + TTL
     paintEquipGrid(eq);
+    ensureEquipHandlers(); // garante handler dos botões (se existirem)
   }
 
   async function open(hero){
@@ -296,6 +390,16 @@ export function bindProfileModal() {
       fillEquip()
     ]);
 
+    // ===== Integra Backpack UI + marca herói ativo (pickup usa isso) =====
+    try { window.ActiveHeroId = hero.id; } catch {}
+    try {
+      if (window.BackpackUI) {
+        window.BackpackUI.render(hero.id);
+        window.BackpackUI.bindContextOpen(() => hero.id);
+      }
+    } catch {}
+    // =====================================================================
+
     overlay.style.display = '';
     overlay.classList.add('show');
     overlay.setAttribute('aria-hidden','false');
@@ -307,6 +411,9 @@ export function bindProfileModal() {
     overlay.classList.remove('show');
     overlay.setAttribute('aria-hidden','true');
     overlay.style.display = 'none';
+
+    // limpa herói ativo quando fecha o modal
+    try { delete window.ActiveHeroId; } catch {}
   }
 
   // Expor uma forma fácil de atualizar equipamentos externamente
