@@ -4,8 +4,11 @@
 
 Lista itens no banco sem YAML em `data/items` e monstros no banco sem YAML em `data/sprites/monsters`.
 
+**Run from the server directory** (where dependencies are installed):
+
 ```bash
-node scripts/audit-db-vs-files.js | jq .
+cd server
+node ../scripts/audit-db-vs-files.js | jq .
 ```
 
 Saída esperada:
