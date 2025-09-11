@@ -24,6 +24,7 @@
     "ctx:snapshot:win": "scripts\\snapshot.bat",
     "ctx:bundle:win": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/make-context-pack.ps1",
     "ctx:zip": "npm run ctx:bundle:win -- -Name auto -Symbols -Imports -Depth 4 -Zip",
+    "cost:calc": "node scripts/calc-cost-local.js",
     "test": "echo \"No tests yet\" && exit 0"
   },
   "keywords": [],
@@ -33,6 +34,7 @@
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
     "canvas": "^3.2.0",
+    "commander": "^14.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",

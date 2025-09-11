@@ -1,6 +1,11 @@
 // client/js/app.js
 // Layout “Tibia”: stacks laterais, chat fixo, viewport central com prioridade.
 // Abre Skills/Heroes/Inventory sempre dockado (sem cobrir a área jogável).
+
+// === Poll incremental do /api/game/tick ===
+// Se preferir carregar via <script src="/js/tick.js" defer>, remova esta linha:
+import './tick.js';
+
 import { openSkills, openHeroes, openInventory, openSummonPanel } from './app_panels.js';
 
 /* ---------- HTTP helpers + CSRF ---------- */
@@ -83,9 +88,8 @@ async function mountSceneHouse(){
   }
 }
 
-/* ---------- Viewport: respeita stacks laterais e chat ---------- */
+/* ---------- Viewport ---------- */
 function applyViewport(){
-  // tamanho disponível do centerStage
   const center = document.getElementById('centerStage');
   if (!center || !canvas) return;
   const rect = center.getBoundingClientRect();
@@ -94,7 +98,6 @@ function applyViewport(){
   const wCSS = Math.max(400, rect.width  - pad);
   const hCSS = Math.max(240, rect.height - pad);
 
-  // DPR cap pode ser controlado por GameSettings (play.js usa também)
   const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
   const baseDpr = window.devicePixelRatio || 1;
   const dpr = Math.max(1, Math.min(baseDpr, Number(st.dprCap || baseDpr)));
@@ -109,10 +112,9 @@ function applyViewport(){
 }
 window.addEventListener('resize', ()=>{ updateTopbarHeight(); applyViewport(); });
 
-/* ---------- Splitters (arrasta para redimensionar as sidebars) ---------- */
+/* ---------- Splitters ---------- */
 function makeVSplitter(splitEl, side){
   let dragging=false, startX=0, startW=0;
-
   function onDown(e){
     dragging=true;
     startX = e.clientX;
@@ -129,7 +131,6 @@ function makeVSplitter(splitEl, side){
     applyViewport();
   }
   function onUp(){ dragging=false; document.body.style.userSelect=''; }
-
   splitEl?.addEventListener('mousedown', onDown);
   window.addEventListener('mousemove', onMove);
   window.addEventListener('mouseup', onUp);
@@ -137,18 +138,16 @@ function makeVSplitter(splitEl, side){
 makeVSplitter(splitL,'left');
 makeVSplitter(splitR,'right');
 
-/* ---------- Resizer do Chat (arrasta a barrinha no topo do chat) ---------- */
+/* ---------- Resizer do Chat ---------- */
 (function mountChatResizer(){
   if (!chatDock) return;
   let res = document.getElementById('chatResizer');
   if (!res){
     res = document.createElement('div');
     res.id = 'chatResizer';
-    // insere como primeiro filho do chatDock (uma barrinha horizontal)
     chatDock.insertBefore(res, chatDock.firstChild);
   }
   let dragging=false, startY=0, startH=0;
-
   function onDown(e){
     dragging=true;
     startY = e.clientY;
@@ -159,28 +158,26 @@ makeVSplitter(splitR,'right');
   }
   function onMove(e){
     if(!dragging) return;
-    const dy = startY - e.clientY; // arrastar pra cima aumenta área do jogo (reduz chat)
+    const dy = startY - e.clientY;
     const newH = Math.max(120, Math.min(window.innerHeight*0.6, startH + dy));
     setRootVar('--chatH', Math.round(newH) + 'px');
     applyViewport();
   }
   function onUp(){ dragging=false; document.body.style.userSelect=''; }
-
   res.addEventListener('mousedown', onDown);
   window.addEventListener('mousemove', onMove);
   window.addEventListener('mouseup', onUp);
 })();
 
-/* ---------- Abrir painéis (sempre dockados) ---------- */
+/* ---------- Botões / Painéis ---------- */
 btnSkills   ?.addEventListener('click', ()=> openSkills(rightS));
 btnHeroes   ?.addEventListener('click', ()=> openHeroes(leftS));
 btnInventory?.addEventListener('click', ()=> openInventory(rightS));
 
-/* ---------- Settings (dock no stack direito) ---------- */
+/* ---------- Settings ---------- */
 btnSettings?.addEventListener('click', ()=>{
   if (window.openSettingsPanel) window.openSettingsPanel(rightS);
 });
-// atalho opcional F10
 window.addEventListener('keydown', (e)=>{
   if (e.key === 'F10'){
     e.preventDefault();
@@ -188,32 +185,21 @@ window.addEventListener('keydown', (e)=>{
   }
 });
 
-/* ---------- Flags vindas do Settings -> UI Scale / Imersivo / Overlay Chat ---------- */
+/* ---------- UI Settings -> Layout ---------- */
 function applyUiFromSettings(){
   const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
-  // UI scale
   const ui = Number(st.uiScale || 1);
   setRootVar('--ui-scale', ui);
-
-  // Imersivo & Overlay Chat
   document.body.classList.toggle('immersive', !!st.immersive);
   document.body.classList.toggle('overlay-chat', !!st.overlayChat);
-
-  // quando muda layout, refaz viewport
   updateTopbarHeight();
   applyViewport();
-
-  // avisa o jogo (play.js) que houve mudança (ele cuida de zoom/smoothing/DPR)
-  const ev = new Event('settings:changed');
-  document.dispatchEvent(ev);
+  document.dispatchEvent(new Event('settings:changed'));
 }
-// aplica uma vez no boot e fica ouvindo mudanças do painel
 document.addEventListener('GameSettings:changed', applyUiFromSettings);
 
-/* ---------- Summon como MODAL ---------- */
-btnSummon?.addEventListener('click', ()=>{
-  if (summonModal) summonModal.hidden = false;
-});
+/* ---------- Summon Modal ---------- */
+btnSummon?.addEventListener('click', ()=>{ if (summonModal) summonModal.hidden = false; });
 summonClose?.addEventListener('click', ()=> summonModal.hidden = true);
 summonModal?.addEventListener('click', (e)=>{ if(e.target===summonModal) summonModal.hidden = true; });
 
@@ -223,23 +209,131 @@ btnLogout?.addEventListener('click', async ()=>{
   location.href='/index.html';
 });
 
-/* ---------- Boot (guard starter + cena) ---------- */
+/* ---------- Boot ---------- */
 (async function boot(){
-  updateTopbarHeight();                 // mede topbar e define --topbarH
+  updateTopbarHeight();
   await getCsrf().catch(()=>null);
   try{
     const st = await jget('/api/starter/status');
     if (st?.canSelect){ location.href='/starter.html'; return; }
   }catch{}
-
-  // aplica estado atual do Settings (se já carregou)
   applyUiFromSettings();
-
   await mountSceneHouse();
   applyViewport();
 })();
 
-/* ===================== Chat global — init seguro (WS + UI) ===================== */
+/* ===================== CHAT / WS + INCREMENTAL TICK ===================== */
+
+// Dedupe robusto: evita duplicar linha quando WS (sem id) chega antes do tick (com id)
+window.__SeenChatIds = window.__SeenChatIds || new Set();
+
+function markSeenId(id) {
+  if (id == null) return;
+  window.__SeenChatIds.add(String(id));
+}
+function hasSeenId(id) {
+  if (id == null) return false;
+  return window.__SeenChatIds.has(String(id));
+}
+
+function normStr(s){ return String(s||'').trim(); }
+function getTs(v){ if (!v) return Date.now(); const d = (v instanceof Date) ? v : new Date(v); const t=d.getTime(); return isFinite(t)?t:Date.now(); }
+
+// Procura uma linha “pendente” (sem id) compatível com a msg do tick (mesma pessoa + texto, e próximo no tempo)
+function findPendingRowFor(msg) {
+  const from = normStr(msg.fromName || '');
+  const text = normStr(msg.text || '');
+  const wantTs = getTs(msg.createdAt || msg.ts || Date.now());
+  const chatBox = document.getElementById('chatBox'); if (!chatBox) return null;
+
+  const rows = Array.from(chatBox.querySelectorAll('.chat-row'));
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const el = rows[i];
+    const hasId = !!el.getAttribute('data-chat-id');
+    if (hasId) continue; // só pendentes (WS)
+    const rFrom = normStr(el.getAttribute('data-from'));
+    const rText = normStr(el.getAttribute('data-text'));
+    const rTs   = Number(el.getAttribute('data-ts')) || 0;
+    if (rFrom !== from) continue;
+    if (rText !== text) continue;
+    if (Math.abs(wantTs - rTs) <= 15_000) { // janela de 15s
+      return el;
+    }
+  }
+  return null;
+}
+
+// Cria/append de linha no chat. Retorna o elemento criado.
+function appendChatRow(msg){
+  const chatBox = document.getElementById('chatBox');
+  if (!chatBox) return null;
+
+  const id  = msg.id ?? msg.messageId ?? null;
+  const ts  = getTs(msg.createdAt || msg.ts || Date.now());
+  const me  = window._chat_me || {};
+  const myId = String(me.id || '');
+  const myName = String(me.name || 'Você');
+  const fromId = msg.fromId ? String(msg.fromId) : '';
+  const isMe = !!myId && fromId && (fromId === myId);
+
+  const fromName = normStr(msg.fromName || (isMe ? myName : 'Anon'));
+  const text = normStr(msg.text || '');
+
+  // Dedup por id — se já vimos, não adiciona
+  if (id && hasSeenId(id)) return null;
+
+  const d = document.createElement('div');
+  d.className = 'chat-row';
+  if (id != null) {
+    d.setAttribute('data-chat-id', String(id));
+    markSeenId(id);
+  }
+  d.setAttribute('data-from', fromName);
+  d.setAttribute('data-text', text);
+  d.setAttribute('data-ts', String(ts));
+  d.classList.add(isMe ? 'me' : 'other');
+
+  const time = new Date(ts).toLocaleTimeString();
+  const esc = (s)=> String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  const displayName = esc(fromName);
+  const extraYou = isMe ? ' <span class="you-tag">(Você)</span>' : '';
+  d.innerHTML = `<strong class="name">${displayName}</strong>${extraYou}: ${esc(text)}
+    <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${time})</span>`;
+
+  chatBox.appendChild(d);
+  chatBox.scrollTop = chatBox.scrollHeight;
+  return d;
+}
+
+// Tick → anexa incrementalmente, mas antes tenta ligar o id numa linha vindas do WS
+window.addEventListener('tick:chat:append', (ev)=>{
+  const list = ev.detail || [];
+  for (const m of list){
+    if (m?.id && !hasSeenId(m.id)) {
+      const pending = findPendingRowFor(m);
+      if (pending) {
+        pending.setAttribute('data-chat-id', String(m.id));
+        markSeenId(m.id);
+        continue; // já “upgrade” a linha do WS p/ linha com id
+      }
+    }
+    appendChatRow({
+      id: m.id,
+      fromId: m.fromId,
+      fromName: m.fromName,
+      text: m.text,
+      createdAt: m.createdAt
+    });
+  }
+});
+
+// Atualiza hero vindo do tick (pode alimentar HUD/painéis)
+window.addEventListener('tick:hero', (ev)=>{
+  try { window.ActiveHeroSummary = ev.detail; } catch {}
+});
+
+/* ===================== Chat global (WebSocket) ===================== */
 (function initGlobalChat() {
   function onReady(fn) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
@@ -279,7 +373,6 @@ btnLogout?.addEventListener('click', async ()=>{
         log('ws aberto');
         try { btnGlobal.classList.add('active'); btnDefault.classList.remove('active'); } catch(e){}
 
-        // handshake auth — extrae /api/player/me (note: endpoint retorna { profile: {...} })
         try {
           const raw = await fetch('/api/player/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
           const me = (raw && raw.profile) ? raw.profile : raw;
@@ -290,18 +383,33 @@ btnLogout?.addEventListener('click', async ()=>{
             ws.send(JSON.stringify({ type: 'auth', id: myId, name: myName }));
             log('sent auth handshake', { id: myId, name: myName });
           }
-          // load history
-          const hist = await fetch('/api/chat/global?limit=200', { credentials: 'include' }).then(r => r.ok ? r.json() : []);
-          for (const m of hist) appendChatRow({ fromId: m.fromId, fromName: m.fromName||m.from, text: m.text, ts: (new Date(m.created_at)).getTime() });
+          // Carrega histórico uma vez (se ainda não populamos nada com id)
+          if (![...window.__SeenChatIds].length) {
+            const hist = await fetch('/api/chat/global?limit=200', { credentials: 'include' }).then(r => r.ok ? r.json() : []);
+            for (const m of hist) {
+              appendChatRow({
+                id: m.id,
+                fromId: m.fromId,
+                fromName: m.fromName || m.from,
+                text: m.text,
+                createdAt: m.created_at
+              });
+            }
+          }
         } catch (e) { log('auth/history failed', e && e.message); }
       });
 
       ws.addEventListener('message', (evt) => {
         try {
           const d = JSON.parse(evt.data);
-          log('ws message', d);
           if (d.type === 'chat' && d.scope === 'global') {
-            appendChatRow({ fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
+            // WS (sem id) — cria linha “pendente”; o tick posterior fará o upgrade com id
+            appendChatRow({
+              fromId: d.fromId,
+              fromName: d.fromName,
+              text: d.text,
+              ts: d.ts || Date.now()
+            });
           }
         } catch (e) { log('bad ws message', e); }
       });
@@ -310,34 +418,18 @@ btnLogout?.addEventListener('click', async ()=>{
       ws.addEventListener('error', (e) => log('ws erro', e && e.message));
     }
 
-    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-    function appendChatRow(msg){
-      const d = document.createElement('div');
-      d.className='chat-row';
-      const time = new Date(msg.ts||Date.now()).toLocaleTimeString();
-      const isMe = (msg.fromId && myId && String(msg.fromId) === String(myId)) || (!msg.fromId && msg.fromName && myName && String(msg.fromName) === String(myName));
-      d.classList.add(isMe ? 'me' : 'other');
-      const displayName = escapeHtml(msg.fromName || (isMe ? myName : 'Anon'));
-      const extraYou = isMe ? ' <span class="you-tag">(Você)</span>' : '';
-      d.innerHTML = `<strong class="name">${displayName}</strong>${extraYou}: ${escapeHtml(msg.text)} <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${time})</span>`;
-      chatBox.appendChild(d);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    connectWS();
-
     async function sendChat(){
       const text = (chatInput.value||'').trim(); if(!text) return;
       if (btnGlobal.classList.contains('active')) {
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type:'chat', scope:'global', text }));
-          log('sent chat', text);
           chatInput.value='';
         } else {
           alert('Conexão real-time indisponível.');
         }
       } else {
-        appendChatRow({ fromName: 'Você', text, ts: Date.now() }); chatInput.value='';
+        appendChatRow({ fromName: 'Você', text, ts: Date.now() });
+        chatInput.value='';
       }
     }
 
@@ -347,5 +439,7 @@ btnLogout?.addEventListener('click', async ()=>{
     chatSend.addEventListener('click', sendChat);
     chatForm.addEventListener('submit', (e)=>{ e.preventDefault(); sendChat(); });
     chatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
+
+    connectWS();
   });
 })();

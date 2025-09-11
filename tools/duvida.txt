@@ -1,0 +1,3073 @@
+cara eu nao vou falar e ler nada do que tu ta fazendo, que eu acho que estamos ferrando a parte inicial de criação de conta e seleção de starter... eu nem entrei no site pra ver ainda, mas hoje eu ja tenho uma logica de criação de conta para seleção de starter, e o jogador so aparece na house depois de selecionar 1 dos 3 starters que eu tinha definido, nem sei quais são os scripts que lidam com isso e me diz se minha interpretação de que estamos modificando esse fluxo está correta, porque ao meu ver to bem preocupado porque a criação ja estava pronta e funcionando certinho ao meu ver, nao sei porque se for isso estamos mexendo, vou tentar te trazer todos oarquivos que eu encontrar de starter e tu analisa tudo e acha uma solução boa,
+
+
+/* ===================== CSRF ===================== */
+let CSRF_TOKEN = null;
+
+async function fetchCsrf() {
+  if (CSRF_TOKEN) return CSRF_TOKEN;
+  const r = await fetch('/api/csrf', {
+    credentials: 'include',
+    headers: { 'Accept': 'application/json' },
+    cache: 'no-store',
+  });
+  const headerTok = r.headers.get('x-csrf-token') || r.headers.get('X-CSRF-Token');
+  let bodyTok = null;
+  try { const data = await r.json(); bodyTok = data?.token || data?.csrf || data?.csrfToken || null; } catch {}
+  CSRF_TOKEN = headerTok || bodyTok || null;
+  return CSRF_TOKEN;
+}
+
+/* ===================== HTTP helpers ===================== */
+async function jget(url) {
+  const r = await fetch(url, { credentials: 'include', headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+  if (r.status === 401) { location.href = '/index.html'; throw new Error('Não autenticado'); }
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function jpost(url, body, _retry) {
+  const token = await fetchCsrf().catch(() => null);
+  const r = await fetch(url, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', ...(token ? { 'x-csrf-token': token } : {}) },
+    body: JSON.stringify(body || {}),
+  });
+  if (r.status === 401) { location.href = '/index.html'; throw new Error('Não autenticado'); }
+  if (r.status === 403 && !_retry) { CSRF_TOKEN = null; await fetchCsrf().catch(() => null); return jpost(url, body, true); }
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+/* ===================== UI refs ===================== */
+const grid    = document.getElementById('grid');
+const errBox  = document.getElementById('err');
+const btnSkip = document.getElementById('btnSkip');
+
+function spriteUrlFrom(h) {
+  if (h?.image)     return '/' + String(h.image).replace(/^\/+/, '');
+  if (h?.spriteKey) return `/sprites/characters/${h.spriteKey}.png`;
+  return '/img/placeholder.png';
+}
+
+/* ===================== Fluxo principal ===================== */
+async function main() {
+  try {
+    await jget('/api/auth/me');
+    await fetchCsrf().catch(() => null);
+
+    const status = await jget('/api/starter/status'); // { canSelect: boolean }
+    if (!status?.canSelect) { location.href = '/app.html'; return; }
+
+    const list = await jget('/api/starter/list');
+    grid.innerHTML = '';
+
+    for (const h of list) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = [
+        '<div class="sprite"><img alt=""></div>',
+        `<h3>${h.name || h.heroKey}</h3>`,
+        `<div class="meta">${(h.rarity||'').toUpperCase()} • ${(h.class||'').toUpperCase()} • ${(h.role||'').toUpperCase()}</div>`,
+        `<button class="btn">Escolher</button>`
+      ].join('');
+
+      const img = card.querySelector('img');
+      img.src = spriteUrlFrom(h);
+      img.onerror = () => { img.src = '/img/placeholder.png'; };
+
+      const btn = card.querySelector('button');
+      btn.onclick = async () => {
+        try { await jpost('/api/starter/select', { heroKey: h.heroKey }); location.href = '/app.html'; }
+        catch (e) {
+          console.error(e);
+          let msg = e?.message || 'falha ao selecionar';
+          try { msg = JSON.parse(msg).error || msg; } catch {}
+          errBox.textContent = 'Erro: ' + msg;
+        }
+      };
+
+      grid.appendChild(card);
+    }
+
+    if (btnSkip) btnSkip.onclick = () => { location.href = '/app.html'; };
+
+  } catch (e) {
+    console.error(e);
+    let msg = e?.message || 'falha';
+    try { msg = JSON.parse(msg).error || msg; } catch {}
+    errBox.textContent = 'Erro ao carregar: ' + msg;
+  }
+}
+main();
+
+
+
+
+import { apiGet, apiPost, getCsrf } from '../api.js';
+
+const combatState = (window.combatState = window.combatState || {
+  monsters: new Map(),
+  targetId: null,
+  attacking: false,
+  loopHandle: null,
+  selectedTargetId: null,
+});
+
+function pickCanvas() {
+  return (window.GameScene && window.GameScene.canvas)
+      || document.getElementById('scene')
+      || document.getElementById('view')
+      || document.querySelector('canvas');
+}
+function pickCamera() { return (window.GameScene && window.GameScene.camera) || null; }
+function screenToWorld(canvas, sx, sy) {
+  const cam = pickCamera();
+  if (cam?.screenToWorld) return cam.screenToWorld(sx, sy);
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
+  return { x: sx*scaleX, y: sy*scaleY };
+}
+function getMouseWorldFromEvent(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const cx = (e.clientX ?? (e.touches && e.touches[0]?.clientX)) || 0;
+  const cy = (e.clientY ?? (e.touches && e.touches[0]?.clientY)) || 0;
+  return screenToWorld(canvas, cx - rect.left, cy - rect.top);
+}
+
+let ACTIVE_HERO = { id: null, heroClass: null };
+function weaponForClass(heroClass) {
+  const c = String(heroClass || '').toUpperCase();
+  if (c.includes('ARCH')) return 'BOW';
+  if (c.includes('MAGE') || c === 'WIZARD' || c === 'DRUID') return 'STAFF';
+  return 'SWORD';
+}
+async function ensureActiveHero() {
+  if (ACTIVE_HERO.id) return ACTIVE_HERO;
+  try {
+    const me = await apiGet('/api/player/me');
+    const heroes = Array.isArray(me?.heroes) ? me.heroes : [];
+    const main = heroes.find(h => h.isStarter === 1 || h.isStarter === true) || heroes[0];
+    if (main) {
+      ACTIVE_HERO.id = String(main.id ?? main.heroId);
+      ACTIVE_HERO.heroClass = String(main.class ?? main.heroClass ?? '').toUpperCase() || null;
+    }
+  } catch {}
+  return ACTIVE_HERO;
+}
+
+/** resolve alvo no servidor; retorna { id, x, y, hp, maxHp } ou null */
+async function resolveServerTarget(pxClick, pyClick) {
+  const map = window.GameScene?.mapKey || 'house';
+
+  // posição atual do player (se disponível)
+  let px = null, py = null;
+  try {
+    const ctrl = window.GameScene?.controller;
+    if (ctrl?.getPosition) { const p = ctrl.getPosition(); px = Math.round(p.x); py = Math.round(p.y); }
+  } catch {}
+
+  const qs = new URLSearchParams({
+    map,
+    x: String(Math.round(pxClick)),
+    y: String(Math.round(pyClick)),
+    ...(px != null && py != null ? { px: String(px), py: String(py) } : {})
+  });
+
+  try {
+    const m = await apiGet('/api/combat/nearest?' + qs.toString());
+    return m?.id ? m : null;
+  } catch { return null; }
+}
+
+async function doHit() {
+  if (!combatState.attacking || !combatState.targetId) return;
+  const hero = await ensureActiveHero();
+  if (!hero.id) { stopAttack(); return; }
+
+  try {
+    const resp = await apiPost('/api/combat/hit', {
+      targetInstanceId: combatState.targetId,
+      targetId:         combatState.targetId,
+      heroId:           hero.id,
+      damage: 10
+    });
+
+    const id     = String(resp.id || resp.targetId || combatState.targetId);
+    const hpNow  = Number(resp.hpAfter ?? resp.hp);
+    const hpPrev = Number(resp.hpBefore ?? (isFinite(hpNow) ? hpNow + Number(resp.dmg || 0) : 0));
+    const hpMax  = Number(resp.maxHp) || Math.max(100, Number(combatState.monsters.get(id)?.hpMax || 100));
+    const dmg    = Number(resp.dmg ?? Math.max(0, (isFinite(hpPrev)&&isFinite(hpNow)) ? (hpPrev-hpNow) : 0));
+    const dead   = !!resp.dead || (isFinite(hpNow) && hpNow <= 0);
+
+    const m = combatState.monsters.get(id) || { id };
+    if (isFinite(hpNow)) m.hp = Math.max(0, hpNow);
+    m.hpMax = hpMax;
+    combatState.monsters.set(id, m);
+
+    window.dispatchEvent(new CustomEvent('combat:hit', { detail:{ id, dmg, hp:hpNow, maxHp:hpMax, dead } }));
+    if (dead) stopAttack();
+  } catch (e) { console.warn('[attack] hit failed', e?.message || e); }
+}
+function startLoop(){ if (!combatState.loopHandle) combatState.loopHandle = setInterval(doHit, 600); }
+
+export async function startAttack(targetId) {
+  const hero = await ensureActiveHero();
+  if (!hero.id) { alert('Nenhum herói ativo encontrado para atacar.'); return; }
+
+  // >>> garante CSRF fresquinho ANTES do POST (evita "CSRF inválido")
+  try { await getCsrf(); } catch {}
+
+  const payload = {
+    heroId:            String(hero.id),
+    weaponType:        String(weaponForClass(hero.heroClass)),
+    targetInstanceId:  String(targetId),
+    targetId:          String(targetId),
+  };
+
+  try {
+    const resp = await apiPost('/api/combat/attack/start', payload);
+    if (!resp?.ok) { console.warn('[attack] start recusado:', resp?.error || 'start-rejected'); return; }
+  } catch (err) { console.warn('[attack] start falhou:', err?.message || err); return; }
+
+  combatState.targetId = String(targetId);
+  combatState.attacking = true;
+  window.combatState.selectedTargetId = combatState.targetId;
+  startLoop();
+  window.dispatchEvent(new CustomEvent('combat:attack:start', { detail:{ targetId: combatState.targetId } }));
+}
+
+export async function stopAttack() {
+  const hero = await ensureActiveHero();
+  combatState.attacking = false;
+  combatState.targetId = null;
+  window.combatState.selectedTargetId = null;
+  if (combatState.loopHandle) { clearInterval(combatState.loopHandle); combatState.loopHandle = null; }
+  try { await apiPost('/api/combat/attack/stop', { heroId: hero?.id || null }); } catch {}
+  window.dispatchEvent(new CustomEvent('combat:attack:stop'));
+}
+
+function attachControls() {
+  if (window.__ATTACK_CONTROLS_ATTACHED__) return;
+  window.__ATTACK_CONTROLS_ATTACHED__ = true;
+
+  const canvas = pickCanvas(); if (!canvas) return;
+
+  canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); stopAttack(); });
+
+  const onPointerDown = async (e) => {
+    if (e.button != null && e.button !== 0) return;
+    const hero = await ensureActiveHero(); if (!hero.id) { alert('Nenhum herói ativo encontrado.'); return; }
+
+    const { x, y } = getMouseWorldFromEvent(e, canvas);
+    console.log('[attack] click @', Math.round(x), Math.round(y));
+
+    const m = await resolveServerTarget(x, y);
+    if (!m?.id) { console.log('[attack] nenhum alvo (server) — stop'); stopAttack(); return; }
+
+    const stat = combatState.monsters.get(String(m.id)) || { id: String(m.id) };
+    if (Number.isFinite(m.hp)) stat.hp = Number(m.hp);
+    if (Number.isFinite(m.maxHp)) stat.hpMax = Number(m.maxHp);
+    combatState.monsters.set(String(m.id), stat);
+
+    await startAttack(String(m.id));
+  };
+
+  canvas.addEventListener('mousedown', onPointerDown);
+  canvas.addEventListener('touchstart', onPointerDown, { passive: true });
+
+  window.addEventListener('blur', () => stopAttack());
+  window.addEventListener('beforeunload', () => stopAttack());
+
+  console.log('[attack] controls ready');
+}
+
+(async () => {
+  await getCsrf().catch(()=>{});
+  await ensureActiveHero().catch(()=>{});
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(attachControls, 0);
+  } else {
+    window.addEventListener('DOMContentLoaded', attachControls);
+  }
+  window.addEventListener('game:ready', attachControls);
+})();
+
+// server/index.js
+require('dotenv').config();
+
+const path = require('path');
+const express = require('express');
+const cors = require('cors');
+const http = require('http');
+
+const { all, get, run } = require('./models/db'); // PG helpers
+const { migrate } = require('./models/migrate');
+const { cookieParser, requireAuth, requireCsrf, csrfRoute } = require('./auth/middleware');
+
+// Import optimization features
+const { endpointMetrics } = require('./middleware/endpoint-metrics');
+const catalogCache = require('./services/catalogCache');
+const idlePoolCloser = require('./services/idlePoolCloser');
+
+const authRoutes = require('./auth/routes');
+const playerRoutes = require('./player/routes'); // mantém seu caminho atual
+const gachaRoutes = require('./gacha/routes');
+const catalogRoutes = require('./routes/catalog');
+const skillsRoutes = require('./skills/routes');
+
+// Loot (pickup + listar loots)
+const lootRoutes = require('./routes/loot'); // <<-- novo
+
+// Backpack (modelo Tibia-like)
+const backpackRoutes = require('./routes/backpack');
+
+// AFK & Farm
+const afkRoutes = require('./routes/afk');
+const farmRoutes = require('./routes/farm');
+
+// Game tick route
+const gameTickRoutes = require('./routes/game_tick');
+
+const K = require('./balance/config');
+const buildStarterRouter = require('./starter/routes');
+const { startRespawnLoop, stopRespawnLoop } = require('./respawn/worker');
+
+// ws bus
+const { attach: attachWsBus, joinMapSocket, moveSocketToMap } = require('./ws/bus');
+const { listAliveMonsters } = require('./ws/initial_monsters');
+
+// ======== Pipeline de Conteúdo ========
+const { loadAll, loadMap } = require('./content/loader');
+const CONTENT_PIPELINE = process.env.CONTENT_PIPELINE || 'off';
+// =====================================
+
+// === Sync automático de instâncias de spawn (opcional) ===
+let syncSpawns = async () => {};
+try {
+  ({ syncSpawns } = require('./jobs/sync_spawns'));
+} catch {
+  // ok em dev: se o arquivo não existir, segue sem quebrar
+}
+
+// (Opcional) cleanup do loot expirado
+let startLootCleanupLoop = null;
+try {
+  ({ startLootCleanupLoop } = require('./loot/cleanup'));
+} catch {
+  // se não existir, segue sem cleanup
+}
+
+// ========= CONFIG =========
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = Number(process.env.PORT || 3000);
+const CLIENT_ROOT_DIR = path.join(__dirname, '..', 'client');
+
+// ========= APP =========
+const app = express();
+app.use(cookieParser());
+app.use(express.json());
+app.use(cors({ origin: true, credentials: true }));
+
+// Add optimization middleware
+app.use(endpointMetrics);
+app.use(idlePoolCloser.trackActivity);
+
+// 1) CSRF BEFORE guard
+app.get('/api/csrf', csrfRoute);
+
+// 2) CSRF guard global (métodos que mudam estado)
+app.use(requireCsrf);
+
+/* ========= Bootstrap: tabelas do pipeline (Postgres) ========= */
+async function bootstrapContentTables() {
+  try {
+    // content_files
+    await run(`
+      CREATE TABLE IF NOT EXISTS content_files (
+        path TEXT PRIMARY KEY,
+        checksum TEXT NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+
+    // monsters_master
+    await run(`
+      CREATE TABLE IF NOT EXISTS monsters_master (
+        id BIGSERIAL PRIMARY KEY,
+        key TEXT UNIQUE,
+        name TEXT,
+        xp INTEGER,
+        "healthMax" INTEGER,
+        speed INTEGER,
+        "flagsJSON" JSONB,
+        "elementsJSON" JSONB,
+        "attacksJSON" JSONB,
+        "defensesJSON" JSONB,
+        "lootJSON" JSONB,
+        "lookJSON" JSONB,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+
+    // items_master
+    await run(`
+      CREATE TABLE IF NOT EXISTS items_master (
+        id BIGSERIAL PRIMARY KEY,
+        key TEXT UNIQUE,
+        "dataJSON" JSONB,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+
+    // sprites_master
+    await run(`
+      CREATE TABLE IF NOT EXISTS sprites_master (
+        id BIGSERIAL PRIMARY KEY,
+        key TEXT UNIQUE,
+        kind TEXT,
+        "dataJSON" JSONB,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+
+    // maps
+    await run(`
+      CREATE TABLE IF NOT EXISTS maps (
+        key TEXT PRIMARY KEY,
+        "dataJSON" JSONB,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+
+    // map_objects
+    await run(`
+      CREATE TABLE IF NOT EXISTS map_objects (
+        id BIGSERIAL PRIMARY KEY,
+        "mapKey" TEXT REFERENCES maps(key) ON DELETE CASCADE,
+        type TEXT,
+        x INTEGER, y INTEGER, w INTEGER, h INTEGER,
+        "propsJSON" JSONB
+      )
+    `);
+
+    // spawns
+    await run(`
+      CREATE TABLE IF NOT EXISTS spawns (
+        id BIGSERIAL PRIMARY KEY,
+        "mapKey" TEXT REFERENCES maps(key) ON DELETE CASCADE,
+        "monsterKey" TEXT,
+        x INTEGER, y INTEGER, w INTEGER, h INTEGER,
+        count INTEGER, "respawnSec" INTEGER,
+        "levelMin" INTEGER, "levelMax" INTEGER
+      )
+    `);
+
+    // chat_messages — nomes MINÚSCULOS
+    await run(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id BIGSERIAL PRIMARY KEY,
+        scope TEXT NOT NULL,
+        fromid TEXT,
+        fromname TEXT,
+        text TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+    try { await run(`ALTER TABLE chat_messages RENAME COLUMN "fromId" TO fromid`); } catch(_) {}
+    try { await run(`ALTER TABLE chat_messages RENAME COLUMN "fromName" TO fromname`); } catch(_) {}
+    await run(`CREATE INDEX IF NOT EXISTS chat_scope_id_idx ON chat_messages (scope, id DESC)`);
+
+    // posição do player por mapa
+    await run(`
+      CREATE TABLE IF NOT EXISTS player_last_pos (
+        player_id BIGINT NOT NULL,
+        map_key   TEXT   NOT NULL,
+        x INTEGER NOT NULL,
+        y INTEGER NOT NULL,
+        last_seq BIGINT DEFAULT 0,
+        updated_at TIMESTAMPTZ DEFAULT now(),
+        PRIMARY KEY (player_id, map_key)
+      )
+    `);
+
+    // hero_backpack_slots — conteúdo da mochila por herói (modelo Tibia-like)
+    await run(`
+      CREATE TABLE IF NOT EXISTS hero_backpack_slots (
+        hero_id    TEXT  NOT NULL,
+        slot_index INTEGER NOT NULL,
+        item_key   TEXT,
+        qty        INTEGER,
+        PRIMARY KEY (hero_id, slot_index)
+      )
+    `);
+
+    console.log('[content] tables ready (bootstrap)');
+  } catch (e) {
+    console.error('[content] bootstrap error:', e.message);
+  }
+}
+
+/* ========= ROTAS ========= */
+
+// públicas / auth
+app.use('/api/auth', authRoutes);
+
+// Combat (sempre protegido por auth)
+const combatRoutes = require('./combat/routes');
+app.use('/api/combat', requireAuth, combatRoutes);
+
+// endpoint auxiliar de nearest (se precisar, mantenha aqui)
+const combatNearest = require('./routes/combat_nearest');
+app.use(combatNearest);
+
+// protegidas
+app.use('/api/player', requireAuth, playerRoutes);
+app.use('/api/gacha', requireAuth, gachaRoutes);
+app.use('/api/skills', requireAuth, skillsRoutes);
+
+// AFK / Farm
+app.use('/api/afk', requireAuth, afkRoutes);
+app.use('/api/farm', requireAuth, farmRoutes);
+
+// inventário / equipment
+app.use('/api/inventory', requireAuth, require('./routes/inventory'));
+app.use('/api/equipment', requireAuth, require('./routes/equipment'));
+
+// Loot (pickup + listar loots)
+app.use('/api', requireAuth, lootRoutes); // <<-- novo (expõe: POST /api/loot/pickup e GET /api/map/:mapKey/loot)
+
+// backpack (modelo Tibia-like)
+app.use('/api/backpack', requireAuth, backpackRoutes);
+
+// Game tick aggregated endpoint
+app.use('/api/game', requireAuth, gameTickRoutes);
+
+/* ========= Helpers (Treino) ========= */
+async function resolveSkillType(weaponOrSkill) {
+  if (!weaponOrSkill) return null;
+  const raw = String(weaponOrSkill);
+  const row = await get(
+    `SELECT skill_type FROM weapon_skill_map WHERE lower(weapon_type) = lower($1)`,
+    [raw]
+  );
+  return row?.skill_type || null;
+}
+
+/* ========= Rotas de Treino ========= */
+const trainingRouter = express.Router();
+
+trainingRouter.post('/start', requireAuth, async (req, res) => {
+  try {
+    const { heroId, weaponOrSkill, heroClass } = req.body || {};
+    if (!heroId || !weaponOrSkill || !heroClass) {
+      return res.status(400).json({ error: 'heroId, weaponOrSkill e heroClass são obrigatórios' });
+    }
+    const skillType = await resolveSkillType(weaponOrSkill);
+    if (!skillType) return res.status(400).json({ error: 'weaponOrSkill inválido' });
+
+    const nowIso = new Date().toISOString();
+    const notes = JSON.stringify({ heroClass: String(heroClass).toUpperCase() });
+
+    const t = await get(`SELECT * FROM hero_training WHERE hero_id=$1`, [heroId]);
+    if (t) {
+      await run(
+        `UPDATE hero_training
+           SET skill_type=$1, status='RUNNING',
+               started_at=COALESCE(started_at, $2),
+               last_tick_at=$3,
+               notes=$4,
+               daily_reset_at = COALESCE(daily_reset_at, date_trunc('day', now()) + interval '1 day'),
+               energy_current = COALESCE(energy_current, energy_max)
+         WHERE hero_id=$5`,
+        [skillType, nowIso, nowIso, notes, heroId]
+      );
+    } else {
+      await run(
+        `INSERT INTO hero_training
+           (hero_id, skill_type, status, started_at, last_tick_at,
+            energy_current, energy_max, energy_spent, session_seconds, daily_seconds, daily_reset_at, notes)
+         VALUES ($1, $2, 'RUNNING', $3, $4, 100, 100, 0, 0, 0,
+                 date_trunc('day', now()) + interval '1 day', $5)`,
+        [heroId, skillType, nowIso, nowIso, notes]
+      );
+    }
+
+    res.json({ ok: true, message: 'Training started', heroId, skillType });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'erro ao iniciar treino' });
+  }
+});
+
+trainingRouter.post('/stop', requireAuth, async (req, res) => {
+  try {
+    const { heroId } = req.body || {};
+    if (!heroId) return res.status(400).json({ error: 'heroId é obrigatório' });
+
+    const t = await get(`SELECT * FROM hero_training WHERE hero_id=$1`, [heroId]);
+    if (!t || t.status !== 'RUNNING') return res.json({ ok: true, message: 'No active session' });
+
+    const now = Date.now();
+    const last = Date.parse(t.last_tick_at || t.started_at || new Date(0).toISOString());
+    const delta = Math.max(0, Math.floor((now - last) / 1000));
+
+    const energyCost = K.ENERGY_PER_MIN_WHEN_TRAINING * (delta / 60);
+    const newEnergy = Math.max(0, (t.energy_current || 0) - energyCost);
+
+    await run(
+      `UPDATE hero_training
+         SET status='STOPPED',
+             last_tick_at=$1,
+             session_seconds=COALESCE(session_seconds,0)+$2,
+             daily_seconds=COALESCE(daily_seconds,0)+$3,
+             energy_current=$4,
+             energy_spent=COALESCE(energy_spent,0)+$5
+       WHERE hero_id=$6`,
+      [new Date(now).toISOString(), delta, delta, newEnergy, energyCost, heroId]
+    );
+
+    res.json({ ok: true, message: 'Training stopped', processed_seconds: delta });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'erro ao parar treino' });
+  }
+});
+
+trainingRouter.get('/status', requireAuth, async (req, res) => {
+  try {
+    const heroId = req.query.heroId;
+    if (!heroId) return res.status(400).json({ error: 'heroId é obrigatório' });
+
+    const t = await get(`SELECT * FROM hero_training WHERE hero_id=$1`, [heroId]);
+    if (!t) return res.json({ status: 'IDLE' });
+
+    const skillRow = await get(
+      `SELECT level, tries_progress FROM player_hero_skills WHERE hero_id=$1 AND skill_type=$2`,
+      [heroId, t.skill_type]
+    );
+    let need = null, remaining = null, pct = null;
+    if (skillRow) {
+      const n = await get(
+        `SELECT tries_needed FROM skill_curves WHERE skill_type=$1 AND level=$2`,
+        [t.skill_type, skillRow.level]
+      );
+      need = n?.tries_needed ?? null;
+      if (need != null) {
+        remaining = Math.max(0, need - (skillRow.tries_progress || 0));
+        pct = Math.floor((skillRow.tries_progress / need) * 100);
+      }
+    }
+
+    res.json({
+      status: t.status,
+      hero_id: t.hero_id,
+      skill_type: t.skill_type,
+      class: (() => { try { return JSON.parse(t.notes || '{}').heroClass } catch { return null } })(),
+      energy_current: t.energy_current,
+      energy_max: t.energy_max,
+      session_seconds: t.session_seconds,
+      daily_seconds: t.daily_seconds,
+      caps: { daily: K.DAILY_TRAIN_CAP_SECONDS, session: K.MAX_SESSION_SECONDS },
+      level: skillRow?.level ?? null,
+      tries_progress: skillRow?.tries_progress ?? null,
+      tries_needed: need,
+      remaining_tries: remaining,
+      progress_pct: pct
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'erro ao consultar status' });
+  }
+});
+
+app.use('/api/training', trainingRouter);
+
+/* ========= admin/content + starter ========= */
+
+// DEBUG: listar monsters
+app.get('/api/admin/content/monsters', requireAuth, async (_req, res) => {
+  try {
+    const rows = await all('SELECT key, name, xp, "healthMax", speed, "lookJSON" FROM monsters_master ORDER BY id');
+    const parsed = rows.map(r => ({ ...r, look: r.lookJSON || {} }));
+    res.json(parsed);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// assets
+app.get('/api/assets/items', async (_req, res) => {
+  try {
+    const rows = await all('SELECT key, "dataJSON" FROM items_master ORDER BY key');
+    res.json(rows.map(r => ({ key: r.key, data: r.dataJSON || {} })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/assets/sprites', async (_req, res) => {
+  try {
+    const rows = await all('SELECT key, kind, "dataJSON" FROM sprites_master ORDER BY key');
+    res.json(rows.map(r => ({ key: r.key, kind: r.kind, data: r.dataJSON || {} })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// maps debug
+app.get('/api/admin/content/maps', async (_req, res) => {
+  try {
+    const rows = await all(
+      `SELECT key, length(("dataJSON"::text)) AS bytes, updated_at FROM maps ORDER BY key`
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/admin/content/map/:key/objects', async (req, res) => {
+  try {
+    const rows = await all(
+      `SELECT id, type, x, y, w, h, "propsJSON" FROM map_objects WHERE "mapKey"=$1 ORDER BY id`,
+      [req.params.key]
+    );
+    res.json(rows.map(r => ({ ...r, props: safeParse(r.propsJSON) })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/admin/content/map/:key/spawns', async (req, res) => {
+  try {
+    const rows = await all(
+      `SELECT id, "monsterKey", x, y, w, h, count, "respawnSec", "levelMin", "levelMax"
+         FROM spawns WHERE "mapKey"=$1 ORDER BY id`,
+      [req.params.key]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/admin/content/map/:key/data', async (req, res) => {
+  try {
+    const row = await get('SELECT "dataJSON" FROM maps WHERE key=$1', [req.params.key]);
+    if (!row) return res.status(404).json({ error: 'map not found' });
+    res.json(row.dataJSON || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/content/reload-map', async (req, res) => {
+  try {
+    const mapKey = (req.query.map || 'house').toString();
+    await loadMap({ all, get, run }, path.join(__dirname, '..'), mapKey);
+    await syncSpawns(); // garante instâncias após recarregar o mapa
+    res.json({ ok: true, reloaded: mapKey });
+  } catch (e) {
+    console.error('[content] reload-map error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+function safeParse(s) { try { return typeof s === 'object' ? s : JSON.parse(s || '{}'); } catch { return {}; } }
+
+// starter
+app.use('/api/starter', requireAuth, buildStarterRouter({ all, get, run }));
+
+// <<<<<<<<<<<<< SOMENTE AGORA o catálago genérico /api >>>>>>>>>>>>>>
+app.use('/api', catalogRoutes);
+
+// ---- Raiz pública
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
+});
+
+// ========= STATIC
+// servir sprites direto da pasta client/sprites
+app.use('/sprites', express.static(path.join(__dirname, '../client/sprites')));
+
+// ========= STATIC
+app.use(express.static(CLIENT_ROOT_DIR));
+
+// ========= SPA fallback
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  if (/\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|map)$/i.test(req.path)) return next();
+  res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
+});
+
+// ========= WebSocket =========
+let WebSocketLib = null;
+let useWebSocket = false;
+try {
+  WebSocketLib = require('ws');
+  useWebSocket = !!WebSocketLib && !!WebSocketLib.Server;
+  if (!useWebSocket) console.warn('[ws] package loaded but Server not available');
+} catch (err) {
+  // REMOVIDOS backticks do texto (evita false positive de parser)
+  console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run npm install ws to enable.');
+  WebSocketLib = null;
+  useWebSocket = false;
+}
+
+const jwt = require('jsonwebtoken');
+const { createClient } = require('redis');
+const crypto = require('crypto');
+
+const REDIS_URL = process.env.REDIS_URL || null;
+const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
+const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || process.env.COOKIE_NAME || 'sid';
+
+let redisPub = null;
+let redisSub = null;
+
+function parseCookies(cookieHeader = '') {
+  return Object.fromEntries(
+    (cookieHeader || '').split(';').map(s => {
+      const idx = s.indexOf('=');
+      if (idx === -1) return [];
+      const k = s.slice(0, idx).trim();
+      const v = s.slice(idx + 1).trim();
+      return [k, decodeURIComponent(v)];
+    }).filter(Boolean)
+  );
+}
+
+async function setupRedis(wss) {
+  if (!REDIS_URL) {
+    console.log('[redis] REDIS_URL not set — running without Redis pub/sub (single-instance)');
+    return;
+  }
+  try {
+    redisPub = createClient({ url: REDIS_URL });
+    redisSub = redisPub.duplicate();
+    await redisPub.connect();
+    await redisSub.connect();
+    await redisSub.subscribe('chat:global', (message) => {
+      try {
+        const obj = JSON.parse(message);
+        const out = JSON.stringify(obj);
+        wss.clients.forEach(c => {
+          if (c && c.readyState === WebSocketLib.OPEN) {
+            try { c.send(out); } catch (e) { /* ignore */ }
+          }
+        });
+      } catch (e) { console.warn('[redis] bad pubsub message', e?.message); }
+    });
+    console.log('[redis] connected and subscribed to chat:global');
+  } catch (e) {
+    console.warn('[redis] failed to connect — continuing without Redis', e?.message);
+    redisPub = null; redisSub = null;
+  }
+}
+
+let server; // http.Server
+let wss = null;
+
+// ========= START =========
+(async () => {
+  try {
+    await migrate();
+    await bootstrapContentTables();
+
+    // Initialize optimization features
+    idlePoolCloser.init();
+
+    // Initialize catalog cache
+    await catalogCache.warm();
+
+    const shouldRunContentPipeline = CONTENT_PIPELINE !== 'off';
+    const shouldGenerateContext = process.env.GEN_CONTEXT_ON_START === '1';
+
+    if (shouldRunContentPipeline) {
+      console.log(`[content] pipeline: ${CONTENT_PIPELINE}`);
+      await loadAll({ all, get, run }, path.join(__dirname, '..'));
+    }
+
+    if (shouldGenerateContext) {
+      console.log('[context] generation enabled by GEN_CONTEXT_ON_START=1');
+      // Add context generation logic here if needed
+    } else {
+      console.log('[context] generation disabled (set GEN_CONTEXT_ON_START=1 to enable)');
+    }
+
+    // Garante instâncias de todos os spawns (e mantém atualizadas periodicamente)
+    try { await syncSpawns(); } catch (e) { console.warn('[sync_spawns] initial failed:', e?.message); }
+    setInterval(() => syncSpawns().catch(()=>{}), 60_000);
+
+    server = http.createServer(app);
+
+    if (useWebSocket) {
+      const WebSocketServer = WebSocketLib.Server;
+      wss = new WebSocketServer({ server, path: '/ws' });
+      attachWsBus(wss);
+      setupRedis(wss).catch(() => {});
+
+      const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
+
+      wss.on('connection', (ws, req) => {
+        const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+        console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
+        console.log('[ws] cookies header:', req.headers && req.headers.cookie);
+
+        ws._connectedAt = Date.now();
+        ws._player = null;
+
+        try {
+          const cookies = parseCookies(req.headers.cookie || '');
+          const token = cookies[COOKIE_NAME] || null;
+          if (token) {
+            try {
+              const payload = jwt.verify(token, JWT_SECRET);
+              ws._player = {
+                id: String(payload.id || payload.playerId || ''),
+                name: String(payload.name || payload.username || payload.displayName || 'Anon')
+              };
+              console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
+            } catch (err) {
+              console.log('[ws] jwt verify failed', err && err.message);
+            }
+          }
+        } catch (e) {
+          console.warn('[ws] cookie parse error', e && e.message);
+        }
+
+        // >>> Coloca o socket na sala do mapa do jogador (fallback: 'house')
+        (async () => {
+          try {
+            let mapKey = 'house';
+            if (ws._player?.id) {
+              const row = await get(
+                `SELECT map_key FROM player_last_pos
+                   WHERE player_id = $1
+                   ORDER BY updated_at DESC
+                   LIMIT 1`,
+                [ws._player.id]
+              );
+              if (row?.map_key) mapKey = row.map_key;
+            }
+            joinMapSocket(mapKey, ws);
+          } catch {
+            joinMapSocket('house', ws);
+          }
+        })();
+
+        // snapshot inicial de monstros vivos
+        (async () => {
+          try {
+            const msgs = await listAliveMonsters();
+            for (const m of msgs) {
+              try { ws.send(JSON.stringify(m)); } catch {}
+            }
+          } catch (e) {
+            console.warn('[ws] init monsters failed:', e?.message);
+          }
+        })();
+
+        ws.on('message', async (msg) => {
+          let data;
+          try { data = JSON.parse(msg.toString()); } catch { console.warn('[ws] malformed json from', addr); return; }
+
+          if (data.type === 'auth') {
+            ws._player = { id: String(data.id || ''), name: String(data.name || 'Anonymous') };
+            try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
+            return;
+          }
+
+          if (data.type === 'chat') {
+            if (!ws._player) {
+              try { ws.send(JSON.stringify({ type:'error', message:'not-authenticated' })); } catch {}
+              return;
+            }
+            const scope = String(data.scope || 'global').toLowerCase();
+            const raw = String(data.text || '').trim().slice(0, 800);
+            if (!raw) return;
+
+            try {
+              if (scope === 'global') {
+                await run(
+                  `INSERT INTO chat_messages(scope, fromid, fromname, text) VALUES ($1, $2, $3, $4)`,
+                  ['global', ws._player.id, ws._player.name, raw]
+                );
+              }
+            } catch (e) { console.warn('[chat] persist error', e && e.message); }
+
+            const out = {
+              type: 'chat',
+              scope,
+              fromId: ws._player.id,
+              fromName: ws._player.name,
+              text: raw,
+              ts: Date.now(),
+              origin: instanceId
+            };
+
+            const outStr = JSON.stringify(out);
+            if (redisPub) {
+              try { await redisPub.publish('chat:global', outStr); }
+              catch (e) { console.warn('[redis] publish failed', e && e.message); }
+            }
+            wss.clients.forEach(c => {
+              if (c && c.readyState === WebSocketLib.OPEN) {
+                try { c.send(outStr); } catch {}
+              }
+            });
+            return;
+          }
+
+          if (data.type === 'pos') {
+            const out = { type:'pos', id:String(data.id||''), x:Number(data.x||0), y:Number(data.y||0), name:String(data.name||'') };
+            wss.clients.forEach(c => {
+              if (c !== ws && c.readyState === WebSocketLib.OPEN) {
+                try { c.send(JSON.stringify(out)); } catch {}
+              }
+            });
+          }
+        });
+
+        ws.on('close', () => {
+          console.log(`[ws] close from ${addr} — clients=${wss.clients.size}`);
+        });
+
+        ws.on('error', (err) => {
+          console.warn('[ws] socket error', err && err.message);
+        });
+      });
+    }
+
+    server.listen(PORT, () => {
+      console.log(`server listening on ${PORT} ${useWebSocket ? '(ws enabled)' : '(ws disabled)'}`);
+      console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
+      // >>> INÍCIO DO LOOP DE RESPAWN <<<
+      startRespawnLoop({ all, run });
+
+      // opcional: inicia cleanup do loot expirado (se existir)
+      if (typeof startLootCleanupLoop === 'function') {
+        try { startLootCleanupLoop({ run }); } catch {}
+      }
+    });
+
+    // Encerramento limpo do loop de respawn (Ctrl+C / kill)
+    process.on('SIGINT',  () => { try { stopRespawnLoop(); } finally { process.exit(0); } });
+    process.on('SIGTERM', () => { try { stopRespawnLoop(); } finally { process.exit(0); } });
+
+  } catch (err) {
+    console.error('Fatal start error:', err);
+    process.exit(1);
+  }
+})();
+
+/* ========= Chat HTTP API ========= */
+
+// História (cronológico asc)
+app.get('/api/chat/global', requireAuth, async (req, res) => {
+  try {
+    const limit = Math.min(200, Number(req.query.limit || 100));
+    const rows = await all(
+      `SELECT id,
+              scope,
+              fromid   AS "fromId",
+              fromname AS "fromName",
+              text,
+              created_at AS "createdAt"
+         FROM chat_messages
+        WHERE scope = $1
+        ORDER BY id DESC
+        LIMIT $2`,
+      ['global', limit]
+    );
+    res.json(rows.reverse());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Enviar mensagem (HTTP, opcional — WS já envia em tempo real)
+app.post('/api/chat/global', requireAuth, async (req, res) => {
+  try {
+    const text = (req.body?.text || '').trim();
+    if (!text) return res.status(400).json({ error: 'Mensagem vazia' });
+
+    await run(
+      `INSERT INTO chat_messages (scope, fromid, fromname, text) VALUES ($1, $2, $3, $4)`,
+      ['global', req.user.id, req.user.name, text]
+    );
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// Cena jogável genérica (House/PvP): usa ?map=<key> (padrão house).
+// Input (WASD/Numpad/Mouse) + PlayerController + Camera2D + AStarGrid + ClickToMove.
+// Requests HTTP centralizadas em client/js/api.js (CSRF automático).
+
+import { getCsrf, apiGet, apiPost } from './api.js';
+import { CombatActions } from './combat/actions.js';
+
+const QS = new URLSearchParams(location.search);
+const MAP_KEY = QS.get('map') || 'house';
+const TILE = 32;
+
+// ----------------- namespace público p/ outros módulos -----------------
+window.GameScene = window.GameScene || {};
+
+// ======= Time/Hero ativo (base para coleta e combate) =======
+/** Define o herói ativo globalmente e emite evento. */
+window.setActiveHero = function setActiveHero(id) {
+  if (!id) return;
+  try {
+    const s = String(id);
+    window.ActiveHeroId = s;
+    if (window.GameScene) window.GameScene.activeHeroId = s;
+    window.dispatchEvent(new CustomEvent('hero:active-changed', { detail: { heroId: s } }));
+  } catch {}
+};
+
+/** Estado leve do time: até 3 heróis. */
+window.Team = window.Team || (function () {
+  const state = {
+    activeIds: [] // array de heroIds (string)
+  };
+
+  function uniq(arr) {
+    const seen = new Set(); const out = [];
+    for (const x of arr) { const k = String(x); if (!seen.has(k)) { seen.add(k); out.push(k); } }
+    return out;
+  }
+
+  return {
+    /** Seta o time inteiro (máx 3). Mantém o herói ativo como o primeiro. */
+    setActiveTeam(ids) {
+      const list = Array.isArray(ids) ? ids.map(String) : [];
+      state.activeIds = uniq(list).slice(0, 3);
+      if (state.activeIds.length > 0) window.setActiveHero(state.activeIds[0]);
+      window.dispatchEvent(new CustomEvent('team:changed', { detail: { heroIds: state.activeIds.slice() } }));
+    },
+    /** Adiciona um herói ao time. */
+    add(id) {
+      const s = String(id);
+      if (!s) return;
+      const next = uniq([...(state.activeIds || []), s]).slice(0,3);
+      state.activeIds = next;
+      if (!window.ActiveHeroId) window.setActiveHero(next[0]);
+      window.dispatchEvent(new CustomEvent('team:changed', { detail: { heroIds: state.activeIds.slice() } }));
+    },
+    /** Remove um herói do time. */
+    remove(id) {
+      const s = String(id);
+      state.activeIds = (state.activeIds || []).filter(x => String(x) !== s);
+      if (window.ActiveHeroId === s) {
+        const nxt = state.activeIds[0] || null;
+        if (nxt) window.setActiveHero(nxt);
+      }
+      window.dispatchEvent(new CustomEvent('team:changed', { detail: { heroIds: state.activeIds.slice() } }));
+    },
+    /** Retorna cópia do time atual. */
+    getActiveTeamIds() {
+      return (state.activeIds || []).slice(0,3);
+    },
+    /** Retorna o herói ativo (fallback: primeiro do time). */
+    getActiveHeroId() {
+      return window.ActiveHeroId || (state.activeIds && state.activeIds[0]) || null;
+    }
+  };
+})();
+
+// ==== BINDING ESTÁVEL (sem gambiarra): instanceId <-> sprite; spawnId -> Set<sprites> ====
+const MOB_BY_INSTANCE = new Map();        // instanceId (UUID) -> sprite (obj do array mobs)
+const MOB_SPRITES_BY_SPAWN = new Map();   // spawnId (int) -> Set<sprite>
+
+window.GameScene.getMobByInstanceId = (id) => MOB_BY_INSTANCE.get(String(id)) || null;
+
+// === bind por monsterKey quando não tiver spawnId do servidor ===
+window.GameScene.bindInstanceToAnySpriteByKey = (instanceId, monsterKey) => {
+  const want = String(monsterKey || '').trim().toLowerCase();
+  let best = null;
+  for (const s of window.GameScene.mobs || []) {
+    const sameKind =
+      (String(s.kind || s.key || '').toLowerCase() === want) ||
+      (String(s.meta?.image || '').toLowerCase().includes(want));
+    if (!sameKind) continue;
+    if (!s.instanceId) { best = s; break; }           // preferir livre
+    if (!best && (s.dead || s.hidden)) best = s;      // senão, reaproveitar
+  }
+  if (!best) return null;
+
+  best.instanceId = String(instanceId);
+  best.dead = false;
+  best.hidden = false;
+  best._animFrozen = false;
+  best._animFrozenFrame = 0;
+
+  // garantir lookup
+  MOB_BY_INSTANCE.set(String(instanceId), best);
+  return best;
+};
+
+window.GameScene.registerMobSprite = (sprite, meta = {}) => {
+  if (!sprite) return;
+  if (Number.isFinite(meta.spawnId)) {
+    sprite.spawnId = Number(meta.spawnId);
+    if (!MOB_SPRITES_BY_SPAWN.has(sprite.spawnId)) MOB_SPRITES_BY_SPAWN.set(sprite.spawnId, new Set());
+    MOB_SPRITES_BY_SPAWN.get(sprite.spawnId).add(sprite);
+  }
+  if (meta.instanceId) {
+    sprite.instanceId = String(meta.instanceId);
+    MOB_BY_INSTANCE.set(sprite.instanceId, sprite);
+  }
+};
+
+// escolhe uma sprite “livre” daquele spawn (sem instanceId ou marcada morta/oculta)
+function pickFreeSpriteForSpawn(spawnId) {
+  const set = MOB_SPRITES_BY_SPAWN.get(Number(spawnId));
+  if (!set || set.size === 0) return null;
+  // preferência: sem vínculo; depois mortas; depois qualquer uma
+  let candidate = null;
+  for (const s of set) { if (!s.instanceId) return s; if (!candidate && (s.dead || s.hidden)) candidate = s; }
+  return candidate || [...set][0];
+}
+
+window.GameScene.bindInstanceToSpawn = (instanceId, spawnId) => {
+  const s = pickFreeSpriteForSpawn(spawnId);
+  if (!s) return null;
+  // limpa estado de morte/oculto e congelações
+  s.instanceId = String(instanceId);
+  s.dead = false;
+  s.hidden = false;
+  s._animFrozen = false;
+  s._animFrozenFrame = 0;
+  MOB_BY_INSTANCE.set(String(instanceId), s);
+  return s;
+};
+
+window.GameScene.onMonsterDead = (instanceId) => {
+  const s = MOB_BY_INSTANCE.get(String(instanceId));
+  if (!s) return;
+  s.dead = true;            // congela AI/movimento
+  s._animFrozen = true;     // congela animação no 1º frame
+  s._animFrozenFrame = 0;
+  MOB_BY_INSTANCE.delete(String(instanceId)); // solta vínculo da instância (respawn reusa a sprite)
+};
+
+// =============== Canvas/HUD flexível (querystring + auto) ===============
+function pickElByIds(prefIds = [], fallbackSelectors = []) {
+  for (const id of prefIds) { if (!id) continue; const el = document.getElementById(id); if (el) return el; }
+  for (const sel of fallbackSelectors) { const el = document.querySelector(sel); if (el) return el; }
+  return null;
+}
+const preferCanvasId = QS.get('canvas'); // ex: ?canvas=scene
+const preferHudId = QS.get('hud');    // ex: ?hud=hud
+
+const canvas = pickElByIds([preferCanvasId, 'view', 'scene'], ['canvas#view', 'canvas#scene', 'canvas']);
+const hud = pickElByIds([preferHudId, 'hud', 'app-hud'], ['#hud', '#app-hud']);
+
+if (!canvas) {
+  console.error('play.js: canvas não encontrado (#view ou #scene).');
+  alert('Erro: canvas não encontrado (#view/#scene).');
+  throw new Error('Canvas not found');
+}
+const ctx = canvas.getContext('2d');
+
+// expõe cedo para módulos externos
+window.GameScene.canvas = canvas;
+window.GameScene.ctx = ctx;
+
+// garante foco p/ WASD e click-to-move
+try { canvas.setAttribute('tabindex', '0'); } catch { }
+canvas.addEventListener('mousedown', () => { try { canvas.focus(); } catch { } });
+canvas.addEventListener('touchstart', () => { try { canvas.focus(); } catch { } });
+
+// helper DOM
+const $ = (s) => document.querySelector(s);
+
+// camera hoisted (evita TDZ)
+let camera;
+
+/* ===================== Assets: normalização de paths ===================== */
+function assetUrl(p, { asTileset = false } = {}) {
+  let s = String(p || '');
+  if (!s) return s;
+  if (/^https?:\/\//i.test(s)) return s;
+  s = s.replace(/^(\.\/)+/, '');
+  s = s.replace(/^client\//, '');
+  s = s.replace(/^\/client\//, '/');
+  if (!s.startsWith('/')) s = asTileset ? '/img/' + s : '/' + s;
+  return s;
+}
+
+// --- loader de tileset compatível com teu caminho antigo do Tiled
+function normalizeTilesetPath(p) {
+  let s = String(p || '');
+  s = s.replace(/^(\.\.\/)+/, '/');
+  if (!s.startsWith('/')) s = '/' + s;
+  s = s.replace(/^\/client\//, '/');
+  return s;
+}
+
+async function loadTilesetImage(rawPath) {
+  const primary = normalizeTilesetPath(rawPath);
+  const base = primary.split('/').pop();
+  const candidates = [
+    primary,
+    '/sprites/' + base,
+    '/sprites/tiles/' + base,
+    '/img/tiles/' + base,
+    '/img/' + base,
+    '/' + base
+  ];
+  for (const url of candidates) {
+    const img = loadImg(url);
+    const ok = await ensureImgLoaded(img);
+    if (ok) return img;
+  }
+  console.warn('[tileset] falhou carregar. Tentativas:', candidates);
+  return null;
+}
+
+/* ============================= Settings (pixel art global) ============================= */
+function applySmoothing() {
+  try {
+    // suavização off
+    ctx.imageSmoothingEnabled = false;
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.webkitImageSmoothingEnabled = false;
+  } catch {}
+  try {
+    // CSS: pixelado nativo pra todos
+    canvas.style.imageRendering = 'pixelated';       // Chrome/Firefox
+    canvas.style.setProperty('image-rendering', 'pixelated');
+  } catch {}
+}
+applySmoothing();
+document.addEventListener('settings:changed', () => { applySmoothing(); resize(); });
+
+/* ============================= Resize + Zoom por tiles ============================= */
+function resize() {
+  const shell = document.querySelector('#clientShell') || canvas.parentElement;
+  const rect = shell ? shell.getBoundingClientRect() : { width: window.innerWidth * 0.9, height: window.innerHeight * 0.9 };
+  const wCSS = Math.max(320, Math.floor(rect.width || window.innerWidth * 0.9));
+  const hCSS = Math.max(200, Math.floor(rect.height || window.innerHeight * 0.9));
+  const st = (window.GameSettings?.get?.() || window.GameSettings?.getState?.()) || {};
+  const dprBase = window.devicePixelRatio || 1;
+  const dpr = Math.min(dprBase, Number(st.dprCap || dprBase));
+
+  // tamanho CSS (aparência) + tamanho real (resolução)
+  canvas.style.width = wCSS + 'px';
+  canvas.style.height = hCSS + 'px';
+  const w = Math.round(wCSS * dpr);
+  const h = Math.round(hCSS * dpr);
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+  if (camera?.resize) camera.resize(canvas.width, canvas.height);
+
+  // recalcula zoom baseado na altura do canvas e tiles visíveis
+  applyCameraZoom();
+}
+window.addEventListener('resize', resize);
+
+/* ============================ Imagens ============================ */
+const IMG_CACHE = new Map();
+function loadImg(src) {
+  const key = assetUrl(src || '');
+  if (IMG_CACHE.has(key)) return IMG_CACHE.get(key);
+  const img = new Image();
+  img.src = key;
+  IMG_CACHE.set(key, img);
+  return img;
+}
+function imgReady(img) { return img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0; }
+
+async function ensureImgLoaded(img) {
+  if (imgReady(img)) return true;
+  try { await img.decode(); return imgReady(img); } catch { return imgReady(img); }
+}
+
+/* ======== Índice tolerante para sprites (YAML) + loader robusto ======== */
+let SPRITES_META = {};
+let SPRITE_INDEX = new Map(); // chave normalizada -> meta
+
+function normKey(s) {
+  return String(s || '')
+    .replace(/\\/g, '/')
+    .replace(/^.*\//, '')
+    .replace(/\.(png|jpg|jpeg|gif|webp)$/i, '')
+    .replace(/[\s_]+/g, '-')
+    .toLowerCase()
+    .trim();
+}
+
+function indexSpriteMeta(obj) {
+  SPRITE_INDEX.clear();
+  for (const [key, data] of Object.entries(obj || {})) {
+    const nk = normKey(key);
+    // indexa por key normalizada
+    SPRITE_INDEX.set(nk, data);
+
+    // indexa também por caminho da imagem do YAML
+    if (data?.image) SPRITE_INDEX.set(normKey(data.image), data);
+
+    // apelidos opcionais
+    if (Array.isArray(data?.aliases)) {
+      for (const a of data.aliases) SPRITE_INDEX.set(normKey(a), data);
+    }
+  }
+}
+
+function asObj(v) {
+  if (!v) return null;
+  if (typeof v === 'string') {
+    try { return JSON.parse(v); } catch { return null; }
+  }
+  return v;
+}
+
+async function loadSpriteMeta() {
+  const list = await apiGet('/api/assets/sprites'); // [{ key, kind, data }]
+  SPRITES_META = Object.fromEntries(
+    (list || []).map(e => [e.key, asObj(e.data)])
+  );
+  indexSpriteMeta(SPRITES_META);
+}
+
+function findMetaFor(spawnKey) {
+  const k = String(spawnKey || '').trim();
+  if (!k) return null;
+  const tries = [
+    k,
+    k.toLowerCase(),
+    k.replace(/[\s_]+/g, '-'),
+    k.replace(/[\s\-]+/g, '_'),
+  ];
+  for (const t of tries) {
+    const m = SPRITE_INDEX.get(normKey(t));
+    if (m) return m;
+  }
+  const nk = normKey(k);
+  for (const [idx, m] of SPRITE_INDEX.entries()) {
+    if (idx.includes(nk)) return m;
+  }
+  return null;
+}
+
+function buildMonsterCandidates(kindNorm, meta, rawKey) {
+  const list = [];
+
+  // 1) Caminho explícito do YAML (prioritário)
+  if (meta?.image) {
+    const p = meta.image.replace(/^(\.\/)+/, '');
+    list.push('/' + p); // ex: /sprites/monsters/cave_rat.png
+    list.push(p);       // ex: sprites/monsters/cave_rat.png
+  }
+
+  // 2) Fallbacks: gera variações de nome
+  const vKebab = String(kindNorm || '').trim();                 // ex: cave-rat
+  const vRaw = String(rawKey || '').trim();                     // ex: cave_rat
+  const vUnder = vRaw.toLowerCase().replace(/[\s\-]+/g, '_');   // ex: cave_rat
+  const vKebabFromRaw = vRaw.toLowerCase().replace(/[\s_]+/g, '-'); // ex: cave-rat
+
+  const variants = [...new Set([vKebab, vUnder, vKebabFromRaw])];
+
+  for (const v of variants) {
+    list.push(`/sprites/monsters/${v}.png`);
+    list.push(`/sprites/${v}.png`);
+    list.push(`/img/monsters/${v}.png`);
+    list.push(`/img/${v}.png`);
+    list.push(`/${v}.png`);
+  }
+
+  // remove duplicatas mantendo a ordem
+  return [...new Set(list)];
+}
+
+async function loadMonsterImg(kindNorm, meta, rawKey) {
+  const candidates = buildMonsterCandidates(kindNorm, meta, rawKey);
+  for (const url of candidates) {
+    const img = loadImg(url);
+    const ok = await ensureImgLoaded(img);
+    if (ok) return img;
+  }
+  console.warn(`[mob sprite] falhou carregar: ${kindNorm}. Tentativas:`, candidates);
+  return null;
+}
+
+// Auto-meta: tenta 64x64 → 48x32 → 32x32 e define animações padrão
+function inferMetaFromImage(img, rawKey) {
+  if (!img || !img.naturalWidth || !img.naturalHeight) return null;
+
+  // ordem de tentativa de frame size
+  const candidates = [
+    { w: 64, h: 64 },
+    { w: 48, h: 32 },
+    { w: 32, h: 32 },
+  ];
+
+  // escolhe o 1º que divide exatamente a imagem
+  let fw = 32, fh = 32;
+  for (const c of candidates) {
+    if (img.naturalWidth % c.w === 0 && img.naturalHeight % c.h === 0) {
+      fw = c.w; fh = c.h; break;
+    }
+  }
+
+  const cols = Math.max(1, Math.floor(img.naturalWidth / fw));
+  const rows = Math.max(1, Math.floor(img.naturalHeight / fh));
+
+  return {
+    key: String(rawKey || '').trim(),
+    kind: 'monster',
+    image: img.src.replace(location.origin, ''),
+    frame: { width: fw, height: fh, margin: 0, spacing: 0, bleedFix: 0.25 },
+    grid: { cols, rows },
+    anchor: { x: 0.5, y: fw === 64 && fh === 64 ? 0.85 : 0.9 },
+    anims: {
+      walk: {
+        fps: 8,
+        frames: Math.min(4, cols),
+        startCol: 0,
+        rowByDir:
+          (rows >= 5)
+            ? { south: 1, west: 2, east: 3, north: 4 }
+            : (rows >= 4) ? { south: 0, west: 1, east: 2, north: 3 } : null,
+        row: 0,
+        loop: true
+      },
+      dead: (rows >= 6)
+        ? { row: 5, frames: Math.min(4, cols), startCol: 0, loop: false }
+        : null
+    }
+  };
+}
+
+/* ========================= Estado do Mapa ========================= */
+let mapData = null;
+let tileset = null;
+let tilesetImg = null;
+let groundLayer = null;
+
+let starts = [];
+let spawns = [];
+
+/* ========================= Spawners / Mobs ======================== */
+const spawners = [];
+const mobs = [];
+window.GameScene.mobs = mobs;
+let mobAutoId = 1;
+
+/* ========================= Loot (estado) ========================== */
+const loots = new Map(); // id -> { id, x, y, items:[...] }
+window.GameScene.loots = loots;
+
+function lootAtWorld(x, y) {
+  for (const l of loots.values()) {
+    if (Math.abs(x - l.x) <= 16 && Math.abs(y - l.y) <= 16) return l;
+  }
+  return null;
+}
+
+function drawLoot(l) {
+  // desenho simples (você pode trocar por sprite/baú depois)
+  ctx.save();
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = '#d97706'; // âmbar
+  ctx.fillRect(l.x - 6, l.y - 10, 12, 10);
+  ctx.fillStyle = '#92400e';
+  ctx.fillRect(l.x - 6, l.y - 6, 12, 6);
+  ctx.restore();
+}
+
+/* ========================= Player Visual ========================== */
+const playerVis = { w: 32, h: 32, img: null, heroKey: null };
+
+/* ============================== Render ============================ */
+function clear() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+function drawGround(cameraObj) {
+  if (!groundLayer || !tileset || !imgReady(tilesetImg)) return;
+  const data = groundLayer.data;
+  const cols = mapData.width;
+  const rows = mapData.height;
+  const first = tileset.firstgid || 1;
+  const tw = tileset.tilewidth, th = tileset.tileheight;
+  const columnsInImage = tileset.columns;
+
+  const x0 = Math.max(0, Math.floor(cameraObj.x / TILE));
+  const y0 = Math.max(0, Math.floor(cameraObj.y / TILE));
+  const x1 = Math.min(cols - 1, Math.ceil((cameraObj.x + cameraObj.w) / TILE));
+  const y1 = Math.min(rows - 1, Math.ceil((cameraObj.y + cameraObj.h) / TILE));
+
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const gid = data[y * cols + x];
+      if (!gid || gid < first) continue;
+      const id = gid - first;
+      const sx = (id % columnsInImage) * tw;
+      const sy = Math.floor(id / columnsInImage) * th;
+      ctx.drawImage(tilesetImg, sx, sy, tw, th, x * TILE, y * TILE, TILE, TILE);
+    }
+  }
+}
+
+function drawPlayer(controller) {
+  const p = controller.getPosition();
+  if (imgReady(playerVis.img)) {
+    const ox = Math.round(p.x - playerVis.w * 0.5);
+    const oy = Math.round(p.y - playerVis.h * 0.9);
+    ctx.drawImage(playerVis.img, ox, oy, playerVis.w, playerVis.h);
+  } else {
+    ctx.save();
+    ctx.fillStyle = "#f59e0b";
+    ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawMob(m) {
+  if (m.hidden) return;
+
+  // Auto-meta se só a imagem carregou
+  if ((!m.meta || !m.meta.frame || !m.meta.grid) && imgReady(m.img)) {
+    const auto = inferMetaFromImage(m.img, m.rawKey || m.kind);
+    if (auto) m.meta = auto;
+  }
+
+  if (!(m.meta && imgReady(m.img))) {
+    if (!m.dead) {
+      ctx.save();
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath(); ctx.arc(m.x, m.y, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    return;
+  }
+
+  const meta = m.meta;
+
+  // frame & grid
+  const frameW  = Number(meta.frame?.width)  || 32;
+  const frameH  = Number(meta.frame?.height) || 32;
+  const margin  = Number(meta.frame?.margin)  || 0;
+  const spacing = Number(meta.frame?.spacing) || 0;
+  const cols    = Math.max(1, Number(meta.grid?.cols) || 1);
+  const rows    = Math.max(1, Number(meta.grid?.rows) || 1);
+  const EPS     = Number.isFinite(Number(meta.frame?.bleedFix)) ? Number(meta.frame?.bleedFix) : 0.25;
+
+  // animações
+  const animIdle = meta.anims?.idle || null;
+  const animWalk = meta.anims?.walk || { fps: 8, frames: cols, row: 0, startCol: 0, loop: true };
+  const animDead = meta.anims?.dead || null;
+
+  // escolher anima
+  let anim = m.dead && animDead ? animDead : (animIdle && m._animFrozen ? animIdle : animWalk);
+
+  // parâmetros base
+  let fps = Number(anim.fps); if (!Number.isFinite(fps) || fps < 0) fps = 8;
+
+  let seq = Array.isArray(anim.seq) ? anim.seq.slice() : null;
+  let frames = Number(anim.frames);
+  let startCol = Number(anim.startCol);
+  if (!Number.isFinite(frames) || frames <= 0) frames = cols;
+  if (!Number.isFinite(startCol) || startCol < 0) startCol = 0;
+
+  // direção (linha/frames/startCol/seq)
+  const face = m.face || 'south';
+  let row = Number(anim.row); if (!Number.isFinite(row)) row = 0;
+
+  if (anim.rowByDir && anim.rowByDir[face] != null) {
+    const r = Number(anim.rowByDir[face]); if (Number.isFinite(r)) row = r;
+  }
+  if (anim.framesByDir && anim.framesByDir[face] != null) {
+    const fd = Number(anim.framesByDir[face]); if (Number.isFinite(fd) && fd > 0) frames = fd;
+  }
+  if (anim.startColByDir && anim.startColByDir[face] != null) {
+    const sd = Number(anim.startColByDir[face]); if (Number.isFinite(sd) && sd >= 0) startCol = sd;
+  }
+  if (!seq && anim.seqByDir && Array.isArray(anim.seqByDir[face])) {
+    seq = anim.seqByDir[face].slice();
+  }
+
+  // clamp do row ao grid
+  row = Math.max(0, Math.min(rows - 1, row));
+
+  // estado morto: congelar 1º frame
+  if (m.dead && animDead) {
+    fps = 0;
+    frames = 1;
+    if (Number.isFinite(animDead.startCol)) startCol = Number(animDead.startCol);
+    if (Number.isFinite(animDead.row)) row = Math.max(0, Math.min(rows - 1, Number(animDead.row)));
+    seq = null;
+    m._animFrozen = true;
+    m._animFrozenFrame = 0;
+  }
+
+  // calcular frame atual
+  const t = performance.now() / 1000;
+  const baseLen = Math.max(1, seq ? seq.length : frames);
+  let f;
+  if (anim.loop === false) {
+    const idx = Math.floor(t * Math.max(0, fps));
+    f = Math.min(idx, baseLen - 1);
+  } else {
+    f = m._animFrozen ? m._animFrozenFrame : Math.floor(t * Math.max(0, fps)) % baseLen;
+  }
+
+  // coluna
+  let col;
+  if (seq && seq.length > 0) {
+    const pick = Number(seq[f]);
+    col = Number.isFinite(pick) ? Math.max(0, Math.min(cols - 1, pick)) : 0;
+  } else {
+    const rowCols = cols;
+    if (startCol < 0) startCol = 0;
+    if (startCol >= rowCols) startCol = Math.max(0, rowCols - 1);
+    const maxFromStart = Math.max(1, rowCols - startCol);
+    frames = Math.min(Math.max(1, frames), maxFromStart);
+    col = startCol + f;
+    if (col >= rowCols) col = rowCols - 1;
+    if (col < 0) col = 0;
+  }
+
+  // recorte
+  const sx = margin + col * (frameW + spacing) + 0.25;
+  const sy = margin + row * (frameH + spacing) + 0.25;
+  const sw = frameW - 0.5;
+  const sh = frameH - 0.5;
+
+  // âncora
+  const anchorX = (meta.anchor?.x ?? 0.5);
+  const anchorY = (meta.anchor?.y ?? 0.9);
+  const dw = frameW, dh = frameH;
+  const ox = Math.round(m.x - dw * anchorX);
+  const oy = Math.round(m.y - dh * anchorY);
+
+  // flipX (1 linha, sem rowByDir)
+  const canFlipX = !anim.rowByDir && rows === 1 && face === 'west';
+
+  ctx.save();
+  if (m.dead) ctx.globalAlpha = 0.55;
+
+  if (canFlipX) {
+    ctx.translate(ox + dw, oy);
+    ctx.scale(-1, 1);
+    ctx.drawImage(m.img, sx, sy, sw, sh, 0, 0, dw, dh);
+  } else {
+    ctx.drawImage(m.img, sx, sy, sw, sh, ox, oy, dw, dh);
+  }
+  ctx.restore();
+}
+
+/* ======================= Posição Persistente ======================= */
+let POS_SYNC_ENABLED = true;
+let lastPostAt = 0;
+
+// contador de sequência enviado ao servidor
+let posSeq = 0;
+// marca se já sincronizamos o contador com o servidor
+let posSeqReady = false;
+// evita posts concorrentes
+let posInFlight = false;
+// evita post quando não mudou
+let lastSent = { x: null, y: null };
+
+/** Lê posição salva do servidor e já sincroniza o seq local */
+async function getSavedPos() {
+  try {
+    const p = await apiGet(`/api/player/pos?map=${encodeURIComponent(MAP_KEY)}`);
+    if (p && Number.isFinite(p.seq)) {
+      posSeq = Number(p.seq);
+      posSeqReady = true;
+    }
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
+      return { x: p.x, y: p.y };
+    }
+  } catch {
+    // ok, começa do default
+  }
+  return null;
+}
+
+/** Envia posição com rate-limit, dedupe e seq sincronizado com o servidor */
+async function postPosThrottled(mapKey, x, y) {
+  if (!POS_SYNC_ENABLED) return;
+
+  // tenta sincronizar seq uma única vez no 1º envio
+  if (!posSeqReady) {
+    try {
+      const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
+      if (chk && Number.isFinite(chk.seq)) {
+        posSeq = Number(chk.seq);
+        posSeqReady = true;
+      }
+    } catch { /* segue mesmo assim */ }
+  }
+
+  // sem flooding: servidor aceita ~12 vezes por 5s → ~1 a cada ~500ms
+  const now = performance.now();
+  if ((now - lastPostAt) < 500) return;
+
+  // não reenvia se não mudou nada
+  const nx = Math.round(x), ny = Math.round(y);
+  if (lastSent.x === nx && lastSent.y === ny) return;
+
+  // sem concorrência
+  if (posInFlight) return;
+  posInFlight = true;
+
+  const doSend = async () => {
+    posSeq += 1;
+    lastPostAt = now;
+    await apiPost('/api/player/pos', {
+      mapKey,
+      x: nx,
+      y: ny,
+      seq: posSeq,
+      clientTs: Date.now()
+    });
+    lastSent = { x: nx, y: ny };
+  };
+
+  try {
+    await doSend();
+  } catch (e) {
+    const msg = String(e?.message || '');
+    // conflito de sequência: rebaseia e tenta UMA vez
+    if (msg.includes('409') || /stale-seq/i.test(msg)) {
+      try {
+        const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
+        if (chk && Number.isFinite(chk.seq)) {
+          posSeq = Number(chk.seq);
+          posSeqReady = true;
+          await doSend();
+        }
+      } catch { /* ignorar - próxima iteração tenta de novo */ }
+    } else if (/429/.test(msg)) {
+      // rate limited: apenas ignore; próxima janela envia
+    } else if (/202/.test(msg)) {
+      // too-fast do anti-speed: não desliga; apenas ignore este tick
+    } else if (/403|csrf/i.test(msg)) {
+      // auth/csrf: desliga para não poluir
+      POS_SYNC_ENABLED = false;
+      console.warn('[pos] desabilitado (auth/csrf):', msg);
+    } else {
+      console.warn('pos sync failed:', msg);
+    }
+  } finally {
+    posInFlight = false;
+  }
+}
+
+/* ==================== Colisão e Spawns do Tiled ==================== */
+function buildCollisionGridFromObjects(mapW, mapH, objs) {
+  const cols = Math.floor(mapW / TILE);
+  const rows = Math.floor(mapH / TILE);
+  const grid = new Uint8Array(cols * rows);
+  for (const o of objs) {
+    const oType = String(o.type || '').toLowerCase();
+    const isSolid = oType === 'solid' || (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1));
+    if (!isSolid) continue;
+    const x0 = Math.floor(o.x / TILE), y0 = Math.floor(o.y / TILE);
+    const x1 = Math.floor((o.x + o.width - 1) / TILE);
+    const y1 = Math.floor((o.y + o.height - 1) / TILE);
+    for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
+      if (cx >= 0 && cy >= 0 && cx < cols && cy < rows) grid[cy * cols + cx] = 1;
+    }
+  }
+  return { grid, cols, rows };
+}
+
+function buildCollisionGridFromTiled(json) {
+  const cols = json.width, rows = json.height;
+  const grid = new Uint8Array(cols * rows);
+  const collisionLayer = (json.layers || []).find(l => l.type === 'tilelayer' && l.name && l.name.toLowerCase().includes('collision'));
+  if (collisionLayer && collisionLayer.data) {
+    for (let i = 0; i < collisionLayer.data.length; i++) if (i < grid.length && collisionLayer.data[i]) grid[i] = 1;
+  }
+  return { grid, cols, rows };
+}
+
+function mapSpawnsFromTiledJSON(json) {
+  const layer = (json.layers || []).find(
+    (l) => l.type === "objectgroup" && l.name && l.name.toLowerCase() === "spawn"
+  );
+  if (!layer) return [];
+  return (layer.objects || [])
+    .filter((o) => ((o.class || o.type || "") + "").toLowerCase() === "spawn")
+    .map((o) => {
+      const p = {}; (o.properties || []).forEach((kv) => { p[kv.name] = kv.value; });
+      const monsterKey = String(p.monsterKey || p.monster || "goblin");
+      const count = Number(p.count || 1) || 1;
+      const respawnSec = Number(p.respawnSec || p.respawn || 20) || 20;
+      const w = o.width > 0 ? o.width : TILE;
+      const h = o.height > 0 ? o.height : TILE;
+      return {
+        id: Number(o.id),
+        monsterKey, count, respawnSec,
+        x: o.x || 0, y: o.y || 0, w, h
+      };
+    });
+}
+
+/* ===================== Resolução de Sprite Player ===================== */
+async function resolvePlayerSprite() {
+  try {
+    const me = await apiGet('/api/player/me');
+    const heroes = Array.isArray(me.heroes) ? me.heroes : [];
+
+    // Time padrão: até 3 primeiros heróis do jogador
+    const teamIds = heroes.slice(0, 3).map(h => String(h.id));
+    if (teamIds.length > 0) {
+      try { window.Team.setActiveTeam(teamIds); } catch {}
+    }
+
+    // Define herói ativo como o primeiro do time (fallback: starter/primeiro)
+    const preferred =
+      heroes.find(h => h.isStarter === 1 || h.isStarter === true) ||
+      heroes[0] || null;
+
+    if (preferred) {
+      try { window.setActiveHero(preferred.id); } catch {}
+
+      playerVis.heroKey = preferred.heroKey || preferred.key || null;
+
+      const candidate = playerVis.heroKey ? `/sprites/characters/${playerVis.heroKey}.png` : null;
+      if (candidate) {
+        playerVis.img = loadImg(candidate);
+        await ensureImgLoaded(playerVis.img).catch(() => { });
+        if (imgReady(playerVis.img)) return;
+      }
+      if (preferred.imageUrl) {
+        playerVis.img = loadImg(preferred.imageUrl);
+        await ensureImgLoaded(playerVis.img).catch(() => { });
+        if (imgReady(playerVis.img)) return;
+      }
+    }
+  } catch (e) { console.warn('resolvePlayerSprite:', e.message); }
+
+  // fallback visual padrão
+  playerVis.img = loadImg("/sprites/characters/player.png");
+  ensureImgLoaded(playerVis.img).catch(() => { });
+}
+
+/* =========================== Respawn Manager ========================== */
+function addMobFromSpawn(spDef) {
+  const rawKey = spDef.monsterKey || spDef.monster || "goblin";
+  const kindNorm = normKey(rawKey);
+
+  // <<< AQUI: meta sempre como OBJETO (se vier string, fazemos JSON.parse)
+  const meta = asObj(findMetaFor(rawKey)) || null;
+
+  const m = {
+    id: mobAutoId++,
+    kind: kindNorm,
+    rawKey,
+    x: (spDef.x || 0) + Math.random() * (spDef.w || TILE),
+    y: (spDef.y || 0) + Math.random() * (spDef.h || TILE),
+    w: 32, h: 32,                              // tamanho visual padrão; o draw usa meta.frame.*
+    speed: 40 + Math.random() * 20,
+    dirX: 0, dirY: 0, changeAt: 0,
+    face: 'east',
+    img: null,
+    meta,                                      // meta já parseado
+    bound: (spDef.w || spDef.h)
+      ? { x: spDef.x || 0, y: spDef.y || 0, w: spDef.w || TILE, h: spDef.h || TILE }
+      : null,
+    spawnId: Number(spDef.id || spDef.spawn_id || spDef.spawnId || 0) || null,
+    instanceId: null,
+    dead: false,
+    hidden: false,
+    _animFrozen: false,
+    _animFrozenFrame: 0,
+  };
+
+  // carrega a imagem usando o meta (que pode ter .image correto do YAML)
+  loadMonsterImg(kindNorm, meta, rawKey).then(img => {
+    if (!img) return;
+    m.img = img;
+
+    // Só infere automaticamente se NÃO veio meta válido do YAML
+    if (!m.meta || !m.meta.frame || !m.meta.grid) {
+      const auto = inferMetaFromImage(img, rawKey);
+      if (auto) m.meta = auto;
+    }
+  });
+
+  mobs.push(m);
+
+  if (m.spawnId != null) {
+    window.GameScene.registerMobSprite(m, { spawnId: m.spawnId });
+  }
+
+  return m.id;
+}
+
+function buildSpawnersFromDefs(defs) {
+  spawners.length = 0;
+  defs.forEach(d => {
+    const want = Math.max(1, Number(d.count || 1));
+    const respawnMs = Math.max(1, Number(d.respawnSec || d.respawn || 20)) * 1000;
+    spawners.push({
+      def: d,
+      want,
+      respawnMs,
+      nextAt: performance.now(),
+      area: { x: d.x || 0, y: d.y || 0, w: d.w || TILE, h: d.h || TILE },
+      liveIds: new Set()
+    });
+  });
+}
+
+function updateRespawns(now) {
+  for (const sp of spawners) {
+    for (const id of Array.from(sp.liveIds)) {
+      if (!mobs.some(m => m.id === id)) sp.liveIds.delete(id);
+    }
+    while (sp.liveIds.size < sp.want && now >= sp.nextAt) {
+      const id = addMobFromSpawn(sp.def);
+      sp.liveIds.add(id);
+      sp.nextAt = now + sp.respawnMs;
+    }
+  }
+}
+
+/* ================================ Boot ================================ */
+(async function main() {
+  // 1) garante CSRF/cookies antes de qualquer POST
+  await getCsrf().catch(() => {});
+
+  await loadSpriteMeta();
+
+  // cria a câmera
+  const maps = await apiGet("/api/admin/content/maps");
+  if (!maps.some((m) => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
+
+  // helper para normalizar payloads que podem vir string/array/obj
+  function normalizeApiJson(payload) {
+    let v = payload;
+    if (Array.isArray(v)) v = v[0];
+    if (typeof v === 'string') { try { v = JSON.parse(v); } catch { } }
+    return v;
+  }
+
+  // Objetos do mapa (starts/solids)
+  const rawObjs = await apiGet(`/api/admin/content/map/${MAP_KEY}/objects`);
+  const objsNorm = normalizeApiJson(rawObjs);
+  const objArr = Array.isArray(objsNorm)
+    ? objsNorm
+    : (objsNorm && Array.isArray(objsNorm.objects) ? objsNorm.objects : []);
+  starts = objArr.filter(o => (o.type || '').toLowerCase() === 'start');
+
+  // Data (tiles)
+  const rawMap = await apiGet(`/api/admin/content/map/${MAP_KEY}/data`);
+  mapData = normalizeApiJson(rawMap);
+
+  tileset = (mapData && mapData.tilesets && mapData.tilesets[0]) || null;
+
+  if (!tileset || !tileset.image) {
+    console.warn("Tileset não embedado. No Tiled: 'Embed Tileset' e exporte novamente o JSON.");
+  } else {
+    tilesetImg = await loadTilesetImage(tileset.image);
+  }
+
+  groundLayer = (mapData.layers || []).find(
+    (l) => l.type === "tilelayer" && l.name && l.name.toLowerCase() === "ground"
+  );
+
+  // Colisão (objetos sólidos preferidos; fallback layer "collision")
+  const mapW = (mapData.width || 64) * TILE;
+  const mapH = (mapData.height || 64) * TILE;
+
+  function hasSolidProp(o) { return (o.properties || []).some(p => p.name === 'solid' && (p.value === true || p.value === 1)); }
+  const collBuild = objArr.some(o => String(o.type || '').toLowerCase() === 'solid' || hasSolidProp(o))
+    ? buildCollisionGridFromObjects(mapW, mapH, objArr)
+    : buildCollisionGridFromTiled(mapData);
+
+  const cols = collBuild.cols || (mapData.width || 64);
+  const rows = collBuild.rows || (mapData.height || 64);
+  const worldW = cols * TILE;
+  const worldH = rows * TILE;
+  const grid = collBuild.grid || new Uint8Array(cols * rows);
+
+  // Instâncias centrais
+  camera = new Camera2D({
+    width: canvas.width,
+    height: canvas.height,
+    worldWidth: worldW,
+    worldHeight: worldH
+  });
+
+  // Polyfills úteis na câmera
+  if (typeof camera.getZoom !== 'function') camera.getZoom = () => (camera.zoom && Number(camera.zoom)) || 1;
+  if (typeof camera.setZoom !== 'function') camera.setZoom = (z) => { camera.zoom = Number(z) || 1; };
+  if (typeof camera.screenToWorld !== 'function') camera.screenToWorld = (sx, sy) => {
+    const z = camera.getZoom ? Number(camera.getZoom()) || 1 : 1;
+    return { x: camera.x + (sx / z), y: camera.y + (sy / z) };
+  };
+  if (typeof camera.worldToScreen !== 'function') camera.worldToScreen = (wx, wy) => {
+    const z = camera.getZoom ? Number(camera.getZoom()) || 1 : 1;
+    return { x: (wx - camera.x) * z, y: (wy - camera.y) * z };
+  };
+  if (typeof camera.apply !== 'function') {
+    // IMPORTANTE: aplica translate depois scale para obter (p - cam) * z (pixel art real)
+    camera.apply = (ctx, draw) => {
+      ctx.save();
+      const z = (typeof camera.getZoom === 'function') ? Number(camera.getZoom()) || 1 : 1;
+      ctx.translate(-camera.x, -camera.y);
+      ctx.scale(z, z);
+      draw();
+      ctx.restore();
+    };
+  }
+
+  function applyCameraZoom() {
+    const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
+
+    // Zoom por quantidade de tiles na altura da tela (estilo Tibia)
+    if (st.zoomByTiles) {
+      const tilesY = Math.max(6, Number(st.tilesY || 13)); // 13 ≈ Tibia clássico
+      const zRaw = canvas.height / (tilesY * TILE);
+      const zMin = Number.isFinite(st.zoomMin) ? st.zoomMin : 0.5;
+      const zMax = Number.isFinite(st.zoomMax) ? st.zoomMax : 4;
+      const zClamped = Math.max(zMin, Math.min(zMax, zRaw));
+      if (typeof camera.setZoom === 'function') camera.setZoom(zClamped);
+    } else {
+      // Modo antigo: zoom numérico direto
+      const zRaw = Number(st.zoom || 1);
+      const zMin = Number.isFinite(st.zoomMin) ? st.zoomMin : 0.5;
+      const zMax = Number.isFinite(st.zoomMax) ? st.zoomMax : 4;
+      const zClamped = Math.max(zMin, Math.min(zMax, zRaw));
+      if (typeof camera.setZoom === 'function') camera.setZoom(zClamped);
+    }
+  }
+
+  // recalcula tamanho do canvas e zoom já no boot
+  resize();
+
+  const controller = new PlayerController({
+    speed: 140,
+    collisionGrid: grid,
+    cols, rows,
+    onMoved: (x, y) => postPosThrottled(MAP_KEY, x, y)
+  });
+
+  // expõe camera/controller/mapKey p/ outros módulos (combate, etc.)
+  window.GameScene.camera = camera;
+  window.GameScene.controller = controller;
+  window.GameScene.mapKey = MAP_KEY;
+
+  const astar = new AStarGrid(grid, cols, rows);
+  const clickMove = new ClickToMove({ canvas, camera, controller, grid });
+  clickMove.setAStar(astar);
+
+  // Input
+  Input.attach(window, canvas);
+
+  // Posição inicial
+  const saved = await getSavedPos();
+  if (saved) controller.setPosition(saved.x, saved.y);
+  else if (starts[0]) controller.setPosition(starts[0].x, starts[0].y);
+  else controller.setPosition(TILE * 2 + TILE / 2, TILE * 2 + TILE / 2);
+
+  camera.follow(controller);
+  await resolvePlayerSprite();
+
+  // Spawns de mobs
+  let spawnsList;
+  try { spawnsList = await apiGet(`/api/admin/content/map/${MAP_KEY}/spawns`); } catch { spawnsList = []; }
+  if (!Array.isArray(spawnsList) || spawnsList.length === 0) {
+    spawns = mapSpawnsFromTiledJSON(mapData);
+    console.log("spawns fallback (JSON):", spawns);
+  } else {
+    spawns = spawnsList;
+    console.log("spawns do servidor:", spawns);
+  }
+
+  // Monta respawners e popula inicial
+  buildSpawnersFromDefs(spawns);
+  const now0 = performance.now();
+  for (const s of spawners) {
+    while (s.liveIds.size < s.want) s.liveIds.add(addMobFromSpawn(s.def));
+    s.nextAt = now0 + s.respawnMs;
+  }
+
+  // === WS → loot (o seu ws-combat.js deve disparar 'ws:message' com {detail:{msg}})
+  window.addEventListener('ws:message', (ev) => {
+    const msg = ev.detail?.msg;
+    if (!msg || !msg.type) return;
+    if (msg.type === 'loot_spawned') {
+      loots.set(String(msg.id), { id: String(msg.id), x: msg.x, y: msg.y, items: msg.items || [] });
+    } else if (msg.type === 'loot_removed') {
+      loots.delete(String(msg.id));
+    }
+  });
+
+  // sinaliza que a cena está pronta (outros módulos podem iniciar)
+  window.dispatchEvent(new CustomEvent('game:ready', { detail: { canvas, ctx, camera, controller } }));
+  // >>> avisa o overlay de combate para re-vincular barras imediatamente <<<
+  window.dispatchEvent(new Event('gamescene:ready'));
+
+  // Loop principal
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+
+    // Click-to-move (PRIORIZA LOOT)
+    const m = Input.getMouse();
+    if (Input.consumeClick()) {
+      const rect = canvas.getBoundingClientRect();
+      const sx = m.x - rect.left, sy = m.y - rect.top;
+      const w = camera.screenToWorld(sx, sy);
+      const loot = lootAtWorld(w.x, w.y);
+      if (loot) {
+        try { CombatActions?.pickupLoot?.(loot.id); } catch {}
+      } else {
+        clickMove.handleClick(sx, sy);
+      }
+    }
+
+    // Teclado: 1 passo de 32x32 por tecla (N/S/L/O)
+    const step = Input.getStepIntent && Input.getStepIntent();
+    if (step) window.GameScene?.controller?.requestStep?.(step);
+    window.GameScene?.controller?.update?.(dt, null);
+
+    // Camera
+    camera.update(dt);
+
+    // ===== IA dos mobs em passos de 32x32 (apenas N/S/L/O) =====
+    const TILE = 32;
+    const hasGrid = !!grid && Number.isFinite(cols) && Number.isFinite(rows);
+    const cellOf   = (wx, wy) => ({ cx: Math.floor(wx / TILE), cy: Math.floor(wy / TILE) });
+    const centerOf = (cx, cy) => ({ x: cx * TILE + TILE / 2, y: cy * TILE + TILE / 2 });
+    const isBlocked = (cx, cy) => {
+      if (!hasGrid) return false;
+      if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) return true;
+      return grid[cy * cols + cx] === 1;
+    };
+    // Bound inteligente: área <= 1 SQM => não limita o mob
+    const inBound = (mob, cx, cy) => {
+      if (!mob.bound) return true;
+      const { x, y, w, h } = mob.bound;
+      if (w <= TILE && h <= TILE) return true;
+      const wx = cx * TILE + TILE / 2;
+      const wy = cy * TILE + TILE / 2;
+      return (wx >= x && wy >= y && wx <= x + w && wy <= y + h);
+    };
+    const faceFrom = (dx, dy) => (dx === 1 ? 'east' : dx === -1 ? 'west' : dy === 1 ? 'south' : 'north');
+
+    for (const mob of mobs) {
+      if (mob.hidden || mob.dead) continue;
+
+      // estado interno do passo
+      if (!mob._step) mob._step = { moving: false, tx: 0, ty: 0, nextAt: 0 };
+      const st = mob._step;
+
+      if (!st.moving) {
+        // congela animação quando parado
+        mob._animFrozen = true;
+        mob._animFrozenFrame = 0;
+
+        if (now >= st.nextAt) {
+          // tenta uma direção válida entre N/S/L/O
+          const dirs = [
+            { dx: 0, dy: -1 }, // N
+            { dx: 0, dy:  1 }, // S
+            { dx: -1, dy: 0 }, // L
+            { dx:  1, dy: 0 }, // O
+          ];
+          // embaralhar (Fisher–Yates simples)
+          for (let i = dirs.length - 1; i > 0; i--) {
+            const j = (Math.random() * (i + 1)) | 0;
+            [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
+          }
+          const c = cellOf(mob.x, mob.y);
+          let pick = null;
+          for (const d of dirs) {
+            const nx = c.cx + d.dx, ny = c.cy + d.dy;
+            if (isBlocked(nx, ny)) continue;
+            if (!inBound(mob, nx, ny)) continue;
+            pick = d; break;
+          }
+          if (pick) {
+            const tgt = centerOf(c.cx + pick.dx, c.cy + pick.dy);
+            st.tx = tgt.x; st.ty = tgt.y; st.moving = true;
+            mob.face = faceFrom(pick.dx, pick.dy);
+            // destrava anima para “walk”
+            mob._animFrozen = false;
+          } else {
+            // sem passo válido agora: espera um pouco e tenta de novo
+            st.nextAt = now + 400 + Math.random() * 400;
+          }
+        }
+      } else {
+        // movendo: destrava anima
+        mob._animFrozen = false;
+
+        const vx = st.tx - mob.x, vy = st.ty - mob.y;
+        const dist = Math.hypot(vx, vy);
+        const spd = Math.max(60, Number(mob.speed) || 60);
+        if (dist <= 1.0) {
+          // chegou no centro do tile
+          mob.x = Math.round(st.tx);
+          mob.y = Math.round(st.ty);
+          st.moving = false;
+          st.nextAt = now + 120 + Math.random() * 120;
+          // após chegar, congela até escolher o próximo passo
+          mob._animFrozen = true;
+          mob._animFrozenFrame = 0;
+        } else {
+          const ux = vx / (dist || 1), uy = vy / (dist || 1);
+          mob.x += ux * spd * dt;
+          mob.y += uy * spd * dt;
+        }
+      }
+    }
+
+    // Respawn local (placeholder visual)
+    updateRespawns(now);
+
+    // Render (mundo)
+    clear();
+    camera.apply(ctx, () => {
+      drawGround(camera);
+      // desenha loots antes dos mobs
+      for (const l of loots.values()) drawLoot(l);
+      for (const m of mobs) drawMob(m);
+      drawPlayer(controller);
+    });
+
+    // Overlay de combate
+    if (window.CombatUI && typeof window.CombatUI.render === 'function') {
+      try { window.CombatUI.render(ctx, camera, dt); } catch (e) { /* não quebrar jogo */ }
+    }
+
+    // evento por frame
+    window.dispatchEvent(new CustomEvent('game:frame', { detail: { ctx, camera, dt } }));
+
+    // HUD
+    if (hud) {
+      const p = controller.getPosition();
+      hud.innerHTML = `
+        <div>map: ${MAP_KEY}</div>
+        <div>Move: Click-to-move • WASD/Setas/Numpad (1 SQM)</div>
+        <div>pos: ${Math.round(p.x)}, ${Math.round(p.y)}</div>
+        <div>mobs: ${mobs.length} • spawns: ${spawners.length} • loots: ${loots.size}</div>
+      `;
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+
+  // listeners finais (settings/resize já ligados no topo)
+  document.addEventListener('settings:changed', () => { resize(); });
+})().catch((err) => {
+  console.error(err);
+  if (hud) hud.textContent = "Erro: " + err.message;
+});
+
+/* ============================ util local ============================ */
+// Aplica zoom por tiles sempre que o canvas mudar de tamanho.
+// (Definição repetida aqui para o resize() do topo poder chamá-la)
+function applyCameraZoom() {
+  if (!camera) return;
+  const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
+  if (st.zoomByTiles) {
+    const tilesY = Math.max(6, Number(st.tilesY || 13));
+    const zRaw = canvas.height / (tilesY * TILE);
+    const zMin = Number.isFinite(st.zoomMin) ? st.zoomMin : 0.5;
+    const zMax = Number.isFinite(st.zoomMax) ? st.zoomMax : 4;
+    const zClamped = Math.max(zMin, Math.min(zMax, zRaw));
+    camera.setZoom?.(zClamped);
+  } else {
+    const zRaw = Number(st.zoom || 1);
+    const zMin = Number.isFinite(st.zoomMin) ? st.zoomMin : 0.5;
+    const zMax = Number.isFinite(st.zoomMax) ? st.zoomMax : 4;
+    const zClamped = Math.max(zMin, Math.min(zMax, zRaw));
+    camera.setZoom?.(zClamped);
+  }
+}
+
+
+// client/js/boot.js
+import { API, getCsrf, apiGet } from './api.js';
+import { doLogin, doRegister, doLogout } from './auth.js';
+import { bindGachaUI } from './gacha.js';
+import { initLoginFx, stopLoginFx, celebrate } from './login_fx.js';
+// (removido) import { bindProfileModal, setupInventoryOpen } from './player_profile.js';
+
+// UI base
+const authScreen = document.getElementById('authScreen');
+const appMain    = document.getElementById('appMain');
+const userInfo   = document.getElementById('userInfo');
+
+// Auth form
+const loginName   = document.getElementById('loginName');
+const loginPass   = document.getElementById('loginPass');
+const btnLogin    = document.getElementById('btnLogin');
+const loginMsg    = document.getElementById('loginMsg');
+
+const regName     = document.getElementById('regName');
+const regPass     = document.getElementById('regPass');
+const btnRegister = document.getElementById('btnRegister');
+const regMsg      = document.getElementById('regMsg');
+
+const btnLogout     = document.getElementById('btnLogout');
+const btnLogoutTop  = document.getElementById('btnLogoutTop');
+const mobileLogout  = document.getElementById('mobileLogout');
+
+// Header buttons
+const btnPlay   = document.getElementById('btnPlay');
+const authClose = document.getElementById('authClose');
+
+// Mobile menu
+const btnHamb   = document.getElementById('btnHamb');
+const mobMenu   = document.getElementById('mobileMenu');
+
+// (Opcional) evitar submit nativo duplicado
+document.getElementById('loginForm')?.addEventListener('submit', (ev) => ev.preventDefault());
+document.getElementById('registerForm')?.addEventListener('submit', (ev) => ev.preventDefault());
+
+// ===== Gacha refs =====
+const ctx = {
+  elGacha:    document.getElementById('btnGacha'),
+  elGacha10:  document.getElementById('btnGacha10'),
+  elBalance:  document.getElementById('balance'),
+  elResult:   document.getElementById('result'),
+  elInv:      document.getElementById('inventory'),
+
+  overlay:   document.getElementById('summon'),
+  rarBg:     document.getElementById('rarBg'),
+  chestWrap: document.getElementById('chestWrap'),
+  chestSvg:  document.getElementById('chestSvg'),
+  burst:     document.getElementById('burst'),
+  sparks:    document.getElementById('sparks'),
+
+  resultPane: document.getElementById('resultPane'),
+  multiPane:  document.getElementById('multiPane'),
+  multiGrid:  document.getElementById('multiGrid'),
+  okbar:      document.getElementById('okbar'),
+
+  btnOk:      document.getElementById('btnOk'),
+  btnAgain:   document.getElementById('btnAgain'),
+  btnAgain10: document.getElementById('btnAgain10'),
+  againHint:  document.getElementById('againHint'),
+
+  sumImg:  document.getElementById('sumImg'),
+  sumName: document.getElementById('sumName'),
+  rarTag:  document.getElementById('rarTag'),
+
+  stAtk:   document.getElementById('stAtk'),
+  stDef:   document.getElementById('stDef'),
+  stSpd:   document.getElementById('stSpd'),
+  stClass: document.getElementById('stClass'),
+  stRole:  document.getElementById('stRole'),
+  stType:  document.getElementById('stType'),
+  stElem:  document.getElementById('stElem'),
+  stWeap:  document.getElementById('stWeap'),
+
+  closeX:    document.getElementById('closeX'),
+  skipChk:   document.getElementById('chkSkip'),
+  chestHint: document.getElementById('chestHint'),
+  heroPane:  document.getElementById('heroPane'),
+  halo:      document.getElementById('halo'),
+  flashEl:   document.getElementById('flash'),
+
+  coinCount: document.getElementById('coinCount'),
+};
+
+// ===== Estado de sessão =====
+let __profile = null;
+window.__isAuth = false;
+
+// HUD centralizado
+function updateHud(profileOrCoins) {
+  const coins = typeof profileOrCoins === 'number'
+    ? profileOrCoins
+    : Number(profileOrCoins?.coins ?? 0);
+
+  const name = (window.__playerName || profileOrCoins?.name || '').toString();
+  if (name) window.__playerName = name;
+
+  if (userInfo) {
+    userInfo.textContent = name
+      ? `${name} • Coins ${coins}`
+      : `Coins ${coins}`;
+  }
+
+  if (ctx.coinCount) ctx.coinCount.textContent = coins;
+  if (ctx.elBalance) ctx.elBalance.textContent = `Moedas: ${coins}`;
+
+  try {
+    document.dispatchEvent(new CustomEvent('coins-updated', { detail: { coins } }));
+  } catch {}
+}
+
+// Mantido por compatibilidade
+const gacha = bindGachaUI(ctx, { onHudUpdate: updateHud });
+
+/* ========= helpers visual ========= */
+function setLogoutVisibility(signed){
+  const show = !!signed;
+  btnLogoutTop?.classList.toggle('hidden', !show);
+  mobileLogout?.classList.toggle('hidden', !show);
+}
+function setLoggedOutGlow(on){
+  document.body.classList.toggle('logged-out', !!on);
+}
+function closeMobileMenu(){
+  mobMenu?.classList.remove('open');
+  btnHamb?.setAttribute('aria-expanded','false');
+}
+
+/* ========= Estados de tela ========= */
+function showLanding(){
+  appMain?.classList.add('hidden');
+  authScreen?.classList.add('hidden');
+  setLogoutVisibility(false);
+  setLoggedOutGlow(true);
+  closeMobileMenu();
+  window.__isAuth = false;
+  initLoginFx();
+}
+
+/**
+ * Regras de navegação:
+ *  - Se PODE selecionar starter (não escolheu ainda) -> /starter.html
+ *  - Senão -> /app.html#house
+ */
+async function goToGameAccordingToStarter() {
+  try {
+    const st = await apiGet(`${API}/api/starter/status`); // { canSelect: boolean }
+    if (st?.canSelect) {
+      location.href = '/starter.html';
+    } else {
+      location.href = '/app.html#house';
+    }
+  } catch {
+    // fallback conservador: shell na House
+    location.href = '/app.html#house';
+  }
+}
+
+async function showApp(profile) {
+  stopLoginFx();
+  __profile = profile;
+  window.__isAuth = true;
+  updateHud(profile);
+  await gacha.init?.(profile);
+  goToGameAccordingToStarter();
+}
+
+/* ========= Sessão ========= */
+async function trySession() {
+  await getCsrf();
+  try {
+    const me = await apiGet(`${API}/api/auth/me`);
+    if (me?.profile) {
+      await showApp(me.profile);
+    } else {
+      showLanding();
+    }
+  } catch {
+    showLanding();
+  }
+}
+trySession();
+
+/* ========= PLAY ========= */
+if (btnPlay) {
+  btnPlay.onclick = async () => {
+    if (window.__isAuth && __profile) {
+      goToGameAccordingToStarter();
+    } else {
+      authScreen?.classList.remove('hidden');
+    }
+  };
+}
+
+/* ========= Close do modal de auth ========= */
+authClose?.addEventListener('click', () => authScreen?.classList.add('hidden'));
+
+/* ========= Auth handlers ========= */
+btnLogin?.addEventListener('click', async (ev) => {
+  ev.preventDefault();
+  loginMsg.textContent = '';
+
+  if (window._loginBusy) return;
+  window._loginBusy = true;
+
+  try {
+    const data = await doLogin(loginName.value.trim(), loginPass.value);
+    if (data?.error) { loginMsg.textContent = data.error; return; }
+
+    // Confirma sessão
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json());
+    if (!me?.profile) { loginMsg.textContent = 'Sessão não criada. Tente novamente.'; return; }
+
+    celebrate();
+    await goToGameAccordingToStarter();
+  } catch {
+    loginMsg.textContent = 'Falha ao autenticar.';
+  } finally {
+    window._loginBusy = false;
+  }
+});
+
+btnRegister?.addEventListener('click', async (ev) => {
+  ev.preventDefault();
+  regMsg.textContent = '';
+
+  if (window._regBusy) return;
+  window._regBusy = true;
+
+  try {
+    const res = await doRegister(regName.value.trim(), regPass.value);
+    if (res?.error) { regMsg.textContent = res.error; return; }
+
+    celebrate();
+
+    // Confere sessão
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json());
+    if (!me?.profile) { regMsg.textContent = 'Sessão não criada. Tente novamente.'; return; }
+
+    await goToGameAccordingToStarter();
+  } catch (e) {
+    const msg = (e?.message || '').toLowerCase();
+    if (msg.includes('já está em uso') || msg.includes('duplicate')) {
+      regMsg.textContent = 'Nome já está em uso.';
+    } else {
+      regMsg.textContent = 'Falha ao registrar.';
+    }
+  } finally {
+    window._regBusy = false;
+  }
+});
+
+/* ========= Logout ========= */
+async function handleLogout(){
+  await doLogout();
+  showLanding();
+}
+btnLogout?.addEventListener('click', handleLogout);
+btnLogoutTop?.addEventListener('click', handleLogout);
+mobileLogout?.addEventListener('click', handleLogout);
+
+/* ========= Mobile menu ========= */
+btnHamb?.addEventListener('click', () => {
+  mobMenu?.classList.toggle('open');
+  const open = mobMenu?.classList.contains('open');
+  btnHamb?.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+window.addEventListener('resize', closeMobileMenu);
+document.addEventListener('click', (e)=>{
+  if (!mobMenu || !btnHamb) return;
+  if (mobMenu.contains(e.target) || btnHamb.contains(e.target)) return;
+  closeMobileMenu();
+});
+
+
+// client/js/app.js
+// Layout “Tibia”: stacks laterais, chat fixo, viewport central com prioridade.
+// Abre Skills/Heroes/Inventory sempre dockado (sem cobrir a área jogável).
+import { openSkills, openHeroes, openInventory, openSummonPanel } from './app_panels.js';
+
+/* ---------- HTTP helpers + CSRF ---------- */
+let CSRF = null;
+async function getCsrf(){
+  if (CSRF) return CSRF;
+  try{
+    const r = await fetch('/api/csrf',{credentials:'include',headers:{'Accept':'application/json'},cache:'no-store'});
+    const hdr = r.headers.get('x-csrf-token') || r.headers.get('X-CSRF-Token');
+    let body=null; try{ body = await r.json(); }catch{}
+    CSRF = hdr || body?.token || body?.csrf || body?.csrfToken || null;
+  }catch{}
+  return CSRF;
+}
+async function jget(u){
+  const r = await fetch(u,{credentials:'include',headers:{'Accept':'application/json'},cache:'no-store'});
+  if (r.status === 401){ location.href='/index.html'; throw new Error('401'); }
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function jpost(u,body){
+  const tok = await getCsrf().catch(()=>null);
+  const r = await fetch(u,{method:'POST',credentials:'include',
+    headers:{'Content-Type':'application/json','Accept':'application/json', ...(tok?{'x-csrf-token':tok}:{})},
+    body: JSON.stringify(body||{})});
+  if (r.status === 401){ location.href='/index.html'; throw new Error('401'); }
+  if (r.status === 403){ CSRF=null; await getCsrf().catch(()=>null); return jpost(u,body); }
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+/* ---------- Refs ---------- */
+const canvas  = document.getElementById('scene');
+const hud     = document.getElementById('hud');
+const leftS   = document.getElementById('leftStack');
+const rightS  = document.getElementById('rightStack');
+const splitL  = document.getElementById('splitLeft');
+const splitR  = document.getElementById('splitRight');
+const chatDock= document.getElementById('chatDock');
+
+const btnSkills    = document.getElementById('btnSkills');
+const btnHeroes    = document.getElementById('btnHeroes');
+const btnInventory = document.getElementById('btnInventory');
+const btnSummon    = document.getElementById('btnSummon');
+const btnSettings  = document.getElementById('btnSettings');
+const btnLogout    = document.getElementById('btnLogout');
+
+const summonModal  = document.getElementById('summonModal');
+const summonClose  = summonModal?.querySelector('.close');
+
+/* ---------- Util CSS Vars ---------- */
+function setRootVar(name, value){ document.documentElement.style.setProperty(name, String(value)); }
+function getRootVar(name, fallback){
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  if (!v) return fallback;
+  return v;
+}
+
+/* ---------- Topbar height -> --topbarH ---------- */
+function updateTopbarHeight(){
+  const tb = document.querySelector('.topbar');
+  const h = Math.round((tb?.getBoundingClientRect().height || 56));
+  setRootVar('--topbarH', h+'px');
+}
+
+/* ---------- Cena House ---------- */
+let currentScene = null;
+async function mountSceneHouse(){
+  if(currentScene?.unmount) try{ currentScene.unmount(); }catch{}
+  try{
+    const mod = await import('/js/scenes/house.js');
+    currentScene = await mod.mount({ canvas, hud, params:{ map:'house' } });
+    applyViewport();
+  }catch(e){
+    console.error('Falha ao carregar cena house.js', e);
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    hud.textContent='HOUSE — erro ao carregar cena';
+  }
+}
+
+/* ---------- Viewport: respeita stacks laterais e chat ---------- */
+function applyViewport(){
+  // tamanho disponível do centerStage
+  const center = document.getElementById('centerStage');
+  if (!center || !canvas) return;
+  const rect = center.getBoundingClientRect();
+
+  const pad = 16;
+  const wCSS = Math.max(400, rect.width  - pad);
+  const hCSS = Math.max(240, rect.height - pad);
+
+  // DPR cap pode ser controlado por GameSettings (play.js usa também)
+  const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
+  const baseDpr = window.devicePixelRatio || 1;
+  const dpr = Math.max(1, Math.min(baseDpr, Number(st.dprCap || baseDpr)));
+
+  canvas.style.width  = `${wCSS}px`;
+  canvas.style.height = `${hCSS}px`;
+
+  const w = Math.round(wCSS*dpr), h=Math.round(hCSS*dpr);
+  if (canvas.width!==w || canvas.height!==h){ canvas.width=w; canvas.height=h; }
+
+  try{ currentScene?.resize?.(wCSS, hCSS, dpr); }catch{}
+}
+window.addEventListener('resize', ()=>{ updateTopbarHeight(); applyViewport(); });
+
+/* ---------- Splitters (arrasta para redimensionar as sidebars) ---------- */
+function makeVSplitter(splitEl, side){
+  let dragging=false, startX=0, startW=0;
+
+  function onDown(e){
+    dragging=true;
+    startX = e.clientX;
+    const root = document.documentElement;
+    startW = parseInt(getComputedStyle(root).getPropertyValue(side==='left'?'--leftW':'--rightW'))|| (side==='left'?300:320);
+    document.body.style.userSelect='none';
+    e.preventDefault();
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const dx = e.clientX - startX;
+    const newW = Math.max(200, Math.min(520, side==='left' ? (startW + dx) : (startW - dx)));
+    document.documentElement.style.setProperty(side==='left'?'--leftW':'--rightW', newW+'px');
+    applyViewport();
+  }
+  function onUp(){ dragging=false; document.body.style.userSelect=''; }
+
+  splitEl?.addEventListener('mousedown', onDown);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+}
+makeVSplitter(splitL,'left');
+makeVSplitter(splitR,'right');
+
+/* ---------- Resizer do Chat (arrasta a barrinha no topo do chat) ---------- */
+(function mountChatResizer(){
+  if (!chatDock) return;
+  let res = document.getElementById('chatResizer');
+  if (!res){
+    res = document.createElement('div');
+    res.id = 'chatResizer';
+    // insere como primeiro filho do chatDock (uma barrinha horizontal)
+    chatDock.insertBefore(res, chatDock.firstChild);
+  }
+  let dragging=false, startY=0, startH=0;
+
+  function onDown(e){
+    dragging=true;
+    startY = e.clientY;
+    const cur = parseInt(getRootVar('--chatH','170px')) || 170;
+    startH = cur;
+    document.body.style.userSelect='none';
+    e.preventDefault();
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const dy = startY - e.clientY; // arrastar pra cima aumenta área do jogo (reduz chat)
+    const newH = Math.max(120, Math.min(window.innerHeight*0.6, startH + dy));
+    setRootVar('--chatH', Math.round(newH) + 'px');
+    applyViewport();
+  }
+  function onUp(){ dragging=false; document.body.style.userSelect=''; }
+
+  res.addEventListener('mousedown', onDown);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+})();
+
+/* ---------- Abrir painéis (sempre dockados) ---------- */
+btnSkills   ?.addEventListener('click', ()=> openSkills(rightS));
+btnHeroes   ?.addEventListener('click', ()=> openHeroes(leftS));
+btnInventory?.addEventListener('click', ()=> openInventory(rightS));
+
+/* ---------- Settings (dock no stack direito) ---------- */
+btnSettings?.addEventListener('click', ()=>{
+  if (window.openSettingsPanel) window.openSettingsPanel(rightS);
+});
+// atalho opcional F10
+window.addEventListener('keydown', (e)=>{
+  if (e.key === 'F10'){
+    e.preventDefault();
+    if (window.openSettingsPanel) window.openSettingsPanel(rightS);
+  }
+});
+
+/* ---------- Flags vindas do Settings -> UI Scale / Imersivo / Overlay Chat ---------- */
+function applyUiFromSettings(){
+  const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
+  // UI scale
+  const ui = Number(st.uiScale || 1);
+  setRootVar('--ui-scale', ui);
+
+  // Imersivo & Overlay Chat
+  document.body.classList.toggle('immersive', !!st.immersive);
+  document.body.classList.toggle('overlay-chat', !!st.overlayChat);
+
+  // quando muda layout, refaz viewport
+  updateTopbarHeight();
+  applyViewport();
+
+  // avisa o jogo (play.js) que houve mudança (ele cuida de zoom/smoothing/DPR)
+  const ev = new Event('settings:changed');
+  document.dispatchEvent(ev);
+}
+// aplica uma vez no boot e fica ouvindo mudanças do painel
+document.addEventListener('GameSettings:changed', applyUiFromSettings);
+
+/* ---------- Summon como MODAL ---------- */
+btnSummon?.addEventListener('click', ()=>{
+  if (summonModal) summonModal.hidden = false;
+});
+summonClose?.addEventListener('click', ()=> summonModal.hidden = true);
+summonModal?.addEventListener('click', (e)=>{ if(e.target===summonModal) summonModal.hidden = true; });
+
+/* ---------- Logout ---------- */
+btnLogout?.addEventListener('click', async ()=>{
+  try{ await jpost('/api/auth/logout',{}); }catch{}
+  location.href='/index.html';
+});
+
+/* ---------- Boot (guard starter + cena) ---------- */
+(async function boot(){
+  updateTopbarHeight();                 // mede topbar e define --topbarH
+  await getCsrf().catch(()=>null);
+  try{
+    const st = await jget('/api/starter/status');
+    if (st?.canSelect){ location.href='/starter.html'; return; }
+  }catch{}
+
+  // aplica estado atual do Settings (se já carregou)
+  applyUiFromSettings();
+
+  await mountSceneHouse();
+  applyViewport();
+})();
+
+/* ===================== Chat global — init seguro (WS + UI) ===================== */
+(function initGlobalChat() {
+  function onReady(fn) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
+  }
+
+  onReady(() => {
+    const btnDefault = document.getElementById('btnDefault');
+    const btnGlobal  = document.getElementById('btnGlobal');
+    const chatBox    = document.getElementById('chatBox');
+    const chatInput  = document.getElementById('chatInput');
+    const chatSend   = document.getElementById('chatSend');
+    const chatForm   = document.getElementById('chatForm');
+
+    if (!chatBox || !chatInput || !chatSend || !btnDefault || !btnGlobal || !chatForm) {
+      console.warn('[chat] elementos do DOM ausentes — verifique client/app.html');
+      return;
+    }
+
+    let ws = null;
+    let myId = '';
+    let myName = 'Você';
+
+    function log(...args){ try{ console.log('[chat]', ...args); }catch{} }
+
+    function connectWS() {
+      try {
+        ws = new WebSocket((location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws');
+      } catch (e) {
+        log('erro ao criar WebSocket', e);
+        ws = null; return;
+      }
+
+      try { window._game_ws = ws; } catch (e) {}
+
+      ws.addEventListener('open', async () => {
+        log('ws aberto');
+        try { btnGlobal.classList.add('active'); btnDefault.classList.remove('active'); } catch(e){}
+
+        // handshake auth — extrae /api/player/me (note: endpoint retorna { profile: {...} })
+        try {
+          const raw = await fetch('/api/player/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+          const me = (raw && raw.profile) ? raw.profile : raw;
+          myId = String((me && (me.id || me.playerId)) || '');
+          myName = (me && (me.name || me.username || me.displayName)) || myName;
+          try { window._chat_me = { id: myId, name: myName }; } catch (e) {}
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'auth', id: myId, name: myName }));
+            log('sent auth handshake', { id: myId, name: myName });
+          }
+          // load history
+          const hist = await fetch('/api/chat/global?limit=200', { credentials: 'include' }).then(r => r.ok ? r.json() : []);
+          for (const m of hist) appendChatRow({ fromId: m.fromId, fromName: m.fromName||m.from, text: m.text, ts: (new Date(m.created_at)).getTime() });
+        } catch (e) { log('auth/history failed', e && e.message); }
+      });
+
+      ws.addEventListener('message', (evt) => {
+        try {
+          const d = JSON.parse(evt.data);
+          log('ws message', d);
+          if (d.type === 'chat' && d.scope === 'global') {
+            appendChatRow({ fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
+          }
+        } catch (e) { log('bad ws message', e); }
+      });
+
+      ws.addEventListener('close', () => log('ws fechado'));
+      ws.addEventListener('error', (e) => log('ws erro', e && e.message));
+    }
+
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    function appendChatRow(msg){
+      const d = document.createElement('div');
+      d.className='chat-row';
+      const time = new Date(msg.ts||Date.now()).toLocaleTimeString();
+      const isMe = (msg.fromId && myId && String(msg.fromId) === String(myId)) || (!msg.fromId && msg.fromName && myName && String(msg.fromName) === String(myName));
+      d.classList.add(isMe ? 'me' : 'other');
+      const displayName = escapeHtml(msg.fromName || (isMe ? myName : 'Anon'));
+      const extraYou = isMe ? ' <span class="you-tag">(Você)</span>' : '';
+      d.innerHTML = `<strong class="name">${displayName}</strong>${extraYou}: ${escapeHtml(msg.text)} <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${time})</span>`;
+      chatBox.appendChild(d);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    connectWS();
+
+    async function sendChat(){
+      const text = (chatInput.value||'').trim(); if(!text) return;
+      if (btnGlobal.classList.contains('active')) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type:'chat', scope:'global', text }));
+          log('sent chat', text);
+          chatInput.value='';
+        } else {
+          alert('Conexão real-time indisponível.');
+        }
+      } else {
+        appendChatRow({ fromName: 'Você', text, ts: Date.now() }); chatInput.value='';
+      }
+    }
+
+    btnDefault.addEventListener('click', ()=>{ btnDefault.classList.add('active'); btnGlobal.classList.remove('active'); });
+    btnGlobal.addEventListener('click', ()=>{ btnGlobal.classList.add('active'); btnDefault.classList.remove('active'); });
+
+    chatSend.addEventListener('click', sendChat);
+    chatForm.addEventListener('submit', (e)=>{ e.preventDefault(); sendChat(); });
+    chatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
+  });
+})();
+
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Escolha seu Herói</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{background:#0b1220;color:#e5e7eb;font-family:ui-sans-serif,system-ui,Segoe UI,Arial;margin:0}
+    .wrap{max-width:960px;margin:40px auto;padding:0 16px}
+    h1{font-size:24px;margin:0 0 12px}
+    p{opacity:.8;margin:0 0 24px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .card{background:#0f172a;border:1px solid #1f2937;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+    .card h3{margin:0;font-size:18px}
+    .meta{font-size:12px;opacity:.85}
+    .sprite{height:96px;display:flex;align-items:center;justify-content:center;background:#111827;border:1px solid #1f2937;border-radius:10px}
+    .sprite img{image-rendering:pixelated;height:88px}
+    .btn{background:#22c55e;color:#051016;border:none;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer}
+    .btn[disabled]{background:#334155;color:#94a3b8;cursor:not-allowed}
+    .bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .warn{font-size:12px;opacity:.8}
+    .err{color:#f87171}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="bar">
+      <div>
+        <h1>Escolha seu Herói</h1>
+        <p class="warn">Você poderá obter cópias no gacha depois para subir estrelas. Esta escolha só é feita <b>uma vez</b> por conta.</p>
+      </div>
+      <button id="btnSkip" class="btn" style="background:#3b82f6;color:white">Ir para o Lobby</button>
+    </div>
+
+    <div id="err" class="err"></div>
+    <div id="grid" class="grid"></div>
+  </div>
+
+  <!-- seu starter.js já cuida de CSRF e de buscar sprites por spriteKey/heroKey -->
+  <script src="/js/starter.js" defer></script>
+</body>
+</html>
+
+
+sugiro tambem que tu olhe o commit e tambem encontre arquivos pertinentes e me explica se meu pensamento ta certo e me explica tambem o que vamos fazer pra nao quebrar tudo, qual a melhor saida e opção?o que eu tenho é realmente o que estou pensando que estamos mexendo e pode dar problema? enfim, to muito preocupado

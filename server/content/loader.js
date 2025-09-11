@@ -94,6 +94,10 @@ async function loadMonsters(db, root) {
 
   const index = YAML.parse(read(idx));
   const entries = Object.entries(index.monsters || {});
+  
+  let skippedCount = 0;
+  let updatedCount = 0;
+  
   for (const [key, rel] of entries) {
     const file = firstExistingPath([
       path.join(root, 'data/monsters', rel),
@@ -105,8 +109,12 @@ async function loadMonsters(db, root) {
     const src = read(file);
     const sum = sha1(src);
 
-    // Consulta o checksum, mas NÃO damos continue; sempre fazemos UPSERT para manter colunas denormalizadas atualizadas
-    await get(`SELECT checksum FROM content_files WHERE path=$1`, [file]).catch(() => null);
+    // Check existing checksum to skip unchanged files
+    const existing = await get(`SELECT checksum FROM content_files WHERE path=$1`, [file]).catch(() => null);
+    if (existing && existing.checksum === sum) {
+      skippedCount++;
+      continue; // Skip if checksum unchanged
+    }
 
     const data = MonsterYAML.parse(YAML.parse(src));
 
@@ -145,6 +153,12 @@ async function loadMonsters(db, root) {
         checksum=EXCLUDED.checksum,
         updated_at=now()
     `, [file, sum]);
+    
+    updatedCount++;
+  }
+  
+  if (skippedCount > 0 || updatedCount > 0) {
+    console.log(`[monsters] processed: ${updatedCount} updated, ${skippedCount} skipped (unchanged)`);
   }
 }
 
