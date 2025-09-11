@@ -16,3 +16,22 @@ anims:
 anchor:
   x: 0.5
   y: 0.9
+
+# --- extra (servidor) ---
+stats:
+  level: 4
+  hp: 45
+  exp: 25
+loot:
+  gold_coin:
+    chance: 1.0
+    amount: "2-4"
+  goblin_ear:
+    chance: 0.10
+    amount: 1
+  rusty_club:
+    chance: 0.05
+    amount: 1
+  short_bow:
+    chance: 0.02
+    amount: 1

@@ -72,20 +72,18 @@ stats:
   hp: 1100
   exp: 720
 loot:
-- item_key: gold_coin
-  chance: 1.0
-  min: 6
-  max: 12
-- item_key: bone_shard
-  chance: 0.70
-  min: 2
-  max: 5
-# Itens “signature” (garantidos no SQL acima):
-- item_key: darkblade
-  chance: 0.01
-  min: 1
-  max: 1
-- item_key: black_shield
-  chance: 0.01
-  min: 1
-  max: 1
+  gold_coin:
+    chance: 1.0
+    amount: "6-12"
+  bone_shard:
+    chance: 0.70
+    amount: "2-5"
+  crystal_shard:
+    chance: 0.10
+    amount: 1
+  darkblade:
+    chance: 0.01
+    amount: 1
+  black_shield:
+    chance: 0.01
+    amount: 1

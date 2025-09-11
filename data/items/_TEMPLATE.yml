@@ -1,0 +1,17 @@
+# Exemplo de schema de item
+key: rusty_sword
+name: Rusted Sword
+rarity: common         # common|uncommon|rare|legendary|mythic
+type: weapon           # weapon|shield|armor|helmet|legs|boots|accessory|resource|consumable|misc
+class: sword           # sword|axe|club|bow|spear|staff|wand|none
+oz: 20
+stackable: false
+stats:
+  atk: 6
+  def: 0
+  armor: 0
+  magic: 0
+  distance: 0
+  resists: {}
+icon: /assets/items/rusted_sword.png
+description: "Espada corroída que mal corta."

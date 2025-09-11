@@ -59,3 +59,25 @@ anims:
       north: 9
     startCol: 0
     loop: false
+
+# --- extra (servidor) ---
+stats:
+  level: 12
+  hp: 180
+  exp: 95
+loot:
+  gold_coin:
+    chance: 1.0
+    amount: "4-8"
+  rotten_meat:
+    chance: 0.40
+    amount: 1
+  carrion_claw:
+    chance: 0.10
+    amount: 1
+  crystal_shard:
+    chance: 0.05
+    amount: 1
+  carrion_club:
+    chance: 0.02
+    amount: 1

@@ -64,26 +64,15 @@ stats:
   hp: 18
   exp: 8
 loot:
-- item_key: gold_coin
-  chance: 1.0
-  min: 1
-  max: 2
-- item_key: bone_shard
-  chance: 0.50
-  min: 1
-  max: 2
-- item_key: moldy_cheese
-  chance: 0.05
-  min: 1
-  max: 1
-# Se quiser usar a adaga enferrujada (garanti o SQL acima):
-- item_key: rusty_dagger
-  chance: 0.01
-  min: 1
-  max: 1
-
-# Caso prefira reutilizar o que já existia, troque por rusty_sword:
-# - item_key: rusty_sword
-#   chance: 0.01
-#   min: 1
-#   max: 1
+  gold_coin:
+    chance: 1.0
+    amount: "1-2"
+  bone_shard:
+    chance: 0.50
+    amount: "1-2"
+  moldy_cheese:
+    chance: 0.05
+    amount: 1
+  rusty_dagger:
+    chance: 0.01
+    amount: 1

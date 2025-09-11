@@ -60,4 +60,23 @@ anims:
       north: 9
     startCol: 0
     loop: false
+
+# --- extra (servidor) ---
+stats:
+  level: 8
+  hp: 120
+  exp: 65
+loot:
+  gold_coin:
+    chance: 1.0
+    amount: "3-6"
+  raw_meat:
+    chance: 0.60
+    amount: 1
+  bear_fur:
+    chance: 0.10
+    amount: 1
+  wooden_club:
+    chance: 0.02
+    amount: 1
   
