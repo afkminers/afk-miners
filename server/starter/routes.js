@@ -1,10 +1,18 @@
 // server/starter/routes.js
+// Fluxo de seleção de starter (mantido separado do /register).
+// Este arquivo pressupõe que o registro NÃO cria herói automaticamente.
+// Ajustado para já popular hp / max_hp nas colunas persistidas.
+// Se as colunas não existirem (ambiente antigo), ele faz fallback sem quebrar.
+
 const express = require('express');
 const { randomUUID } = require('crypto');
 const { get, run } = require('../models/db');
 const { requireAuth } = require('../auth/middleware');
 
-/** Checa se a coluna "heroKey" de player_heroes é gerada (ALWAYS). */
+/**
+ * Verifica no information_schema se a coluna "heroKey" é uma coluna gerada ALWAYS.
+ * Caso seja (ex: foi convertida para generated), não devemos inserir explicitamente.
+ */
 async function isHeroKeyGenerated() {
   try {
     const row = await get(`
@@ -20,11 +28,31 @@ async function isHeroKeyGenerated() {
   }
 }
 
+/**
+ * Verifica rapidamente se as colunas hp e max_hp existem (evita erro em ambientes
+ * onde a migration ainda não rodou).
+ */
+async function hasHpColumns() {
+  try {
+    const row = await get(`
+      SELECT COUNT(*) AS ct
+        FROM information_schema.columns
+       WHERE table_name = 'player_heroes'
+         AND column_name IN ('hp','max_hp')
+    `);
+    return Number(row?.ct || 0) >= 2;
+  } catch {
+    return false;
+  }
+}
+
 function buildStarterRouter() {
   const router = express.Router();
+
+  // Todas as rotas deste módulo exigem sessão
   router.use(requireAuth);
 
-  /* ---------------- Lista de starters (mock; pode migrar p/ BD) ---------------- */
+  /* ---------------- Lista de starters (mock simples; pode migrar para tabela) ---------------- */
   router.get('/list', async (_req, res) => {
     try {
       const starters = [
@@ -76,7 +104,8 @@ function buildStarterRouter() {
       const row = await get(
         `SELECT 1
            FROM player_heroes
-          WHERE "playerId" = $1 AND "isStarter" = TRUE
+          WHERE "playerId" = $1
+            AND "isStarter" = TRUE
           LIMIT 1`,
         [playerId]
       );
@@ -89,8 +118,9 @@ function buildStarterRouter() {
 
   /* ---------------- Selecionar starter ---------------- */
   router.post('/select', async (req, res) => {
+    const playerId = req.user.id;
+
     try {
-      const playerId = req.user.id;
       const { heroKey } = req.body || {};
       if (!heroKey) {
         return res.status(400).json({ error: 'heroKey é obrigatório' });
@@ -100,7 +130,8 @@ function buildStarterRouter() {
       const exists = await get(
         `SELECT 1
            FROM player_heroes
-          WHERE "playerId" = $1 AND "isStarter" = TRUE
+          WHERE "playerId" = $1
+            AND "isStarter" = TRUE
           LIMIT 1`,
         [playerId]
       );
@@ -119,107 +150,145 @@ function buildStarterRouter() {
         return res.status(400).json({ error: 'heroKey inválido' });
       }
 
-      // Stats iniciais básicos
+      // Stats iniciais (later: puxar de uma curva ou tabela)
       const baseAttack = 1;
       const baseDefense = 1;
       const baseSpeed = 1;
       const level = 1;
+      const baseHp = 100 + (level - 1) * 5 + baseDefense * 2; // fórmula simples inicial
+      const rarity = master.rarity || 'COMMON';
 
       const id = randomUUID();
 
       // Detecta se "heroKey" é coluna gerada
       const heroKeyIsGenerated = await isHeroKeyGenerated();
+      const hpCols = await hasHpColumns(); // TRUE se migration já aplicada
 
+      // Inserções separadas para evitar tentar inserir heroKey em coluna gerada
       if (heroKeyIsGenerated) {
-        // Se "heroKey" for gerada (ALWAYS), NÃO inserir nela; usamos o name com o heroKey curto.
-        await run(
-          `INSERT INTO player_heroes
-             (id, "playerId", name,     rarity,     attack,     defense,     speed,     level, "createdAt", "updatedAt", "isStarter")
-           VALUES
-             ($1,  $2,        $3,       $4,         $5,         $6,          $7,        $8,    NOW(),       NOW(),       TRUE)`,
-          [
-            id,
-            playerId,
-            heroKey,                 // name curto
-            master.rarity || 'COMMON',
-            baseAttack,
-            baseDefense,
-            baseSpeed,
-            level,
-          ]
-        );
+        if (hpCols) {
+          await run(
+            `INSERT INTO player_heroes
+               (id, "playerId", name, rarity, attack, defense, speed, level,
+                "createdAt", "updatedAt", "isStarter", hp, max_hp)
+             VALUES
+               ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW(),TRUE,$9,$9)`,
+            [
+              id,
+              playerId,
+              heroKey, // usando heroKey como name curto
+              rarity,
+              baseAttack,
+              baseDefense,
+              baseSpeed,
+              level,
+              baseHp
+            ]
+          );
+        } else {
+          await run(
+            `INSERT INTO player_heroes
+               (id, "playerId", name, rarity, attack, defense, speed, level,
+                "createdAt", "updatedAt", "isStarter")
+             VALUES
+               ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW(),TRUE)`,
+            [
+              id,
+              playerId,
+              heroKey,
+              rarity,
+              baseAttack,
+              baseDefense,
+              baseSpeed,
+              level
+            ]
+          );
+        }
       } else {
-        // heroKey normal (não gerada): inserir explicitamente "heroKey"
-        await run(
-          `INSERT INTO player_heroes
-             (id, "playerId", "heroKey", name,   rarity,     attack,     defense,     speed,     level, "createdAt", "updatedAt", "isStarter")
-           VALUES
-             ($1,  $2,        $3,        $4,     $5,         $6,         $7,          $8,        $9,    NOW(),       NOW(),       TRUE)`,
-          [
-            id,
-            playerId,
-            heroKey,
-            master.name || heroKey,  // fallback pro nome do catálogo
-            master.rarity || 'COMMON',
-            baseAttack,
-            baseDefense,
-            baseSpeed,
-            level,
-          ]
-        );
+        if (hpCols) {
+          await run(
+            `INSERT INTO player_heroes
+               (id, "playerId", "heroKey", name, rarity, attack, defense, speed, level,
+                "createdAt", "updatedAt", "isStarter", hp, max_hp)
+             VALUES
+               ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),NOW(),TRUE,$10,$10)`,
+            [
+              id,
+              playerId,
+              heroKey,
+              master.name || heroKey,
+              rarity,
+              baseAttack,
+              baseDefense,
+              baseSpeed,
+              level,
+              baseHp
+            ]
+          );
+        } else {
+          await run(
+            `INSERT INTO player_heroes
+               (id, "playerId", "heroKey", name, rarity, attack, defense, speed, level,
+                "createdAt", "updatedAt", "isStarter")
+             VALUES
+               ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),NOW(),TRUE)`,
+            [
+              id,
+              playerId,
+              heroKey,
+              master.name || heroKey,
+              rarity,
+              baseAttack,
+              baseDefense,
+              baseSpeed,
+              level
+            ]
+          );
+        }
       }
 
       /* ================== AUTO-ENTREGAR E EQUIPAR ARMA DO STARTER ================== */
-      // Mapa heroKey -> item inicial (precisa existir em items_master)
       const weaponByHeroKey = {
         lyria: 'short_bow',
-        aric:  'rusty_sword',
-        brokk: 'rusty_sword', // até ter hammer/club iniciais
+        aric: 'rusty_sword',
+        brokk: 'rusty_sword'
       };
       const starterItem = weaponByHeroKey[String(heroKey).toLowerCase()] || null;
 
       if (starterItem) {
         try {
-          // 1) dá 1x no inventário do dono (idempotente)
-          await run(
+            await run(
             `INSERT INTO player_inventories (player_id, item_key, qty)
-             VALUES ($1, $2, 1)
+             VALUES ($1,$2,1)
              ON CONFLICT (player_id, item_key) DO NOTHING`,
             [playerId, starterItem]
           );
 
-          // 2) equipa no slot WEAPON desse herói (upsert)
           await run(
             `INSERT INTO hero_equipment (hero_id, slot, item_key)
-             VALUES ($1, 'WEAPON', $2)
+             VALUES ($1,'WEAPON',$2)
              ON CONFLICT (hero_id, slot)
              DO UPDATE SET item_key = EXCLUDED.item_key, updated_at = now()`,
             [id, starterItem]
           );
         } catch (e) {
-          // não quebra o fluxo se inventário/equip falhar
           console.warn('[starter] auto-equip weapon falhou:', e?.message);
         }
       }
-      /* ============================================================================ */
 
-      /* ================== AUTO-ENTREGAR + EQUIPAR BAG (BACKPACK) ================== */
-      // Garante que o herói já comece com capacidade para coletar loot
-      const STARTER_BAG_KEY = 'bag_brown'; // deve existir em items_master com slot: BACK e slots: 8
-
+      /* ================== AUTO-ENTREGAR + EQUIPAR BAG ================== */
+      const STARTER_BAG_KEY = 'bag_brown';
       try {
-        // opcional: manter consistência e registrar 1x no inventário (não usado pelo drop, mas não atrapalha)
         await run(
           `INSERT INTO player_inventories (player_id, item_key, qty)
-           VALUES ($1, $2, 1)
+           VALUES ($1,$2,1)
            ON CONFLICT (player_id, item_key) DO NOTHING`,
           [playerId, STARTER_BAG_KEY]
         );
 
-        // equipa no slot BACK desse herói (upsert)
         await run(
           `INSERT INTO hero_equipment (hero_id, slot, item_key)
-           VALUES ($1, 'BACK', $2)
+           VALUES ($1,'BACK',$2)
            ON CONFLICT (hero_id, slot)
            DO UPDATE SET item_key = EXCLUDED.item_key, updated_at = now()`,
           [id, STARTER_BAG_KEY]
@@ -227,12 +296,9 @@ function buildStarterRouter() {
       } catch (e) {
         console.warn('[starter] auto-equip bag falhou:', e?.message);
       }
-      /* ============================================================================ */
 
-      // Retorno
-      res.json({ ok: true, id, heroKey });
+      return res.json({ ok: true, id, heroKey });
     } catch (err) {
-      // Duplicado (já escolheu starter) ou conflito de unique
       const msg = String(err?.message || '').toLowerCase();
       if (msg.includes('duplicate key') || msg.includes('unique')) {
         return res.status(400).json({ error: 'starter já escolhido' });
@@ -243,7 +309,7 @@ function buildStarterRouter() {
         });
       }
       console.error('[starter] select error:', err);
-      res.status(500).json({ error: 'erro ao selecionar starter' });
+      return res.status(500).json({ error: 'erro ao selecionar starter' });
     }
   });
 

@@ -1,4 +1,3 @@
-// server/index.js
 require('dotenv').config();
 
 const path = require('path');
@@ -241,6 +240,7 @@ app.use('/api/equipment', requireAuth, require('./routes/equipment'));
 
 // Loot (pickup + listar loots)
 app.use('/api', requireAuth, lootRoutes); // <<-- novo (expõe: POST /api/loot/pickup e GET /api/map/:mapKey/loot)
+app.use('/api', require('./routes/csrf_alias'));  // compat: /api/auth/csrf
 
 // backpack (modelo Tibia-like)
 app.use('/api/backpack', requireAuth, backpackRoutes);
@@ -514,7 +514,6 @@ try {
   useWebSocket = !!WebSocketLib && !!WebSocketLib.Server;
   if (!useWebSocket) console.warn('[ws] package loaded but Server not available');
 } catch (err) {
-  // REMOVIDOS backticks do texto (evita false positive de parser)
   console.warn('[ws] optional dependency "ws" not installed — realtime disabled. Run npm install ws to enable.');
   WebSocketLib = null;
   useWebSocket = false;
@@ -523,6 +522,9 @@ try {
 const jwt = require('jsonwebtoken');
 const { createClient } = require('redis');
 const crypto = require('crypto');
+
+// (NOVO) handler de chat que insere no DB e retorna payload com id
+const { createChatPayload } = require('./ws/chat-handler');
 
 const REDIS_URL = process.env.REDIS_URL || null;
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
@@ -559,7 +561,7 @@ async function setupRedis(wss) {
         const out = JSON.stringify(obj);
         wss.clients.forEach(c => {
           if (c && c.readyState === WebSocketLib.OPEN) {
-            try { c.send(out); } catch (e) { /* ignore */ }
+            try { c.send(out); } catch { /* ignore */ }
           }
         });
       } catch (e) { console.warn('[redis] bad pubsub message', e?.message); }
@@ -596,7 +598,6 @@ let wss = null;
 
     if (shouldGenerateContext) {
       console.log('[context] generation enabled by GEN_CONTEXT_ON_START=1');
-      // Add context generation logic here if needed
     } else {
       console.log('[context] generation disabled (set GEN_CONTEXT_ON_START=1 to enable)');
     }
@@ -693,35 +694,29 @@ let wss = null;
             const raw = String(data.text || '').trim().slice(0, 800);
             if (!raw) return;
 
-            try {
-              if (scope === 'global') {
-                await run(
-                  `INSERT INTO chat_messages(scope, fromid, fromname, text) VALUES ($1, $2, $3, $4)`,
-                  ['global', ws._player.id, ws._player.name, raw]
-                );
+            if (scope === 'global') {
+              // NOVO: cria payload com id a partir do insert no DB
+              const payload = await createChatPayload(ws, raw);
+              if (!payload) return;
+
+              // mantém campo 'origin' como antes (útil se usar Redis e quiser dedupe por instância)
+              payload.origin = instanceId;
+
+              const outStr = JSON.stringify(payload);
+
+              // Publica no Redis (se estiver configurado) para replicar entre instâncias
+              if (redisPub) {
+                try { await redisPub.publish('chat:global', outStr); }
+                catch (e) { console.warn('[redis] publish failed', e && e.message); }
               }
-            } catch (e) { console.warn('[chat] persist error', e && e.message); }
 
-            const out = {
-              type: 'chat',
-              scope,
-              fromId: ws._player.id,
-              fromName: ws._player.name,
-              text: raw,
-              ts: Date.now(),
-              origin: instanceId
-            };
-
-            const outStr = JSON.stringify(out);
-            if (redisPub) {
-              try { await redisPub.publish('chat:global', outStr); }
-              catch (e) { console.warn('[redis] publish failed', e && e.message); }
+              // Broadcast local para todos os clientes
+              wss.clients.forEach(c => {
+                if (c && c.readyState === WebSocketLib.OPEN) {
+                  try { c.send(outStr); } catch {}
+                }
+              });
             }
-            wss.clients.forEach(c => {
-              if (c && c.readyState === WebSocketLib.OPEN) {
-                try { c.send(outStr); } catch {}
-              }
-            });
             return;
           }
 

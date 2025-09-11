@@ -17,18 +17,24 @@ function getPool() {
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
     });
+    try {
+      const u = new URL(process.env.DATABASE_URL);
+      console.log(`[DB] pool ready → host=${u.hostname} db=${u.pathname.replace('/', '')}`);
+    } catch {
+      console.log('[DB] pool ready (DATABASE_URL parse)');
+    }
   }
   return pool;
 }
 
-// Helpers unificados (mantêm a mesma “cara” usada no projeto)
+// Helpers unificados
 async function all(q, params = []) {
-  const { rows } = await pool.query(q, params);
+  const { rows } = await getPool().query(q, params);
   return rows;
 }
 
 async function get(q, params = []) {
-  const { rows } = await pool.query(q, params);
+  const { rows } = await getPool().query(q, params);
   return rows[0] || null;
 }
 
@@ -38,26 +44,15 @@ async function get(q, params = []) {
  * e leia de res.rows[0].id.
  */
 async function run(q, params = []) {
-  const res = await pool.query(q, params);
-  return res; // { rowCount, rows, ... }
+  const res = await getPool().query(q, params);
+  return res;
 }
 
-// Logs bonitinhos
-try {
-  const u = new URL(process.env.DATABASE_URL);
-  console.log(`[DB] PG conectado → ${u.hostname}/${u.pathname.replace('/', '')}`);
-} catch {
-  console.log('[DB] PG conectado (DATABASE_URL detectada)');
-}
-
-/**
- * Close the current pool (for idle management)
- */
 async function closePool() {
   if (pool) {
     console.log('[DB] closing pool for idle management');
-    try { 
-      await pool.end(); 
+    try {
+      await pool.end();
       pool = null;
     } catch (error) {
       console.warn('[DB] error closing pool:', error.message);
@@ -75,4 +70,4 @@ const shutdown = async () => {
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
-module.exports = { pool: getPool, all, get, run, closePool };
+module.exports = { pool: getPool, getPool, all, get, run, closePool };
