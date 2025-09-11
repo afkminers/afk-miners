@@ -53,13 +53,15 @@ async function pickupLoot(lootId, heroId) {
     if (lootMap.has(lootId)) {
       const entry = lootMap.get(lootId);
 
-      // aqui você poderia persistir no inventário (DB). Por ora, só devolvemos.
+      // remove da memória
       lootMap.delete(lootId);
 
       try { broadcastToMap(mapKey, { type: 'loot_removed', id: lootId }); } catch {}
 
       return {
         mapKey,
+        x: entry.x,
+        y: entry.y,
         items: entry.items.slice(), // [{key, amount}]
         heroId: heroId ? String(heroId) : null
       };

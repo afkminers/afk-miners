@@ -59,12 +59,35 @@ export const CombatActions = {
       if (heroId != null && heroId !== '') payload.heroId = String(heroId);
 
       const r = await apiPost('/api/loot/pickup', payload);
+
+      // Falta de backpack equipada
+      if (r && r.error === 'no-backpack') {
+        alert('You need a backpack equipped in the BACK slot to carry items.');
+        return r;
+      }
+
+      const placedItems = r?.placedToBackpack || r?.placed || r?.items || [];
+
+      // Evento existente (compat)
       window.dispatchEvent(new CustomEvent('loot:picked', {
-        detail: { lootId: String(lootId), items: r?.placedToBackpack || r?.items || [] }
+        detail: { lootId: String(lootId), items: placedItems }
       }));
+
+      // Atualização instantânea da mochila com snapshot do backend
+      if (r?.backpack) {
+        window.dispatchEvent(new CustomEvent('backpack:update', {
+          detail: { heroId: heroId || null, snapshot: r.backpack }
+        }));
+      }
+
       return r;
     } catch (e) {
-      console.warn('[loot] pickup failed:', e?.message || e);
+      const msg = String(e?.message || '').toLowerCase();
+      if (msg.includes('no-backpack') || msg.includes('no backpack')) {
+        alert('You need a backpack equipped in the BACK slot to carry items.');
+      } else {
+        console.warn('[loot] pickup failed:', e?.message || e);
+      }
       return null;
     }
   },

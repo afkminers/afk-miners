@@ -37,6 +37,20 @@ function animateProgressBars(container){
   });
 }
 
+/** Resolve o heroId ativo a partir das fontes conhecidas (Team → ActiveHeroId → GameScene → Player → fallback) */
+function getActiveHeroId(fallbackId = null){
+  try{
+    if (window.Team && typeof window.Team.getActiveHeroId === 'function') {
+      const hid = window.Team.getActiveHeroId();
+      if (hid) return hid;
+    }
+  }catch{}
+  try{ if (window.ActiveHeroId) return window.ActiveHeroId; }catch{}
+  try{ if (window.GameScene && window.GameScene.activeHeroId) return window.GameScene.activeHeroId; }catch{}
+  try{ if (window.Player && window.Player.activeHeroId) return window.Player.activeHeroId; }catch{}
+  return fallbackId;
+}
+
 /* =========================
    EQUIP: leitura + pintura
    ========================= */
@@ -214,7 +228,7 @@ function ensureEquipHandlers(){
   const grid = document.querySelector('.pf-equip');
   if (!grid) return;
 
-  // Unequip (como já estava)
+  // Unequip (como já estava, mas usando o resolvedor de heroId)
   grid.addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-action="unequip"]');
     if (!btn) return;
@@ -225,7 +239,7 @@ function ensureEquipHandlers(){
     e.preventDefault();
 
     const slot = (slotEl.getAttribute('data-slot') || '').toUpperCase();
-    const heroId = window.ActiveHeroId || openState.currentHero?.id;
+    const heroId = getActiveHeroId(openState.currentHero?.id);
     if (!heroId) return;
 
     const currentKey = cache.equip?.equipment?.[slot.toLowerCase()] || null;
@@ -247,7 +261,7 @@ function ensureEquipHandlers(){
 
   // *** NOVO: clique direito no slot BACK abre a mochila ***
   grid.addEventListener('contextmenu', (e) => {
-    const slotEl = e.target.closest('.slot[data-slot]');
+    const slotEl = e.target.closest('.pf-equip .slot[data-slot]');
     if (!slotEl) return;
 
     const slot = String(slotEl.getAttribute('data-slot') || '').toUpperCase();
@@ -256,15 +270,7 @@ function ensureEquipHandlers(){
     e.preventDefault(); // impede o menu do navegador
 
     // Resolve heroId “vivo” na tela
-    const heroId =
-      window.ActiveHeroId ||
-      openState.currentHero?.id ||
-      (window.Team && typeof Team.getActiveHeroId === 'function' && Team.getActiveHeroId()) ||
-      (window.GameScene && GameScene.activeHeroId) ||
-      (window.Player && Player.activeHeroId) ||
-      window.CurrentHeroId ||
-      null;
-
+    const heroId = getActiveHeroId(openState.currentHero?.id);
     if (!heroId) return;
 
     try {
@@ -390,12 +396,23 @@ export function bindProfileModal() {
       fillEquip()
     ]);
 
-    // ===== Integra Backpack UI + marca herói ativo (pickup usa isso) =====
-    try { window.ActiveHeroId = hero.id; } catch {}
+    // ===== Integra Backpack UI + marca herói ativo (pickup/equip usam isso) =====
+    try { 
+      if (typeof window.setActiveHero === 'function') {
+        window.setActiveHero(hero.id); // setter centralizado (emite eventos e atualiza GameScene/ActiveHeroId)
+      } else {
+        // fallback: manter compat se o setter ainda não existir
+        window.ActiveHeroId = hero.id;
+        if (window.GameScene) window.GameScene.activeHeroId = hero.id;
+      }
+    } catch {}
+
     try {
       if (window.BackpackUI) {
-        window.BackpackUI.render(hero.id);
-        window.BackpackUI.bindContextOpen(() => hero.id);
+        const hid = getActiveHeroId(hero.id);
+        window.BackpackUI.render(hid);
+        // Sempre que abrir fora de hora, consulta o herói ativo atual
+        window.BackpackUI.bindContextOpen(() => getActiveHeroId(hid));
       }
     } catch {}
     // =====================================================================
@@ -412,8 +429,9 @@ export function bindProfileModal() {
     overlay.setAttribute('aria-hidden','true');
     overlay.style.display = 'none';
 
-    // limpa herói ativo quando fecha o modal
-    try { delete window.ActiveHeroId; } catch {}
+    // ⚠️ Não limpamos o ActiveHeroId aqui para manter o herói ativo globalmente.
+    // Se quiser forçar limpar ao fechar, descomente abaixo:
+    // try { delete window.ActiveHeroId; } catch {}
   }
 
   // Expor uma forma fácil de atualizar equipamentos externamente

@@ -238,6 +238,20 @@ async function migrate() {
     )
   `);
 
+    // ---------- Loot (map_loot) ----------
+  await run(`
+    CREATE TABLE IF NOT EXISTS map_loot (
+      id TEXT PRIMARY KEY,
+      "mapKey" TEXT NOT NULL,
+      x INTEGER NOT NULL,
+      y INTEGER NOT NULL,
+      "itemsJSON" JSONB NOT NULL DEFAULT '[]'::jsonb,
+      expires_at TIMESTAMPTZ DEFAULT (now() + interval '2 minutes'),
+      created_at TIMESTAMPTZ DEFAULT now()
+    )
+  `);
+
+
   // ---------- Chat ----------
   await run(`
     CREATE TABLE IF NOT EXISTS chat_messages (

@@ -5,13 +5,74 @@
 import { getCsrf, apiGet, apiPost } from './api.js';
 import { CombatActions } from './combat/actions.js';
 
-
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
 const TILE = 32;
 
 // ----------------- namespace público p/ outros módulos -----------------
 window.GameScene = window.GameScene || {};
+
+// ======= Time/Hero ativo (base para coleta e combate) =======
+/** Define o herói ativo globalmente e emite evento. */
+window.setActiveHero = function setActiveHero(id) {
+  if (!id) return;
+  try {
+    const s = String(id);
+    window.ActiveHeroId = s;
+    if (window.GameScene) window.GameScene.activeHeroId = s;
+    window.dispatchEvent(new CustomEvent('hero:active-changed', { detail: { heroId: s } }));
+  } catch {}
+};
+
+/** Estado leve do time: até 3 heróis. */
+window.Team = window.Team || (function () {
+  const state = {
+    activeIds: [] // array de heroIds (string)
+  };
+
+  function uniq(arr) {
+    const seen = new Set(); const out = [];
+    for (const x of arr) { const k = String(x); if (!seen.has(k)) { seen.add(k); out.push(k); } }
+    return out;
+  }
+
+  return {
+    /** Seta o time inteiro (máx 3). Mantém o herói ativo como o primeiro. */
+    setActiveTeam(ids) {
+      const list = Array.isArray(ids) ? ids.map(String) : [];
+      state.activeIds = uniq(list).slice(0, 3);
+      if (state.activeIds.length > 0) window.setActiveHero(state.activeIds[0]);
+      window.dispatchEvent(new CustomEvent('team:changed', { detail: { heroIds: state.activeIds.slice() } }));
+    },
+    /** Adiciona um herói ao time. */
+    add(id) {
+      const s = String(id);
+      if (!s) return;
+      const next = uniq([...(state.activeIds || []), s]).slice(0,3);
+      state.activeIds = next;
+      if (!window.ActiveHeroId) window.setActiveHero(next[0]);
+      window.dispatchEvent(new CustomEvent('team:changed', { detail: { heroIds: state.activeIds.slice() } }));
+    },
+    /** Remove um herói do time. */
+    remove(id) {
+      const s = String(id);
+      state.activeIds = (state.activeIds || []).filter(x => String(x) !== s);
+      if (window.ActiveHeroId === s) {
+        const nxt = state.activeIds[0] || null;
+        if (nxt) window.setActiveHero(nxt);
+      }
+      window.dispatchEvent(new CustomEvent('team:changed', { detail: { heroIds: state.activeIds.slice() } }));
+    },
+    /** Retorna cópia do time atual. */
+    getActiveTeamIds() {
+      return (state.activeIds || []).slice(0,3);
+    },
+    /** Retorna o herói ativo (fallback: primeiro do time). */
+    getActiveHeroId() {
+      return window.ActiveHeroId || (state.activeIds && state.activeIds[0]) || null;
+    }
+  };
+})();
 
 // ==== BINDING ESTÁVEL (sem gambiarra): instanceId <-> sprite; spawnId -> Set<sprites> ====
 const MOB_BY_INSTANCE = new Map();        // instanceId (UUID) -> sprite (obj do array mobs)
@@ -750,22 +811,38 @@ async function resolvePlayerSprite() {
   try {
     const me = await apiGet('/api/player/me');
     const heroes = Array.isArray(me.heroes) ? me.heroes : [];
-    const starter = heroes.find(h => h.isStarter === 1 || h.isStarter === true) || heroes[0];
-    if (starter) {
-      playerVis.heroKey = starter.heroKey || starter.key || null;
+
+    // Time padrão: até 3 primeiros heróis do jogador
+    const teamIds = heroes.slice(0, 3).map(h => String(h.id));
+    if (teamIds.length > 0) {
+      try { window.Team.setActiveTeam(teamIds); } catch {}
+    }
+
+    // Define herói ativo como o primeiro do time (fallback: starter/primeiro)
+    const preferred =
+      heroes.find(h => h.isStarter === 1 || h.isStarter === true) ||
+      heroes[0] || null;
+
+    if (preferred) {
+      try { window.setActiveHero(preferred.id); } catch {}
+
+      playerVis.heroKey = preferred.heroKey || preferred.key || null;
+
       const candidate = playerVis.heroKey ? `/sprites/characters/${playerVis.heroKey}.png` : null;
       if (candidate) {
         playerVis.img = loadImg(candidate);
         await ensureImgLoaded(playerVis.img).catch(() => { });
         if (imgReady(playerVis.img)) return;
       }
-      if (starter.imageUrl) {
-        playerVis.img = loadImg(starter.imageUrl);
+      if (preferred.imageUrl) {
+        playerVis.img = loadImg(preferred.imageUrl);
         await ensureImgLoaded(playerVis.img).catch(() => { });
         if (imgReady(playerVis.img)) return;
       }
     }
   } catch (e) { console.warn('resolvePlayerSprite:', e.message); }
+
+  // fallback visual padrão
   playerVis.img = loadImg("/sprites/characters/player.png");
   ensureImgLoaded(playerVis.img).catch(() => { });
 }

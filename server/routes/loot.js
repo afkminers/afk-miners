@@ -2,26 +2,41 @@
 const express = require('express');
 const router = express.Router();
 
-const { all, get, run } = require('../models/db');
 const { requireAuth } = require('../auth/middleware');
 const { listBackpack, getBackpackSpec, putLootItemsForHero } = require('../services/backpack');
+const lootSvc = require('../services/loot');
+
+// Opcional: se existir bus para notificar os clientes do mapa
+let broadcastToMap = () => {};
+try {
+  ({ broadcastToMap } = require('../ws/bus'));
+} catch {
+  // segue sem broadcast se o módulo não existir
+}
 
 router.use(requireAuth);
 
+// Helpers
+function findLootInMemory(lootId) {
+  const id = String(lootId);
+  if (!lootSvc || !lootSvc._memory) return null;
+  for (const [mapKey, lootMap] of lootSvc._memory.entries()) {
+    if (lootMap.has(id)) {
+      const entry = lootMap.get(id);
+      return { mapKey: String(mapKey), lootMap, entry };
+    }
+  }
+  return null;
+}
+
 /**
- * Lista loots ativos no mapa (inalterado; mantenha como já estava se você tiver outro formato)
+ * Lista loots ativos no mapa a partir da memória (MAP_LOOT).
  */
 router.get('/map/:mapKey/loot', async (req, res) => {
   try {
     const mapKey = String(req.params.mapKey);
-    const rows = await all(
-      `SELECT id, "mapKey" AS "mapKey", x, y, "itemsJSON" AS "items", expires_at
-         FROM map_loot
-        WHERE "mapKey" = $1
-        ORDER BY id`,
-      [mapKey]
-    );
-    res.json(rows.map(r => ({ ...r, items: r.items || [] })));
+    const rows = await lootSvc.getMapLoot(mapKey);
+    res.json(rows);
   } catch (e) {
     console.error('[loot] list', e.message);
     res.status(500).json({ error: 'loot-list-failed' });
@@ -29,11 +44,13 @@ router.get('/map/:mapKey/loot', async (req, res) => {
 });
 
 /**
- * Pickup de loot
+ * Pickup de loot (Tibia-like)
  * Regras:
  *  - Sem BACK (capacidade 0) => 400 { error: 'no-backpack' }
  *  - Tenta colocar tudo na mochila do herói
- *  - Se sobrar (sem espaço), retorna leftover; o loot permanece/é atualizado
+ *  - Se sobrar (sem espaço), atualiza o loot em memória com o leftover
+ *  - Senão, remove o loot do mapa
+ *  - Retorna snapshot da mochila para atualização instantânea do front
  */
 router.post('/loot/pickup', express.json(), async (req, res) => {
   try {
@@ -47,31 +64,39 @@ router.post('/loot/pickup', express.json(), async (req, res) => {
       return res.status(400).json({ error: 'no-backpack' });
     }
 
-    // 2) carrega o loot
-    const loot = await get(`SELECT id, "itemsJSON" AS items FROM map_loot WHERE id = $1`, [lootId]);
-    if (!loot) return res.status(404).json({ error: 'loot-not-found' });
-    const items = Array.isArray(loot.items) ? loot.items : [];
+    // 2) localiza loot EM MEMÓRIA (MAP_LOOT)
+    const found = findLootInMemory(lootId);
+    if (!found) return res.status(404).json({ error: 'loot-not-found' });
+
+    const { mapKey, lootMap, entry } = found;
+    const srcItems = Array.isArray(entry.items) ? entry.items : [];
+
+    // normaliza para { key, amount }
+    const items = srcItems.map((it) => ({
+      key: String(it.key || it.itemKey || '').trim(),
+      amount: Number(it.amount ?? it.qty ?? 0),
+    })).filter((x) => x.key && x.amount > 0);
 
     // 3) tenta depositar tudo na mochila
     const { placed, leftover } = await putLootItemsForHero(heroId, items);
 
-    // 4) se sobrou algo, atualiza o loot; senão, remove o loot
-    if (leftover.length > 0) {
-      await run(
-        `UPDATE map_loot SET "itemsJSON" = $2 WHERE id = $1`,
-        [lootId, JSON.stringify(leftover)]
-      );
+    // 4) se sobrou algo, atualiza o loot em memória; senão, remove
+    if (Array.isArray(leftover) && leftover.length > 0) {
+      entry.items = leftover.map((x) => ({ key: x.key, amount: x.amount }));
+      lootMap.set(String(lootId), entry);
+      try { broadcastToMap(mapKey, { type: 'loot_updated', id: String(lootId) }); } catch {}
     } else {
-      await run(`DELETE FROM map_loot WHERE id = $1`, [lootId]);
+      lootMap.delete(String(lootId));
+      try { broadcastToMap(mapKey, { type: 'loot_removed', id: String(lootId) }); } catch {}
     }
 
-    // 5) resposta
+    // 5) resposta com snapshot da mochila para atualização instantânea
     const snapshot = await listBackpack(heroId);
     res.json({
       ok: true,
       placed,
       leftover,
-      backpack: snapshot
+      backpack: snapshot,
     });
   } catch (e) {
     console.error('[loot] pickup', e.message);
