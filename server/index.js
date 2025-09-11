@@ -10,6 +10,11 @@ const { all, get, run } = require('./models/db'); // PG helpers
 const { migrate } = require('./models/migrate');
 const { cookieParser, requireAuth, requireCsrf, csrfRoute } = require('./auth/middleware');
 
+// Import optimization features
+const { endpointMetrics } = require('./middleware/endpoint-metrics');
+const catalogCache = require('./services/catalogCache');
+const idlePoolCloser = require('./services/idlePoolCloser');
+
 const authRoutes = require('./auth/routes');
 const playerRoutes = require('./player/routes'); // mantém seu caminho atual
 const gachaRoutes = require('./gacha/routes');
@@ -25,6 +30,9 @@ const backpackRoutes = require('./routes/backpack');
 // AFK & Farm
 const afkRoutes = require('./routes/afk');
 const farmRoutes = require('./routes/farm');
+
+// Game tick route
+const gameTickRoutes = require('./routes/game_tick');
 
 const K = require('./balance/config');
 const buildStarterRouter = require('./starter/routes');
@@ -65,6 +73,10 @@ const app = express();
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
+
+// Add optimization middleware
+app.use(endpointMetrics);
+app.use(idlePoolCloser.trackActivity);
 
 // 1) CSRF BEFORE guard
 app.get('/api/csrf', csrfRoute);
@@ -232,6 +244,9 @@ app.use('/api', requireAuth, lootRoutes); // <<-- novo (expõe: POST /api/loot/p
 
 // backpack (modelo Tibia-like)
 app.use('/api/backpack', requireAuth, backpackRoutes);
+
+// Game tick aggregated endpoint
+app.use('/api/game', requireAuth, gameTickRoutes);
 
 /* ========= Helpers (Treino) ========= */
 async function resolveSkillType(weaponOrSkill) {
@@ -565,9 +580,25 @@ let wss = null;
     await migrate();
     await bootstrapContentTables();
 
-    if (CONTENT_PIPELINE !== 'off') {
+    // Initialize optimization features
+    idlePoolCloser.init();
+
+    // Initialize catalog cache
+    await catalogCache.warm();
+
+    const shouldRunContentPipeline = CONTENT_PIPELINE !== 'off';
+    const shouldGenerateContext = process.env.GEN_CONTEXT_ON_START === '1';
+
+    if (shouldRunContentPipeline) {
       console.log(`[content] pipeline: ${CONTENT_PIPELINE}`);
       await loadAll({ all, get, run }, path.join(__dirname, '..'));
+    }
+
+    if (shouldGenerateContext) {
+      console.log('[context] generation enabled by GEN_CONTEXT_ON_START=1');
+      // Add context generation logic here if needed
+    } else {
+      console.log('[context] generation disabled (set GEN_CONTEXT_ON_START=1 to enable)');
     }
 
     // Garante instâncias de todos os spawns (e mantém atualizadas periodicamente)
