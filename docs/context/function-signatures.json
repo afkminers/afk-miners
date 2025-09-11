@@ -459,7 +459,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 72,
+    "line": 74,
     "kind": "function",
     "name": "getMapLoot",
     "params": [
@@ -468,14 +468,14 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 84,
+    "line": 86,
     "kind": "function",
     "name": "cleanupExpiredOnce",
     "params": []
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 96,
+    "line": 98,
     "kind": "function",
     "name": "startCleanupLoop",
     "params": []
@@ -966,6 +966,22 @@
     "params": [
       "a",
       "b"
+    ]
+  },
+  {
+    "file": "server\\routes\\loot.js",
+    "line": 10,
+    "kind": "arrow",
+    "name": "broadcastToMap",
+    "params": []
+  },
+  {
+    "file": "server\\routes\\loot.js",
+    "line": 20,
+    "kind": "function",
+    "name": "findLootInMemory",
+    "params": [
+      "lootId"
     ]
   },
   {
@@ -2238,7 +2254,16 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 43,
+    "line": 41,
+    "kind": "function",
+    "name": "getActiveHeroId",
+    "params": [
+      "fallbackId = null"
+    ]
+  },
+  {
+    "file": "client\\js\\player_profile.js",
+    "line": 57,
     "kind": "function",
     "name": "fetchEquip",
     "params": [
@@ -2247,7 +2272,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 61,
+    "line": 75,
     "kind": "function",
     "name": "spriteUrlFromMeta",
     "params": [
@@ -2256,7 +2281,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 68,
+    "line": 82,
     "kind": "function",
     "name": "paintEquipGrid",
     "params": [
@@ -2265,7 +2290,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 100,
+    "line": 114,
     "kind": "function",
     "name": "fetchPlayerMeOnce",
     "params": [
@@ -2274,7 +2299,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 118,
+    "line": 132,
     "kind": "function",
     "name": "loadHeroSkills",
     "params": [
@@ -2284,7 +2309,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 165,
+    "line": 179,
     "kind": "function",
     "name": "renderTrainBars",
     "params": [
@@ -2293,7 +2318,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 184,
+    "line": 198,
     "kind": "function",
     "name": "renderHeroSkills",
     "params": [
@@ -2302,21 +2327,21 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 212,
+    "line": 226,
     "kind": "function",
     "name": "ensureEquipHandlers",
     "params": []
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 293,
+    "line": 299,
     "kind": "function",
     "name": "bindProfileModal",
     "params": []
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 314,
+    "line": 320,
     "kind": "function",
     "name": "fillHeader",
     "params": [
@@ -2325,7 +2350,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 334,
+    "line": 340,
     "kind": "function",
     "name": "fillSkillsArea",
     "params": [
@@ -2335,14 +2360,14 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 373,
+    "line": 379,
     "kind": "function",
     "name": "fillEquip",
     "params": []
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 379,
+    "line": 385,
     "kind": "function",
     "name": "open",
     "params": [
@@ -2351,14 +2376,14 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 409,
+    "line": 426,
     "kind": "function",
     "name": "close",
     "params": []
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 420,
+    "line": 438,
     "kind": "function",
     "name": "refreshEquip",
     "params": [
@@ -2367,14 +2392,14 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 426,
+    "line": 444,
     "kind": "function",
     "name": "refreshAll",
     "params": []
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 449,
+    "line": 467,
     "kind": "function",
     "name": "setupInventoryOpen",
     "params": [
@@ -2385,7 +2410,7 @@
   },
   {
     "file": "client\\js\\player_profile.js",
-    "line": 450,
+    "line": 468,
     "kind": "function",
     "name": "resolveCard",
     "params": [
@@ -2394,7 +2419,16 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 61,
+    "line": 33,
+    "kind": "function",
+    "name": "uniq",
+    "params": [
+      "arr"
+    ]
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 122,
     "kind": "function",
     "name": "pickFreeSpriteForSpawn",
     "params": [
@@ -2403,7 +2437,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 93,
+    "line": 154,
     "kind": "function",
     "name": "pickElByIds",
     "params": [
@@ -2413,7 +2447,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 121,
+    "line": 182,
     "kind": "arrow",
     "name": "$",
     "params": [
@@ -2422,7 +2456,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 127,
+    "line": 188,
     "kind": "function",
     "name": "assetUrl",
     "params": [
@@ -2432,7 +2466,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 139,
+    "line": 200,
     "kind": "function",
     "name": "normalizeTilesetPath",
     "params": [
@@ -2441,7 +2475,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 147,
+    "line": 208,
     "kind": "function",
     "name": "loadTilesetImage",
     "params": [
@@ -2450,21 +2484,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 168,
+    "line": 229,
     "kind": "function",
     "name": "applySmoothing",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 185,
+    "line": 246,
     "kind": "function",
     "name": "resize",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 209,
+    "line": 270,
     "kind": "function",
     "name": "loadImg",
     "params": [
@@ -2473,7 +2507,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 217,
+    "line": 278,
     "kind": "function",
     "name": "imgReady",
     "params": [
@@ -2482,7 +2516,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 219,
+    "line": 280,
     "kind": "function",
     "name": "ensureImgLoaded",
     "params": [
@@ -2491,7 +2525,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 228,
+    "line": 289,
     "kind": "function",
     "name": "normKey",
     "params": [
@@ -2500,7 +2534,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 238,
+    "line": 299,
     "kind": "function",
     "name": "indexSpriteMeta",
     "params": [
@@ -2509,7 +2543,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 255,
+    "line": 316,
     "kind": "function",
     "name": "asObj",
     "params": [
@@ -2518,14 +2552,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 263,
+    "line": 324,
     "kind": "function",
     "name": "loadSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 271,
+    "line": 332,
     "kind": "function",
     "name": "findMetaFor",
     "params": [
@@ -2534,7 +2568,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 291,
+    "line": 352,
     "kind": "function",
     "name": "buildMonsterCandidates",
     "params": [
@@ -2545,7 +2579,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 321,
+    "line": 382,
     "kind": "function",
     "name": "loadMonsterImg",
     "params": [
@@ -2556,7 +2590,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 333,
+    "line": 394,
     "kind": "function",
     "name": "inferMetaFromImage",
     "params": [
@@ -2566,7 +2600,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 399,
+    "line": 460,
     "kind": "function",
     "name": "lootAtWorld",
     "params": [
@@ -2576,7 +2610,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 406,
+    "line": 467,
     "kind": "function",
     "name": "drawLoot",
     "params": [
@@ -2585,14 +2619,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 421,
+    "line": 482,
     "kind": "function",
     "name": "clear",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 423,
+    "line": 484,
     "kind": "function",
     "name": "drawGround",
     "params": [
@@ -2601,7 +2635,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 449,
+    "line": 510,
     "kind": "function",
     "name": "drawPlayer",
     "params": [
@@ -2610,7 +2644,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 463,
+    "line": 524,
     "kind": "function",
     "name": "drawMob",
     "params": [
@@ -2619,14 +2653,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 611,
+    "line": 672,
     "kind": "function",
     "name": "getSavedPos",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 628,
+    "line": 689,
     "kind": "function",
     "name": "postPosThrottled",
     "params": [
@@ -2637,14 +2671,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 654,
+    "line": 715,
     "kind": "arrow",
     "name": "doSend",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 698,
+    "line": 759,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -2655,7 +2689,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 716,
+    "line": 777,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -2664,7 +2698,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 726,
+    "line": 787,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -2673,14 +2707,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 749,
+    "line": 810,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 774,
+    "line": 851,
     "kind": "function",
     "name": "addMobFromSpawn",
     "params": [
@@ -2689,7 +2723,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 825,
+    "line": 902,
     "kind": "function",
     "name": "buildSpawnersFromDefs",
     "params": [
@@ -2698,7 +2732,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 841,
+    "line": 918,
     "kind": "function",
     "name": "updateRespawns",
     "params": [
@@ -2707,7 +2741,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 866,
+    "line": 943,
     "kind": "function",
     "name": "normalizeApiJson",
     "params": [
@@ -2716,7 +2750,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 901,
+    "line": 978,
     "kind": "function",
     "name": "hasSolidProp",
     "params": [
@@ -2725,14 +2759,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 943,
+    "line": 1020,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1032,
+    "line": 1109,
     "kind": "function",
     "name": "frame",
     "params": [
@@ -2741,7 +2775,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1061,
+    "line": 1138,
     "kind": "arrow",
     "name": "cellOf",
     "params": [
@@ -2751,7 +2785,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1062,
+    "line": 1139,
     "kind": "arrow",
     "name": "centerOf",
     "params": [
@@ -2761,7 +2795,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1063,
+    "line": 1140,
     "kind": "arrow",
     "name": "isBlocked",
     "params": [
@@ -2771,7 +2805,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1069,
+    "line": 1146,
     "kind": "arrow",
     "name": "inBound",
     "params": [
@@ -2782,7 +2816,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1077,
+    "line": 1154,
     "kind": "arrow",
     "name": "faceFrom",
     "params": [
@@ -2792,7 +2826,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1194,
+    "line": 1271,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
@@ -5506,21 +5540,37 @@
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 12,
+    "line": 14,
     "kind": "function",
     "name": "getItemsIndex",
     "params": []
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 26,
+    "line": 28,
     "kind": "function",
     "name": "findPanel",
     "params": []
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 28,
+    "line": 33,
+    "kind": "function",
+    "name": "hideOuterLabelIfPresent",
+    "params": []
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 43,
+    "kind": "function",
+    "name": "escapeHtml",
+    "params": [
+      "s"
+    ]
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 52,
     "kind": "function",
     "name": "iconFor",
     "params": [
@@ -5530,7 +5580,17 @@
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 34,
+    "line": 57,
+    "kind": "function",
+    "name": "displayNameForBackpack",
+    "params": [
+      "payload",
+      "itemsIndex"
+    ]
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 63,
     "kind": "function",
     "name": "renderGrid",
     "params": [
@@ -5541,7 +5601,7 @@
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 100,
+    "line": 153,
     "kind": "function",
     "name": "render",
     "params": [
@@ -5550,21 +5610,34 @@
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 125,
+    "line": 224,
     "kind": "function",
-    "name": "bindContextOpen",
+    "name": "open",
     "params": [
-      "getHeroId"
+      "heroId"
     ]
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 135,
+    "line": 270,
     "kind": "function",
-    "name": "open",
+    "name": "close",
+    "params": []
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 277,
+    "kind": "function",
+    "name": "toggle",
     "params": [
-      "heroId",
-      "opts"
+      "heroId"
     ]
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 283,
+    "kind": "function",
+    "name": "bindContextOpen",
+    "params": []
   }
 ]

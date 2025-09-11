@@ -116,10 +116,10 @@
     "{profile }"
   ],
   "POST /loot/pickup": [
-    "{ok:true,placed,leftover,backpack:snapshot }"
+    "{ok:true,placed,leftover,backpack:snapshot,}"
   ],
   "GET /map/:mapKey/loot": [
-    "{ok:true,placed,leftover,backpack:snapshot }"
+    "{ok:true,placed,leftover,backpack:snapshot,}"
   ],
   "GET /me": [
     "{profile }"

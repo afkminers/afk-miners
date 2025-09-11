@@ -547,7 +547,7 @@ Arquivo: `server\starter\routes.js:28`
 
 ### GET /map/:mapKey/loot
 
-Arquivo: `server\routes\loot.js:14`
+Arquivo: `server\routes\loot.js:35`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -566,7 +566,7 @@ Arquivo: `server\routes\loot.js:14`
 
 **Resposta de sucesso (amostra):**
 ```json
-{ok:true,placed,leftover,backpack:snapshot }
+{ok:true,placed,leftover,backpack:snapshot,}
 ```
 
 **Erros conhecidos:**
@@ -1156,7 +1156,7 @@ _Sem payload inferido_
 
 ### POST /loot/pickup
 
-Arquivo: `server\routes\loot.js:38`
+Arquivo: `server\routes\loot.js:55`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1169,7 +1169,7 @@ Arquivo: `server\routes\loot.js:38`
 
 **Resposta de sucesso (amostra):**
 ```json
-{ok:true,placed,leftover,backpack:snapshot }
+{ok:true,placed,leftover,backpack:snapshot,}
 ```
 
 **Erros conhecidos:**

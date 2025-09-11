@@ -68,12 +68,17 @@
     "file": "client\\js\\backpack\\ui.js",
     "symbols": [
       "bindContextOpen",
+      "close",
+      "displayNameForBackpack",
+      "escapeHtml",
       "findPanel",
       "getItemsIndex",
+      "hideOuterLabelIfPresent",
       "iconFor",
       "open",
       "render",
-      "renderGrid"
+      "renderGrid",
+      "toggle"
     ]
   },
   {
@@ -373,6 +378,7 @@
       "postPosThrottled",
       "resize",
       "resolvePlayerSprite",
+      "uniq",
       "updateRespawns"
     ]
   },
@@ -388,6 +394,7 @@
       "fillEquip",
       "fillHeader",
       "fillSkillsArea",
+      "getActiveHeroId",
       "loadHeroSkills",
       "open",
       "paintEquipGrid",
@@ -747,6 +754,12 @@
     "symbols": [
       "computeStage",
       "toMs"
+    ]
+  },
+  {
+    "file": "server\\routes\\loot.js",
+    "symbols": [
+      "findLootInMemory"
     ]
   },
   {

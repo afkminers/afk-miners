@@ -270,6 +270,9 @@
     try { installCombatOverlay(); } catch (e) { console.error("[overlay] init failed:", e); }
   </script>
 
+  <!-- loot-mapa -->
+  <script src="/js/map/loot-layer.js"></script>
+
   <!-- ========= CDNs obrigatórios ========= -->
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -288,6 +291,9 @@
 
   <!-- Backpack UI (grade de slots da mochila) -->
   <script type="module" src="/js/backpack/ui.js"></script>
+
+  <!-- Drag and Drop (arrastar e soltar) -->
+  <script src="/js/dnd/items-dnd.js"></script>
 
   <!-- ========= UI: Team + Skills + Equipamentos ========= -->
   <script type="text/babel" data-presets="react,env">

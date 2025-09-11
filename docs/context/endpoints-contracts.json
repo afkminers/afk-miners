@@ -1410,7 +1410,7 @@
     "method": "POST",
     "path": "/loot/pickup",
     "file": "server\\routes\\loot.js",
-    "line": 38,
+    "line": 55,
     "sample": {
       "body": {
         "try {\n    const { heroId": 1,
@@ -1438,7 +1438,7 @@
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true,placed,leftover,backpack:snapshot }"
+        "body": "{ok:true,placed,leftover,backpack:snapshot,}"
       }
     ]
   },
@@ -1446,7 +1446,7 @@
     "method": "GET",
     "path": "/map/:mapKey/loot",
     "file": "server\\routes\\loot.js",
-    "line": 14,
+    "line": 35,
     "sample": {
       "params": {
         "mapKey": "value"
@@ -1481,7 +1481,7 @@
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true,placed,leftover,backpack:snapshot }"
+        "body": "{ok:true,placed,leftover,backpack:snapshot,}"
       }
     ]
   },
