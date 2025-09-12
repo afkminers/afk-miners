@@ -36,6 +36,12 @@ function getPool() {
     try {
       const u = new URL(process.env.DATABASE_URL);
       console.log(`[DB] pool ready -> host=${u.hostname} db=${u.pathname.replace('/', '')} max=${max}`);
+      
+      // Warn if not using Neon pooler endpoint for cost optimization
+      if (u.hostname.includes('neon') && !u.hostname.includes('-pooler')) {
+        console.warn('[DB] ⚠️  Consider using Neon pooler endpoint (add "-pooler" to hostname) for better connection management and cost optimization');
+        console.warn('[DB] Example: ep-xxx-pooler.region.aws.neon.tech instead of ep-xxx.region.aws.neon.tech');
+      }
     } catch {
       console.log('[DB] pool ready.');
     }

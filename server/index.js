@@ -13,6 +13,7 @@ const { cookieParser, requireAuth, requireCsrf, csrfRoute } = require('./auth/mi
 const { endpointMetrics } = require('./middleware/endpoint-metrics');
 const catalogCache = require('./services/catalogCache');
 const idlePoolCloser = require('./services/idlePoolCloser');
+const httpCache = require('./services/httpCache');
 
 const authRoutes = require('./auth/routes');
 const playerRoutes = require('./player/routes'); // mantém seu caminho atual
@@ -66,6 +67,16 @@ try {
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const PORT = Number(process.env.PORT || 3000);
 const CLIENT_ROOT_DIR = path.join(__dirname, '..', 'client');
+
+// New environment variables for idle-aware scheduling
+const SYNC_SPAWNS_INTERVAL_MS = Number(process.env.SYNC_SPAWNS_INTERVAL_MS || 300000); // 5 minutes default
+const IDLE_SCHEDULER_CHECK_MS = Number(process.env.IDLE_SCHEDULER_CHECK_MS || 30000); // 30 seconds default
+
+// Assets cache configuration
+const ASSETS_CACHE_TTL_MS = Number(process.env.ASSETS_CACHE_TTL_MS || 300000); // 5 minutes default
+
+// Optional migration gating (prod-safe)
+const SKIP_MIGRATIONS_ON_BOOT = process.env.SKIP_MIGRATIONS_ON_BOOT === '1';
 
 // ========= APP =========
 const app = express();
@@ -206,6 +217,15 @@ async function bootstrapContentTables() {
       )
     `);
 
+    // Add performance indexes for common lookups
+    await run(`CREATE INDEX IF NOT EXISTS idx_map_objects_mapkey ON map_objects("mapKey")`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_spawns_mapkey ON spawns("mapKey")`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_spawns_monster ON spawns("monsterKey")`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_monster_instances_map ON monster_instances(map_key)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_monster_instances_spawn ON monster_instances(spawn_id)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_monster_instances_state ON monster_instances(state)`);
+    
+    console.log('[content] performance indexes created');
     console.log('[content] tables ready (bootstrap)');
   } catch (e) {
     console.error('[content] bootstrap error:', e.message);
@@ -402,19 +422,45 @@ app.get('/api/admin/content/monsters', requireAuth, async (_req, res) => {
 });
 
 // assets
-app.get('/api/assets/items', async (_req, res) => {
+app.get('/api/assets/items', async (req, res) => {
   try {
-    const rows = await all('SELECT key, "dataJSON" FROM items_master ORDER BY key');
-    res.json(rows.map(r => ({ key: r.key, data: r.dataJSON || {} })));
+    const cacheKey = 'assets:items';
+    
+    // Try cache first, then query database if needed
+    let data;
+    const cachedEntry = httpCache.get(cacheKey);
+    
+    if (cachedEntry) {
+      data = cachedEntry.value;
+    } else {
+      const rows = await all('SELECT key, "dataJSON" FROM items_master ORDER BY key');
+      data = rows.map(r => ({ key: r.key, data: r.dataJSON || {} }));
+    }
+    
+    // Handle ETag/304 response
+    httpCache.handleEtagResponse(req, res, cacheKey, data, ASSETS_CACHE_TTL_MS);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get('/api/assets/sprites', async (_req, res) => {
+app.get('/api/assets/sprites', async (req, res) => {
   try {
-    const rows = await all('SELECT key, kind, "dataJSON" FROM sprites_master ORDER BY key');
-    res.json(rows.map(r => ({ key: r.key, kind: r.kind, data: r.dataJSON || {} })));
+    const cacheKey = 'assets:sprites';
+    
+    // Try cache first, then query database if needed
+    let data;
+    const cachedEntry = httpCache.get(cacheKey);
+    
+    if (cachedEntry) {
+      data = cachedEntry.value;
+    } else {
+      const rows = await all('SELECT key, kind, "dataJSON" FROM sprites_master ORDER BY key');
+      data = rows.map(r => ({ key: r.key, kind: r.kind, data: r.dataJSON || {} }));
+    }
+    
+    // Handle ETag/304 response
+    httpCache.handleEtagResponse(req, res, cacheKey, data, ASSETS_CACHE_TTL_MS);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -573,14 +619,106 @@ async function setupRedis(wss) {
   }
 }
 
+// ========= IDLE-AWARE SCHEDULER =========
+
+/**
+ * Check if the application is currently idle and manage background loops accordingly
+ */
+function checkIdleAndManageLoops() {
+  const status = idlePoolCloser.getStatus();
+  
+  if (!status.enabled) {
+    // Idle management not enabled - ensure loops are running
+    if (!respawnRunning) {
+      startRespawnLoop({ all, run });
+      respawnRunning = true;
+      console.log('[idle-scheduler] idle management disabled, ensuring respawn loop is running');
+    }
+    return;
+  }
+  
+  const isIdle = status.idleMs >= (status.idleCloseMinutes * 60 * 1000);
+  
+  if (isIdle && respawnRunning) {
+    // App is idle and respawn is running - stop it
+    stopRespawnLoop();
+    respawnRunning = false;
+    console.log(`[idle-scheduler] stopping respawn loop after ${status.idleMinutes.toFixed(1)} minutes idle`);
+  } else if (!isIdle && !respawnRunning) {
+    // App is not idle and respawn is not running - start it
+    startRespawnLoop({ all, run });
+    respawnRunning = true;
+    console.log(`[idle-scheduler] starting respawn loop after activity detected`);
+  }
+}
+
+/**
+ * Idle-aware syncSpawns executor
+ */
+function idleAwareSyncSpawns() {
+  const status = idlePoolCloser.getStatus();
+  
+  if (status.enabled) {
+    const isIdle = status.idleMs >= (status.idleCloseMinutes * 60 * 1000);
+    if (isIdle) {
+      console.log('[idle-scheduler] skipping syncSpawns due to idle state');
+      return;
+    }
+  }
+  
+  syncSpawns().catch(e => {
+    console.warn('[idle-scheduler] syncSpawns failed:', e?.message);
+  });
+}
+
+/**
+ * Start the idle-aware scheduler
+ */
+function startIdleScheduler() {
+  if (idleSchedulerTimer) return;
+  
+  // Start periodic idle check
+  idleSchedulerTimer = setInterval(checkIdleAndManageLoops, IDLE_SCHEDULER_CHECK_MS);
+  
+  // Start idle-aware syncSpawns
+  syncSpawnsTimer = setInterval(idleAwareSyncSpawns, SYNC_SPAWNS_INTERVAL_MS);
+  
+  console.log(`[idle-scheduler] started with ${IDLE_SCHEDULER_CHECK_MS}ms check interval`);
+  console.log(`[idle-scheduler] syncSpawns interval: ${SYNC_SPAWNS_INTERVAL_MS}ms`);
+}
+
+/**
+ * Stop the idle-aware scheduler
+ */
+function stopIdleScheduler() {
+  if (idleSchedulerTimer) {
+    clearInterval(idleSchedulerTimer);
+    idleSchedulerTimer = null;
+  }
+  if (syncSpawnsTimer) {
+    clearInterval(syncSpawnsTimer);
+    syncSpawnsTimer = null;
+  }
+  console.log('[idle-scheduler] stopped');
+}
+
 let server; // http.Server
 let wss = null;
+
+// Idle-aware scheduler variables
+let respawnRunning = false;
+let syncSpawnsTimer = null;
+let idleSchedulerTimer = null;
 
 // ========= START =========
 (async () => {
   try {
-    await migrate();
-    await bootstrapContentTables();
+    if (SKIP_MIGRATIONS_ON_BOOT) {
+      console.log('[startup] skipping migrations due to SKIP_MIGRATIONS_ON_BOOT=1');
+    } else {
+      await migrate();
+      await bootstrapContentTables();
+    }
 
     // Initialize optimization features
     idlePoolCloser.init();
@@ -604,7 +742,9 @@ let wss = null;
 
     // Garante instâncias de todos os spawns (e mantém atualizadas periodicamente)
     try { await syncSpawns(); } catch (e) { console.warn('[sync_spawns] initial failed:', e?.message); }
-    setInterval(() => syncSpawns().catch(()=>{}), 60_000);
+    
+    // Start idle-aware scheduler instead of fixed interval
+    startIdleScheduler();
 
     server = http.createServer(app);
 
@@ -617,6 +757,9 @@ let wss = null;
       const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
 
       wss.on('connection', (ws, req) => {
+        // Track WebSocket activity for idle management
+        idlePoolCloser.updateLastRequest();
+        
         const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
         console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
         console.log('[ws] cookies header:', req.headers && req.headers.cookie);
@@ -676,6 +819,9 @@ let wss = null;
         })();
 
         ws.on('message', async (msg) => {
+          // Track WebSocket activity for idle management
+          idlePoolCloser.updateLastRequest();
+          
           let data;
           try { data = JSON.parse(msg.toString()); } catch { console.warn('[ws] malformed json from', addr); return; }
 
@@ -743,8 +889,18 @@ let wss = null;
     server.listen(PORT, () => {
       console.log(`server listening on ${PORT} ${useWebSocket ? '(ws enabled)' : '(ws disabled)'}`);
       console.log(`> ${NODE_ENV} | http://localhost:${PORT}`);
-      // >>> INÍCIO DO LOOP DE RESPAWN <<<
-      startRespawnLoop({ all, run });
+      
+      // Initialize respawn loop based on idle gating status
+      const idleStatus = idlePoolCloser.getStatus();
+      if (!idleStatus.enabled) {
+        // If idle management is disabled, start respawn loop immediately for safety
+        startRespawnLoop({ all, run });
+        respawnRunning = true;
+        console.log('[startup] idle management disabled, starting respawn loop immediately');
+      } else {
+        // If idle management is enabled, the scheduler will handle respawn loop state
+        console.log('[startup] idle management enabled, respawn loop will be managed by scheduler');
+      }
 
       // opcional: inicia cleanup do loot expirado (se existir)
       if (typeof startLootCleanupLoop === 'function') {
