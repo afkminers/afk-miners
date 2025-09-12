@@ -22,6 +22,18 @@
     ]
   },
   {
+    "key": "ASSETS_CACHE_TTL_MS",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 2761
+      }
+    ],
+    "defaults": [
+      "300000"
+    ]
+  },
+  {
     "key": "CATALOG_CACHE_ENABLED",
     "occurrences": [
       {
@@ -70,7 +82,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1663
+        "index": 1734
       }
     ],
     "defaults": [
@@ -94,7 +106,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 17345
+        "index": 19335
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -200,19 +212,11 @@
       },
       {
         "file": "server\\models\\db.js",
-        "index": 442
+        "index": 551
       },
       {
         "file": "server\\models\\db.js",
-        "index": 552
-      },
-      {
-        "file": "server\\db\\index.js",
-        "index": 198
-      },
-      {
-        "file": "server\\db\\index.js",
-        "index": 265
+        "index": 1091
       }
     ],
     "defaults": []
@@ -235,6 +239,26 @@
       {
         "file": "server\\services\\catalogCache.js",
         "index": 392
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "DEBUG_HTTP_CACHE",
+    "occurrences": [
+      {
+        "file": "server\\services\\httpCache.js",
+        "index": 158
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "DEBUG_LOOT_CACHE",
+    "occurrences": [
+      {
+        "file": "server\\services\\lootCache.js",
+        "index": 372
       }
     ],
     "defaults": []
@@ -278,17 +302,29 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 19092
+        "index": 24322
       }
     ],
     "defaults": []
+  },
+  {
+    "key": "IDLE_SCHEDULER_CHECK_MS",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 2626
+      }
+    ],
+    "defaults": [
+      "30000"
+    ]
   },
   {
     "key": "JWT_SECRET",
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 17252
+        "index": 19242
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -298,6 +334,28 @@
     "defaults": [
       "changeme",
       "CHANGE_ME_DEV_ONLY"
+    ]
+  },
+  {
+    "key": "LOOT_CACHE_ENABLED",
+    "occurrences": [
+      {
+        "file": "server\\services\\lootCache.js",
+        "index": 195
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "LOOT_CACHE_TTL_SEC",
+    "occurrences": [
+      {
+        "file": "server\\services\\lootCache.js",
+        "index": 288
+      }
+    ],
+    "defaults": [
+      "5"
     ]
   },
   {
@@ -329,7 +387,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2204
+        "index": 2275
       },
       {
         "file": "server\\skills\\routes.js",
@@ -356,6 +414,18 @@
     ]
   },
   {
+    "key": "PG_CONNECTION_TIMEOUT",
+    "occurrences": [
+      {
+        "file": "server\\models\\db.js",
+        "index": 398
+      }
+    ],
+    "defaults": [
+      "5000"
+    ]
+  },
+  {
     "key": "PG_DUMP_PATH",
     "occurrences": [
       {
@@ -373,116 +443,42 @@
     "key": "PG_IDLE",
     "occurrences": [
       {
-        "file": "server\\db\\index.js",
-        "index": 459
-      },
-      {
-        "file": "server\\db\\index.js",
-        "index": 913
+        "file": "server\\models\\db.js",
+        "index": 473
       }
     ],
     "defaults": [
-      "30000",
       "30000"
     ]
   },
   {
-    "key": "PGDATABASE",
+    "key": "PG_POOL_MAX",
     "occurrences": [
       {
-        "file": "server\\db\\index.js",
-        "index": 713
+        "file": "server\\models\\db.js",
+        "index": 310
       }
     ],
     "defaults": [
-      "postgres"
-    ]
-  },
-  {
-    "key": "PGHOST",
-    "occurrences": [
-      {
-        "file": "server\\db\\index.js",
-        "index": 526
-      }
-    ],
-    "defaults": [
-      "localhost"
-    ]
-  },
-  {
-    "key": "PGPASSWORD",
-    "occurrences": [
-      {
-        "file": "server\\db\\index.js",
-        "index": 668
-      }
-    ],
-    "defaults": [
-      ""
+      "process.env.PGPOOL_MAX"
     ]
   },
   {
     "key": "PGPOOL_MAX",
     "occurrences": [
       {
-        "file": "server\\db\\index.js",
-        "index": 395
-      },
-      {
-        "file": "server\\db\\index.js",
-        "index": 851
-      }
-    ],
-    "defaults": [
-      "10",
-      "10"
-    ]
-  },
-  {
-    "key": "PGPORT",
-    "occurrences": [
-      {
-        "file": "server\\db\\index.js",
-        "index": 579
-      }
-    ],
-    "defaults": [
-      "5432"
-    ]
-  },
-  {
-    "key": "PGSSL",
-    "occurrences": [
-      {
-        "file": "server\\db\\index.js",
-        "index": 303
-      },
-      {
-        "file": "server\\db\\index.js",
-        "index": 761
+        "file": "server\\models\\db.js",
+        "index": 337
       }
     ],
     "defaults": []
-  },
-  {
-    "key": "PGUSER",
-    "occurrences": [
-      {
-        "file": "server\\db\\index.js",
-        "index": 619
-      }
-    ],
-    "defaults": [
-      "postgres"
-    ]
   },
   {
     "key": "PORT",
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2263
+        "index": 2334
       }
     ],
     "defaults": [
@@ -494,7 +490,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 17202
+        "index": 19192
       }
     ],
     "defaults": [
@@ -530,7 +526,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 17310
+        "index": 19300
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -552,6 +548,28 @@
     ],
     "defaults": [
       "1"
+    ]
+  },
+  {
+    "key": "SKIP_MIGRATIONS_ON_BOOT",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 2900
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "SYNC_SPAWNS_INTERVAL_MS",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 2518
+      }
+    ],
+    "defaults": [
+      "300000"
     ]
   }
 ]

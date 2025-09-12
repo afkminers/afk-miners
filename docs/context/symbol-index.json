@@ -44,26 +44,39 @@
       "appendChatRow",
       "applyUiFromSettings",
       "applyViewport",
-      "connectWS",
+      "clearCanvas",
+      "drawEntity",
+      "drawGrid",
+      "drawGround",
       "findPendingRowFor",
       "getCsrf",
       "getRootVar",
       "getTs",
       "hasSeenId",
+      "initGlobalChatUI",
+      "initPosSync",
       "jget",
       "jpost",
-      "log",
+      "loadImgWithCandidates",
+      "loop",
       "makeVSplitter",
       "markSeenId",
+      "mergeSpawns",
       "mountSceneHouse",
       "normStr",
       "onDown",
       "onMove",
-      "onReady",
       "onUp",
+      "resolveSprite",
       "sendChat",
+      "sendMyPos",
       "setRootVar",
-      "updateTopbarHeight"
+      "setStatus",
+      "startHub",
+      "syncCameraSize",
+      "update",
+      "updateTopbarHeight",
+      "worldToScreen"
     ]
   },
   {
@@ -139,18 +152,16 @@
     "symbols": [
       "bindByKey",
       "bindBySpawn",
-      "connectCombatWS",
       "drawHpBarAtSprite",
       "drawTargetBox",
       "ensureSpriteBind",
       "getSpriteFor",
       "installCombatOverlay",
-      "onWsMessage",
+      "installWsHandlers",
       "pickMobAtWorld",
       "pushFloaterAtSprite",
       "startRebindLoop",
-      "updateAndDrawFloaters",
-      "wsUrl"
+      "updateAndDrawFloaters"
     ]
   },
   {
@@ -305,26 +316,25 @@
     "symbols": [
       "appendChatRow",
       "clearCanvas",
-      "connectWS",
       "drawEntity",
       "drawGrid",
       "drawGround",
-      "ensureWsAuthOnConnect",
       "escapeHtml",
+      "initChat",
+      "initPosSync",
       "jget",
-      "loadImg",
+      "loadImgWithCandidates",
       "loop",
-      "maybeSendPos",
       "mergeSpawns",
       "postWithCsrf",
+      "resolveSprite",
       "sendChat",
+      "sendMyPos",
       "setStatus",
       "startHub",
-      "startPolling",
       "syncCameraSize",
       "update",
-      "worldToScreen",
-      "wsAuthAndLoadHistory"
+      "worldToScreen"
     ]
   },
   {
@@ -534,6 +544,17 @@
     ]
   },
   {
+    "file": "client\\js\\ws\\singleton.js",
+    "symbols": [
+      "attach",
+      "connect",
+      "getSocket",
+      "notify",
+      "scheduleReconnect",
+      "url"
+    ]
+  },
+  {
     "file": "fix-camel-columns.js",
     "symbols": [
       "applyReplacements",
@@ -702,15 +723,6 @@
     ]
   },
   {
-    "file": "server\\db\\index.js",
-    "symbols": [
-      "all",
-      "buildConfig",
-      "get",
-      "run"
-    ]
-  },
-  {
     "file": "server\\gacha\\routes.js",
     "symbols": [
       "chooseHeroFromPool",
@@ -722,10 +734,16 @@
     "file": "server\\index.js",
     "symbols": [
       "bootstrapContentTables",
+      "checkIdleAndManageLoops",
+      "idleAwareSyncSpawns",
+      "noop",
       "parseCookies",
       "resolveSkillType",
       "safeParse",
-      "setupRedis"
+      "setupHeartbeat",
+      "setupRedis",
+      "startIdleScheduler",
+      "stopIdleScheduler"
     ]
   },
   {
@@ -926,6 +944,17 @@
     ]
   },
   {
+    "file": "server\\services\\httpCache.js",
+    "symbols": [
+      "clear",
+      "get",
+      "handleEtagResponse",
+      "makeEtagFromJSON",
+      "set",
+      "stats"
+    ]
+  },
+  {
     "file": "server\\services\\idlePoolCloser.js",
     "symbols": [
       "checkIdle",
@@ -945,6 +974,16 @@
       "nowMs",
       "pickupLoot",
       "startCleanupLoop"
+    ]
+  },
+  {
+    "file": "server\\services\\lootCache.js",
+    "symbols": [
+      "cleanupExpired",
+      "clear",
+      "getMapLoot",
+      "getStats",
+      "invalidateMap"
     ]
   },
   {

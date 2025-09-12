@@ -12,6 +12,10 @@
     "to": "./combat/actions.js"
   },
   {
+    "from": "client\\js\\house.js",
+    "to": "./ws/singleton.js"
+  },
+  {
     "from": "client\\js\\gacha.js",
     "to": "./api.js"
   },
@@ -42,6 +46,14 @@
   {
     "from": "client\\js\\app.js",
     "to": "./app_panels.js"
+  },
+  {
+    "from": "client\\js\\app.js",
+    "to": "./ws/singleton.js"
+  },
+  {
+    "from": "client\\js\\combat\\render-combat.js",
+    "to": "../ws/singleton.js"
   },
   {
     "from": "client\\js\\combat\\attack-controls.js",

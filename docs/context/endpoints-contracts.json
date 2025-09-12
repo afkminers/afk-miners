@@ -195,7 +195,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 460,
+    "line": 508,
     "sample": {
       "params": {
         "key": "value"
@@ -229,7 +229,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 435,
+    "line": 483,
     "sample": {
       "params": {
         "key": "value"
@@ -271,7 +271,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 447,
+    "line": 495,
     "sample": {
       "params": {
         "key": "value"
@@ -309,7 +309,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 424,
+    "line": 472,
     "sample": {
       "query": {
         "map": "value"
@@ -352,7 +352,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 394,
+    "line": 416,
     "sample": {
       "query": {
         "map": "value"
@@ -407,7 +407,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 470,
+    "line": 518,
     "sample": {
       "query": {
         "map": "value"
@@ -430,7 +430,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 405,
+    "line": 427,
     "sample": {
       "query": {
         "map": "value"
@@ -481,7 +481,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 414,
+    "line": 449,
     "sample": {
       "query": {
         "map": "value"
@@ -528,7 +528,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 768,
+    "line": 952,
     "sample": {
       "query": {
         "limit": 1
@@ -559,7 +559,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 791,
+    "line": 975,
     "sample": {},
     "errors": [
       {
@@ -611,7 +611,7 @@
     "method": "GET",
     "path": "/api/csrf",
     "file": "server\\index.js",
-    "line": 81,
+    "line": 94,
     "sample": {},
     "errors": []
   },
@@ -795,6 +795,19 @@
       {
         "status": 200,
         "body": "{ok:true }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/cache/stats",
+    "file": "server\\routes\\loot.js",
+    "line": 173,
+    "sample": {},
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'cache-stats-failed' }"
       }
     ]
   },
@@ -1127,7 +1140,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 491,
+    "line": 539,
     "sample": {},
     "errors": []
   },
@@ -1410,7 +1423,7 @@
     "method": "POST",
     "path": "/loot/drop",
     "file": "server\\routes\\loot.js",
-    "line": 123,
+    "line": 129,
     "sample": {},
     "errors": [
       {
@@ -1424,6 +1437,10 @@
       {
         "status": 500,
         "body": "{error:'drop-failed' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'cache-stats-failed' }"
       }
     ],
     "ok": [
@@ -1437,7 +1454,7 @@
     "method": "POST",
     "path": "/loot/pickup",
     "file": "server\\routes\\loot.js",
-    "line": 74,
+    "line": 75,
     "sample": {
       "body": {
         "try {\n    const { heroId": 1,
@@ -1476,6 +1493,10 @@
       {
         "status": 500,
         "body": "{error:'drop-failed' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'cache-stats-failed' }"
       }
     ],
     "ok": [
@@ -1493,7 +1514,7 @@
     "method": "GET",
     "path": "/map/:mapKey/loot",
     "file": "server\\routes\\loot.js",
-    "line": 62,
+    "line": 63,
     "sample": {
       "params": {
         "mapKey": "value"
@@ -1539,6 +1560,10 @@
       {
         "status": 500,
         "body": "{error:'drop-failed' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'cache-stats-failed' }"
       }
     ],
     "ok": [
