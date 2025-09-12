@@ -1912,7 +1912,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "try {\n      const playerId = req.user.id;\n      const { heroKey": {
+                  "const playerId = req.user.id;\n\n    try {\n      const { heroKey": {
                     "type": "number"
                   }
                 }
@@ -1993,6 +1993,42 @@
           },
           "404": {
             "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/loot/drop": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2973,27 +3009,10 @@
       "post": {
         "responses": {
           "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": "OK"
           },
           "400": {
             "description": "Error 400 (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error 500 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3010,7 +3029,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "try {\n      const playerId = req.user.id;\n      const { heroKey": {
+                  "const playerId = req.user.id;\n\n    try {\n      const { heroKey": {
                     "type": "number"
                   }
                 }
@@ -3140,7 +3159,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "try {\n      const playerId = req.user.id;\n      const { heroKey": {
+                  "const playerId = req.user.id;\n\n    try {\n      const { heroKey": {
                     "type": "number"
                   }
                 }
@@ -3148,6 +3167,41 @@
             }
           }
         }
+      }
+    },
+    "/tick": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "name": "sinceChatId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "includeLoot",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeCombat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     }
   }
