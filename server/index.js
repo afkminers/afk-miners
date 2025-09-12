@@ -1,3 +1,5 @@
+// server/index.js
+
 require('dotenv').config();
 
 const path = require('path');
@@ -591,6 +593,27 @@ function parseCookies(cookieHeader = '') {
   );
 }
 
+// Heartbeat: derruba sockets inativos (zumbis) de forma segura
+function setupHeartbeat(wss) {
+  const intervalMs = 30000; // 30s
+  function noop() {}
+  wss.on('connection', (ws) => {
+    ws.isAlive = true;
+    ws.on('pong', () => { ws.isAlive = true; });
+  });
+  const interval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+      if (ws.isAlive === false) {
+        try { ws.terminate(); } catch {}
+        return;
+      }
+      ws.isAlive = false;
+      try { ws.ping(noop); } catch {}
+    });
+  }, intervalMs);
+  wss.on('close', () => clearInterval(interval));
+}
+
 async function setupRedis(wss) {
   if (!REDIS_URL) {
     console.log('[redis] REDIS_URL not set — running without Redis pub/sub (single-instance)');
@@ -752,6 +775,7 @@ let idleSchedulerTimer = null;
       const WebSocketServer = WebSocketLib.Server;
       wss = new WebSocketServer({ server, path: '/ws' });
       attachWsBus(wss);
+      setupHeartbeat(wss); // <<< Heartbeat habilitado
       setupRedis(wss).catch(() => {});
 
       const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
@@ -766,6 +790,7 @@ let idleSchedulerTimer = null;
 
         ws._connectedAt = Date.now();
         ws._player = null;
+        ws.isAlive = true; // compat com heartbeat
 
         try {
           const cookies = parseCookies(req.headers.cookie || '');
@@ -821,7 +846,8 @@ let idleSchedulerTimer = null;
         ws.on('message', async (msg) => {
           // Track WebSocket activity for idle management
           idlePoolCloser.updateLastRequest();
-          
+          ws.isAlive = true; // marcou atividade
+
           let data;
           try { data = JSON.parse(msg.toString()); } catch { console.warn('[ws] malformed json from', addr); return; }
 
@@ -875,6 +901,8 @@ let idleSchedulerTimer = null;
             });
           }
         });
+
+        ws.on('pong', () => { ws.isAlive = true; }); // compat extra
 
         ws.on('close', () => {
           console.log(`[ws] close from ${addr} — clients=${wss.clients.size}`);
