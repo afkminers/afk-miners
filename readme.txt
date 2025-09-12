@@ -1,3 +1,14 @@
+# AFK Miners
+
+## Configuração de ambiente
+
+Para configurar o ambiente de desenvolvimento:
+1. Copie `server/.env.example` para `server/.env`
+2. Configure as variáveis de ambiente necessárias (veja docs/DEPLOY_CHECKLIST.md para detalhes de produção)
+3. Nunca commite o arquivo `server/.env` - ele contém segredos sensíveis
+
+## Comandos úteis
+
 npm run deploy  -- rodar sempre após subir uma atualização pro site
 npm start -- ligar server local
 $env:CONTENT_PIPELINE="shadow"; npm run dev

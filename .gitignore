@@ -21,6 +21,7 @@ build/
 .env
 .env.*
 *.local
+server/.env
 
 # ======================
 # Banco de dados (SQLite dev only)
