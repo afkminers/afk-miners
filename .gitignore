@@ -19,7 +19,10 @@ build/
 # Ambiente (.env secrets)
 # ======================
 .env
-.env.*
+.env.local
+.env.production
+.env.development
+.env.staging
 *.local
 server/.env
 
