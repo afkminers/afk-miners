@@ -9,3 +9,6 @@
 *.sql  text eol=lf
 *.html text eol=lf
 *.css  text eol=lf
+docs/context/* text eol=lf
+docs/releases/* text eol=lf
+docs/backups/* text eol=lf
