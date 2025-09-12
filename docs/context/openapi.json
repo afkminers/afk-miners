@@ -1107,6 +1107,25 @@
         }
       }
     },
+    "/cache/stats": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/class-rates": {
       "get": {
         "responses": {

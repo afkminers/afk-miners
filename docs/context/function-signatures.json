@@ -446,6 +446,45 @@
     ]
   },
   {
+    "file": "server\\services\\lootCache.js",
+    "line": 25,
+    "kind": "function",
+    "name": "getMapLoot",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\services\\lootCache.js",
+    "line": 71,
+    "kind": "function",
+    "name": "invalidateMap",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\services\\lootCache.js",
+    "line": 85,
+    "kind": "function",
+    "name": "clear",
+    "params": []
+  },
+  {
+    "file": "server\\services\\lootCache.js",
+    "line": 97,
+    "kind": "function",
+    "name": "getStats",
+    "params": []
+  },
+  {
+    "file": "server\\services\\lootCache.js",
+    "line": 117,
+    "kind": "function",
+    "name": "cleanupExpired",
+    "params": []
+  },
+  {
     "file": "server\\services\\loot.js",
     "line": 17,
     "kind": "function",
@@ -1108,14 +1147,14 @@
   },
   {
     "file": "server\\routes\\loot.js",
-    "line": 15,
+    "line": 16,
     "kind": "arrow",
     "name": "broadcastToMap",
     "params": []
   },
   {
     "file": "server\\routes\\loot.js",
-    "line": 21,
+    "line": 22,
     "kind": "function",
     "name": "takeFromBackpack",
     "params": [

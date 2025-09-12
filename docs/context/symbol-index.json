@@ -948,6 +948,16 @@
     ]
   },
   {
+    "file": "server\\services\\lootCache.js",
+    "symbols": [
+      "cleanupExpired",
+      "clear",
+      "getMapLoot",
+      "getStats",
+      "invalidateMap"
+    ]
+  },
+  {
     "file": "server\\services\\starterHero.js",
     "symbols": [
       "createStarterHeroIfMissing"
