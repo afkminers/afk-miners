@@ -2,6 +2,19 @@
 
 ## Variáveis de ambiente
 
+### Core Environment Variables
+
+- `DATABASE_URL` — PostgreSQL connection string. **Use Neon `-pooler` endpoint** with `sslmode=require` and set `application_name` for metrics.
+- `DB_IDLE_CLOSE_MINUTES` (defaults: 0) — When > 0, enables idle pool closer to allow Neon scale-to-zero on inactivity.
+- `STATIC_CACHE_SECONDS` (defaults: 300–600 in prod) — TTL for in-memory HTTP cache on static/catalog endpoints.
+- `SYNC_SPAWNS_INTERVAL_MS` (defaults: 300000 = 5 min) — Interval for spawn sync loop; must be idle-aware.
+- `MIGRATE_ON_BOOT` (defaults: "1") — Set to "0" to skip migrations on boot (prod-friendly).
+- `JWT_SECRET` — JWT signing secret (defaults: changeme, CHANGE_ME_DEV_ONLY)
+- `SESSION_COOKIE_NAME` or `COOKIE_NAME` — Session cookie name
+- `REDIS_URL` (optional) — Enables chat pub/sub between instances
+
+### Optimization Variables
+
 - `APP_ORIGIN`
 - `APP_ORIGINS` (defaults: process.env.APP_ORIGIN)
 - `CATALOG_CACHE_ENABLED`
@@ -16,14 +29,11 @@
 - `CTX_DEPTH` (defaults: 4)
 - `CTX_IMPORTS`
 - `CTX_SYMBOLS`
-- `DATABASE_URL`
-- `DB_IDLE_CLOSE_MINUTES` (defaults: 0)
 - `DEBUG_CATALOG_CACHE`
 - `ENDPOINT_METRICS_INTERVAL_MS` (defaults: 60000)
 - `ENDPOINT_METRICS_PROD`
 - `ENDPOINT_METRICS_TOP_N` (defaults: 10)
 - `GEN_CONTEXT_ON_START`
-- `JWT_SECRET` (defaults: changeme, CHANGE_ME_DEV_ONLY)
 - `LOOT_CLEANUP_EVERY_SECONDS` (defaults: 30)
 - `LOOT_EXPIRE_SECONDS` (defaults: 120)
 - `NODE_ENV` (defaults: development)
@@ -37,11 +47,26 @@
 - `PGSSL`
 - `PGUSER` (defaults: postgres)
 - `PORT` (defaults: 3000)
-- `REDIS_URL` (defaults: null)
 - `RESPAWN_DEBUG` (defaults: )
 - `RESPAWN_TICK_MS` (defaults: 5000)
-- `SESSION_COOKIE_NAME` (defaults: process.env.COOKIE_NAME)
 - `SKILL_TRY_PER_HIT` (defaults: 1)
+
+## Operational Notes for Neon
+
+### Database Connection
+- Always use the **pooled endpoint** (`-pooler`) for better connection management
+- Set `sslmode=require` and include `application_name=afk-miners` for monitoring
+- Example: `postgresql://user:pass@ep-name-pooler.region.aws.neon.tech/db?sslmode=require&application_name=afk-miners`
+
+### Scale-to-Zero Configuration
+- Set `DB_IDLE_CLOSE_MINUTES=15` (or higher) to enable automatic pool closing
+- Background loops (spawn sync, loot cleanup) are idle-aware and stop during inactivity
+- Pool automatically reopens on first HTTP/WS request after idle period
+
+### Performance Optimizations
+- ETag/304 caching on `/api/assets/items` and `/api/assets/sprites`
+- In-memory catalog cache with configurable TTL
+- Endpoint metrics tracking for optimization insights
 
 ## Endpoints
 
