@@ -75,6 +75,9 @@ const IDLE_SCHEDULER_CHECK_MS = Number(process.env.IDLE_SCHEDULER_CHECK_MS || 30
 // Assets cache configuration
 const ASSETS_CACHE_TTL_MS = Number(process.env.ASSETS_CACHE_TTL_MS || 300000); // 5 minutes default
 
+// Optional migration gating (prod-safe)
+const SKIP_MIGRATIONS_ON_BOOT = process.env.SKIP_MIGRATIONS_ON_BOOT === '1';
+
 // ========= APP =========
 const app = express();
 app.use(cookieParser());
@@ -214,6 +217,15 @@ async function bootstrapContentTables() {
       )
     `);
 
+    // Add performance indexes for common lookups
+    await run(`CREATE INDEX IF NOT EXISTS idx_map_objects_mapkey ON map_objects("mapKey")`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_spawns_mapkey ON spawns("mapKey")`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_spawns_monster ON spawns("monsterKey")`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_monster_instances_map ON monster_instances(map_key)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_monster_instances_spawn ON monster_instances(spawn_id)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_monster_instances_state ON monster_instances(state)`);
+    
+    console.log('[content] performance indexes created');
     console.log('[content] tables ready (bootstrap)');
   } catch (e) {
     console.error('[content] bootstrap error:', e.message);
@@ -701,8 +713,12 @@ let idleSchedulerTimer = null;
 // ========= START =========
 (async () => {
   try {
-    await migrate();
-    await bootstrapContentTables();
+    if (SKIP_MIGRATIONS_ON_BOOT) {
+      console.log('[startup] skipping migrations due to SKIP_MIGRATIONS_ON_BOOT=1');
+    } else {
+      await migrate();
+      await bootstrapContentTables();
+    }
 
     // Initialize optimization features
     idlePoolCloser.init();

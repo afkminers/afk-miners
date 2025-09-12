@@ -180,7 +180,97 @@ lootCache.clear();
 - Automatic cache invalidation when loot is picked up or dropped
 - Memory efficient with automatic cleanup of expired entries
 
-### 8. Cost Calculation Script
+### 8. Idle-Aware Background Task Scheduling
+
+**Files**: `server/index.js` (idle scheduler functions)
+
+Automatically manages background tasks based on application idle state to reduce unnecessary compute when no users are active.
+
+**Environment Variables**:
+```bash
+SYNC_SPAWNS_INTERVAL_MS=300000         # Spawn sync interval (default: 5 minutes)
+IDLE_SCHEDULER_CHECK_MS=30000          # Idle check frequency (default: 30 seconds)
+```
+
+**Features**:
+- Monitors application idle state using `idlePoolCloser.getStatus()`
+- Automatically stops respawn loop when idle for configured duration
+- Starts respawn loop when activity detected
+- Skips spawn synchronization during idle periods
+- WebSocket activity tracking for accurate idle detection
+- Backwards compatible - if idle management disabled, loops run normally
+
+**Benefits**:
+- Reduces background task overhead during low-traffic periods
+- Enables better scale-to-zero behavior
+- Maintains gameplay responsiveness when active
+
+### 9. HTTP Assets Cache with ETags
+
+**Files**: `server/services/httpCache.js`, updated asset endpoints in `server/index.js`
+
+Implements ETag-based HTTP caching for heavy read-only endpoints to reduce database queries and bandwidth.
+
+**Environment Variables**:
+```bash
+ASSETS_CACHE_TTL_MS=300000             # Cache TTL (default: 5 minutes)
+DEBUG_HTTP_CACHE=1                     # Enable cache debug logging
+```
+
+**Endpoints Enhanced**:
+- `GET /api/assets/items` - Item catalog data
+- `GET /api/assets/sprites` - Sprite definitions
+
+**Features**:
+- In-memory TTL cache with automatic expiration
+- Weak ETags using SHA256 hash (truncated to 16 chars)
+- 304 Not Modified responses when client has current version
+- Configurable cache TTL
+- Atomic cache operations to prevent race conditions
+
+**Benefits**:
+- Eliminates database queries for cached content
+- Reduces bandwidth usage via 304 responses  
+- Significantly faster response times for repeat requests
+- Lower database connection pressure
+
+### 10. Production Migration Controls
+
+**Environment Variables**:
+```bash
+SKIP_MIGRATIONS_ON_BOOT=1              # Skip migrations during startup
+```
+
+**Features**:
+- Optional migration skipping for production deployments
+- Maintains dev DX with migrations enabled by default
+- Production-safe - allows faster startup when migrations not needed
+
+### 11. Performance Database Indexes
+
+**Added Indexes**:
+```sql
+CREATE INDEX idx_map_objects_mapkey ON map_objects("mapKey");
+CREATE INDEX idx_spawns_mapkey ON spawns("mapKey");
+CREATE INDEX idx_spawns_monster ON spawns("monsterKey");
+CREATE INDEX idx_monster_instances_map ON monster_instances(map_key);
+CREATE INDEX idx_monster_instances_spawn ON monster_instances(spawn_id);
+CREATE INDEX idx_monster_instances_state ON monster_instances(state);
+```
+
+**Benefits**:
+- Faster lookups for map-related queries
+- Improved spawn system performance
+- Better monster instance queries
+
+### 12. Database URL Validation
+
+**Features**:
+- Warns if not using Neon "-pooler" endpoint
+- Provides guidance for optimal connection management
+- Helps ensure cost-effective database configuration
+
+### 13. Cost Calculation Script
 
 **File**: `scripts/calc-cost-local.js`
 
