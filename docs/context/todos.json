@@ -1,15 +1,15 @@
 [
   {
-    "file": "client\\js\\app.js",
-    "line": 282,
-    "tag": "NOTE",
-    "text": "endpoint retorna { profile: {...} })"
-  },
-  {
     "file": "server\\combat\\worker.js",
     "line": 11,
     "tag": "TODO",
     "text": "pegar spawn info original (monsterKey, hp, etc)"
+  },
+  {
+    "file": "server\\routes\\csrf_alias.js",
+    "line": 3,
+    "tag": "TODO",
+    "text": "."
   },
   {
     "file": "server\\scripts\\gen-context.js",

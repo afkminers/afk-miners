@@ -115,11 +115,16 @@
     "{ok:true }",
     "{profile }"
   ],
+  "POST /loot/drop": [
+    "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
+  ],
   "POST /loot/pickup": [
-    "{ok:true,placed,leftover,backpack:snapshot,}"
+    "{ok:true,snapshot:{heroId:String(heroId),capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec2.key },placed,leftover }",
+    "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
   ],
   "GET /map/:mapKey/loot": [
-    "{ok:true,placed,leftover,backpack:snapshot,}"
+    "{ok:true,snapshot:{heroId:String(heroId),capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec2.key },placed,leftover }",
+    "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
   ],
   "GET /me": [
     "{profile }"
@@ -167,9 +172,7 @@
     "{ok:true }",
     "{profile }"
   ],
-  "POST /select": [
-    "{ok:true,id,heroKey }"
-  ],
+  "POST /select": [],
   "GET /state": [
     "{workers,boxes,inventory:inv }",
     "{ok:true,id }",
@@ -177,7 +180,7 @@
     "{ok:true,added:total }"
   ],
   "GET /status": [
-    "{canSelect:!row }",
-    "{ok:true,id,heroKey }"
-  ]
+    "{canSelect:!row }"
+  ],
+  "GET /tick": []
 }

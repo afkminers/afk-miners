@@ -11,6 +11,7 @@ const { run, all, get } = require('../db');
 
 const { listBackpack, getBackpackSpec } = require('../services/backpack');
 const lootSvc = require('../services/loot');
+const lootCache = require('../services/lootCache');
 
 let broadcastToMap = () => {};
 try { ({ broadcastToMap } = require('../ws/bus')); } catch {}
@@ -58,11 +59,11 @@ async function takeFromBackpack(heroId, itemKey, qty) {
   return (Number(qty) | 0) - left; // quanto foi removido
 }
 
-// Lista loots do mapa (seu serviço em memória)
+// Lista loots do mapa (com cache TTL)
 router.get('/map/:mapKey/loot', async (req, res) => {
   try {
     const mapKey = String(req.params.mapKey);
-    const rows = await lootSvc.getMapLoot(mapKey);
+    const rows = await lootCache.getMapLoot(mapKey);
     res.json(rows);
   } catch (e) {
     console.error('[loot] list', e.message);
@@ -87,6 +88,9 @@ router.post('/loot/pickup', express.json(), async (req, res) => {
     const picked = await lootSvc.pickupLoot(String(lootId), String(heroId));
     if (!picked) return res.status(404).json({ error: 'loot-not-found' });
 
+    // Invalidate cache since loot was removed
+    lootCache.invalidateMap(picked.mapKey);
+
     const items = (picked.items || []).map(i => ({ key: String(i.key), amount: Number(i.amount) || 0 }));
     const { putLootItemsForHero } = require('../services/backpack');
     const { placed, leftover } = await putLootItemsForHero(heroId, items);
@@ -96,6 +100,8 @@ router.post('/loot/pickup', express.json(), async (req, res) => {
         mapKey: picked.mapKey, x: picked.x, y: picked.y,
         items: leftover.map(x => ({ key: x.key, amount: x.amount }))
       });
+      // Invalidate cache again since new loot was added
+      lootCache.invalidateMap(picked.mapKey);
     }
 
     const data = await listBackpack(heroId);
@@ -141,6 +147,9 @@ router.post('/loot/drop', express.json(), async (req, res) => {
       items: [{ key: itemKey, amount: qty }]
     });
 
+    // Invalidate cache since new loot was added
+    lootCache.invalidateMap(mapKey);
+
     const data = await listBackpack(heroId);
     const spec = await getBackpackSpec(heroId);
 
@@ -157,6 +166,17 @@ router.post('/loot/drop', express.json(), async (req, res) => {
   } catch (e) {
     console.error('[loot] drop', e.message);
     res.status(500).json({ error: 'drop-failed' });
+  }
+});
+
+// Debug endpoint to check cache stats (development only)
+router.get('/cache/stats', async (req, res) => {
+  try {
+    const stats = lootCache.getStats();
+    res.json(stats);
+  } catch (e) {
+    console.error('[loot] cache stats', e.message);
+    res.status(500).json({ error: 'cache-stats-failed' });
   }
 });
 

@@ -144,21 +144,21 @@
   },
   {
     "file": "server\\index.js",
-    "line": 43,
+    "line": 50,
     "kind": "arrow",
     "name": "syncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 76,
+    "line": 87,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 237,
+    "line": 252,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -167,7 +167,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 467,
+    "line": 482,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -176,7 +176,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 519,
+    "line": 536,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -185,7 +185,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 531,
+    "line": 548,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -217,6 +217,16 @@
     "name": "listAliveMonsters",
     "params": [
       "{ mapKey: fallbackMapKey = 'house' } = {}"
+    ]
+  },
+  {
+    "file": "server\\ws\\chat-handler.js",
+    "line": 6,
+    "kind": "function",
+    "name": "createChatPayload",
+    "params": [
+      "ws",
+      "textRaw"
     ]
   },
   {
@@ -294,14 +304,21 @@
   },
   {
     "file": "server\\starter\\routes.js",
-    "line": 8,
+    "line": 16,
     "kind": "function",
     "name": "isHeroKeyGenerated",
     "params": []
   },
   {
     "file": "server\\starter\\routes.js",
-    "line": 23,
+    "line": 35,
+    "kind": "function",
+    "name": "hasHpColumns",
+    "params": []
+  },
+  {
+    "file": "server\\starter\\routes.js",
+    "line": 49,
     "kind": "function",
     "name": "buildStarterRouter",
     "params": []
@@ -420,6 +437,15 @@
     ]
   },
   {
+    "file": "server\\services\\starterHero.js",
+    "line": 10,
+    "kind": "function",
+    "name": "createStarterHeroIfMissing",
+    "params": [
+      "playerId"
+    ]
+  },
+  {
     "file": "server\\services\\loot.js",
     "line": 17,
     "kind": "function",
@@ -479,6 +505,118 @@
     "kind": "function",
     "name": "startCleanupLoop",
     "params": []
+  },
+  {
+    "file": "server\\services\\idlePoolCloser.js",
+    "line": 13,
+    "kind": "function",
+    "name": "updateLastRequest",
+    "params": []
+  },
+  {
+    "file": "server\\services\\idlePoolCloser.js",
+    "line": 31,
+    "kind": "function",
+    "name": "checkIdle",
+    "params": []
+  },
+  {
+    "file": "server\\services\\idlePoolCloser.js",
+    "line": 57,
+    "kind": "function",
+    "name": "init",
+    "params": []
+  },
+  {
+    "file": "server\\services\\idlePoolCloser.js",
+    "line": 70,
+    "kind": "function",
+    "name": "trackActivity",
+    "params": [
+      "req",
+      "res",
+      "next"
+    ]
+  },
+  {
+    "file": "server\\services\\idlePoolCloser.js",
+    "line": 78,
+    "kind": "function",
+    "name": "getStatus",
+    "params": []
+  },
+  {
+    "file": "server\\services\\heroStats.js",
+    "line": 4,
+    "kind": "function",
+    "name": "computeMaxHp",
+    "params": [
+      "hero"
+    ]
+  },
+  {
+    "file": "server\\services\\catalogCache.js",
+    "line": 29,
+    "kind": "function",
+    "name": "warm",
+    "params": []
+  },
+  {
+    "file": "server\\services\\catalogCache.js",
+    "line": 106,
+    "kind": "function",
+    "name": "checkForUpdates",
+    "params": []
+  },
+  {
+    "file": "server\\services\\catalogCache.js",
+    "line": 173,
+    "kind": "function",
+    "name": "getMonster",
+    "params": [
+      "key"
+    ]
+  },
+  {
+    "file": "server\\services\\catalogCache.js",
+    "line": 218,
+    "kind": "function",
+    "name": "getItem",
+    "params": [
+      "key"
+    ]
+  },
+  {
+    "file": "server\\services\\catalogCache.js",
+    "line": 253,
+    "kind": "function",
+    "name": "getSprite",
+    "params": [
+      "key"
+    ]
+  },
+  {
+    "file": "server\\services\\catalogCache.js",
+    "line": 290,
+    "kind": "function",
+    "name": "stats",
+    "params": []
+  },
+  {
+    "file": "server\\services\\catalogCache.js",
+    "line": 305,
+    "kind": "function",
+    "name": "clear",
+    "params": []
+  },
+  {
+    "file": "server\\services\\catalogCache.js",
+    "line": 317,
+    "kind": "function",
+    "name": "safeParse",
+    "params": [
+      "str"
+    ]
   },
   {
     "file": "server\\services\\backpack.js",
@@ -970,18 +1108,20 @@
   },
   {
     "file": "server\\routes\\loot.js",
-    "line": 10,
+    "line": 15,
     "kind": "arrow",
     "name": "broadcastToMap",
     "params": []
   },
   {
     "file": "server\\routes\\loot.js",
-    "line": 20,
+    "line": 21,
     "kind": "function",
-    "name": "findLootInMemory",
+    "name": "takeFromBackpack",
     "params": [
-      "lootId"
+      "heroId",
+      "itemKey",
+      "qty"
     ]
   },
   {
@@ -1283,7 +1423,14 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 17,
+    "line": 13,
+    "kind": "function",
+    "name": "getPool",
+    "params": []
+  },
+  {
+    "file": "server\\models\\db.js",
+    "line": 31,
     "kind": "function",
     "name": "all",
     "params": [
@@ -1293,7 +1440,7 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 22,
+    "line": 36,
     "kind": "function",
     "name": "get",
     "params": [
@@ -1303,7 +1450,7 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 32,
+    "line": 46,
     "kind": "function",
     "name": "run",
     "params": [
@@ -1313,9 +1460,41 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 46,
+    "line": 51,
+    "kind": "function",
+    "name": "closePool",
+    "params": []
+  },
+  {
+    "file": "server\\models\\db.js",
+    "line": 64,
     "kind": "arrow",
     "name": "shutdown",
+    "params": []
+  },
+  {
+    "file": "server\\middleware\\endpoint-metrics.js",
+    "line": 19,
+    "kind": "function",
+    "name": "endpointMetrics",
+    "params": [
+      "req",
+      "res",
+      "next"
+    ]
+  },
+  {
+    "file": "server\\middleware\\endpoint-metrics.js",
+    "line": 39,
+    "kind": "function",
+    "name": "logTopEndpoints",
+    "params": []
+  },
+  {
+    "file": "server\\middleware\\endpoint-metrics.js",
+    "line": 61,
+    "kind": "function",
+    "name": "getMetrics",
     "params": []
   },
   {
@@ -1395,6 +1574,43 @@
     "name": "doSingleSummon",
     "params": [
       "playerId"
+    ]
+  },
+  {
+    "file": "server\\db\\index.js",
+    "line": 7,
+    "kind": "function",
+    "name": "buildConfig",
+    "params": []
+  },
+  {
+    "file": "server\\db\\index.js",
+    "line": 30,
+    "kind": "function",
+    "name": "all",
+    "params": [
+      "sql",
+      "params"
+    ]
+  },
+  {
+    "file": "server\\db\\index.js",
+    "line": 35,
+    "kind": "function",
+    "name": "get",
+    "params": [
+      "sql",
+      "params"
+    ]
+  },
+  {
+    "file": "server\\db\\index.js",
+    "line": 40,
+    "kind": "function",
+    "name": "run",
+    "params": [
+      "sql",
+      "params"
     ]
   },
   {
@@ -1502,7 +1718,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 151,
+    "line": 165,
     "kind": "function",
     "name": "loadItems",
     "params": [
@@ -1512,7 +1728,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 229,
+    "line": 243,
     "kind": "function",
     "name": "loadSprites",
     "params": [
@@ -1522,7 +1738,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 310,
+    "line": 324,
     "kind": "function",
     "name": "loadMap",
     "params": [
@@ -1533,7 +1749,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 388,
+    "line": 402,
     "kind": "function",
     "name": "loadAll",
     "params": [
@@ -1984,7 +2200,7 @@
   },
   {
     "file": "server\\auth\\routes.js",
-    "line": 31,
+    "line": 24,
     "kind": "function",
     "name": "validatePassword",
     "params": [
@@ -1993,7 +2209,7 @@
   },
   {
     "file": "server\\auth\\routes.js",
-    "line": 38,
+    "line": 29,
     "kind": "function",
     "name": "noStore",
     "params": [
@@ -2077,6 +2293,26 @@
     ]
   },
   {
+    "file": "scripts\\calc-cost-local.js",
+    "line": 38,
+    "kind": "function",
+    "name": "calculateProjectedCost",
+    "params": [
+      "computeHours",
+      "currentDay",
+      "storageGB",
+      "pitGB",
+      "daysInMonth"
+    ]
+  },
+  {
+    "file": "scripts\\calc-cost-local.js",
+    "line": 85,
+    "kind": "function",
+    "name": "main",
+    "params": []
+  },
+  {
     "file": "client\\js\\ui.js",
     "line": 1,
     "kind": "function",
@@ -2102,6 +2338,13 @@
     "params": [
       "flashEl"
     ]
+  },
+  {
+    "file": "client\\js\\tick.js",
+    "line": 24,
+    "kind": "function",
+    "name": "tickOnce",
+    "params": []
   },
   {
     "file": "client\\js\\starter.js",
@@ -4150,14 +4393,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 8,
+    "line": 13,
     "kind": "function",
     "name": "getCsrf",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 18,
+    "line": 23,
     "kind": "function",
     "name": "jget",
     "params": [
@@ -4166,7 +4409,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 24,
+    "line": 29,
     "kind": "function",
     "name": "jpost",
     "params": [
@@ -4176,7 +4419,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 55,
+    "line": 60,
     "kind": "function",
     "name": "setRootVar",
     "params": [
@@ -4186,7 +4429,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 56,
+    "line": 61,
     "kind": "function",
     "name": "getRootVar",
     "params": [
@@ -4196,28 +4439,28 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 63,
+    "line": 68,
     "kind": "function",
     "name": "updateTopbarHeight",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 71,
+    "line": 76,
     "kind": "function",
     "name": "mountSceneHouse",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 87,
+    "line": 92,
     "kind": "function",
     "name": "applyViewport",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 113,
+    "line": 116,
     "kind": "function",
     "name": "makeVSplitter",
     "params": [
@@ -4227,7 +4470,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 116,
+    "line": 118,
     "kind": "function",
     "name": "onDown",
     "params": [
@@ -4236,7 +4479,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 124,
+    "line": 126,
     "kind": "function",
     "name": "onMove",
     "params": [
@@ -4245,14 +4488,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 131,
+    "line": 133,
     "kind": "function",
     "name": "onUp",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 152,
+    "line": 151,
     "kind": "function",
     "name": "onDown",
     "params": [
@@ -4261,7 +4504,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 160,
+    "line": 159,
     "kind": "function",
     "name": "onMove",
     "params": [
@@ -4270,55 +4513,66 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 167,
+    "line": 166,
     "kind": "function",
     "name": "onUp",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 192,
+    "line": 189,
     "kind": "function",
     "name": "applyUiFromSettings",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 244,
+    "line": 230,
     "kind": "function",
-    "name": "onReady",
+    "name": "markSeenId",
     "params": [
-      "fn"
+      "id"
     ]
   },
   {
     "file": "client\\js\\app.js",
-    "line": 266,
+    "line": 234,
     "kind": "function",
-    "name": "log",
+    "name": "hasSeenId",
     "params": [
-      "...args"
+      "id"
     ]
   },
   {
     "file": "client\\js\\app.js",
-    "line": 268,
+    "line": 239,
     "kind": "function",
-    "name": "connectWS",
-    "params": []
-  },
-  {
-    "file": "client\\js\\app.js",
-    "line": 313,
-    "kind": "function",
-    "name": "escapeHtml",
+    "name": "normStr",
     "params": [
       "s"
     ]
   },
   {
     "file": "client\\js\\app.js",
-    "line": 314,
+    "line": 240,
+    "kind": "function",
+    "name": "getTs",
+    "params": [
+      "v"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 243,
+    "kind": "function",
+    "name": "findPendingRowFor",
+    "params": [
+      "msg"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 267,
     "kind": "function",
     "name": "appendChatRow",
     "params": [
@@ -4327,10 +4581,216 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 329,
+    "line": 297,
+    "kind": "arrow",
+    "name": "esc",
+    "params": [
+      "s"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 338,
+    "kind": "function",
+    "name": "onReady",
+    "params": [
+      "fn"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 360,
+    "kind": "function",
+    "name": "log",
+    "params": [
+      "...args"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 362,
+    "kind": "function",
+    "name": "connectWS",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 421,
     "kind": "function",
     "name": "sendChat",
     "params": []
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 19,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "constructor",
+    "params": [
+      "options = {}"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 32,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "start",
+    "params": []
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 50,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "stop",
+    "params": []
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 54,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "this.pollTimer"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 64,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "fetchTick",
+    "params": []
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 71,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "this.lastChatId > 0"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 84,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "!response.ok"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 91,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "data.chat && data.chat.length > 0"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 106,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "forceTick",
+    "params": []
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 112,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "typeof window !== 'undefined'"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 122,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "data.pos"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 127,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "data.hero"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 132,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "data.chat && data.chat.length > 0"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 137,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "data.loot"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 142,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "data.combat"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 147,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "data.backpack"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 163,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "document.hidden"
+    ]
+  },
+  {
+    "file": "client\\js\\api_tick_example.js",
+    "line": 175,
+    "kind": "method",
+    "class": "GameTickClient",
+    "name": "if",
+    "params": [
+      "typeof module !== 'undefined' && module.exports"
+    ]
   },
   {
     "file": "client\\js\\api.js",
@@ -4756,6 +5216,170 @@
       "hud",
       "params } = {}"
     ]
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 9,
+    "kind": "function",
+    "name": "getCookie",
+    "params": [
+      "name"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 16,
+    "kind": "function",
+    "name": "ensureCsrf",
+    "params": []
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 20,
+    "kind": "function",
+    "name": "postJSON",
+    "params": [
+      "url",
+      "body"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 21,
+    "kind": "arrow",
+    "name": "send",
+    "params": []
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 37,
+    "kind": "function",
+    "name": "getJSON",
+    "params": [
+      "url"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 51,
+    "kind": "function",
+    "name": "getHeroId",
+    "params": []
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 60,
+    "kind": "function",
+    "name": "getMapKey",
+    "params": []
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 70,
+    "kind": "function",
+    "name": "ensureItemsIndex",
+    "params": []
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 82,
+    "kind": "function",
+    "name": "iconFor",
+    "params": [
+      "itemKey"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 86,
+    "kind": "function",
+    "name": "nameFor",
+    "params": [
+      "itemKey"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 92,
+    "kind": "function",
+    "name": "getOverlayRoot",
+    "params": []
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 108,
+    "kind": "function",
+    "name": "getCanvas",
+    "params": []
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 111,
+    "kind": "function",
+    "name": "getCanvasRects",
+    "params": []
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 119,
+    "kind": "function",
+    "name": "tileToCanvasPx",
+    "params": [
+      "x",
+      "y"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 141,
+    "kind": "function",
+    "name": "canvasPxToCss",
+    "params": [
+      "px",
+      "py"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 147,
+    "kind": "function",
+    "name": "tileToCss",
+    "params": [
+      "x",
+      "y"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 153,
+    "kind": "function",
+    "name": "makeNode",
+    "params": [
+      "loot"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 225,
+    "kind": "function",
+    "name": "removeLoot",
+    "params": [
+      "id"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 233,
+    "kind": "function",
+    "name": "layout",
+    "params": []
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 250,
+    "kind": "function",
+    "name": "refresh",
+    "params": []
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
@@ -5276,6 +5900,62 @@
     ]
   },
   {
+    "file": "client\\js\\dnd\\items-dnd.js",
+    "line": 19,
+    "kind": "function",
+    "name": "getCookie",
+    "params": [
+      "name"
+    ]
+  },
+  {
+    "file": "client\\js\\dnd\\items-dnd.js",
+    "line": 26,
+    "kind": "function",
+    "name": "ensureCsrfLocal",
+    "params": []
+  },
+  {
+    "file": "client\\js\\dnd\\items-dnd.js",
+    "line": 30,
+    "kind": "function",
+    "name": "ensureCsrf",
+    "params": []
+  },
+  {
+    "file": "client\\js\\dnd\\items-dnd.js",
+    "line": 36,
+    "kind": "function",
+    "name": "postJSON",
+    "params": [
+      "url",
+      "body"
+    ]
+  },
+  {
+    "file": "client\\js\\dnd\\items-dnd.js",
+    "line": 37,
+    "kind": "arrow",
+    "name": "send",
+    "params": []
+  },
+  {
+    "file": "client\\js\\dnd\\items-dnd.js",
+    "line": 60,
+    "kind": "function",
+    "name": "makeDebugHud",
+    "params": []
+  },
+  {
+    "file": "client\\js\\dnd\\items-dnd.js",
+    "line": 257,
+    "kind": "arrow",
+    "name": "updateHover",
+    "params": [
+      "ev"
+    ]
+  },
+  {
     "file": "client\\js\\combat\\ws-combat.js",
     "line": 11,
     "kind": "function",
@@ -5540,28 +6220,44 @@
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 14,
+    "line": 13,
+    "kind": "function",
+    "name": "ensureDnDLoaded",
+    "params": [
+      "cb"
+    ]
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 16,
+    "kind": "arrow",
+    "name": "once",
+    "params": []
+  },
+  {
+    "file": "client\\js\\backpack\\ui.js",
+    "line": 38,
     "kind": "function",
     "name": "getItemsIndex",
     "params": []
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 28,
+    "line": 52,
     "kind": "function",
     "name": "findPanel",
     "params": []
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 33,
+    "line": 54,
     "kind": "function",
     "name": "hideOuterLabelIfPresent",
     "params": []
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 43,
+    "line": 64,
     "kind": "function",
     "name": "escapeHtml",
     "params": [
@@ -5570,7 +6266,7 @@
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 52,
+    "line": 70,
     "kind": "function",
     "name": "iconFor",
     "params": [
@@ -5580,7 +6276,7 @@
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 57,
+    "line": 72,
     "kind": "function",
     "name": "displayNameForBackpack",
     "params": [
@@ -5590,7 +6286,7 @@
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 63,
+    "line": 78,
     "kind": "function",
     "name": "renderGrid",
     "params": [
@@ -5601,7 +6297,7 @@
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 153,
+    "line": 167,
     "kind": "function",
     "name": "render",
     "params": [
@@ -5610,7 +6306,7 @@
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 224,
+    "line": 233,
     "kind": "function",
     "name": "open",
     "params": [
@@ -5619,14 +6315,14 @@
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 270,
+    "line": 272,
     "kind": "function",
     "name": "close",
     "params": []
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 277,
+    "line": 279,
     "kind": "function",
     "name": "toggle",
     "params": [
@@ -5635,7 +6331,7 @@
   },
   {
     "file": "client\\js\\backpack\\ui.js",
-    "line": 283,
+    "line": 280,
     "kind": "function",
     "name": "bindContextOpen",
     "params": []

@@ -13,6 +13,12 @@
     ]
   },
   {
+    "file": "client\\js\\api_tick_example.js",
+    "symbols": [
+      "GameTickClient"
+    ]
+  },
+  {
     "file": "client\\js\\api.js",
     "symbols": [
       "API",
@@ -39,14 +45,18 @@
       "applyUiFromSettings",
       "applyViewport",
       "connectWS",
-      "escapeHtml",
+      "findPendingRowFor",
       "getCsrf",
       "getRootVar",
+      "getTs",
+      "hasSeenId",
       "jget",
       "jpost",
       "log",
       "makeVSplitter",
+      "markSeenId",
       "mountSceneHouse",
+      "normStr",
       "onDown",
       "onMove",
       "onReady",
@@ -70,6 +80,7 @@
       "bindContextOpen",
       "close",
       "displayNameForBackpack",
+      "ensureDnDLoaded",
       "escapeHtml",
       "findPanel",
       "getItemsIndex",
@@ -157,6 +168,16 @@
       "jget",
       "jpost",
       "readCookie"
+    ]
+  },
+  {
+    "file": "client\\js\\dnd\\items-dnd.js",
+    "symbols": [
+      "ensureCsrf",
+      "ensureCsrfLocal",
+      "getCookie",
+      "makeDebugHud",
+      "postJSON"
     ]
   },
   {
@@ -340,6 +361,30 @@
     ]
   },
   {
+    "file": "client\\js\\map\\loot-layer.js",
+    "symbols": [
+      "canvasPxToCss",
+      "ensureCsrf",
+      "ensureItemsIndex",
+      "getCanvas",
+      "getCanvasRects",
+      "getCookie",
+      "getHeroId",
+      "getJSON",
+      "getMapKey",
+      "getOverlayRoot",
+      "iconFor",
+      "layout",
+      "makeNode",
+      "nameFor",
+      "postJSON",
+      "refresh",
+      "removeLoot",
+      "tileToCanvasPx",
+      "tileToCss"
+    ]
+  },
+  {
     "file": "client\\js\\play.js",
     "symbols": [
       "addMobFromSpawn",
@@ -443,6 +488,12 @@
     ]
   },
   {
+    "file": "client\\js\\tick.js",
+    "symbols": [
+      "tickOnce"
+    ]
+  },
+  {
     "file": "client\\js\\ui.js",
     "symbols": [
       "cap"
@@ -508,6 +559,13 @@
       "fixBlockText",
       "processFile",
       "walk"
+    ]
+  },
+  {
+    "file": "scripts\\calc-cost-local.js",
+    "symbols": [
+      "calculateProjectedCost",
+      "main"
     ]
   },
   {
@@ -644,6 +702,15 @@
     ]
   },
   {
+    "file": "server\\db\\index.js",
+    "symbols": [
+      "all",
+      "buildConfig",
+      "get",
+      "run"
+    ]
+  },
+  {
     "file": "server\\gacha\\routes.js",
     "symbols": [
       "chooseHeroFromPool",
@@ -677,10 +744,20 @@
     ]
   },
   {
+    "file": "server\\middleware\\endpoint-metrics.js",
+    "symbols": [
+      "endpointMetrics",
+      "getMetrics",
+      "logTopEndpoints"
+    ]
+  },
+  {
     "file": "server\\models\\db.js",
     "symbols": [
       "all",
+      "closePool",
       "get",
+      "getPool",
       "run"
     ]
   },
@@ -759,7 +836,7 @@
   {
     "file": "server\\routes\\loot.js",
     "symbols": [
-      "findLootInMemory"
+      "takeFromBackpack"
     ]
   },
   {
@@ -830,6 +907,35 @@
     ]
   },
   {
+    "file": "server\\services\\catalogCache.js",
+    "symbols": [
+      "checkForUpdates",
+      "clear",
+      "getItem",
+      "getMonster",
+      "getSprite",
+      "safeParse",
+      "stats",
+      "warm"
+    ]
+  },
+  {
+    "file": "server\\services\\heroStats.js",
+    "symbols": [
+      "computeMaxHp"
+    ]
+  },
+  {
+    "file": "server\\services\\idlePoolCloser.js",
+    "symbols": [
+      "checkIdle",
+      "getStatus",
+      "init",
+      "trackActivity",
+      "updateLastRequest"
+    ]
+  },
+  {
     "file": "server\\services\\loot.js",
     "symbols": [
       "cleanupExpiredOnce",
@@ -839,6 +945,12 @@
       "nowMs",
       "pickupLoot",
       "startCleanupLoop"
+    ]
+  },
+  {
+    "file": "server\\services\\starterHero.js",
+    "symbols": [
+      "createStarterHeroIfMissing"
     ]
   },
   {
@@ -866,6 +978,7 @@
     "file": "server\\starter\\routes.js",
     "symbols": [
       "buildStarterRouter",
+      "hasHpColumns",
       "isHeroKeyGenerated"
     ]
   },
@@ -879,6 +992,12 @@
       "joinMapSocket",
       "moveSocketToMap",
       "roomOf"
+    ]
+  },
+  {
+    "file": "server\\ws\\chat-handler.js",
+    "symbols": [
+      "createChatPayload"
     ]
   },
   {

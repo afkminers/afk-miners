@@ -195,7 +195,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 445,
+    "line": 460,
     "sample": {
       "params": {
         "key": "value"
@@ -229,7 +229,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 420,
+    "line": 435,
     "sample": {
       "params": {
         "key": "value"
@@ -271,7 +271,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 432,
+    "line": 447,
     "sample": {
       "params": {
         "key": "value"
@@ -309,7 +309,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 409,
+    "line": 424,
     "sample": {
       "query": {
         "map": "value"
@@ -352,7 +352,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 379,
+    "line": 394,
     "sample": {
       "query": {
         "map": "value"
@@ -407,7 +407,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 455,
+    "line": 470,
     "sample": {
       "query": {
         "map": "value"
@@ -430,7 +430,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 390,
+    "line": 405,
     "sample": {
       "query": {
         "map": "value"
@@ -481,7 +481,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 399,
+    "line": 414,
     "sample": {
       "query": {
         "map": "value"
@@ -528,7 +528,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 742,
+    "line": 768,
     "sample": {
       "query": {
         "limit": 1
@@ -559,7 +559,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 765,
+    "line": 791,
     "sample": {},
     "errors": [
       {
@@ -611,7 +611,7 @@
     "method": "GET",
     "path": "/api/csrf",
     "file": "server\\index.js",
-    "line": 70,
+    "line": 81,
     "sample": {},
     "errors": []
   },
@@ -1127,7 +1127,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 476,
+    "line": 491,
     "sample": {},
     "errors": []
   },
@@ -1301,10 +1301,10 @@
     "method": "GET",
     "path": "/list",
     "file": "server\\starter\\routes.js",
-    "line": 28,
+    "line": 56,
     "sample": {
       "body": {
-        "try {\n      const playerId = req.user.id;\n      const { heroKey": 1
+        "const playerId = req.user.id;\n\n    try {\n      const { heroKey": 1
       }
     },
     "errors": [
@@ -1340,7 +1340,7 @@
     "method": "POST",
     "path": "/login",
     "file": "server\\auth\\routes.js",
-    "line": 93,
+    "line": 70,
     "sample": {},
     "errors": [
       {
@@ -1383,7 +1383,7 @@
     "method": "POST",
     "path": "/logout",
     "file": "server\\auth\\routes.js",
-    "line": 121,
+    "line": 87,
     "sample": {},
     "errors": [
       {
@@ -1408,9 +1408,36 @@
   },
   {
     "method": "POST",
+    "path": "/loot/drop",
+    "file": "server\\routes\\loot.js",
+    "line": 123,
+    "sample": {},
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:'bad-args' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'not-enough-qty' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'drop-failed' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
     "path": "/loot/pickup",
     "file": "server\\routes\\loot.js",
-    "line": 55,
+    "line": 74,
     "sample": {
       "body": {
         "try {\n    const { heroId": 1,
@@ -1431,14 +1458,34 @@
         "body": "{error:'loot-not-found' }"
       },
       {
+        "status": 404,
+        "body": "{error:'loot-not-found' }"
+      },
+      {
         "status": 500,
         "body": "{error:'loot-pickup-failed' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'bad-args' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'not-enough-qty' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'drop-failed' }"
       }
     ],
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true,placed,leftover,backpack:snapshot,}"
+        "body": "{ok:true,snapshot:{heroId:String(heroId),capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec2.key },placed,leftover }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
       }
     ]
   },
@@ -1446,7 +1493,7 @@
     "method": "GET",
     "path": "/map/:mapKey/loot",
     "file": "server\\routes\\loot.js",
-    "line": 35,
+    "line": 62,
     "sample": {
       "params": {
         "mapKey": "value"
@@ -1474,14 +1521,34 @@
         "body": "{error:'loot-not-found' }"
       },
       {
+        "status": 404,
+        "body": "{error:'loot-not-found' }"
+      },
+      {
         "status": 500,
         "body": "{error:'loot-pickup-failed' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'bad-args' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'not-enough-qty' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'drop-failed' }"
       }
     ],
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true,placed,leftover,backpack:snapshot,}"
+        "body": "{ok:true,snapshot:{heroId:String(heroId),capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec2.key },placed,leftover }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
       }
     ]
   },
@@ -1613,7 +1680,7 @@
     "method": "GET",
     "path": "/me",
     "file": "server\\auth\\routes.js",
-    "line": 129,
+    "line": 94,
     "sample": {},
     "errors": [
       {
@@ -2242,7 +2309,7 @@
     "method": "POST",
     "path": "/register",
     "file": "server\\auth\\routes.js",
-    "line": 50,
+    "line": 34,
     "sample": {},
     "errors": [
       {
@@ -2305,10 +2372,10 @@
     "method": "POST",
     "path": "/select",
     "file": "server\\starter\\routes.js",
-    "line": 91,
+    "line": 120,
     "sample": {
       "body": {
-        "try {\n      const playerId = req.user.id;\n      const { heroKey": 1
+        "const playerId = req.user.id;\n\n    try {\n      const { heroKey": 1
       }
     },
     "errors": [
@@ -2323,24 +2390,6 @@
       {
         "status": 400,
         "body": "{error:'heroKey inválido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'starter já escolhido' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'schema indica heroKey gerada — tente novamente; já ajustamos para não inserir nela.' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'erro ao selecionar starter' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,id,heroKey }"
       }
     ]
   },
@@ -2503,10 +2552,10 @@
     "method": "GET",
     "path": "/status",
     "file": "server\\starter\\routes.js",
-    "line": 73,
+    "line": 101,
     "sample": {
       "body": {
-        "try {\n      const playerId = req.user.id;\n      const { heroKey": 1
+        "const playerId = req.user.id;\n\n    try {\n      const { heroKey": 1
       }
     },
     "errors": [
@@ -2531,11 +2580,21 @@
       {
         "status": 200,
         "body": "{canSelect:!row }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,id,heroKey }"
       }
     ]
+  },
+  {
+    "method": "GET",
+    "path": "/tick",
+    "file": "server\\routes\\game_tick.js",
+    "line": 10,
+    "sample": {
+      "query": {
+        "sinceChatId": 1,
+        "includeLoot": "value",
+        "includeCombat": "value"
+      }
+    },
+    "errors": []
   }
 ]

@@ -22,6 +22,28 @@
     ]
   },
   {
+    "key": "CATALOG_CACHE_ENABLED",
+    "occurrences": [
+      {
+        "file": "server\\services\\catalogCache.js",
+        "index": 201
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "CATALOG_CACHE_REFRESH_SEC",
+    "occurrences": [
+      {
+        "file": "server\\services\\catalogCache.js",
+        "index": 304
+      }
+    ],
+    "defaults": [
+      "120"
+    ]
+  },
+  {
     "key": "COMBAT_DEBUG",
     "occurrences": [
       {
@@ -48,7 +70,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1387
+        "index": 1663
       }
     ],
     "defaults": [
@@ -72,7 +94,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 16749
+        "index": 17345
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -174,15 +196,89 @@
       },
       {
         "file": "server\\models\\db.js",
-        "index": 93
+        "index": 89
       },
       {
         "file": "server\\models\\db.js",
-        "index": 299
+        "index": 442
       },
       {
         "file": "server\\models\\db.js",
-        "index": 986
+        "index": 552
+      },
+      {
+        "file": "server\\db\\index.js",
+        "index": 198
+      },
+      {
+        "file": "server\\db\\index.js",
+        "index": 265
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "DB_IDLE_CLOSE_MINUTES",
+    "occurrences": [
+      {
+        "file": "server\\services\\idlePoolCloser.js",
+        "index": 151
+      }
+    ],
+    "defaults": [
+      "0"
+    ]
+  },
+  {
+    "key": "DEBUG_CATALOG_CACHE",
+    "occurrences": [
+      {
+        "file": "server\\services\\catalogCache.js",
+        "index": 392
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "ENDPOINT_METRICS_INTERVAL_MS",
+    "occurrences": [
+      {
+        "file": "server\\middleware\\endpoint-metrics.js",
+        "index": 241
+      }
+    ],
+    "defaults": [
+      "60000"
+    ]
+  },
+  {
+    "key": "ENDPOINT_METRICS_PROD",
+    "occurrences": [
+      {
+        "file": "server\\middleware\\endpoint-metrics.js",
+        "index": 419
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "ENDPOINT_METRICS_TOP_N",
+    "occurrences": [
+      {
+        "file": "server\\middleware\\endpoint-metrics.js",
+        "index": 346
+      }
+    ],
+    "defaults": [
+      "10"
+    ]
+  },
+  {
+    "key": "GEN_CONTEXT_ON_START",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 19092
       }
     ],
     "defaults": []
@@ -192,7 +288,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 16656
+        "index": 17252
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -233,7 +329,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1928
+        "index": 2204
       },
       {
         "file": "server\\skills\\routes.js",
@@ -244,11 +340,16 @@
         "index": 7557
       },
       {
+        "file": "server\\middleware\\endpoint-metrics.js",
+        "index": 479
+      },
+      {
         "file": "server\\auth\\middleware.js",
         "index": 303
       }
     ],
     "defaults": [
+      "development",
       "development",
       "development",
       "development"
@@ -269,11 +370,119 @@
     "defaults": []
   },
   {
+    "key": "PG_IDLE",
+    "occurrences": [
+      {
+        "file": "server\\db\\index.js",
+        "index": 459
+      },
+      {
+        "file": "server\\db\\index.js",
+        "index": 913
+      }
+    ],
+    "defaults": [
+      "30000",
+      "30000"
+    ]
+  },
+  {
+    "key": "PGDATABASE",
+    "occurrences": [
+      {
+        "file": "server\\db\\index.js",
+        "index": 713
+      }
+    ],
+    "defaults": [
+      "postgres"
+    ]
+  },
+  {
+    "key": "PGHOST",
+    "occurrences": [
+      {
+        "file": "server\\db\\index.js",
+        "index": 526
+      }
+    ],
+    "defaults": [
+      "localhost"
+    ]
+  },
+  {
+    "key": "PGPASSWORD",
+    "occurrences": [
+      {
+        "file": "server\\db\\index.js",
+        "index": 668
+      }
+    ],
+    "defaults": [
+      ""
+    ]
+  },
+  {
+    "key": "PGPOOL_MAX",
+    "occurrences": [
+      {
+        "file": "server\\db\\index.js",
+        "index": 395
+      },
+      {
+        "file": "server\\db\\index.js",
+        "index": 851
+      }
+    ],
+    "defaults": [
+      "10",
+      "10"
+    ]
+  },
+  {
+    "key": "PGPORT",
+    "occurrences": [
+      {
+        "file": "server\\db\\index.js",
+        "index": 579
+      }
+    ],
+    "defaults": [
+      "5432"
+    ]
+  },
+  {
+    "key": "PGSSL",
+    "occurrences": [
+      {
+        "file": "server\\db\\index.js",
+        "index": 303
+      },
+      {
+        "file": "server\\db\\index.js",
+        "index": 761
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "PGUSER",
+    "occurrences": [
+      {
+        "file": "server\\db\\index.js",
+        "index": 619
+      }
+    ],
+    "defaults": [
+      "postgres"
+    ]
+  },
+  {
     "key": "PORT",
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1987
+        "index": 2263
       }
     ],
     "defaults": [
@@ -285,7 +494,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 16606
+        "index": 17202
       }
     ],
     "defaults": [
@@ -321,7 +530,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 16714
+        "index": 17310
       },
       {
         "file": "server\\auth\\middleware.js",

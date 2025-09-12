@@ -37,6 +37,10 @@
   },
   {
     "from": "client\\js\\app.js",
+    "to": "./tick.js"
+  },
+  {
+    "from": "client\\js\\app.js",
     "to": "./app_panels.js"
   },
   {
