@@ -67,6 +67,7 @@
   "POST /attack/stop": [
     "{ok:true }"
   ],
+  "GET /cache/stats": [],
   "GET /class-rates": [
     "{skills:rows }"
   ],

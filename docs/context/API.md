@@ -19,23 +19,22 @@
 - `DATABASE_URL`
 - `DB_IDLE_CLOSE_MINUTES` (defaults: 0)
 - `DEBUG_CATALOG_CACHE`
+- `DEBUG_LOOT_CACHE`
 - `ENDPOINT_METRICS_INTERVAL_MS` (defaults: 60000)
 - `ENDPOINT_METRICS_PROD`
 - `ENDPOINT_METRICS_TOP_N` (defaults: 10)
 - `GEN_CONTEXT_ON_START`
 - `JWT_SECRET` (defaults: changeme, CHANGE_ME_DEV_ONLY)
+- `LOOT_CACHE_ENABLED`
+- `LOOT_CACHE_TTL_SEC` (defaults: 5)
 - `LOOT_CLEANUP_EVERY_SECONDS` (defaults: 30)
 - `LOOT_EXPIRE_SECONDS` (defaults: 120)
 - `NODE_ENV` (defaults: development)
+- `PG_CONNECTION_TIMEOUT` (defaults: 5000)
 - `PG_DUMP_PATH`
 - `PG_IDLE` (defaults: 30000)
-- `PGDATABASE` (defaults: postgres)
-- `PGHOST` (defaults: localhost)
-- `PGPASSWORD` (defaults: )
-- `PGPOOL_MAX` (defaults: 10)
-- `PGPORT` (defaults: 5432)
-- `PGSSL`
-- `PGUSER` (defaults: postgres)
+- `PG_POOL_MAX` (defaults: process.env.PGPOOL_MAX)
+- `PGPOOL_MAX`
 - `PORT` (defaults: 3000)
 - `REDIS_URL` (defaults: null)
 - `RESPAWN_DEBUG` (defaults: )
@@ -420,6 +419,15 @@ _Sem payload inferido_
 - `HTTP 500` → {error:"Falha ao listar sprites" }
 - `HTTP 500` → {error:"Falha ao listar items" }
 
+### GET /cache/stats
+
+Arquivo: `server\routes\loot.js:173`
+
+_Sem payload inferido_
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:'cache-stats-failed' }
+
 ### GET /class-rates
 
 Arquivo: `server\skills\routes.js:40`
@@ -563,7 +571,7 @@ Arquivo: `server\starter\routes.js:56`
 
 ### GET /map/:mapKey/loot
 
-Arquivo: `server\routes\loot.js:62`
+Arquivo: `server\routes\loot.js:63`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -595,6 +603,7 @@ Arquivo: `server\routes\loot.js:62`
 - `HTTP 400` → {error:'bad-args' }
 - `HTTP 400` → {error:'not-enough-qty' }
 - `HTTP 500` → {error:'drop-failed' }
+- `HTTP 500` → {error:'cache-stats-failed' }
 
 ### GET /me
 
@@ -1190,7 +1199,7 @@ _Sem payload inferido_
 
 ### POST /loot/drop
 
-Arquivo: `server\routes\loot.js:123`
+Arquivo: `server\routes\loot.js:129`
 
 _Sem payload inferido_
 
@@ -1203,10 +1212,11 @@ _Sem payload inferido_
 - `HTTP 400` → {error:'bad-args' }
 - `HTTP 400` → {error:'not-enough-qty' }
 - `HTTP 500` → {error:'drop-failed' }
+- `HTTP 500` → {error:'cache-stats-failed' }
 
 ### POST /loot/pickup
 
-Arquivo: `server\routes\loot.js:74`
+Arquivo: `server\routes\loot.js:75`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1231,6 +1241,7 @@ Arquivo: `server\routes\loot.js:74`
 - `HTTP 400` → {error:'bad-args' }
 - `HTTP 400` → {error:'not-enough-qty' }
 - `HTTP 500` → {error:'drop-failed' }
+- `HTTP 500` → {error:'cache-stats-failed' }
 
 ### POST /move
 
@@ -1489,6 +1500,8 @@ Arquivo: `server\starter\routes.js:120`
 - **GET /assets/sprites**
   - HTTP 500: {error:"Falha ao listar sprites" }
   - HTTP 500: {error:"Falha ao listar items" }
+- **GET /cache/stats**
+  - HTTP 500: {error:'cache-stats-failed' }
 - **GET /class-rates**
   - HTTP 500: {error:'Falha ao listar rates' }
   - HTTP 400: {error:'heroId é obrigatório' }
@@ -1535,6 +1548,7 @@ Arquivo: `server\starter\routes.js:120`
   - HTTP 400: {error:'bad-args' }
   - HTTP 400: {error:'not-enough-qty' }
   - HTTP 500: {error:'drop-failed' }
+  - HTTP 500: {error:'cache-stats-failed' }
 - **GET /me**
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
@@ -1698,6 +1712,7 @@ Arquivo: `server\starter\routes.js:120`
   - HTTP 400: {error:'bad-args' }
   - HTTP 400: {error:'not-enough-qty' }
   - HTTP 500: {error:'drop-failed' }
+  - HTTP 500: {error:'cache-stats-failed' }
 - **POST /loot/pickup**
   - HTTP 400: {error:'bad-args' }
   - HTTP 400: {error:'no-backpack' }
@@ -1707,6 +1722,7 @@ Arquivo: `server\starter\routes.js:120`
   - HTTP 400: {error:'bad-args' }
   - HTTP 400: {error:'not-enough-qty' }
   - HTTP 500: {error:'drop-failed' }
+  - HTTP 500: {error:'cache-stats-failed' }
 - **POST /move**
   - HTTP 409: {error:'old-seq' }
   - HTTP 400: {error:'too-fast' }

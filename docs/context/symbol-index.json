@@ -702,15 +702,6 @@
     ]
   },
   {
-    "file": "server\\db\\index.js",
-    "symbols": [
-      "all",
-      "buildConfig",
-      "get",
-      "run"
-    ]
-  },
-  {
     "file": "server\\gacha\\routes.js",
     "symbols": [
       "chooseHeroFromPool",
@@ -945,6 +936,16 @@
       "nowMs",
       "pickupLoot",
       "startCleanupLoop"
+    ]
+  },
+  {
+    "file": "server\\services\\lootCache.js",
+    "symbols": [
+      "cleanupExpired",
+      "clear",
+      "getMapLoot",
+      "getStats",
+      "invalidateMap"
     ]
   },
   {

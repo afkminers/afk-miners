@@ -390,6 +390,12 @@
       "body": "{ok:false,error:'no-such-alive' }"
     }
   ],
+  "GET /cache/stats": [
+    {
+      "status": 500,
+      "body": "{error:'cache-stats-failed' }"
+    }
+  ],
   "GET /class-rates": [
     {
       "status": 500,
@@ -712,6 +718,10 @@
     {
       "status": 500,
       "body": "{error:'drop-failed' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'cache-stats-failed' }"
     }
   ],
   "POST /loot/pickup": [
@@ -746,6 +756,10 @@
     {
       "status": 500,
       "body": "{error:'drop-failed' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'cache-stats-failed' }"
     }
   ],
   "GET /map/:mapKey/loot": [
@@ -784,6 +798,10 @@
     {
       "status": 500,
       "body": "{error:'drop-failed' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'cache-stats-failed' }"
     }
   ],
   "GET /me": [

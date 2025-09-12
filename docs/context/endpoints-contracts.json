@@ -800,6 +800,19 @@
   },
   {
     "method": "GET",
+    "path": "/cache/stats",
+    "file": "server\\routes\\loot.js",
+    "line": 173,
+    "sample": {},
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'cache-stats-failed' }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
     "path": "/class-rates",
     "file": "server\\skills\\routes.js",
     "line": 40,
@@ -1410,7 +1423,7 @@
     "method": "POST",
     "path": "/loot/drop",
     "file": "server\\routes\\loot.js",
-    "line": 123,
+    "line": 129,
     "sample": {},
     "errors": [
       {
@@ -1424,6 +1437,10 @@
       {
         "status": 500,
         "body": "{error:'drop-failed' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'cache-stats-failed' }"
       }
     ],
     "ok": [
@@ -1437,7 +1454,7 @@
     "method": "POST",
     "path": "/loot/pickup",
     "file": "server\\routes\\loot.js",
-    "line": 74,
+    "line": 75,
     "sample": {
       "body": {
         "try {\n    const { heroId": 1,
@@ -1476,6 +1493,10 @@
       {
         "status": 500,
         "body": "{error:'drop-failed' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'cache-stats-failed' }"
       }
     ],
     "ok": [
@@ -1493,7 +1514,7 @@
     "method": "GET",
     "path": "/map/:mapKey/loot",
     "file": "server\\routes\\loot.js",
-    "line": 62,
+    "line": 63,
     "sample": {
       "params": {
         "mapKey": "value"
@@ -1539,6 +1560,10 @@
       {
         "status": 500,
         "body": "{error:'drop-failed' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'cache-stats-failed' }"
       }
     ],
     "ok": [

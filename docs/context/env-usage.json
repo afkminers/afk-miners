@@ -200,19 +200,11 @@
       },
       {
         "file": "server\\models\\db.js",
-        "index": 442
+        "index": 551
       },
       {
         "file": "server\\models\\db.js",
-        "index": 552
-      },
-      {
-        "file": "server\\db\\index.js",
-        "index": 198
-      },
-      {
-        "file": "server\\db\\index.js",
-        "index": 265
+        "index": 1091
       }
     ],
     "defaults": []
@@ -235,6 +227,16 @@
       {
         "file": "server\\services\\catalogCache.js",
         "index": 392
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "DEBUG_LOOT_CACHE",
+    "occurrences": [
+      {
+        "file": "server\\services\\lootCache.js",
+        "index": 372
       }
     ],
     "defaults": []
@@ -301,6 +303,28 @@
     ]
   },
   {
+    "key": "LOOT_CACHE_ENABLED",
+    "occurrences": [
+      {
+        "file": "server\\services\\lootCache.js",
+        "index": 195
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "LOOT_CACHE_TTL_SEC",
+    "occurrences": [
+      {
+        "file": "server\\services\\lootCache.js",
+        "index": 288
+      }
+    ],
+    "defaults": [
+      "5"
+    ]
+  },
+  {
     "key": "LOOT_CLEANUP_EVERY_SECONDS",
     "occurrences": [
       {
@@ -356,6 +380,18 @@
     ]
   },
   {
+    "key": "PG_CONNECTION_TIMEOUT",
+    "occurrences": [
+      {
+        "file": "server\\models\\db.js",
+        "index": 398
+      }
+    ],
+    "defaults": [
+      "5000"
+    ]
+  },
+  {
     "key": "PG_DUMP_PATH",
     "occurrences": [
       {
@@ -373,109 +409,35 @@
     "key": "PG_IDLE",
     "occurrences": [
       {
-        "file": "server\\db\\index.js",
-        "index": 459
-      },
-      {
-        "file": "server\\db\\index.js",
-        "index": 913
+        "file": "server\\models\\db.js",
+        "index": 473
       }
     ],
     "defaults": [
-      "30000",
       "30000"
     ]
   },
   {
-    "key": "PGDATABASE",
+    "key": "PG_POOL_MAX",
     "occurrences": [
       {
-        "file": "server\\db\\index.js",
-        "index": 713
+        "file": "server\\models\\db.js",
+        "index": 310
       }
     ],
     "defaults": [
-      "postgres"
-    ]
-  },
-  {
-    "key": "PGHOST",
-    "occurrences": [
-      {
-        "file": "server\\db\\index.js",
-        "index": 526
-      }
-    ],
-    "defaults": [
-      "localhost"
-    ]
-  },
-  {
-    "key": "PGPASSWORD",
-    "occurrences": [
-      {
-        "file": "server\\db\\index.js",
-        "index": 668
-      }
-    ],
-    "defaults": [
-      ""
+      "process.env.PGPOOL_MAX"
     ]
   },
   {
     "key": "PGPOOL_MAX",
     "occurrences": [
       {
-        "file": "server\\db\\index.js",
-        "index": 395
-      },
-      {
-        "file": "server\\db\\index.js",
-        "index": 851
-      }
-    ],
-    "defaults": [
-      "10",
-      "10"
-    ]
-  },
-  {
-    "key": "PGPORT",
-    "occurrences": [
-      {
-        "file": "server\\db\\index.js",
-        "index": 579
-      }
-    ],
-    "defaults": [
-      "5432"
-    ]
-  },
-  {
-    "key": "PGSSL",
-    "occurrences": [
-      {
-        "file": "server\\db\\index.js",
-        "index": 303
-      },
-      {
-        "file": "server\\db\\index.js",
-        "index": 761
+        "file": "server\\models\\db.js",
+        "index": 337
       }
     ],
     "defaults": []
-  },
-  {
-    "key": "PGUSER",
-    "occurrences": [
-      {
-        "file": "server\\db\\index.js",
-        "index": 619
-      }
-    ],
-    "defaults": [
-      "postgres"
-    ]
   },
   {
     "key": "PORT",

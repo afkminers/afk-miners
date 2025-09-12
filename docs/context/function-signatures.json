@@ -446,6 +446,45 @@
     ]
   },
   {
+    "file": "server\\services\\lootCache.js",
+    "line": 25,
+    "kind": "function",
+    "name": "getMapLoot",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\services\\lootCache.js",
+    "line": 71,
+    "kind": "function",
+    "name": "invalidateMap",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\services\\lootCache.js",
+    "line": 85,
+    "kind": "function",
+    "name": "clear",
+    "params": []
+  },
+  {
+    "file": "server\\services\\lootCache.js",
+    "line": 97,
+    "kind": "function",
+    "name": "getStats",
+    "params": []
+  },
+  {
+    "file": "server\\services\\lootCache.js",
+    "line": 117,
+    "kind": "function",
+    "name": "cleanupExpired",
+    "params": []
+  },
+  {
     "file": "server\\services\\loot.js",
     "line": 17,
     "kind": "function",
@@ -1108,14 +1147,14 @@
   },
   {
     "file": "server\\routes\\loot.js",
-    "line": 15,
+    "line": 16,
     "kind": "arrow",
     "name": "broadcastToMap",
     "params": []
   },
   {
     "file": "server\\routes\\loot.js",
-    "line": 21,
+    "line": 22,
     "kind": "function",
     "name": "takeFromBackpack",
     "params": [
@@ -1423,14 +1462,14 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 13,
+    "line": 12,
     "kind": "function",
     "name": "getPool",
     "params": []
   },
   {
     "file": "server\\models\\db.js",
-    "line": 31,
+    "line": 47,
     "kind": "function",
     "name": "all",
     "params": [
@@ -1440,7 +1479,7 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 36,
+    "line": 52,
     "kind": "function",
     "name": "get",
     "params": [
@@ -1450,7 +1489,7 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 46,
+    "line": 61,
     "kind": "function",
     "name": "run",
     "params": [
@@ -1460,14 +1499,14 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 51,
+    "line": 65,
     "kind": "function",
     "name": "closePool",
     "params": []
   },
   {
     "file": "server\\models\\db.js",
-    "line": 64,
+    "line": 78,
     "kind": "arrow",
     "name": "shutdown",
     "params": []
@@ -1574,43 +1613,6 @@
     "name": "doSingleSummon",
     "params": [
       "playerId"
-    ]
-  },
-  {
-    "file": "server\\db\\index.js",
-    "line": 7,
-    "kind": "function",
-    "name": "buildConfig",
-    "params": []
-  },
-  {
-    "file": "server\\db\\index.js",
-    "line": 30,
-    "kind": "function",
-    "name": "all",
-    "params": [
-      "sql",
-      "params"
-    ]
-  },
-  {
-    "file": "server\\db\\index.js",
-    "line": 35,
-    "kind": "function",
-    "name": "get",
-    "params": [
-      "sql",
-      "params"
-    ]
-  },
-  {
-    "file": "server\\db\\index.js",
-    "line": 40,
-    "kind": "function",
-    "name": "run",
-    "params": [
-      "sql",
-      "params"
     ]
   },
   {
