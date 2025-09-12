@@ -142,7 +142,45 @@ Enhanced database module to support pool recreation after idle shutdown.
 - Automatic reconnection on next query
 - Maintains existing API compatibility
 
-### 7. Cost Calculation Script
+### 7. Loot Cache Service
+
+**File**: `server/services/lootCache.js`
+
+In-memory TTL cache for GET /api/map/:mapKey/loot endpoint responses to reduce redundant loot data queries.
+
+**Environment Variables**:
+```bash
+LOOT_CACHE_ENABLED=1                  # Enable cache (default: enabled)
+LOOT_CACHE_TTL_SEC=5                  # Cache TTL in seconds (default: 5)
+DEBUG_LOOT_CACHE=1                    # Log cache hits/misses for debugging
+```
+
+**API**:
+```javascript
+const lootCache = require('../services/lootCache');
+
+// Get cached loot data (used automatically by route)
+const loot = await lootCache.getMapLoot('house');
+
+// Invalidate cache for a map
+lootCache.invalidateMap('house');
+
+// Get cache statistics
+const stats = lootCache.getStats();
+
+// Clear all cache
+lootCache.clear();
+```
+
+**Debug Endpoint**: `GET /api/loot/cache/stats` returns cache statistics.
+
+**Benefits**:
+- Reduces redundant calls to loot service for frequently polled endpoints
+- Configurable TTL to balance freshness vs performance
+- Automatic cache invalidation when loot is picked up or dropped
+- Memory efficient with automatic cleanup of expired entries
+
+### 8. Cost Calculation Script
 
 **File**: `scripts/calc-cost-local.js`
 
@@ -183,6 +221,11 @@ CATALOG_CACHE_ENABLED=1
 CATALOG_CACHE_REFRESH_SEC=120
 # DEBUG_CATALOG_CACHE=1            # Uncomment for cache debugging
 
+# Loot endpoint caching (recommended for high-frequency polling)
+LOOT_CACHE_ENABLED=1
+LOOT_CACHE_TTL_SEC=5
+# DEBUG_LOOT_CACHE=1                  # Uncomment for cache debugging
+
 # Idle pool management (optional - test carefully)
 # DB_IDLE_CLOSE_MINUTES=15         # Uncomment to enable
 
@@ -206,7 +249,7 @@ Add cost calculation script:
 
 ### 1. Enable Features Gradually
 
-1. **Start with caching**: Enable `CATALOG_CACHE_ENABLED=1` (safest)
+1. **Start with caching**: Enable `CATALOG_CACHE_ENABLED=1` and `LOOT_CACHE_ENABLED=1` (safest)
 2. **Add metrics**: Enable endpoint metrics to measure current usage
 3. **Deploy and monitor**: Check logs for cache hits and endpoint patterns
 4. **Migrate to tick endpoint**: Update client to use `/api/game/tick`
@@ -274,10 +317,11 @@ With all optimizations enabled:
 
 If issues occur, disable features incrementally:
 
-1. Set `CATALOG_CACHE_ENABLED=0` to disable caching
-2. Remove `DB_IDLE_CLOSE_MINUTES` to disable idle management
-3. Keep using individual endpoints instead of `/api/game/tick`
-4. All existing endpoints remain functional for compatibility
+1. Set `CATALOG_CACHE_ENABLED=0` to disable catalog caching
+2. Set `LOOT_CACHE_ENABLED=0` to disable loot caching
+3. Remove `DB_IDLE_CLOSE_MINUTES` to disable idle management
+4. Keep using individual endpoints instead of `/api/game/tick`
+5. All existing endpoints remain functional for compatibility
 
 ## Future Enhancements
 
