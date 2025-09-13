@@ -4,6 +4,7 @@
 
 - `APP_ORIGIN`
 - `APP_ORIGINS` (defaults: process.env.APP_ORIGIN)
+- `ASSETS_CACHE_TTL_MS` (defaults: 300000)
 - `CATALOG_CACHE_ENABLED`
 - `CATALOG_CACHE_REFRESH_SEC` (defaults: 120)
 - `COMBAT_DEBUG` (defaults: )
@@ -19,11 +20,13 @@
 - `DATABASE_URL`
 - `DB_IDLE_CLOSE_MINUTES` (defaults: 0)
 - `DEBUG_CATALOG_CACHE`
+- `DEBUG_HTTP_CACHE`
 - `DEBUG_LOOT_CACHE`
 - `ENDPOINT_METRICS_INTERVAL_MS` (defaults: 60000)
 - `ENDPOINT_METRICS_PROD`
 - `ENDPOINT_METRICS_TOP_N` (defaults: 10)
 - `GEN_CONTEXT_ON_START`
+- `IDLE_SCHEDULER_CHECK_MS` (defaults: 30000)
 - `JWT_SECRET` (defaults: changeme, CHANGE_ME_DEV_ONLY)
 - `LOOT_CACHE_ENABLED`
 - `LOOT_CACHE_TTL_SEC` (defaults: 5)
@@ -41,12 +44,14 @@
 - `RESPAWN_TICK_MS` (defaults: 5000)
 - `SESSION_COOKIE_NAME` (defaults: process.env.COOKIE_NAME)
 - `SKILL_TRY_PER_HIT` (defaults: 1)
+- `SKIP_MIGRATIONS_ON_BOOT`
+- `SYNC_SPAWNS_INTERVAL_MS` (defaults: 300000)
 
 ## Endpoints
 
 ### GET /
 
-Arquivo: `server\index.js:491`
+Arquivo: `server\index.js:538`
 
 _Sem payload inferido_
 
@@ -158,7 +163,7 @@ Arquivo: `server\combat\routes.js:39`
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:460`
+Arquivo: `server\index.js:507`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -186,7 +191,7 @@ Arquivo: `server\index.js:460`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:435`
+Arquivo: `server\index.js:482`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -216,7 +221,7 @@ Arquivo: `server\index.js:435`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:447`
+Arquivo: `server\index.js:494`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -245,7 +250,7 @@ Arquivo: `server\index.js:447`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:424`
+Arquivo: `server\index.js:471`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -270,7 +275,7 @@ Arquivo: `server\index.js:424`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:394`
+Arquivo: `server\index.js:415`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -298,7 +303,7 @@ Arquivo: `server\index.js:394`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:405`
+Arquivo: `server\index.js:426`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -325,7 +330,7 @@ Arquivo: `server\index.js:405`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:414`
+Arquivo: `server\index.js:448`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -351,7 +356,7 @@ Arquivo: `server\index.js:414`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:768`
+Arquivo: `server\index.js:951`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -396,7 +401,7 @@ Arquivo: `server\routes\combat_nearest.js:28`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:81`
+Arquivo: `server\index.js:93`
 
 _Sem payload inferido_
 
@@ -869,7 +874,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:470`
+Arquivo: `server\index.js:517`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -889,7 +894,7 @@ Arquivo: `server\index.js:470`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:791`
+Arquivo: `server\index.js:974`
 
 _Sem payload inferido_
 

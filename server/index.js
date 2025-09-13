@@ -3,8 +3,15 @@ require('dotenv').config();
 
 const path = require('path');
 const express = require('express');
-const cors = require('cors');
 const http = require('http');
+
+// Segurança e performance
+const compression = require('compression');
+const helmetMiddleware = require('./middleware/security-headers');
+const { buildCors } = require('./middleware/cors-allowlist');
+const bodyParserLimited = require('./middleware/body-limit');
+const makeLimiter = require('./middleware/limiter');
+const { isOriginAllowed } = require('./ws/origins');
 
 const { all, get, run } = require('./models/db'); // PG helpers
 const { migrate } = require('./models/migrate');
@@ -82,8 +89,12 @@ const SKIP_MIGRATIONS_ON_BOOT = process.env.SKIP_MIGRATIONS_ON_BOOT === '1';
 // ========= APP =========
 const app = express();
 app.use(cookieParser());
-app.use(express.json());
-app.use(cors({ origin: true, credentials: true }));
+
+// Middlewares de segurança e performance
+app.use(helmetMiddleware);
+app.use(buildCors());
+app.use(bodyParserLimited());
+app.use(compression());
 
 // Add optimization middleware
 app.use(endpointMetrics);
@@ -94,6 +105,10 @@ app.get('/api/csrf', csrfRoute);
 
 // 2) CSRF guard global (métodos que mudam estado)
 app.use(requireCsrf);
+
+// Rate limits direcionados (sem alterar resposta das rotas)
+app.use('/api/player/pos', makeLimiter({ windowMs: 1000, max: 10 }));
+app.use('/api/game/tick',  makeLimiter({ windowMs: 1000, max: 6  }));
 
 /* ========= Bootstrap: tabelas do pipeline (Postgres) ========= */
 async function bootstrapContentTables() {
@@ -772,7 +787,8 @@ let idleSchedulerTimer = null;
 
     if (useWebSocket) {
       const WebSocketServer = WebSocketLib.Server;
-      wss = new WebSocketServer({ server, path: '/ws' });
+      // Hardening: limita payload do WS
+      wss = new WebSocketServer({ server, path: '/ws', maxPayload: 32 * 1024 });
       attachWsBus(wss);
       setupHeartbeat(wss); // <<< Heartbeat habilitado
       setupRedis(wss).catch(() => {});
@@ -780,12 +796,21 @@ let idleSchedulerTimer = null;
       const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
 
       wss.on('connection', (ws, req) => {
+        // Checagem de Origin (CORS para WS)
+        const origin = req.headers.origin || '';
+        if (!isOriginAllowed(origin)) {
+          try { ws.close(1008, 'origin not allowed'); } catch {}
+          return;
+        }
+
         // Track WebSocket activity for idle management
         idlePoolCloser.updateLastRequest();
         
         const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
         console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
-        console.log('[ws] cookies header:', req.headers && req.headers.cookie);
+        if (NODE_ENV !== 'production') {
+          console.log('[ws] cookies header:', req.headers && req.headers.cookie);
+        }
 
         ws._connectedAt = Date.now();
         ws._player = null;

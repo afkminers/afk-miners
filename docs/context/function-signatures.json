@@ -144,21 +144,21 @@
   },
   {
     "file": "server\\index.js",
-    "line": 50,
+    "line": 52,
     "kind": "arrow",
     "name": "syncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 87,
+    "line": 99,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 252,
+    "line": 273,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -167,7 +167,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 482,
+    "line": 529,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -176,7 +176,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 536,
+    "line": 583,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -185,12 +185,56 @@
   },
   {
     "file": "server\\index.js",
-    "line": 548,
+    "line": 596,
+    "kind": "function",
+    "name": "setupHeartbeat",
+    "params": [
+      "wss"
+    ]
+  },
+  {
+    "file": "server\\index.js",
+    "line": 598,
+    "kind": "function",
+    "name": "noop",
+    "params": []
+  },
+  {
+    "file": "server\\index.js",
+    "line": 616,
     "kind": "function",
     "name": "setupRedis",
     "params": [
       "wss"
     ]
+  },
+  {
+    "file": "server\\index.js",
+    "line": 649,
+    "kind": "function",
+    "name": "checkIdleAndManageLoops",
+    "params": []
+  },
+  {
+    "file": "server\\index.js",
+    "line": 680,
+    "kind": "function",
+    "name": "idleAwareSyncSpawns",
+    "params": []
+  },
+  {
+    "file": "server\\index.js",
+    "line": 699,
+    "kind": "function",
+    "name": "startIdleScheduler",
+    "params": []
+  },
+  {
+    "file": "server\\index.js",
+    "line": 715,
+    "kind": "function",
+    "name": "stopIdleScheduler",
+    "params": []
   },
   {
     "file": "server\\ws\\initial_monsters.js",
@@ -218,6 +262,22 @@
     "params": [
       "{ mapKey: fallbackMapKey = 'house' } = {}"
     ]
+  },
+  {
+    "file": "server\\ws\\heartbeat.example.js",
+    "line": 1,
+    "kind": "function",
+    "name": "setupHeartbeat",
+    "params": [
+      "wss"
+    ]
+  },
+  {
+    "file": "server\\ws\\heartbeat.example.js",
+    "line": 2,
+    "kind": "function",
+    "name": "noop",
+    "params": []
   },
   {
     "file": "server\\ws\\chat-handler.js",
@@ -583,6 +643,62 @@
     "kind": "function",
     "name": "getStatus",
     "params": []
+  },
+  {
+    "file": "server\\services\\httpCache.js",
+    "line": 14,
+    "kind": "function",
+    "name": "get",
+    "params": [
+      "key"
+    ]
+  },
+  {
+    "file": "server\\services\\httpCache.js",
+    "line": 34,
+    "kind": "function",
+    "name": "set",
+    "params": [
+      "key",
+      "value",
+      "ttlMs"
+    ]
+  },
+  {
+    "file": "server\\services\\httpCache.js",
+    "line": 53,
+    "kind": "function",
+    "name": "makeEtagFromJSON",
+    "params": [
+      "value"
+    ]
+  },
+  {
+    "file": "server\\services\\httpCache.js",
+    "line": 62,
+    "kind": "function",
+    "name": "clear",
+    "params": []
+  },
+  {
+    "file": "server\\services\\httpCache.js",
+    "line": 70,
+    "kind": "function",
+    "name": "stats",
+    "params": []
+  },
+  {
+    "file": "server\\services\\httpCache.js",
+    "line": 85,
+    "kind": "function",
+    "name": "handleEtagResponse",
+    "params": [
+      "req",
+      "res",
+      "cacheKey",
+      "data",
+      "ttlMs"
+    ]
   },
   {
     "file": "server\\services\\heroStats.js",
@@ -3370,7 +3486,7 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 14,
+    "line": 28,
     "kind": "arrow",
     "name": "$",
     "params": [
@@ -3379,7 +3495,7 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 22,
+    "line": 36,
     "kind": "function",
     "name": "setStatus",
     "params": [
@@ -3388,23 +3504,14 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 23,
+    "line": 37,
     "kind": "function",
     "name": "clearCanvas",
     "params": []
   },
   {
     "file": "client\\js\\house.js",
-    "line": 26,
-    "kind": "function",
-    "name": "loadImg",
-    "params": [
-      "src"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 36,
+    "line": 40,
     "kind": "function",
     "name": "jget",
     "params": [
@@ -3413,7 +3520,7 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 41,
+    "line": 45,
     "kind": "function",
     "name": "postWithCsrf",
     "params": [
@@ -3422,14 +3529,33 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 63,
+    "line": 67,
     "kind": "function",
     "name": "syncCameraSize",
     "params": []
   },
   {
     "file": "client\\js\\house.js",
-    "line": 72,
+    "line": 82,
+    "kind": "function",
+    "name": "loadImgWithCandidates",
+    "params": [
+      "candidates"
+    ]
+  },
+  {
+    "file": "client\\js\\house.js",
+    "line": 107,
+    "kind": "function",
+    "name": "resolveSprite",
+    "params": [
+      "look",
+      "monsterKey"
+    ]
+  },
+  {
+    "file": "client\\js\\house.js",
+    "line": 124,
     "kind": "function",
     "name": "drawGrid",
     "params": [
@@ -3439,7 +3565,7 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 81,
+    "line": 134,
     "kind": "function",
     "name": "worldToScreen",
     "params": [
@@ -3449,14 +3575,14 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 85,
+    "line": 138,
     "kind": "function",
     "name": "drawGround",
     "params": []
   },
   {
     "file": "client\\js\\house.js",
-    "line": 114,
+    "line": 166,
     "kind": "function",
     "name": "drawEntity",
     "params": [
@@ -3465,7 +3591,7 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 137,
+    "line": 191,
     "kind": "function",
     "name": "update",
     "params": [
@@ -3474,28 +3600,21 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 165,
+    "line": 219,
     "kind": "function",
-    "name": "connectWS",
+    "name": "initPosSync",
     "params": []
   },
   {
     "file": "client\\js\\house.js",
-    "line": 186,
+    "line": 230,
     "kind": "function",
-    "name": "maybeSendPos",
+    "name": "sendMyPos",
     "params": []
   },
   {
     "file": "client\\js\\house.js",
-    "line": 193,
-    "kind": "function",
-    "name": "startPolling",
-    "params": []
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 204,
+    "line": 235,
     "kind": "function",
     "name": "mergeSpawns",
     "params": [
@@ -3504,7 +3623,7 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 235,
+    "line": 262,
     "kind": "function",
     "name": "loop",
     "params": [
@@ -3513,23 +3632,14 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 246,
+    "line": 273,
     "kind": "function",
     "name": "startHub",
     "params": []
   },
   {
     "file": "client\\js\\house.js",
-    "line": 333,
-    "kind": "function",
-    "name": "appendChatRow",
-    "params": [
-      "msg"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 342,
+    "line": 360,
     "kind": "function",
     "name": "escapeHtml",
     "params": [
@@ -3538,23 +3648,25 @@
   },
   {
     "file": "client\\js\\house.js",
-    "line": 346,
+    "line": 363,
     "kind": "function",
-    "name": "wsAuthAndLoadHistory",
+    "name": "appendChatRow",
+    "params": [
+      "msg"
+    ]
+  },
+  {
+    "file": "client\\js\\house.js",
+    "line": 373,
+    "kind": "function",
+    "name": "initChat",
     "params": []
   },
   {
     "file": "client\\js\\house.js",
-    "line": 361,
+    "line": 407,
     "kind": "function",
     "name": "sendChat",
-    "params": []
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 392,
-    "kind": "function",
-    "name": "ensureWsAuthOnConnect",
     "params": []
   },
   {
@@ -4395,14 +4507,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 13,
+    "line": 14,
     "kind": "function",
     "name": "getCsrf",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 23,
+    "line": 24,
     "kind": "function",
     "name": "jget",
     "params": [
@@ -4411,7 +4523,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 29,
+    "line": 30,
     "kind": "function",
     "name": "jpost",
     "params": [
@@ -4421,7 +4533,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 60,
+    "line": 61,
     "kind": "function",
     "name": "setRootVar",
     "params": [
@@ -4431,7 +4543,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 61,
+    "line": 62,
     "kind": "function",
     "name": "getRootVar",
     "params": [
@@ -4441,28 +4553,28 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 68,
+    "line": 69,
     "kind": "function",
     "name": "updateTopbarHeight",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 76,
+    "line": 77,
     "kind": "function",
     "name": "mountSceneHouse",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 92,
+    "line": 93,
     "kind": "function",
     "name": "applyViewport",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 116,
+    "line": 117,
     "kind": "function",
     "name": "makeVSplitter",
     "params": [
@@ -4472,7 +4584,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 118,
+    "line": 119,
     "kind": "function",
     "name": "onDown",
     "params": [
@@ -4481,7 +4593,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 126,
+    "line": 127,
     "kind": "function",
     "name": "onMove",
     "params": [
@@ -4490,14 +4602,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 133,
+    "line": 134,
     "kind": "function",
     "name": "onUp",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 151,
+    "line": 152,
     "kind": "function",
     "name": "onDown",
     "params": [
@@ -4506,7 +4618,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 159,
+    "line": 160,
     "kind": "function",
     "name": "onMove",
     "params": [
@@ -4515,21 +4627,21 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 166,
+    "line": 167,
     "kind": "function",
     "name": "onUp",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 189,
+    "line": 190,
     "kind": "function",
     "name": "applyUiFromSettings",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 230,
+    "line": 215,
     "kind": "function",
     "name": "markSeenId",
     "params": [
@@ -4538,7 +4650,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 234,
+    "line": 216,
     "kind": "function",
     "name": "hasSeenId",
     "params": [
@@ -4547,7 +4659,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 239,
+    "line": 217,
     "kind": "function",
     "name": "normStr",
     "params": [
@@ -4556,7 +4668,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 240,
+    "line": 218,
     "kind": "function",
     "name": "getTs",
     "params": [
@@ -4565,7 +4677,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 243,
+    "line": 220,
     "kind": "function",
     "name": "findPendingRowFor",
     "params": [
@@ -4574,7 +4686,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 267,
+    "line": 240,
     "kind": "function",
     "name": "appendChatRow",
     "params": [
@@ -4583,7 +4695,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 297,
+    "line": 265,
     "kind": "arrow",
     "name": "esc",
     "params": [
@@ -4592,34 +4704,158 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 338,
+    "line": 292,
     "kind": "function",
-    "name": "onReady",
-    "params": [
-      "fn"
-    ]
-  },
-  {
-    "file": "client\\js\\app.js",
-    "line": 360,
-    "kind": "function",
-    "name": "log",
-    "params": [
-      "...args"
-    ]
-  },
-  {
-    "file": "client\\js\\app.js",
-    "line": 362,
-    "kind": "function",
-    "name": "connectWS",
+    "name": "initGlobalChatUI",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 421,
+    "line": 330,
     "kind": "function",
     "name": "sendChat",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 348,
+    "kind": "arrow",
+    "name": "$",
+    "params": [
+      "id"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 354,
+    "kind": "function",
+    "name": "setStatus",
+    "params": [
+      "t"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 355,
+    "kind": "function",
+    "name": "clearCanvas",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 359,
+    "kind": "function",
+    "name": "loadImgWithCandidates",
+    "params": [
+      "candidates"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 386,
+    "kind": "function",
+    "name": "resolveSprite",
+    "params": [
+      "look",
+      "monsterKey"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 415,
+    "kind": "function",
+    "name": "syncCameraSize",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 425,
+    "kind": "function",
+    "name": "drawGrid",
+    "params": [
+      "cols",
+      "rows"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 433,
+    "kind": "function",
+    "name": "worldToScreen",
+    "params": [
+      "wx",
+      "wy"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 435,
+    "kind": "function",
+    "name": "drawGround",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 462,
+    "kind": "function",
+    "name": "drawEntity",
+    "params": [
+      "e"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 486,
+    "kind": "function",
+    "name": "initPosSync",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 499,
+    "kind": "function",
+    "name": "sendMyPos",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 504,
+    "kind": "function",
+    "name": "update",
+    "params": [
+      "dt"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 530,
+    "kind": "function",
+    "name": "mergeSpawns",
+    "params": [
+      "spawnsRows"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 557,
+    "kind": "function",
+    "name": "loop",
+    "params": [
+      "now"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 568,
+    "kind": "function",
+    "name": "startHub",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 635,
+    "kind": "arrow",
+    "name": "applyUiFromSettings",
     "params": []
   },
   {
@@ -4990,6 +5226,91 @@
     "kind": "function",
     "name": "attachButton",
     "params": []
+  },
+  {
+    "file": "client\\js\\ws\\singleton.js",
+    "line": 10,
+    "kind": "function",
+    "name": "url",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ws\\singleton.js",
+    "line": 15,
+    "kind": "function",
+    "name": "notify",
+    "params": [
+      "type",
+      "payload"
+    ]
+  },
+  {
+    "file": "client\\js\\ws\\singleton.js",
+    "line": 28,
+    "kind": "function",
+    "name": "attach",
+    "params": [
+      "wsInstance"
+    ]
+  },
+  {
+    "file": "client\\js\\ws\\singleton.js",
+    "line": 59,
+    "kind": "function",
+    "name": "connect",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ws\\singleton.js",
+    "line": 74,
+    "kind": "function",
+    "name": "scheduleReconnect",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ws\\singleton.js",
+    "line": 83,
+    "kind": "function",
+    "name": "getSocket",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ws\\singleton.js",
+    "line": 88,
+    "kind": "function",
+    "name": "wsSend",
+    "params": [
+      "msg"
+    ]
+  },
+  {
+    "file": "client\\js\\ws\\singleton.js",
+    "line": 99,
+    "kind": "function",
+    "name": "onMessage",
+    "params": [
+      "type",
+      "fn"
+    ]
+  },
+  {
+    "file": "client\\js\\ws\\singleton.js",
+    "line": 106,
+    "kind": "function",
+    "name": "offMessage",
+    "params": [
+      "type",
+      "fn"
+    ]
+  },
+  {
+    "file": "client\\js\\ws\\singleton.js",
+    "line": 115,
+    "kind": "function",
+    "name": "authenticate",
+    "params": [
+      "getIdentity"
+    ]
   },
   {
     "file": "client\\js\\ui\\skill_notify.js",
@@ -5968,6 +6289,35 @@
     "file": "client\\js\\combat\\render-combat.js",
     "line": 16,
     "kind": "function",
+    "name": "getSpriteFor",
+    "params": [
+      "id"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 19,
+    "kind": "function",
+    "name": "bindBySpawn",
+    "params": [
+      "id",
+      "spawnId"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 22,
+    "kind": "function",
+    "name": "bindByKey",
+    "params": [
+      "id",
+      "monsterKey"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 26,
+    "kind": "function",
     "name": "ensureSpriteBind",
     "params": [
       "id",
@@ -5977,14 +6327,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 24,
-    "kind": "function",
-    "name": "wsUrl",
-    "params": []
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 31,
+    "line": 35,
     "kind": "function",
     "name": "pushFloaterAtSprite",
     "params": [
@@ -6005,59 +6348,21 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 63,
+    "line": 62,
     "kind": "function",
-    "name": "getSpriteFor",
-    "params": [
-      "id"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 67,
-    "kind": "function",
-    "name": "bindBySpawn",
-    "params": [
-      "id",
-      "spawnId"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 71,
-    "kind": "function",
-    "name": "bindByKey",
-    "params": [
-      "id",
-      "monsterKey"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 76,
-    "kind": "function",
-    "name": "onWsMessage",
-    "params": [
-      "e"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 142,
-    "kind": "function",
-    "name": "connectCombatWS",
+    "name": "installWsHandlers",
     "params": []
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 154,
+    "line": 115,
     "kind": "function",
     "name": "startRebindLoop",
     "params": []
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 171,
+    "line": 132,
     "kind": "function",
     "name": "drawHpBarAtSprite",
     "params": [
@@ -6069,7 +6374,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 201,
+    "line": 158,
     "kind": "function",
     "name": "drawTargetBox",
     "params": [
@@ -6078,7 +6383,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 241,
+    "line": 220,
     "kind": "function",
     "name": "pickMobAtWorld",
     "params": [
@@ -6087,7 +6392,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 289,
+    "line": 241,
     "kind": "arrow",
     "name": "drawAll",
     "params": []

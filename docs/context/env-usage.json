@@ -22,6 +22,18 @@
     ]
   },
   {
+    "key": "ASSETS_CACHE_TTL_MS",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 2760
+      }
+    ],
+    "defaults": [
+      "300000"
+    ]
+  },
+  {
     "key": "CATALOG_CACHE_ENABLED",
     "occurrences": [
       {
@@ -70,7 +82,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1663
+        "index": 1733
       }
     ],
     "defaults": [
@@ -94,7 +106,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 17345
+        "index": 19334
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -232,6 +244,16 @@
     "defaults": []
   },
   {
+    "key": "DEBUG_HTTP_CACHE",
+    "occurrences": [
+      {
+        "file": "server\\services\\httpCache.js",
+        "index": 163
+      }
+    ],
+    "defaults": []
+  },
+  {
     "key": "DEBUG_LOOT_CACHE",
     "occurrences": [
       {
@@ -280,17 +302,29 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 19092
+        "index": 24321
       }
     ],
     "defaults": []
+  },
+  {
+    "key": "IDLE_SCHEDULER_CHECK_MS",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 2625
+      }
+    ],
+    "defaults": [
+      "30000"
+    ]
   },
   {
     "key": "JWT_SECRET",
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 17252
+        "index": 19241
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -353,7 +387,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2204
+        "index": 2274
       },
       {
         "file": "server\\skills\\routes.js",
@@ -444,7 +478,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2263
+        "index": 2333
       }
     ],
     "defaults": [
@@ -456,7 +490,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 17202
+        "index": 19191
       }
     ],
     "defaults": [
@@ -492,7 +526,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 17310
+        "index": 19299
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -514,6 +548,28 @@
     ],
     "defaults": [
       "1"
+    ]
+  },
+  {
+    "key": "SKIP_MIGRATIONS_ON_BOOT",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 2899
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "SYNC_SPAWNS_INTERVAL_MS",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 2517
+      }
+    ],
+    "defaults": [
+      "300000"
     ]
   }
 ]

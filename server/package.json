@@ -24,15 +24,18 @@
     "ctx:verify": "node scripts/verify-context.mjs",
     "backup:pre": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/backup-repo.ps1 -Label pre",
     "backup:post": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/backup-repo.ps1 -Label post",
-    "save": "node -e \"console.log('🚀 Salvando alterações no GitHub...')\" && npm run backup:pre && npm run deploy && npm run backup:post && node -e \"console.log('📦 Gerando snapshot zipado...')\" && npm run ctx:zip && node -e \"console.log('✅ Pronto! Agora só mandar o zip em nova conversa.')\""
+    "save": "node -e \"console.log('🚀 Salvando alterações no GitHub...')\" && npm run backup:pre && npm run deploy && npm run backup:post && node -e \"console.log('📦 Gerando snapshot zipado (ctx:zip)...')\" && npm run ctx:zip"
   },
   "dependencies": {
     "bcryptjs": "2.4.3",
     "body-parser": "1.20.3",
+    "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^7.2.0",
     "jsonwebtoken": "9.0.2",
     "pg": "^8.16.3",
     "redis": "5.8.0",
