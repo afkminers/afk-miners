@@ -74,6 +74,38 @@ async function resolveServerTarget(pxClick, pyClick) {
   } catch { return null; }
 }
 
+/** Local sprite picking with robust fallbacks for missing metadata */
+function pickMobAtWorld(pt) {
+  const K = 64; // default sprite size
+  const all = Array.from((window.combatState?.monsters || new Map()).values());
+  
+  for (const m of all) {
+    const s = window.GameScene?.getMobByInstanceId?.(String(m.id));
+    if (!s || s.hidden || s.dead) continue;
+    
+    const meta = s.meta || {};
+    // Use meta.frame if available, fallback to s.width/s.height, then default
+    let frameW = meta.frame?.width;
+    let frameH = meta.frame?.height;
+    
+    if (!frameW || !frameH) {
+      frameW = s.width || K;
+      frameH = s.height || K;
+    }
+    
+    const ax = meta.anchor?.x ?? 0.5;
+    const ay = meta.anchor?.y ?? 0.9;
+    
+    const ox = Math.round(s.x - frameW * ax);
+    const oy = Math.round(s.y - frameH * ay);
+    
+    if (pt.x >= ox && pt.x <= ox + frameW && pt.y >= oy && pt.y <= oy + frameH) {
+      return m.id;
+    }
+  }
+  return null;
+}
+
 async function doHit() {
   if (!combatState.attacking || !combatState.targetId) return;
   const hero = await ensureActiveHero();
