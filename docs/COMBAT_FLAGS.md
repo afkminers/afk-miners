@@ -1,97 +1,77 @@
-# Combat Flags Documentation
+# Combat Configuration Flags
 
-This document describes the environment flags that control the new Tibia-like combat system.
+This document describes the environment variables that control combat behavior in the AFK Miners game.
 
-## Environment Variables
+## Core Combat Variables
 
-### Client Behavior
+### `CLICK_REQUIRE_INTERSECT`
+- **Default**: `1` (enabled)
+- **Values**: `0` or `1`
+- **Description**: When enabled, requires the click point to intersect with the sprite rectangle for target selection. When disabled, falls back to radius-based selection.
+- **Use case**: Set to `0` for immediate testing if sprite rectangle metadata is missing.
 
-#### `ATTACK_USE_RMB` (default: `true`)
-Controls mouse input behavior for combat:
-- `true`: Right mouse button (RMB) starts attacks, left-click and RMB on empty space cancels
-- `false`: Legacy mode - left-click starts attacks
+### `CLICK_PICK_RADIUS_PX`
+- **Default**: `192` (6 tiles × 32px)
+- **Values**: Number (pixels)
+- **Description**: Maximum radius for monster selection when `CLICK_REQUIRE_INTERSECT=0` or when no sprite intersects.
 
-### Server Validation
+### `COMBAT_DEBUG`
+- **Default**: `0` (disabled)
+- **Values**: `0` or `1`
+- **Description**: Enables detailed logging of combat operations including target selection, sprite rectangles, and hit calculations.
 
-#### `ATTACK_STRICT_MODE` (default: `true`)
-Enables server-authoritative validation for combat:
-- `true`: Enforces range, line-of-sight, and weapon type validations on both `/attack/start` and `/hit`
-- `false`: Permissive mode for debugging (legacy behavior)
+## Sprite Intersection Logic
 
-### Targeting Configuration
+The combat system uses a sophisticated sprite intersection algorithm that:
 
-#### `CLICK_REQUIRE_INTERSECT` (default: `true`)
-Controls targeting strictness:
-- `true`: Only accept clicks that intersect the monster's bounding rectangle
-- `false`: Allow fallback radius-based selection when no intersection
+1. **Mirrors client logic**: Uses sprite metadata with anchor positioning (ax≈0.5, ay≈0.9) to create accurate hit boxes
+2. **Provides fallbacks**: Detects sprite sizes from monster keys (32px, 48px, 64px) when metadata is missing
+3. **Adds tolerance**: Inflates hit rectangles by 2px for better user experience
+4. **Supports strict mode**: Can require exact intersection or fall back to radius-based selection
 
-#### `CLICK_PICK_RADIUS_PX` (default: `96`)
-Fallback radius in pixels when `CLICK_REQUIRE_INTERSECT` is false:
-- Used when click doesn't directly intersect any monster
-- Default of 96px = 3 tiles (32px each)
+## Weapon Type Resolution
 
-#### `CLICK_MAX_DIST_PX` (default: `160`)
-Maximum allowed distance between click and player position:
-- Prevents accidental targeting of monsters far from the player
-- Default of 160px = 5 tiles
-- Only applies when player position (px, py) is provided
+Combat requires an equipped weapon in the WEAPON slot. The system performs strict weapon validation:
 
-## Weapon Range Configuration
+- Range/LOS and skill mapping come from `hero_equipment` → `items_master.weapon_type` → `weapon_skill_map`
+- If no weapon is equipped, both `/attack/start` and `/hit` will reject with `{ error: 'no-weapon-equipped' }`
+- **NO class-based fallback** is provided during combat
+- Skill gain only occurs when damage > 0
 
-The following environment variables control weapon ranges (existing system):
+This ensures proper game balance and equipment requirements.
 
-- `SWORD_RANGE_TILES` (default: `1`) - Melee weapon range
-- `AXE_RANGE_TILES` (default: `1`) - Melee weapon range  
-- `CLUB_RANGE_TILES` (default: `1`) - Melee weapon range
-- `BOW_RANGE_TILES` (default: `5`) - Ranged weapon range
-- `DISTANCE_RANGE_TILES` (default: `5`) - Alias for BOW_RANGE_TILES
-- `MAGIC_RANGE_TILES` (default: `8`) - Magic weapon range
+## Testing Configurations
 
-## Usage Examples
-
-### Development (Strict Mode)
+### Development Testing
 ```bash
-# Default strict behavior - all validations enabled
-ATTACK_USE_RMB=1
-ATTACK_STRICT_MODE=1
-CLICK_REQUIRE_INTERSECT=1
-npm run dev
-```
-
-### Testing/Debugging (Permissive Mode)
-```bash
-# Disable strict validations for debugging
-ATTACK_STRICT_MODE=0
+# Relaxed intersection for testing with incomplete sprite data
 CLICK_REQUIRE_INTERSECT=0
-CLICK_PICK_RADIUS_PX=192  # Larger radius
-npm run dev
+CLICK_PICK_RADIUS_PX=256
+COMBAT_DEBUG=1
 ```
 
-### Custom Targeting
+### Production Setup
 ```bash
-# Tighter targeting controls
+# Strict intersection with good sprite metadata
 CLICK_REQUIRE_INTERSECT=1
-CLICK_PICK_RADIUS_PX=64   # 2 tiles
-CLICK_MAX_DIST_PX=128     # 4 tiles
-npm run dev
+CLICK_PICK_RADIUS_PX=192
+COMBAT_DEBUG=0
 ```
 
-## Combat Flow
+## Troubleshooting
 
-1. **Client**: Right-click on monster or empty space
-2. **Client**: Local sprite hit-test using `pickMobAtWorld()`
-3. **Client**: If local pick fails, fallback to `/api/combat/nearest`
-4. **Server**: Validate click distance and intersection based on flags
-5. **Client**: Call `/api/combat/attack/start` with target ID
-6. **Server**: Validate range, LOS, and weapon type (if `ATTACK_STRICT_MODE=true`)
-7. **Client**: Start attack loop with `/api/combat/hit` calls
-8. **Server**: Validate each hit and apply damage via `applyHit()` service
+### "no-intersect" errors for small sprites
+1. Check if sprite metadata exists in `sprites_master` table
+2. Set `CLICK_REQUIRE_INTERSECT=0` as temporary workaround
+3. Verify monster key patterns include size hints (e.g., "rat32", "deer48")
 
-## Debugging
+### Weapon fallback not working
+1. Ensure the hero has a weapon equipped in the WEAPON slot via `hero_equipment` table
+2. Check that the equipped weapon has a valid `weapon_type` in `items_master`
+3. Verify `weapon_skill_map` table has entries for the equipped weapon type
+4. Note: There is NO class-based fallback - a weapon must be equipped to attack
 
-Enable debug logging:
-```bash
-COMBAT_DEBUG=1 npm run dev
-```
-
-This will log detailed information about targeting decisions, validations, and combat flow.
+### Range/LOS issues
+1. Set `PERMISSIVE_START=true` in combat routes for testing
+2. Check weapon range configuration in balance files
+3. Verify line-of-sight grid data is properly loaded

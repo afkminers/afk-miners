@@ -60,131 +60,69 @@ async function getEquippedWeaponType(heroId) {
   return row?.weapon_type ? String(row.weapon_type).toUpperCase() : null;
 }
 
-/** Resolve o skill_type usado para ganhar skill:
- *  1) Se veio weaponType do cliente, mapeia via weapon_skill_map.
- *  2) Senão, tenta a arma EQUIPADA do herói (slot WEAPON) e mapeia.
- *  3) Senão, faz fallback pela classe do herói.
- *  4) Se nada encontrado, retorna null (não conta skill).
- */
-async function resolveSkillTypeOrClass({ weaponType, heroId }) {
-  async function mapWeaponToSkill(wtype) {
-    if (!wtype) return null;
-    const row = await get(
-      `SELECT skill_type
-         FROM weapon_skill_map
-        WHERE lower(weapon_type) = lower($1)
-        LIMIT 1`,
-      [String(wtype)]
-    );
-    return row?.skill_type ? String(row.skill_type).toUpperCase() : null;
-  }
-
-  if (weaponType) {
-    const s = await mapWeaponToSkill(weaponType);
-    if (s) return s;
-  }
-
-  if (heroId) {
-    const equippedWeaponType = await getEquippedWeaponType(heroId);
-    const s2 = await mapWeaponToSkill(equippedWeaponType);
-    if (s2) return s2;
-
-    const c = await get(
-      `SELECT hm.class
-         FROM player_heroes ph
-         JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
-        WHERE ph.id = $1`,
-      [String(heroId)]
-    );
-    const heroClass = (c?.class || '').toUpperCase();
-
-    if (heroClass === 'RANGER' || heroClass === 'PALADIN') return 'DISTANCE';
-    if (heroClass === 'MAGE' || heroClass === 'WIZARD')   return 'MAGIC';
-    if (heroClass === 'KNIGHT' || heroClass === 'GUARDIAN') return 'SWORD';
-  }
-  return null;
-}
-
-/** Aplica ganho de skill no banco. */
-async function gainSkillFromHit({ heroId, weaponType }) {
-  const skillType = await resolveSkillTypeOrClass({ weaponType, heroId });
-  if (!skillType) return { ok: false, reason: 'no-skill-type' };
-
-  await run(
-    `INSERT INTO player_hero_skills (hero_id, skill_type, level, tries_progress)
-     VALUES ($1, $2, 1, 0)
-     ON CONFLICT (hero_id, skill_type) DO NOTHING`,
-    [String(heroId), skillType]
-  );
-
-  const cur = await get(
-    `SELECT level, tries_progress FROM player_hero_skills
-      WHERE hero_id=$1 AND skill_type=$2`,
-    [String(heroId), skillType]
-  );
-  if (!cur) return { ok: false };
-
-  let level = Number(cur.level) || 1;
-  let progress = Number(cur.tries_progress) || 0;
-
-  const klass = await get(
-    `SELECT hm.class
-       FROM player_heroes ph
-       JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
-      WHERE ph.id = $1`,
-    [String(heroId)]
-  );
-  const heroClass = (klass?.class || '').toUpperCase();
-
-  const rateRow = await get(
-    `SELECT rate FROM class_skill_rates
-      WHERE class=$1 AND skill_type=$2`,
-    [heroClass, skillType]
-  );
-  const rate = Number(rateRow?.rate) || 1.0;
-
-  const inc = BASE_TRY_PER_HIT * rate;
-  progress += inc;
-
-  let needRow = await get(
-    `SELECT tries_needed FROM skill_curves WHERE skill_type=$1 AND level=$2`,
-    [skillType, level]
-  );
-  let need = Number(needRow?.tries_needed) || 999999;
-
-  let ups = 0;
-  while (progress >= need) {
-    progress -= need;
-    level += 1;
-    ups += 1;
-    needRow = await get(
-      `SELECT tries_needed FROM skill_curves WHERE skill_type=$1 AND level=$2`,
-      [skillType, level]
-    );
-    need = Number(needRow?.tries_needed) || 999999;
-  }
-
-  await run(
-    `UPDATE player_hero_skills
-        SET level=$3, tries_progress=$4
-      WHERE hero_id=$1 AND skill_type=$2`,
-    [String(heroId), skillType, level, progress]
-  );
-
-  if (DEBUG) {
-    console.log('[skill] hero', heroId, 'skill', skillType, 'inc', inc.toFixed(2), 'lvl', level, 'prog', progress.toFixed(2));
-    if (ups) console.log(`[skill] level up +${ups} (${skillType})`);
-  }
-
-  return { ok: true, heroId, skillType, level, progress, inc };
-}
-
 /* =========================================================================
-   /nearest - DISABLED: Use unified /api/combat/nearest from combat_nearest.js
+   /nearest
    ========================================================================== */
-// router.get('/nearest', async (req, res) => {
-//   ... (code moved to server/routes/combat_nearest.js with shared targeting)
-// });
+router.get('/nearest', async (req, res) => {
+  try {
+    const mapKey = String(req.query.map || 'house');
+    const cx = Math.round(+req.query.x || 0);
+    const cy = Math.round(+req.query.y || 0);
+
+    const hasPX = Number.isFinite(+req.query.px) && Number.isFinite(+req.query.py);
+    const px = hasPX ? Math.round(+req.query.px) : null;
+    const py = hasPX ? Math.round(+req.query.py) : null;
+
+    const clickMax = Number(K?.CLICK_MAX_DIST_PX) || 280;
+    if (hasPX) {
+      const dx = cx - px, dy = cy - py;
+      if (dx*dx + dy*dy > clickMax*clickMax) {
+        return res.status(200).json({ ok:false, error:'too-far-click' });
+      }
+    }
+
+    const row = await get(
+      `WITH cand AS (
+         SELECT mi.id, mi.x, mi.y, mi.hp, mi.max_hp, s."monsterKey",
+                ((mi.x - $2)*(mi.x - $2) + (mi.y - $3)*(mi.y - $3)) AS d_px,
+                (((mi.x*32) - $2)*((mi.x*32) - $3)*1 + ((mi.y*32) - $3)*((mi.y*32) - $3)) AS d_tile
+           FROM monster_instances mi
+           JOIN spawns s ON s.id = mi.spawn_id
+          WHERE mi.state = 'ALIVE'
+            AND (mi.map_key = $1 OR s."mapKey" = $1)
+       )
+       SELECT id, x, y, hp, max_hp, "monsterKey",
+              CASE WHEN d_px <= d_tile THEN d_px ELSE d_tile END AS dist2,
+              CASE WHEN d_px <= d_tile THEN 1 ELSE 32 END AS scale
+         FROM cand
+        ORDER BY dist2 ASC
+        LIMIT 1`,
+      [mapKey, cx, cy]
+    );
+
+    if (!row) return res.status(404).json({ ok:false, error:'no-monster' });
+
+    const pickRadius = Number(K?.CLICK_PICK_RADIUS_PX) || 420;
+    if (Number(row.dist2) > pickRadius*pickRadius) {
+      return res.status(404).json({ ok:false, error:'no-monster-in-radius' });
+    }
+
+    const scale = Number(row.scale) || 1;
+    const mx = Math.round(Number(row.x) * scale);
+    const my = Math.round(Number(row.y) * scale);
+
+    return res.json({
+      ok: true,
+      id: String(row.id),
+      x: mx, y: my,
+      hp: Number(row.hp), maxHp: Number(row.max_hp),
+      monsterKey: row.monsterKey
+    });
+  } catch (e) {
+    console.error('[combat/nearest] error:', e);
+    return res.status(500).json({ ok:false, error:'nearest-failed' });
+  }
+});
 
 // ====== START/STOP =========================================================
 router.post('/attack/start', express.json(), async (req, res) => {
@@ -192,6 +130,12 @@ router.post('/attack/start', express.json(), async (req, res) => {
     const { heroId, targetInstanceId, weaponType } = req.body || {};
     if (!heroId || !targetInstanceId) {
       return res.status(400).json({ ok:false, error:'missing-params' });
+    }
+
+    // Require equipped weapon via getEquippedWeaponType(heroId) - no class fallback
+    const resolvedWeaponType = await getEquippedWeaponType(heroId);
+    if (!resolvedWeaponType) {
+      return res.json({ ok: false, error: 'no-weapon-equipped' });
     }
 
     // Get strict mode configuration
@@ -228,24 +172,16 @@ router.post('/attack/start', express.json(), async (req, res) => {
       // Validate line of sight
       const { grid, cols } = await getGrid(heroPos.map_key);
       const losGrid = { data: grid, cols };
-      if (!hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y)) {
-        return res.json({ ok:false, error:'no_los' });
-      }
 
-      // Store the server-determined weapon type in session
-      attackSessions.set(String(targetInstanceId), {
-        heroId: String(heroId),
-        weaponType: weaponTypeToUse,
-        startedAt: Date.now()
-      });
-    } else {
-      // Legacy permissive mode
-      attackSessions.set(String(targetInstanceId), {
-        heroId: String(heroId),
-        weaponType: weaponType ? String(weaponType) : null,
-        startedAt: Date.now()
-      });
+      if (!inReachPx(heroPos, mobPos, weaponType, K)) return res.json({ ok:false, error:'out_of_range' });
+      if (!hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y)) return res.json({ ok:false, error:'no_los' });
     }
+
+    attackSessions.set(String(targetInstanceId), {
+      heroId: String(heroId),
+      weaponType: weaponType ? String(weaponType) : null,
+      startedAt: Date.now()
+    });
 
     return res.json({ ok:true });
   } catch (e) {
@@ -269,29 +205,19 @@ router.post('/attack/stop', express.json(), async (req, res) => {
   }
 });
 
-// ====== HIT (debug DB-only) ===============================================
+// ====== HIT ===============================================
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-// roll de loot super simples por monsterKey (apenas para visualizar drop)
-function rollSimpleLoot(monsterKey) {
-  const k = String(monsterKey || '').toLowerCase();
-  // ajuste os item keys conforme seu items_master (ou deixe como placeholders)
-  if (k.includes('rat')) {
-    // 50% 1 cheese, 20% até 3 gold
-    const out = [];
-    if (Math.random() < 0.5) out.push({ key: 'cheese', amount: 1 });
-    if (Math.random() < 0.2) out.push({ key: 'gold_coin', amount: 1 + Math.floor(Math.random() * 3) });
-    return out;
-  }
-  if (k.includes('deer')) {
-    const out = [];
-    if (Math.random() < 0.6) out.push({ key: 'meat', amount: 1 });
-    if (Math.random() < 0.15) out.push({ key: 'antlers', amount: 1 });
-    return out;
-  }
-  // genérico: chance pequena de gold
-  if (Math.random() < 0.1) return [{ key: 'gold_coin', amount: 1 }];
-  return [];
+// Import the combat service
+const { applyHit } = require('./service');
+
+/** Get weapon type fallback based on class */
+async function getWeaponTypeFallback(heroId) {
+  const weaponTypeEquipped = await getEquippedWeaponType(heroId);
+  if (weaponTypeEquipped) return weaponTypeEquipped;
+  
+  // NO class-based fallback - return null if no weapon equipped
+  return null;
 }
 
 router.post('/hit', express.json(), async (req, res) => {
@@ -305,197 +231,118 @@ router.post('/hit', express.json(), async (req, res) => {
     const heroIdFromSess = sess?.heroId || (req.body?.heroId ? String(req.body.heroId) : null);
     const weaponTypeFromSess = sess?.weaponType || (req.body?.weaponType ? String(req.body.weaponType) : null);
 
-    if (!heroIdFromSess) {
-      return res.status(400).json({ ok:false, error:'no-hero-session' });
-    }
-
-    // Get strict mode configuration
-    const strictMode = K.ATTACK_STRICT_MODE;
-    
-    if (strictMode) {
-      // Validate monster exists and is alive
-      let mi;
-      if (UUID_RE.test(String(raw))) {
-        mi = await get(
-          `SELECT mi.id, mi.hp, mi.max_hp, mi.spawn_id, s."respawnSec"
-             FROM monster_instances mi
-             JOIN spawns s ON s.id = mi.spawn_id
-            WHERE mi.id = $1 AND mi.state = 'ALIVE'`,
-          [String(raw)]
-        );
-      } else {
-        return res.status(400).json({ ok:false, error:'invalid-target-id' });
-      }
-
-      if (!mi) return res.status(404).json({ ok:false, error:'no-such-alive' });
-
-      // Get monster and hero positions for validation
-      const mobPos = await getMonsterPos(raw);
-      if (!mobPos) return res.status(400).json({ ok:false, error:'mob-pos-missing' });
-
-      const heroPos = await getHeroPos(heroIdFromSess, mobPos.map_key);
-      if (!heroPos) return res.status(400).json({ ok:false, error:'hero-pos-missing' });
-      if (heroPos.map_key !== mobPos.map_key) {
-        return res.status(400).json({ ok:false, error:'different-maps' });
-      }
-
-      // Get equipped weapon type (server-authoritative)
-      const equippedWeaponType = await getEquippedWeaponType(heroIdFromSess);
-      const weaponTypeToUse = equippedWeaponType || weaponTypeFromSess || 'SWORD';
-
-      // Validate range using equipped weapon
-      if (!inReachPx(heroPos, mobPos, weaponTypeToUse, K)) {
-        return res.json({ ok:false, error:'out_of_range' });
-      }
-
-      // Validate line of sight
-      const { grid, cols } = await getGrid(heroPos.map_key);
-      const losGrid = { data: grid, cols };
-      if (!hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y)) {
-        return res.json({ ok:false, error:'no_los' });
-      }
-
-      // Use combat service for server-authoritative hit
-      const result = await applyHit({
-        attackerHeroId: heroIdFromSess,
-        targetInstanceId: raw,
-        weaponType: weaponTypeToUse
-      });
-
-      if (!result.ok) {
-        return res.status(400).json({ ok:false, error: result.message || 'hit-failed' });
-      }
-
-      // Clean up attack session if target died
-      if (result.dead) {
-        attackSessions.delete(String(raw));
-      }
-
-      // Return response matching client expectations
-      return res.json({
-        ok: true,
-        id: result.instanceId,
-        dmg: result.damage,
-        hpAfter: result.hpAfter,
-        hp: result.hpAfter, // alias for compatibility
-        maxHp: result.maxHp || 0,
-        dead: result.dead
-      });
+    let mi;
+    if (UUID_RE.test(String(raw))) {
+      mi = await get(
+        `SELECT mi.id, mi.hp, mi.max_hp, mi.spawn_id, s."respawnSec"
+           FROM monster_instances mi
+           JOIN spawns s ON s.id = mi.spawn_id
+          WHERE mi.id = $1 AND mi.state = 'ALIVE'`,
+        [String(raw)]
+      );
+    } else if (/^\d+$/.test(String(raw))) {
+      const n = Number(raw);
+      mi = await get(
+        `SELECT mi.id, mi.hp, mi.max_hp, mi.spawn_id, s."respawnSec"
+           FROM monster_instances mi
+           JOIN spawns s ON s.id = mi.spawn_id
+           JOIN monsters_master mm ON mm.key = s."monsterKey"
+          WHERE mi.state = 'ALIVE' AND mm.id = $1
+          ORDER BY mi.updated_at DESC LIMIT 1`, [n]
+      ) || await get(
+        `SELECT mi.id, mi.hp, mi.max_hp, mi.spawn_id, s."respawnSec"
+           FROM monster_instances mi
+           JOIN spawns s ON s.id = mi.spawn_id
+          WHERE mi.state = 'ALIVE' AND mi.spawn_id = $1
+          ORDER BY mi.updated_at DESC LIMIT 1`, [n]
+      );
     } else {
-      // Legacy mode - keep existing ad-hoc implementation for debugging
-      let mi;
-      if (UUID_RE.test(String(raw))) {
-        mi = await get(
-          `SELECT mi.id, mi.hp, mi.max_hp, mi.spawn_id, s."respawnSec"
-             FROM monster_instances mi
-             JOIN spawns s ON s.id = mi.spawn_id
-            WHERE mi.id = $1 AND mi.state = 'ALIVE'`,
-          [String(raw)]
-        );
-      } else if (/^\d+$/.test(String(raw))) {
-        const n = Number(raw);
-        mi = await get(
-          `SELECT mi.id, mi.hp, mi.max_hp, mi.spawn_id, s."respawnSec"
-             FROM monster_instances mi
-             JOIN spawns s ON s.id = mi.spawn_id
-             JOIN monsters_master mm ON mm.key = s."monsterKey"
-            WHERE mi.state = 'ALIVE' AND mm.id = $1
-            ORDER BY mi.updated_at DESC LIMIT 1`, [n]
-        ) || await get(
-          `SELECT mi.id, mi.hp, mi.max_hp, mi.spawn_id, s."respawnSec"
-             FROM monster_instances mi
-             JOIN spawns s ON s.id = mi.spawn_id
-            WHERE mi.state = 'ALIVE' AND mi.spawn_id = $1
-            ORDER BY mi.updated_at DESC LIMIT 1`, [n]
-        );
-      } else {
-        return res.status(400).json({ ok:false, error:'bad-id' });
-      }
-
-      if (!mi) return res.status(404).json({ ok:false, error:'no-such-alive' });
-
-      const DMG = Number.isFinite(+req.body?.damage) ? Math.max(1, Math.floor(+req.body.damage)) : 10;
-
-      let hp = Math.max(0, Number(mi.hp) - DMG);
-      let dead = false;
-
-      if (hp <= 0) {
-        dead = true; hp = 0;
-        const secs = Math.max(5, Number(mi.respawnSec) || 30);
-        await run(
-          `UPDATE monster_instances
-              SET state='DEAD', hp=0,
-                  respawn_at = now() + make_interval(secs => $2),
-                  updated_at = now()
-            WHERE id = $1`,
-          [mi.id, secs]
-        );
-        // morreu: limpa sessão desse alvo
-        attackSessions.delete(String(mi.id));
-      } else {
-        await run(`UPDATE monster_instances SET hp=$2, updated_at=now() WHERE id=$1`, [mi.id, hp]);
-      }
-
-      // === Envia atualizações em tempo real pelo WS (barra de HP + floater de dano) ===
-      const cur = await get(`
-        SELECT mi.id,
-               mi.hp,
-               mi.max_hp,
-               mi.state,
-               mi.spawn_id        AS "spawnId",
-               s."monsterKey"     AS "monsterKey"
-          FROM monster_instances mi
-          JOIN spawns s ON s.id = mi.spawn_id
-         WHERE mi.id = $1
-      `, [mi.id]);
-
-      if (cur) {
-        broadcast({
-          type: 'monster_hp',
-          id: String(cur.id),
-          hp: Number(cur.hp),
-          maxHp: Number(cur.max_hp || cur.hp || 1),
-          dmg: Number(DMG),
-          monsterKey: cur.monsterKey,
-          spawnId: Number(cur.spawnId)
-        });
-
-        if (String(cur.state) === 'DEAD' || Number(cur.hp) <= 0) {
-          const xp = 0; // calcule XP real se quiser
-          broadcast({ type: 'monster_dead', id: String(cur.id), xp });
-
-          // >>>>>>>>>>>>> DROP DE LOOT <<<<<<<<<<<<<<
-          try {
-            // posição atual do monstro em PX + map
-            const pos = await getMonsterPos(cur.id);
-            // rolagem simples por tipo
-            const items = rollSimpleLoot(cur.monsterKey);
-            if (pos && items && items.length > 0) {
-              await createLootFromKill({
-                mapKey: pos.map_key || pos.mapKey || 'house',
-                x: Math.round(pos.x),
-                y: Math.round(pos.y),
-                items
-              });
-            }
-          } catch (e) {
-            console.warn('[loot] drop failed:', e?.message);
-          }
-        }
-      }
-
-      // >>>>>>>>>>>> GANHO DE SKILL POR HIT (armas equipadas) <<<<<<<<<<<<<
-      if (heroIdFromSess) {
-        try {
-          const weaponTypeEquipped = await getEquippedWeaponType(heroIdFromSess);
-          await gainSkillFromHit({ heroId: heroIdFromSess, weaponType: weaponTypeEquipped });
-        } catch (e) {
-          console.warn('[combat] skill gain failed:', e?.message);
-        }
-      }
-
-      return res.json({ ok:true, id: mi.id, dmg: DMG, hp, maxHp: Number(mi.max_hp)||0, dead });
+      return res.status(400).json({ ok:false, error:'bad-id' });
     }
+
+    if (!mi) return res.status(404).json({ ok:false, error:'no-such-alive' });
+
+    const DMG = Number.isFinite(+req.body?.damage) ? Math.max(1, Math.floor(+req.body.damage)) : 10;
+
+    let hp = Math.max(0, Number(mi.hp) - DMG);
+    let dead = false;
+
+    if (hp <= 0) {
+      dead = true; hp = 0;
+      const secs = Math.max(5, Number(mi.respawnSec) || 30);
+      await run(
+        `UPDATE monster_instances
+            SET state='DEAD', hp=0,
+                respawn_at = now() + make_interval(secs => $2),
+                updated_at = now()
+          WHERE id = $1`,
+        [mi.id, secs]
+      );
+      // morreu: limpa sessão desse alvo
+      attackSessions.delete(String(mi.id));
+    } else {
+      await run(`UPDATE monster_instances SET hp=$2, updated_at=now() WHERE id=$1`, [mi.id, hp]);
+    }
+
+    // === Envia atualizações em tempo real pelo WS (barra de HP + floater de dano) ===
+    const cur = await get(`
+      SELECT mi.id,
+             mi.hp,
+             mi.max_hp,
+             mi.state,
+             mi.spawn_id        AS "spawnId",
+             s."monsterKey"     AS "monsterKey"
+        FROM monster_instances mi
+        JOIN spawns s ON s.id = mi.spawn_id
+       WHERE mi.id = $1
+    `, [mi.id]);
+
+    if (cur) {
+      broadcast({
+        type: 'monster_hp',
+        id: String(cur.id),
+        hp: Number(cur.hp),
+        maxHp: Number(cur.max_hp || cur.hp || 1),
+        dmg: Number(DMG),
+        monsterKey: cur.monsterKey,
+        spawnId: Number(cur.spawnId)
+      });
+
+      if (String(cur.state) === 'DEAD' || Number(cur.hp) <= 0) {
+        const xp = 0; // calcule XP real se quiser
+        broadcast({ type: 'monster_dead', id: String(cur.id), xp });
+
+        // >>>>>>>>>>>>> DROP DE LOOT <<<<<<<<<<<<<<
+        try {
+          // posição atual do monstro em PX + map
+          const pos = await getMonsterPos(cur.id);
+          // rolagem simples por tipo
+          const items = rollSimpleLoot(cur.monsterKey);
+          if (pos && items && items.length > 0) {
+            await createLootFromKill({
+              mapKey: pos.map_key || pos.mapKey || 'house',
+              x: Math.round(pos.x),
+              y: Math.round(pos.y),
+              items
+            });
+          }
+        } catch (e) {
+          console.warn('[loot] drop failed:', e?.message);
+        }
+      }
+    }
+
+    // >>>>>>>>>>>> GANHO DE SKILL POR HIT (armas equipadas) <<<<<<<<<<<<<
+    if (heroIdFromSess) {
+      try {
+        const weaponTypeEquipped = await getEquippedWeaponType(heroIdFromSess);
+        await gainSkillFromHit({ heroId: heroIdFromSess, weaponType: weaponTypeEquipped });
+      } catch (e) {
+        console.warn('[combat] skill gain failed:', e?.message);
+      }
+    }
+
+    return res.json({ ok:true, id: mi.id, dmg: DMG, hp, maxHp: Number(mi.max_hp)||0, dead });
   } catch (e) {
     console.error('[combat] /hit error:', e);
     return res.status(500).json({ ok:false, error:'hit-failed' });

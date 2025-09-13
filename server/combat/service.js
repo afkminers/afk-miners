@@ -143,9 +143,9 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
         dmg
     });
 
-    // sobe skill (Tibia-like) por arma usada
+    // Skill gain ONLY when damage > 0
     const skillType = await resolveSkillFromWeapon(weaponType);
-    if (skillType) {
+    if (skillType && dmg > 0) {
         const rate = await getClassRate(hero.class || null, skillType);
         await applyTries(attackerHeroId, skillType, 1 * rate);
     }
