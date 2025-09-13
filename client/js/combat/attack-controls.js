@@ -8,6 +8,9 @@ const combatState = (window.combatState = window.combatState || {
   selectedTargetId: null,
 });
 
+// Check environment flag for RMB attack mode
+const ATTACK_USE_RMB = true; // Default to true as per requirements
+
 function pickCanvas() {
   return (window.GameScene && window.GameScene.canvas)
       || document.getElementById('scene')
@@ -27,6 +30,40 @@ function getMouseWorldFromEvent(e, canvas) {
   const cx = (e.clientX ?? (e.touches && e.touches[0]?.clientX)) || 0;
   const cy = (e.clientY ?? (e.touches && e.touches[0]?.clientY)) || 0;
   return screenToWorld(canvas, cx - rect.left, cy - rect.top);
+}
+
+/**
+ * Local picking function that uses the existing pickMobAtWorld from render-combat.js
+ * Returns monster ID if found, null otherwise
+ */
+function localPickUnderCursor(worldPos) {
+  // Try to use the existing pickMobAtWorld function from render-combat.js
+  if (window.CombatUI && typeof window.CombatUI.pickMobAtWorld === 'function') {
+    return window.CombatUI.pickMobAtWorld(worldPos);
+  }
+  
+  // Fallback: implement basic local picking by iterating through combat state monsters
+  if (!window.combatState?.monsters) return null;
+  
+  const all = Array.from(window.combatState.monsters.values());
+  for (const m of all) {
+    const s = window.GameScene?.getMobByInstanceId?.(String(m.id));
+    if (!s || s.hidden || s.dead) continue;
+    
+    const meta = s.meta || {};
+    const frameW = meta.frame?.width ?? 32;
+    const frameH = meta.frame?.height ?? 32;
+    const ax = meta.anchor?.x ?? 0.5;
+    const ay = meta.anchor?.y ?? 0.9;
+    const ox = Math.round(s.x - frameW * ax);
+    const oy = Math.round(s.y - frameH * ay);
+    
+    if (worldPos.x >= ox && worldPos.x <= ox + frameW && 
+        worldPos.y >= oy && worldPos.y <= oy + frameH) {
+      return m.id;
+    }
+  }
+  return null;
 }
 
 let ACTIVE_HERO = { id: null, heroClass: null };
@@ -147,33 +184,93 @@ function attachControls() {
 
   const canvas = pickCanvas(); if (!canvas) return;
 
-  canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); stopAttack(); });
+  // Handle context menu - prevent browser menu but allow our RMB logic
+  canvas.addEventListener('contextmenu', (e) => { 
+    e.preventDefault(); 
+    // Don't stop attack immediately here - let the mousedown handler decide
+  });
 
   const onPointerDown = async (e) => {
-    if (e.button != null && e.button !== 0) return;
-    const hero = await ensureActiveHero(); if (!hero.id) { alert('Nenhum herói ativo encontrado.'); return; }
+    const hero = await ensureActiveHero(); 
+    if (!hero.id) { 
+      alert('Nenhum herói ativo encontrado.'); 
+      return; 
+    }
 
-    const { x, y } = getMouseWorldFromEvent(e, canvas);
-    console.log('[attack] click @', Math.round(x), Math.round(y));
+    // Check if we should use RMB mode
+    if (ATTACK_USE_RMB) {
+      // Right mouse button (button === 2) starts attack
+      if (e.button === 2) {
+        const { x, y } = getMouseWorldFromEvent(e, canvas);
+        console.log('[attack] RMB click @', Math.round(x), Math.round(y));
 
-    const m = await resolveServerTarget(x, y);
-    if (!m?.id) { console.log('[attack] nenhum alvo (server) — stop'); stopAttack(); return; }
+        // 1. First try local picking
+        const localId = localPickUnderCursor({ x, y });
+        if (localId) {
+          console.log('[attack] local pick found:', localId);
+          const stat = combatState.monsters.get(String(localId)) || { id: String(localId) };
+          combatState.monsters.set(String(localId), stat);
+          await startAttack(String(localId));
+          return;
+        }
 
-    const stat = combatState.monsters.get(String(m.id)) || { id: String(m.id) };
-    if (Number.isFinite(m.hp)) stat.hp = Number(m.hp);
-    if (Number.isFinite(m.maxHp)) stat.hpMax = Number(m.maxHp);
-    combatState.monsters.set(String(m.id), stat);
+        // 2. Fallback to server targeting
+        console.log('[attack] local pick failed, trying server...');
+        const m = await resolveServerTarget(x, y);
+        if (!m?.id) { 
+          console.log('[attack] no server target - canceling attack'); 
+          stopAttack(); 
+          return; 
+        }
 
-    await startAttack(String(m.id));
+        const stat = combatState.monsters.get(String(m.id)) || { id: String(m.id) };
+        if (Number.isFinite(m.hp)) stat.hp = Number(m.hp);
+        if (Number.isFinite(m.maxHp)) stat.hpMax = Number(m.maxHp);
+        combatState.monsters.set(String(m.id), stat);
+
+        await startAttack(String(m.id));
+        return;
+      } 
+      // Right-click on empty space or other mouse buttons cancel attack
+      else if (e.button === 2 || e.button === 0) {
+        console.log('[attack] RMB on empty space or left-click - canceling attack');
+        stopAttack();
+        return;
+      }
+    } else {
+      // Legacy mode: left-click only
+      if (e.button != null && e.button !== 0) return;
+      
+      const { x, y } = getMouseWorldFromEvent(e, canvas);
+      console.log('[attack] legacy click @', Math.round(x), Math.round(y));
+
+      const m = await resolveServerTarget(x, y);
+      if (!m?.id) { console.log('[attack] nenhum alvo (server) — stop'); stopAttack(); return; }
+
+      const stat = combatState.monsters.get(String(m.id)) || { id: String(m.id) };
+      if (Number.isFinite(m.hp)) stat.hp = Number(m.hp);
+      if (Number.isFinite(m.maxHp)) stat.hpMax = Number(m.maxHp);
+      combatState.monsters.set(String(m.id), stat);
+
+      await startAttack(String(m.id));
+    }
   };
 
   canvas.addEventListener('mousedown', onPointerDown);
   canvas.addEventListener('touchstart', onPointerDown, { passive: true });
 
+  // Add ESC key listener to cancel attacks
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Escape' || e.key === 'Escape') {
+      console.log('[attack] ESC pressed - canceling attack');
+      stopAttack();
+    }
+  });
+
   window.addEventListener('blur', () => stopAttack());
   window.addEventListener('beforeunload', () => stopAttack());
 
-  console.log('[attack] controls ready');
+  console.log('[attack] controls ready (RMB mode:', ATTACK_USE_RMB, ')');
 }
 
 (async () => {

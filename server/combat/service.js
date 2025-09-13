@@ -189,6 +189,7 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
         ok: true,
         damage: dmg,
         hpAfter: newHp,
+        maxHp: inst.max_hp,
         dead,
         instanceId: inst.id,
         xpGained,

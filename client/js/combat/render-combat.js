@@ -265,6 +265,11 @@ export default function installCombatOverlay() {
         ts: Date.now(),
         monsters: Array.from(state.monsters.values())
       };
+    },
+
+    // Expose pickMobAtWorld for use by attack-controls.js
+    pickMobAtWorld(pt) {
+      return pickMobAtWorld(pt);
     }
   };
 }

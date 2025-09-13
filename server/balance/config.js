@@ -6,6 +6,13 @@ const envNum = (name, def) => {
   return Number.isFinite(v) ? v : def;
 };
 
+const envBool = (name, def) => {
+  const v = String(process.env[name] || '').toLowerCase();
+  if (v === 'true' || v === '1') return true;
+  if (v === 'false' || v === '0') return false;
+  return def;
+};
+
 module.exports = {
   // === PROGRESSÃO POR HIT (Tibia-like) ===
   // Ganho de skill NÃO depende do dano. Cada acerto rende a mesma fração.
@@ -55,4 +62,16 @@ module.exports = {
   // === Loot no chão ===
   LOOT_EXPIRE_SECONDS: envNum('LOOT_EXPIRE_SECONDS', 600),          // 600s = 10 min
   LOOT_CLEANUP_EVERY_SECONDS: envNum('LOOT_CLEANUP_EVERY_SECONDS', 60), // varredura a cada 60s
+
+  // === Combat Targeting & Attack Flags ===
+  // Mouse/keyboard UX
+  ATTACK_USE_RMB: envBool('ATTACK_USE_RMB', true),                   // Use right mouse button for attacks
+  
+  // Server validation strictness  
+  ATTACK_STRICT_MODE: envBool('ATTACK_STRICT_MODE', true),           // Enforce range/LOS validations
+  
+  // Targeting behavior
+  CLICK_REQUIRE_INTERSECT: envBool('CLICK_REQUIRE_INTERSECT', true), // Only accept clicks that intersect monster rect
+  CLICK_PICK_RADIUS_PX: envNum('CLICK_PICK_RADIUS_PX', 96),          // Fallback radius when no intersection (3 tiles)
+  CLICK_MAX_DIST_PX: envNum('CLICK_MAX_DIST_PX', 160),               // Max click distance from player (5 tiles)
 };
