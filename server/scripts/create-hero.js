@@ -1,3 +1,4 @@
+//server/scripts/create-hero.js
 const { pool } = require('../models/db');
 const { randomUUID } = require('crypto');
 

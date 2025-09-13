@@ -12,3 +12,6 @@ attacks:
   intervalMs: 2000
   min: 8
   max: 14
+defenses:
+  armor: 0
+  defense: 0

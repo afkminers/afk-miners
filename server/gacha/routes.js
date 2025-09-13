@@ -1,8 +1,8 @@
-// server/gacha/routes.js
 const express = require('express');
 const { randomUUID } = require('crypto');
 const { all, get, run } = require('../models/db');
 const { requireAuth } = require('../auth/middleware');
+const { ensureHeroSkills } = require('../models/hero_extra');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -109,6 +109,9 @@ async function doSingleSummon(playerId) {
         Date.now(),
       ]
     );
+
+    // === GARANTE SKILLS BASE ===
+    await ensureHeroSkills(heroId);
 
     await run('COMMIT');
   } catch (e) {

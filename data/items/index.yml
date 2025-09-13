@@ -4,3 +4,4 @@ items:
   backpack_brown: "./backpack_brown.yml"
   gold_coin: "./gold_coin.yml"
   bag_brown: "./bag_brown.yml"
+  starter_bow: "./starter_bow.yml"

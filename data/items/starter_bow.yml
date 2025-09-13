@@ -1,0 +1,18 @@
+key: starter_bow
+name: Starter Bow
+type: weapon
+slot: WEAPON # crítico p/ ser equipável
+kind: weapon # opcional; ajuda na categorização
+weapon_type: distance # usado pelo servidor/cliente para saber “família” da arma
+icon: bow # ou sprite: bow (o loader aceita icon ou sprite)
+
+# números “planos” (opcionais, mas úteis p/ listagens/consulta rápida)
+atk: 2
+def: 0
+stackable: false
+
+# bloco detalhado que você já fez: mantemos para o cálculo de dano
+weapon:
+  family: distance
+  min: 2
+  max: 4

@@ -68,7 +68,7 @@ function decideStarterWeapon({ heroKey, klass }) {
   const hk = String(heroKey || '').toLowerCase();
   const k  = String(klass || '').toUpperCase();
 
-  if (hk === 'lyria' || k === 'RANGER' || k === 'PALADIN') return 'short_bow';
+  if (hk === 'lyria' || k === 'RANGER' || k === 'PALADIN') return 'starter_bow';
   if (hk === 'aric'  || hk === 'brokk' || k === 'KNIGHT'  || k === 'WARRIOR') return 'rusty_sword';
   return 'oak_staff'; // fallback mágico
 }

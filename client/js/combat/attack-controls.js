@@ -1,3 +1,4 @@
+//client/js/combat/attack-controls.js
 import { apiGet, apiPost, getCsrf } from '../api.js';
 
 const combatState = (window.combatState = window.combatState || {

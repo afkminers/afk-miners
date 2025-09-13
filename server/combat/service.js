@@ -23,19 +23,24 @@ async function resolveSkillFromWeapon(weaponType) {
     return row?.skill_type || null;
 }
 
+
 /** Stats básicos do herói (usa suas tabelas) */
 async function getHeroStats(heroId) {
     return await get(
-        `SELECT ph.id AS hero_id,
-            COALESCE(ph.attack,10)  AS attack,
+        `SELECT 
+            ph.id AS hero_id,
+            COALESCE(ph.attack,10) + COALESCE(i.atk,0) AS attack,
             COALESCE(ph.defense,10) AS defense,
             hm.class
-       FROM player_heroes ph
-  LEFT JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
-      WHERE ph.id = $1`,
+         FROM player_heroes ph
+    LEFT JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
+    LEFT JOIN hero_equipment eq ON eq.hero_id = ph.id::uuid AND eq.slot = 'WEAPON'
+    LEFT JOIN items_master i    ON i.key = eq.item_key
+        WHERE ph.id = $1`,
         [heroId]
     );
 }
+
 
 /** Carrega a instância + dados do monstro (xp/loot) */
 async function getInstanceWithMonster(instanceId) {
