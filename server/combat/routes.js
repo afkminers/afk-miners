@@ -59,125 +59,6 @@ async function getEquippedWeaponType(heroId) {
   return row?.weapon_type ? String(row.weapon_type).toUpperCase() : null;
 }
 
-/** Resolve o skill_type usado para ganhar skill:
- *  1) Se veio weaponType do cliente, mapeia via weapon_skill_map.
- *  2) Senão, tenta a arma EQUIPADA do herói (slot WEAPON) e mapeia.
- *  3) Senão, faz fallback pela classe do herói.
- *  4) Se nada encontrado, retorna null (não conta skill).
- */
-async function resolveSkillTypeOrClass({ weaponType, heroId }) {
-  async function mapWeaponToSkill(wtype) {
-    if (!wtype) return null;
-    const row = await get(
-      `SELECT skill_type
-         FROM weapon_skill_map
-        WHERE lower(weapon_type) = lower($1)
-        LIMIT 1`,
-      [String(wtype)]
-    );
-    return row?.skill_type ? String(row.skill_type).toUpperCase() : null;
-  }
-
-  if (weaponType) {
-    const s = await mapWeaponToSkill(weaponType);
-    if (s) return s;
-  }
-
-  if (heroId) {
-    const equippedWeaponType = await getEquippedWeaponType(heroId);
-    const s2 = await mapWeaponToSkill(equippedWeaponType);
-    if (s2) return s2;
-
-    const c = await get(
-      `SELECT hm.class
-         FROM player_heroes ph
-         JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
-        WHERE ph.id = $1`,
-      [String(heroId)]
-    );
-    const heroClass = (c?.class || '').toUpperCase();
-
-    if (heroClass === 'RANGER' || heroClass === 'PALADIN') return 'DISTANCE';
-    if (heroClass === 'MAGE' || heroClass === 'WIZARD')   return 'MAGIC';
-    if (heroClass === 'KNIGHT' || heroClass === 'GUARDIAN') return 'SWORD';
-  }
-  return null;
-}
-
-/** Aplica ganho de skill no banco. */
-async function gainSkillFromHit({ heroId, weaponType }) {
-  const skillType = await resolveSkillTypeOrClass({ weaponType, heroId });
-  if (!skillType) return { ok: false, reason: 'no-skill-type' };
-
-  await run(
-    `INSERT INTO player_hero_skills (hero_id, skill_type, level, tries_progress)
-     VALUES ($1, $2, 1, 0)
-     ON CONFLICT (hero_id, skill_type) DO NOTHING`,
-    [String(heroId), skillType]
-  );
-
-  const cur = await get(
-    `SELECT level, tries_progress FROM player_hero_skills
-      WHERE hero_id=$1 AND skill_type=$2`,
-    [String(heroId), skillType]
-  );
-  if (!cur) return { ok: false };
-
-  let level = Number(cur.level) || 1;
-  let progress = Number(cur.tries_progress) || 0;
-
-  const klass = await get(
-    `SELECT hm.class
-       FROM player_heroes ph
-       JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
-      WHERE ph.id = $1`,
-    [String(heroId)]
-  );
-  const heroClass = (klass?.class || '').toUpperCase();
-
-  const rateRow = await get(
-    `SELECT rate FROM class_skill_rates
-      WHERE class=$1 AND skill_type=$2`,
-    [heroClass, skillType]
-  );
-  const rate = Number(rateRow?.rate) || 1.0;
-
-  const inc = BASE_TRY_PER_HIT * rate;
-  progress += inc;
-
-  let needRow = await get(
-    `SELECT tries_needed FROM skill_curves WHERE skill_type=$1 AND level=$2`,
-    [skillType, level]
-  );
-  let need = Number(needRow?.tries_needed) || 999999;
-
-  let ups = 0;
-  while (progress >= need) {
-    progress -= need;
-    level += 1;
-    ups += 1;
-    needRow = await get(
-      `SELECT tries_needed FROM skill_curves WHERE skill_type=$1 AND level=$2`,
-      [skillType, level]
-    );
-    need = Number(needRow?.tries_needed) || 999999;
-  }
-
-  await run(
-    `UPDATE player_hero_skills
-        SET level=$3, tries_progress=$4
-      WHERE hero_id=$1 AND skill_type=$2`,
-    [String(heroId), skillType, level, progress]
-  );
-
-  if (DEBUG) {
-    console.log('[skill] hero', heroId, 'skill', skillType, 'inc', inc.toFixed(2), 'lvl', level, 'prog', progress.toFixed(2));
-    if (ups) console.log(`[skill] level up +${ups} (${skillType})`);
-  }
-
-  return { ok: true, heroId, skillType, level, progress, inc };
-}
-
 /* =========================================================================
    Combat Routes: /attack/start, /attack/stop, /hit
    Note: /nearest endpoint moved to routes/combat_nearest.js for better sprite intersection
@@ -191,8 +72,11 @@ router.post('/attack/start', express.json(), async (req, res) => {
       return res.status(400).json({ ok:false, error:'missing-params' });
     }
 
-    // Resolve weapon type with class fallback  
-    const resolvedWeaponType = await getWeaponTypeFallback(heroId);
+    // Require equipped weapon via getEquippedWeaponType(heroId) - no class fallback
+    const resolvedWeaponType = await getEquippedWeaponType(heroId);
+    if (!resolvedWeaponType) {
+      return res.json({ ok: false, error: 'no-weapon-equipped' });
+    }
 
     if (!PERMISSIVE_START) {
       const mobPos = await getMonsterPos(targetInstanceId);
@@ -248,19 +132,8 @@ async function getWeaponTypeFallback(heroId) {
   const weaponTypeEquipped = await getEquippedWeaponType(heroId);
   if (weaponTypeEquipped) return weaponTypeEquipped;
   
-  // Class-based fallback
-  const hero = await get(
-    `SELECT hm.class
-       FROM player_heroes ph
-       JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
-      WHERE ph.id = $1`,
-    [String(heroId)]
-  );
-  const heroClass = (hero?.class || '').toUpperCase();
-  
-  if (heroClass === 'ARCHER') return 'BOW';
-  if (heroClass === 'MAGE' || heroClass === 'WIZARD' || heroClass === 'DRUID') return 'STAFF';
-  return 'SWORD';
+  // NO class-based fallback - return null if no weapon equipped
+  return null;
 }
 
 router.post('/hit', express.json(), async (req, res) => {
@@ -277,6 +150,12 @@ router.post('/hit', express.json(), async (req, res) => {
       return res.status(400).json({ ok:false, error:'missing-hero-id' });
     }
 
+    // Require equipped weapon for the hero session - no class fallback
+    const weaponType = await getEquippedWeaponType(heroIdFromSess);
+    if (!weaponType) {
+      return res.json({ ok: false, error: 'no-weapon-equipped' });
+    }
+
     // Validate range/LOS first if not permissive
     if (!PERMISSIVE_START) {
       const mobPos = await getMonsterPos(raw);
@@ -286,16 +165,12 @@ router.post('/hit', express.json(), async (req, res) => {
       if (!heroPos) return res.status(400).json({ ok:false, error:'hero-pos-missing' });
       if (heroPos.map_key !== mobPos.map_key) return res.json({ ok:false, error:'map-diff' });
 
-      const weaponType = await getWeaponTypeFallback(heroIdFromSess);
       const { grid, cols } = await getGrid(heroPos.map_key);
       const losGrid = { data: grid, cols };
 
       if (!inReachPx(heroPos, mobPos, weaponType, K)) return res.json({ ok:false, error:'out_of_range' });
       if (!hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y)) return res.json({ ok:false, error:'no_los' });
     }
-
-    // Get weapon type with class fallback
-    const weaponType = await getWeaponTypeFallback(heroIdFromSess);
     
     // Call the service to apply hit
     const result = await applyHit({ 

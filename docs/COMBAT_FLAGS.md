@@ -31,13 +31,14 @@ The combat system uses a sophisticated sprite intersection algorithm that:
 
 ## Weapon Type Resolution
 
-The system provides automatic weapon type fallback for classes without equipped weapons:
+Combat requires an equipped weapon in the WEAPON slot. The system performs strict weapon validation:
 
-- **ARCHER** → `BOW`
-- **MAGE/WIZARD/DRUID** → `STAFF`
-- **Others** → `SWORD`
+- Range/LOS and skill mapping come from `hero_equipment` → `items_master.weapon_type` → `weapon_skill_map`
+- If no weapon is equipped, both `/attack/start` and `/hit` will reject with `{ error: 'no-weapon-equipped' }`
+- **NO class-based fallback** is provided during combat
+- Skill gain only occurs when damage > 0
 
-This allows testing of all classes even when weapons are not equipped.
+This ensures proper game balance and equipment requirements.
 
 ## Testing Configurations
 
@@ -65,9 +66,10 @@ COMBAT_DEBUG=0
 3. Verify monster key patterns include size hints (e.g., "rat32", "deer48")
 
 ### Weapon fallback not working
-1. Ensure hero has a valid class in `heroes_master`
-2. Check class name mapping in `getWeaponTypeFallback` function
-3. Verify `weapon_skill_map` table has entries for fallback weapon types
+1. Ensure the hero has a weapon equipped in the WEAPON slot via `hero_equipment` table
+2. Check that the equipped weapon has a valid `weapon_type` in `items_master`
+3. Verify `weapon_skill_map` table has entries for the equipped weapon type
+4. Note: There is NO class-based fallback - a weapon must be equipped to attack
 
 ### Range/LOS issues
 1. Set `PERMISSIVE_START=true` in combat routes for testing
