@@ -52,6 +52,10 @@ module.exports = {
     MAGIC:    envNum('MAGIC_RANGE_TILES', 8),
   },
 
+  // === Combat target selection ===
+  CLICK_MAX_DIST_PX: envNum('CLICK_MAX_DIST_PX', 280),      // max click distance
+  CLICK_PICK_RADIUS_PX: envNum('CLICK_PICK_RADIUS_PX', 192), // 6 tiles for pickup radius
+
   // === Loot no chão ===
   LOOT_EXPIRE_SECONDS: envNum('LOOT_EXPIRE_SECONDS', 600),          // 600s = 10 min
   LOOT_CLEANUP_EVERY_SECONDS: envNum('LOOT_CLEANUP_EVERY_SECONDS', 60), // varredura a cada 60s
