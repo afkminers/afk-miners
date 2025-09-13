@@ -1,5 +1,17 @@
 [
   {
+    "file": "docs\\COMBAT_FLAGS.md",
+    "line": 72,
+    "tag": "NOTE",
+    "text": "There is NO class-based fallback - a weapon must be equipped to attack"
+  },
+  {
+    "file": "server\\combat\\routes.js",
+    "line": 64,
+    "tag": "NOTE",
+    "text": "/nearest endpoint moved to routes/combat_nearest.js for better sprite intersection"
+  },
+  {
     "file": "server\\combat\\worker.js",
     "line": 11,
     "tag": "TODO",

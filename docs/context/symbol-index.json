@@ -132,8 +132,10 @@
       "doHit",
       "ensureActiveHero",
       "getMouseWorldFromEvent",
+      "localPickUnderCursor",
       "pickCamera",
       "pickCanvas",
+      "pickMobAtWorld",
       "resolveServerTarget",
       "screenToWorld",
       "startAttack",
@@ -659,11 +661,8 @@
   {
     "file": "server\\combat\\routes.js",
     "symbols": [
-      "gainSkillFromHit",
       "getEquippedWeaponType",
-      "mapWeaponToSkill",
-      "resolveSkillTypeOrClass",
-      "rollSimpleLoot"
+      "getWeaponTypeFallback"
     ]
   },
   {
@@ -685,6 +684,14 @@
       "persistDrops",
       "resolveSkillFromWeapon",
       "rollLoot"
+    ]
+  },
+  {
+    "file": "server\\combat\\targeting.js",
+    "symbols": [
+      "containsPoint",
+      "findNearestMonster",
+      "pointRectDist2"
     ]
   },
   {
@@ -762,6 +769,14 @@
     ]
   },
   {
+    "file": "server\\middleware\\cors-allowlist.js",
+    "symbols": [
+      "buildCors",
+      "parseOrigins",
+      "sameOrigin"
+    ]
+  },
+  {
     "file": "server\\middleware\\endpoint-metrics.js",
     "symbols": [
       "endpointMetrics",
@@ -832,7 +847,8 @@
   {
     "file": "server\\routes\\combat_nearest.js",
     "symbols": [
-      "containsPoint",
+      "getSpriteRect",
+      "pointInRect",
       "pointRectDist2"
     ]
   },
@@ -908,6 +924,12 @@
       "summarizeJSON",
       "summarizeYAML",
       "walkDir"
+    ]
+  },
+  {
+    "file": "server\\scripts\\ws-payload-test.js",
+    "symbols": [
+      "arg"
     ]
   },
   {
@@ -1052,6 +1074,12 @@
       "listAliveMonsters",
       "tableExists",
       "tryAll"
+    ]
+  },
+  {
+    "file": "server\\ws\\origins.js",
+    "symbols": [
+      "isOriginAllowed"
     ]
   },
   {

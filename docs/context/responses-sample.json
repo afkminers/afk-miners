@@ -1,10 +1,30 @@
 {
   "GET /_ping": [
     "{ok:true,ts:Date.now() }",
-    "{routes:list }"
+    "{routes:list }",
+    "{ok:false,error:'no-weapon-equipped' }",
+    "{ok:false,error:'map-diff' }",
+    "{ok:false,error:'out_of_range' }",
+    "{ok:false,error:'no_los' }",
+    "{ok:true }",
+    "{ok:true }",
+    "{ok:false,error:'no-weapon-equipped' }",
+    "{ok:false,error:'map-diff' }",
+    "{ok:false,error:'out_of_range' }",
+    "{ok:false,error:'no_los' }"
   ],
   "GET /_routes": [
-    "{routes:list }"
+    "{routes:list }",
+    "{ok:false,error:'no-weapon-equipped' }",
+    "{ok:false,error:'map-diff' }",
+    "{ok:false,error:'out_of_range' }",
+    "{ok:false,error:'no_los' }",
+    "{ok:true }",
+    "{ok:true }",
+    "{ok:false,error:'no-weapon-equipped' }",
+    "{ok:false,error:'map-diff' }",
+    "{ok:false,error:'out_of_range' }",
+    "{ok:false,error:'no_los' }"
   ],
   "POST /:heroId/deposit": [
     "{ok:true,placed }"
@@ -58,14 +78,23 @@
     "{ok:true,added:total }"
   ],
   "POST /attack/start": [
+    "{ok:false,error:'no-weapon-equipped' }",
     "{ok:false,error:'map-diff' }",
     "{ok:false,error:'out_of_range' }",
     "{ok:false,error:'no_los' }",
     "{ok:true }",
-    "{ok:true }"
+    "{ok:true }",
+    "{ok:false,error:'no-weapon-equipped' }",
+    "{ok:false,error:'map-diff' }",
+    "{ok:false,error:'out_of_range' }",
+    "{ok:false,error:'no_los' }"
   ],
   "POST /attack/stop": [
-    "{ok:true }"
+    "{ok:true }",
+    "{ok:false,error:'no-weapon-equipped' }",
+    "{ok:false,error:'map-diff' }",
+    "{ok:false,error:'out_of_range' }",
+    "{ok:false,error:'no_los' }"
   ],
   "GET /cache/stats": [],
   "GET /class-rates": [
@@ -102,7 +131,10 @@
   "GET /hero/:id": [],
   "GET /heroes/master": [],
   "POST /hit": [
-    "{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp)||0,dead }"
+    "{ok:false,error:'no-weapon-equipped' }",
+    "{ok:false,error:'map-diff' }",
+    "{ok:false,error:'out_of_range' }",
+    "{ok:false,error:'no_los' }"
   ],
   "GET /list": [
     "{canSelect:!row }"
@@ -132,14 +164,6 @@
   ],
   "POST /move": [
     "{ok:true,x,y,seq }"
-  ],
-  "GET /nearest": [
-    "{ok:true,id:String(row.id),x:mx,y:my,hp:Number(row.hp),maxHp:Number(row.max_hp),monsterKey:row.monsterKey }",
-    "{ok:false,error:'map-diff' }",
-    "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }",
-    "{ok:true }",
-    "{ok:true }"
   ],
   "GET /ping": [
     "{ok:true,ts:Date.now() }",

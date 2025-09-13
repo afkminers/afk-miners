@@ -144,21 +144,21 @@
   },
   {
     "file": "server\\index.js",
-    "line": 52,
+    "line": 59,
     "kind": "arrow",
     "name": "syncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 99,
+    "line": 114,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 273,
+    "line": 288,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -167,7 +167,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 529,
+    "line": 544,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -176,7 +176,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 583,
+    "line": 598,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -185,7 +185,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 596,
+    "line": 611,
     "kind": "function",
     "name": "setupHeartbeat",
     "params": [
@@ -194,14 +194,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 598,
+    "line": 613,
     "kind": "function",
     "name": "noop",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 616,
+    "line": 631,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -210,31 +210,40 @@
   },
   {
     "file": "server\\index.js",
-    "line": 649,
+    "line": 664,
     "kind": "function",
     "name": "checkIdleAndManageLoops",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 680,
+    "line": 695,
     "kind": "function",
     "name": "idleAwareSyncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 699,
+    "line": 714,
     "kind": "function",
     "name": "startIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 715,
+    "line": 730,
     "kind": "function",
     "name": "stopIdleScheduler",
     "params": []
+  },
+  {
+    "file": "server\\ws\\origins.js",
+    "line": 3,
+    "kind": "function",
+    "name": "isOriginAllowed",
+    "params": [
+      "origin"
+    ]
   },
   {
     "file": "server\\ws\\initial_monsters.js",
@@ -364,21 +373,21 @@
   },
   {
     "file": "server\\starter\\routes.js",
-    "line": 16,
+    "line": 8,
     "kind": "function",
     "name": "isHeroKeyGenerated",
     "params": []
   },
   {
     "file": "server\\starter\\routes.js",
-    "line": 35,
+    "line": 23,
     "kind": "function",
     "name": "hasHpColumns",
     "params": []
   },
   {
     "file": "server\\starter\\routes.js",
-    "line": 49,
+    "line": 37,
     "kind": "function",
     "name": "buildStarterRouter",
     "params": []
@@ -881,6 +890,16 @@
     ]
   },
   {
+    "file": "server\\scripts\\ws-payload-test.js",
+    "line": 4,
+    "kind": "function",
+    "name": "arg",
+    "params": [
+      "name",
+      "def"
+    ]
+  },
+  {
     "file": "server\\scripts\\gen-context.js",
     "line": 68,
     "kind": "function",
@@ -1320,30 +1339,33 @@
   },
   {
     "file": "server\\routes\\combat_nearest.js",
-    "line": 72,
+    "line": 73,
     "kind": "function",
-    "name": "pointRectDist2",
+    "name": "getSpriteRect",
     "params": [
-      "px0",
-      "py0",
-      "rx",
-      "ry",
-      "rw",
-      "rh"
+      "m"
     ]
   },
   {
     "file": "server\\routes\\combat_nearest.js",
-    "line": 79,
+    "line": 112,
     "kind": "function",
-    "name": "containsPoint",
+    "name": "pointInRect",
     "params": [
-      "px0",
-      "py0",
-      "rx",
-      "ry",
-      "rw",
-      "rh"
+      "px",
+      "py",
+      "rect"
+    ]
+  },
+  {
+    "file": "server\\routes\\combat_nearest.js",
+    "line": 118,
+    "kind": "function",
+    "name": "pointRectDist2",
+    "params": [
+      "px",
+      "py",
+      "rect"
     ]
   },
   {
@@ -1653,6 +1675,30 @@
     "params": []
   },
   {
+    "file": "server\\middleware\\cors-allowlist.js",
+    "line": 3,
+    "kind": "function",
+    "name": "parseOrigins",
+    "params": []
+  },
+  {
+    "file": "server\\middleware\\cors-allowlist.js",
+    "line": 8,
+    "kind": "function",
+    "name": "sameOrigin",
+    "params": [
+      "a",
+      "b"
+    ]
+  },
+  {
+    "file": "server\\middleware\\cors-allowlist.js",
+    "line": 12,
+    "kind": "function",
+    "name": "buildCors",
+    "params": []
+  },
+  {
     "file": "server\\maps\\grid.js",
     "line": 6,
     "kind": "function",
@@ -1916,6 +1962,47 @@
     ]
   },
   {
+    "file": "server\\combat\\targeting.js",
+    "line": 12,
+    "kind": "function",
+    "name": "pointRectDist2",
+    "params": [
+      "px",
+      "py",
+      "rx",
+      "ry",
+      "rw",
+      "rh"
+    ]
+  },
+  {
+    "file": "server\\combat\\targeting.js",
+    "line": 23,
+    "kind": "function",
+    "name": "containsPoint",
+    "params": [
+      "px",
+      "py",
+      "rx",
+      "ry",
+      "rw",
+      "rh"
+    ]
+  },
+  {
+    "file": "server\\combat\\targeting.js",
+    "line": 31,
+    "kind": "function",
+    "name": "findNearestMonster",
+    "params": [
+      "{ mapKey",
+      "clickX",
+      "clickY",
+      "playerX",
+      "playerY }"
+    ]
+  },
+  {
     "file": "server\\combat\\service.js",
     "line": 10,
     "kind": "function",
@@ -1937,7 +2024,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 27,
+    "line": 28,
     "kind": "function",
     "name": "getHeroStats",
     "params": [
@@ -1946,7 +2033,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 41,
+    "line": 46,
     "kind": "function",
     "name": "getInstanceWithMonster",
     "params": [
@@ -1955,7 +2042,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 55,
+    "line": 60,
     "kind": "function",
     "name": "getRespawnSeconds",
     "params": [
@@ -1964,7 +2051,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 65,
+    "line": 70,
     "kind": "function",
     "name": "rollLoot",
     "params": [
@@ -1973,7 +2060,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 84,
+    "line": 89,
     "kind": "function",
     "name": "giveXp",
     "params": [
@@ -1983,7 +2070,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 95,
+    "line": 100,
     "kind": "function",
     "name": "persistDrops",
     "params": [
@@ -1994,7 +2081,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 113,
+    "line": 118,
     "kind": "function",
     "name": "applyHit",
     "params": [
@@ -2030,40 +2117,11 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 68,
+    "line": 131,
     "kind": "function",
-    "name": "resolveSkillTypeOrClass",
+    "name": "getWeaponTypeFallback",
     "params": [
-      "{ weaponType",
-      "heroId }"
-    ]
-  },
-  {
-    "file": "server\\combat\\routes.js",
-    "line": 69,
-    "kind": "function",
-    "name": "mapWeaponToSkill",
-    "params": [
-      "wtype"
-    ]
-  },
-  {
-    "file": "server\\combat\\routes.js",
-    "line": 108,
-    "kind": "function",
-    "name": "gainSkillFromHit",
-    "params": [
-      "{ heroId",
-      "weaponType }"
-    ]
-  },
-  {
-    "file": "server\\combat\\routes.js",
-    "line": 300,
-    "kind": "function",
-    "name": "rollSimpleLoot",
-    "params": [
-      "monsterKey"
+      "heroId"
     ]
   },
   {
@@ -2302,6 +2360,16 @@
     "line": 4,
     "kind": "arrow",
     "name": "envNum",
+    "params": [
+      "name",
+      "def"
+    ]
+  },
+  {
+    "file": "server\\balance\\config.js",
+    "line": 9,
+    "kind": "arrow",
+    "name": "envBool",
     "params": [
       "name",
       "def"
@@ -6420,21 +6488,21 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 11,
+    "line": 15,
     "kind": "function",
     "name": "pickCanvas",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 17,
+    "line": 21,
     "kind": "function",
     "name": "pickCamera",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 18,
+    "line": 22,
     "kind": "function",
     "name": "screenToWorld",
     "params": [
@@ -6445,7 +6513,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 25,
+    "line": 29,
     "kind": "function",
     "name": "getMouseWorldFromEvent",
     "params": [
@@ -6455,7 +6523,16 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 33,
+    "line": 40,
+    "kind": "function",
+    "name": "localPickUnderCursor",
+    "params": [
+      "worldPos"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 71,
     "kind": "function",
     "name": "weaponForClass",
     "params": [
@@ -6464,14 +6541,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 39,
+    "line": 77,
     "kind": "function",
     "name": "ensureActiveHero",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 54,
+    "line": 92,
     "kind": "function",
     "name": "resolveServerTarget",
     "params": [
@@ -6481,21 +6558,30 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 77,
+    "line": 116,
+    "kind": "function",
+    "name": "pickMobAtWorld",
+    "params": [
+      "pt"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 147,
     "kind": "function",
     "name": "doHit",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 106,
+    "line": 176,
     "kind": "function",
     "name": "startLoop",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 108,
+    "line": 178,
     "kind": "function",
     "name": "startAttack",
     "params": [
@@ -6504,21 +6590,21 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 134,
+    "line": 204,
     "kind": "function",
     "name": "stopAttack",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 144,
+    "line": 214,
     "kind": "function",
     "name": "attachControls",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 152,
+    "line": 226,
     "kind": "arrow",
     "name": "onPointerDown",
     "params": [

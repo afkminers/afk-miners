@@ -1,14 +1,86 @@
 {
   "GET /_ping": [
     {
-      "status": 200,
-      "body": "{ok:false,error:'too-far-click' }"
+      "status": 400,
+      "body": "{ok:false,error:'missing-params' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'mob-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'hero-pos-missing' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'start-failed' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'stop-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-id' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero-id' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'mob-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'hero-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:result.message }"
     }
   ],
   "GET /_routes": [
     {
-      "status": 200,
-      "body": "{ok:false,error:'too-far-click' }"
+      "status": 400,
+      "body": "{ok:false,error:'missing-params' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'mob-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'hero-pos-missing' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'start-failed' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'stop-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-id' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero-id' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'mob-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'hero-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:result.message }"
     }
   ],
   "POST /:heroId/deposit": [
@@ -296,7 +368,11 @@
     },
     {
       "status": 404,
-      "body": "{error:'no-alive' }"
+      "body": "{error:'no-intersect' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'no-monster-in-radius' }"
     }
   ],
   "GET /api/csrf": [],
@@ -365,11 +441,23 @@
     },
     {
       "status": 400,
-      "body": "{ok:false,error:'bad-id' }"
+      "body": "{ok:false,error:'missing-hero-id' }"
     },
     {
-      "status": 404,
-      "body": "{ok:false,error:'no-such-alive' }"
+      "status": 400,
+      "body": "{ok:false,error:'mob-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'hero-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:result.message }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'hit-failed' }"
     }
   ],
   "POST /attack/stop": [
@@ -383,11 +471,23 @@
     },
     {
       "status": 400,
-      "body": "{ok:false,error:'bad-id' }"
+      "body": "{ok:false,error:'missing-hero-id' }"
     },
     {
-      "status": 404,
-      "body": "{ok:false,error:'no-such-alive' }"
+      "status": 400,
+      "body": "{ok:false,error:'mob-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'hero-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:result.message }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'hit-failed' }"
     }
   ],
   "GET /cache/stats": [
@@ -641,11 +741,19 @@
     },
     {
       "status": 400,
-      "body": "{ok:false,error:'bad-id' }"
+      "body": "{ok:false,error:'missing-hero-id' }"
     },
     {
-      "status": 404,
-      "body": "{ok:false,error:'no-such-alive' }"
+      "status": 400,
+      "body": "{ok:false,error:'mob-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'hero-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:result.message }"
     },
     {
       "status": 500,
@@ -890,48 +998,6 @@
     {
       "status": 400,
       "body": "{error:'too-fast' }"
-    }
-  ],
-  "GET /nearest": [
-    {
-      "status": 200,
-      "body": "{ok:false,error:'too-far-click' }"
-    },
-    {
-      "status": 404,
-      "body": "{ok:false,error:'no-monster' }"
-    },
-    {
-      "status": 404,
-      "body": "{ok:false,error:'no-monster-in-radius' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'nearest-failed' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'missing-params' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'mob-pos-missing' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'hero-pos-missing' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'start-failed' }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'stop-failed' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'missing-id' }"
     }
   ],
   "GET /ping": [

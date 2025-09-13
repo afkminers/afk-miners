@@ -3,10 +3,12 @@
 ## Variáveis de ambiente
 
 - `APP_ORIGIN`
-- `APP_ORIGINS` (defaults: process.env.APP_ORIGIN)
+- `APP_ORIGINS` (defaults: http://localhost:3000, process.env.APP_ORIGIN)
 - `ASSETS_CACHE_TTL_MS` (defaults: 300000)
 - `CATALOG_CACHE_ENABLED`
 - `CATALOG_CACHE_REFRESH_SEC` (defaults: 120)
+- `CLICK_PICK_RADIUS_PX` (defaults: 192)
+- `CLICK_REQUIRE_INTERSECT` (defaults: 1)
 - `COMBAT_DEBUG` (defaults: )
 - `CONTENT_PIPELINE` (defaults: off)
 - `COOKIE_DOMAIN` (defaults: undefined)
@@ -27,6 +29,7 @@
 - `ENDPOINT_METRICS_TOP_N` (defaults: 10)
 - `GEN_CONTEXT_ON_START`
 - `IDLE_SCHEDULER_CHECK_MS` (defaults: 30000)
+- `JSON_LIMIT` (defaults: 64kb)
 - `JWT_SECRET` (defaults: changeme, CHANGE_ME_DEV_ONLY)
 - `LOOT_CACHE_ENABLED`
 - `LOOT_CACHE_TTL_SEC` (defaults: 5)
@@ -51,7 +54,7 @@
 
 ### GET /
 
-Arquivo: `server\index.js:538`
+Arquivo: `server\index.js:553`
 
 _Sem payload inferido_
 
@@ -118,14 +121,13 @@ Arquivo: `server\routes\backpack.js:8`
 Arquivo: `server\combat\routes.js:38`
 
 **Payloads (exemplos inferidos):**
-- query:
+- body:
 ```json
 {
-  "map": "value",
-  "x": "value",
-  "y": "value",
-  "px": "value",
-  "py": "value"
+  "heroId": 1,
+  "try {\n    const { heroId": 1,
+  "targetInstanceId": 1,
+  "weaponType": "value"
 }
 ```
 
@@ -135,21 +137,29 @@ Arquivo: `server\combat\routes.js:38`
 ```
 
 **Erros conhecidos:**
-- `HTTP 200` → {ok:false,error:'too-far-click' }
+- `HTTP 400` → {ok:false,error:'missing-params' }
+- `HTTP 400` → {ok:false,error:'mob-pos-missing' }
+- `HTTP 400` → {ok:false,error:'hero-pos-missing' }
+- `HTTP 500` → {ok:false,error:'start-failed' }
+- `HTTP 500` → {ok:false,error:'stop-failed' }
+- `HTTP 400` → {ok:false,error:'missing-id' }
+- `HTTP 400` → {ok:false,error:'missing-hero-id' }
+- `HTTP 400` → {ok:false,error:'mob-pos-missing' }
+- `HTTP 400` → {ok:false,error:'hero-pos-missing' }
+- `HTTP 400` → {ok:false,error:result.message }
 
 ### GET /_routes
 
 Arquivo: `server\combat\routes.js:39`
 
 **Payloads (exemplos inferidos):**
-- query:
+- body:
 ```json
 {
-  "map": "value",
-  "x": "value",
-  "y": "value",
-  "px": "value",
-  "py": "value"
+  "heroId": 1,
+  "try {\n    const { heroId": 1,
+  "targetInstanceId": 1,
+  "weaponType": "value"
 }
 ```
 
@@ -159,11 +169,20 @@ Arquivo: `server\combat\routes.js:39`
 ```
 
 **Erros conhecidos:**
-- `HTTP 200` → {ok:false,error:'too-far-click' }
+- `HTTP 400` → {ok:false,error:'missing-params' }
+- `HTTP 400` → {ok:false,error:'mob-pos-missing' }
+- `HTTP 400` → {ok:false,error:'hero-pos-missing' }
+- `HTTP 500` → {ok:false,error:'start-failed' }
+- `HTTP 500` → {ok:false,error:'stop-failed' }
+- `HTTP 400` → {ok:false,error:'missing-id' }
+- `HTTP 400` → {ok:false,error:'missing-hero-id' }
+- `HTTP 400` → {ok:false,error:'mob-pos-missing' }
+- `HTTP 400` → {ok:false,error:'hero-pos-missing' }
+- `HTTP 400` → {ok:false,error:result.message }
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:507`
+Arquivo: `server\index.js:522`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -191,7 +210,7 @@ Arquivo: `server\index.js:507`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:482`
+Arquivo: `server\index.js:497`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -221,7 +240,7 @@ Arquivo: `server\index.js:482`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:494`
+Arquivo: `server\index.js:509`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -250,7 +269,7 @@ Arquivo: `server\index.js:494`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:471`
+Arquivo: `server\index.js:486`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -275,7 +294,7 @@ Arquivo: `server\index.js:471`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:415`
+Arquivo: `server\index.js:430`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -303,7 +322,7 @@ Arquivo: `server\index.js:415`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:426`
+Arquivo: `server\index.js:441`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -330,7 +349,7 @@ Arquivo: `server\index.js:426`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:448`
+Arquivo: `server\index.js:463`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -356,7 +375,7 @@ Arquivo: `server\index.js:448`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:951`
+Arquivo: `server\index.js:976`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -380,7 +399,7 @@ Arquivo: `server\index.js:951`
 
 ### GET /api/combat/nearest
 
-Arquivo: `server\routes\combat_nearest.js:28`
+Arquivo: `server\routes\combat_nearest.js:30`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -390,18 +409,20 @@ Arquivo: `server\routes\combat_nearest.js:28`
   "x": "value",
   "y": "value",
   "px": "value",
-  "py": "value"
+  "py": "value",
+  "debug": "value"
 }
 ```
 
 **Erros conhecidos:**
 - `HTTP 400` → {error:'bad-coords' }
 - `HTTP 404` → {error:'no-alive' }
-- `HTTP 404` → {error:'no-alive' }
+- `HTTP 404` → {error:'no-intersect' }
+- `HTTP 404` → {error:'no-monster-in-radius' }
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:93`
+Arquivo: `server\index.js:104`
 
 _Sem payload inferido_
 
@@ -552,7 +573,7 @@ _Sem payload inferido_
 
 ### GET /list
 
-Arquivo: `server\starter\routes.js:56`
+Arquivo: `server\starter\routes.js:41`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -646,48 +667,6 @@ Arquivo: `server\skills\routes.js:94`
 - `HTTP 500` → {error:'Falha ao listar skills do herói' }
 - `HTTP 400` → {error:'heroId e skillType são obrigatórios' }
 - `HTTP 500` → {error:'Falha ao aplicar ganho' }
-
-### GET /nearest
-
-Arquivo: `server\combat\routes.js:184`
-
-**Payloads (exemplos inferidos):**
-- query:
-```json
-{
-  "map": "value",
-  "x": "value",
-  "y": "value",
-  "px": "value",
-  "py": "value"
-}
-```
-- body:
-```json
-{
-  "heroId": 1,
-  "weaponType": "value",
-  "try {\n    const { heroId": 1,
-  "targetInstanceId": 1
-}
-```
-
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,id:String(row.id),x:mx,y:my,hp:Number(row.hp),maxHp:Number(row.max_hp),monsterKey:row.monsterKey }
-```
-
-**Erros conhecidos:**
-- `HTTP 200` → {ok:false,error:'too-far-click' }
-- `HTTP 404` → {ok:false,error:'no-monster' }
-- `HTTP 404` → {ok:false,error:'no-monster-in-radius' }
-- `HTTP 500` → {ok:false,error:'nearest-failed' }
-- `HTTP 400` → {ok:false,error:'missing-params' }
-- `HTTP 400` → {ok:false,error:'mob-pos-missing' }
-- `HTTP 400` → {ok:false,error:'hero-pos-missing' }
-- `HTTP 500` → {ok:false,error:'start-failed' }
-- `HTTP 500` → {ok:false,error:'stop-failed' }
-- `HTTP 400` → {ok:false,error:'missing-id' }
 
 ### GET /ping
 
@@ -794,7 +773,7 @@ Arquivo: `server\routes\farm.js:71`
 
 ### GET /status
 
-Arquivo: `server\starter\routes.js:101`
+Arquivo: `server\starter\routes.js:85`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -831,7 +810,7 @@ Arquivo: `server\routes\game_tick.js:10`
 
 ### POST /
 
-Arquivo: `server\gacha\routes.js:144`
+Arquivo: `server\gacha\routes.js:147`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -874,7 +853,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:517`
+Arquivo: `server\index.js:532`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -894,7 +873,7 @@ Arquivo: `server\index.js:517`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:974`
+Arquivo: `server\index.js:999`
 
 _Sem payload inferido_
 
@@ -938,23 +917,22 @@ Arquivo: `server\routes\afk.js:65`
 
 ### POST /attack/start
 
-Arquivo: `server\combat\routes.js:246`
+Arquivo: `server\combat\routes.js:68`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
   "heroId": 1,
-  "weaponType": "value",
-  "damage": "value",
   "try {\n    const { heroId": 1,
-  "targetInstanceId": 1
+  "targetInstanceId": 1,
+  "weaponType": "value"
 }
 ```
 
 **Resposta de sucesso (amostra):**
 ```json
-{ok:false,error:'map-diff' }
+{ok:false,error:'no-weapon-equipped' }
 ```
 
 **Erros conhecidos:**
@@ -964,20 +942,21 @@ Arquivo: `server\combat\routes.js:246`
 - `HTTP 500` → {ok:false,error:'start-failed' }
 - `HTTP 500` → {ok:false,error:'stop-failed' }
 - `HTTP 400` → {ok:false,error:'missing-id' }
-- `HTTP 400` → {ok:false,error:'bad-id' }
-- `HTTP 404` → {ok:false,error:'no-such-alive' }
+- `HTTP 400` → {ok:false,error:'missing-hero-id' }
+- `HTTP 400` → {ok:false,error:'mob-pos-missing' }
+- `HTTP 400` → {ok:false,error:'hero-pos-missing' }
+- `HTTP 400` → {ok:false,error:result.message }
+- `HTTP 500` → {ok:false,error:'hit-failed' }
 
 ### POST /attack/stop
 
-Arquivo: `server\combat\routes.js:281`
+Arquivo: `server\combat\routes.js:109`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
   "heroId": 1,
-  "weaponType": "value",
-  "damage": "value",
   "try {\n    const { heroId": 1
 }
 ```
@@ -992,8 +971,11 @@ Arquivo: `server\combat\routes.js:281`
 **Erros conhecidos:**
 - `HTTP 500` → {ok:false,error:'stop-failed' }
 - `HTTP 400` → {ok:false,error:'missing-id' }
-- `HTTP 400` → {ok:false,error:'bad-id' }
-- `HTTP 404` → {ok:false,error:'no-such-alive' }
+- `HTTP 400` → {ok:false,error:'missing-hero-id' }
+- `HTTP 400` → {ok:false,error:'mob-pos-missing' }
+- `HTTP 400` → {ok:false,error:'hero-pos-missing' }
+- `HTTP 400` → {ok:false,error:result.message }
+- `HTTP 500` → {ok:false,error:'hit-failed' }
 
 ### POST /collect
 
@@ -1142,27 +1124,27 @@ Arquivo: `server\routes\farm.js:181`
 
 ### POST /hit
 
-Arquivo: `server\combat\routes.js:321`
+Arquivo: `server\combat\routes.js:139`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "heroId": 1,
-  "weaponType": "value",
-  "damage": "value"
+  "heroId": 1
 }
 ```
 
 **Resposta de sucesso (amostra):**
 ```json
-{ok:true,id:mi.id,dmg:DMG,hp,maxHp:Number(mi.max_hp)||0,dead }
+{ok:false,error:'no-weapon-equipped' }
 ```
 
 **Erros conhecidos:**
 - `HTTP 400` → {ok:false,error:'missing-id' }
-- `HTTP 400` → {ok:false,error:'bad-id' }
-- `HTTP 404` → {ok:false,error:'no-such-alive' }
+- `HTTP 400` → {ok:false,error:'missing-hero-id' }
+- `HTTP 400` → {ok:false,error:'mob-pos-missing' }
+- `HTTP 400` → {ok:false,error:'hero-pos-missing' }
+- `HTTP 400` → {ok:false,error:result.message }
 - `HTTP 500` → {ok:false,error:'hit-failed' }
 
 ### POST /login
@@ -1405,7 +1387,7 @@ _Sem payload inferido_
 
 ### POST /select
 
-Arquivo: `server\starter\routes.js:120`
+Arquivo: `server\starter\routes.js:103`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1439,9 +1421,27 @@ Arquivo: `server\starter\routes.js:120`
   - HTTP 400: {error:'bad-args' }
   - HTTP 500: {error:'backpack-deposit-failed' }
 - **GET /_ping**
-  - HTTP 200: {ok:false,error:'too-far-click' }
+  - HTTP 400: {ok:false,error:'missing-params' }
+  - HTTP 400: {ok:false,error:'mob-pos-missing' }
+  - HTTP 400: {ok:false,error:'hero-pos-missing' }
+  - HTTP 500: {ok:false,error:'start-failed' }
+  - HTTP 500: {ok:false,error:'stop-failed' }
+  - HTTP 400: {ok:false,error:'missing-id' }
+  - HTTP 400: {ok:false,error:'missing-hero-id' }
+  - HTTP 400: {ok:false,error:'mob-pos-missing' }
+  - HTTP 400: {ok:false,error:'hero-pos-missing' }
+  - HTTP 400: {ok:false,error:result.message }
 - **GET /_routes**
-  - HTTP 200: {ok:false,error:'too-far-click' }
+  - HTTP 400: {ok:false,error:'missing-params' }
+  - HTTP 400: {ok:false,error:'mob-pos-missing' }
+  - HTTP 400: {ok:false,error:'hero-pos-missing' }
+  - HTTP 500: {ok:false,error:'start-failed' }
+  - HTTP 500: {ok:false,error:'stop-failed' }
+  - HTTP 400: {ok:false,error:'missing-id' }
+  - HTTP 400: {ok:false,error:'missing-hero-id' }
+  - HTTP 400: {ok:false,error:'mob-pos-missing' }
+  - HTTP 400: {ok:false,error:'hero-pos-missing' }
+  - HTTP 400: {ok:false,error:result.message }
 - **GET /api/admin/content/map/:key/data**
   - HTTP 404: {error:'map not found' }
   - HTTP 500: {error:err.message }
@@ -1498,7 +1498,8 @@ Arquivo: `server\starter\routes.js:120`
 - **GET /api/combat/nearest**
   - HTTP 400: {error:'bad-coords' }
   - HTTP 404: {error:'no-alive' }
-  - HTTP 404: {error:'no-alive' }
+  - HTTP 404: {error:'no-intersect' }
+  - HTTP 404: {error:'no-monster-in-radius' }
 - **GET /api/csrf**
 - **GET /assets/items**
   - HTTP 500: {error:"Falha ao listar items" }
@@ -1574,17 +1575,6 @@ Arquivo: `server\starter\routes.js:120`
   - HTTP 500: {error:'pos-write-failed' }
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
-- **GET /nearest**
-  - HTTP 200: {ok:false,error:'too-far-click' }
-  - HTTP 404: {ok:false,error:'no-monster' }
-  - HTTP 404: {ok:false,error:'no-monster-in-radius' }
-  - HTTP 500: {ok:false,error:'nearest-failed' }
-  - HTTP 400: {ok:false,error:'missing-params' }
-  - HTTP 400: {ok:false,error:'mob-pos-missing' }
-  - HTTP 400: {ok:false,error:'hero-pos-missing' }
-  - HTTP 500: {ok:false,error:'start-failed' }
-  - HTTP 500: {ok:false,error:'stop-failed' }
-  - HTTP 400: {ok:false,error:'missing-id' }
 - **GET /ping**
   - HTTP 500: {error:'afk_state_failed' }
   - HTTP 400: {error:'produce_type required' }
@@ -1659,13 +1649,19 @@ Arquivo: `server\starter\routes.js:120`
   - HTTP 500: {ok:false,error:'start-failed' }
   - HTTP 500: {ok:false,error:'stop-failed' }
   - HTTP 400: {ok:false,error:'missing-id' }
-  - HTTP 400: {ok:false,error:'bad-id' }
-  - HTTP 404: {ok:false,error:'no-such-alive' }
+  - HTTP 400: {ok:false,error:'missing-hero-id' }
+  - HTTP 400: {ok:false,error:'mob-pos-missing' }
+  - HTTP 400: {ok:false,error:'hero-pos-missing' }
+  - HTTP 400: {ok:false,error:result.message }
+  - HTTP 500: {ok:false,error:'hit-failed' }
 - **POST /attack/stop**
   - HTTP 500: {ok:false,error:'stop-failed' }
   - HTTP 400: {ok:false,error:'missing-id' }
-  - HTTP 400: {ok:false,error:'bad-id' }
-  - HTTP 404: {ok:false,error:'no-such-alive' }
+  - HTTP 400: {ok:false,error:'missing-hero-id' }
+  - HTTP 400: {ok:false,error:'mob-pos-missing' }
+  - HTTP 400: {ok:false,error:'hero-pos-missing' }
+  - HTTP 400: {ok:false,error:result.message }
+  - HTTP 500: {ok:false,error:'hit-failed' }
 - **POST /collect**
   - HTTP 500: {error:'collect_failed' }
 - **POST /create-worker**
@@ -1701,8 +1697,10 @@ Arquivo: `server\starter\routes.js:120`
   - HTTP 500: {error:'debug_grant_failed' }
 - **POST /hit**
   - HTTP 400: {ok:false,error:'missing-id' }
-  - HTTP 400: {ok:false,error:'bad-id' }
-  - HTTP 404: {ok:false,error:'no-such-alive' }
+  - HTTP 400: {ok:false,error:'missing-hero-id' }
+  - HTTP 400: {ok:false,error:'mob-pos-missing' }
+  - HTTP 400: {ok:false,error:'hero-pos-missing' }
+  - HTTP 400: {ok:false,error:result.message }
   - HTTP 500: {ok:false,error:'hit-failed' }
 - **POST /login**
   - HTTP 401: {error:'Credenciais inválidas' }

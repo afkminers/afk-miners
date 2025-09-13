@@ -13,11 +13,16 @@
     "key": "APP_ORIGINS",
     "occurrences": [
       {
+        "file": "server\\middleware\\cors-allowlist.js",
+        "index": 74
+      },
+      {
         "file": "server\\auth\\middleware.js",
         "index": 911
       }
     ],
     "defaults": [
+      "http://localhost:3000",
       "process.env.APP_ORIGIN"
     ]
   },
@@ -26,7 +31,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2760
+        "index": 3099
       }
     ],
     "defaults": [
@@ -56,15 +61,43 @@
     ]
   },
   {
+    "key": "CLICK_PICK_RADIUS_PX",
+    "occurrences": [
+      {
+        "file": "server\\routes\\combat_nearest.js",
+        "index": 346
+      }
+    ],
+    "defaults": [
+      "192"
+    ]
+  },
+  {
+    "key": "CLICK_REQUIRE_INTERSECT",
+    "occurrences": [
+      {
+        "file": "server\\routes\\combat_nearest.js",
+        "index": 259
+      }
+    ],
+    "defaults": [
+      "1"
+    ]
+  },
+  {
     "key": "COMBAT_DEBUG",
     "occurrences": [
       {
         "file": "server\\routes\\combat_nearest.js",
-        "index": 177
+        "index": 172
+      },
+      {
+        "file": "server\\combat\\targeting.js",
+        "index": 198
       },
       {
         "file": "server\\combat\\routes.js",
-        "index": 926
+        "index": 903
       },
       {
         "file": "server\\combat\\autoloop.js",
@@ -72,6 +105,7 @@
       }
     ],
     "defaults": [
+      "",
       "",
       "",
       ""
@@ -82,7 +116,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 1733
+        "index": 2072
       }
     ],
     "defaults": [
@@ -106,7 +140,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 19334
+        "index": 19944
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -302,7 +336,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 24321
+        "index": 24931
       }
     ],
     "defaults": []
@@ -312,7 +346,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2625
+        "index": 2964
       }
     ],
     "defaults": [
@@ -320,11 +354,23 @@
     ]
   },
   {
+    "key": "JSON_LIMIT",
+    "occurrences": [
+      {
+        "file": "server\\middleware\\body-limit.js",
+        "index": 104
+      }
+    ],
+    "defaults": [
+      "64kb"
+    ]
+  },
+  {
     "key": "JWT_SECRET",
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 19241
+        "index": 19851
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -387,7 +433,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2274
+        "index": 2613
       },
       {
         "file": "server\\skills\\routes.js",
@@ -478,7 +524,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2333
+        "index": 2672
       }
     ],
     "defaults": [
@@ -490,7 +536,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 19191
+        "index": 19801
       }
     ],
     "defaults": [
@@ -526,7 +572,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 19299
+        "index": 19909
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -543,7 +589,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\routes.js",
-        "index": 1238
+        "index": 1208
       }
     ],
     "defaults": [
@@ -555,7 +601,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2899
+        "index": 3238
       }
     ],
     "defaults": []
@@ -565,7 +611,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2517
+        "index": 2856
       }
     ],
     "defaults": [
