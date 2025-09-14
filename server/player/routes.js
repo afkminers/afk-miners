@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 const { all, get, run } = require('../models/db');
+const { computeHeroStats } = require('../services/heroStats'); // NOVO: cálculo dinâmico
 
 const MAX_SPEED_PX_PER_S = 180;          // teto de velocidade (px/s)
 const EXTRA_GRACE_PX = 48;               // tolerância p/ jitter/rede
@@ -147,14 +148,29 @@ router.get('/me', async (req, res) => {
       [userId]
     );
 
-    const me = {
-      id: userId,
-      name: req.user?.name || req.user?.username || 'player',
-      heroes: heroes.map(h => ({
+    // NOVO: Calcula status máximos dinâmicos para cada herói para enviar ao client
+    const heroesWithStats = await Promise.all(heroes.map(async h => {
+      let stats = {};
+      try {
+        stats = await computeHeroStats({
+          level: h.level,
+          heroKey: h.heroKey,
+          class: h.class
+        });
+      } catch (e) {
+        // fallback seguro
+        stats = {
+          maxHp: 100 + (h.level - 1) * 5 + (h.defense || 0) * 2,
+          maxMana: 50,
+          maxCap: 470
+        };
+        console.warn('[player/me] computeHeroStats falhou, usando fallback:', e?.message);
+      }
+      return {
         id: String(h.id),
         heroKey: h.heroKey,
-        class: h.class,                 // <- o client usa isso
-        isStarter: !!h.isStarter,       // <- e isso também
+        class: h.class,
+        isStarter: !!h.isStarter,
         name: h.displayName || h.heroKey,
         level: Number(h.level || 1),
         rarity: h.rarity || 'COMMON',
@@ -162,7 +178,16 @@ router.get('/me', async (req, res) => {
         defense: Number(h.defense || 1),
         speed: Number(h.speed || 1),
         xp: Number(h.xp || 0),
-      })),
+        maxHp: stats.maxHp,
+        maxMana: stats.maxMana,
+        maxCap: stats.maxCap
+      };
+    }));
+
+    const me = {
+      id: userId,
+      name: req.user?.name || req.user?.username || 'player',
+      heroes: heroesWithStats,
     };
 
     res.json(me);

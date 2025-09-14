@@ -1,6 +1,7 @@
 // Cena jogável genérica (House/PvP): usa ?map=<key> (padrão house).
 // Input (WASD/Numpad/Mouse) + PlayerController + Camera2D + AStarGrid + ClickToMove.
 // Requests HTTP centralizadas em client/js/api.js (CSRF automático).
+// /client/js/play.js
 
 import { getCsrf, apiGet, apiPost } from './api.js';
 import { CombatActions } from './combat/actions.js';
@@ -1242,15 +1243,10 @@ function updateRespawns(now) {
     // evento por frame
     window.dispatchEvent(new CustomEvent('game:frame', { detail: { ctx, camera, dt } }));
 
-    // HUD
+    // Remover HUD de informações do jogo
     if (hud) {
-      const p = controller.getPosition();
-      hud.innerHTML = `
-        <div>map: ${MAP_KEY}</div>
-        <div>Move: Click-to-move • WASD/Setas/Numpad (1 SQM)</div>
-        <div>pos: ${Math.round(p.x)}, ${Math.round(p.y)}</div>
-        <div>mobs: ${mobs.length} • spawns: ${spawners.length} • loots: ${loots.size}</div>
-      `;
+      const hudGameInfo = document.getElementById('hud-gameinfo');
+      if (hudGameInfo) hudGameInfo.remove();
     }
 
     requestAnimationFrame(frame);

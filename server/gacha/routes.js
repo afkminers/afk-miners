@@ -1,8 +1,10 @@
+//server/gacha/routes.js
 const express = require('express');
 const { randomUUID } = require('crypto');
 const { all, get, run } = require('../models/db');
 const { requireAuth } = require('../auth/middleware');
 const { ensureHeroSkills } = require('../models/hero_extra');
+const { computeHeroStats } = require('../services/heroStats'); // NOVO: cálculo dinâmico
 
 const router = express.Router();
 router.use(requireAuth);
@@ -86,6 +88,29 @@ async function doSingleSummon(playerId) {
   const atk = Math.max(1, Math.floor((chosen.base_attack  || 1) * m));
   const def = Math.max(1, Math.floor((chosen.base_defense || 1) * m));
   const spd = Math.max(1, Math.floor((chosen.base_speed   || 1) * m));
+  const level = 1;
+
+  // Determina a classe do herói sorteado (pode vir minúscula do banco)
+  const classe = (chosen.class || '').toUpperCase();
+
+  // Cálculo dinâmico dos status máximos
+  let maxHp = null, maxMana = null, maxCap = null;
+  try {
+    const stats = await computeHeroStats({
+      level,
+      heroKey: chosen.heroKey,
+      class: classe
+    });
+    maxHp = stats.maxHp;
+    maxMana = stats.maxMana;
+    maxCap = stats.maxCap;
+  } catch (e) {
+    // fallback seguro
+    maxHp = 100 + (level - 1) * 5 + def * 2;
+    maxMana = 50;
+    maxCap = 470;
+    console.warn('[gacha] computeHeroStats falhou, usando fallback:', e?.message);
+  }
 
   const heroId = randomUUID();
 
@@ -95,8 +120,8 @@ async function doSingleSummon(playerId) {
 
     await run(
       `INSERT INTO player_heroes
-         (id, playerid, herokey, name, rarity, attack, defense, speed, createdat)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+         (id, playerid, herokey, name, rarity, attack, defense, speed, level, hp, max_hp, mana, max_mana, createdat)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
       [
         heroId,
         playerId,
@@ -106,6 +131,11 @@ async function doSingleSummon(playerId) {
         atk,
         def,
         spd,
+        level,
+        maxHp,
+        maxHp,
+        maxMana,
+        maxMana,
         Date.now(),
       ]
     );
@@ -138,6 +168,8 @@ async function doSingleSummon(playerId) {
       attack_type: chosen.attack_type,
       element: chosen.element,
       weapon_pref: chosen.weapon_pref,
+      maxHp: maxHp,
+      maxMana: maxMana
     },
   };
 }

@@ -1,3 +1,7 @@
+<!--
+  // client/app.html
+-->
+
 <!doctype html>
 <html lang="pt-BR">
 
@@ -281,6 +285,10 @@
   <!-- mensagens estilo Tibia / notificação de avanço de skill -->
   <script src="/js/ui/skill_notify.js"></script>
 
+  <!-- ====== NOVO: HUD de status do herói (barras) + Level Up notify ====== -->
+  <script type="module" src="/js/ui/hud_status.js"></script>
+  <script type="module" src="/js/ui/levelup_notify.js"></script>
+
   <!-- força o endpoint certo das skills (PG) -->
   <script>
     // usa a rota que você já tem no back: GET /api/skills/me?heroId=...
@@ -503,7 +511,7 @@
             atk: rowOrNull.atk || 0,
             def: rowOrNull.def || 0,
           };
-          if (idx === -1) next.push(newRow); else next[idx] = { ...next[idx], ...newRow };
+          if (idx === -1) next.push(newRow); else idx >= 0 && (next[idx] = { ...next[idx], ...newRow });
         } else {
           if (idx === -1) next.push({ slot: SLOT, item_key: null }); else next[idx] = { slot: SLOT, item_key: null };
         }

@@ -114,6 +114,56 @@
 
 .pf-stat.pill b{ font-size:13px; }
 
+/* ============ Barras HP/Mana/Cap no perfil ============ */
+.pf-bar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+.pf-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pf-bar-label {
+  width: 60px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 11px;
+  color: #e6eef6;
+  text-align: right;
+}
+.pf-bar {
+  height: 18px;
+  width: 140px;
+  border-radius: 9px;
+  background: #191d29;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #000;
+  flex: 1 1 auto;
+}
+.pf-bar-fill {
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: width .3s cubic-bezier(.4,1.2,.4,1);
+  border-radius: 9px;
+}
+.pf-bar-fill.hp { background: linear-gradient(90deg, #f87171 65%, #fecaca 100%); }
+.pf-bar-fill.mana { background: linear-gradient(90deg, #60a5fa 65%, #bae6fd 100%); }
+.pf-bar-fill.cap { background: linear-gradient(90deg, #facc15 65%, #fef08a 100%); }
+.pf-bar-num {
+  font-family: "Press Start 2P", monospace;
+  font-size: 11px;
+  color: #fff;
+  margin-left: 5px;
+  min-width: 62px;
+  text-align: left;
+  text-shadow: 0 2px 4px #0008;
+}
+
 /* ============ Coluna 2: Equip grid (com Grid Areas) ============ */
 .pf-equip{
   display:grid; gap:6px;

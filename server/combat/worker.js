@@ -1,3 +1,5 @@
+//server/combat/worker.js
+
 async function respawnTick({ all, run }) {
   const due = await all(`
     SELECT id, spawn_id, map_key

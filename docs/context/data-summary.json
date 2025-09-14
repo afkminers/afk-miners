@@ -1,5 +1,9 @@
 [
   {
+    "file": "docs\\releases\\2025-09-13_224705-auto\\ctx.yml",
+    "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
+  },
+  {
     "file": "docs\\releases\\2025-09-13_214653-auto\\ctx.yml",
     "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
   },
@@ -280,7 +284,7 @@
   {
     "file": "data\\sprites\\monsters\\rat.yml",
     "kind": "object",
-    "size": 9,
+    "size": 7,
     "topKeys": [
       "key",
       "kind",
@@ -288,9 +292,7 @@
       "frame",
       "grid",
       "anchor",
-      "anims",
-      "stats",
-      "loot"
+      "anims"
     ]
   },
   {
@@ -447,7 +449,7 @@
   {
     "file": "data\\monsters\\rat.yml",
     "kind": "object",
-    "size": 8,
+    "size": 9,
     "topKeys": [
       "key",
       "name",
@@ -456,7 +458,8 @@
       "speed",
       "look",
       "attacks",
-      "defenses"
+      "defenses",
+      "loot"
     ]
   },
   {
@@ -560,6 +563,24 @@
       "attacks",
       "defenses",
       "loot"
+    ]
+  },
+  {
+    "file": "data\\items\\starter_sword.yml",
+    "kind": "object",
+    "size": 11,
+    "topKeys": [
+      "key",
+      "name",
+      "type",
+      "slot",
+      "kind",
+      "weapon_type",
+      "icon",
+      "atk",
+      "def",
+      "stackable",
+      "weapon"
     ]
   },
   {

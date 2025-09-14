@@ -1,13 +1,15 @@
--- 014_add_hp_columns.sql
+-- /server/db/migrations/014_add_hp_columns.sql
 -- Idempotente: adiciona hp e max_hp se não existirem e faz backfill.
 
 ALTER TABLE player_heroes ADD COLUMN IF NOT EXISTS hp INT;
 ALTER TABLE player_heroes ADD COLUMN IF NOT EXISTS max_hp INT;
 
+-- LEGADO: Antes usava cálculo fixo; agora campos são populados dinamicamente via backend (classes/class_level_gains)
+-- Se quiser garantir que não haja null, pode fazer um backfill mínimo:
 UPDATE player_heroes
-SET max_hp = 100 + GREATEST(level-1,0)*5 + defense*2,
-    hp = COALESCE(hp, 100 + GREATEST(level-1,0)*5 + defense*2)
-WHERE max_hp IS NULL;
+SET max_hp = COALESCE(max_hp, 1),
+    hp = COALESCE(hp, 1)
+WHERE max_hp IS NULL OR hp IS NULL;
 
 -- (Depois de validar que todos registros têm valores)
 -- ALTER TABLE player_heroes ALTER COLUMN hp SET NOT NULL;

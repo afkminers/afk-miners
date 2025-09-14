@@ -15,7 +15,6 @@ const cache = {
 const TTL_ME = 15_000; // 15s
 const TTL_EQ = 10_000; // 10s
 
-/* Controla buscas concorrentes quando reabre o modal rapidamente */
 let openState = {
   controller: null,      // AbortController para /me e /skills
   currentHero: null      // referência do herói atualmente aberto
@@ -59,21 +58,16 @@ async function fetchEquip(force=false){
   try{
     const r = await fetch(`${API}/api/equip/my`, { credentials:'include', cache:'no-store' });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    cache.equip = await r.json(); // { equipment, equipped:[...], bag:[...] }
+    cache.equip = await r.json();
   }catch(_e){
-    // Backend ainda não tem /api/equip/my? ok — seguimos com vazio sem poluir console.
     cache.equip = { equipment:{}, equipped:[], bag:[] };
   }
   cache.lastEquip = Date.now();
   return cache.equip;
 }
 
-/** Resolve URL da sprite do item.
- *  - Se vier absoluta (/algo… ou http…), usa como está
- *  - Se vier relativa (ex.: 'items/backpack_brown.png'), prefixa /sprites/
- */
 function spriteUrlFromMeta(meta){
-  const sprite = meta?.sprite || meta?.icon || ''; // compat
+  const sprite = meta?.sprite || meta?.icon || '';
   if (!sprite) return '';
   if (sprite.startsWith('/') || sprite.startsWith('http')) return sprite;
   return `/sprites/${sprite}`;
@@ -120,6 +114,10 @@ async function fetchPlayerMeOnce(signal){
     if (Array.isArray(data?.skills)) cache.playerSkills = data.skills;
     if (data?.level) cache.playerLevel = data.level;
     cache.lastFetch = Date.now();
+    // NOVO: salva dados HP/Mana/Capacidade no cache (se vierem)
+    if (Array.isArray(data?.heroes)) {
+      cache.playerHeroes = data.heroes;
+    }
   }catch(e){
     if (e?.name === 'AbortError') return;
     console.error('Falha ao buscar /api/player/me', e);
@@ -130,7 +128,6 @@ async function fetchPlayerMeOnce(signal){
    Skills do herói (NOVO endpoint)
    ========================= */
 async function loadHeroSkills(hero, signal){
-  // Agora o backend expõe: GET /api/skills/me?heroId=...
   if (!hero?.id) return [];
   try{
     const r = await fetch(
@@ -139,8 +136,6 @@ async function loadHeroSkills(hero, signal){
     );
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const rows = await r.json();
-    // Espera-se: [{ skill_type, level, tries_progress }]
-    // Normaliza para o renderer
     return (Array.isArray(rows) ? rows : []).map(s => {
       const need = Number(s.need ?? 0);
       const tries = Number(s.tries_progress ?? s.tries ?? 0);
@@ -151,7 +146,7 @@ async function loadHeroSkills(hero, signal){
       return {
         skillType: String(s.skill_type || s.skillType || '').toUpperCase(),
         level: Number(s.level ?? 1),
-        progress: Math.max(0, Math.min(1, pct)), // 0..1
+        progress: Math.max(0, Math.min(1, pct)),
         need,
         tries
       };
@@ -182,7 +177,7 @@ function renderTrainBars(skills){
     const nice    = niceLabel[rawType] || cap(rawType);
 
     const pct  = Math.max(0, Math.min(100, Math.round((s.progress || 0) * 100)));
-    const tip  = `${pct}% — You are ${pct}% to the next level.`; // <- sem “faltam X tries”
+    const tip  = `${pct}% — You are ${pct}% to the next level.`;
 
     return `
       <div class="pf-skill">
@@ -191,7 +186,6 @@ function renderTrainBars(skills){
         <div class="pf-skill-tip">You are ${pct}% to the next level.</div>
       </div>
     `;
-
   }).join('');
 }
 
@@ -206,7 +200,7 @@ function renderHeroSkills(list){
     const frac  = Number.isFinite(s.progress) ? s.progress : (need > 0 ? tries/need : 0);
 
     const pct   = Math.max(0, Math.min(100, Math.round(frac * 100)));
-    const tip   = `You are ${pct}% to the next level.`; // frase estilo Tibia
+    const tip   = `You are ${pct}% to the next level.`;
 
     return `
       <div class="pf-skill">
@@ -218,17 +212,54 @@ function renderHeroSkills(list){
   }).join('');
 }
 
+/* ========== NOVO: Renderiza barras de HP/Mana/Capacidade ========== */
+function renderBars(hero) {
+  // HP, Mana, Capacidade: sempre mostrar barra
+  // Espera-se: hero.maxHp, hero.maxMana, hero.maxCap (ou equivalente)
+  // fallback para 0 se ausente
+  const maxHp = hero.maxHp ?? hero.hp ?? 0;
+  const curHp = hero.hp ?? maxHp;
+  const maxMana = hero.maxMana ?? hero.mana ?? 0;
+  const curMana = hero.mana ?? maxMana;
+  const maxCap = hero.maxCap ?? hero.cap ?? 0;
+  const curCap = hero.cap ?? maxCap;
+
+  return `
+    <div class="pf-bar-group">
+      <div class="pf-bar-row">
+        <span class="pf-bar-label">HP</span>
+        <div class="pf-bar">
+          <div class="pf-bar-fill hp" style="width:${maxHp > 0 ? Math.round(curHp / maxHp * 100) : 0}%"></div>
+        </div>
+        <span class="pf-bar-num">${curHp} / ${maxHp}</span>
+      </div>
+      <div class="pf-bar-row">
+        <span class="pf-bar-label">Mana</span>
+        <div class="pf-bar">
+          <div class="pf-bar-fill mana" style="width:${maxMana > 0 ? Math.round(curMana / maxMana * 100) : 0}%"></div>
+        </div>
+        <span class="pf-bar-num">${curMana} / ${maxMana}</span>
+      </div>
+      <div class="pf-bar-row">
+        <span class="pf-bar-label">Cap</span>
+        <div class="pf-bar">
+          <div class="pf-bar-fill cap" style="width:${maxCap > 0 ? Math.round(curCap / maxCap * 100) : 0}%"></div>
+        </div>
+        <span class="pf-bar-num">${curCap} / ${maxCap}</span>
+      </div>
+    </div>
+  `;
+}
+
 /* =========================
    Equip actions (opcional)
    ========================= */
-// === troque APENAS esta função ===
 let equipHandlersBound = false;
 function ensureEquipHandlers(){
   if (equipHandlersBound) return;
   const grid = document.querySelector('.pf-equip');
   if (!grid) return;
 
-  // Unequip (como já estava, mas usando o resolvedor de heroId)
   grid.addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-action="unequip"]');
     if (!btn) return;
@@ -248,7 +279,6 @@ function ensureEquipHandlers(){
       await apiPost('/api/equipment/equip', {
         heroId,
         slot,
-        // seu backend aceita itemKey nulo => unequip
         itemKey: currentKey || null
       });
       await fetchEquip(true);
@@ -259,22 +289,19 @@ function ensureEquipHandlers(){
     }
   });
 
-  // *** NOVO: clique direito no slot BACK abre a mochila ***
   grid.addEventListener('contextmenu', (e) => {
     const slotEl = e.target.closest('.pf-equip .slot[data-slot]');
     if (!slotEl) return;
 
     const slot = String(slotEl.getAttribute('data-slot') || '').toUpperCase();
-    if (slot !== 'BACK') return; // só interessa o slot da mochila
+    if (slot !== 'BACK') return;
 
-    e.preventDefault(); // impede o menu do navegador
+    e.preventDefault();
 
-    // Resolve heroId “vivo” na tela
     const heroId = getActiveHeroId(openState.currentHero?.id);
     if (!heroId) return;
 
     try {
-      // Abre a UI da mochila (qualquer uma das duas APIs, conforme o que existir)
       if (window.BackpackUI?.open) window.BackpackUI.open(heroId);
       else if (window.BackpackUI?.render) window.BackpackUI.render(heroId);
     } catch (err) {
@@ -282,7 +309,6 @@ function ensureEquipHandlers(){
     }
   });
 
-  // Opcional: evita seleção de texto acidental nos slots
   grid.addEventListener('mousedown', (e) => {
     if (e.target.closest('.pf-equip .slot')) {
       e.target.closest('.pf-equip .slot').style.userSelect = 'none';
@@ -291,7 +317,6 @@ function ensureEquipHandlers(){
 
   equipHandlersBound = true;
 }
-
 
 /* =========================
    Modal / Perfil
@@ -314,7 +339,8 @@ export function bindProfileModal() {
     def:        document.getElementById('pf-def'),
     spd:        document.getElementById('pf-spd'),
     skillsBox:  document.getElementById('pf-skills-placeholder'),
-    levelBadge: document.getElementById('pf-level') // “Lvl X (Y%)”
+    levelBadge: document.getElementById('pf-level'),
+    bars:       document.getElementById('pf-bars')  // NOVO!
   };
 
   function fillHeader(hero){
@@ -335,6 +361,8 @@ export function bindProfileModal() {
     if (el.atk) el.atk.textContent = hero.attack ?? 0;
     if (el.def) el.def.textContent = hero.defense ?? 0;
     if (el.spd) el.spd.textContent = hero.speed ?? 0;
+    // NOVO: barras de HP/Mana/Capacidade
+    if (el.bars) el.bars.innerHTML = renderBars(hero);
   }
 
   async function fillSkillsArea(hero, signal){
@@ -346,17 +374,14 @@ export function bindProfileModal() {
       </div>
     `;
 
-    // Busca as skills do herói + level do player (para o badge)
     const [heroSkillsRaw] = await Promise.all([ loadHeroSkills(hero, signal) ]);
     await fetchPlayerMeOnce(signal);
 
-    // Atualiza badge "Lvl X (Y%)"
     if (cache.playerLevel && el.levelBadge){
       const pct = Math.round((cache.playerLevel.progress||0)*100);
       el.levelBadge.textContent = `Lvl ${cache.playerLevel.level} (${pct}%)`;
     }
 
-    // ORDEM desejada: Sword → Axe → Club → Distance → Magic → Shield
     const ORDER = ['SWORD','AXE','CLUB','DISTANCE','MAGIC','SHIELD'];
     const heroSkills = [...(heroSkillsRaw||[])].sort((a,b) => {
       const ia = ORDER.indexOf(String(a.skillType||'').toUpperCase());
@@ -364,7 +389,6 @@ export function bindProfileModal() {
       return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
     });
 
-    // Renderiza SOMENTE "Hero Skills" (sem a seção Training Skills)
     el.skillsBox.innerHTML = `
       <div class="pf-skill-block">
         <div class="pf-skill-block-title pf-skill-block-title--primary">Hero Skills</div>
@@ -372,20 +396,18 @@ export function bindProfileModal() {
       </div>
     `;
 
-    // anima as barras (usa data-pct já calculado em renderHeroSkills)
     animateProgressBars(el.skillsBox);
   }
 
   async function fillEquip(){
-    const eq = await fetchEquip(); // cache + TTL
+    const eq = await fetchEquip();
     paintEquipGrid(eq);
-    ensureEquipHandlers(); // garante handler dos botões (se existirem)
+    ensureEquipHandlers();
   }
 
   async function open(hero){
     if (!hero) return;
 
-    // Cancela buscas anteriores se ainda estiverem ativas
     if (openState.controller) { try{ openState.controller.abort(); }catch{} }
     openState.controller = new AbortController();
     openState.currentHero = hero;
@@ -396,12 +418,10 @@ export function bindProfileModal() {
       fillEquip()
     ]);
 
-    // ===== Integra Backpack UI + marca herói ativo (pickup/equip usam isso) =====
     try { 
       if (typeof window.setActiveHero === 'function') {
-        window.setActiveHero(hero.id); // setter centralizado (emite eventos e atualiza GameScene/ActiveHeroId)
+        window.setActiveHero(hero.id);
       } else {
-        // fallback: manter compat se o setter ainda não existir
         window.ActiveHeroId = hero.id;
         if (window.GameScene) window.GameScene.activeHeroId = hero.id;
       }
@@ -411,11 +431,9 @@ export function bindProfileModal() {
       if (window.BackpackUI) {
         const hid = getActiveHeroId(hero.id);
         window.BackpackUI.render(hid);
-        // Sempre que abrir fora de hora, consulta o herói ativo atual
         window.BackpackUI.bindContextOpen(() => getActiveHeroId(hid));
       }
     } catch {}
-    // =====================================================================
 
     overlay.style.display = '';
     overlay.classList.add('show');
@@ -428,19 +446,13 @@ export function bindProfileModal() {
     overlay.classList.remove('show');
     overlay.setAttribute('aria-hidden','true');
     overlay.style.display = 'none';
-
-    // ⚠️ Não limpamos o ActiveHeroId aqui para manter o herói ativo globalmente.
-    // Se quiser forçar limpar ao fechar, descomente abaixo:
-    // try { delete window.ActiveHeroId; } catch {}
   }
 
-  // Expor uma forma fácil de atualizar equipamentos externamente
   async function refreshEquip(force=false){
     await fetchEquip(force);
     paintEquipGrid(cache.equip);
   }
 
-  // Recarrega tudo (skills + equip). Útil após ganhos ou trocar item.
   async function refreshAll(){
     const hero = openState.currentHero;
     if (!hero) return;
@@ -451,7 +463,6 @@ export function bindProfileModal() {
     await refreshEquip(true);
   }
 
-  // Eventos opcionais para integrar com outras telas
   document.addEventListener('equip-updated', () => refreshEquip(true));
   document.addEventListener('player-updated', () => refreshAll());
 

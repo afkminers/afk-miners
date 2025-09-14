@@ -1,7 +1,7 @@
 // Gera instâncias que estiverem faltando para cada spawn
 // Requisitos de schema usados aqui: monster_instances(id uuid, spawn_id int, monster_id int NOT NULL,
 //   map_key text NOT NULL, state text, hp int, max_hp int, created_at timestamptz, updated_at timestamptz)
-
+//server/jobs/sync_spawns.js
 const { run } = require('../models/db');
 
 async function syncSpawns() {

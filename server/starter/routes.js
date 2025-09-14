@@ -4,6 +4,7 @@ const { randomUUID } = require('crypto');
 const { get, run } = require('../models/db');
 const { requireAuth } = require('../auth/middleware');
 const { ensureHeroSkills } = require('../models/hero_extra');
+const { computeHeroStats } = require('../services/heroStats'); // <- NOVO: importa cálculo dinâmico
 
 async function isHeroKeyGenerated() {
   try {
@@ -67,7 +68,7 @@ function buildStarterRouter() {
           heroKey: 'lyria',
           name: 'Lyria, the Archer',
           rarity: 'COMMON',
-          class: 'PALADIN',
+          class: 'ARCHER',
           role: 'DPS',
           element: 'NATURE',
           attack_type: 'RANGED',
@@ -135,8 +136,26 @@ function buildStarterRouter() {
       const baseDefense = 1;
       const baseSpeed = 1;
       const level = 1;
-      const baseHp = 100 + (level - 1) * 5 + baseDefense * 2;
       const rarity = master.rarity || 'COMMON';
+
+      // NOVO: Cálculo dinâmico de status máximo via computeHeroStats
+      let maxHp = null, maxMana = null, maxCap = null;
+      try {
+        const stats = await computeHeroStats({
+          level,
+          heroKey,
+          class: master.class
+        });
+        maxHp = stats.maxHp;
+        maxMana = stats.maxMana;
+        maxCap = stats.maxCap;
+      } catch (e) {
+        // fallback de segurança para nunca quebrar o fluxo
+        maxHp = 100 + (level - 1) * 5 + baseDefense * 2;
+        maxMana = 50;
+        maxCap = 470;
+        console.warn('[starter] computeHeroStats falhou, usando fallback:', e?.message);
+      }
 
       const id = randomUUID();
 
@@ -152,9 +171,9 @@ function buildStarterRouter() {
             await run(
               `INSERT INTO player_heroes
                  (id, "playerId", name, rarity, attack, defense, speed, level,
-                  "createdAt", "updatedAt", "isStarter", hp, max_hp)
+                  "createdAt", "updatedAt", "isStarter", hp, max_hp, mana, max_mana)
                VALUES
-                 ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW(),TRUE,$9,$9)`,
+                 ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW(),TRUE,$9,$10,$11,$12)`,
               [
                 id,
                 playerId,
@@ -164,7 +183,10 @@ function buildStarterRouter() {
                 baseDefense,
                 baseSpeed,
                 level,
-                baseHp
+                maxHp,
+                maxHp,
+                maxMana,
+                maxMana
               ]
             );
           } else {
@@ -191,9 +213,9 @@ function buildStarterRouter() {
             await run(
               `INSERT INTO player_heroes
                  (id, "playerId", "heroKey", name, rarity, attack, defense, speed, level,
-                  "createdAt", "updatedAt", "isStarter", hp, max_hp)
+                  "createdAt", "updatedAt", "isStarter", hp, max_hp, mana, max_mana)
                VALUES
-                 ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),NOW(),TRUE,$10,$10)`,
+                 ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),NOW(),TRUE,$10,$11,$12,$13)`,
               [
                 id,
                 playerId,
@@ -204,7 +226,10 @@ function buildStarterRouter() {
                 baseDefense,
                 baseSpeed,
                 level,
-                baseHp
+                maxHp,
+                maxHp,
+                maxMana,
+                maxMana
               ]
             );
           } else {

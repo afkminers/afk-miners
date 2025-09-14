@@ -1,0 +1,143 @@
+# Roadmap de Evolução por Fases — Sistema de Heróis "Tibia-like" (AFK Miners)
+
+**Prompt Instruções para Copilot/IA:**  
+- Ao receber este Roadmap, use SEMPRE como referência mestre para todo o contexto e para escolher o próximo passo.  
+- Entenda que pode ser colado em qualquer momento do desenvolvimento: o Roadmap informa o contexto ATUAL, as FASES, o que já foi feito e o PRÓXIMO PASSO.  
+- Sempre avance só quando solicitado explicitamente pelo usuário ("próxima fase", "seguir", etc).  
+- Garanta 100% de integração entre o novo sistema de classes/progressão e o sistema de heróis gacha já existente (com status base, raridade, subclasses, elementos e atributos únicos por herói).  
+- Nunca ignore informações já existentes no banco ou scripts, sempre proponha integração e NÃO substituição.  
+- Se o usuário informar dúvidas, problemas ou anexar prints/arquivos, PARE, analise, traga um diagnóstico e proponha o ajuste antes de avançar.  
+- O objetivo é:  
+  - Sistema de classes/progressão dinâmico e flexível  
+  - Aproveitar 100% dos dados e diferenciais do sistema de heróis gacha já existente  
+  - Evitar perda de dados e retrabalho  
+  - Garantir clareza, coesão e rastreabilidade entre as fases
+
+---
+
+## **Status Atual (2025-09-14)**
+
+- **Fase 2 (Backend — Cálculo Dinâmico e API) foi CONCLUÍDA.**
+- Toda criação, consulta e resposta de herói (starter, gacha, admin, API) agora calcula HP, Mana, Capacidade em tempo real pela classe+level, usando função centralizada.
+- Não há mais status fixo/legacy para HP/Mana/Capacidade no backend.
+- O sistema está PRONTO para balanceamento retroativo (mudou a progressão de classe, todos os heróis daquela classe já se adaptam).
+- Integração total entre atributos únicos do herói (atk, def, speed, element, rarity, skills, buffs, etc) e status dinâmicos (hp, mana, cap).
+- **Próximo passo: Fase 3 — Frontend (HUD dinâmica, perfil de herói, feedback de progressão, etc)**
+
+---
+
+## **Contexto Atual**
+
+- O sistema já possui tabelas de heróis (`player_heroes`, `heroes_master`) com status base únicos por herói, elementos, subclasses, raridade, etc (gacha/summon).
+- Heróis são obtidos via sistema gacha (summon), cada um com atributos exclusivos (atk, def, speed, skills, element, rarity, etc).
+- Agora, foi implementado um sistema de CLASSES PRIMÁRIAS (Knight, Mage, Druid, Paladin/Ranger, Guardian etc) via tabela `classes`, com progressão de HP/Mana/Cap, e tabela `class_level_gains` para ganhos detalhados por level.
+- Todo status de HP/Mana/Capacidade **deve ser calculado** pela classe+level, nunca salvo como fixo por herói.
+- Todos atributos especiais e diferenciais dos heróis (atk, def, speed, rarity, element, skills, buffs, etc) continuam existindo e sendo utilizados normalmente. Eles são o "segredo" do diferencial do personagem, enquanto as classes são a base de progressão.
+
+---
+
+## **Princípios de Integração**
+
+- **Classe Primária** → Progressão de HP/Mana/Cap (base e por level), balanceamento fácil e retroativo.
+- **Herói Gacha** → Status base únicos (atk, def, speed, skills, rarity, element, buffs, etc); podem ser usados como modificadores, bônus ou para estratégias únicas.
+- Ao consultar/mostrar um herói:  
+  - Sempre calcule HP/Mana/Cap (classe+level)
+  - Sempre mostre os atributos e diferenciais únicos do herói (atk, def, element, etc)
+
+---
+
+## **FASES DO ROADMAP**
+
+### **Fase 0 — Levantamento e Diagnóstico**
+1. Identificar todas as tabelas e campos de heróis, classes, atributos, skills, status, raridades, elementos, etc.
+2. Mapear relações: player pode ter vários heróis, vínculo entre herói e classe, vínculo de skills, etc.
+3. Documentar gaps: ausência de tabelas de classe/progressão, status fixos, etc.
+
+### **Fase 1 — Banco de Dados**
+1. Criar tabela `classes` com base e progressão de HP/Mana/Capacidade (**já feita**).
+2. Criar tabela `class_level_gains` para ganhos detalhados por level/classe (**já feita/adaptada**).
+3. Garantir tabelas de heróis (`heroes_master`, `player_heroes`) e status únicos estão preservadas.
+4. **Atenção:** Não gravar HP/Mana/Capacidade fixos nos heróis; se houver, migrar para cálculo dinâmico.
+5. **Checklist SQL:**  
+   - Verifique existência e consistência das tabelas: `classes`, `class_level_gains`, `heroes_master`, `player_heroes`, `xp_table`, etc.
+
+### **Fase 2 — Backend (Cálculo Dinâmico e API)**
+1. Backend deve calcular HP/Mana/Capacidade em tempo real via classe+level (nunca buscar fixo do herói). **[CONCLUÍDO]**
+2. Ao criar/sortear novo herói (gacha), vincular a classe primária correta. **[CONCLUÍDO]**
+3. Ao consultar herói, retornar:  
+   - HP/Mana/Cap calculados  
+   - Todos outros atributos do herói (atk, def, skills, rarity, element, etc)  
+   - Permitir buffs, modificadores temporários, mas nunca sobrescrever status base. **[CONCLUÍDO]**
+4. Permitir balanceamento retroativo: mudar progressão de uma classe reflete em todos os heróis daquela classe. **[CONCLUÍDO]**
+5. Garantir integração total com atributos herdados do sistema antigo (não perder valor estratégico de heróis únicos). **[CONCLUÍDO]**
+
+### **Fase 3 — Frontend**
+1. HUD dinâmica: mostrar barras e valores de HP/Mana/Capacidade calculados.
+2. Perfil do herói: exibir classe primária, level, status calculados, atributos base do herói, raridade, skills, etc.
+3. Feedback de progressão: notificar ganho de level, aumento de status, skills liberadas, buffs aplicados, raridade, etc.
+
+### **Fase 4 — Testes, Balanceamento e Polimento**
+1. Testar criação, consulta, level up, progressão retroativa e integração (heróis novos/gacha e antigos).
+2. Validar integração de buffs, raridade, elementos, skills, etc.
+3. Facilitar balanceamento: alterar classes/progressão deve refletir em todos os heróis automaticamente.
+4. Documentar endpoints, lógica de cálculo, exemplos de consulta e resposta, estrutura das tabelas, exemplos de integração.
+
+---
+
+## **Checklist SQL prático**
+
+```sql
+-- Ver classes e progressão:
+SELECT * FROM classes;
+SELECT * FROM class_level_gains;
+
+-- Ver dados dos heróis:
+SELECT * FROM heroes_master;
+SELECT * FROM player_heroes;
+
+-- XP table:
+SELECT * FROM xp_table LIMIT 10;
+
+-- Conferir status únicos dos heróis (atk, def, speed, element, skills, rarity, etc):
+SELECT * FROM heroes_master LIMIT 5;
+```
+
+---
+
+## **Como o Copilot/IA deve agir:**
+- Sempre use este roadmap para saber o contexto atual e o próximo passo exato.
+- Não avance para a próxima fase sem confirmação do usuário.
+- Se o usuário anexar prints/CSVs/arquivos, pare e integre as informações antes de avançar.
+- Se o usuário relatar dúvidas ou sentir insegurança sobre integração com o sistema antigo, explique como funciona a junção dos sistemas e proponha soluções para garantir coesão e aproveitamento total.
+- Proponha comandos/ajustes sempre baseados no que EXISTE no banco/scripts, nunca sobrepondo ou apagando dados antigos sem analisar juntos.
+- O objetivo é um sistema de progressão justo, balanceável e que valorize a singularidade de cada herói do gacha.
+
+---
+
+## **Exemplo de resposta para consulta de herói (pseudocódigo/JSON):**
+
+```json
+{
+  "hero_id": 17,
+  "name": "Brokk, the Dwarf",
+  "class": "GUARDIAN",
+  "level": 5,
+  "hp": 289,         // Calculado pela classe+level
+  "mana": 43,        // Calculado pela classe+level
+  "cap": 0,          // Calculado pela classe+level
+  "atk": 12,         // Status base do herói
+  "def": 9,          // Status base do herói
+  "speed": 8,        // Status base do herói
+  "element": "earth",// Atributo do herói
+  "rarity": "common",
+  "skills": ["Taunt", "Stone Shield"],
+  "buffs": [],       // Modificadores temporários
+  "...": "..."
+}
+```
+
+---
+
+**Quando colar este roadmap, o Copilot/IA deve SEMPRE saber onde está, qual o contexto, o que foi feito e o que falta, SEM SE PERDER.**
+
+**Avance SÓ quando o usuário pedir.**

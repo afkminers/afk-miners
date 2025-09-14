@@ -1,5 +1,7 @@
 // Overlay único de combate: hp bar, target box e floaters.
 // NUNCA "adivinha" posição. Só desenha se houver sprite vinculada via GameScene.
+//client/js/combat/render-combat.js
+
 
 import { getSocket, onMessage } from '../ws/singleton.js';
 
