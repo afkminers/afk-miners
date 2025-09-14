@@ -676,7 +676,8 @@
     "file": "server\\combat\\service.js",
     "symbols": [
       "applyHit",
-      "computeDamage",
+      "computeDamageTibiaLike",
+      "getHeroSkillLevel",
       "getHeroStats",
       "getInstanceWithMonster",
       "getRespawnSeconds",

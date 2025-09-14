@@ -1,0 +1,55 @@
+key: wolf
+kind: monster
+image: "sprites/monsters/wolf.png"
+
+frame:
+  width: 48
+  height: 32
+  margin: 0
+  spacing: 0
+  bleedFix: 0.25
+
+grid:
+  cols: 6
+  rows: 12
+
+anchor:
+  x: 0.5
+  y: 0.82 # ligeiramente abaixo do centro para “assentar” no chão
+
+anims:
+  idle:
+    fps: 4
+    frames: 4
+    row: 0
+    startCol: 0
+    loop: true
+
+  walk:
+    fps: 8
+    frames: 4
+    rowByDir:
+      south: 1
+      west: 2
+      east: 3
+      north: 4
+    startCol: 0
+    loop: true
+
+  dead:
+    fps: 6
+    frames: 3
+    row: 5
+    startCol: 0
+    loop: false
+
+  attack:
+    fps: 10
+    frames: 2
+    rowByDir:
+      south: 6
+      west: 7
+      east: 8
+      north: 9
+    startCol: 0
+    loop: false

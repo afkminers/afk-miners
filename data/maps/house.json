@@ -413,6 +413,38 @@
                  "width":64,
                  "x":1048,
                  "y":924
+                }, 
+                {
+                 "height":32,
+                 "id":28,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"count",
+                         "type":"int",
+                         "value":1
+                        }, 
+                        {
+                         "name":"monsterKey",
+                         "type":"string",
+                         "value":"wolf"
+                        }, 
+                        {
+                         "name":"respawnSec",
+                         "type":"int",
+                         "value":30
+                        }, 
+                        {
+                         "name":"type",
+                         "type":"string",
+                         "value":"spawn"
+                        }],
+                 "rotation":0,
+                 "type":"spawn",
+                 "visible":true,
+                 "width":32,
+                 "x":990,
+                 "y":784
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -421,7 +453,7 @@
          "y":0
         }],
  "nextlayerid":5,
- "nextobjectid":28,
+ "nextobjectid":29,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

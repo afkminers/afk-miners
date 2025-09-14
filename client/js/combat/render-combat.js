@@ -1,8 +1,6 @@
-// client/js/combat/render-combat.js
 // Overlay único de combate: hp bar, target box e floaters.
 // NUNCA "adivinha" posição. Só desenha se houver sprite vinculada via GameScene.
 
-// Overlay de combate: hp bar, target box e floaters — usando WS singleton.
 import { getSocket, onMessage } from '../ws/singleton.js';
 
 const state = {
@@ -32,7 +30,7 @@ function ensureSpriteBind(id, key, spawnId) {
 }
 
 /* ---------------- Floater (dano/xp) ---------------- */
-function pushFloaterAtSprite(sprite, text, ttl = 900) {
+function pushFloaterAtSprite(sprite, text, ttl = 900, color = "rgba(255,0,0,0.92)", outline = "#fff") {
   if (!sprite) return;
   const meta = sprite.meta || {};
   const frameW = meta.frame?.width ?? 32;
@@ -40,8 +38,8 @@ function pushFloaterAtSprite(sprite, text, ttl = 900) {
   const ax = meta.anchor?.x ?? 0.5;
   const ay = meta.anchor?.y ?? 0.9;
   const x = Math.round(sprite.x - frameW * ax + frameW * 0.5);
-  const y = Math.round(sprite.y - frameH * ay - 8);
-  state.floaters.push({ x, y, text, ttl, vy: -0.035 });
+  const y = Math.round(sprite.y - frameH * ay - 10);
+  state.floaters.push({ x, y, text, ttl, vy: -0.038, color, outline });
 }
 
 function updateAndDrawFloaters(ctx, dtMs) {
@@ -51,10 +49,15 @@ function updateAndDrawFloaters(ctx, dtMs) {
     f.ttl -= dtMs;
     if (f.ttl <= 0) { list.splice(i, 1); continue; }
     f.y += f.vy * dtMs;
-    ctx.font = 'bold 12px sans-serif';
+    ctx.save();
+    ctx.font = 'bold 12px "Trebuchet MS", Arial, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(255,0,0,0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = f.outline || "#fff";
+    ctx.strokeText(f.text, Math.round(f.x), Math.round(f.y));
+    ctx.fillStyle = f.color || "rgba(255,0,0,0.9)";
     ctx.fillText(f.text, Math.round(f.x), Math.round(f.y));
+    ctx.restore();
   }
 }
 
@@ -69,12 +72,22 @@ function installWsHandlers() {
     const spawnId = (msg.spawnId != null) ? Number(msg.spawnId) : null;
 
     const m = state.monsters.get(id) || { id };
-    m.key = key; m.maxHp = maxHp; m.hp = hp; if (spawnId != null) m.spawnId = spawnId;
+    m.key = key;
+    m.maxHp = maxHp;
+    m.hp = hp;
+    if (spawnId != null) m.spawnId = spawnId;
     state.monsters.set(id, m);
 
     const s = ensureSpriteBind(id, key, spawnId);
-    if (s) { s.dead = false; s.hidden = false; s._animFrozen = false; s._animFrozenFrame = 0; unbound.delete(id); }
-    else { unbound.add(id); }
+    if (s) {
+      s.dead = false;
+      s.hidden = false;
+      s._animFrozen = false;
+      s._animFrozenFrame = 0;
+      unbound.delete(id);
+    } else {
+      unbound.add(id);
+    }
   });
 
   onMessage('monster_hp', (msg) => {
@@ -91,7 +104,10 @@ function installWsHandlers() {
     if (!s) unbound.add(id);
 
     const dmg = (typeof msg.dmg === 'number') ? msg.dmg : (prevHp != null ? Math.max(0, prevHp - m.hp) : 0);
-    if (dmg > 0 && s) pushFloaterAtSprite(s, `-${dmg}`);
+    if (dmg > 0 && s) {
+      const isCrit = dmg >= (m.maxHp / 2);
+      pushFloaterAtSprite(s, `-${dmg}`, 950, isCrit ? "#fff176" : "#ff4444", isCrit ? "#000" : "#fff");
+    }
   });
 
   onMessage('monster_dead', (msg) => {
@@ -99,14 +115,18 @@ function installWsHandlers() {
     const xp = Number(msg.xp || 0);
 
     const m = state.monsters.get(id) || { id };
-    m.hp = 0; state.monsters.set(id, m);
+    m.hp = 0;
+    state.monsters.set(id, m);
 
     const s = getSpriteFor(id);
     if (s) {
-      if (xp > 0) pushFloaterAtSprite(s, `+${xp}xp`, 1100);
+      if (xp > 0) pushFloaterAtSprite(s, `+${xp}xp`, 1200, "#66ff66", "#222");
       window.GameScene?.onMonsterDead?.(id);
     }
-    setTimeout(() => { state.monsters.delete(id); unbound.delete(id); }, 0);
+    setTimeout(() => {
+      state.monsters.delete(id);
+      unbound.delete(id);
+    }, 0);
   });
 }
 
@@ -121,7 +141,10 @@ function startRebindLoop() {
       if (!m || m.hp <= 0) { unbound.delete(id); continue; }
       const s = ensureSpriteBind(m.id, m.key, m.spawnId);
       if (s) {
-        s.dead = false; s.hidden = false; s._animFrozen = false; s._animFrozenFrame = 0;
+        s.dead = false;
+        s.hidden = false;
+        s._animFrozen = false;
+        s._animFrozenFrame = 0;
         unbound.delete(id);
       }
     }
@@ -129,6 +152,33 @@ function startRebindLoop() {
 }
 
 /* --------------- Draw helpers --------------- */
+
+// Barra de HP colorida estilo Tibia
+function getHpBarColor(pct) {
+  if (pct > 0.75) return 'rgba(51, 246, 22, 1)'; // verde
+  if (pct > 0.50) return 'rgba(170, 255, 110, 1)'; // verde claro
+  if (pct > 0.25) return 'rgba(255, 191, 0, 1)'; // amarelo
+  if (pct > 0.05) return 'rgba(255, 68, 68, 1)';  // vermelho
+  return 'rgba(120, 20, 20, 1)'; // vermelho escuro
+}
+
+// Busca o nome do monstro pelo key no catálogo de monstros carregado no frontend
+function getMonsterNameByKey(key) {
+  try {
+    const meta = (window.SPRITES_META && window.SPRITES_META[key]) ||
+      (window.SPRITE_INDEX && window.SPRITE_INDEX.get && window.SPRITE_INDEX.get(key));
+    if (meta && meta.name) return meta.name;
+    if (window.SPRITES_META) {
+      const tryKey = Object.keys(window.SPRITES_META).find(k =>
+        k.toLowerCase() === key.toLowerCase());
+      if (tryKey) return window.SPRITES_META[tryKey]?.name || key;
+    }
+    return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+  } catch {
+    return key;
+  }
+}
+
 function drawHpBarAtSprite(ctx, sprite, hp, maxHp) {
   if (!sprite) return;
   const meta = sprite.meta || {};
@@ -140,19 +190,58 @@ function drawHpBarAtSprite(ctx, sprite, hp, maxHp) {
   const w = frameW - 4;
   const h = 4;
   const x = Math.round(sprite.x - frameW * ax + 2);
-  const y = Math.round(sprite.y - frameH * ay - 6);
+  const y = Math.round(sprite.y - frameH * ay - 8);
 
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.fillRect(x, y, w, h);
+  // Barra de fundo
+  ctx.save();
+  ctx.globalAlpha = 0.82;
+  ctx.fillStyle = 'rgba(0,0,0,0.38)';
+  ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+  ctx.restore();
 
   const pct = Math.max(0, Math.min(1, (maxHp > 0 ? hp / maxHp : 0)));
   const wHp = Math.round(w * pct);
-  ctx.fillStyle = 'rgba(51, 246, 22, 1)';
+  ctx.save();
+  ctx.fillStyle = getHpBarColor(pct);
+  ctx.shadowColor = "transparent"; // sem blur!
+  ctx.shadowBlur = 0;
   ctx.fillRect(x, y, wHp, h);
+  ctx.restore();
 
-  ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(x, y, w, h);
+  ctx.save();
+  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(x - 1, y - 1, w + 2, h + 2);
+  ctx.restore();
+}
+
+// Nome do monstro acima da barra de HP, cor acompanha barra, minimalista
+function drawMonsterNameAtSprite(ctx, sprite, key, hp, maxHp) {
+  const name = getMonsterNameByKey(key);
+  if (!sprite || !name) return;
+  const meta = sprite.meta || {};
+  const frameW = meta.frame?.width ?? 32;
+  const frameH = meta.frame?.height ?? 32;
+  const ax = meta.anchor?.x ?? 0.5;
+  const ay = meta.anchor?.y ?? 0.9;
+  const x = Math.round(sprite.x - frameW * ax + frameW * 0.5);
+  const y = Math.round(sprite.y - frameH * ay - 20);
+
+  // Cor dinâmica igual a da barra de vida
+  const pct = Math.max(0, Math.min(1, (maxHp > 0 ? hp / maxHp : 0)));
+  const barColor = getHpBarColor(pct);
+
+  ctx.save();
+  ctx.font = 'bold 11.5px "Trebuchet MS", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#000';
+  ctx.fillStyle = barColor;
+  ctx.shadowColor = "transparent"; // sem blur
+  ctx.shadowBlur = 0;
+  ctx.strokeText(name, x, y);
+  ctx.fillText(name, x, y);
+  ctx.restore();
 }
 
 function drawTargetBox(ctx) {
@@ -170,9 +259,13 @@ function drawTargetBox(ctx) {
   const ox = Math.round(s.x - frameW * ax);
   const oy = Math.round(s.y - frameH * ay);
 
+  ctx.save();
+  ctx.shadowColor = "transparent"; // sem blur!
+  ctx.shadowBlur = 0;
   ctx.strokeStyle = 'red';
   ctx.lineWidth = 2;
   ctx.strokeRect(ox, oy, frameW, frameH);
+  ctx.restore();
 }
 
 /* --------------- Install API --------------- */
@@ -244,6 +337,7 @@ export default function installCombatOverlay() {
           const s = ensureSpriteBind(m.id, m.key, m.spawnId);
           if (!s) { needRebind.add(m.id); continue; }
           drawHpBarAtSprite(ctx, s, m.hp, m.maxHp);
+          drawMonsterNameAtSprite(ctx, s, m.key, m.hp, m.maxHp); // Nome acompanha cor da barra
         }
         drawTargetBox(ctx);
         updateAndDrawFloaters(ctx, dt * 1000);

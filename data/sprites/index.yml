@@ -9,3 +9,4 @@ sprites:
   deer: "./monsters/deer.yml"
   demon_bonefiend: "./monsters/demon_bonefiend.yml"
   teste: "./monsters/teste.yml"
+  wolf: "./monsters/wolf.yml"

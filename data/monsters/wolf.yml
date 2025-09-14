@@ -1,0 +1,33 @@
+# data/monsters/wolf.yml
+key: wolf
+name: Wolf
+xp: 18
+health:
+  max: 40
+speed: 60
+look:
+  spriteKey: wolf
+attacks:
+- type: melee
+  intervalMs: 2000
+  min: 0
+  max: 20
+defenses:
+  armor: 0
+  defense: 0
+loot:
+- item: Gold Coin
+  qty: "2-4"
+  chance: 100
+- item: Raw Meat
+  qty: 1
+  chance: 40
+- item: Wolf Pelt
+  qty: 1
+  chance: 15
+- item: Wolfhide Cap
+  qty: 1
+  chance: 2
+- item: Leather Armor
+  qty: 1
+  chance: 2

@@ -7,4 +7,5 @@ monsters:
   rotmaw: "./rotmaw.yml"
   deer: "./deer.yml"
   demon_bonefiend: "./demon_bonefiend.yml"
-  teste: "./teste.yml" # ← ADICIONE ESTA
+  teste: "./teste.yml"
+  wolf: "./wolf.yml"

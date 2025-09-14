@@ -2004,18 +2004,19 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 10,
+    "line": 8,
     "kind": "function",
-    "name": "computeDamage",
+    "name": "computeDamageTibiaLike",
     "params": [
-      "baseAtk",
-      "defFallback = K.MONSTER_DEF_FALLBACK",
+      "weaponAtk",
+      "skillLevel",
+      "monsterArmor",
       "variance = K.DAMAGE_VARIANCE"
     ]
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 17,
+    "line": 18,
     "kind": "function",
     "name": "resolveSkillFromWeapon",
     "params": [
@@ -2026,6 +2027,16 @@
     "file": "server\\combat\\service.js",
     "line": 28,
     "kind": "function",
+    "name": "getHeroSkillLevel",
+    "params": [
+      "heroId",
+      "skillType"
+    ]
+  },
+  {
+    "file": "server\\combat\\service.js",
+    "line": 38,
+    "kind": "function",
     "name": "getHeroStats",
     "params": [
       "heroId"
@@ -2033,7 +2044,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 46,
+    "line": 58,
     "kind": "function",
     "name": "getInstanceWithMonster",
     "params": [
@@ -2042,7 +2053,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 60,
+    "line": 73,
     "kind": "function",
     "name": "getRespawnSeconds",
     "params": [
@@ -2051,7 +2062,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 70,
+    "line": 83,
     "kind": "function",
     "name": "rollLoot",
     "params": [
@@ -2060,7 +2071,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 89,
+    "line": 102,
     "kind": "function",
     "name": "giveXp",
     "params": [
@@ -2070,7 +2081,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 100,
+    "line": 113,
     "kind": "function",
     "name": "persistDrops",
     "params": [
@@ -2081,7 +2092,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 118,
+    "line": 131,
     "kind": "function",
     "name": "applyHit",
     "params": [
