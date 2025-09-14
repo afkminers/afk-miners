@@ -1,16 +1,17 @@
-// server/combat/service.js
 const { get, run, all } = require('../models/db');
 const K = require('../balance/config');
 const { applyTries, getClassRate } = require('../skills/engine');
 //ws bus
 const { broadcast } = require('../ws/bus');
 
-
-/** Util: dano simples com variação */
-function computeDamage(baseAtk, defFallback = K.MONSTER_DEF_FALLBACK, variance = K.DAMAGE_VARIANCE) {
-    const raw = Math.max(0, baseAtk - defFallback / 2);
-    const roll = raw * (1 - variance + Math.random() * (2 * variance));
-    return Math.max(0, Math.floor(roll));
+/** Util: cálculo de dano Tibia-like, progressão real, sem dano mínimo */
+function computeDamageTibiaLike(weaponAtk, skillLevel, monsterArmor, variance = K.DAMAGE_VARIANCE) {
+    const base = weaponAtk * (1 + skillLevel / 50);
+    const minDmg = Math.floor(base * (1 - variance));
+    const maxDmg = Math.ceil(base * (1 + variance));
+    const raw = Math.floor(Math.random() * (maxDmg - minDmg + 1)) + minDmg;
+    const defenseReduction = Math.floor(Math.random() * (monsterArmor + 1));
+    return Math.max(0, raw - defenseReduction); // sem dano mínimo garantido
 }
 
 /** Resolve skill pelo tipo de arma (usa tabela weapon_skill_map que você já tem) */
@@ -23,6 +24,15 @@ async function resolveSkillFromWeapon(weaponType) {
     return row?.skill_type || null;
 }
 
+/** Busca o nível do skill do herói para o tipo de skill usado */
+async function getHeroSkillLevel(heroId, skillType) {
+    if (!heroId || !skillType) return 10; // fallback razoável
+    const row = await get(
+        `SELECT level FROM player_hero_skills WHERE hero_id = $1 AND skill_type = $2`,
+        [heroId, skillType]
+    );
+    return row?.level ? Number(row.level) : 10; // fallback inicial
+}
 
 /** Stats básicos do herói (usa suas tabelas) */
 async function getHeroStats(heroId) {
@@ -31,7 +41,10 @@ async function getHeroStats(heroId) {
             ph.id AS hero_id,
             COALESCE(ph.attack,10) + COALESCE(i.atk,0) AS attack,
             COALESCE(ph.defense,10) AS defense,
-            hm.class
+            hm.class,
+            eq.item_key AS weapon_key,
+            i.atk AS weapon_atk,
+            i.weapon_type AS weapon_type
          FROM player_heroes ph
     LEFT JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
     LEFT JOIN hero_equipment eq ON eq.hero_id = ph.id::uuid AND eq.slot = 'WEAPON'
@@ -41,14 +54,14 @@ async function getHeroStats(heroId) {
     );
 }
 
-
-/** Carrega a instância + dados do monstro (xp/loot) */
+/** Carrega a instância + dados do monstro (xp/loot/armor) */
 async function getInstanceWithMonster(instanceId) {
     return await get(
         `SELECT mi.id, mi.hp, mi.max_hp, mi.state, mi.spawn_id, mi.map_key,
             m.id AS monster_id, m.key AS monster_key,
             COALESCE(m.xp,25) AS xp_reward,
-            COALESCE(m."lootJSON",'[]'::jsonb) AS loot_json
+            COALESCE(m."lootJSON",'[]'::jsonb) AS loot_json,
+            COALESCE(m."defensesJSON",'{}'::jsonb) AS defenses_json
        FROM monster_instances mi
        JOIN monsters_master m ON m.id = mi.monster_id
       WHERE mi.id = $1`,
@@ -121,8 +134,25 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
     if (!hero || !inst) return { ok: false, message: 'attacker or target not found' };
     if (inst.state !== 'ALIVE') return { ok: false, message: 'target not alive' };
 
-    // dano
-    const dmg = computeDamage(hero.attack);
+    // Resolve skill e nível do skill
+    const resolvedWeaponType = weaponType || hero.weapon_type || null;
+    const skillType = await resolveSkillFromWeapon(resolvedWeaponType);
+    const skillLevel = await getHeroSkillLevel(attackerHeroId, skillType);
+
+    // Busca atk real da arma (ou fallback)
+    const weaponAtk = hero.weapon_atk || 1;
+
+    // Busca armor do monstro (defenses_json.armor)
+    let monsterArmor = 0;
+    try {
+        const defenses = typeof inst.defenses_json === "object" ? inst.defenses_json :
+            JSON.parse(inst.defenses_json || '{}');
+        monsterArmor = Number(defenses.armor || 0);
+    } catch { monsterArmor = 0; }
+
+    // Cálculo novo de dano
+    const dmg = computeDamageTibiaLike(weaponAtk, skillLevel, monsterArmor);
+
     const newHp = Math.max(0, inst.hp - dmg);
     const dead = newHp === 0;
 
@@ -149,7 +179,6 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
     });
 
     // Skill gain ONLY when damage > 0
-    const skillType = await resolveSkillFromWeapon(weaponType);
     if (skillType && dmg > 0) {
         const rate = await getClassRate(hero.class || null, skillType);
         await applyTries(attackerHeroId, skillType, 1 * rate);
@@ -200,7 +229,6 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
         xpGained,
         drops
     };
-
 }
 
 module.exports = { applyHit };

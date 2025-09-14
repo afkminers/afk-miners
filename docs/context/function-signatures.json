@@ -1520,7 +1520,7 @@
   },
   {
     "file": "server\\models\\hero_extra.js",
-    "line": 40,
+    "line": 45,
     "kind": "function",
     "name": "ensureHeroSkills",
     "params": [
@@ -1529,7 +1529,7 @@
   },
   {
     "file": "server\\models\\hero_extra.js",
-    "line": 56,
+    "line": 86,
     "kind": "function",
     "name": "getHeroMeta",
     "params": [
@@ -1538,7 +1538,7 @@
   },
   {
     "file": "server\\models\\hero_extra.js",
-    "line": 67,
+    "line": 97,
     "kind": "function",
     "name": "decideStarterWeapon",
     "params": [
@@ -1548,7 +1548,7 @@
   },
   {
     "file": "server\\models\\hero_extra.js",
-    "line": 82,
+    "line": 117,
     "kind": "function",
     "name": "autoEquipStarterWeapon",
     "params": [

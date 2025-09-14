@@ -1,4 +1,4 @@
--- 001_skill_maps.sql  (PostgreSQL)
+-- server/db/seeds/001_skill_maps.sql  (PostgreSQL)
 
 BEGIN;
 

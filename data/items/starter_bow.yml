@@ -7,7 +7,7 @@ weapon_type: distance # usado pelo servidor/cliente para saber “família” da
 icon: bow # ou sprite: bow (o loader aceita icon ou sprite)
 
 # números “planos” (opcionais, mas úteis p/ listagens/consulta rápida)
-atk: 2
+atk: 10
 def: 0
 stackable: false
 

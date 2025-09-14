@@ -1,4 +1,4 @@
--- 002_skill_curves.sql  (PostgreSQL)
+-- server/db/seeds/002_skill_curves.sql  (PostgreSQL)
 
 BEGIN;
 
