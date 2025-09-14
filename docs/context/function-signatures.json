@@ -6366,7 +6366,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 16,
+    "line": 14,
     "kind": "function",
     "name": "getSpriteFor",
     "params": [
@@ -6375,7 +6375,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 19,
+    "line": 17,
     "kind": "function",
     "name": "bindBySpawn",
     "params": [
@@ -6385,7 +6385,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 22,
+    "line": 20,
     "kind": "function",
     "name": "bindByKey",
     "params": [
@@ -6395,7 +6395,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 26,
+    "line": 24,
     "kind": "function",
     "name": "ensureSpriteBind",
     "params": [
@@ -6406,18 +6406,22 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 35,
+    "line": 33,
     "kind": "function",
     "name": "pushFloaterAtSprite",
     "params": [
       "sprite",
       "text",
-      "ttl = 900"
+      "ttl = 900",
+      "color = \"rgba(255",
+      "0",
+      "0",
+      "0.92"
     ]
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 47,
+    "line": 45,
     "kind": "function",
     "name": "updateAndDrawFloaters",
     "params": [
@@ -6427,21 +6431,39 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 62,
+    "line": 65,
     "kind": "function",
     "name": "installWsHandlers",
     "params": []
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 115,
+    "line": 135,
     "kind": "function",
     "name": "startRebindLoop",
     "params": []
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 132,
+    "line": 157,
+    "kind": "function",
+    "name": "getHpBarColor",
+    "params": [
+      "pct"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 166,
+    "kind": "function",
+    "name": "getMonsterNameByKey",
+    "params": [
+      "key"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 182,
     "kind": "function",
     "name": "drawHpBarAtSprite",
     "params": [
@@ -6453,7 +6475,20 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 158,
+    "line": 219,
+    "kind": "function",
+    "name": "drawMonsterNameAtSprite",
+    "params": [
+      "ctx",
+      "sprite",
+      "key",
+      "hp",
+      "maxHp"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\render-combat.js",
+    "line": 247,
     "kind": "function",
     "name": "drawTargetBox",
     "params": [
@@ -6462,7 +6497,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 220,
+    "line": 313,
     "kind": "function",
     "name": "pickMobAtWorld",
     "params": [
@@ -6471,7 +6506,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 241,
+    "line": 334,
     "kind": "arrow",
     "name": "drawAll",
     "params": []

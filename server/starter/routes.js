@@ -235,8 +235,8 @@ function buildStarterRouter() {
         // AUTO-EQUIP ARMA
         const weaponByHeroKey = {
           lyria: 'starter_bow',
-          aric: 'rusty_sword',
-          brokk: 'rusty_sword'
+          aric: 'starter_sword',
+          brokk: 'starter_sword'
         };
         const starterItem = weaponByHeroKey[String(heroKey).toLowerCase()] || null;
 

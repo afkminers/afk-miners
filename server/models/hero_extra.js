@@ -102,7 +102,7 @@ function decideStarterWeapon({ heroKey, klass }) {
   if (hk === 'lyria' || k === 'RANGER' || k === 'PALADIN') return 'starter_bow';
 
   // Knights/Warriors (ex.: aric/brokk) → espada
-  if (hk === 'aric' || hk === 'brokk' || k === 'KNIGHT' || k === 'WARRIOR') return 'rusty_sword';
+  if (hk === 'aric' || hk === 'brokk' || k === 'KNIGHT' || k === 'WARRIOR') return 'starter_sword';
 
   // Mago/Outros → cajado simples
   return 'oak_staff';

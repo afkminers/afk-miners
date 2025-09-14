@@ -1,0 +1,17 @@
+key: starter_sword
+name: Starter Sword
+type: weapon
+slot: WEAPON
+kind: weapon
+weapon_type: sword
+icon: "sprites/items/starter_sword.png"
+
+# números “planos” (opcionais, mas úteis p/ listagens/consulta rápida)
+atk: 10
+def: 0
+stackable: false
+
+weapon:
+  family: sword
+  min: 2
+  max: 4

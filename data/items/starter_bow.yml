@@ -4,7 +4,7 @@ type: weapon
 slot: WEAPON # crítico p/ ser equipável
 kind: weapon # opcional; ajuda na categorização
 weapon_type: distance # usado pelo servidor/cliente para saber “família” da arma
-icon: bow # ou sprite: bow (o loader aceita icon ou sprite)
+icon: "sprites/items/starter_bow.png"
 
 # números “planos” (opcionais, mas úteis p/ listagens/consulta rápida)
 atk: 10
