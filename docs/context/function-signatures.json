@@ -729,6 +729,52 @@
     ]
   },
   {
+    "file": "server\\services\\heroProgress.js",
+    "line": 5,
+    "kind": "function",
+    "name": "xpNeededForLevel",
+    "params": [
+      "level"
+    ]
+  },
+  {
+    "file": "server\\services\\heroProgress.js",
+    "line": 12,
+    "kind": "function",
+    "name": "giveXp",
+    "params": [
+      "heroId",
+      "xpGained"
+    ]
+  },
+  {
+    "file": "server\\services\\heroProgress.js",
+    "line": 23,
+    "kind": "function",
+    "name": "applyLevelUp",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "server\\services\\heroProgress.js",
+    "line": 46,
+    "kind": "function",
+    "name": "getXpNeededForHero",
+    "params": [
+      "hero"
+    ]
+  },
+  {
+    "file": "server\\services\\heroProgress.js",
+    "line": 52,
+    "kind": "function",
+    "name": "notifyLevelUpClient",
+    "params": [
+      "hero"
+    ]
+  },
+  {
     "file": "server\\services\\catalogCache.js",
     "line": 29,
     "kind": "function",
@@ -1424,7 +1470,7 @@
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 20,
+    "line": 22,
     "kind": "function",
     "name": "loadMapJson",
     "params": [
@@ -1433,7 +1479,7 @@
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 25,
+    "line": 27,
     "kind": "function",
     "name": "loadMapObjects",
     "params": [
@@ -1442,7 +1488,7 @@
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 32,
+    "line": 34,
     "kind": "function",
     "name": "hasSolidProp",
     "params": [
@@ -1451,7 +1497,7 @@
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 40,
+    "line": 42,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -1462,7 +1508,7 @@
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 58,
+    "line": 60,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -1471,7 +1517,7 @@
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 70,
+    "line": 72,
     "kind": "function",
     "name": "getMapCollision",
     "params": [
@@ -1480,7 +1526,7 @@
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 89,
+    "line": 91,
     "kind": "function",
     "name": "isSolidAt",
     "params": [
@@ -1493,7 +1539,7 @@
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 96,
+    "line": 98,
     "kind": "function",
     "name": "inWorld",
     "params": [
@@ -1505,7 +1551,7 @@
   },
   {
     "file": "server\\player\\routes.js",
-    "line": 102,
+    "line": 104,
     "kind": "function",
     "name": "rlAllow",
     "params": [
@@ -2014,7 +2060,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 10,
+    "line": 12,
     "kind": "function",
     "name": "computeDamageTibiaLike",
     "params": [
@@ -2026,7 +2072,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 20,
+    "line": 22,
     "kind": "function",
     "name": "resolveSkillFromWeapon",
     "params": [
@@ -2035,7 +2081,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 30,
+    "line": 32,
     "kind": "function",
     "name": "getHeroSkillLevel",
     "params": [
@@ -2045,7 +2091,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 40,
+    "line": 42,
     "kind": "function",
     "name": "getHeroStats",
     "params": [
@@ -2054,7 +2100,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 60,
+    "line": 62,
     "kind": "function",
     "name": "getInstanceWithMonster",
     "params": [
@@ -2063,7 +2109,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 75,
+    "line": 77,
     "kind": "function",
     "name": "getRespawnSeconds",
     "params": [
@@ -2072,7 +2118,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 85,
+    "line": 87,
     "kind": "function",
     "name": "rollLoot",
     "params": [
@@ -2081,17 +2127,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 104,
-    "kind": "function",
-    "name": "giveXp",
-    "params": [
-      "heroId",
-      "xp"
-    ]
-  },
-  {
-    "file": "server\\combat\\service.js",
-    "line": 115,
+    "line": 107,
     "kind": "function",
     "name": "persistDrops",
     "params": [
@@ -2102,7 +2138,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 133,
+    "line": 125,
     "kind": "function",
     "name": "applyHit",
     "params": [
@@ -5668,15 +5704,6 @@
     "file": "client\\js\\ui\\hud_status.js",
     "line": 31,
     "kind": "function",
-    "name": "renderHudBars",
-    "params": [
-      "hero"
-    ]
-  },
-  {
-    "file": "client\\js\\ui\\hud_status.js",
-    "line": 40,
-    "kind": "function",
     "name": "pct",
     "params": [
       "cur",
@@ -5685,7 +5712,17 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 81,
+    "line": 36,
+    "kind": "function",
+    "name": "renderHudBars",
+    "params": [
+      "hero",
+      "minimized = false"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\hud_status.js",
+    "line": 133,
     "kind": "function",
     "name": "updateHudBars",
     "params": [

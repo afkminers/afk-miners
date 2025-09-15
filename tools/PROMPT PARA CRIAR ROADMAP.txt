@@ -1,0 +1,233 @@
+Boa funcionou, agora consegu analisar o repositório que acabei de subir? verifique os arquivos necessários para a função de ataque dos monstros, preciso focar nisso agora... como no tibia, movimentação do heroi, inteligencia, agro dos monstros nos herois na tela por ranged, tudo igual tibia, hoje os monstros nao estão atacando, preciso fazer tudo isso funcionar com os .yml dos monstros, levando em consideração os status do .yml e tudo balanceado o repositorio do github para analise esta publico analise por favor e vamos montar um planejamento para implementar isso, quais arquivos vai ser preciso mexer, o que vai precisar criar, quais informações do banco tu precisa, fale tudo 
+
+agora consegu analisar o repositório que acabei de subir? verifique os arquivos necessários para a função de ataque dos monstros, preciso focar nisso agora... como no tibia, movimentação do heroi, inteligencia, agro dos monstros nos herois na tela por ranged, tudo igual tibia, hoje os monstros nao estão atacando, preciso fazer tudo isso funcionar com os .yml dos monstros, levando em consideração os status do .yml e tudo balanceado o repositorio do github para analise esta publico analise por favor e vamos montar um planejamento para implementar isso, quais arquivos vai ser preciso mexer, o que vai precisar criar, quais informações do banco tu precisa, fale tudo 
+
+
+
+
+10 references
+Copilot said: ### 1. **Arquivos e Estruturas Envolvidas com
+1. Arquivos e Estruturas Envolvidas com Monstros e Combate
+Back-end:
+
+Banco de Dados
+spawns: Define onde monstros nascem, qual tipo, quantidade, respawn, etc.
+monster_instances: Cada monstro vivo/dead no mapa.
+monsters_master: Catálogo de monstros (HP, XP, status base).
+YAML dos monstros: Estrutura em data/sprites/monsters/<key>.yml para animação, direção, etc.
+server/combat/pos.js: Funções para pegar posição do herói e do monstro, essencial para calcular distância, agro, etc.
+server/combat/los.js: Cálculo de line of sight (LOS) para ranged/visão, usado para decidir se o monstro pode atacar.
+docs/COMBAT_FLAGS.md: Flags e variáveis de ambiente importantes para o combate, seleção de alvo, debug.
+Documentação e Notas:
+
+docs/add-monsters-guide.md: Como adicionar monstros, estrutura dos arquivos YAML.
+tools/MOBS/CONSULTA DB.txt: Queries de checagem de consistência das tabelas, exemplos de como validar se está tudo ok no banco.
+tools/MOBS/MONSTERS_LIST.txt: Bestiário, status, comportamento, loot, etc.
+2. Planejamento para Implementar Ataque e Inteligência dos Monstros
+A. O que precisa funcionar (como Tibia):
+
+Movimentação básica dos monstros (andar pelo mapa, perseguir herói se agro).
+Agro/target: Monstro detecta heróis próximos (por distância/range e line of sight) e decide perseguir/atacar.
+Ataque: Monstro ataca (melee/ranged/mágico) se dentro do range.
+Configuração dos status: HP, dano, comportamento, tudo balanceado via .yml e banco.
+Respawn: Monstros mortos voltam após respawn.
+B. Arquivos a serem modificados/criados
+
+Back-end:
+Loop principal de monstros (tick dos monstros): provavelmente um arquivo tipo server/monsters/ai.js ou similar (pode ser que precise criar).
+Funções de agro/ataque: Provavelmente em um novo arquivo ou dentro do sistema de combate (server/combat/).
+Funções de movimentação: Pode ser junto do AI.
+Eventualmente, rota de atualização/controle para debug.
+YAML dos monstros: Revisar e garantir que todos monstros têm status e comportamento definidos.
+Banco: Checar se todos monstros/spawns estão corretos (usar queries do arquivo de consulta).
+C. Informações do banco necessárias
+
+monster_instances: id, spawn_id, state, hp, max_hp, x, y, map_key, updated_at
+spawns: id, mapKey, monsterKey, x, y, w, h, count, respawnSec
+monsters_master: key, healthMax, danoBase, range, speed, etc (ajustar colunas para o que for usar)
+Posição dos heróis: via player_last_pos e ligação com o herói (player_heroes)
+3. Fluxo sugerido para implementar (roadmap)
+Movimentação dos monstros
+
+Para cada monstro vivo, calcular se deve andar, perseguir ou ficar parado.
+Se herói está no range de agro, começa perseguição.
+Agro/target
+
+Calcular heróis próximos (getHeroPos), verificar LOS (hasLineOfSight).
+Definir target e estado do monstro.
+Ataque
+
+Se no range de ataque, disparar ação de ataque (melee/ranged/magia).
+Usar status do YAML/banco para calcular dano, frequência, etc.
+Configuração e balanceamento
+
+Garantir que YAML e banco estejam alinhados (HP, dano, range, comportamento).
+Adicionar/ajustar campos se necessário.
+Respawn
+
+Se monstro morrer, agendar respawn conforme respawnSec.
+4. Referências diretas do repositório para estudar
+docs/COMBAT_FLAGS.md
+docs/add-monsters-guide.md
+tools/MOBS/CONSULTA DB.txt
+tools/MOBS/MONSTERS_LIST.txt
+server/combat/pos.js
+server/combat/los.js
+Obs:
+Esta análise cobre só os 10 primeiros arquivos resultantes da busca.
+Veja mais arquivos ou pesquise direto no GitHub
+
+Se quiser um esqueleto de AI ou exemplos práticos de funções para o loop de monstros, peça que te ajudo a montar!
+
+You said: traga o roadmap completo para tudo isso
+traga o roadmap completo para tudo isso que tu falou por fases, inclua no roadmap informações que tu tens importantes para nao se perder ao longo da implementação e também para respeitar todos arquivos e funções existentes que tu mapeou, o roadmap é bom ser feito de um jeito que independente do local da conversa e da fase eu cole e você entenda a situação onde estávamos caso a conversa saia do eixo e do proposito
+Copilot said: ````markdown name=MONSTER_AI_COMBAT_ROADMAP.md # ROADMAP: Inteligência Artificial, Ataque, Movimentação
+
+MONSTER_AI_COMBAT_ROADMAP.md
+# ROADMAP: Inteligência Artificial, Ataque, Movimentação e Agro de Monstros (Estilo Tibia)
+**Projeto:** [afkminers/afk-miners](https://github.com/afkminers/afk-miners)  
+**Objetivo:** Implementar sistema completo de AI para monstros: movimentação, agro, perseguição, ataque (melee/ranged/mágico), respawn, usando dados do banco e dos arquivos `.yml`, respeitando a estrutura e funções já existentes.
+
+---
+
+You said: # ROADMAP: Inteligência Artificial, Ataque, Movimentação e
+# ROADMAP: Inteligência Artificial, Ataque, Movimentação e Agro de Monstros (Estilo Tibia)
+**Projeto:** [afkminers/afk-miners](https://github.com/afkminers/afk-miners)  
+**Objetivo:** Implementar sistema completo de AI para monstros: movimentação, agro, perseguição, ataque (melee/ranged/mágico), respawn, usando dados do banco e dos arquivos `.yml`, respeitando a estrutura e funções já existentes.
+
+---
+
+## 📚 **Referências e Arquivos-Chave**
+- **Banco:** `spawns`, `monster_instances`, `monsters_master`, `player_last_pos`, `player_heroes`
+- **YAML:** `data/sprites/monsters/<key>.yml` (sprites, animação, status)
+- **Back-end:**  
+  - `/server/combat/pos.js` (posições)  
+  - `/server/combat/los.js` (line of sight)  
+  - `/server/models/db.js` (queries banco)  
+  - `/server/monsters/` (AI/tick dos monstros, pode precisar criar/expandir)  
+  - `/server/combat/` (funções de ataque/comportamento)
+- **Documentação:**  
+  - `docs/COMBAT_FLAGS.md` (flags de combate)  
+  - `docs/add-monsters-guide.md` (como adicionar monstros)  
+  - `tools/MOBS/CONSULTA DB.txt` (queries úteis do banco)  
+  - `tools/MOBS/MONSTERS_LIST.txt` (bestário/descrição)
+- **Cliente:**  
+  - Para visualização e debug, HUD, logs, feedback de ataque.
+
+---
+
+## 🚦 **ROADMAP POR FASES**
+
+### **FASE 1 — Infraestrutura e Diagnóstico**
+1. **Revisar e validar banco de dados**
+   - Usar queries de `tools/MOBS/CONSULTA DB.txt` para garantir consistência das tabelas e colunas (`spawns`, `monster_instances`, `monsters_master`, etc).
+   - Validar catálogo de monstros (campos essenciais: HP, dano, tipo, range).
+
+2. **Auditar arquivos YAML**
+   - Garantir que todos monstros usados em mapas/spawns têm seu `.yml` correspondente, com campos necessários para animação e status.
+
+3. **Mapear funções essenciais já existentes**
+   - **Posição:** `/server/combat/pos.js` (`getHeroPos`, `getMonsterPos`)
+   - **Line of Sight:** `/server/combat/los.js` (`hasLineOfSight`)
+   - **Respawn e ciclo de vida:** (ver onde o monstro é criado/morto; pode ser em `/server/monsters/` ou controller principal)
+
+---
+
+### **FASE 2 — Loop Principal dos Monstros (Monster AI Loop)**
+1. **Criar ou revisar loop de update (tick) dos monstros**
+   - Para cada monstro vivo (`monster_instances` com `state='ALIVE'`):
+     - Buscar status base (`monsters_master` & YAML).
+     - Buscar posição atual.
+
+2. **Implementar movimentação básica**
+   - Se monstro não tem target: pode andar aleatoriamente (idle/wander).
+   - Se monstro vê herói: inicia perseguição/agro.
+
+---
+
+### **FASE 3 — Agro e Target**
+1. **Detecção de heróis próximos**
+   - Usar `getHeroPos` + posição do monstro.
+   - Definir range de agro (campo fixo ou do YAML/banco).
+   - Verificar line of sight (LOS) via `/server/combat/los.js`.
+
+2. **Escolha de alvo**
+   - Se múltiplos heróis próximos, pode priorizar o mais próximo, o que deu mais dano, etc.
+   - Salvar `targetId` ou equivalente na instância do monstro.
+
+---
+
+### **FASE 4 — Perseguição e Inteligência de Movimento**
+1. **Movimentação em direção ao alvo**
+   - Implementar pathfinding simples (linha reta, ou A* se grid disponível).
+   - Evitar obstáculos via mapa de colisão.
+
+2. **Lógica de desistência**
+   - Monstro desiste de perseguir se herói sai do range/LOS ou após certo tempo.
+
+---
+
+### **FASE 5 — Ataque dos Monstros**
+1. **Checar se está em range de ataque**
+   - Usar range do monstro (melee/ranged/magic) do YAML/banco.
+
+2. **Executar ataque**
+   - Calcular dano conforme status (balancear via YAML/banco).
+   - Enviar evento de dano ao herói (`player_heroes`), atualizar HP.
+   - Se ataque ranged/magic, usar LOS para checar se pode atacar.
+   - Adicionar cooldown/velocidade de ataque.
+
+3. **Feedback para cliente**
+   - Enviar logs/efeitos de ataque, feedback visual/auditivo.
+
+---
+
+### **FASE 6 — Morte e Respawn**
+1. **Verificar morte do monstro**
+   - Se HP <= 0, setar `state='DEAD'` e agendar respawn (`respawnSec` do spawn).
+
+2. **Respawn automático**
+   - Após tempo de respawn, criar nova instância do monstro na posição do spawn.
+
+---
+
+### **FASE 7 — Balanceamento e Polimento**
+1. **Balancear status dos monstros**
+   - Ajustar HP, dano, range, velocidade nos YAMLs e banco.
+
+2. **Ajustar comportamento**
+   - Adicionar falas, loot, efeitos visuais, comportamento de grupo (ex: lobos atacam juntos).
+
+3. **Debug e logs**
+   - Adicionar logs detalhados, debug visual para checar AI.
+
+---
+
+## 🛠️ **NOTAS IMPORTANTES**
+- **Sempre usar funções utilitárias já criadas** (ex: `getHeroPos`, `hasLineOfSight`) para evitar duplicação e garantir consistência.
+- **Respeitar dados dos YAMLs e banco**: status, range, dano, etc. devem ser parametrizados, não hardcoded.
+- **Testar cada fase isoladamente**: use logs e debug visual.
+- **Documente cada função/módulo novo criado para facilitar retomada se a conversa/análise sair do eixo.**
+- **Se criar novo arquivo, sempre anote aqui no roadmap.**
+- **Se alterar estrutura do banco ou YAML, documente a alteração.**
+
+---
+
+## 🚩 **CONTROLE DE FASE**
+> Ao iniciar/terminar cada fase, registre aqui o status, decisões, arquivos alterados/criados, dificuldades e próximos passos.
+
+---
+
+## 🗂️ **LINKS ÚTEIS**
+- [docs/COMBAT_FLAGS.md](https://github.com/afkminers/afk-miners/blob/main/docs/COMBAT_FLAGS.md)
+- [docs/add-monsters-guide.md](https://github.com/afkminers/afk-miners/blob/main/docs/add-monsters-guide.md)
+- [tools/MOBS/CONSULTA DB.txt](https://github.com/afkminers/afk-miners/blob/main/tools/MOBS/CONSULTA%20DB.txt)
+- [tools/MOBS/MONSTERS_LIST.txt](https://github.com/afkminers/afk-miners/blob/main/tools/MOBS/MONSTERS_LIST.txt)
+- [server/combat/pos.js](https://github.com/afkminers/afk-miners/blob/main/server/combat/pos.js)
+- [server/combat/los.js](https://github.com/afkminers/afk-miners/blob/main/server/combat/los.js)
+
+---
+
+> **Sempre copie este roadmap para consulta e atualização a cada retomada ou mudança de contexto! Qualquer dúvida ou desvio, cole aqui para reorientar.**
+
+com base no roadmap vamos para a primeira fase

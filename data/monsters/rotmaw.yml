@@ -7,11 +7,17 @@ health:
 speed: 60
 look:
   spriteKey: rotmaw
+flags:
+  hostile: true
+elements:
+  physical: 0
 attacks:
 - type: melee
   intervalMs: 2000
+  chancePercent: 100
   min: 8
   max: 14
 defenses:
   armor: 0
   defense: 0
+loot: []

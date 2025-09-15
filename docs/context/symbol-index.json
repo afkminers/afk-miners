@@ -703,7 +703,6 @@
       "getHeroStats",
       "getInstanceWithMonster",
       "getRespawnSeconds",
-      "giveXp",
       "persistDrops",
       "resolveSkillFromWeapon",
       "rollLoot"
@@ -980,6 +979,16 @@
       "safeParse",
       "stats",
       "warm"
+    ]
+  },
+  {
+    "file": "server\\services\\heroProgress.js",
+    "symbols": [
+      "applyLevelUp",
+      "getXpNeededForHero",
+      "giveXp",
+      "notifyLevelUpClient",
+      "xpNeededForLevel"
     ]
   },
   {

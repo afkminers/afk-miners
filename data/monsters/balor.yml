@@ -23,6 +23,7 @@ elements:
 attacks:
 - type: melee
   intervalMs: 2000
+  chancePercent: 100
   min: 300
   max: 520
 - type: spell

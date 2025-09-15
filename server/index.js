@@ -770,7 +770,11 @@ let idleSchedulerTimer = null;
       console.log(`[content] pipeline: ${CONTENT_PIPELINE}`);
       await loadAll({ all, get, run }, path.join(__dirname, '..'));
     }
-
+    
+    // AI dos monstros: inicia o loop de IA dos mobs
+    const aiMobs = require('./combat/ai-mobs');
+    aiMobs.start();
+    
     if (shouldGenerateContext) {
       console.log('[context] generation enabled by GEN_CONTEXT_ON_START=1');
     } else {

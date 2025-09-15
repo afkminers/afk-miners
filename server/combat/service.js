@@ -102,7 +102,6 @@ function rollLoot(lootJson) {
     return drops;
 }
 
-
 /** Persiste drops na tabela hero_loot_drops */
 async function persistDrops(heroId, instanceId, drops) {
     if (!drops || !drops.length) return 0;
@@ -226,4 +225,76 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
     };
 }
 
-module.exports = { applyHit };
+/**
+ * Aplica hit de mob em herói (ataque ativo do monstro).
+ * attackerInstanceId: ID da instância do monstro (monster_instances)
+ * targetHeroId: ID do herói alvo (player_heroes)
+ * attackInfo: { min, max, element, ... } (do YAML do monstro)
+ */
+async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
+    // Carrega status do herói alvo
+    const hero = await getHeroStats(targetHeroId);
+    if (!hero) return { ok: false, message: 'target hero not found' };
+
+    // Carrega a instância do monstro
+    const inst = await getInstanceWithMonster(attackerInstanceId);
+    if (!inst || inst.state !== 'ALIVE') return { ok: false, message: 'attacker not alive' };
+
+    // Dano aleatório entre min/max (pode evoluir p/ elementos, defesas etc)
+    const min = Number(attackInfo?.min ?? 1);
+    const max = Number(attackInfo?.max ?? 2);
+    let dmg = min + Math.floor(Math.random() * (max - min + 1));
+    // Redução de defesa do herói
+    const heroDefense = Number(hero.defense || 0);
+    dmg = Math.max(0, dmg - Math.floor(Math.random() * (heroDefense + 1)));
+
+    // Atualiza o HP do herói (pode ser em player_heroes ou outra tabela)
+    const row = await get(
+        `SELECT hp, max_hp FROM player_heroes WHERE id=$1`,
+        [targetHeroId]
+    );
+    if (!row) return { ok: false, message: 'hero stats not found' };
+
+    const newHp = Math.max(0, Number(row.hp) - dmg);
+    const dead = newHp === 0;
+
+    await run(
+        `UPDATE player_heroes
+         SET hp = $2, updated_at = now()
+         WHERE id = $1`,
+        [targetHeroId, newHp]
+    );
+
+    // Broadcast de dano no herói alvo
+    broadcast({
+        type: 'hero_hp',
+        heroId: targetHeroId,
+        hp: newHp,
+        maxHp: row.max_hp,
+        byMob: inst.monster_key,
+        instanceId: inst.id,
+        dmg
+    });
+
+    // Se morreu, pode adicionar lógica adicional (respawn, penalidade, etc)
+    if (dead) {
+        broadcast({
+            type: 'hero_dead',
+            heroId: targetHeroId,
+            byMob: inst.monster_key,
+            instanceId: inst.id
+        });
+    }
+
+    return {
+        ok: true,
+        damage: dmg,
+        hpAfter: newHp,
+        maxHp: row.max_hp,
+        dead,
+        targetHeroId,
+        attackerInstanceId
+    };
+}
+
+module.exports = { applyHit, applyMobHit };

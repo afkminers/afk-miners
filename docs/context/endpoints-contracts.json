@@ -1869,7 +1869,7 @@
     "method": "GET",
     "path": "/me",
     "file": "server\\player\\routes.js",
-    "line": 123,
+    "line": 125,
     "sample": {
       "query": {
         "map": "value"
@@ -1920,10 +1920,6 @@
       {
         "status": 200,
         "body": "{x:null,y:null,seq:0,updatedAt:null }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
       }
     ]
   },
@@ -2285,7 +2281,7 @@
     "method": "GET",
     "path": "/pos",
     "file": "server\\player\\routes.js",
-    "line": 200,
+    "line": 208,
     "sample": {
       "query": {
         "map": "value"
@@ -2389,7 +2385,7 @@
     "method": "POST",
     "path": "/pos",
     "file": "server\\player\\routes.js",
-    "line": 216,
+    "line": 224,
     "sample": {
       "body": {
         "mapKey": "value",

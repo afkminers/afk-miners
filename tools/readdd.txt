@@ -1,0 +1,684 @@
+// server/combat/pos.js
+const { get } = require('../models/db');
+
+/** Pega playerId dono do herói + classe (útil p/ cálculos) */
+async function getHeroOwner(heroId) {
+  return await get(
+    `SELECT ph.id AS "heroId", ph."playerId" AS "playerId", hm.class AS class
+       FROM player_heroes ph
+  LEFT JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
+      WHERE ph.id = $1`,
+    [heroId]
+  );
+}
+
+/** Última posição persistida do player (por mapa) — usamos a do mapa atual do alvo/partida */
+async function getPlayerLastPos(playerId, mapKey) {
+  return await get(
+    `SELECT x, y, map_key AS "mapKey", last_seq AS seq, updated_at AS "updatedAt"
+       FROM player_last_pos
+      WHERE player_id = $1 AND map_key = $2`,
+    [playerId, mapKey]
+  );
+}
+
+/** Posição do herói, inferida pela última posição do player no mesmo mapKey do alvo */
+async function getHeroPos(heroId, preferMapKey = null) {
+  const owner = await getHeroOwner(heroId);
+  if (!owner) return null;
+
+  // Se não soubermos o mapa ainda, retorna a última posição global (qualquer mapa)
+  if (!preferMapKey) {
+    const any = await get(
+      `SELECT x, y, map_key AS "mapKey"
+         FROM player_last_pos
+        WHERE player_id = $1
+        ORDER BY updated_at DESC
+        LIMIT 1`,
+      [owner.playerId]
+    );
+    if (any) return { x: any.x, y: any.y, map_key: any.mapKey, class: owner.class || null };
+    return null;
+  }
+
+  // Preferimos a posição já no mapa do alvo
+  const row = await getPlayerLastPos(owner.playerId, preferMapKey);
+  if (row) return { x: row.x, y: row.y, map_key: row.mapKey, class: owner.class || null };
+
+  // Fallback: última posição em qualquer mapa
+  const any = await get(
+    `SELECT x, y, map_key AS "mapKey"
+       FROM player_last_pos
+      WHERE player_id = $1
+      ORDER BY updated_at DESC
+      LIMIT 1`,
+    [owner.playerId]
+  );
+  return any ? { x: any.x, y: any.y, map_key: any.mapKey, class: owner.class || null } : null;
+}
+
+/** Posição do monstro pela instância */
+async function getMonsterPos(instanceId) {
+  return await get(
+    `SELECT x, y, map_key AS "map_key"
+       FROM monster_instances
+      WHERE id = $1`,
+    [instanceId]
+  );
+}
+
+module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos };
+
+
+// server/combat/los.js
+const { toTile } = require('./geom');
+
+/**
+ * Suporta:
+ *  - grid2D: boolean[][] (true/1 = bloqueia)
+ *  - linear: { data: Uint8Array, cols, rows }
+ *  - ou diretamente Uint8Array + você passa um wrapper (ver autoloop)
+ */
+function hasLineOfSight(gridLike, ax, ay, bx, by) {
+  let x0 = toTile(ax), y0 = toTile(ay);
+  let x1 = toTile(bx), y1 = toTile(by);
+
+  let cols = null, data = null, grid2D = null;
+
+  if (Array.isArray(gridLike)) {
+    grid2D = gridLike; // boolean[][]
+  } else if (gridLike && gridLike.data instanceof Uint8Array && Number.isFinite(gridLike.cols)) {
+    data = gridLike.data;
+    cols = gridLike.cols;
+  } else if (gridLike instanceof Uint8Array) {
+    // caso raro: se te passarem só o Uint8Array, não temos cols/rows -> não conseguimos index linear
+    // prefira passar { data: grid, cols, rows }
+    throw new Error('LOS: precisa de cols/rows quando usar Uint8Array');
+  }
+
+  const blocked = (cx, cy) => {
+    if (grid2D) return !!(grid2D[cy]?.[cx]);
+    if (data && Number.isFinite(cols)) return !!data[cy * cols + cx];
+    return false;
+  };
+
+  const dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+  const dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+  let err = dx + dy;
+
+  while (true) {
+    if (blocked(x0, y0)) return false;
+    if (x0 === x1 && y0 === y1) break;
+    const e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x0 += sx; }
+    if (e2 <= dx) { err += dx; y0 += sy; }
+  }
+  return true;
+}
+
+module.exports = { hasLineOfSight };
+
+// server/maps/grid.js
+const { get, all } = require('../models/db');
+const TILE = 32;
+const cache = new Map(); // mapKey -> { grid: Uint8Array, cols, rows }
+
+function hasSolidPropRow(row) {
+  try {
+    const p = row.propsJSON;
+    if (Array.isArray(p)) return p.some(v => v?.name === 'solid' && (v.value === true || v.value === 1));
+    if (p && typeof p === 'object') return !!(p.solid === true || p.solid === 1);
+  } catch {}
+  return false;
+}
+
+function buildCollisionFromObjects(mapW, mapH, objs) {
+  const cols = Math.floor(mapW / TILE), rows = Math.floor(mapH / TILE);
+  const grid = new Uint8Array(cols * rows);
+  for (const o of objs) {
+    const t = String(o.type || '').toLowerCase();
+    const solid = t === 'solid' || hasSolidPropRow(o);
+    if (!solid) continue;
+    const x0 = Math.floor(o.x / TILE), y0 = Math.floor(o.y / TILE);
+    const x1 = Math.floor((o.x + o.w - 1) / TILE);
+    const y1 = Math.floor((o.y + o.h - 1) / TILE);
+    for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
+      if (cx>=0 && cy>=0) grid[cy*cols + cx] = 1;
+    }
+  }
+  return { grid, cols, rows };
+}
+
+function buildCollisionFromTiled(json) {
+  const cols = json.width|0, rows = json.height|0;
+  const grid = new Uint8Array(cols * rows);
+  const layer = (json.layers || []).find(l => l.type === 'tilelayer' && (l.name||'').toLowerCase().includes('collision'));
+  if (layer && Array.isArray(layer.data)) {
+    for (let i=0;i<layer.data.length;i++) if (layer.data[i]) grid[i]=1;
+  }
+  return { grid, cols, rows };
+}
+
+async function getGrid(mapKey) {
+  if (cache.has(mapKey)) return cache.get(mapKey);
+
+  const mapRow = await get(`SELECT "dataJSON" FROM maps WHERE key=$1`, [mapKey]);
+  if (!mapRow?.dataJSON) throw new Error('map-not-found');
+
+  const objs = await all(
+    `SELECT type, x, y, w, h, "propsJSON" FROM map_objects WHERE "mapKey"=$1`,
+    [mapKey]
+  );
+
+  const mapJson = mapRow.dataJSON;
+  const mapW = (mapJson.width || 64) * TILE;
+  const mapH = (mapJson.height || 64) * TILE;
+
+  const built = (objs && objs.length)
+    ? buildCollisionFromObjects(mapW, mapH, objs)
+    : buildCollisionFromTiled(mapJson);
+
+  const entry = { grid: built.grid, cols: built.cols, rows: built.rows };
+  cache.set(mapKey, entry);
+  return entry;
+}
+
+module.exports = { getGrid, TILE };
+
+
+// server/combat/service.js
+
+const { get, run, all } = require('../models/db');
+const K = require('../balance/config');
+const { applyTries, getClassRate } = require('../skills/engine');
+//ws bus
+const { broadcast } = require('../ws/bus');
+// ADICIONE ESTA LINHA: importa o serviço de XP/level up centralizado
+const { giveXp } = require('../services/heroProgress');
+
+/** Util: cálculo de dano Tibia-like, progressão real, sem dano mínimo */
+function computeDamageTibiaLike(weaponAtk, skillLevel, monsterArmor, variance = K.DAMAGE_VARIANCE) {
+    const base = weaponAtk * (1 + skillLevel / 50);
+    const minDmg = Math.floor(base * (1 - variance));
+    const maxDmg = Math.ceil(base * (1 + variance));
+    const raw = Math.floor(Math.random() * (maxDmg - minDmg + 1)) + minDmg;
+    const defenseReduction = Math.floor(Math.random() * (monsterArmor + 1));
+    return Math.max(0, raw - defenseReduction); // sem dano mínimo garantido
+}
+
+/** Resolve skill pelo tipo de arma (usa tabela weapon_skill_map que você já tem) */
+async function resolveSkillFromWeapon(weaponType) {
+    if (!weaponType) return null;
+    const row = await get(
+        `SELECT skill_type FROM weapon_skill_map WHERE lower(weapon_type) = lower($1)`,
+        [String(weaponType)]
+    );
+    return row?.skill_type || null;
+}
+
+/** Busca o nível do skill do herói para o tipo de skill usado */
+async function getHeroSkillLevel(heroId, skillType) {
+    if (!heroId || !skillType) return 10; // fallback razoável
+    const row = await get(
+        `SELECT level FROM player_hero_skills WHERE hero_id = $1 AND skill_type = $2`,
+        [heroId, skillType]
+    );
+    return row?.level ? Number(row.level) : 10; // fallback inicial
+}
+
+/** Stats básicos do herói (usa suas tabelas) */
+async function getHeroStats(heroId) {
+    return await get(
+        `SELECT 
+            ph.id AS hero_id,
+            COALESCE(ph.attack,10) + COALESCE(i.atk,0) AS attack,
+            COALESCE(ph.defense,10) AS defense,
+            hm.class,
+            eq.item_key AS weapon_key,
+            i.atk AS weapon_atk,
+            i.weapon_type AS weapon_type
+         FROM player_heroes ph
+    LEFT JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
+    LEFT JOIN hero_equipment eq ON eq.hero_id = ph.id::uuid AND eq.slot = 'WEAPON'
+    LEFT JOIN items_master i    ON i.key = eq.item_key
+        WHERE ph.id = $1`,
+        [heroId]
+    );
+}
+
+/** Carrega a instância + dados do monstro (xp/loot/armor) */
+async function getInstanceWithMonster(instanceId) {
+    return await get(
+        `SELECT mi.id, mi.hp, mi.max_hp, mi.state, mi.spawn_id, mi.map_key,
+            m.id AS monster_id, m.key AS monster_key,
+            COALESCE(m.xp,25) AS xp_reward,
+            COALESCE(m."lootJSON",'[]'::jsonb) AS loot_json,
+            COALESCE(m."defensesJSON",'{}'::jsonb) AS defenses_json
+       FROM monster_instances mi
+       JOIN monsters_master m ON m.id = mi.monster_id
+      WHERE mi.id = $1`,
+        [instanceId]
+    );
+}
+
+/** Consulta respawnSec pelo spawn_id da instância (fallback 30s) */
+async function getRespawnSeconds(spawnId) {
+    if (!spawnId) return 30;
+    const row = await get(
+        `SELECT COALESCE("respawnSec",30) AS sec FROM spawns WHERE id=$1`,
+        [spawnId]
+    );
+    return row?.sec ?? 30;
+}
+
+/** Rola loot de acordo com lootJSON do monsters_master (array de {item,min,max,chance}) */
+function rollLoot(lootJson) {
+    const drops = [];
+    const arr = Array.isArray(lootJson) ? lootJson : [];
+    for (const e of arr) {
+        const item = e?.item;
+        const min = Number(e?.min ?? 1);
+        const max = Number(e?.max ?? 1);
+        const chance = Number(e?.chance ?? 0); // em %
+        if (!item || chance <= 0) continue;
+        const roll = Math.random() * 100;
+        if (roll <= chance) {
+            const amount = min >= max ? min : (min + Math.floor(Math.random() * (max - min + 1)));
+            if (amount > 0) drops.push({ item_key: String(item), amount });
+        }
+    }
+    return drops;
+}
+
+
+/** Persiste drops na tabela hero_loot_drops */
+async function persistDrops(heroId, instanceId, drops) {
+    if (!drops || !drops.length) return 0;
+    const values = [];
+    const params = [];
+    let i = 1;
+    for (const d of drops) {
+        values.push(`($${i++}, $${i++}, $${i++}, $${i++})`);
+        params.push(heroId, instanceId, d.item_key, d.amount);
+    }
+    await run(
+        `INSERT INTO hero_loot_drops (hero_id, monster_instance_id, item_key, amount)
+     VALUES ${values.join(',')}`,
+        params
+    );
+    return drops.length;
+}
+
+/** Aplica hit (dano + skill + morte/loot/xp/respawn) */
+async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
+    const hero = await getHeroStats(attackerHeroId);
+    const inst = await getInstanceWithMonster(targetInstanceId);
+    if (!hero || !inst) return { ok: false, message: 'attacker or target not found' };
+    if (inst.state !== 'ALIVE') return { ok: false, message: 'target not alive' };
+
+    // Resolve skill e nível do skill
+    const resolvedWeaponType = weaponType || hero.weapon_type || null;
+    const skillType = await resolveSkillFromWeapon(resolvedWeaponType);
+    const skillLevel = await getHeroSkillLevel(attackerHeroId, skillType);
+
+    // Busca atk real da arma (ou fallback)
+    const weaponAtk = hero.weapon_atk || 1;
+
+    // Busca armor do monstro (defenses_json.armor)
+    let monsterArmor = 0;
+    try {
+        const defenses = typeof inst.defenses_json === "object" ? inst.defenses_json :
+            JSON.parse(inst.defenses_json || '{}');
+        monsterArmor = Number(defenses.armor || 0);
+    } catch { monsterArmor = 0; }
+
+    // Cálculo novo de dano
+    const dmg = computeDamageTibiaLike(weaponAtk, skillLevel, monsterArmor);
+
+    const newHp = Math.max(0, inst.hp - dmg);
+    const dead = newHp === 0;
+
+    // sempre marcamos quem bateu por último
+    await run(
+        `UPDATE monster_instances
+        SET hp=$2,
+            last_hit_hero_id=$3,
+            last_hit_at=now(),
+            state = CASE WHEN $2=0 THEN 'DEAD' ELSE state END,
+            updated_at=now()
+      WHERE id=$1`,
+        [inst.id, newHp, hero.hero_id]
+    );
+
+    // notifica clientes em tempo real
+    broadcast({
+        type: 'monster_hp',
+        id: inst.id,
+        hp: newHp,
+        maxHp: inst.max_hp,
+        byHero: hero.hero_id,
+        dmg
+    });
+
+    // Skill gain ONLY when damage > 0
+    if (skillType && dmg > 0) {
+        const rate = await getClassRate(hero.class || null, skillType);
+        await applyTries(attackerHeroId, skillType, 1 * rate);
+    }
+
+    // Se morreu: XP + loot + agenda respawn
+    let xpGained = 0;
+    let drops = [];
+    if (dead) {
+        // XP
+        xpGained = Number(inst.xp_reward || 0);
+        // Aqui é a mudança: usa o serviço central de XP/level up!
+        await giveXp(attackerHeroId, xpGained);
+
+        // Loot
+        try {
+            const lootArray = Array.isArray(inst.loot_json) ? inst.loot_json : [];
+            drops = rollLoot(lootArray);
+            if (drops.length) await persistDrops(attackerHeroId, inst.id, drops);
+        } catch (e) {
+            console.warn('[combat] loot roll error:', e?.message);
+        }
+
+        // Agenda respawn
+        const sec = await getRespawnSeconds(inst.spawn_id);
+        await run(
+            `UPDATE monster_instances
+            SET respawn_at = now() + ($2 || ' seconds')::interval
+        WHERE id = $1`,
+            [inst.id, String(sec)]
+        );
+
+        // avisa clientes que morreu (só aqui dentro!)
+        broadcast({
+            type: 'monster_dead',
+            id: inst.id,
+            xp: xpGained,
+            drops
+        });
+    }
+
+    return {
+        ok: true,
+        damage: dmg,
+        hpAfter: newHp,
+        maxHp: inst.max_hp,
+        dead,
+        instanceId: inst.id,
+        xpGained,
+        drops
+    };
+}
+
+module.exports = { applyHit };
+
+
+//server/combat/worker.js
+
+async function respawnTick({ all, run }) {
+  const due = await all(`
+    SELECT id, spawn_id, map_key
+    FROM monster_instances
+    WHERE state='DEAD' AND now() >= respawn_at
+    ORDER BY respawn_at ASC
+    LIMIT 50
+  `);
+
+  for (const m of due) {
+    // TODO: pegar spawn info original (monsterKey, hp, etc)
+    await run(
+      `UPDATE monster_instances
+         SET state='ALIVE', hp=max_hp, respawn_at=NULL, updated_at=now()
+       WHERE id=$1`,
+      [m.id]
+    );
+  }
+}
+
+
+
+// server/combat/ai-mobs.js
+// AI extremamente simples: “passeio” com agro básico ao player mais próximo.
+// Mantém os monstros dentro do retângulo do spawn e publica a cada passo a posição.
+
+const { get } = require('../models/db');
+const bus = require('../ws/bus'); // { broadcast }
+
+const TICK_MS      = 350;  // ms entre passos
+const WANDER_SPEED = 40;   // px/s quando à toa
+const CHASE_SPEED  = 60;   // px/s quando em agro
+const AGGRO_RANGE  = 160;  // px
+
+let timer = null;
+
+// Cache: id -> { x, y, mapKey, spawnRect:{x,y,w,h} }
+const INST = new Map();
+
+/**
+ * Usado pelo respawn/loader para injetar a posição inicial.
+ * spawnRect é opcional; se não vier, usa caixa 96x96 centrada.
+ */
+function seedPosition({ id, x, y, mapKey, spawnRect }) {
+  const sr = (spawnRect && Number.isFinite(spawnRect.w) && Number.isFinite(spawnRect.h))
+    ? { x: Number(spawnRect.x) || 0, y: Number(spawnRect.y) || 0, w: Number(spawnRect.w), h: Number(spawnRect.h) }
+    : { x: Math.max(0, (Number(x)||0) - 48), y: Math.max(0, (Number(y)||0) - 48), w: 96, h: 96 };
+
+  INST.set(String(id), {
+    x: Math.round(Number(x)||0),
+    y: Math.round(Number(y)||0),
+    mapKey: String(mapKey || 'house'),
+    spawnRect: sr
+  });
+}
+
+/** Remover do cache quando morrer/despawnar (caso queira ligar em outro ponto do código) */
+function forget(id) { INST.delete(String(id)); }
+
+function clampToRect(x, y, r) {
+  const cx = Math.min(Math.max(x, r.x), r.x + r.w);
+  const cy = Math.min(Math.max(y, r.y), r.y + r.h);
+  return { x: cx, y: cy };
+}
+
+// “cheiro” do player mais próximo pela última posição conhecida
+async function nearestPlayerPos(mapKey, x, y) {
+  const row = await get(
+    `SELECT x, y
+       FROM player_last_pos
+      WHERE map_key = $1
+      ORDER BY ((x-$2)*(x-$2) + (y-$3)*(y-$3)) ASC
+      LIMIT 1`,
+    [mapKey, x, y]
+  ).catch(() => null);
+  return row ? { x: Number(row.x), y: Number(row.y) } : null;
+}
+
+async function tick() {
+  const dt = TICK_MS / 1000;
+
+  for (const [id, m] of INST.entries()) {
+    let dx = 0, dy = 0, speed = WANDER_SPEED;
+
+    // agro simples
+    const p = await nearestPlayerPos(m.mapKey, m.x, m.y);
+    if (p) {
+      const dist = Math.hypot(p.x - m.x, p.y - m.y);
+      if (dist <= AGGRO_RANGE) {
+        speed = CHASE_SPEED;
+        dx = (p.x - m.x) / (dist || 1);
+        dy = (p.y - m.y) / (dist || 1);
+      }
+    }
+
+    // passeio aleatório
+    if (dx === 0 && dy === 0) {
+      const ang = Math.random() * Math.PI * 2;
+      dx = Math.cos(ang);
+      dy = Math.sin(ang);
+    }
+
+    let nx = m.x + dx * speed * dt;
+    let ny = m.y + dy * speed * dt;
+
+    // mantém dentro do retângulo do spawn
+    const cl = clampToRect(nx, ny, m.spawnRect);
+    nx = Math.round(cl.x);
+    ny = Math.round(cl.y);
+
+    // atualiza cache
+    m.x = nx; m.y = ny; INST.set(id, m);
+
+    // avisa clientes para mover sprite + barra
+    bus.broadcast({ type: 'monster_move', id: String(id), x: nx, y: ny });
+  }
+}
+
+function start() {
+  if (timer) return;
+  timer = setInterval(tick, TICK_MS);
+  console.log(`[ai] mob AI started (${TICK_MS}ms)`);
+}
+function stop() {
+  if (timer) clearInterval(timer);
+  timer = null;
+  console.log('[ai] mob AI stopped');
+}
+
+module.exports = { start, stop, seedPosition, forget };
+
+
+// server/combat/autoloop.js
+const K = require('../balance/config');
+const { applyHit } = require('./service');
+const { getHeroPos, getMonsterPos } = require('./pos');   // posições
+const { inReachPx } = require('./geom');                  // Chebyshev
+const { hasLineOfSight } = require('./los');              // Bresenham
+const { getGrid } = require('../maps/grid');              // colisão server
+const { get } = require('../models/db');                  // já usado no isTargetAlive
+
+const DEBUG = String(process.env.COMBAT_DEBUG || '').trim() === '1';
+
+// heroId -> { timer, targetInstanceId, weaponType, cooldownMs }
+const loops = new Map();
+
+function cooldownFor(weaponType) {
+  const key = String(weaponType || 'SWORD').toUpperCase();
+  return (K.WEAPON_SPEED_MS && K.WEAPON_SPEED_MS[key]) || 1000;
+}
+
+async function isTargetAlive(instanceId) {
+  const row = await get(
+    'SELECT state, hp FROM monster_instances WHERE id=$1',
+    [instanceId]
+  );
+  return !!row && row.state === 'ALIVE' && Number(row.hp || 0) > 0;
+}
+
+// Validação “OT-like” por golpe (alcance + LOS em cada tick)
+async function tickOnce(heroId, targetInstanceId, weaponType) {
+  const mobPos = await getMonsterPos(targetInstanceId);
+  if (!mobPos) return { ok:false, reason:'mob-pos-missing' };
+
+  const heroPos = await getHeroPos(heroId, mobPos.map_key);
+  if (!heroPos) return { ok:false, reason:'hero-pos-missing' };
+  if (heroPos.map_key !== mobPos.map_key) return { ok:false, reason:'map-diff' };
+
+  // pega grid linear e passa wrapper com metadata p/ LOS
+  const { grid, cols } = await getGrid(heroPos.map_key);
+  const losGrid = { data: grid, cols };
+
+  if (!inReachPx(heroPos, mobPos, weaponType, K)) {
+    if (DEBUG) console.log('[autoloop] out_of_range');
+    return { ok:false, reason:'out_of_range' };
+  }
+  if (!hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y)) {
+    if (DEBUG) console.log('[autoloop] no_los');
+    return { ok:false, reason:'no_los' };
+  }
+
+  return await applyHit({
+    attackerHeroId: String(heroId),
+    targetInstanceId: String(targetInstanceId),
+    weaponType: String(weaponType || 'SWORD')
+  });
+}
+
+function start(heroId, targetInstanceId, weaponType = 'SWORD') {
+  stop(heroId); // idempotente
+
+  const cooldownMs = cooldownFor(weaponType);
+  if (DEBUG) console.log(`[autoloop] start hero=${heroId} target=${targetInstanceId} cd=${cooldownMs}ms`);
+
+  const tick = async () => {
+    try {
+      if (!(await isTargetAlive(targetInstanceId))) {
+        if (DEBUG) console.log(`[autoloop] target not alive -> stop hero=${heroId}`);
+        stop(heroId);
+        return;
+      }
+      const r = await tickOnce(heroId, targetInstanceId, weaponType);
+      if (r?.dead) {
+        if (DEBUG) console.log(`[autoloop] target died -> stop hero=${heroId}`);
+        stop(heroId);
+      }
+    } catch (e) {
+      console.warn('[autoloop] tick error:', e?.message);
+    }
+  };
+
+  // primeiro hit imediato e agenda os próximos
+  tick();
+  const timer = setInterval(tick, cooldownMs);
+  loops.set(heroId, { timer, targetInstanceId, weaponType, cooldownMs });
+}
+
+function stop(heroId) {
+  const entry = loops.get(heroId);
+  if (entry?.timer) clearInterval(entry.timer);
+  if (entry && DEBUG) console.log(`[autoloop] stop hero=${heroId}`);
+  loops.delete(heroId);
+}
+
+function stopAll() {
+  for (const heroId of loops.keys()) stop(heroId);
+}
+
+function getState(heroId) {
+  const e = loops.get(heroId);
+  return e ? { targetInstanceId: e.targetInstanceId, weaponType: e.weaponType, cooldownMs: e.cooldownMs } : null;
+}
+
+module.exports = { start, stop, stopAll, cooldownFor, getState, _tickOnce: tickOnce };
+
+
+// server/combat/geom.js
+const TILE = 32;
+
+function toTile(v) {
+  return Math.floor(v / TILE);
+}
+
+function chebyshevTiles(ax, ay, bx, by) {
+  const dx = Math.abs(toTile(ax) - toTile(bx));
+  const dy = Math.abs(toTile(ay) - toTile(by));
+  return Math.max(dx, dy);
+}
+
+/** Alcance em tiles por arma (melee=1; distance=5; magic=8...) */
+function inReachPx(attacker, target, weaponType, K) {
+  const key = String(weaponType || 'SWORD').toUpperCase();
+  const rangeTiles = (K.WEAPON_RANGE_TILES && K.WEAPON_RANGE_TILES[key]) ?? 1;
+  const distTiles = chebyshevTiles(attacker.x, attacker.y, target.x, target.y);
+  return distTiles <= rangeTiles;
+}
+
+module.exports = { TILE, toTile, chebyshevTiles, inReachPx };
+
+
+
+
+
