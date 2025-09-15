@@ -234,7 +234,7 @@ async function bootstrapContentTables() {
     `);
 
     // Add performance indexes for common lookups
-    await run(`CREATE INDEX IF NOT EXISTS idx_map_objects_mapkey ON map_objects("mapKey")`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_map_objects_mapkey ON map_objects("MapKey")`);
     await run(`CREATE INDEX IF NOT EXISTS idx_spawns_mapkey ON spawns("mapKey")`);
     await run(`CREATE INDEX IF NOT EXISTS idx_spawns_monster ON spawns("monsterKey")`);
     await run(`CREATE INDEX IF NOT EXISTS idx_monster_instances_map ON monster_instances(map_key)`);
@@ -749,6 +749,9 @@ let idleSchedulerTimer = null;
 
 // ========= START =========
 (async () => {
+  // (opcional) ataque dos monstros — só inicia se o módulo existir
+  let monsterAttack = null;
+
   try {
     if (SKIP_MIGRATIONS_ON_BOOT) {
       console.log('[startup] skipping migrations due to SKIP_MIGRATIONS_ON_BOOT=1');
@@ -774,6 +777,16 @@ let idleSchedulerTimer = null;
     // AI dos monstros: inicia o loop de IA dos mobs
     const aiMobs = require('./combat/ai-mobs');
     aiMobs.start();
+
+    // (opcional) loop de ataque dos monstros
+    try {
+      monsterAttack = require('./combat/ai-monster-attack');
+      if (monsterAttack && typeof monsterAttack.start === 'function') {
+        monsterAttack.start();
+      }
+    } catch {
+      console.log('[ai-monster-attack] module not found — skipping monster attack loop');
+    }
     
     if (shouldGenerateContext) {
       console.log('[context] generation enabled by GEN_CONTEXT_ON_START=1');
@@ -818,6 +831,7 @@ let idleSchedulerTimer = null;
 
         ws._connectedAt = Date.now();
         ws._player = null;
+        ws._mapKey = 'house'; // padrão até resolver abaixo
         ws.isAlive = true; // compat com heartbeat
 
         try {
@@ -839,7 +853,7 @@ let idleSchedulerTimer = null;
           console.warn('[ws] cookie parse error', e && e.message);
         }
 
-        // >>> Coloca o socket na sala do mapa do jogador (fallback: 'house')
+        // >>> Coloca o socket na sala do mapa do jogador (fallback: 'house') e guarda o mapKey no socket
         (async () => {
           try {
             let mapKey = 'house';
@@ -853,8 +867,10 @@ let idleSchedulerTimer = null;
               );
               if (row?.map_key) mapKey = row.map_key;
             }
+            ws._mapKey = mapKey;            // <<< guarda para persistência de /pos
             joinMapSocket(mapKey, ws);
           } catch {
+            ws._mapKey = 'house';
             joinMapSocket('house', ws);
           }
         })();
@@ -921,12 +937,40 @@ let idleSchedulerTimer = null;
           }
 
           if (data.type === 'pos') {
-            const out = { type:'pos', id:String(data.id||''), x:Number(data.x||0), y:Number(data.y||0), name:String(data.name||'') };
+            // Novo: persistir posição para AI ter nearest/aggro
+            const pid = ws._player?.id || String(data.id || '');
+            const x = Number(data.x || 0);
+            const y = Number(data.y || 0);
+            const name = String(data.name || '');
+            const mapKey = String(data.mapKey || ws._mapKey || 'house');
+
+            // 1) rebroadcast (como antes)
+            const out = { type:'pos', id:String(pid), x, y, name };
             wss.clients.forEach(c => {
               if (c !== ws && c.readyState === WebSocketLib.OPEN) {
                 try { c.send(JSON.stringify(out)); } catch {}
               }
             });
+
+            // 2) persistência no DB (ESSENCIAL)
+            try {
+              await run(`
+                INSERT INTO player_last_pos (player_id, map_key, x, y, last_seq, updated_at)
+                VALUES ($1, $2, $3, $4,
+                        COALESCE((SELECT last_seq FROM player_last_pos WHERE player_id=$1 AND map_key=$2), 0) + 1,
+                        now())
+                ON CONFLICT (player_id, map_key)
+                DO UPDATE SET
+                  x = EXCLUDED.x,
+                  y = EXCLUDED.y,
+                  last_seq = player_last_pos.last_seq + 1,
+                  updated_at = now()
+              `, [pid, mapKey, x, y]);
+            } catch (e) {
+              console.warn('[ws] failed to persist player_last_pos:', e?.message);
+            }
+
+            return;
           }
         });
 
@@ -964,9 +1008,25 @@ let idleSchedulerTimer = null;
       }
     });
 
-    // Encerramento limpo do loop de respawn (Ctrl+C / kill)
-    process.on('SIGINT',  () => { try { stopRespawnLoop(); } finally { process.exit(0); } });
-    process.on('SIGTERM', () => { try { stopRespawnLoop(); } finally { process.exit(0); } });
+    // Encerramento limpo (Ctrl+C / kill)
+    process.on('SIGINT',  () => {
+      try {
+        try { const aiMobs = require('./combat/ai-mobs'); aiMobs.stop?.(); } catch {}
+        try { monsterAttack && monsterAttack.stop?.(); } catch {}
+        stopRespawnLoop();
+      } finally {
+        process.exit(0);
+      }
+    });
+    process.on('SIGTERM', () => {
+      try {
+        try { const aiMobs = require('./combat/ai-mobs'); aiMobs.stop?.(); } catch {}
+        try { monsterAttack && monsterAttack.stop?.(); } catch {}
+        stopRespawnLoop();
+      } finally {
+        process.exit(0);
+      }
+    });
 
   } catch (err) {
     console.error('Fatal start error:', err);
