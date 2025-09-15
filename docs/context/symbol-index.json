@@ -638,7 +638,9 @@
     "symbols": [
       "clampToRect",
       "forget",
-      "nearestPlayerPos",
+      "getHeroesOnMap",
+      "getMonsterYmlStats",
+      "isHeroAlive",
       "seedPosition",
       "start",
       "stop",
@@ -698,6 +700,7 @@
     "file": "server\\combat\\service.js",
     "symbols": [
       "applyHit",
+      "applyMobHit",
       "computeDamageTibiaLike",
       "getHeroSkillLevel",
       "getHeroStats",

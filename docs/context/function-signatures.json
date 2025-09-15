@@ -2127,7 +2127,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 107,
+    "line": 106,
     "kind": "function",
     "name": "persistDrops",
     "params": [
@@ -2138,13 +2138,24 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 125,
+    "line": 124,
     "kind": "function",
     "name": "applyHit",
     "params": [
       "{ attackerHeroId",
       "targetInstanceId",
       "weaponType }"
+    ]
+  },
+  {
+    "file": "server\\combat\\service.js",
+    "line": 234,
+    "kind": "function",
+    "name": "applyMobHit",
+    "params": [
+      "{ attackerInstanceId",
+      "targetHeroId",
+      "attackInfo }"
     ]
   },
   {
@@ -2349,7 +2360,16 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 22,
+    "line": 27,
+    "kind": "function",
+    "name": "getMonsterYmlStats",
+    "params": [
+      "monsterKey"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 52,
     "kind": "function",
     "name": "seedPosition",
     "params": [
@@ -2357,12 +2377,13 @@
       "x",
       "y",
       "mapKey",
-      "spawnRect }"
+      "spawnRect",
+      "monsterKey }"
     ]
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 36,
+    "line": 72,
     "kind": "function",
     "name": "forget",
     "params": [
@@ -2371,7 +2392,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 38,
+    "line": 74,
     "kind": "function",
     "name": "clampToRect",
     "params": [
@@ -2382,32 +2403,40 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 45,
+    "line": 81,
     "kind": "function",
-    "name": "nearestPlayerPos",
+    "name": "getHeroesOnMap",
     "params": [
-      "mapKey",
-      "x",
-      "y"
+      "mapKey"
     ]
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 57,
+    "line": 93,
+    "kind": "function",
+    "name": "isHeroAlive",
+    "params": [
+      "heroId",
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 99,
     "kind": "function",
     "name": "tick",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 97,
+    "line": 233,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 102,
+    "line": 238,
     "kind": "function",
     "name": "stop",
     "params": []

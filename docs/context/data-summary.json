@@ -1,5 +1,9 @@
 [
   {
+    "file": "docs\\releases\\2025-09-14_213731-auto\\ctx.yml",
+    "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
+  },
+  {
     "file": "docs\\releases\\2025-09-14_185745-auto\\ctx.yml",
     "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
   },
@@ -408,7 +412,7 @@
   {
     "file": "data\\monsters\\wolf.yml",
     "kind": "object",
-    "size": 9,
+    "size": 11,
     "topKeys": [
       "key",
       "name",
@@ -416,6 +420,8 @@
       "health",
       "speed",
       "look",
+      "flags",
+      "elements",
       "attacks",
       "defenses",
       "loot"
@@ -442,7 +448,7 @@
   {
     "file": "data\\monsters\\rotmaw.yml",
     "kind": "object",
-    "size": 8,
+    "size": 11,
     "topKeys": [
       "key",
       "name",
@@ -450,14 +456,17 @@
       "health",
       "speed",
       "look",
+      "flags",
+      "elements",
       "attacks",
-      "defenses"
+      "defenses",
+      "loot"
     ]
   },
   {
     "file": "data\\monsters\\rat.yml",
     "kind": "object",
-    "size": 9,
+    "size": 11,
     "topKeys": [
       "key",
       "name",
@@ -465,6 +474,8 @@
       "health",
       "speed",
       "look",
+      "flags",
+      "elements",
       "attacks",
       "defenses",
       "loot"
@@ -496,7 +507,7 @@
   {
     "file": "data\\monsters\\demon_bonefiend.yml",
     "kind": "object",
-    "size": 7,
+    "size": 11,
     "topKeys": [
       "key",
       "name",
@@ -504,13 +515,17 @@
       "health",
       "speed",
       "look",
-      "attacks"
+      "flags",
+      "elements",
+      "attacks",
+      "defenses",
+      "loot"
     ]
   },
   {
     "file": "data\\monsters\\deer.yml",
     "kind": "object",
-    "size": 8,
+    "size": 11,
     "topKeys": [
       "key",
       "name",
@@ -518,8 +533,11 @@
       "health",
       "speed",
       "look",
+      "flags",
+      "elements",
       "attacks",
-      "defenses"
+      "defenses",
+      "loot"
     ]
   },
   {
@@ -543,7 +561,7 @@
   {
     "file": "data\\monsters\\bear.yml",
     "kind": "object",
-    "size": 8,
+    "size": 11,
     "topKeys": [
       "key",
       "name",
@@ -551,8 +569,11 @@
       "health",
       "speed",
       "look",
+      "flags",
+      "elements",
       "attacks",
-      "defenses"
+      "defenses",
+      "loot"
     ]
   },
   {

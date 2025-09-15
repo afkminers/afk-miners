@@ -47,7 +47,7 @@ const buildStarterRouter = require('./starter/routes');
 const { startRespawnLoop, stopRespawnLoop } = require('./respawn/worker');
 
 // ws bus
-const { attach: attachWsBus, joinMapSocket, moveSocketToMap } = require('./ws/bus');
+const { attach: attachWsBus, joinMapSocket } = require('./ws/bus');
 const { listAliveMonsters } = require('./ws/initial_monsters');
 
 // ======== Pipeline de Conteúdo ========
@@ -234,7 +234,7 @@ async function bootstrapContentTables() {
     `);
 
     // Add performance indexes for common lookups
-    await run(`CREATE INDEX IF NOT EXISTS idx_map_objects_mapkey ON map_objects("MapKey")`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_map_objects_mapkey ON map_objects("mapKey")`);
     await run(`CREATE INDEX IF NOT EXISTS idx_spawns_mapkey ON spawns("mapKey")`);
     await run(`CREATE INDEX IF NOT EXISTS idx_spawns_monster ON spawns("monsterKey")`);
     await run(`CREATE INDEX IF NOT EXISTS idx_monster_instances_map ON monster_instances(map_key)`);
@@ -532,14 +532,25 @@ app.get('/api/admin/content/map/:key/data', async (req, res) => {
 app.post('/api/admin/content/reload-map', async (req, res) => {
   try {
     const mapKey = (req.query.map || 'house').toString();
+
     await loadMap({ all, get, run }, path.join(__dirname, '..'), mapKey);
     await syncSpawns(); // garante instâncias após recarregar o mapa
+
+    // <<< NOVO: re-semeia o AI com as instâncias vivas após o reload
+    try { 
+      const aiMobs = require('./combat/ai-mobs');
+      await seedAIMobsFromDB(aiMobs);
+    } catch (e) {
+      console.warn('[ai-mobs] seed after reload failed:', e?.message);
+    }
+
     res.json({ ok: true, reloaded: mapKey });
   } catch (e) {
     console.error('[content] reload-map error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
+
 
 function safeParse(s) { try { return typeof s === 'object' ? s : JSON.parse(s || '{}'); } catch { return {}; } }
 
@@ -747,10 +758,38 @@ let respawnRunning = false;
 let syncSpawnsTimer = null;
 let idleSchedulerTimer = null;
 
+// Semeia o ai-mobs com todas as instâncias vivas do banco
+async function seedAIMobsFromDB(aiMobs) {
+  try {
+    const rows = await all(`
+      SELECT mi.id,
+             mi.x, mi.y, mi.map_key,
+             s.x  AS sx, s.y  AS sy, s.w AS sw, s.h AS sh,
+             s."monsterKey" AS monster_key
+        FROM monster_instances mi
+        JOIN spawns s ON s.id = mi.spawn_id
+       WHERE mi.state = 'ALIVE'
+    `);
+    for (const r of rows) {
+      aiMobs.seedPosition({
+        id: r.id,
+        x: r.x,
+        y: r.y,
+        mapKey: r.map_key,
+        spawnRect: { x: r.sx, y: r.sy, w: r.sw, h: r.sh },
+        monsterKey: r.monster_key
+      });
+    }
+    console.log(`[ai-mobs] seeded ${rows.length} alive instances from DB`);
+  } catch (e) {
+    console.warn('[ai-mobs] seed failed:', e?.message);
+  }
+}
+
+
 // ========= START =========
 (async () => {
   // (opcional) ataque dos monstros — só inicia se o módulo existir
-  let monsterAttack = null;
 
   try {
     if (SKIP_MIGRATIONS_ON_BOOT) {
@@ -774,19 +813,14 @@ let idleSchedulerTimer = null;
       await loadAll({ all, get, run }, path.join(__dirname, '..'));
     }
     
-    // AI dos monstros: inicia o loop de IA dos mobs
+    // AI dos monstros
     const aiMobs = require('./combat/ai-mobs');
     aiMobs.start();
 
-    // (opcional) loop de ataque dos monstros
-    try {
-      monsterAttack = require('./combat/ai-monster-attack');
-      if (monsterAttack && typeof monsterAttack.start === 'function') {
-        monsterAttack.start();
-      }
-    } catch {
-      console.log('[ai-monster-attack] module not found — skipping monster attack loop');
-    }
+    // Garante instâncias e semeia o AI
+    try { await syncSpawns(); } catch (e) { console.warn('[sync_spawns] initial failed:', e?.message); }
+    await seedAIMobsFromDB(aiMobs);
+
     
     if (shouldGenerateContext) {
       console.log('[context] generation enabled by GEN_CONTEXT_ON_START=1');
@@ -1012,21 +1046,16 @@ let idleSchedulerTimer = null;
     process.on('SIGINT',  () => {
       try {
         try { const aiMobs = require('./combat/ai-mobs'); aiMobs.stop?.(); } catch {}
-        try { monsterAttack && monsterAttack.stop?.(); } catch {}
         stopRespawnLoop();
-      } finally {
-        process.exit(0);
-      }
+      } finally { process.exit(0); }
     });
     process.on('SIGTERM', () => {
       try {
         try { const aiMobs = require('./combat/ai-mobs'); aiMobs.stop?.(); } catch {}
-        try { monsterAttack && monsterAttack.stop?.(); } catch {}
         stopRespawnLoop();
-      } finally {
-        process.exit(0);
-      }
+      } finally { process.exit(0); }
     });
+
 
   } catch (err) {
     console.error('Fatal start error:', err);
