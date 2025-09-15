@@ -638,9 +638,10 @@
     "symbols": [
       "clampToRect",
       "forget",
-      "getHeroesOnMap",
+      "getGridCached",
+      "getHeroesWithPosByMap",
+      "getHeroesWithPosByMapCached",
       "getMonsterYmlStats",
-      "isHeroAlive",
       "seedPosition",
       "start",
       "stop",
@@ -772,6 +773,7 @@
       "parseCookies",
       "resolveSkillType",
       "safeParse",
+      "seedAIMobsFromDB",
       "setupHeartbeat",
       "setupRedis",
       "startIdleScheduler",
@@ -813,9 +815,13 @@
     "file": "server\\models\\db.js",
     "symbols": [
       "all",
+      "buildPool",
       "closePool",
+      "envBool",
+      "envInt",
       "get",
       "getPool",
+      "logPoolState",
       "run"
     ]
   },

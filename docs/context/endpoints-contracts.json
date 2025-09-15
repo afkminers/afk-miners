@@ -678,7 +678,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1040,
+    "line": 1069,
     "sample": {
       "query": {
         "limit": 1
@@ -709,7 +709,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1063,
+    "line": 1092,
     "sample": {},
     "errors": [
       {
@@ -1352,7 +1352,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 553,
+    "line": 564,
     "sample": {},
     "errors": []
   },

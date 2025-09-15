@@ -1,5 +1,17 @@
 [
   {
+    "key": "AI_TICK_MS",
+    "occurrences": [
+      {
+        "file": "server\\combat\\ai-mobs.js",
+        "index": 644
+      }
+    ],
+    "defaults": [
+      "350"
+    ]
+  },
+  {
     "key": "APP_ORIGIN",
     "occurrences": [
       {
@@ -31,7 +43,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 3099
+        "index": 3082
       }
     ],
     "defaults": [
@@ -116,7 +128,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2072
+        "index": 2055
       }
     ],
     "defaults": [
@@ -140,7 +152,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 19944
+        "index": 20195
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -246,11 +258,11 @@
       },
       {
         "file": "server\\models\\db.js",
-        "index": 551
+        "index": 1447
       },
       {
         "file": "server\\models\\db.js",
-        "index": 1091
+        "index": 2101
       }
     ],
     "defaults": []
@@ -336,7 +348,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 25028
+        "index": 26064
       }
     ],
     "defaults": []
@@ -346,7 +358,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2964
+        "index": 2947
       }
     ],
     "defaults": [
@@ -370,7 +382,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 19851
+        "index": 20102
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -433,7 +445,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2613
+        "index": 2596
       },
       {
         "file": "server\\skills\\routes.js",
@@ -460,18 +472,6 @@
     ]
   },
   {
-    "key": "PG_CONNECTION_TIMEOUT",
-    "occurrences": [
-      {
-        "file": "server\\models\\db.js",
-        "index": 398
-      }
-    ],
-    "defaults": [
-      "5000"
-    ]
-  },
-  {
     "key": "PG_DUMP_PATH",
     "occurrences": [
       {
@@ -486,35 +486,15 @@
     "defaults": []
   },
   {
-    "key": "PG_IDLE",
+    "key": "PGSSLMODE",
     "occurrences": [
       {
         "file": "server\\models\\db.js",
-        "index": 473
-      }
-    ],
-    "defaults": [
-      "30000"
-    ]
-  },
-  {
-    "key": "PG_POOL_MAX",
-    "occurrences": [
+        "index": 1281
+      },
       {
         "file": "server\\models\\db.js",
-        "index": 310
-      }
-    ],
-    "defaults": [
-      "process.env.PGPOOL_MAX"
-    ]
-  },
-  {
-    "key": "PGPOOL_MAX",
-    "occurrences": [
-      {
-        "file": "server\\models\\db.js",
-        "index": 337
+        "index": 1306
       }
     ],
     "defaults": []
@@ -524,7 +504,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2672
+        "index": 2655
       }
     ],
     "defaults": [
@@ -536,7 +516,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 19801
+        "index": 20052
       }
     ],
     "defaults": [
@@ -572,7 +552,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 19909
+        "index": 20160
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -601,7 +581,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 3238
+        "index": 3221
       }
     ],
     "defaults": []
@@ -611,7 +591,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2856
+        "index": 2839
       }
     ],
     "defaults": [

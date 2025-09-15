@@ -167,7 +167,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 544,
+    "line": 555,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -176,7 +176,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 598,
+    "line": 609,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -185,7 +185,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 611,
+    "line": 622,
     "kind": "function",
     "name": "setupHeartbeat",
     "params": [
@@ -194,14 +194,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 613,
+    "line": 624,
     "kind": "function",
     "name": "noop",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 631,
+    "line": 642,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -210,31 +210,40 @@
   },
   {
     "file": "server\\index.js",
-    "line": 664,
+    "line": 675,
     "kind": "function",
     "name": "checkIdleAndManageLoops",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 695,
+    "line": 706,
     "kind": "function",
     "name": "idleAwareSyncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 714,
+    "line": 725,
     "kind": "function",
     "name": "startIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 730,
+    "line": 741,
     "kind": "function",
     "name": "stopIdleScheduler",
     "params": []
+  },
+  {
+    "file": "server\\index.js",
+    "line": 762,
+    "kind": "function",
+    "name": "seedAIMobsFromDB",
+    "params": [
+      "aiMobs"
+    ]
   },
   {
     "file": "server\\ws\\origins.js",
@@ -1656,14 +1665,50 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 12,
+    "line": 11,
+    "kind": "function",
+    "name": "envInt",
+    "params": [
+      "keys",
+      "def"
+    ]
+  },
+  {
+    "file": "server\\models\\db.js",
+    "line": 18,
+    "kind": "function",
+    "name": "envBool",
+    "params": [
+      "keys",
+      "def"
+    ]
+  },
+  {
+    "file": "server\\models\\db.js",
+    "line": 28,
+    "kind": "function",
+    "name": "buildPool",
+    "params": []
+  },
+  {
+    "file": "server\\models\\db.js",
+    "line": 83,
     "kind": "function",
     "name": "getPool",
     "params": []
   },
   {
     "file": "server\\models\\db.js",
-    "line": 47,
+    "line": 89,
+    "kind": "function",
+    "name": "logPoolState",
+    "params": [
+      "where"
+    ]
+  },
+  {
+    "file": "server\\models\\db.js",
+    "line": 100,
     "kind": "function",
     "name": "all",
     "params": [
@@ -1673,7 +1718,7 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 52,
+    "line": 112,
     "kind": "function",
     "name": "get",
     "params": [
@@ -1683,7 +1728,7 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 61,
+    "line": 128,
     "kind": "function",
     "name": "run",
     "params": [
@@ -1693,14 +1738,14 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 65,
+    "line": 139,
     "kind": "function",
     "name": "closePool",
     "params": []
   },
   {
     "file": "server\\models\\db.js",
-    "line": 78,
+    "line": 152,
     "kind": "arrow",
     "name": "shutdown",
     "params": []
@@ -2360,7 +2405,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 27,
+    "line": 30,
     "kind": "function",
     "name": "getMonsterYmlStats",
     "params": [
@@ -2369,7 +2414,45 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 52,
+    "line": 55,
+    "kind": "function",
+    "name": "clampToRect",
+    "params": [
+      "x",
+      "y",
+      "r"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 61,
+    "kind": "function",
+    "name": "getGridCached",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 70,
+    "kind": "function",
+    "name": "getHeroesWithPosByMap",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 81,
+    "kind": "function",
+    "name": "getHeroesWithPosByMapCached",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 91,
     "kind": "function",
     "name": "seedPosition",
     "params": [
@@ -2383,7 +2466,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 72,
+    "line": 112,
     "kind": "function",
     "name": "forget",
     "params": [
@@ -2392,51 +2475,21 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 74,
-    "kind": "function",
-    "name": "clampToRect",
-    "params": [
-      "x",
-      "y",
-      "r"
-    ]
-  },
-  {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 81,
-    "kind": "function",
-    "name": "getHeroesOnMap",
-    "params": [
-      "mapKey"
-    ]
-  },
-  {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 93,
-    "kind": "function",
-    "name": "isHeroAlive",
-    "params": [
-      "heroId",
-      "mapKey"
-    ]
-  },
-  {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 99,
+    "line": 115,
     "kind": "function",
     "name": "tick",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 233,
+    "line": 227,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 238,
+    "line": 232,
     "kind": "function",
     "name": "stop",
     "params": []

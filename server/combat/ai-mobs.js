@@ -1,8 +1,10 @@
 // server/combat/ai-mobs.js
 // IA dos mobs: targeting com LOS, ataque ativo e I/O mínimo no Postgres.
-// - 1 SELECT por mapa por tick para heróis + posições (em vez de N por herói)
+// - 1 SELECT por mapa por tick (heróis + posições)
 // - Grid cache
 // - Guard de pressão do pool (evita derrubar login/respawn)
+// - Leash expandido quando em CHASE (evita "orbitar" na borda do spawn)
+// - Logs de ataque quando COMBAT_DEBUG=1 (ver por que não tira vida)
 
 const { all, getPool } = require('../models/db');
 const bus = require('../ws/bus');
@@ -15,6 +17,11 @@ const fs = require('fs');
 const path = require('path');
 
 const TICK_MS = Number(process.env.AI_TICK_MS || 350);
+const DEFAULT_ATTACK_RANGE = Number(process.env.AI_ATTACK_RANGE || (TILE * 2)); // 64px
+const LEASH_MARGIN = Number(process.env.AI_LEASH_MARGIN || 96);                 // +96px fora do spawn em CHASE
+const ACTIVE_WINDOW_SEC = Number(process.env.AI_ACTIVE_WINDOW_SEC || 10);       // posição "recente" (anti-offline)
+const DBG = String(process.env.COMBAT_DEBUG || '').trim() === '1';
+
 let timer = null;
 
 // Instâncias vivas em memória
@@ -24,7 +31,7 @@ const INST = new Map();
 const MONSTER_STATS = new Map();      // monsterKey -> { stats, ai }
 const GRID_CACHE = new Map();         // mapKey -> { data, cols, rows }
 const HEROES_POS_CACHE = new Map();   // mapKey -> { ts, list:[{heroId,x,y}] }
-const HERO_CACHE_TTL_MS = 250;        // 0.25s: suficiente para 1–2 ticks
+const HERO_CACHE_TTL_MS = 250;        // 0.25s
 
 // ===== YAML stats =====
 function getMonsterYmlStats(monsterKey) {
@@ -37,7 +44,7 @@ function getMonsterYmlStats(monsterKey) {
       aggro_range:        stats.aggro_range ?? 160,
       move_speed:         stats.move_speed ?? 40,
       chase_speed:        stats.chase_speed ?? 60,
-      attack_range:       stats.attack_range ?? TILE,
+      attack_range:       stats.attack_range ?? DEFAULT_ATTACK_RANGE,
       attack_cooldown_ms: stats.attack_cooldown_ms ?? 1200,
       attack_min:         stats.attack_min ?? 4,
       attack_max:         stats.attack_max ?? 10,
@@ -46,7 +53,11 @@ function getMonsterYmlStats(monsterKey) {
     MONSTER_STATS.set(monsterKey, merged);
     return merged;
   } catch {
-    const ai = { aggro_range:160, move_speed:40, chase_speed:60, attack_range:TILE, attack_cooldown_ms:1200, attack_min:4, attack_max:10 };
+    const ai = {
+      aggro_range:160, move_speed:40, chase_speed:60,
+      attack_range: DEFAULT_ATTACK_RANGE, attack_cooldown_ms:1200,
+      attack_min:4, attack_max:10
+    };
     return { ai };
   }
 }
@@ -57,6 +68,9 @@ function clampToRect(x, y, r) {
   const cy = Math.min(Math.max(y, r.y), r.y + r.h);
   return { x: cx, y: cy };
 }
+function expandRect(r, margin) {
+  return { x: r.x - margin, y: r.y - margin, w: r.w + margin * 2, h: r.h + margin * 2 };
+}
 
 async function getGridCached(mapKey) {
   if (GRID_CACHE.has(mapKey)) return GRID_CACHE.get(mapKey);
@@ -66,14 +80,17 @@ async function getGridCached(mapKey) {
   return losGrid;
 }
 
-// 1 SELECT por mapa: retorna heróis (ids) já com as posições (x,y)
+// 1 SELECT por mapa: heróis + posições (atenção: "playerId" é camelCase!)
 async function getHeroesWithPosByMap(mapKey) {
   const rows = await all(
     `SELECT ph.id AS hero_id, plp.x, plp.y
        FROM player_heroes ph
-       JOIN player_last_pos plp ON plp.player_id = ph.player_id
-      WHERE plp.map_key = $1`,
-    [mapKey]
+       JOIN player_last_pos plp
+         ON plp.player_id::text = ph."playerId"::text
+      WHERE plp.map_key = $1
+        AND COALESCE(ph.hp, ph.max_hp) > 0
+        AND plp.updated_at >= now() - ($2 || ' seconds')::interval`,
+    [mapKey, String(ACTIVE_WINDOW_SEC)]
   ).catch(() => []);
   return rows.map(r => ({ heroId: String(r.hero_id), x: r.x | 0, y: r.y | 0 }));
 }
@@ -119,9 +136,6 @@ async function tick() {
     if (p.waitingCount > 0) return;
   } catch { /* ignore */ }
 
-  // Cache curto por tick
-  HEROES_POS_CACHE.clear();
-
   const dt = TICK_MS / 1000;
 
   for (const [id, m] of INST.entries()) {
@@ -130,13 +144,11 @@ async function tick() {
       let losGrid;
       try {
         losGrid = await getGridCached(m.mapKey);
-      } catch (e) {
-        // Se o DB caiu, apenas pula este mob
-        // console.warn(`[AI] getGrid falhou em ${m.mapKey} para mob ${id}:`, e?.message);
-        continue;
+      } catch {
+        continue; // DB indisponível: pula este mob
       }
 
-      // Lista de heróis + posições (cache por ~250ms)
+      // Lista de heróis + posições (cache curto)
       const heroes = await getHeroesWithPosByMapCached(m.mapKey);
 
       // 1) Targeting
@@ -173,11 +185,14 @@ async function tick() {
         }
       }
 
-      // 2) Movimento
-      let dx=0, dy=0, speed = m.ai.move_speed;
+      // 2) Movimento (com leash expandido em CHASE)
+      let dx = 0, dy = 0, speed = m.ai.move_speed;
+      let clampRect = m.spawnRect;
+
       if (targetId && targetPos) {
         m.state = 'CHASE';
         speed = m.ai.chase_speed;
+        clampRect = expandRect(m.spawnRect, LEASH_MARGIN);
         const dist = Math.hypot(targetPos.x - m.x, targetPos.y - m.y);
         dx = (targetPos.x - m.x) / (dist || 1);
         dy = (targetPos.y - m.y) / (dist || 1);
@@ -189,7 +204,7 @@ async function tick() {
 
       let nx = m.x + dx * speed * dt;
       let ny = m.y + dy * speed * dt;
-      const cl = clampToRect(nx, ny, m.spawnRect);
+      const cl = clampToRect(nx, ny, clampRect);
       m.x = Math.round(cl.x);
       m.y = Math.round(cl.y);
       INST.set(id, m);
@@ -201,25 +216,23 @@ async function tick() {
         const inRange = Math.hypot(targetPos.x - m.x, targetPos.y - m.y) <= m.ai.attack_range;
         if (inRange && (Date.now() - (m.lastAttackAt || 0) > m.ai.attack_cooldown_ms)) {
           if (hasLineOfSight(losGrid, m.x, m.y, targetPos.x, targetPos.y)) {
+            if (DBG) console.log(`[ai-mobs] ATTEMPT mob=${m.id} -> hero=${targetId} range=${m.ai.attack_range}`);
             try {
               const result = await applyMobHit({
                 attackerInstanceId: m.id,
                 targetHeroId: targetId,
                 attackInfo: { min: m.ai.attack_min, max: m.ai.attack_max }
               });
-              if (!result?.ok) {
-                // console.warn(`[AI] ataque falhou mob=${m.id} -> hero=${targetId}: ${result?.message||'unknown'}`);
-              }
+              if (DBG) console.log('[ai-mobs] HIT result:', result);
             } catch (e) {
-              // console.error(`[AI] erro no applyMobHit mob=${m.id}:`, e?.message);
+              if (DBG) console.log('[ai-mobs] HIT error:', e?.message);
             }
             m.lastAttackAt = Date.now();
           }
         }
       }
-    } catch (e) {
-      // Protege o loop: erro em 1 mob não derruba o processo
-      // console.warn(`[AI] erro no tick do mob ${id}:`, e?.message);
+    } catch {
+      // erro em 1 mob não derruba o loop
     }
   }
 }

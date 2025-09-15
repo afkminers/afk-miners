@@ -2,6 +2,7 @@
 
 ## Variáveis de ambiente
 
+- `AI_TICK_MS` (defaults: 350)
 - `APP_ORIGIN`
 - `APP_ORIGINS` (defaults: http://localhost:3000, process.env.APP_ORIGIN)
 - `ASSETS_CACHE_TTL_MS` (defaults: 300000)
@@ -36,11 +37,8 @@
 - `LOOT_CLEANUP_EVERY_SECONDS` (defaults: 30)
 - `LOOT_EXPIRE_SECONDS` (defaults: 120)
 - `NODE_ENV` (defaults: development)
-- `PG_CONNECTION_TIMEOUT` (defaults: 5000)
 - `PG_DUMP_PATH`
-- `PG_IDLE` (defaults: 30000)
-- `PG_POOL_MAX` (defaults: process.env.PGPOOL_MAX)
-- `PGPOOL_MAX`
+- `PGSSLMODE`
 - `PORT` (defaults: 3000)
 - `REDIS_URL` (defaults: null)
 - `RESPAWN_DEBUG` (defaults: )
@@ -54,7 +52,7 @@
 
 ### GET /
 
-Arquivo: `server\index.js:553`
+Arquivo: `server\index.js:564`
 
 _Sem payload inferido_
 
@@ -375,7 +373,7 @@ Arquivo: `server\index.js:463`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1040`
+Arquivo: `server\index.js:1069`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -873,7 +871,7 @@ Arquivo: `server\index.js:532`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1063`
+Arquivo: `server\index.js:1092`
 
 _Sem payload inferido_
 
