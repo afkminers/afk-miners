@@ -17,6 +17,8 @@ const rlMem = new Map(); // key: playerId => { ts[], lastPrune }
 const mapCache = new Map(); // key => { json, cols, rows, grid }
 const TILE = 32;
 
+const { getXpNeededForHero } = require('../services/heroProgress');
+
 async function loadMapJson(mapKey) {
   const row = await get('SELECT "dataJSON" FROM maps WHERE key=$1', [mapKey]);
   return row?.dataJSON || null;
@@ -166,6 +168,10 @@ router.get('/me', async (req, res) => {
         };
         console.warn('[player/me] computeHeroStats falhou, usando fallback:', e?.message);
       }
+
+      // ADICIONE ESTA LINHA:
+      const xp_needed_next_level = await getXpNeededForHero(h);
+
       return {
         id: String(h.id),
         heroKey: h.heroKey,
@@ -180,7 +186,9 @@ router.get('/me', async (req, res) => {
         xp: Number(h.xp || 0),
         maxHp: stats.maxHp,
         maxMana: stats.maxMana,
-        maxCap: stats.maxCap
+        maxCap: stats.maxCap,
+        // NOVO:
+        xp_needed_next_level
       };
     }));
 

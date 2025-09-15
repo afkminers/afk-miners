@@ -460,6 +460,7 @@
       "paintEquipGrid",
       "refreshAll",
       "refreshEquip",
+      "renderBars",
       "renderHeroSkills",
       "renderTrainBars",
       "resolveCard",
@@ -512,6 +513,24 @@
     "file": "client\\js\\ui.js",
     "symbols": [
       "cap"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\hud_status.js",
+    "symbols": [
+      "fetchActiveHeroData",
+      "getActiveHeroId",
+      "pct",
+      "renderHudBars",
+      "updateHudBars"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\levelup_notify.js",
+    "symbols": [
+      "ensureContainer",
+      "playSound",
+      "showLevelUp"
     ]
   },
   {
@@ -966,6 +985,7 @@
   {
     "file": "server\\services\\heroStats.js",
     "symbols": [
+      "computeHeroStats",
       "computeMaxHp"
     ]
   },

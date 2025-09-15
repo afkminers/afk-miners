@@ -13,7 +13,7 @@
   },
   {
     "file": "server\\combat\\worker.js",
-    "line": 11,
+    "line": 13,
     "tag": "TODO",
     "text": "pegar spawn info original (monsterKey, hp, etc)"
   },

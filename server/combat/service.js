@@ -5,6 +5,8 @@ const K = require('../balance/config');
 const { applyTries, getClassRate } = require('../skills/engine');
 //ws bus
 const { broadcast } = require('../ws/bus');
+// ADICIONE ESTA LINHA: importa o serviço de XP/level up centralizado
+const { giveXp } = require('../services/heroProgress');
 
 /** Util: cálculo de dano Tibia-like, progressão real, sem dano mínimo */
 function computeDamageTibiaLike(weaponAtk, skillLevel, monsterArmor, variance = K.DAMAGE_VARIANCE) {
@@ -100,16 +102,6 @@ function rollLoot(lootJson) {
     return drops;
 }
 
-/** Dá XP pro herói */
-async function giveXp(heroId, xp) {
-    if (!xp || xp <= 0) return;
-    await run(
-        `UPDATE player_heroes
-        SET xp = COALESCE(xp,0) + $2
-      WHERE id = $1`,
-        [heroId, xp]
-    );
-}
 
 /** Persiste drops na tabela hero_loot_drops */
 async function persistDrops(heroId, instanceId, drops) {
@@ -192,6 +184,7 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
     if (dead) {
         // XP
         xpGained = Number(inst.xp_reward || 0);
+        // Aqui é a mudança: usa o serviço central de XP/level up!
         await giveXp(attackerHeroId, xpGained);
 
         // Loot

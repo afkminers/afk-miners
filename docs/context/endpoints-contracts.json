@@ -1544,7 +1544,7 @@
     "method": "GET",
     "path": "/list",
     "file": "server\\starter\\routes.js",
-    "line": 41,
+    "line": 42,
     "sample": {
       "body": {
         "const playerId = req.user.id;\n\n    try {\n      const { heroKey": 1
@@ -1869,7 +1869,7 @@
     "method": "GET",
     "path": "/me",
     "file": "server\\player\\routes.js",
-    "line": 122,
+    "line": 123,
     "sample": {
       "query": {
         "map": "value"
@@ -1914,10 +1914,6 @@
       {
         "status": 202,
         "body": "{ok:false,reason:'too-fast' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'pos-write-failed' }"
       }
     ],
     "ok": [
@@ -2289,7 +2285,7 @@
     "method": "GET",
     "path": "/pos",
     "file": "server\\player\\routes.js",
-    "line": 175,
+    "line": 200,
     "sample": {
       "query": {
         "map": "value"
@@ -2393,7 +2389,7 @@
     "method": "POST",
     "path": "/pos",
     "file": "server\\player\\routes.js",
-    "line": 191,
+    "line": 216,
     "sample": {
       "body": {
         "mapKey": "value",
@@ -2444,7 +2440,7 @@
     "method": "POST",
     "path": "/",
     "file": "server\\gacha\\routes.js",
-    "line": 147,
+    "line": 179,
     "sample": {
       "query": {
         "count": 1
@@ -2538,7 +2534,7 @@
     "method": "POST",
     "path": "/select",
     "file": "server\\starter\\routes.js",
-    "line": 103,
+    "line": 104,
     "sample": {
       "body": {
         "const playerId = req.user.id;\n\n    try {\n      const { heroKey": 1
@@ -2718,7 +2714,7 @@
     "method": "GET",
     "path": "/status",
     "file": "server\\starter\\routes.js",
-    "line": 85,
+    "line": 86,
     "sample": {
       "body": {
         "const playerId = req.user.id;\n\n    try {\n      const { heroKey": 1

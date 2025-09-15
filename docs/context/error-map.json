@@ -978,10 +978,6 @@
       "body": "{ok:false,reason:'too-fast' }"
     },
     {
-      "status": 500,
-      "body": "{error:'pos-write-failed' }"
-    },
-    {
       "status": 404,
       "body": "{error:'Jogador não encontrado' }"
     },

@@ -573,7 +573,7 @@ _Sem payload inferido_
 
 ### GET /list
 
-Arquivo: `server\starter\routes.js:41`
+Arquivo: `server\starter\routes.js:42`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -773,7 +773,7 @@ Arquivo: `server\routes\farm.js:71`
 
 ### GET /status
 
-Arquivo: `server\starter\routes.js:85`
+Arquivo: `server\starter\routes.js:86`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -810,7 +810,7 @@ Arquivo: `server\routes\game_tick.js:10`
 
 ### POST /
 
-Arquivo: `server\gacha\routes.js:147`
+Arquivo: `server\gacha\routes.js:179`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -1387,7 +1387,7 @@ _Sem payload inferido_
 
 ### POST /select
 
-Arquivo: `server\starter\routes.js:103`
+Arquivo: `server\starter\routes.js:104`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1572,7 +1572,6 @@ Arquivo: `server\starter\routes.js:103`
   - HTTP 400: {error:'inside-solid' }
   - HTTP 409: {error:'stale-seq' }
   - HTTP 202: {ok:false,reason:'too-fast' }
-  - HTTP 500: {error:'pos-write-failed' }
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
 - **GET /ping**
