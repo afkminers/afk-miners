@@ -9,3 +9,4 @@ monsters:
   demon_bonefiend: "./demon_bonefiend.yml"
   teste: "./teste.yml"
   wolf: "./wolf.yml"
+  rotworm: "./rotworm.yml"

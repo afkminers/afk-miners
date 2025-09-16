@@ -416,7 +416,7 @@
                 }, 
                 {
                  "height":32,
-                 "id":28,
+                 "id":29,
                  "name":"",
                  "properties":[
                         {
@@ -427,7 +427,7 @@
                         {
                          "name":"monsterKey",
                          "type":"string",
-                         "value":"wolf"
+                         "value":"rotworm"
                         }, 
                         {
                          "name":"respawnSec",
@@ -443,8 +443,8 @@
                  "type":"spawn",
                  "visible":true,
                  "width":32,
-                 "x":990,
-                 "y":784
+                 "x":836,
+                 "y":862
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -453,7 +453,7 @@
          "y":0
         }],
  "nextlayerid":5,
- "nextobjectid":29,
+ "nextobjectid":30,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

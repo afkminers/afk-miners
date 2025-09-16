@@ -2,6 +2,9 @@
 
 ## Variáveis de ambiente
 
+- `AI_ACTIVE_WINDOW_SEC` (defaults: 10)
+- `AI_ATTACK_RANGE` (defaults: (TILE)
+- `AI_LEASH_MARGIN` (defaults: 96)
 - `AI_TICK_MS` (defaults: 350)
 - `APP_ORIGIN`
 - `APP_ORIGINS` (defaults: http://localhost:3000, process.env.APP_ORIGIN)

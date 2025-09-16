@@ -637,6 +637,7 @@
     "file": "server\\combat\\ai-mobs.js",
     "symbols": [
       "clampToRect",
+      "expandRect",
       "forget",
       "getGridCached",
       "getHeroesWithPosByMap",

@@ -1,10 +1,11 @@
 // server/combat/ai-mobs.js
 // IA dos mobs: targeting com LOS, ataque ativo e I/O mínimo no Postgres.
-// - 1 SELECT por mapa por tick (heróis + posições)
+// - 1 SELECT por mapa por tick (heróis + posições) — SOMENTE posições recentes
 // - Grid cache
 // - Guard de pressão do pool (evita derrubar login/respawn)
 // - Leash expandido quando em CHASE (evita "orbitar" na borda do spawn)
-// - Logs de ataque quando COMBAT_DEBUG=1 (ver por que não tira vida)
+// - Logs de ataque quando COMBAT_DEBUG=1
+// - Keep-alive opcional do Postgres (evita fechar pool por ociosidade)
 
 const { all, getPool } = require('../models/db');
 const bus = require('../ws/bus');
@@ -18,11 +19,15 @@ const path = require('path');
 
 const TICK_MS = Number(process.env.AI_TICK_MS || 350);
 const DEFAULT_ATTACK_RANGE = Number(process.env.AI_ATTACK_RANGE || (TILE * 2)); // 64px
-const LEASH_MARGIN = Number(process.env.AI_LEASH_MARGIN || 96);                 // +96px fora do spawn em CHASE
-const ACTIVE_WINDOW_SEC = Number(process.env.AI_ACTIVE_WINDOW_SEC || 10);       // posição "recente" (anti-offline)
+const LEASH_MARGIN = Number(process.env.AI_LEASH_MARGIN || 96);                 // +96px em CHASE
+const ACTIVE_WINDOW_SEC = Number(process.env.AI_ACTIVE_WINDOW_SEC || 120);      // posição "recente"
 const DBG = String(process.env.COMBAT_DEBUG || '').trim() === '1';
 
+// Keep-alive do Postgres (0 = desliga). Padrão 240s.
+const KEEPALIVE_MS = Number(process.env.DB_KEEPALIVE_MS || 240_000);
+
 let timer = null;
+let keepAlive = null;
 
 // Instâncias vivas em memória
 const INST = new Map();
@@ -80,7 +85,8 @@ async function getGridCached(mapKey) {
   return losGrid;
 }
 
-// 1 SELECT por mapa: heróis + posições (atenção: "playerId" é camelCase!)
+// ===== 1 SELECT por mapa: heróis + posições (APENAS recentes) =====
+// Observação: "playerId" é camelCase em player_heroes.
 async function getHeroesWithPosByMap(mapKey) {
   const rows = await all(
     `SELECT ph.id AS hero_id, plp.x, plp.y
@@ -88,8 +94,8 @@ async function getHeroesWithPosByMap(mapKey) {
        JOIN player_last_pos plp
          ON plp.player_id::text = ph."playerId"::text
       WHERE plp.map_key = $1
-        AND COALESCE(ph.hp, ph.max_hp) > 0
-        AND plp.updated_at >= now() - ($2 || ' seconds')::interval`,
+        AND plp.updated_at >= now() - ($2 || ' seconds')::interval
+        AND COALESCE(ph.hp, ph.max_hp) > 0`,
     [mapKey, String(ACTIVE_WINDOW_SEC)]
   ).catch(() => []);
   return rows.map(r => ({ heroId: String(r.hero_id), x: r.x | 0, y: r.y | 0 }));
@@ -240,11 +246,19 @@ async function tick() {
 function start() {
   if (timer) return;
   timer = setInterval(tick, TICK_MS);
+  if (!keepAlive && KEEPALIVE_MS > 0) {
+    // evita o idle-pool fechar o Postgres e parar a IA
+    keepAlive = setInterval(() => {
+      all('SELECT 1').catch(() => {});
+    }, KEEPALIVE_MS);
+  }
   console.log(`[ai-mobs] started (tick=${TICK_MS}ms; targeting/agro/attack)`);
 }
 function stop() {
   if (timer) clearInterval(timer);
   timer = null;
+  if (keepAlive) clearInterval(keepAlive);
+  keepAlive = null;
   console.log('[ai-mobs] stopped');
 }
 
