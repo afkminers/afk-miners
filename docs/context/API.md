@@ -2,7 +2,7 @@
 
 ## Variáveis de ambiente
 
-- `AI_ACTIVE_WINDOW_SEC` (defaults: 10)
+- `AI_ACTIVE_WINDOW_SEC` (defaults: 120)
 - `AI_ATTACK_RANGE` (defaults: (TILE)
 - `AI_LEASH_MARGIN` (defaults: 96)
 - `AI_TICK_MS` (defaults: 350)
@@ -25,6 +25,7 @@
 - `CTX_SYMBOLS`
 - `DATABASE_URL`
 - `DB_IDLE_CLOSE_MINUTES` (defaults: 0)
+- `DB_KEEPALIVE_MS` (defaults: 240_000)
 - `DEBUG_CATALOG_CACHE`
 - `DEBUG_HTTP_CACHE`
 - `DEBUG_LOOT_CACHE`

@@ -4,11 +4,11 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1030
+        "index": 1089
       }
     ],
     "defaults": [
-      "10"
+      "120"
     ]
   },
   {
@@ -16,7 +16,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 831
+        "index": 904
       }
     ],
     "defaults": [
@@ -28,7 +28,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 912
+        "index": 985
       }
     ],
     "defaults": [
@@ -40,7 +40,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 762
+        "index": 835
       }
     ],
     "defaults": [
@@ -153,7 +153,7 @@
       },
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1133
+        "index": 1177
       }
     ],
     "defaults": [
@@ -318,6 +318,18 @@
     ],
     "defaults": [
       "0"
+    ]
+  },
+  {
+    "key": "DB_KEEPALIVE_MS",
+    "occurrences": [
+      {
+        "file": "server\\combat\\ai-mobs.js",
+        "index": 1311
+      }
+    ],
+    "defaults": [
+      "240_000"
     ]
   },
   {

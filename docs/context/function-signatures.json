@@ -2405,7 +2405,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 37,
+    "line": 42,
     "kind": "function",
     "name": "getMonsterYmlStats",
     "params": [
@@ -2414,7 +2414,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 66,
+    "line": 71,
     "kind": "function",
     "name": "clampToRect",
     "params": [
@@ -2425,7 +2425,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 71,
+    "line": 76,
     "kind": "function",
     "name": "expandRect",
     "params": [
@@ -2435,7 +2435,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 75,
+    "line": 80,
     "kind": "function",
     "name": "getGridCached",
     "params": [
@@ -2444,7 +2444,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 84,
+    "line": 90,
     "kind": "function",
     "name": "getHeroesWithPosByMap",
     "params": [
@@ -2453,7 +2453,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 98,
+    "line": 104,
     "kind": "function",
     "name": "getHeroesWithPosByMapCached",
     "params": [
@@ -2462,7 +2462,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 108,
+    "line": 114,
     "kind": "function",
     "name": "seedPosition",
     "params": [
@@ -2476,7 +2476,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 129,
+    "line": 135,
     "kind": "function",
     "name": "forget",
     "params": [
@@ -2485,21 +2485,21 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 132,
+    "line": 138,
     "kind": "function",
     "name": "tick",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 240,
+    "line": 246,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 245,
+    "line": 257,
     "kind": "function",
     "name": "stop",
     "params": []

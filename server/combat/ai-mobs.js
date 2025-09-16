@@ -13,7 +13,7 @@ const { hasLineOfSight } = require('./los');
 const { getGrid } = require('../maps/grid');
 const { applyMobHit } = require('./service');
 const { TILE } = require('./geom');
-const YAML = require('js-yaml');
+const YAML = require('yaml');
 const fs = require('fs');
 const path = require('path');
 
@@ -43,7 +43,7 @@ function getMonsterYmlStats(monsterKey) {
   if (MONSTER_STATS.has(monsterKey)) return MONSTER_STATS.get(monsterKey);
   try {
     const file = path.resolve(__dirname, `../../data/sprites/monsters/${monsterKey}.yml`);
-    const yml = YAML.load(fs.readFileSync(file, 'utf8')) || {};
+    const yml = YAML.parse(fs.readFileSync(file, 'utf8')) || {};
     const stats = yml.stats || {};
     const ai = {
       aggro_range:        stats.aggro_range ?? 160,

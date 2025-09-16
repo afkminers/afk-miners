@@ -1,5 +1,9 @@
 [
   {
+    "file": "docs\\releases\\2025-09-15_025925-auto\\ctx.yml",
+    "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
+  },
+  {
     "file": "docs\\releases\\2025-09-15_015542-auto\\ctx.yml",
     "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
   },
@@ -288,6 +292,20 @@
     ]
   },
   {
+    "file": "data\\sprites\\monsters\\rotworm.yml",
+    "kind": "object",
+    "size": 7,
+    "topKeys": [
+      "key",
+      "kind",
+      "image",
+      "frame",
+      "grid",
+      "anchor",
+      "anims"
+    ]
+  },
+  {
     "file": "data\\sprites\\monsters\\rotmaw.yml",
     "kind": "object",
     "size": 7,
@@ -437,6 +455,24 @@
   },
   {
     "file": "data\\monsters\\teste.yml",
+    "kind": "object",
+    "size": 11,
+    "topKeys": [
+      "key",
+      "name",
+      "xp",
+      "health",
+      "speed",
+      "look",
+      "flags",
+      "elements",
+      "attacks",
+      "defenses",
+      "loot"
+    ]
+  },
+  {
+    "file": "data\\monsters\\rotworm.yml",
     "kind": "object",
     "size": 11,
     "topKeys": [
