@@ -284,6 +284,38 @@ app.use('/api/backpack', requireAuth, backpackRoutes);
 // Game tick aggregated endpoint
 app.use('/api/game', requireAuth, gameTickRoutes);
 
+// --- Persistência de posição via HTTP (além do WS) ---
+app.post('/api/player/pos', requireAuth, async (req, res) => {
+  try {
+    const pid = String(req.user.id);
+    const x = Number(req.body?.x || 0) | 0;
+    const y = Number(req.body?.y || 0) | 0;
+    const mapKey = String(req.body?.mapKey || 'house');
+
+    await run(`
+      INSERT INTO player_last_pos (player_id, map_key, x, y, last_seq, updated_at)
+      VALUES ($1, $2, $3, $4,
+              COALESCE((SELECT last_seq FROM player_last_pos WHERE player_id=$1 AND map_key=$2), 0) + 1,
+              now())
+      ON CONFLICT (player_id, map_key)
+      DO UPDATE SET
+        x = EXCLUDED.x,
+        y = EXCLUDED.y,
+        last_seq = player_last_pos.last_seq + 1,
+        updated_at = now()
+    `, [pid, mapKey, x, y]);
+
+    // reforça presença online com o mapa atual
+    try { await upsertOnlineByPlayer(pid, mapKey); } catch {}
+
+    return res.json({ ok: true });
+  } catch (e) {
+    console.warn('[player/pos] persist failed:', e?.message);
+    return res.status(500).json({ error: 'failed to persist pos' });
+  }
+});
+
+
 /* ========= Helpers (Treino) ========= */
 async function resolveSkillType(weaponOrSkill) {
   if (!weaponOrSkill) return null;
@@ -618,6 +650,65 @@ function parseCookies(cookieHeader = '') {
   );
 }
 
+// ========= PRESENÇA ONLINE (players realmente conectados ao WS) =========
+
+// cria a tabela só se não existir
+async function ensurePlayerOnlineTable() {
+  await run(`
+    CREATE TABLE IF NOT EXISTS player_online(
+      hero_id UUID PRIMARY KEY,
+      player_id TEXT,
+      map_key TEXT,
+      last_seen TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `);
+  await run(`CREATE INDEX IF NOT EXISTS idx_player_online_last_seen ON player_online(last_seen DESC)`);
+}
+
+// tenta descobrir o herói "ativo" desse player (pela última posição conhecida)
+async function resolveActiveHeroId(playerId) {
+  if (!playerId) return null;
+
+  const hRecent = await get(`
+    SELECT ph.id
+    FROM player_heroes ph
+    JOIN player_last_pos plp
+      ON plp.player_id::text = ph."playerId"::text
+    WHERE ph."playerId" = $1
+    ORDER BY plp.updated_at DESC
+    LIMIT 1
+  `, [playerId]);
+  if (hRecent?.id) return hRecent.id;
+
+  const hAny = await get(`
+    SELECT id
+    FROM player_heroes
+    WHERE "playerId" = $1
+    ORDER BY id
+    LIMIT 1
+  `, [playerId]);
+  return hAny?.id || null;
+}
+
+// marca/renova presença (upsert)
+async function upsertOnlineByPlayer(playerId, mapKey = null) {
+  const heroId = await resolveActiveHeroId(playerId);
+  if (!heroId) return;
+  await run(`
+    INSERT INTO player_online(hero_id, player_id, map_key, last_seen)
+    VALUES ($1,$2,$3, now())
+    ON CONFLICT (hero_id) DO UPDATE
+      SET map_key = EXCLUDED.map_key,
+          last_seen = now()
+  `, [heroId, String(playerId), mapKey]);
+}
+
+// remove presença (quando WS fecha)
+async function markOfflineByPlayer(playerId) {
+  await run(`DELETE FROM player_online WHERE player_id = $1`, [String(playerId)]);
+}
+
+
 // Heartbeat: derruba sockets inativos (zumbis) de forma segura
 function setupHeartbeat(wss) {
   const intervalMs = 30000; // 30s
@@ -789,14 +880,13 @@ async function seedAIMobsFromDB(aiMobs) {
 
 // ========= START =========
 (async () => {
-  // (opcional) ataque dos monstros — só inicia se o módulo existir
-
   try {
     if (SKIP_MIGRATIONS_ON_BOOT) {
       console.log('[startup] skipping migrations due to SKIP_MIGRATIONS_ON_BOOT=1');
     } else {
       await migrate();
       await bootstrapContentTables();
+      await ensurePlayerOnlineTable(); // <<< presença online
     }
 
     // Initialize optimization features
@@ -821,7 +911,6 @@ async function seedAIMobsFromDB(aiMobs) {
     try { await syncSpawns(); } catch (e) { console.warn('[sync_spawns] initial failed:', e?.message); }
     await seedAIMobsFromDB(aiMobs);
 
-    
     if (shouldGenerateContext) {
       console.log('[context] generation enabled by GEN_CONTEXT_ON_START=1');
     } else {
@@ -867,6 +956,7 @@ async function seedAIMobsFromDB(aiMobs) {
         ws._player = null;
         ws._mapKey = 'house'; // padrão até resolver abaixo
         ws.isAlive = true; // compat com heartbeat
+        ws._presenceTimer = null;
 
         try {
           const cookies = parseCookies(req.headers.cookie || '');
@@ -907,6 +997,16 @@ async function seedAIMobsFromDB(aiMobs) {
             ws._mapKey = 'house';
             joinMapSocket('house', ws);
           }
+
+          // >>> NOVO: marca presença assim que conectar (e renova a cada 15s)
+          try {
+            if (ws._player?.id) {
+              await upsertOnlineByPlayer(ws._player.id, ws._mapKey || 'house');
+              ws._presenceTimer = setInterval(() => {
+                upsertOnlineByPlayer(ws._player.id, ws._mapKey || 'house').catch(() => {});
+              }, 15000);
+            }
+          } catch {}
         })();
 
         // snapshot inicial de monstros vivos
@@ -932,6 +1032,17 @@ async function seedAIMobsFromDB(aiMobs) {
           if (data.type === 'auth') {
             ws._player = { id: String(data.id || ''), name: String(data.name || 'Anonymous') };
             try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
+
+            // >>> NOVO: reforça presença após auth
+            try {
+              await upsertOnlineByPlayer(ws._player.id, ws._mapKey || 'house');
+              if (!ws._presenceTimer) {
+                ws._presenceTimer = setInterval(() => {
+                  upsertOnlineByPlayer(ws._player.id, ws._mapKey || 'house').catch(() => {});
+                }, 15000);
+              }
+            } catch {}
+
             return;
           }
 
@@ -1004,6 +1115,10 @@ async function seedAIMobsFromDB(aiMobs) {
               console.warn('[ws] failed to persist player_last_pos:', e?.message);
             }
 
+            // 3) >>> NOVO: mantém mapKey atual no socket e reforça presença
+            ws._mapKey = mapKey;
+            try { await upsertOnlineByPlayer(pid, mapKey); } catch {}
+
             return;
           }
         });
@@ -1012,6 +1127,13 @@ async function seedAIMobsFromDB(aiMobs) {
 
         ws.on('close', () => {
           console.log(`[ws] close from ${addr} — clients=${wss.clients.size}`);
+          if (ws._presenceTimer) {
+            clearInterval(ws._presenceTimer);
+            ws._presenceTimer = null;
+          }
+          if (ws._player?.id) {
+            markOfflineByPlayer(ws._player.id).catch(() => {});
+          }
         });
 
         ws.on('error', (err) => {
@@ -1055,7 +1177,6 @@ async function seedAIMobsFromDB(aiMobs) {
         stopRespawnLoop();
       } finally { process.exit(0); }
     });
-
 
   } catch (err) {
     console.error('Fatal start error:', err);
