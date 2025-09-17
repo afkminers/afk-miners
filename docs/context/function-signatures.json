@@ -158,7 +158,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 288,
+    "line": 320,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -167,7 +167,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 555,
+    "line": 587,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -176,7 +176,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 609,
+    "line": 641,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -185,7 +185,42 @@
   },
   {
     "file": "server\\index.js",
-    "line": 622,
+    "line": 656,
+    "kind": "function",
+    "name": "ensurePlayerOnlineTable",
+    "params": []
+  },
+  {
+    "file": "server\\index.js",
+    "line": 669,
+    "kind": "function",
+    "name": "resolveActiveHeroId",
+    "params": [
+      "playerId"
+    ]
+  },
+  {
+    "file": "server\\index.js",
+    "line": 694,
+    "kind": "function",
+    "name": "upsertOnlineByPlayer",
+    "params": [
+      "playerId",
+      "mapKey = null"
+    ]
+  },
+  {
+    "file": "server\\index.js",
+    "line": 707,
+    "kind": "function",
+    "name": "markOfflineByPlayer",
+    "params": [
+      "playerId"
+    ]
+  },
+  {
+    "file": "server\\index.js",
+    "line": 713,
     "kind": "function",
     "name": "setupHeartbeat",
     "params": [
@@ -194,14 +229,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 624,
+    "line": 715,
     "kind": "function",
     "name": "noop",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 642,
+    "line": 733,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -210,35 +245,35 @@
   },
   {
     "file": "server\\index.js",
-    "line": 675,
+    "line": 766,
     "kind": "function",
     "name": "checkIdleAndManageLoops",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 706,
+    "line": 797,
     "kind": "function",
     "name": "idleAwareSyncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 725,
+    "line": 816,
     "kind": "function",
     "name": "startIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 741,
+    "line": 832,
     "kind": "function",
     "name": "stopIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 762,
+    "line": 853,
     "kind": "function",
     "name": "seedAIMobsFromDB",
     "params": [
@@ -2405,7 +2440,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 42,
+    "line": 46,
     "kind": "function",
     "name": "getMonsterYmlStats",
     "params": [
@@ -2414,7 +2449,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 71,
+    "line": 78,
     "kind": "function",
     "name": "clampToRect",
     "params": [
@@ -2425,7 +2460,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 76,
+    "line": 83,
     "kind": "function",
     "name": "expandRect",
     "params": [
@@ -2435,7 +2470,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 80,
+    "line": 87,
     "kind": "function",
     "name": "getGridCached",
     "params": [
@@ -2444,7 +2479,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 90,
+    "line": 96,
     "kind": "function",
     "name": "getHeroesWithPosByMap",
     "params": [
@@ -2453,7 +2488,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 104,
+    "line": 144,
     "kind": "function",
     "name": "getHeroesWithPosByMapCached",
     "params": [
@@ -2462,7 +2497,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 114,
+    "line": 154,
     "kind": "function",
     "name": "seedPosition",
     "params": [
@@ -2476,7 +2511,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 135,
+    "line": 176,
     "kind": "function",
     "name": "forget",
     "params": [
@@ -2485,21 +2520,21 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 138,
+    "line": 181,
     "kind": "function",
     "name": "tick",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 246,
+    "line": 308,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 257,
+    "line": 313,
     "kind": "function",
     "name": "stop",
     "params": []
@@ -2811,6 +2846,39 @@
     "kind": "function",
     "name": "autodetect",
     "params": []
+  },
+  {
+    "file": "client\\js\\pos-publisher.js",
+    "line": 12,
+    "kind": "function",
+    "name": "getCsrf",
+    "params": []
+  },
+  {
+    "file": "client\\js\\pos-publisher.js",
+    "line": 17,
+    "kind": "function",
+    "name": "getMapKey",
+    "params": []
+  },
+  {
+    "file": "client\\js\\pos-publisher.js",
+    "line": 22,
+    "kind": "function",
+    "name": "setMapKey",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "client\\js\\pos-publisher.js",
+    "line": 27,
+    "kind": "function",
+    "name": "publishPos",
+    "params": [
+      "x",
+      "y"
+    ]
   },
   {
     "file": "client\\js\\player_profile.js",

@@ -376,6 +376,36 @@
     }
   ],
   "GET /api/csrf": [],
+  "POST /api/player/pos": [
+    {
+      "status": 500,
+      "body": "{error:'failed to persist pos' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'weaponOrSkill inválido' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'erro ao iniciar treino' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'erro ao parar treino' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'heroId é obrigatório' }"
+    }
+  ],
   "GET /assets/items": [
     {
       "status": 500,

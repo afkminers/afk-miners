@@ -1,22 +1,10 @@
 [
   {
-    "key": "AI_ACTIVE_WINDOW_SEC",
-    "occurrences": [
-      {
-        "file": "server\\combat\\ai-mobs.js",
-        "index": 1086
-      }
-    ],
-    "defaults": [
-      "120"
-    ]
-  },
-  {
     "key": "AI_ATTACK_RANGE",
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 901
+        "index": 916
       }
     ],
     "defaults": [
@@ -24,11 +12,47 @@
     ]
   },
   {
+    "key": "AI_FORCE_RANGE",
+    "occurrences": [
+      {
+        "file": "server\\combat\\ai-mobs.js",
+        "index": 1300
+      }
+    ],
+    "defaults": [
+      "0"
+    ]
+  },
+  {
+    "key": "AI_HERO_RECENT_SEC",
+    "occurrences": [
+      {
+        "file": "server\\combat\\ai-mobs.js",
+        "index": 1400
+      }
+    ],
+    "defaults": [
+      "0"
+    ]
+  },
+  {
+    "key": "AI_IGNORE_LOS",
+    "occurrences": [
+      {
+        "file": "server\\combat\\ai-mobs.js",
+        "index": 1198
+      }
+    ],
+    "defaults": [
+      ""
+    ]
+  },
+  {
     "key": "AI_LEASH_MARGIN",
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 982
+        "index": 996
       }
     ],
     "defaults": [
@@ -36,11 +60,47 @@
     ]
   },
   {
+    "key": "AI_ONLINE_WINDOW_SEC",
+    "occurrences": [
+      {
+        "file": "server\\combat\\ai-mobs.js",
+        "index": 1732
+      }
+    ],
+    "defaults": [
+      "20"
+    ]
+  },
+  {
+    "key": "AI_POOL_WAIT_MAX",
+    "occurrences": [
+      {
+        "file": "server\\combat\\ai-mobs.js",
+        "index": 1521
+      }
+    ],
+    "defaults": [
+      "0"
+    ]
+  },
+  {
+    "key": "AI_REQUIRE_ONLINE",
+    "occurrences": [
+      {
+        "file": "server\\combat\\ai-mobs.js",
+        "index": 1626
+      }
+    ],
+    "defaults": [
+      "1"
+    ]
+  },
+  {
     "key": "AI_TICK_MS",
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 832
+        "index": 848
       }
     ],
     "defaults": [
@@ -153,7 +213,7 @@
       },
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1174
+        "index": 1085
       }
     ],
     "defaults": [
@@ -193,7 +253,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 20195
+        "index": 21276
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -321,18 +381,6 @@
     ]
   },
   {
-    "key": "DB_KEEPALIVE_MS",
-    "occurrences": [
-      {
-        "file": "server\\combat\\ai-mobs.js",
-        "index": 1308
-      }
-    ],
-    "defaults": [
-      "240_000"
-    ]
-  },
-  {
     "key": "DEBUG_CATALOG_CACHE",
     "occurrences": [
       {
@@ -401,7 +449,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 26064
+        "index": 28810
       }
     ],
     "defaults": []
@@ -435,7 +483,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 20102
+        "index": 21183
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -569,7 +617,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 20052
+        "index": 21133
       }
     ],
     "defaults": [
@@ -605,7 +653,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 20160
+        "index": 21241
       },
       {
         "file": "server\\auth\\middleware.js",

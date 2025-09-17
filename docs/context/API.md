@@ -2,9 +2,14 @@
 
 ## Variáveis de ambiente
 
-- `AI_ACTIVE_WINDOW_SEC` (defaults: 120)
 - `AI_ATTACK_RANGE` (defaults: (TILE)
+- `AI_FORCE_RANGE` (defaults: 0)
+- `AI_HERO_RECENT_SEC` (defaults: 0)
+- `AI_IGNORE_LOS` (defaults: )
 - `AI_LEASH_MARGIN` (defaults: 96)
+- `AI_ONLINE_WINDOW_SEC` (defaults: 20)
+- `AI_POOL_WAIT_MAX` (defaults: 0)
+- `AI_REQUIRE_ONLINE` (defaults: 1)
 - `AI_TICK_MS` (defaults: 350)
 - `APP_ORIGIN`
 - `APP_ORIGINS` (defaults: http://localhost:3000, process.env.APP_ORIGIN)
@@ -25,7 +30,6 @@
 - `CTX_SYMBOLS`
 - `DATABASE_URL`
 - `DB_IDLE_CLOSE_MINUTES` (defaults: 0)
-- `DB_KEEPALIVE_MS` (defaults: 240_000)
 - `DEBUG_CATALOG_CACHE`
 - `DEBUG_HTTP_CACHE`
 - `DEBUG_LOOT_CACHE`
@@ -56,7 +60,7 @@
 
 ### GET /
 
-Arquivo: `server\index.js:564`
+Arquivo: `server\index.js:596`
 
 _Sem payload inferido_
 
@@ -184,7 +188,7 @@ Arquivo: `server\combat\routes.js:39`
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:522`
+Arquivo: `server\index.js:554`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -212,7 +216,7 @@ Arquivo: `server\index.js:522`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:497`
+Arquivo: `server\index.js:529`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -242,7 +246,7 @@ Arquivo: `server\index.js:497`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:509`
+Arquivo: `server\index.js:541`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -271,7 +275,7 @@ Arquivo: `server\index.js:509`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:486`
+Arquivo: `server\index.js:518`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -296,7 +300,7 @@ Arquivo: `server\index.js:486`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:430`
+Arquivo: `server\index.js:462`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -324,7 +328,7 @@ Arquivo: `server\index.js:430`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:441`
+Arquivo: `server\index.js:473`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -351,7 +355,7 @@ Arquivo: `server\index.js:441`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:463`
+Arquivo: `server\index.js:495`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -377,7 +381,7 @@ Arquivo: `server\index.js:463`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1069`
+Arquivo: `server\index.js:1190`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -855,7 +859,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:532`
+Arquivo: `server\index.js:564`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -875,7 +879,7 @@ Arquivo: `server\index.js:532`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1092`
+Arquivo: `server\index.js:1213`
 
 _Sem payload inferido_
 
@@ -889,6 +893,42 @@ _Sem payload inferido_
 **Erros conhecidos:**
 - `HTTP 400` → {error:'Mensagem vazia' }
 - `HTTP 500` → {error:err.message }
+
+### POST /api/player/pos
+
+Arquivo: `server\index.js:288`
+
+**Payloads (exemplos inferidos):**
+- query:
+```json
+{
+  "heroId": 1
+}
+```
+- body:
+```json
+{
+  "try {\n    const { heroId": 1,
+  "weaponOrSkill": "value",
+  "heroClass": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{
+  "ok": true
+}
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:'failed to persist pos' }
+- `HTTP 400` → {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
+- `HTTP 400` → {error:'weaponOrSkill inválido' }
+- `HTTP 500` → {error:'erro ao iniciar treino' }
+- `HTTP 400` → {error:'heroId é obrigatório' }
+- `HTTP 500` → {error:'erro ao parar treino' }
+- `HTTP 400` → {error:'heroId é obrigatório' }
 
 ### POST /assign
 
@@ -1637,6 +1677,14 @@ Arquivo: `server\starter\routes.js:104`
 - **POST /api/chat/global**
   - HTTP 400: {error:'Mensagem vazia' }
   - HTTP 500: {error:err.message }
+- **POST /api/player/pos**
+  - HTTP 500: {error:'failed to persist pos' }
+  - HTTP 400: {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
+  - HTTP 400: {error:'weaponOrSkill inválido' }
+  - HTTP 500: {error:'erro ao iniciar treino' }
+  - HTTP 400: {error:'heroId é obrigatório' }
+  - HTTP 500: {error:'erro ao parar treino' }
+  - HTTP 400: {error:'heroId é obrigatório' }
 - **POST /assign**
   - HTTP 400: {error:'worker_id required' }
   - HTTP 404: {error:'worker_not_found' }

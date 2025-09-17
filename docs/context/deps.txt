@@ -1,3 +1,4 @@
+client\js\pos-publisher.js -> ./ws.js
 client\js\player_profile.js -> ./api.js
 client\js\play.js -> ./api.js
 client\js\play.js -> ./combat/actions.js

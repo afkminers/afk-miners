@@ -1,5 +1,9 @@
 [
   {
+    "from": "client\\js\\pos-publisher.js",
+    "to": "./ws.js"
+  },
+  {
     "from": "client\\js\\player_profile.js",
     "to": "./api.js"
   },

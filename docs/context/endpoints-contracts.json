@@ -345,7 +345,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 522,
+    "line": 554,
     "sample": {
       "params": {
         "key": "value"
@@ -379,7 +379,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 497,
+    "line": 529,
     "sample": {
       "params": {
         "key": "value"
@@ -421,7 +421,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 509,
+    "line": 541,
     "sample": {
       "params": {
         "key": "value"
@@ -459,7 +459,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 486,
+    "line": 518,
     "sample": {
       "query": {
         "map": "value"
@@ -502,7 +502,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 430,
+    "line": 462,
     "sample": {
       "query": {
         "map": "value"
@@ -557,7 +557,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 532,
+    "line": 564,
     "sample": {
       "query": {
         "map": "value"
@@ -580,7 +580,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 441,
+    "line": 473,
     "sample": {
       "query": {
         "map": "value"
@@ -631,7 +631,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 463,
+    "line": 495,
     "sample": {
       "query": {
         "map": "value"
@@ -678,7 +678,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1069,
+    "line": 1190,
     "sample": {
       "query": {
         "limit": 1
@@ -709,7 +709,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1092,
+    "line": 1213,
     "sample": {},
     "errors": [
       {
@@ -769,6 +769,78 @@
     "line": 104,
     "sample": {},
     "errors": []
+  },
+  {
+    "method": "POST",
+    "path": "/api/player/pos",
+    "file": "server\\index.js",
+    "line": 288,
+    "sample": {
+      "query": {
+        "heroId": 1
+      },
+      "body": {
+        "try {\n    const { heroId": 1,
+        "weaponOrSkill": "value",
+        "heroClass": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'failed to persist pos' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'weaponOrSkill inválido' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'erro ao iniciar treino' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'heroId é obrigatório' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'erro ao parar treino' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'heroId é obrigatório' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,message:'Training started',heroId,skillType }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,message:'No active session' }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,message:'Training stopped',processed_seconds:delta }"
+      },
+      {
+        "status": 200,
+        "body": "{status:'IDLE' }"
+      },
+      {
+        "status": 200,
+        "body": "{status:t.status,hero_id:t.hero_id,skill_type:t.skill_type,class:(() =>{try{return JSON.parse(t.notes || '{}').heroClass } catch{return null } }"
+      }
+    ]
   },
   {
     "method": "GET",
@@ -1352,7 +1424,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 564,
+    "line": 596,
     "sample": {},
     "errors": []
   },

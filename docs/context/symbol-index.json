@@ -468,6 +468,14 @@
     ]
   },
   {
+    "file": "client\\js\\pos-publisher.js",
+    "symbols": [
+      "getCsrf",
+      "getMapKey",
+      "setMapKey"
+    ]
+  },
+  {
     "file": "client\\js\\scenes\\house.js",
     "symbols": [
       "mount"
@@ -769,16 +777,20 @@
     "symbols": [
       "bootstrapContentTables",
       "checkIdleAndManageLoops",
+      "ensurePlayerOnlineTable",
       "idleAwareSyncSpawns",
+      "markOfflineByPlayer",
       "noop",
       "parseCookies",
+      "resolveActiveHeroId",
       "resolveSkillType",
       "safeParse",
       "seedAIMobsFromDB",
       "setupHeartbeat",
       "setupRedis",
       "startIdleScheduler",
-      "stopIdleScheduler"
+      "stopIdleScheduler",
+      "upsertOnlineByPlayer"
     ]
   },
   {
