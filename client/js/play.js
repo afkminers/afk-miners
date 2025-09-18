@@ -656,7 +656,9 @@ function drawMob(m) {
   ctx.restore();
 }
 
-/* ======================= Posição Persistente ======================= */
+// ----- Substitua/cole este trecho no lugar das funções antigas em client/js/play.js -----
+
+/* ======================= Posição Persistente (robusta) ======================= */
 let POS_SYNC_ENABLED = true;
 let lastPostAt = 0;
 
@@ -669,92 +671,181 @@ let posInFlight = false;
 // evita post quando não mudou
 let lastSent = { x: null, y: null };
 
+// Helper: grava posSeq local e em localStorage (sincroniza entre abas)
+function setPosSeq(v) {
+  posSeq = Number(v) || 0;
+  posSeqReady = true;
+  try { window.localStorage.setItem('posSeq', String(posSeq)); } catch (_) {}
+}
+
+// Sincroniza posSeq entre abas: quando outra aba atualizar localStorage, esta aba reage
+window.addEventListener('storage', (ev) => {
+  if (ev.key === 'posSeq') {
+    const v = Number(ev.newValue || NaN);
+    if (Number.isFinite(v) && v > posSeq) {
+      posSeq = v;
+      posSeqReady = true;
+    }
+  }
+});
+
 /** Lê posição salva do servidor e já sincroniza o seq local */
 async function getSavedPos() {
   try {
     const p = await apiGet(`/api/player/pos?map=${encodeURIComponent(MAP_KEY)}`);
     if (p && Number.isFinite(p.seq)) {
-      posSeq = Number(p.seq);
-      posSeqReady = true;
+      setPosSeq(Number(p.seq));
     }
     if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
       return { x: p.x, y: p.y };
     }
-  } catch {
-    // ok, começa do default
+  } catch (err) {
+    // ignorar — starts/default será usado
   }
   return null;
 }
 
-/** Envia posição com rate-limit, dedupe e seq sincronizado com o servidor */
+// Substitua/cole esta única definição de postPosThrottled (inclui resync threshold)
 async function postPosThrottled(mapKey, x, y) {
   if (!POS_SYNC_ENABLED) return;
 
-  // tenta sincronizar seq uma única vez no 1º envio
-  if (!posSeqReady) {
-    try {
-      const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
-      if (chk && Number.isFinite(chk.seq)) {
-        posSeq = Number(chk.seq);
-        posSeqReady = true;
-      }
-    } catch { /* segue mesmo assim */ }
+  // configurações
+  const THROTTLE_MS = 500;               // 500ms ~ equilíbrio entre responsividade e taxa
+  const RETRY_DELAY_MS = 50;             // retry curto para 409
+  const BACKOFF_MS_ON_TOO_FAST = 700;    // aguarda antes de tentar enviar novamente
+  const RESYNC_THRESHOLD_PX = 24;        // só aplica resync visual se delta > 24px
+  const DEBUG = false;                   // coloque true para debugar no console
+
+  // sincroniza seq inicial (localStorage / GET) — tolerante
+  try {
+    const stored = Number(window.localStorage.getItem('posSeq') || NaN);
+    if (Number.isFinite(stored)) {
+      posSeq = stored;
+      posSeqReady = true;
+      if (DEBUG) console.debug('[pos] posSeq from localStorage', posSeq);
+    } else if (!posSeqReady) {
+      try {
+        const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
+        if (chk && Number.isFinite(chk.seq)) { setPosSeq(Number(chk.seq)); if (DEBUG) console.debug('[pos] posSeq from GET /pos', posSeq); }
+      } catch (err) { if (DEBUG) console.warn('[pos] initial /pos read failed', err); }
+    }
+  } catch (err) { if (DEBUG) console.warn('[pos] localStorage unavailable', err); }
+
+  // throttle básico
+  const nowPerf = performance.now();
+  if ((nowPerf - lastPostAt) < THROTTLE_MS) {
+    if (DEBUG) console.debug('[pos] throttle skip', nowPerf - lastPostAt);
+    return;
   }
 
-  // sem flooding: servidor aceita ~12 vezes por 5s → ~1 a cada ~500ms
-  const now = performance.now();
-  if ((now - lastPostAt) < 500) return;
-
-  // não reenvia se não mudou nada
+  // dedupe por posição inteira
   const nx = Math.round(x), ny = Math.round(y);
-  if (lastSent.x === nx && lastSent.y === ny) return;
+  if (lastSent.x === nx && lastSent.y === ny) {
+    if (DEBUG) console.debug('[pos] skip no-change');
+    return;
+  }
 
-  // sem concorrência
-  if (posInFlight) return;
+  // evita posts concorrentes
+  if (posInFlight) {
+    if (DEBUG) console.debug('[pos] skip in-flight');
+    return;
+  }
   posInFlight = true;
 
+  // função que realiza o POST e trata respostas 2xx
   const doSend = async () => {
-    posSeq += 1;
-    lastPostAt = now;
-    await apiPost('/api/player/pos', {
+    posSeq = (Number(posSeq) || 0) + 1; // monotonic local
+    lastPostAt = performance.now();
+    if (DEBUG) console.debug('[pos] sending', { nx, ny, seq: posSeq });
+
+    const resp = await apiPost('/api/player/pos', {
       mapKey,
       x: nx,
       y: ny,
       seq: posSeq,
       clientTs: Date.now()
     });
+
+    // servidor retornou last_seq — atualiza local
+    if (resp && Number.isFinite(resp.last_seq)) {
+      if (DEBUG) console.debug('[pos] server returned last_seq', resp.last_seq);
+      setPosSeq(Number(resp.last_seq));
+    }
+
+    // servidor recusou por anti-speed
+    if (resp && resp.ok === false && resp.reason === 'too-fast') {
+      if (DEBUG) console.warn('[pos] server too-fast, backoff', { nx, ny, seq: posSeq });
+      try {
+        // tenta GET /pos e só aplica correção visual se diferença for significativa
+        const srv = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
+        if (srv && Number.isFinite(srv.x) && Number.isFinite(srv.y)) {
+          const dx = Math.abs(Number(srv.x) - nx);
+          const dy = Math.abs(Number(srv.y) - ny);
+          const dist = Math.hypot(dx, dy);
+          if (dist > RESYNC_THRESHOLD_PX) {
+            if (DEBUG) console.debug('[pos] resyncing to server position (dist)', dist, srv);
+            try { window.GameScene?.controller?.setPosition?.(srv.x, srv.y); } catch (_) {}
+          } else {
+            if (DEBUG) console.debug('[pos] resync skipped (small diff)', dist);
+          }
+          if (Number.isFinite(srv.seq)) setPosSeq(Number(srv.seq));
+        }
+      } catch (err) {
+        if (DEBUG) console.warn('[pos] fallback GET /pos failed', err);
+      }
+      // evita reenvio imediato e força backoff
+      lastSent = { x: nx, y: ny };
+      lastPostAt = performance.now() + BACKOFF_MS_ON_TOO_FAST;
+      return { tooFast: true };
+    }
+
+    // sucesso normal
     lastSent = { x: nx, y: ny };
+    try { window.localStorage.setItem('posSeq', String(posSeq)); } catch (_) {}
+    return { ok: true, resp };
   };
 
   try {
-    await doSend();
+    const r = await doSend();
+    if (DEBUG) {
+      if (r && r.tooFast) console.debug('[pos] handled too-fast, waiting...');
+      else console.debug('[pos] post ok', posSeq);
+    }
   } catch (e) {
-    const msg = String(e?.message || '');
-    // conflito de sequência: rebaseia e tenta UMA vez
-    if (msg.includes('409') || /stale-seq/i.test(msg)) {
+    const status = e?.status;
+    const body = e?.body || e?.payload || null;
+    if (DEBUG) console.warn('[pos] error sending pos', { status, body, message: e?.message });
+
+    let handled = false;
+    // 409 stale-seq: rebase usando last_seq do body e tenta 1x
+    if ((status === 409 || String(status) === '409') && body && (Number.isFinite(body.last_seq) || Number.isFinite(body.seq))) {
       try {
-        const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
-        if (chk && Number.isFinite(chk.seq)) {
-          posSeq = Number(chk.seq);
-          posSeqReady = true;
-          await doSend();
-        }
-      } catch { /* ignorar - próxima iteração tenta de novo */ }
-    } else if (/429/.test(msg)) {
-      // rate limited: apenas ignore; próxima janela envia
-    } else if (/202/.test(msg)) {
-      // too-fast do anti-speed: não desliga; apenas ignore este tick
-    } else if (/403|csrf/i.test(msg)) {
-      // auth/csrf: desliga para não poluir
-      POS_SYNC_ENABLED = false;
-      console.warn('[pos] desabilitado (auth/csrf):', msg);
-    } else {
-      console.warn('pos sync failed:', msg);
+        const last = Number(body.last_seq ?? body.seq);
+        if (DEBUG) console.debug('[pos] 409 -> rebase to', last);
+        setPosSeq(last);
+        await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+        await doSend();
+        handled = true;
+        if (DEBUG) console.debug('[pos] retry after 409 ok');
+      } catch (inner) { if (DEBUG) console.warn('[pos] retry after 409 failed', inner); }
+    }
+
+    if (!handled) {
+      const msg = String(e?.message || body?.error || '');
+      if (/403|csrf/i.test(msg) || status === 403) {
+        POS_SYNC_ENABLED = false;
+        console.warn('[pos] disabled (auth/csrf):', msg);
+      } else if (/429|rate-limited/i.test(msg) || status === 429) {
+        if (DEBUG) console.warn('[pos] rate limited (429), ignoring this tick');
+      } else {
+        console.warn('pos sync failed:', e);
+      }
     }
   } finally {
     posInFlight = false;
   }
 }
+// ----- Fim do trecho substituído -----
 
 /* ==================== Colisão e Spawns do Tiled ==================== */
 function buildCollisionGridFromObjects(mapW, mapH, objs) {
@@ -1018,26 +1109,6 @@ function updateRespawns(now) {
     };
   }
 
-  function applyCameraZoom() {
-    const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
-
-    // Zoom por quantidade de tiles na altura da tela (estilo Tibia)
-    if (st.zoomByTiles) {
-      const tilesY = Math.max(6, Number(st.tilesY || 13)); // 13 ≈ Tibia clássico
-      const zRaw = canvas.height / (tilesY * TILE);
-      const zMin = Number.isFinite(st.zoomMin) ? st.zoomMin : 0.5;
-      const zMax = Number.isFinite(st.zoomMax) ? st.zoomMax : 4;
-      const zClamped = Math.max(zMin, Math.min(zMax, zRaw));
-      if (typeof camera.setZoom === 'function') camera.setZoom(zClamped);
-    } else {
-      // Modo antigo: zoom numérico direto
-      const zRaw = Number(st.zoom || 1);
-      const zMin = Number.isFinite(st.zoomMin) ? st.zoomMin : 0.5;
-      const zMax = Number.isFinite(st.zoomMax) ? st.zoomMax : 4;
-      const zClamped = Math.max(zMin, Math.min(zMax, zRaw));
-      if (typeof camera.setZoom === 'function') camera.setZoom(zClamped);
-    }
-  }
 
   // recalcula tamanho do canvas e zoom já no boot
   resize();

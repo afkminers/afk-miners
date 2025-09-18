@@ -22,9 +22,12 @@ function currentCsrf() {
 
 /** tenta extrair token de possíveis headers de resposta */
 function readCsrfFromHeaders(res) {
+  if (!res || !res.headers) return null;
   return (
-    res.headers?.get?.('x-csrf-token') ||
-    res.headers?.get?.('X-CSRF-Token') ||
+    res.headers.get?.('x-csrf-token') ||
+    res.headers.get?.('X-CSRF-Token') ||
+    res.headers.get?.('x-csrf') ||
+    res.headers.get?.('X-CSRF') ||
     null
   );
 }
@@ -66,23 +69,43 @@ export async function getCsrf(force = false) {
 }
 
 /* ======================== Fetch genérico ======================== */
+/**
+ * doFetch:
+ * - preserva response na exceção (err.response)
+ * - anexa parsed JSON/text no err.body / err.payload para o caller usar
+ */
 async function doFetch(url, init) {
   const res = await fetch(url, init);
 
+  // tenta extrair corpo (json preferencialmente, fallback para texto)
+  let parsed = null;
+  try {
+    parsed = await res.clone().json();
+  } catch (_) {
+    try { parsed = await res.clone().text(); } catch (_) { parsed = null; }
+  }
+
   if (!res.ok) {
-    let payload = null;
-    try { payload = await res.clone().json(); } catch (_) {}
+    const payload = parsed;
     const err = new Error(
-      payload?.error ||
-      payload?.message ||
-      `${init.method || 'GET'} ${url} -> ${res.status}`
+      (payload && typeof payload === 'object' && (payload.error || payload.message)) ||
+      (typeof payload === 'string' ? payload : `${init.method || 'GET'} ${url} -> ${res.status}`)
     );
     err.status = res.status;
+    err.response = res;
+    // legacy / convenience: both names available
     err.payload = payload;
+    err.body = payload;
     throw err;
   }
 
-  try { return await res.json(); } catch { return null; }
+  // Success: retorna JSON quando possível, senão texto, senão null
+  if (parsed !== null) return parsed;
+  try {
+    return await res.text();
+  } catch (_) {
+    return null;
+  }
 }
 
 function isJsonBody(body) {
@@ -141,7 +164,8 @@ export async function apiRequest(method, url, body = null, opts = {}) {
       err?.status === 403 ||
       err?.status === 419 ||
       /csrf/i.test(String(err?.message)) ||
-      /csrf/i.test(String(err?.payload?.error || ''));
+      /csrf/i.test(String(err?.payload?.error || '')) ||
+      /csrf/i.test(String(err?.body?.error || ''));
 
     if (looksLikeCsrf && !opts.noRetry) {
       try { await getCsrf(true); } catch (_) {}

@@ -130,6 +130,58 @@ function installWsHandlers() {
       unbound.delete(id);
     }, 0);
   });
+
+  // NEW: handler para atualizações de HP de herói (broadcast hero_hp)
+  // Isso atualiza rapidamente o HUD (targetHud e dispatch 'player-updated')
+  onMessage('hero_hp', (msg) => {
+    try {
+      const heroId = msg.heroId || msg.targetHeroId;
+      const hp = (typeof msg.hp === 'number') ? msg.hp : (typeof msg.hpAfter === 'number' ? msg.hpAfter : undefined);
+      const maxHp = msg.maxHp ?? msg.max_hp ?? undefined;
+
+      // Atualiza targetHud (se visível)
+      try {
+        const hpFill = document.getElementById('hpFill');
+        const hpText = document.getElementById('hpText');
+        if (hpFill && hpText && typeof hp === 'number' && typeof maxHp === 'number') {
+          const pct = Math.max(0, Math.min(100, Math.round((hp / maxHp) * 100)));
+          hpFill.style.width = pct + '%';
+          hpText.textContent = `${hp}/${maxHp}`;
+          hpFill.style.transition = 'width 160ms linear';
+        }
+      } catch (e) {
+        // não falhar se DOM não existir
+      }
+
+      // Atualiza caches JS (best-effort)
+      try {
+        if (window.Player && typeof window.Player.updateHeroHp === 'function') {
+          window.Player.updateHeroHp(heroId, hp, maxHp);
+        } else if (window.Team && typeof window.Team.updateHeroHp === 'function') {
+          window.Team.updateHeroHp(heroId, hp, maxHp);
+        } else if (window.GameScene && Array.isArray(window.GameScene.heroes)) {
+          const h = window.GameScene.heroes.find(x => String(x.id) === String(heroId));
+          if (h) { if (typeof hp === 'number') h.hp = hp; if (typeof maxHp === 'number') h.maxHp = maxHp; }
+        } else if (window.GameScene && window.GameScene.state && window.GameScene.state.heroes) {
+          const h = window.GameScene.state.heroes.find(x => String(x.id) === String(heroId));
+          if (h) { if (typeof hp === 'number') h.hp = hp; if (typeof maxHp === 'number') h.maxHp = maxHp; }
+        }
+      } catch (e) {
+        // swallow
+      }
+
+      // Dispara evento para que hud_status escute e atualize (compatibilidade)
+      try {
+        window.dispatchEvent(new CustomEvent('player-updated', { detail: { heroId, hp, maxHp } }));
+      } catch (e) {
+        // swallow
+      }
+    } catch (e) {
+      if (console && console.warn) console.warn('[ws] hero_hp handler error', e);
+    }
+  });
+
+  // Nota: outros handlers de WS podem existir através de onMessage(...) em outros módulos.
 }
 
 /* ===== Rebind loop ===== */

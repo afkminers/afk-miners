@@ -5,6 +5,13 @@ const path = require('path');
 const express = require('express');
 const http = require('http');
 
+try {
+  // shim de debug para o serviço de combate (dev only)
+  require('./combat/debug-patches');
+  console.log('[startup] debug-patches loaded');
+} catch (e) {
+  console.warn('[startup] debug-patches not loaded (ok in prod):', e && e.message ? e.message : e);
+}
 // Segurança e performance
 const compression = require('compression');
 const helmetMiddleware = require('./middleware/security-headers');

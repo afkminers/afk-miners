@@ -256,11 +256,6 @@ router.post('/pos', async (req, res) => {
       [req.user.id, map]
     );
 
-    // Replay/ordenamento
-    if (prev && cseq && prev.seq != null && cseq <= Number(prev.seq)) {
-      return res.status(409).json({ error: 'stale-seq' });
-    }
-
     // Anti-teleport/speedhack (se tiver posição anterior)
     if (prev && Number.isFinite(prev.x) && Number.isFinite(prev.y)) {
       // Delta tempo (server-side); se clientTs vier, usamos o menor (fail-safe)
@@ -279,18 +274,39 @@ router.post('/pos', async (req, res) => {
       }
     }
 
-    // UPSERT
+    // SERVER-AUTHORITATIVE SEQUENCE LOGIC:
+    // - calcula nextSeq esperado a partir do banco (prev.seq + 1)
+    // - se o cliente enviou exatamente esse valor, usa-o; caso contrário, usamos o nextSeq calculado aqui.
+    const nextSeqFromPrev = Number(prev?.seq || 0) + 1;
+    const writeSeq = (Number.isFinite(cseq) && cseq === nextSeqFromPrev) ? cseq : nextSeqFromPrev;
+
+    // UPSERT do estado do player (grava a posição e o last_seq)
     await run(
       `INSERT INTO player_last_pos (player_id, map_key, x, y, last_seq, updated_at)
             VALUES ($1, $2, $3, $4, $5, now())
        ON CONFLICT (player_id, map_key)
          DO UPDATE SET x=$3, y=$4, last_seq=$5, updated_at=now()`,
-      [req.user.id, map, Math.round(nx), Math.round(ny), cseq || ((prev?.seq | 0) + 1)]
+      [req.user.id, map, Math.round(nx), Math.round(ny), writeSeq]
     );
 
-    res.json({ ok: true });
+    // reforça presença online com o mapa atual (não bloquear)
+    try { await run('SELECT upsert_online_by_player($1, $2)', [req.user.id, map]).catch(()=>null); } catch(_) {}
+
+    // Ler de volta o last_seq efetivamente gravado e devolver ao cliente
+    try {
+      const after = await get(
+        `SELECT last_seq FROM player_last_pos WHERE player_id=$1 AND map_key=$2`,
+        [req.user.id, map]
+      );
+      const lastSeqRecorded = Number(after?.last_seq || writeSeq);
+      return res.json({ ok: true, last_seq: lastSeqRecorded });
+    } catch (readAfterErr) {
+      console.warn('[pos] warning: could not read back last_seq after upsert', readAfterErr);
+      return res.json({ ok: true });
+    }
+
   } catch (e) {
-    console.error('[pos] error:', e?.message);
+    console.error('[pos] error:', e?.message || e);
     res.status(500).json({ error: 'pos-write-failed' });
   }
 });
