@@ -438,6 +438,7 @@
       "postPosThrottled",
       "resize",
       "resolvePlayerSprite",
+      "setPosSeq",
       "uniq",
       "updateRespawns"
     ]
@@ -651,10 +652,12 @@
       "getHeroesWithPosByMap",
       "getHeroesWithPosByMapCached",
       "getMonsterYmlStats",
+      "rateLog",
       "seedPosition",
       "start",
       "stop",
-      "tick"
+      "tick",
+      "tryLockHeroForHit"
     ]
   },
   {
@@ -716,8 +719,13 @@
       "getHeroStats",
       "getInstanceWithMonster",
       "getRespawnSeconds",
+      "logDebug",
+      "logError",
+      "logInfo",
+      "logWarn",
       "persistDrops",
       "resolveSkillFromWeapon",
+      "respawnHeroAtMapPosition",
       "rollLoot"
     ]
   },
@@ -805,6 +813,7 @@
       "buildCollisionFromObjects",
       "buildCollisionFromTiled",
       "getGrid",
+      "getMapSpawns",
       "hasSolidPropRow"
     ]
   },

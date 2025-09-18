@@ -212,7 +212,8 @@ async function updateHudBars(force=false) {
 window.addEventListener("DOMContentLoaded", () => updateHudBars(true));
 window.addEventListener("hero:active-changed", () => updateHudBars(true));
 window.addEventListener("tick:hero", () => updateHudBars());
-// Server-driven event (WS) should dispatch 'player-updated' — listen and force refresh
+// React to server-driven events (already present in app): if a hero update comes over WS,
+// other modules should dispatch 'player-updated' — we listen and force an immediate update.
 window.addEventListener("player-updated", () => updateHudBars(true));
 
 // Pause/resume polling with page visibility
@@ -224,7 +225,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Polling fallback (protected): only poll when page is visible and not already fetching.
-// Interval slightly increased to reduce noise.
+// Interval increased slightly from 2200 to 3000 to be less chatty.
 setInterval(() => {
   if (document.hidden) return;
   if (isFetching) return;

@@ -32,6 +32,10 @@ function logError(...args) {
   try { console.error('[combat]', ...args); } catch (e) {}
 }
 
+function safeType(v) {
+  try { return typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v; } catch { return String(v); }
+}
+
 /** Dano estilo Tibia (sem dano mínimo garantido) */
 function computeDamageTibiaLike(weaponAtk, skillLevel, monsterArmor, variance = K.DAMAGE_VARIANCE) {
   const base = weaponAtk * (1 + skillLevel / 50);
@@ -157,7 +161,7 @@ async function persistDrops(heroId, instanceId, drops) {
 
 /** Hit do herói em monstro */
 async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
-  logInfo('applyHit start', { attackerHeroId, targetInstanceId, weaponType });
+  logInfo('applyHit start', safeType({ attackerHeroId, targetInstanceId, weaponType }));
   try {
     const hero = await getHeroStats(attackerHeroId);
     const inst = await getInstanceWithMonster(targetInstanceId);
@@ -199,15 +203,16 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
 
     logInfo('monster hit applied', { instanceId: inst.id, dmg, hpBefore: inst.hp, hpAfter: newHp, dead });
 
-    broadcast({
+    const monsterHpPayload = {
       type: 'monster_hp',
       id: inst.id,
       hp: newHp,
       maxHp: inst.max_hp,
       byHero: hero.hero_id,
       dmg
-    });
-    logDebug('broadcast monster_hp', { id: inst.id, hp: newHp, maxHp: inst.max_hp, byHero: hero.hero_id, dmg });
+    };
+    const sentMon = broadcast(monsterHpPayload);
+    logDebug('broadcast monster_hp', { payload: monsterHpPayload, sent: sentMon });
 
     if (skillType && dmg > 0) {
       try {
@@ -242,13 +247,9 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
       );
       logInfo('monster scheduled respawn', { instanceId: inst.id, respawnSec: sec });
 
-      broadcast({
-        type: 'monster_dead',
-        id: inst.id,
-        xp: xpGained,
-        drops
-      });
-      logInfo('broadcast monster_dead', { id: inst.id, xpGained, drops });
+      const deadPayload = { type: 'monster_dead', id: inst.id, xp: xpGained, drops };
+      const sentDead = broadcast(deadPayload);
+      logInfo('broadcast monster_dead', { payload: deadPayload, sent: sentDead });
     }
 
     return {
@@ -275,7 +276,7 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
  * - broadcasts hero_respawn and hero_hp
  */
 async function respawnHeroAtMapPosition(targetHeroId, preferredMapKey = null) {
-  logInfo('respawnHeroAtMapPosition start', { targetHeroId, preferredMapKey });
+  logInfo('respawnHeroAtMapPosition start', safeType({ targetHeroId, preferredMapKey }));
   try {
     // fetch hero + player
     const hr = await get(`SELECT id, "playerId", max_hp FROM player_heroes WHERE id=$1`, [targetHeroId]);
@@ -335,7 +336,7 @@ async function respawnHeroAtMapPosition(targetHeroId, preferredMapKey = null) {
     logInfo('player_last_pos upserted', { playerId, mapKey, x: targetX, y: targetY });
 
     // broadcast respawn + hp for immediate client sync
-    broadcast({
+    const respawnPayload = {
       type: 'hero_respawn',
       heroId: targetHeroId,
       playerId,
@@ -344,16 +345,18 @@ async function respawnHeroAtMapPosition(targetHeroId, preferredMapKey = null) {
       y: targetY,
       hp: heroMaxHp,
       maxHp: heroMaxHp
-    });
-    logInfo('broadcast hero_respawn', { targetHeroId, playerId, mapKey, x: targetX, y: targetY, hp: heroMaxHp });
+    };
+    const sentRespawn = broadcast(respawnPayload);
+    logInfo('broadcast hero_respawn', { payload: safeType(respawnPayload), sent: sentRespawn });
 
-    broadcast({
+    const hpPayload = {
       type: 'hero_hp',
       heroId: targetHeroId,
       hp: heroMaxHp,
       maxHp: heroMaxHp
-    });
-    logInfo('broadcast hero_hp after respawn', { targetHeroId, hp: heroMaxHp, maxHp: heroMaxHp });
+    };
+    const sentHp = broadcast(hpPayload);
+    logInfo('broadcast hero_hp after respawn', { payload: safeType(hpPayload), sent: sentHp });
   } catch (e) {
     logError('[respawnHero] error:', e?.message || e, e?.stack);
   }
@@ -364,7 +367,7 @@ async function respawnHeroAtMapPosition(targetHeroId, preferredMapKey = null) {
  * Usa player_heroes.hp / max_hp e atualiza "updatedAt" (camelCase).
  */
 async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
-  logInfo('applyMobHit start', { attackerInstanceId, targetHeroId, attackInfo });
+  logInfo('applyMobHit start', safeType({ attackerInstanceId, targetHeroId, attackInfo }));
   try {
     const hero = await getHeroStats(targetHeroId);
     if (!hero) {
@@ -414,8 +417,8 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
       instanceId: inst.id,
       dmg
     };
-    broadcast(heroHpPayload);
-    logInfo('broadcast hero_hp', heroHpPayload);
+    const sentHp = broadcast(heroHpPayload);
+    logInfo('broadcast hero_hp', { payload: safeType(heroHpPayload), sent: sentHp });
 
     // (Opcional) evento de “dano” para flutuante/sangue, caso seu front use
     const heroDmgPayload = {
@@ -425,8 +428,8 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
       byMob: inst.monster_key,
       instanceId: inst.id
     };
-    broadcast(heroDmgPayload);
-    logDebug('broadcast hero_dmg', heroDmgPayload);
+    const sentDmg = broadcast(heroDmgPayload);
+    logDebug('broadcast hero_dmg', { payload: heroDmgPayload, sent: sentDmg });
 
     if (dead) {
       const deadPayload = {
@@ -435,8 +438,8 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
         byMob: inst.monster_key,
         instanceId: inst.id
       };
-      broadcast(deadPayload);
-      logInfo('broadcast hero_dead', deadPayload);
+      const sentDead = broadcast(deadPayload);
+      logInfo('broadcast hero_dead', { payload: deadPayload, sent: sentDead });
 
       // Agendar respawn do herói após HERO_RESPAWN_MS
       try {

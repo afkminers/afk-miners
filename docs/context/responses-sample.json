@@ -192,9 +192,11 @@
   ],
   "GET /pos": [
     "{x:null,y:null,seq:0,updatedAt:null }",
+    "{ok:true,last_seq:lastSeqRecorded }",
     "{ok:true }"
   ],
   "POST /pos": [
+    "{ok:true,last_seq:lastSeqRecorded }",
     "{ok:true }"
   ],
   "POST /": [

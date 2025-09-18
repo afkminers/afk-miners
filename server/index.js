@@ -56,6 +56,7 @@ const { startRespawnLoop, stopRespawnLoop } = require('./respawn/worker');
 // ws bus
 const { attach: attachWsBus, joinMapSocket } = require('./ws/bus');
 const { listAliveMonsters } = require('./ws/initial_monsters');
+const sessionManager = require('./ws/session-manager');
 
 // ======== Pipeline de Conteúdo ========
 const { loadAll, loadMap } = require('./content/loader');
@@ -942,6 +943,8 @@ async function seedAIMobsFromDB(aiMobs) {
 
       const instanceId = `${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
 
+      // Substitua o bloco wss.on('connection', (ws, req) => { ... }) pelo seguinte:
+
       wss.on('connection', (ws, req) => {
         // Checagem de Origin (CORS para WS)
         const origin = req.headers.origin || '';
@@ -952,22 +955,26 @@ async function seedAIMobsFromDB(aiMobs) {
 
         // Track WebSocket activity for idle management
         idlePoolCloser.updateLastRequest();
-        
+
         const addr = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
         console.log(`[ws] connection from ${addr} — clients=${wss.clients.size}`);
         if (NODE_ENV !== 'production') {
           console.log('[ws] cookies header:', req.headers && req.headers.cookie);
         }
 
+        // Inicializa propriedades do socket
         ws._connectedAt = Date.now();
         ws._player = null;
         ws._mapKey = 'house'; // padrão até resolver abaixo
         ws.isAlive = true; // compat com heartbeat
         ws._presenceTimer = null;
+        // token e sessionId declarados fora de try para estarem no escopo
+        let token = null;
 
+        // tenta validar JWT do cookie (se houver)
         try {
           const cookies = parseCookies(req.headers.cookie || '');
-          const token = cookies[COOKIE_NAME] || null;
+          token = cookies[COOKIE_NAME] || null;
           if (token) {
             try {
               const payload = jwt.verify(token, JWT_SECRET);
@@ -984,6 +991,33 @@ async function seedAIMobsFromDB(aiMobs) {
           console.warn('[ws] cookie parse error', e && e.message);
         }
 
+        // >>> SINGLE-SOCKET policy: replace previous socket for same session (Tibia-like)
+        try {
+          // preferimos usar player id como chave de sessão quando disponível; fallback para token ou addr+timestamp
+          const sessionId = (ws._player && String(ws._player.id)) || (token ? String(token) : `${addr}:${Date.now()}`);
+          ws._sessionId = sessionId;
+
+          const { replaced, previous } = sessionManager.register(sessionId, ws);
+          if (replaced && previous && previous !== ws) {
+            try {
+              console.info('[ws] replacing previous socket for session', sessionId);
+              // tenta fechar de forma graciosa a conexão antiga
+              try {
+                previous.close && previous.close(4000, 'replaced by new connection');
+              } catch (e) {
+                try { previous.terminate && previous.terminate(); } catch {}
+              }
+            } catch (e) {
+              console.warn('[ws] failed to close previous socket for session', sessionId, e?.message || e);
+              try { previous.terminate && previous.terminate(); } catch {}
+            }
+          } else {
+            console.info('[ws] session registered', sessionId);
+          }
+        } catch (e) {
+          console.warn('[ws] session-manager register failed:', e?.message || e);
+        }
+
         // >>> Coloca o socket na sala do mapa do jogador (fallback: 'house') e guarda o mapKey no socket
         (async () => {
           try {
@@ -991,9 +1025,9 @@ async function seedAIMobsFromDB(aiMobs) {
             if (ws._player?.id) {
               const row = await get(
                 `SELECT map_key FROM player_last_pos
-                   WHERE player_id = $1
-                   ORDER BY updated_at DESC
-                   LIMIT 1`,
+                  WHERE player_id = $1
+                  ORDER BY updated_at DESC
+                  LIMIT 1`,
                 [ws._player.id]
               );
               if (row?.map_key) mapKey = row.map_key;
@@ -1005,7 +1039,7 @@ async function seedAIMobsFromDB(aiMobs) {
             joinMapSocket('house', ws);
           }
 
-          // >>> NOVO: marca presença assim que conectar (e renova a cada 15s)
+          // >>> marca presença assim que conectar (e renova a cada 15s)
           try {
             if (ws._player?.id) {
               await upsertOnlineByPlayer(ws._player.id, ws._mapKey || 'house');
@@ -1036,11 +1070,31 @@ async function seedAIMobsFromDB(aiMobs) {
           let data;
           try { data = JSON.parse(msg.toString()); } catch { console.warn('[ws] malformed json from', addr); return; }
 
+          // Mensagem de autenticação manual: atualiza ws._player e re-registra sessão (caso o cliente autentique via mensagem)
           if (data.type === 'auth') {
             ws._player = { id: String(data.id || ''), name: String(data.name || 'Anonymous') };
             try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
 
-            // >>> NOVO: reforça presença após auth
+            // Re-register session under player id (if changed)
+            try {
+              const newSessionId = String(ws._player.id);
+              if (ws._sessionId !== newSessionId) {
+                ws._sessionId = newSessionId;
+                const { replaced, previous } = sessionManager.register(newSessionId, ws);
+                if (replaced && previous && previous !== ws) {
+                  try {
+                    console.info('[ws] replacing previous socket for session (auth message)', newSessionId);
+                    previous.close && previous.close(4000, 'replaced by new connection (auth)');
+                  } catch (e) {
+                    try { previous.terminate && previous.terminate(); } catch {}
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn('[ws] session-manager register on auth failed:', e?.message || e);
+            }
+
+            // >>> reforça presença após auth
             try {
               await upsertOnlineByPlayer(ws._player.id, ws._mapKey || 'house');
               if (!ws._presenceTimer) {
@@ -1063,16 +1117,13 @@ async function seedAIMobsFromDB(aiMobs) {
             if (!raw) return;
 
             if (scope === 'global') {
-              // NOVO: cria payload com id a partir do insert no DB
+              // cria payload com id a partir do insert no DB
               const payload = await createChatPayload(ws, raw);
               if (!payload) return;
 
-              // mantém campo 'origin' como antes (útil se usar Redis e quiser dedupe por instância)
               payload.origin = instanceId;
-
               const outStr = JSON.stringify(payload);
 
-              // Publica no Redis (se estiver configurado) para replicar entre instâncias
               if (redisPub) {
                 try { await redisPub.publish('chat:global', outStr); }
                 catch (e) { console.warn('[redis] publish failed', e && e.message); }
@@ -1089,14 +1140,14 @@ async function seedAIMobsFromDB(aiMobs) {
           }
 
           if (data.type === 'pos') {
-            // Novo: persistir posição para AI ter nearest/aggro
+            // persistir posição para AI ter nearest/aggro
             const pid = ws._player?.id || String(data.id || '');
             const x = Number(data.x || 0);
             const y = Number(data.y || 0);
             const name = String(data.name || '');
             const mapKey = String(data.mapKey || ws._mapKey || 'house');
 
-            // 1) rebroadcast (como antes)
+            // 1) rebroadcast para outros clientes (como antes)
             const out = { type:'pos', id:String(pid), x, y, name };
             wss.clients.forEach(c => {
               if (c !== ws && c.readyState === WebSocketLib.OPEN) {
@@ -1122,24 +1173,46 @@ async function seedAIMobsFromDB(aiMobs) {
               console.warn('[ws] failed to persist player_last_pos:', e?.message);
             }
 
-            // 3) >>> NOVO: mantém mapKey atual no socket e reforça presença
+            // 3) mantém mapKey atual no socket e reforça presença
             ws._mapKey = mapKey;
             try { await upsertOnlineByPlayer(pid, mapKey); } catch {}
 
             return;
           }
+
+          // (outros tipos podem ser tratados aqui)
         });
 
         ws.on('pong', () => { ws.isAlive = true; }); // compat extra
 
         ws.on('close', () => {
           console.log(`[ws] close from ${addr} — clients=${wss.clients.size}`);
+
+          // limpa timer de presença
           if (ws._presenceTimer) {
             clearInterval(ws._presenceTimer);
             ws._presenceTimer = null;
           }
-          if (ws._player?.id) {
-            markOfflineByPlayer(ws._player.id).catch(() => {});
+
+          // tenta desregistrar a sessão apenas para este socket
+          try {
+            if (ws._sessionId) {
+              const res = sessionManager.unregister(ws._sessionId, ws);
+              console.info('[ws] session unregister', ws._sessionId, 'removed=', res.removed, 'remaining=', res.remaining);
+              // Se foi removida (res.removed === true), então não há socket atual para a sessão
+              // e podemos marcar offline
+              if (res.removed && ws._player?.id) {
+                markOfflineByPlayer(ws._player.id).catch(() => {});
+              }
+            } else {
+              // fallback: se não existir sessionId mas houver player id
+              if (ws._player?.id) {
+                markOfflineByPlayer(ws._player.id).catch(() => {});
+              }
+            }
+          } catch (e) {
+            console.warn('[ws] error during close unregister:', e?.message || e);
+            try { if (ws._player?.id) markOfflineByPlayer(ws._player.id).catch(()=>{}); } catch {}
           }
         });
 
