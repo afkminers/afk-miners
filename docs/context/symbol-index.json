@@ -726,7 +726,8 @@
       "persistDrops",
       "resolveSkillFromWeapon",
       "respawnHeroAtMapPosition",
-      "rollLoot"
+      "rollLoot",
+      "safeType"
     ]
   },
   {
@@ -1110,13 +1111,15 @@
   {
     "file": "server\\ws\\bus.js",
     "symbols": [
+      "_safeSend",
       "attach",
       "broadcast",
       "broadcastToMap",
       "isOpen",
       "joinMapSocket",
       "moveSocketToMap",
-      "roomOf"
+      "roomOf",
+      "safeStringify"
     ]
   },
   {
@@ -1144,6 +1147,14 @@
     "file": "server\\ws\\origins.js",
     "symbols": [
       "isOriginAllowed"
+    ]
+  },
+  {
+    "file": "server\\ws\\session-manager.js",
+    "symbols": [
+      "get",
+      "register",
+      "unregister"
     ]
   },
   {

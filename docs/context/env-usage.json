@@ -151,7 +151,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 3346
+        "index": 3402
       }
     ],
     "defaults": [
@@ -246,7 +246,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2319
+        "index": 2375
       }
     ],
     "defaults": [
@@ -270,7 +270,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21540
+        "index": 21596
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -466,7 +466,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 29074
+        "index": 29130
       }
     ],
     "defaults": []
@@ -488,7 +488,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 3211
+        "index": 3267
       }
     ],
     "defaults": [
@@ -512,7 +512,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21447
+        "index": 21503
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -575,7 +575,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2860
+        "index": 2916
       },
       {
         "file": "server\\skills\\routes.js",
@@ -634,7 +634,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2919
+        "index": 2975
       }
     ],
     "defaults": [
@@ -646,7 +646,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21397
+        "index": 21453
       }
     ],
     "defaults": [
@@ -682,7 +682,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21505
+        "index": 21561
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -711,7 +711,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 3485
+        "index": 3541
       }
     ],
     "defaults": []
@@ -721,11 +721,23 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 3103
+        "index": 3159
       }
     ],
     "defaults": [
       "300000"
+    ]
+  },
+  {
+    "key": "WS_DEBUG",
+    "occurrences": [
+      {
+        "file": "server\\ws\\bus.js",
+        "index": 311
+      }
+    ],
+    "defaults": [
+      ""
     ]
   }
 ]

@@ -945,6 +945,10 @@ async function seedAIMobsFromDB(aiMobs) {
 
       // Substitua o bloco wss.on('connection', (ws, req) => { ... }) pelo seguinte:
 
+      // Substitua o bloco atual wss.on('connection', (ws, req) => { ... }) por este trecho completo.
+      // Ele aplica a política single-socket (Tibia-like) e envia um frame {type:'kicked'} para o socket anterior
+      // antes de fechá-lo; também garante terminate() como fallback se o antigo não encerrar.
+
       wss.on('connection', (ws, req) => {
         // Checagem de Origin (CORS para WS)
         const origin = req.headers.origin || '';
@@ -968,7 +972,7 @@ async function seedAIMobsFromDB(aiMobs) {
         ws._mapKey = 'house'; // padrão até resolver abaixo
         ws.isAlive = true; // compat com heartbeat
         ws._presenceTimer = null;
-        // token e sessionId declarados fora de try para estarem no escopo
+        // token declarado para possível uso posterior
         let token = null;
 
         // tenta validar JWT do cookie (se houver)
@@ -991,6 +995,36 @@ async function seedAIMobsFromDB(aiMobs) {
           console.warn('[ws] cookie parse error', e && e.message);
         }
 
+        // Helper to gracefully kick previous socket with notification + fallback terminate
+        function kickPreviousSocket(previous, reason = 'replaced_by_new_connection') {
+          if (!previous) return;
+          try {
+            // try to notify the previous socket so the client can suppress reconnection
+            try {
+              const openState = WebSocketLib ? WebSocketLib.OPEN : 1;
+              if (previous && previous.readyState === openState) {
+                previous.send && previous.send(JSON.stringify({ type: 'kicked', reason }));
+              }
+            } catch (sendErr) {
+              // ignore send errors
+            }
+
+            // try graceful close
+            try {
+              previous.close && previous.close(4000, reason);
+            } catch (closeErr) {
+              try { previous.terminate && previous.terminate(); } catch {}
+            }
+
+            // fallback: force terminate after 3s if still not closed
+            setTimeout(() => {
+              try { previous && previous.terminate && previous.terminate(); } catch (e) {}
+            }, 3000);
+          } catch (e) {
+            try { previous && previous.terminate && previous.terminate(); } catch (ee) {}
+          }
+        }
+
         // >>> SINGLE-SOCKET policy: replace previous socket for same session (Tibia-like)
         try {
           // preferimos usar player id como chave de sessão quando disponível; fallback para token ou addr+timestamp
@@ -1001,12 +1035,8 @@ async function seedAIMobsFromDB(aiMobs) {
           if (replaced && previous && previous !== ws) {
             try {
               console.info('[ws] replacing previous socket for session', sessionId);
-              // tenta fechar de forma graciosa a conexão antiga
-              try {
-                previous.close && previous.close(4000, 'replaced by new connection');
-              } catch (e) {
-                try { previous.terminate && previous.terminate(); } catch {}
-              }
+              // kick previous: notify + graceful close + fallback terminate
+              kickPreviousSocket(previous, 'replaced_by_new_connection');
             } catch (e) {
               console.warn('[ws] failed to close previous socket for session', sessionId, e?.message || e);
               try { previous.terminate && previous.terminate(); } catch {}
@@ -1084,7 +1114,8 @@ async function seedAIMobsFromDB(aiMobs) {
                 if (replaced && previous && previous !== ws) {
                   try {
                     console.info('[ws] replacing previous socket for session (auth message)', newSessionId);
-                    previous.close && previous.close(4000, 'replaced by new connection (auth)');
+                    // kick previous: notify + graceful close + fallback terminate
+                    kickPreviousSocket(previous, 'replaced_by_new_connection (auth)');
                   } catch (e) {
                     try { previous.terminate && previous.terminate(); } catch {}
                   }

@@ -57,12 +57,13 @@
 - `SKILL_TRY_PER_HIT` (defaults: 1)
 - `SKIP_MIGRATIONS_ON_BOOT`
 - `SYNC_SPAWNS_INTERVAL_MS` (defaults: 300000)
+- `WS_DEBUG` (defaults: )
 
 ## Endpoints
 
 ### GET /
 
-Arquivo: `server\index.js:603`
+Arquivo: `server\index.js:604`
 
 _Sem payload inferido_
 
@@ -190,7 +191,7 @@ Arquivo: `server\combat\routes.js:39`
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:561`
+Arquivo: `server\index.js:562`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -218,7 +219,7 @@ Arquivo: `server\index.js:561`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:536`
+Arquivo: `server\index.js:537`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -248,7 +249,7 @@ Arquivo: `server\index.js:536`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:548`
+Arquivo: `server\index.js:549`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -277,7 +278,7 @@ Arquivo: `server\index.js:548`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:525`
+Arquivo: `server\index.js:526`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -302,7 +303,7 @@ Arquivo: `server\index.js:525`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:469`
+Arquivo: `server\index.js:470`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -330,7 +331,7 @@ Arquivo: `server\index.js:469`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:480`
+Arquivo: `server\index.js:481`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -357,7 +358,7 @@ Arquivo: `server\index.js:480`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:502`
+Arquivo: `server\index.js:503`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -383,7 +384,7 @@ Arquivo: `server\index.js:502`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1197`
+Arquivo: `server\index.js:1270`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -430,7 +431,7 @@ Arquivo: `server\routes\combat_nearest.js:30`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:111`
+Arquivo: `server\index.js:112`
 
 _Sem payload inferido_
 
@@ -861,7 +862,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:571`
+Arquivo: `server\index.js:572`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -881,7 +882,7 @@ Arquivo: `server\index.js:571`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1220`
+Arquivo: `server\index.js:1293`
 
 _Sem payload inferido_
 
@@ -898,7 +899,7 @@ _Sem payload inferido_
 
 ### POST /api/player/pos
 
-Arquivo: `server\index.js:295`
+Arquivo: `server\index.js:296`
 
 **Payloads (exemplos inferidos):**
 - query:
