@@ -1,3 +1,4 @@
+// server/combat/ai-mobs.js
 // IA dos mobs: targeting com LOS, ataque ativo e I/O mínimo no Postgres.
 // - 1 SELECT por mapa por tick (heróis + posições)
 // - Grid cache
@@ -28,11 +29,7 @@ const FORCE_RANGE     = Number(process.env.AI_FORCE_RANGE || 0) || 0;           
 const HERO_RECENT_S   = Number(process.env.AI_HERO_RECENT_SEC || 0) || 0;       // 0 = sem filtro de recência (fallback)
 const POOL_WAIT_MAX   = Number(process.env.AI_POOL_WAIT_MAX || 0) || 0;         // 0 = não pula por fila
 const USE_ONLINE      = String(process.env.AI_REQUIRE_ONLINE || '1').trim() === '1'; // usa player_online
-const ONLINE_WINDOW_S = Number(process.env.AI_ONLINE_WINDOW_SEC || 60) || 60;   // janela de presença
-
-// rate-limit dos logs de fallback/sem-herois para evitar spam em logs
-const LOG_RATE_MS = Number(process.env.AI_LOG_RATE_MS || 30 * 1000); // 30s por mapa
-const _lastLogAt = new Map(); // mapKey -> timestamp ms
+const ONLINE_WINDOW_S = Number(process.env.AI_ONLINE_WINDOW_SEC || 20) || 20;   // janela de presença
 
 let timer = null;
 
@@ -44,22 +41,6 @@ const MONSTER_STATS = new Map();      // monsterKey -> { stats, ai }
 const GRID_CACHE = new Map();         // mapKey -> { data, cols, rows }
 const HEROES_POS_CACHE = new Map();   // mapKey -> { ts, list:[{heroId,x,y}] }
 const HERO_CACHE_TTL_MS = 250;        // 0.25s
-
-// quick in-memory locks to avoid multiple mobs hitting same hero concurrently
-const HERO_HIT_LOCKS = new Map(); // heroId -> unlockTimestamp
-function tryLockHeroForHit(heroId, ttlMs = 600) {
-  if (!heroId) return false;
-  const now = Date.now();
-  const lockUntil = HERO_HIT_LOCKS.get(heroId);
-  if (lockUntil && lockUntil > now) return false;
-  HERO_HIT_LOCKS.set(heroId, now + ttlMs);
-  // schedule a cleanup (best-effort)
-  setTimeout(() => {
-    const cur = HERO_HIT_LOCKS.get(heroId);
-    if (!cur || cur <= Date.now()) HERO_HIT_LOCKS.delete(heroId);
-  }, ttlMs + 100);
-  return true;
-}
 
 /* ==================== YAML stats ==================== */
 function getMonsterYmlStats(monsterKey) {
@@ -111,20 +92,6 @@ async function getGridCached(mapKey) {
   return losGrid;
 }
 
-function rateLog(mapKey, message, ...args) {
-  try {
-    const now = Date.now();
-    const last = _lastLogAt.get(mapKey) || 0;
-    if (now - last >= LOG_RATE_MS) {
-      // usar console.info para manter visibilidade, mas com rate limit
-      console.info(`[ai-mobs] [${mapKey}] ${message}`, ...args);
-      _lastLogAt.set(mapKey, now);
-    }
-  } catch (e) {
-    // não deixar a função de log quebrar a IA
-  }
-}
-
 /* ============ Heróis + posições (gated por presença online com fallback) ============ */
 async function getHeroesWithPosByMap(mapKey) {
   const params = [mapKey];
@@ -133,32 +100,22 @@ async function getHeroesWithPosByMap(mapKey) {
   if (USE_ONLINE) {
     try {
       params.push(String(ONLINE_WINDOW_S));
-      // JOIN com player_heroes por playerId para ser robusto mesmo quando po.hero_id não estiver preenchido
-      // ADICIONADO: filtrar heróis mortos/zero hp via COALESCE(ph.hp, ph.max_hp) > 0
       const rows = await all(`
-        SELECT ph.id::text AS hero_id, plp.x, plp.y
+        SELECT po.hero_id::text AS hero_id, plp.x, plp.y
           FROM player_online po
           JOIN player_last_pos plp
             ON plp.player_id::text = po.player_id::text
            AND plp.map_key = po.map_key
           JOIN player_heroes ph
-            ON ph."playerId"::text = po.player_id::text
+            ON ph.id::text = po.hero_id::text
          WHERE po.map_key = $1
            AND po.last_seen >= now() - ($2::int || ' seconds')::interval
            AND COALESCE(ph.hp, ph.max_hp) > 0
       `, params);
-
-      // Se a query retornar resultados, usamos (caso ideal).
-      if (rows && rows.length > 0) {
-        return rows.map(r => ({ heroId: String(r.hero_id), x: r.x | 0, y: r.y | 0 }));
-      }
-
-      // Se veio vazia, tentamos o fallback imediatamente (evita "sem heróis" por last_seen ligeiramente fora da janela)
-      // rate-limited log (para evitar spam)
-      if (DBG) rateLog(mapKey, 'USE_ONLINE returned 0 rows, tentando fallback por player_last_pos');
+      return rows.map(r => ({ heroId: String(r.hero_id), x: r.x | 0, y: r.y | 0 }));
     } catch (e) {
       // Fallback se a tabela ainda não existir ou der erro
-      if (DBG) rateLog(mapKey, `presença online indisponível ou query falhou, caindo para fallback: ${String(e?.message || e)}`);
+      if (DBG) console.warn('[ai-mobs] presença online indisponível, caindo para fallback:', e?.message || e);
     }
   }
 
@@ -178,7 +135,7 @@ async function getHeroesWithPosByMap(mapKey) {
   }
 
   const rows = await all(sql, fbParams).catch((e) => {
-    if (DBG) rateLog(mapKey, 'heróis query falhou: ' + (e?.message || e));
+    if (DBG) console.warn('[ai-mobs] heróis query falhou:', e?.message || e);
     return [];
   });
   return rows.map(r => ({ heroId: String(r.hero_id), x: r.x | 0, y: r.y | 0 }));
@@ -213,7 +170,7 @@ function seedPosition({ id, x, y, mapKey, spawnRect, monsterKey }) {
     lastAttackAt: 0,
     ...stats
   });
-  if (DBG) rateLog(mapKey, `seed mob=${id} @(${x},${y})`); // rate-limited to avoid spam on large spawns
+  if (DBG) console.log(`[ai-mobs] seed mob=${id} map=${mapKey} @(${x},${y})`);
 }
 
 function forget(id) { INST.delete(String(id)); }
@@ -247,35 +204,14 @@ async function tick() {
       try {
         losGrid = await getGridCached(m.mapKey);
       } catch (e) {
-        if (DBG) rateLog(m.mapKey, 'getGridCached falhou: ' + (e?.message || e));
+        if (DBG) console.warn('[ai-mobs] getGridCached falhou:', e?.message || e);
         continue;
       }
 
       // Heróis + pos (cache curto)
       const heroes = await getHeroesWithPosByMapCached(m.mapKey);
-      if (DBG && heroes.length === 0) {
-        // print amostras do que a IA enxerga (player_online/player_last_pos) para debugging
-        try {
-          const sampleOnline = await all(`SELECT hero_id::text AS hero_id, player_id::text AS player_id, map_key, last_seen FROM player_online WHERE map_key = $1 ORDER BY last_seen DESC LIMIT 10`, [m.mapKey]);
-          const samplePos = await all(`SELECT player_id::text AS player_id, map_key, x, y, updated_at FROM player_last_pos WHERE map_key = $1 ORDER BY updated_at DESC LIMIT 10`, [m.mapKey]);
-          // rate-limited: mostrar só counts e timestamps para evitar spam de arrays enormes
-          rateLog(m.mapKey, `sample player_online count=${(sampleOnline||[]).length}, sample player_last_pos count=${(samplePos||[]).length}`);
-          if (DBG) {
-            // apenas quando DBG=1 e o rate permite, logar o conteúdo completo (útil em dev)
-            const last = _lastLogAt.get(m.mapKey) || 0;
-            if (Date.now() - last < 1000 * 60) { // se já logou recentemente, não reprintar arrays
-              // noop
-            } else {
-              console.debug('[ai-mobs-debug] sample player_online:', sampleOnline);
-              console.debug('[ai-mobs-debug] sample player_last_pos (recent):', samplePos);
-            }
-          }
-        } catch (e) {
-          if (DBG) rateLog(m.mapKey, 'failed to read presence/pos samples: ' + (e?.message || e));
-        }
-        if (Math.random() < 0.05) { // reduzir ainda mais a frequência dessa mensagem
-          rateLog(m.mapKey, `mapa=${m.mapKey} sem heróis visíveis (USE_ONLINE=${USE_ONLINE ? 1:0}, ONLINE_WINDOW_S=${ONLINE_WINDOW_S}, HERO_RECENT_S=${HERO_RECENT_S})`);
-        }
+      if (DBG && heroes.length === 0 && Math.random() < 0.05) {
+        console.log(`[ai-mobs] mapa=${m.mapKey} sem heróis visíveis (USE_ONLINE=${USE_ONLINE ? 1:0}, ONLINE_WINDOW_S=${ONLINE_WINDOW_S}, HERO_RECENT_S=${HERO_RECENT_S})`);
       }
 
       // 1) Targeting
@@ -285,7 +221,7 @@ async function tick() {
       if (targetId) {
         const hp = heroes.find(h => h.heroId === targetId);
         if (!hp || Math.hypot(hp.x - m.x, hp.y - m.y) > m.ai.aggro_range) {
-          if (DBG) rateLog(m.mapKey, `LOST target mob=${m.id} -> hero=${m.targetId}`);
+          if (DBG && m.targetId) console.log(`[ai-mobs] LOST target mob=${m.id} -> hero=${m.targetId}`);
           targetId = null;
           targetPos = null;
           m.state = 'IDLE';
@@ -310,7 +246,7 @@ async function tick() {
           m.state = 'AGRO';
           m.aggroUntil = Date.now() + 4000;
           m.targetId = targetId;
-          if (DBG) rateLog(m.mapKey, `ACQUIRE mob=${m.id} -> hero=${targetId} dist=${Math.hypot(best.x-m.x,best.y-m.y)|0}`);
+          if (DBG) console.log(`[ai-mobs] ACQUIRE mob=${m.id} -> hero=${targetId} dist=${Math.hypot(best.x-m.x,best.y-m.y)|0}`);
         }
       }
 
@@ -340,47 +276,31 @@ async function tick() {
 
       bus.broadcast({ type:'monster_move', id:String(id), x:m.x, y:m.y, state:m.state, target:m.targetId });
 
-      // 3) Ataque (com trava por hero para evitar hits concorrentes)
+      // 3) Ataque
       if (targetId && targetPos) {
         const baseRange = FORCE_RANGE > 0 ? FORCE_RANGE : m.ai.attack_range;
         const inRange = Math.hypot(targetPos.x - m.x, targetPos.y - m.y) <= baseRange;
-        const nowMs = Date.now();
-        if (inRange && (nowMs - (m.lastAttackAt || 0) > m.ai.attack_cooldown_ms)) {
+        if (inRange && (Date.now() - (m.lastAttackAt || 0) > m.ai.attack_cooldown_ms)) {
           if (IGNORE_LOS || hasLineOfSight(losGrid, m.x, m.y, targetPos.x, targetPos.y)) {
-            // evita concorrência por heroId
-            if (!tryLockHeroForHit(targetId, Math.max(600, m.ai.attack_cooldown_ms))) {
-              if (DBG) rateLog(m.mapKey, `skip hit busy hero=${targetId} by mob=${m.id}`);
-            } else {
-              if (DBG) rateLog(m.mapKey, `ATTEMPT mob=${m.id} -> hero=${targetId} range=${baseRange}`);
-              try {
-                const result = await applyMobHit({
-                  attackerInstanceId: m.id,
-                  targetHeroId: targetId,
-                  attackInfo: { min: m.ai.attack_min, max: m.ai.attack_max } // dano real é validado no service
-                });
-                if (DBG) {
-                  rateLog(m.mapKey, '[ai-mobs] HIT result (brief): dead=' + Boolean(result?.dead) + ' dmg=' + (result?.damage || 0));
-                }
-                // se o service reportou dead do hero, abandona target e limpa lock
-                if (result && result.dead) {
-                  if (DBG) rateLog(m.mapKey, `target died hero=${targetId} -> mob=${m.id}`);
-                  // garantir que target não seja reescolhido imediatamente por este mob
-                  m.targetId = null;
-                  m.state = 'IDLE';
-                  m.aggroUntil = null;
-                }
-              } catch (e) {
-                if (DBG) rateLog(m.mapKey, '[ai-mobs] HIT error: ' + (e?.message || e));
-              }
+            if (DBG) console.log(`[ai-mobs] ATTEMPT mob=${m.id} -> hero=${targetId} range=${baseRange}`);
+            try {
+              const result = await applyMobHit({
+                attackerInstanceId: m.id,
+                targetHeroId: targetId,
+                attackInfo: { min: m.ai.attack_min, max: m.ai.attack_max } // dano real é validado no service
+              });
+              if (DBG) console.log('[ai-mobs] HIT result:', result);
+            } catch (e) {
+              if (DBG) console.log('[ai-mobs] HIT error:', e?.message);
             }
             m.lastAttackAt = Date.now();
           } else if (DBG && Math.random() < 0.05) {
-            rateLog(m.mapKey, `LOS BLOCKED mob=${m.id} -> hero=${targetId}`);
+            console.log(`[ai-mobs] LOS BLOCKED mob=${m.id} -> hero=${targetId}`);
           }
         }
       }
     } catch (e) {
-      if (DBG) rateLog(m.mapKey, 'erro no mob loop: ' + (e?.message || e));
+      if (DBG) console.warn('[ai-mobs] erro no mob loop:', e?.message || e);
     }
   }
 }

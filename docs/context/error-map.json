@@ -1000,6 +1000,10 @@
       "body": "{error:'inside-solid' }"
     },
     {
+      "status": 409,
+      "body": "{error:'stale-seq' }"
+    },
+    {
       "status": 202,
       "body": "{ok:false,reason:'too-fast' }"
     },
@@ -1206,6 +1210,10 @@
       "body": "{error:'inside-solid' }"
     },
     {
+      "status": 409,
+      "body": "{error:'stale-seq' }"
+    },
+    {
       "status": 202,
       "body": "{ok:false,reason:'too-fast' }"
     },
@@ -1242,6 +1250,10 @@
     {
       "status": 400,
       "body": "{error:'inside-solid' }"
+    },
+    {
+      "status": 409,
+      "body": "{error:'stale-seq' }"
     },
     {
       "status": 202,

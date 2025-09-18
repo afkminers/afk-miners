@@ -438,7 +438,6 @@
       "postPosThrottled",
       "resize",
       "resolvePlayerSprite",
-      "setPosSeq",
       "uniq",
       "updateRespawns"
     ]
@@ -652,12 +651,10 @@
       "getHeroesWithPosByMap",
       "getHeroesWithPosByMapCached",
       "getMonsterYmlStats",
-      "rateLog",
       "seedPosition",
       "start",
       "stop",
-      "tick",
-      "tryLockHeroForHit"
+      "tick"
     ]
   },
   {
@@ -719,15 +716,9 @@
       "getHeroStats",
       "getInstanceWithMonster",
       "getRespawnSeconds",
-      "logDebug",
-      "logError",
-      "logInfo",
-      "logWarn",
       "persistDrops",
       "resolveSkillFromWeapon",
-      "respawnHeroAtMapPosition",
-      "rollLoot",
-      "safeType"
+      "rollLoot"
     ]
   },
   {
@@ -814,7 +805,6 @@
       "buildCollisionFromObjects",
       "buildCollisionFromTiled",
       "getGrid",
-      "getMapSpawns",
       "hasSolidPropRow"
     ]
   },
@@ -1111,15 +1101,13 @@
   {
     "file": "server\\ws\\bus.js",
     "symbols": [
-      "_safeSend",
       "attach",
       "broadcast",
       "broadcastToMap",
       "isOpen",
       "joinMapSocket",
       "moveSocketToMap",
-      "roomOf",
-      "safeStringify"
+      "roomOf"
     ]
   },
   {
@@ -1147,14 +1135,6 @@
     "file": "server\\ws\\origins.js",
     "symbols": [
       "isOriginAllowed"
-    ]
-  },
-  {
-    "file": "server\\ws\\session-manager.js",
-    "symbols": [
-      "get",
-      "register",
-      "unregister"
     ]
   },
   {

@@ -15,47 +15,17 @@ function getActiveHeroId() {
   );
 }
 
-// Abort controller to cancel inflight fetches when a new one starts
-let activeAbortController = null;
-// Prevent concurrent fetches
-let isFetching = false;
-
 function fetchActiveHeroData() {
-  // Cancela fetch anterior se ainda estiver em andamento
-  if (activeAbortController) {
-    try { activeAbortController.abort(); } catch (e) {}
-    activeAbortController = null;
-  }
-
-  activeAbortController = new AbortController();
-  const signal = activeAbortController.signal;
-
   // Busca o herói ativo do /api/player/me
-  // nota: cache no-store para garantir dados frescos quando for necessário
-  isFetching = true;
-  return fetch("/api/player/me", { credentials: "include", cache: "no-store", signal })
-    .then((r) => {
-      if (!r.ok) throw new Error('fetch_failed');
-      return r.json();
-    })
+  return fetch("/api/player/me", { credentials: "include", cache: "no-store" })
+    .then((r) => r.json())
     .then((data) => {
       const heroId = getActiveHeroId();
       if (!heroId) return null;
       if (!data.heroes) return null;
-      return data.heroes.find((h) => String(h.id) === String(heroId)) || null;
+      return data.heroes.find((h) => String(h.id) === String(heroId));
     })
-    .catch((err) => {
-      if (err && err.name === 'AbortError') {
-        // fetch abortado — comportamento esperado quando substituído por outro
-        return null;
-      }
-      // swallow other errors but keep console.debug available for dev
-      if (console && console.debug) console.debug('[hud_status] fetchActiveHeroData error', err);
-      return null;
-    })
-    .finally(() => {
-      isFetching = false;
-    });
+    .catch(() => null);
 }
 
 function pct(cur, max) {
@@ -160,17 +130,9 @@ let HUD_MINIMIZED = false;
 let lastHeroId = null;
 let lastHeroLevel = null;
 
-// Atualiza HUD com proteção contra fetchs demasiados
 async function updateHudBars(force=false) {
   const container = document.getElementById(HUD_CONTAINER_ID);
   if (!container) return;
-
-  // se a aba estiver em background e não for force, evita fetch
-  if (document.hidden && !force) return;
-
-  // evita fetch concorrente (se já estiver buscando, apenas retorna)
-  if (isFetching && !force) return;
-
   const hero = await fetchActiveHeroData();
   if (!hero) {
     container.innerHTML = `<div style="color:#f87171;font-size:13px;">Nenhum herói ativo.</div>`;
@@ -212,24 +174,8 @@ async function updateHudBars(force=false) {
 window.addEventListener("DOMContentLoaded", () => updateHudBars(true));
 window.addEventListener("hero:active-changed", () => updateHudBars(true));
 window.addEventListener("tick:hero", () => updateHudBars());
-// React to server-driven events (already present in app): if a hero update comes over WS,
-// other modules should dispatch 'player-updated' — we listen and force an immediate update.
 window.addEventListener("player-updated", () => updateHudBars(true));
 
-// Pause/resume polling with page visibility
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
-    // when returning to page, force immediate refresh
-    updateHudBars(true);
-  }
-});
-
-// Polling fallback (protected): only poll when page is visible and not already fetching.
-// Interval increased slightly from 2200 to 3000 to be less chatty.
-setInterval(() => {
-  if (document.hidden) return;
-  if (isFetching) return;
-  updateHudBars();
-}, 3000);
+setInterval(() => updateHudBars(), 2200);
 
 export {};

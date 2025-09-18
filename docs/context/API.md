@@ -7,8 +7,7 @@
 - `AI_HERO_RECENT_SEC` (defaults: 0)
 - `AI_IGNORE_LOS` (defaults: )
 - `AI_LEASH_MARGIN` (defaults: 96)
-- `AI_LOG_RATE_MS` (defaults: 30)
-- `AI_ONLINE_WINDOW_SEC` (defaults: 60)
+- `AI_ONLINE_WINDOW_SEC` (defaults: 20)
 - `AI_POOL_WAIT_MAX` (defaults: 0)
 - `AI_REQUIRE_ONLINE` (defaults: 1)
 - `AI_TICK_MS` (defaults: 350)
@@ -38,7 +37,6 @@
 - `ENDPOINT_METRICS_PROD`
 - `ENDPOINT_METRICS_TOP_N` (defaults: 10)
 - `GEN_CONTEXT_ON_START`
-- `HERO_RESPAWN_MS` (defaults: 7000)
 - `IDLE_SCHEDULER_CHECK_MS` (defaults: 30000)
 - `JSON_LIMIT` (defaults: 64kb)
 - `JWT_SECRET` (defaults: changeme, CHANGE_ME_DEV_ONLY)
@@ -57,13 +55,12 @@
 - `SKILL_TRY_PER_HIT` (defaults: 1)
 - `SKIP_MIGRATIONS_ON_BOOT`
 - `SYNC_SPAWNS_INTERVAL_MS` (defaults: 300000)
-- `WS_DEBUG` (defaults: )
 
 ## Endpoints
 
 ### GET /
 
-Arquivo: `server\index.js:604`
+Arquivo: `server\index.js:596`
 
 _Sem payload inferido_
 
@@ -191,7 +188,7 @@ Arquivo: `server\combat\routes.js:39`
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:562`
+Arquivo: `server\index.js:554`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -219,7 +216,7 @@ Arquivo: `server\index.js:562`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:537`
+Arquivo: `server\index.js:529`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -249,7 +246,7 @@ Arquivo: `server\index.js:537`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:549`
+Arquivo: `server\index.js:541`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -278,7 +275,7 @@ Arquivo: `server\index.js:549`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:526`
+Arquivo: `server\index.js:518`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -303,7 +300,7 @@ Arquivo: `server\index.js:526`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:470`
+Arquivo: `server\index.js:462`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -331,7 +328,7 @@ Arquivo: `server\index.js:470`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:481`
+Arquivo: `server\index.js:473`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -358,7 +355,7 @@ Arquivo: `server\index.js:481`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:503`
+Arquivo: `server\index.js:495`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -384,7 +381,7 @@ Arquivo: `server\index.js:503`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1270`
+Arquivo: `server\index.js:1190`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -431,7 +428,7 @@ Arquivo: `server\routes\combat_nearest.js:30`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:112`
+Arquivo: `server\index.js:104`
 
 _Sem payload inferido_
 
@@ -862,7 +859,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:572`
+Arquivo: `server\index.js:564`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -882,7 +879,7 @@ Arquivo: `server\index.js:572`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1293`
+Arquivo: `server\index.js:1213`
 
 _Sem payload inferido_
 
@@ -899,7 +896,7 @@ _Sem payload inferido_
 
 ### POST /api/player/pos
 
-Arquivo: `server\index.js:296`
+Arquivo: `server\index.js:288`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -1615,6 +1612,7 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 400: {error:'invalid-pos' }
   - HTTP 400: {error:'out-of-bounds' }
   - HTTP 400: {error:'inside-solid' }
+  - HTTP 409: {error:'stale-seq' }
   - HTTP 202: {ok:false,reason:'too-fast' }
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
@@ -1636,6 +1634,7 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 400: {error:'invalid-pos' }
   - HTTP 400: {error:'out-of-bounds' }
   - HTTP 400: {error:'inside-solid' }
+  - HTTP 409: {error:'stale-seq' }
   - HTTP 202: {ok:false,reason:'too-fast' }
   - HTTP 500: {error:'pos-write-failed' }
 - **GET /state**
@@ -1817,6 +1816,7 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 400: {error:'invalid-pos' }
   - HTTP 400: {error:'out-of-bounds' }
   - HTTP 400: {error:'inside-solid' }
+  - HTTP 409: {error:'stale-seq' }
   - HTTP 202: {ok:false,reason:'too-fast' }
   - HTTP 500: {error:'pos-write-failed' }
 - **POST /register**

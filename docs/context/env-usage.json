@@ -4,7 +4,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 888
+        "index": 916
       }
     ],
     "defaults": [
@@ -16,7 +16,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1272
+        "index": 1300
       }
     ],
     "defaults": [
@@ -28,7 +28,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1372
+        "index": 1400
       }
     ],
     "defaults": [
@@ -40,7 +40,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1170
+        "index": 1198
       }
     ],
     "defaults": [
@@ -52,7 +52,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 968
+        "index": 996
       }
     ],
     "defaults": [
@@ -60,27 +60,15 @@
     ]
   },
   {
-    "key": "AI_LOG_RATE_MS",
-    "occurrences": [
-      {
-        "file": "server\\combat\\ai-mobs.js",
-        "index": 1874
-      }
-    ],
-    "defaults": [
-      "30"
-    ]
-  },
-  {
     "key": "AI_ONLINE_WINDOW_SEC",
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1704
+        "index": 1732
       }
     ],
     "defaults": [
-      "60"
+      "20"
     ]
   },
   {
@@ -88,7 +76,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1493
+        "index": 1521
       }
     ],
     "defaults": [
@@ -100,7 +88,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1598
+        "index": 1626
       }
     ],
     "defaults": [
@@ -112,7 +100,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 820
+        "index": 848
       }
     ],
     "defaults": [
@@ -151,7 +139,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 3402
+        "index": 3082
       }
     ],
     "defaults": [
@@ -216,10 +204,6 @@
         "index": 198
       },
       {
-        "file": "server\\combat\\service.js",
-        "index": 793
-      },
-      {
         "file": "server\\combat\\routes.js",
         "index": 903
       },
@@ -229,11 +213,10 @@
       },
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1057
+        "index": 1085
       }
     ],
     "defaults": [
-      "",
       "",
       "",
       "",
@@ -246,7 +229,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2375
+        "index": 2055
       }
     ],
     "defaults": [
@@ -270,7 +253,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21596
+        "index": 21276
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -466,29 +449,17 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 29130
+        "index": 28810
       }
     ],
     "defaults": []
-  },
-  {
-    "key": "HERO_RESPAWN_MS",
-    "occurrences": [
-      {
-        "file": "server\\combat\\service.js",
-        "index": 542
-      }
-    ],
-    "defaults": [
-      "7000"
-    ]
   },
   {
     "key": "IDLE_SCHEDULER_CHECK_MS",
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 3267
+        "index": 2947
       }
     ],
     "defaults": [
@@ -512,7 +483,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21503
+        "index": 21183
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -575,7 +546,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2916
+        "index": 2596
       },
       {
         "file": "server\\skills\\routes.js",
@@ -634,7 +605,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2975
+        "index": 2655
       }
     ],
     "defaults": [
@@ -646,7 +617,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21453
+        "index": 21133
       }
     ],
     "defaults": [
@@ -682,7 +653,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21561
+        "index": 21241
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -711,7 +682,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 3541
+        "index": 3221
       }
     ],
     "defaults": []
@@ -721,23 +692,11 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 3159
+        "index": 2839
       }
     ],
     "defaults": [
       "300000"
-    ]
-  },
-  {
-    "key": "WS_DEBUG",
-    "occurrences": [
-      {
-        "file": "server\\ws\\bus.js",
-        "index": 311
-      }
-    ],
-    "defaults": [
-      ""
     ]
   }
 ]
