@@ -3,7 +3,7 @@
 //   register(sessionId, ws) -> { replaced: boolean, previous: WebSocket|null }
 //   unregister(sessionId, ws) -> { removed: boolean, remaining: number }
 //   get(sessionId) -> WebSocket|null
-
+// server/ws/session-manager.js
 const map = new Map(); // sessionId -> ws
 
 function register(sessionId, ws) {
