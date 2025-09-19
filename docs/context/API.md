@@ -36,6 +36,7 @@
 - `ENDPOINT_METRICS_INTERVAL_MS` (defaults: 60000)
 - `ENDPOINT_METRICS_PROD`
 - `ENDPOINT_METRICS_TOP_N` (defaults: 10)
+- `FLUSH_POS_INTERVAL_MS` (defaults: 30000)
 - `GEN_CONTEXT_ON_START`
 - `IDLE_SCHEDULER_CHECK_MS` (defaults: 30000)
 - `JSON_LIMIT` (defaults: 64kb)
@@ -60,7 +61,7 @@
 
 ### GET /
 
-Arquivo: `server\index.js:596`
+Arquivo: `server\index.js:625`
 
 _Sem payload inferido_
 
@@ -188,7 +189,7 @@ Arquivo: `server\combat\routes.js:39`
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:554`
+Arquivo: `server\index.js:583`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -216,7 +217,7 @@ Arquivo: `server\index.js:554`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:529`
+Arquivo: `server\index.js:558`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -246,7 +247,7 @@ Arquivo: `server\index.js:529`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:541`
+Arquivo: `server\index.js:570`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -275,7 +276,7 @@ Arquivo: `server\index.js:541`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:518`
+Arquivo: `server\index.js:547`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -300,7 +301,7 @@ Arquivo: `server\index.js:518`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:462`
+Arquivo: `server\index.js:491`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -328,7 +329,7 @@ Arquivo: `server\index.js:462`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:473`
+Arquivo: `server\index.js:502`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -355,7 +356,7 @@ Arquivo: `server\index.js:473`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:495`
+Arquivo: `server\index.js:524`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -381,7 +382,7 @@ Arquivo: `server\index.js:495`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1190`
+Arquivo: `server\index.js:1256`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -428,7 +429,7 @@ Arquivo: `server\routes\combat_nearest.js:30`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:104`
+Arquivo: `server\index.js:165`
 
 _Sem payload inferido_
 
@@ -859,7 +860,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:564`
+Arquivo: `server\index.js:593`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -879,7 +880,7 @@ Arquivo: `server\index.js:564`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1213`
+Arquivo: `server\index.js:1279`
 
 _Sem payload inferido_
 
@@ -893,42 +894,6 @@ _Sem payload inferido_
 **Erros conhecidos:**
 - `HTTP 400` → {error:'Mensagem vazia' }
 - `HTTP 500` → {error:err.message }
-
-### POST /api/player/pos
-
-Arquivo: `server\index.js:288`
-
-**Payloads (exemplos inferidos):**
-- query:
-```json
-{
-  "heroId": 1
-}
-```
-- body:
-```json
-{
-  "try {\n    const { heroId": 1,
-  "weaponOrSkill": "value",
-  "heroClass": "value"
-}
-```
-
-**Resposta de sucesso (amostra):**
-```json
-{
-  "ok": true
-}
-```
-
-**Erros conhecidos:**
-- `HTTP 500` → {error:'failed to persist pos' }
-- `HTTP 400` → {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
-- `HTTP 400` → {error:'weaponOrSkill inválido' }
-- `HTTP 500` → {error:'erro ao iniciar treino' }
-- `HTTP 400` → {error:'heroId é obrigatório' }
-- `HTTP 500` → {error:'erro ao parar treino' }
-- `HTTP 400` → {error:'heroId é obrigatório' }
 
 ### POST /assign
 
@@ -1607,13 +1572,6 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 400: {error:'heroId e skillType são obrigatórios' }
   - HTTP 500: {error:'Falha ao aplicar ganho' }
   - HTTP 500: {error:'me-failed' }
-  - HTTP 500: {error:'pos-read-failed' }
-  - HTTP 429: {error:'rate-limited' }
-  - HTTP 400: {error:'invalid-pos' }
-  - HTTP 400: {error:'out-of-bounds' }
-  - HTTP 400: {error:'inside-solid' }
-  - HTTP 409: {error:'stale-seq' }
-  - HTTP 202: {ok:false,reason:'too-fast' }
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
 - **GET /ping**
@@ -1629,14 +1587,6 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 400: {error:'coords inválidas' }
   - HTTP 409: {error:'old-seq' }
   - HTTP 400: {error:'too-fast' }
-  - HTTP 500: {error:'pos-read-failed' }
-  - HTTP 429: {error:'rate-limited' }
-  - HTTP 400: {error:'invalid-pos' }
-  - HTTP 400: {error:'out-of-bounds' }
-  - HTTP 400: {error:'inside-solid' }
-  - HTTP 409: {error:'stale-seq' }
-  - HTTP 202: {ok:false,reason:'too-fast' }
-  - HTTP 500: {error:'pos-write-failed' }
 - **GET /state**
   - HTTP 500: {error:'farm_state_failed' }
   - HTTP 500: {error:'plot_create_failed' }
@@ -1677,14 +1627,6 @@ Arquivo: `server\starter\routes.js:104`
 - **POST /api/chat/global**
   - HTTP 400: {error:'Mensagem vazia' }
   - HTTP 500: {error:err.message }
-- **POST /api/player/pos**
-  - HTTP 500: {error:'failed to persist pos' }
-  - HTTP 400: {error:'heroId,weaponOrSkill e heroClass são obrigatórios' }
-  - HTTP 400: {error:'weaponOrSkill inválido' }
-  - HTTP 500: {error:'erro ao iniciar treino' }
-  - HTTP 400: {error:'heroId é obrigatório' }
-  - HTTP 500: {error:'erro ao parar treino' }
-  - HTTP 400: {error:'heroId é obrigatório' }
 - **POST /assign**
   - HTTP 400: {error:'worker_id required' }
   - HTTP 404: {error:'worker_not_found' }
@@ -1812,13 +1754,6 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 400: {error:'coords inválidas' }
   - HTTP 409: {error:'old-seq' }
   - HTTP 400: {error:'too-fast' }
-  - HTTP 429: {error:'rate-limited' }
-  - HTTP 400: {error:'invalid-pos' }
-  - HTTP 400: {error:'out-of-bounds' }
-  - HTTP 400: {error:'inside-solid' }
-  - HTTP 409: {error:'stale-seq' }
-  - HTTP 202: {ok:false,reason:'too-fast' }
-  - HTTP 500: {error:'pos-write-failed' }
 - **POST /register**
   - HTTP 400: {error:v.msg }
   - HTTP 400: {error:vp.msg }

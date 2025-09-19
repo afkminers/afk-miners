@@ -1,7 +1,7 @@
 [
   {
     "from": "client\\js\\pos-publisher.js",
-    "to": "./ws.js"
+    "to": "./ws/singleton.js"
   },
   {
     "from": "client\\js\\player_profile.js",
@@ -14,6 +14,14 @@
   {
     "from": "client\\js\\play.js",
     "to": "./combat/actions.js"
+  },
+  {
+    "from": "client\\js\\play.js",
+    "to": "./pos-publisher.js"
+  },
+  {
+    "from": "client\\js\\play.js",
+    "to": "./ws/singleton.js"
   },
   {
     "from": "client\\js\\house.js",

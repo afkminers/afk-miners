@@ -345,7 +345,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 554,
+    "line": 583,
     "sample": {
       "params": {
         "key": "value"
@@ -379,7 +379,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 529,
+    "line": 558,
     "sample": {
       "params": {
         "key": "value"
@@ -421,7 +421,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 541,
+    "line": 570,
     "sample": {
       "params": {
         "key": "value"
@@ -459,7 +459,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 518,
+    "line": 547,
     "sample": {
       "query": {
         "map": "value"
@@ -502,7 +502,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 462,
+    "line": 491,
     "sample": {
       "query": {
         "map": "value"
@@ -557,7 +557,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 564,
+    "line": 593,
     "sample": {
       "query": {
         "map": "value"
@@ -580,7 +580,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 473,
+    "line": 502,
     "sample": {
       "query": {
         "map": "value"
@@ -631,7 +631,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 495,
+    "line": 524,
     "sample": {
       "query": {
         "map": "value"
@@ -678,7 +678,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1190,
+    "line": 1256,
     "sample": {
       "query": {
         "limit": 1
@@ -709,7 +709,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1213,
+    "line": 1279,
     "sample": {},
     "errors": [
       {
@@ -766,81 +766,9 @@
     "method": "GET",
     "path": "/api/csrf",
     "file": "server\\index.js",
-    "line": 104,
+    "line": 165,
     "sample": {},
     "errors": []
-  },
-  {
-    "method": "POST",
-    "path": "/api/player/pos",
-    "file": "server\\index.js",
-    "line": 288,
-    "sample": {
-      "query": {
-        "heroId": 1
-      },
-      "body": {
-        "try {\n    const { heroId": 1,
-        "weaponOrSkill": "value",
-        "heroClass": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'failed to persist pos' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'weaponOrSkill inválido' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'erro ao iniciar treino' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'heroId é obrigatório' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'erro ao parar treino' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'heroId é obrigatório' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,message:'Training started',heroId,skillType }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,message:'No active session' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,message:'Training stopped',processed_seconds:delta }"
-      },
-      {
-        "status": 200,
-        "body": "{status:'IDLE' }"
-      },
-      {
-        "status": 200,
-        "body": "{status:t.status,hero_id:t.hero_id,skill_type:t.skill_type,class:(() =>{try{return JSON.parse(t.notes || '{}').heroClass } catch{return null } }"
-      }
-    ]
   },
   {
     "method": "GET",
@@ -1424,7 +1352,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 596,
+    "line": 625,
     "sample": {},
     "errors": []
   },
@@ -1941,57 +1869,12 @@
     "method": "GET",
     "path": "/me",
     "file": "server\\player\\routes.js",
-    "line": 125,
-    "sample": {
-      "query": {
-        "map": "value"
-      },
-      "body": {
-        "mapKey": "value",
-        "x": "value",
-        "y": "value",
-        "seq": "value",
-        "clientTs": "value"
-      }
-    },
+    "line": 13,
+    "sample": {},
     "errors": [
       {
         "status": 500,
         "body": "{error:'me-failed' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'pos-read-failed' }"
-      },
-      {
-        "status": 429,
-        "body": "{error:'rate-limited' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid-pos' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'out-of-bounds' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'inside-solid' }"
-      },
-      {
-        "status": 409,
-        "body": "{error:'stale-seq' }"
-      },
-      {
-        "status": 202,
-        "body": "{ok:false,reason:'too-fast' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{x:null,y:null,seq:0,updatedAt:null }"
       }
     ]
   },
@@ -2350,68 +2233,6 @@
     ]
   },
   {
-    "method": "GET",
-    "path": "/pos",
-    "file": "server\\player\\routes.js",
-    "line": 208,
-    "sample": {
-      "query": {
-        "map": "value"
-      },
-      "body": {
-        "mapKey": "value",
-        "x": "value",
-        "y": "value",
-        "seq": "value",
-        "clientTs": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 500,
-        "body": "{error:'pos-read-failed' }"
-      },
-      {
-        "status": 429,
-        "body": "{error:'rate-limited' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid-pos' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'out-of-bounds' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'inside-solid' }"
-      },
-      {
-        "status": 409,
-        "body": "{error:'stale-seq' }"
-      },
-      {
-        "status": 202,
-        "body": "{ok:false,reason:'too-fast' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'pos-write-failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{x:null,y:null,seq:0,updatedAt:null }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      }
-    ]
-  },
-  {
     "method": "POST",
     "path": "/pos",
     "file": "server\\routes\\player.old.js",
@@ -2450,57 +2271,6 @@
       {
         "status": 200,
         "body": "{ok:true,x,y,seq }"
-      }
-    ]
-  },
-  {
-    "method": "POST",
-    "path": "/pos",
-    "file": "server\\player\\routes.js",
-    "line": 224,
-    "sample": {
-      "body": {
-        "mapKey": "value",
-        "x": "value",
-        "y": "value",
-        "seq": "value",
-        "clientTs": "value"
-      }
-    },
-    "errors": [
-      {
-        "status": 429,
-        "body": "{error:'rate-limited' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'invalid-pos' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'out-of-bounds' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'inside-solid' }"
-      },
-      {
-        "status": 409,
-        "body": "{error:'stale-seq' }"
-      },
-      {
-        "status": 202,
-        "body": "{ok:false,reason:'too-fast' }"
-      },
-      {
-        "status": 500,
-        "body": "{error:'pos-write-failed' }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true }"
       }
     ]
   },

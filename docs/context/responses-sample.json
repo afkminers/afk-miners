@@ -71,14 +71,6 @@
   ],
   "GET /api/combat/nearest": [],
   "GET /api/csrf": [],
-  "POST /api/player/pos": [
-    "{ok:true }",
-    "{ok:true,message:'Training started',heroId,skillType }",
-    "{ok:true,message:'No active session' }",
-    "{ok:true,message:'Training stopped',processed_seconds:delta }",
-    "{status:'IDLE' }",
-    "{status:t.status,hero_id:t.hero_id,skill_type:t.skill_type,class:(() =>{try{return JSON.parse(t.notes || '{}').heroClass } catch{return null } }"
-  ],
   "GET /assets/items": [],
   "GET /assets/sprites": [],
   "POST /assign": [
@@ -191,11 +183,14 @@
     "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }"
   ],
   "GET /pos": [
-    "{x:null,y:null,seq:0,updatedAt:null }",
-    "{ok:true }"
+    "{x:row.x,y:row.y }",
+    "{x:64,y:64 }",
+    "{ok:true }",
+    "{ok:true,x,y,seq }"
   ],
   "POST /pos": [
-    "{ok:true }"
+    "{ok:true }",
+    "{ok:true,x,y,seq }"
   ],
   "POST /": [
     "{cost:SUMMON_COST_COINS,pulls,newBalance:updated }"

@@ -44,39 +44,24 @@
       "appendChatRow",
       "applyUiFromSettings",
       "applyViewport",
-      "clearCanvas",
-      "drawEntity",
-      "drawGrid",
-      "drawGround",
       "findPendingRowFor",
       "getCsrf",
       "getRootVar",
       "getTs",
       "hasSeenId",
       "initGlobalChatUI",
-      "initPosSync",
       "jget",
       "jpost",
-      "loadImgWithCandidates",
-      "loop",
       "makeVSplitter",
       "markSeenId",
-      "mergeSpawns",
       "mountSceneHouse",
       "normStr",
       "onDown",
       "onMove",
       "onUp",
-      "resolveSprite",
       "sendChat",
-      "sendMyPos",
       "setRootVar",
-      "setStatus",
-      "startHub",
-      "syncCameraSize",
-      "update",
-      "updateTopbarHeight",
-      "worldToScreen"
+      "updateTopbarHeight"
     ]
   },
   {
@@ -320,11 +305,9 @@
     "file": "client\\js\\house.js",
     "symbols": [
       "appendChatRow",
-      "clearCanvas",
       "drawEntity",
       "drawGrid",
       "drawGround",
-      "escapeHtml",
       "initChat",
       "initPosSync",
       "jget",
@@ -335,10 +318,11 @@
       "resolveSprite",
       "sendChat",
       "sendMyPos",
-      "setStatus",
       "startHub",
       "syncCameraSize",
-      "update",
+      "takeStepIntent",
+      "tryStartStep",
+      "updateStep",
       "worldToScreen"
     ]
   },
@@ -419,7 +403,6 @@
       "ensureImgLoaded",
       "findMetaFor",
       "frame",
-      "getSavedPos",
       "hasSolidProp",
       "imgReady",
       "indexSpriteMeta",
@@ -435,7 +418,6 @@
       "normalizeTilesetPath",
       "pickElByIds",
       "pickFreeSpriteForSpawn",
-      "postPosThrottled",
       "resize",
       "resolvePlayerSprite",
       "uniq",
@@ -470,9 +452,10 @@
   {
     "file": "client\\js\\pos-publisher.js",
     "symbols": [
-      "getCsrf",
       "getMapKey",
-      "setMapKey"
+      "isAdjacent32",
+      "setMapKey",
+      "toTileCenter"
     ]
   },
   {
@@ -526,11 +509,15 @@
   {
     "file": "client\\js\\ui\\hud_status.js",
     "symbols": [
+      "cacheTTL",
       "fetchActiveHeroData",
       "getActiveHeroId",
+      "getMe",
       "pct",
       "renderHudBars",
-      "updateHudBars"
+      "scheduleNextPoll",
+      "updateHudBars",
+      "wireToggles"
     ]
   },
   {
@@ -778,7 +765,10 @@
       "bootstrapContentTables",
       "checkIdleAndManageLoops",
       "ensurePlayerOnlineTable",
+      "flushAllPlayerPos",
+      "flushOnePlayerPos",
       "idleAwareSyncSpawns",
+      "isAdjacentStep",
       "markOfflineByPlayer",
       "noop",
       "parseCookies",
@@ -789,7 +779,9 @@
       "setupHeartbeat",
       "setupRedis",
       "startIdleScheduler",
+      "startPosFlusher",
       "stopIdleScheduler",
+      "stopPosFlusher",
       "upsertOnlineByPlayer"
     ]
   },
@@ -863,20 +855,6 @@
     "symbols": [
       "TEXT",
       "migrate"
-    ]
-  },
-  {
-    "file": "server\\player\\routes.js",
-    "symbols": [
-      "buildCollisionGridFromObjects",
-      "buildCollisionGridFromTiled",
-      "getMapCollision",
-      "hasSolidProp",
-      "inWorld",
-      "isSolidAt",
-      "loadMapJson",
-      "loadMapObjects",
-      "rlAllow"
     ]
   },
   {

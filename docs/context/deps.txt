@@ -1,7 +1,9 @@
-client\js\pos-publisher.js -> ./ws.js
+client\js\pos-publisher.js -> ./ws/singleton.js
 client\js\player_profile.js -> ./api.js
 client\js\play.js -> ./api.js
 client\js\play.js -> ./combat/actions.js
+client\js\play.js -> ./pos-publisher.js
+client\js\play.js -> ./ws/singleton.js
 client\js\house.js -> ./ws/singleton.js
 client\js\gacha.js -> ./api.js
 client\js\boot.js -> ./api.js

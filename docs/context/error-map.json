@@ -376,36 +376,6 @@
     }
   ],
   "GET /api/csrf": [],
-  "POST /api/player/pos": [
-    {
-      "status": 500,
-      "body": "{error:'failed to persist pos' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'heroId,weaponOrSkill e heroClass são obrigatórios' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'weaponOrSkill inválido' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'erro ao iniciar treino' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'heroId é obrigatório' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'erro ao parar treino' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'heroId é obrigatório' }"
-    }
-  ],
   "GET /assets/items": [
     {
       "status": 500,
@@ -980,34 +950,6 @@
       "body": "{error:'me-failed' }"
     },
     {
-      "status": 500,
-      "body": "{error:'pos-read-failed' }"
-    },
-    {
-      "status": 429,
-      "body": "{error:'rate-limited' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'invalid-pos' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'out-of-bounds' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'inside-solid' }"
-    },
-    {
-      "status": 409,
-      "body": "{error:'stale-seq' }"
-    },
-    {
-      "status": 202,
-      "body": "{ok:false,reason:'too-fast' }"
-    },
-    {
       "status": 404,
       "body": "{error:'Jogador não encontrado' }"
     },
@@ -1188,38 +1130,6 @@
     {
       "status": 400,
       "body": "{error:'too-fast' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'pos-read-failed' }"
-    },
-    {
-      "status": 429,
-      "body": "{error:'rate-limited' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'invalid-pos' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'out-of-bounds' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'inside-solid' }"
-    },
-    {
-      "status": 409,
-      "body": "{error:'stale-seq' }"
-    },
-    {
-      "status": 202,
-      "body": "{ok:false,reason:'too-fast' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'pos-write-failed' }"
     }
   ],
   "POST /pos": [
@@ -1234,34 +1144,6 @@
     {
       "status": 400,
       "body": "{error:'too-fast' }"
-    },
-    {
-      "status": 429,
-      "body": "{error:'rate-limited' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'invalid-pos' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'out-of-bounds' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'inside-solid' }"
-    },
-    {
-      "status": 409,
-      "body": "{error:'stale-seq' }"
-    },
-    {
-      "status": 202,
-      "body": "{ok:false,reason:'too-fast' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'pos-write-failed' }"
     }
   ],
   "POST /": [

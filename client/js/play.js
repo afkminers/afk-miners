@@ -7,11 +7,34 @@
 import { getCsrf, apiGet } from './api.js';
 import { CombatActions } from './combat/actions.js';
 import { publishPos, setMapKey } from './pos-publisher.js';
-import { onMessage } from './ws/singleton.js';
+import { onMessage, authenticate } from './ws/singleton.js';
+
 
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
 const TILE = 32;
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// WS Auth: garante que o servidor sabe quem é o player (id/nome) e
+// assim persiste sua posição no banco (player_last_pos). Sem isso, no F5
+// você volta para o spawn porque o server não sabe seu player_id.
+async function bootAuth() {
+  await authenticate(async () => {
+    // usa teu endpoint atual
+    const me = await apiGet('/api/player/me').catch(() => null);
+
+    // em alguns lugares o payload vem como { profile: {...} }, noutros, direto
+    const p = (me && me.profile) ? me.profile : me;
+
+    // devolve o shape que o singleton espera
+    return {
+      id:   String(p?.id || p?.playerId || ''), // <<<<<< ESSENCIAL
+      name:        p?.name || p?.username || 'Player'
+    };
+  });
+}
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 
 // registra o mapKey para o publicador WS
 setMapKey(MAP_KEY);
@@ -735,6 +758,8 @@ function updateRespawns(now) {
 /* ================================ Boot ================================ */
 (async function main() {
   await getCsrf().catch(() => {});
+  await bootAuth();
+  console.log('[ws-auth] autenticado, o servidor agora conhece seu player_id');
   await loadSpriteMeta();
 
   const maps = await apiGet("/api/admin/content/maps");
@@ -878,6 +903,7 @@ function updateRespawns(now) {
 
   // === WS: correção de posição (autoridade do servidor)
   onMessage('pos_snap', (msg) => {
+    console.log('[pos_snap]', msg); // vê a posição que veio do servidor
     if (msg.mapKey && msg.mapKey !== MAP_KEY) return;
     try { controller.setPosition(msg.x | 0, msg.y | 0); } catch {}
   });
