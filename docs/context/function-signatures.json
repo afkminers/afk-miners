@@ -3078,7 +3078,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 37,
+    "line": 21,
+    "kind": "function",
+    "name": "bootAuth",
+    "params": []
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 60,
     "kind": "function",
     "name": "uniq",
     "params": [
@@ -3087,7 +3094,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 115,
+    "line": 138,
     "kind": "function",
     "name": "pickFreeSpriteForSpawn",
     "params": [
@@ -3096,7 +3103,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 145,
+    "line": 168,
     "kind": "function",
     "name": "pickElByIds",
     "params": [
@@ -3106,7 +3113,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 173,
+    "line": 196,
     "kind": "arrow",
     "name": "$",
     "params": [
@@ -3115,7 +3122,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 179,
+    "line": 202,
     "kind": "function",
     "name": "assetUrl",
     "params": [
@@ -3125,7 +3132,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 191,
+    "line": 214,
     "kind": "function",
     "name": "normalizeTilesetPath",
     "params": [
@@ -3134,7 +3141,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 199,
+    "line": 222,
     "kind": "function",
     "name": "loadTilesetImage",
     "params": [
@@ -3143,21 +3150,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 220,
+    "line": 243,
     "kind": "function",
     "name": "applySmoothing",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 235,
+    "line": 258,
     "kind": "function",
     "name": "resize",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 257,
+    "line": 280,
     "kind": "function",
     "name": "loadImg",
     "params": [
@@ -3166,7 +3173,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 265,
+    "line": 288,
     "kind": "function",
     "name": "imgReady",
     "params": [
@@ -3175,7 +3182,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 266,
+    "line": 289,
     "kind": "function",
     "name": "ensureImgLoaded",
     "params": [
@@ -3184,7 +3191,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 275,
+    "line": 298,
     "kind": "function",
     "name": "normKey",
     "params": [
@@ -3193,7 +3200,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 285,
+    "line": 308,
     "kind": "function",
     "name": "indexSpriteMeta",
     "params": [
@@ -3202,7 +3209,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 297,
+    "line": 320,
     "kind": "function",
     "name": "asObj",
     "params": [
@@ -3211,14 +3218,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 303,
+    "line": 326,
     "kind": "function",
     "name": "loadSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 309,
+    "line": 332,
     "kind": "function",
     "name": "findMetaFor",
     "params": [
@@ -3227,7 +3234,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 322,
+    "line": 345,
     "kind": "function",
     "name": "buildMonsterCandidates",
     "params": [
@@ -3238,7 +3245,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 345,
+    "line": 368,
     "kind": "function",
     "name": "loadMonsterImg",
     "params": [
@@ -3249,7 +3256,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 357,
+    "line": 380,
     "kind": "function",
     "name": "inferMetaFromImage",
     "params": [
@@ -3259,7 +3266,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 407,
+    "line": 430,
     "kind": "function",
     "name": "lootAtWorld",
     "params": [
@@ -3269,7 +3276,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 412,
+    "line": 435,
     "kind": "function",
     "name": "drawLoot",
     "params": [
@@ -3278,14 +3285,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 426,
+    "line": 449,
     "kind": "function",
     "name": "clear",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 428,
+    "line": 451,
     "kind": "function",
     "name": "drawGround",
     "params": [
@@ -3294,7 +3301,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 454,
+    "line": 477,
     "kind": "function",
     "name": "drawPlayer",
     "params": [
@@ -3303,7 +3310,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 468,
+    "line": 491,
     "kind": "function",
     "name": "drawMob",
     "params": [
@@ -3312,7 +3319,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 582,
+    "line": 605,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -3323,7 +3330,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 600,
+    "line": 623,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -3332,7 +3339,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 610,
+    "line": 633,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -3341,14 +3348,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 633,
+    "line": 656,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 666,
+    "line": 689,
     "kind": "function",
     "name": "addMobFromSpawn",
     "params": [
@@ -3357,7 +3364,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 708,
+    "line": 731,
     "kind": "function",
     "name": "buildSpawnersFromDefs",
     "params": [
@@ -3366,7 +3373,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 722,
+    "line": 745,
     "kind": "function",
     "name": "updateRespawns",
     "params": [
@@ -3375,7 +3382,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 743,
+    "line": 768,
     "kind": "function",
     "name": "normalizeApiJson",
     "params": [
@@ -3384,7 +3391,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 774,
+    "line": 799,
     "kind": "function",
     "name": "hasSolidProp",
     "params": [
@@ -3393,14 +3400,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 813,
+    "line": 838,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 899,
+    "line": 925,
     "kind": "function",
     "name": "frame",
     "params": [
@@ -3409,7 +3416,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 927,
+    "line": 953,
     "kind": "arrow",
     "name": "cellOf",
     "params": [
@@ -3419,7 +3426,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 928,
+    "line": 954,
     "kind": "arrow",
     "name": "centerOf",
     "params": [
@@ -3429,7 +3436,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 929,
+    "line": 955,
     "kind": "arrow",
     "name": "isBlocked",
     "params": [
@@ -3439,7 +3446,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 934,
+    "line": 960,
     "kind": "arrow",
     "name": "inBound",
     "params": [
@@ -3450,7 +3457,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 942,
+    "line": 968,
     "kind": "arrow",
     "name": "faceFrom",
     "params": [
@@ -3460,7 +3467,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1026,
+    "line": 1052,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
@@ -3755,208 +3762,6 @@
     "line": 260,
     "kind": "function",
     "name": "sync",
-    "params": []
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 15,
-    "kind": "arrow",
-    "name": "$",
-    "params": [
-      "id"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 21,
-    "kind": "arrow",
-    "name": "setStatus",
-    "params": [
-      "t"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 22,
-    "kind": "arrow",
-    "name": "clearCanvas",
-    "params": []
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 25,
-    "kind": "function",
-    "name": "jget",
-    "params": [
-      "url"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 30,
-    "kind": "function",
-    "name": "postWithCsrf",
-    "params": [
-      "url"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 59,
-    "kind": "function",
-    "name": "syncCameraSize",
-    "params": []
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 72,
-    "kind": "function",
-    "name": "takeStepIntent",
-    "params": []
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 83,
-    "kind": "function",
-    "name": "loadImgWithCandidates",
-    "params": [
-      "candidates"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 100,
-    "kind": "function",
-    "name": "resolveSprite",
-    "params": [
-      "look",
-      "monsterKey"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 117,
-    "kind": "function",
-    "name": "drawGrid",
-    "params": [
-      "cols",
-      "rows"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 126,
-    "kind": "function",
-    "name": "worldToScreen",
-    "params": [
-      "wx",
-      "wy"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 128,
-    "kind": "function",
-    "name": "drawGround",
-    "params": []
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 154,
-    "kind": "function",
-    "name": "drawEntity",
-    "params": [
-      "e"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 185,
-    "kind": "function",
-    "name": "tryStartStep",
-    "params": [
-      "now"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 202,
-    "kind": "function",
-    "name": "updateStep",
-    "params": [
-      "dt",
-      "now"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 232,
-    "kind": "function",
-    "name": "initPosSync",
-    "params": []
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 253,
-    "kind": "function",
-    "name": "sendMyPos",
-    "params": []
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 259,
-    "kind": "function",
-    "name": "mergeSpawns",
-    "params": [
-      "spawnsRows"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 286,
-    "kind": "function",
-    "name": "loop",
-    "params": [
-      "now"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 312,
-    "kind": "arrow",
-    "name": "esc",
-    "params": [
-      "s"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 313,
-    "kind": "function",
-    "name": "appendChatRow",
-    "params": [
-      "msg"
-    ]
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 322,
-    "kind": "function",
-    "name": "initChat",
-    "params": []
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 352,
-    "kind": "function",
-    "name": "sendChat",
-    "params": []
-  },
-  {
-    "file": "client\\js\\house.js",
-    "line": 368,
-    "kind": "function",
-    "name": "startHub",
     "params": []
   },
   {

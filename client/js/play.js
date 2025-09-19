@@ -14,6 +14,24 @@ const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
 const TILE = 32;
 
+// === buffer de pos_snap recebido cedo (antes do controller existir)
+let _earlySnap = null;
+function _applyEarlySnapIfAny(controller) {
+  if (!_earlySnap || !controller) return;
+  if (_earlySnap.mapKey && _earlySnap.mapKey !== MAP_KEY) return;
+  try { controller.setPosition(_earlySnap.x | 0, _earlySnap.y | 0); } catch {}
+  _earlySnap = null;
+}
+
+// registre o handler o quanto antes (ainda no topo do arquivo)
+onMessage('pos_snap', (msg) => {
+  // se o controller ainda não existe, guarda; senão aplica na hora
+  const ctrl = window.GameScene?.controller;
+  if (!ctrl) { _earlySnap = msg; return; }
+  if (msg.mapKey && msg.mapKey !== MAP_KEY) return;
+  try { ctrl.setPosition(msg.x | 0, msg.y | 0); } catch {}
+});
+
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // WS Auth: garante que o servidor sabe quem é o player (id/nome) e
 // assim persiste sua posição no banco (player_last_pos). Sem isso, no F5
@@ -860,7 +878,12 @@ function updateRespawns(now) {
     collisionGrid: grid,
     cols, rows,
     // WS-only: publica cada passo válido
-    onMoved: (x, y) => publishPos(x, y),
+    onMoved: (x, y) => {
+      try {
+        localStorage.setItem(`lastPos:${MAP_KEY}`, JSON.stringify({ x, y, t: Date.now() }));
+      } catch {}
+      publishPos(x, y);
+    },
   });
 
   // expõe camera/controller/mapKey p/ outros módulos (combate, etc.)
@@ -868,6 +891,41 @@ function updateRespawns(now) {
   window.GameScene.controller = controller;
   window.GameScene.mapKey = MAP_KEY;
 
+  // ==== Posição inicial: prioridade = pos_snap do servidor -> localStorage -> spawn ====
+  // 2.1) tenta aplicar um pos_snap que pode ter chegado antes do controller existir
+  let usedInitial = false;
+  if (_earlySnap && (!_earlySnap.mapKey || _earlySnap.mapKey === MAP_KEY)) {
+    try { controller.setPosition(_earlySnap.x | 0, _earlySnap.y | 0); usedInitial = true; } catch {}
+    _earlySnap = null;
+  }
+
+  // 2.2) se ainda não usamos nada, tenta localStorage
+  if (!usedInitial) {
+    try {
+      const raw = localStorage.getItem(`lastPos:${MAP_KEY}`);
+      if (raw) {
+        const { x, y } = JSON.parse(raw);
+        if (Number.isFinite(x) && Number.isFinite(y)) {
+          controller.setPosition(x | 0, y | 0);
+          usedInitial = true;
+        }
+      }
+    } catch {}
+  }
+
+  // 2.3) fallback: spawn do mapa
+  if (!usedInitial) {
+    if (starts[0]) controller.setPosition(starts[0].x, starts[0].y);
+    else controller.setPosition(TILE * 2 + TILE / 2, TILE * 2 + TILE / 2);
+  }
+
+  // 2.4) publica imediatamente a posição inicial para o servidor responder com pos_snap
+  try {
+    const p0 = controller.getPosition();
+    publishPos(p0.x | 0, p0.y | 0);
+  } catch {}
+
+  // === A* e click-to-move (pode ficar logo depois da posição inicial)
   const astar = new AStarGrid(grid, cols, rows);
   const clickMove = new ClickToMove({ canvas, camera, controller, grid });
   clickMove.setAStar(astar);
@@ -875,12 +933,10 @@ function updateRespawns(now) {
   // Input
   Input.attach(window, canvas);
 
-  // Posição inicial local (spawn do mapa). O servidor corrigirá com 'pos_snap' na conexão.
-  if (starts[0]) controller.setPosition(starts[0].x, starts[0].y);
-  else controller.setPosition(TILE * 2 + TILE / 2, TILE * 2 + TILE / 2);
-
+  // seguir câmera e resolver sprite
   camera.follow(controller);
   await resolvePlayerSprite();
+
 
   // Spawns de mobs
   let spawnsList;
@@ -901,12 +957,6 @@ function updateRespawns(now) {
     s.nextAt = now0 + s.respawnMs;
   }
 
-  // === WS: correção de posição (autoridade do servidor)
-  onMessage('pos_snap', (msg) => {
-    console.log('[pos_snap]', msg); // vê a posição que veio do servidor
-    if (msg.mapKey && msg.mapKey !== MAP_KEY) return;
-    try { controller.setPosition(msg.x | 0, msg.y | 0); } catch {}
-  });
 
   // === WS: loot
   onMessage('loot_spawned', (msg) => {

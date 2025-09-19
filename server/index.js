@@ -13,6 +13,7 @@ const bodyParserLimited = require('./middleware/body-limit');
 const makeLimiter = require('./middleware/limiter');
 const { isOriginAllowed } = require('./ws/origins');
 
+
 const { all, get, run } = require('./models/db'); // PG helpers
 const { migrate } = require('./models/migrate');
 const { cookieParser, requireAuth, requireCsrf, csrfRoute } = require('./auth/middleware');
@@ -1154,10 +1155,15 @@ async function seedAIMobsFromDB(aiMobs) {
             const now = Date.now();
             const dt = now - (lts || 0);
 
+            // helpers
+            const sameTile = (a, b) => Math.floor(a / TILE) === Math.floor(b / TILE);
             const okAdj = isAdjacentStep(lx, ly, nx, ny);
             const okTime = dt >= MIN_STEP_MS;
 
-            if (!okAdj || !okTime) {
+            // --- NOVO: se o último ponto não estava quantizado, aceite o 1º passo dentro do MESMO tile
+            const tolerateSameTileFirstStep = (!okAdj && sameTile(lx, nx) && sameTile(ly, ny));
+
+            if (!(okAdj && okTime) && !tolerateSameTileFirstStep) {
               try { ws.send(JSON.stringify({ type: 'pos_snap', x: lx, y: ly, mapKey })); } catch {}
               return;
             }
@@ -1179,6 +1185,7 @@ async function seedAIMobsFromDB(aiMobs) {
             });
             return;
           }
+
         });
 
         ws.on('pong', () => { ws.isAlive = true; }); // compat extra

@@ -24,10 +24,6 @@
     "to": "./ws/singleton.js"
   },
   {
-    "from": "client\\js\\house.js",
-    "to": "./ws/singleton.js"
-  },
-  {
     "from": "client\\js\\gacha.js",
     "to": "./api.js"
   },

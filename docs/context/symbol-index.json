@@ -302,31 +302,6 @@
     ]
   },
   {
-    "file": "client\\js\\house.js",
-    "symbols": [
-      "appendChatRow",
-      "drawEntity",
-      "drawGrid",
-      "drawGround",
-      "initChat",
-      "initPosSync",
-      "jget",
-      "loadImgWithCandidates",
-      "loop",
-      "mergeSpawns",
-      "postWithCsrf",
-      "resolveSprite",
-      "sendChat",
-      "sendMyPos",
-      "startHub",
-      "syncCameraSize",
-      "takeStepIntent",
-      "tryStartStep",
-      "updateStep",
-      "worldToScreen"
-    ]
-  },
-  {
     "file": "client\\js\\landing_fx.js",
     "symbols": [
       "addSpark",
@@ -391,6 +366,7 @@
       "applySmoothing",
       "asObj",
       "assetUrl",
+      "bootAuth",
       "buildCollisionGridFromObjects",
       "buildCollisionGridFromTiled",
       "buildMonsterCandidates",
