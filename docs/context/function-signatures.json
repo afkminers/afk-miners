@@ -281,6 +281,35 @@
     ]
   },
   {
+    "file": "server\\ws\\session-manager.js",
+    "line": 9,
+    "kind": "function",
+    "name": "register",
+    "params": [
+      "sessionId",
+      "ws"
+    ]
+  },
+  {
+    "file": "server\\ws\\session-manager.js",
+    "line": 17,
+    "kind": "function",
+    "name": "unregister",
+    "params": [
+      "sessionId",
+      "ws"
+    ]
+  },
+  {
+    "file": "server\\ws\\session-manager.js",
+    "line": 29,
+    "kind": "function",
+    "name": "get",
+    "params": [
+      "sessionId"
+    ]
+  },
+  {
     "file": "server\\ws\\origins.js",
     "line": 3,
     "kind": "function",
@@ -2364,6 +2393,15 @@
       "target",
       "weaponType",
       "K"
+    ]
+  },
+  {
+    "file": "server\\combat\\debug-patches.js",
+    "line": 18,
+    "kind": "arrow",
+    "name": "wrapAsync",
+    "params": [
+      "fnName"
     ]
   },
   {

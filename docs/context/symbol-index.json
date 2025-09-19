@@ -1138,6 +1138,14 @@
     ]
   },
   {
+    "file": "server\\ws\\session-manager.js",
+    "symbols": [
+      "get",
+      "register",
+      "unregister"
+    ]
+  },
+  {
     "file": "tools\\extract-sprite.js",
     "symbols": [
       "parseArgs",

@@ -1,54 +1,62 @@
 // client/js/pos-publisher.js
-// Publica posição do jogador (WS + fallback HTTP) e inclui mapKey.
-// Usa um leve throttle pra não spammar o servidor.
+import { wsSend } from './ws/singleton.js';
 
-import { wsSend } from './ws.js'; // se seu projeto NÃO usa ESM, veja nota mais abaixo
+const TILE = 32;
+const HALF = TILE / 2;
 
-const POS_HTTP_INTERVAL_MS = 300;   // fallback HTTP, ~3x/seg
-const FORCE_HTTP_EVERY_MS  = 2000;  // garante um POST a cada 2s mesmo sem mover
-let lastSentAt = 0;
-let lastX = null, lastY = null, lastMap = null;
+const state = {
+  lastTileX: null,
+  lastTileY: null,
+  lastSentAt: 0,
+};
 
-function getCsrf() {
-  const m = document.cookie.match(/(?:^|;\s*)csrf=([^;]+)/);
-  return m ? m[1] : '';
+export function setMapKey(mapKey) {
+  const mk = String(mapKey || 'house');
+  window.game = window.game || { state: {} };
+  window.game.state.mapKey = mk;
 }
 
 function getMapKey() {
-  // ajuste aqui se seu estado do jogo guarda o mapKey em outro lugar
   return (window.game && window.game.state && window.game.state.mapKey) || 'house';
 }
 
-export function setMapKey(mapKey) {
-  window.game = window.game || { state: {} };
-  window.game.state.mapKey = mapKey || 'house';
+// quantiza qualquer (x,y) pro centro do tile
+function toTileCenter(v) {
+  // ex.: 0..31 -> 16; 32..63 -> 48; etc.
+  return Math.round((v - HALF) / TILE) * TILE + HALF;
 }
 
-export async function publishPos(x, y) {
-  const now = Date.now();
-  const mapKey = getMapKey();
-  const ix = (x | 0), iy = (y | 0);
+function isAdjacent32(ax, ay, bx, by) {
+  const dx = Math.abs(bx - ax);
+  const dy = Math.abs(by - ay);
+  return (dx === TILE && dy === 0) || (dx === 0 && dy === TILE);
+}
 
-  const moved = ix !== lastX || iy !== lastY || mapKey !== lastMap;
-  const timeSince = now - lastSentAt;
+export function publishPos(x, y) {
+  // quantiza pro centro do tile
+  const qx = toTileCenter(x);
+  const qy = toTileCenter(y);
 
-  // Envia pelo WebSocket sempre que houver movimento significativo
-  try {
-    wsSend({ type: 'pos', x: ix, y: iy, mapKey });
-  } catch {}
+  // só envia quando mudou de tile
+  if (qx === state.lastTileX && qy === state.lastTileY) return;
 
-  // Fallback HTTP (e também reforça presença online no servidor)
-  if (moved && timeSince >= POS_HTTP_INTERVAL_MS || timeSince >= FORCE_HTTP_EVERY_MS) {
-    lastSentAt = now;
-    lastX = ix; lastY = iy; lastMap = mapKey;
-
-    fetch('/api/player/pos', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-csrf': getCsrf()
-      },
-      body: JSON.stringify({ x: ix, y: iy, mapKey })
-    }).catch(() => {});
+  // respeita o passo adjacente
+  if (state.lastTileX != null && state.lastTileY != null) {
+    if (!isAdjacent32(state.lastTileX, state.lastTileY, qx, qy)) {
+      // ainda andando dentro do mesmo tile ou pulou demais — espera
+      return;
+    }
   }
+
+  // throttle (precisa casar com o MIN_STEP_MS do servidor)
+  const now = performance.now();
+  if (now - state.lastSentAt < 150) return;
+
+  state.lastTileX = qx;
+  state.lastTileY = qy;
+  state.lastSentAt = now;
+
+  try {
+    wsSend({ type: 'pos', x: qx | 0, y: qy | 0, mapKey: getMapKey() });
+  } catch {}
 }

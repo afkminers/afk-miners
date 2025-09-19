@@ -4,6 +4,10 @@
 
 const HUD_CONTAINER_ID = "hud";
 
+/* =====================================================================================
+   UTIL: herói ativo + cache /api/player/me com dedupe e throttle
+===================================================================================== */
+
 function getActiveHeroId() {
   return (
     window.ActiveHeroId ||
@@ -15,21 +19,73 @@ function getActiveHeroId() {
   );
 }
 
-function fetchActiveHeroData() {
-  // Busca o herói ativo do /api/player/me
-  return fetch("/api/player/me", { credentials: "include", cache: "no-store" })
-    .then((r) => r.json())
-    .then((data) => {
-      const heroId = getActiveHeroId();
-      if (!heroId) return null;
-      if (!data.heroes) return null;
-      return data.heroes.find((h) => String(h.id) === String(heroId));
-    })
-    .catch(() => null);
+// Cache simples e dedupe para /api/player/me
+const MeCache = {
+  data: null,
+  ts: 0,
+  inflight: null,
+  ttlMsVisible: 10_000, // 10s com a aba visível
+  ttlMsHidden: 25_000,  // 25s com a aba oculta
+};
+
+function cacheTTL() {
+  return document.visibilityState === "visible"
+    ? MeCache.ttlMsVisible
+    : MeCache.ttlMsHidden;
 }
 
+async function getMe(force = false, signal) {
+  const now = Date.now();
+  const fresh = now - MeCache.ts < cacheTTL();
+
+  if (!force && fresh && MeCache.data) return MeCache.data;
+  if (MeCache.inflight) return MeCache.inflight;
+
+  const controller = new AbortController();
+  const link = signal;
+  // Se for passado um AbortSignal de fora, encadeia o cancelamento
+  if (link) link.addEventListener("abort", () => controller.abort(), { once: true });
+
+  MeCache.inflight = fetch("/api/player/me", {
+    credentials: "include",
+    cache: "no-store",
+    signal: controller.signal,
+  })
+    .then((r) => r.json())
+    .then((data) => {
+      MeCache.data = data || null;
+      MeCache.ts = Date.now();
+      return MeCache.data;
+    })
+    .catch((err) => {
+      // Se abort, apenas ignora silenciosamente
+      if (err && err.name === "AbortError") return MeCache.data;
+      return MeCache.data; // mantém último snapshot
+    })
+    .finally(() => {
+      MeCache.inflight = null;
+    });
+
+  return MeCache.inflight;
+}
+
+async function fetchActiveHeroData(options = {}) {
+  const { force = false, signal } = options;
+  const data = await getMe(force, signal);
+  if (!data || !Array.isArray(data.heroes)) return null;
+
+  const heroId = getActiveHeroId();
+  if (!heroId) return null;
+  return data.heroes.find((h) => String(h.id) === String(heroId)) || null;
+}
+
+/* =====================================================================================
+   RENDER
+===================================================================================== */
+
 function pct(cur, max) {
-  return max > 0 ? ((cur / max) * 100).toFixed(1) : "0.0";
+  const v = max > 0 ? (cur / max) * 100 : 0;
+  return Math.max(0, Math.min(100, v)).toFixed(1);
 }
 
 // Minimalista com toggle para ocultar/mostrar HUD detalhado
@@ -47,7 +103,6 @@ function renderHudBars(hero, minimized = false) {
   const xpParaProximo = hero.xp_needed_next_level ?? 1;
   const pctXp = pct(xpAtual, xpParaProximo);
 
-  // Minimal, horizontal, compact bars with icons and a toggle
   if (minimized) {
     return `
       <div id="hud-minimalbar" style="
@@ -65,7 +120,6 @@ function renderHudBars(hero, minimized = false) {
     `;
   }
 
-  // HUD detalhado porém compacto
   return `
     <div id="hud-detailedbar" style="
       display:flex;align-items:center;gap:9px;background:#181c24e6;
@@ -125,57 +179,122 @@ function renderHudBars(hero, minimized = false) {
   `;
 }
 
-// Estado do toggle
+/* =====================================================================================
+   STATE + UPDATE LOOP
+===================================================================================== */
+
 let HUD_MINIMIZED = false;
 let lastHeroId = null;
 let lastHeroLevel = null;
 
-async function updateHudBars(force=false) {
-  const container = document.getElementById(HUD_CONTAINER_ID);
-  if (!container) return;
-  const hero = await fetchActiveHeroData();
-  if (!hero) {
-    container.innerHTML = `<div style="color:#f87171;font-size:13px;">Nenhum herói ativo.</div>`;
-    lastHeroId = null;
-    lastHeroLevel = null;
-    return;
-  }
-  container.innerHTML = renderHudBars(hero, HUD_MINIMIZED);
+// Proteção para não rodar render em paralelo
+let updating = false;
+// Reaproveita um AbortController para cancelar consultas anteriores
+let updateController = null;
 
-  // Toggle listeners
-  setTimeout(() => {
+async function updateHudBars(force = false) {
+  if (updating) return;
+  updating = true;
+
+  if (updateController) {
+    try { updateController.abort(); } catch {}
+  }
+  updateController = new AbortController();
+
+  try {
+    const container = document.getElementById(HUD_CONTAINER_ID);
+    if (!container) return;
+
+    const hero = await fetchActiveHeroData({ force, signal: updateController.signal });
+
+    if (!hero) {
+      container.innerHTML = `<div style="color:#f87171;font-size:13px;">Nenhum herói ativo.</div>`;
+      lastHeroId = null;
+      lastHeroLevel = null;
+      return;
+    }
+
+    container.innerHTML = renderHudBars(hero, HUD_MINIMIZED);
+
+    // Toggle listeners (remove anteriores e adiciona 1x por render)
     const minimizeBtn = document.getElementById("hud-minimize-btn");
     if (minimizeBtn) {
       minimizeBtn.onclick = () => {
         HUD_MINIMIZED = true;
-        updateHudBars(true);
+        // render local sem refetch
+        container.innerHTML = renderHudBars(hero, HUD_MINIMIZED);
+        wireToggles(hero, container);
       };
     }
     const expandBtn = document.getElementById("hud-expand-btn");
     if (expandBtn) {
       expandBtn.onclick = () => {
         HUD_MINIMIZED = false;
-        updateHudBars(true);
+        container.innerHTML = renderHudBars(hero, HUD_MINIMIZED);
+        wireToggles(hero, container);
       };
     }
-  }, 10);
 
-  // Se mudou de herói ou subiu de level, dispara evento para LevelUpNotify
-  if (force || lastHeroId !== hero.id || hero.level !== lastHeroLevel) {
-    if (lastHeroLevel !== null && hero.level > lastHeroLevel) {
-      window.dispatchEvent(new CustomEvent('hero:levelup', { detail: { hero } }));
+    // Evento de level up
+    if (force || lastHeroId !== hero.id || hero.level !== lastHeroLevel) {
+      if (lastHeroLevel !== null && hero.level > lastHeroLevel) {
+        window.dispatchEvent(new CustomEvent("hero:levelup", { detail: { hero } }));
+      }
+      lastHeroId = hero.id;
+      lastHeroLevel = hero.level;
     }
-    lastHeroId = hero.id;
-    lastHeroLevel = hero.level;
+  } finally {
+    updating = false;
   }
 }
 
-// Atualiza ao iniciar, trocar de herói, tick:hero, level up, etc
-window.addEventListener("DOMContentLoaded", () => updateHudBars(true));
+// reconecta listeners de toggle após re-render
+function wireToggles(hero, container) {
+  const minimizeBtn = document.getElementById("hud-minimize-btn");
+  if (minimizeBtn) {
+    minimizeBtn.onclick = () => {
+      HUD_MINIMIZED = true;
+      container.innerHTML = renderHudBars(hero, HUD_MINIMIZED);
+      wireToggles(hero, container);
+    };
+  }
+  const expandBtn = document.getElementById("hud-expand-btn");
+  if (expandBtn) {
+    expandBtn.onclick = () => {
+      HUD_MINIMIZED = false;
+      container.innerHTML = renderHudBars(hero, HUD_MINIMIZED);
+      wireToggles(hero, container);
+    };
+  }
+}
+
+/* =====================================================================================
+   POLL: suave e consciente de visibilidade
+===================================================================================== */
+
+let pollTimer = null;
+
+function scheduleNextPoll() {
+  clearTimeout(pollTimer);
+  const ms = document.visibilityState === "visible" ? 10_000 : 25_000;
+  pollTimer = setTimeout(() => updateHudBars(false).then(scheduleNextPoll), ms);
+}
+
+// Eventos que realmente merecem atualizar “na hora”
+window.addEventListener("DOMContentLoaded", () => {
+  updateHudBars(true).then(scheduleNextPoll);
+});
 window.addEventListener("hero:active-changed", () => updateHudBars(true));
-window.addEventListener("tick:hero", () => updateHudBars());
+window.addEventListener("tick:hero", () => updateHudBars(false)); // usa cache TTL
 window.addEventListener("player-updated", () => updateHudBars(true));
+document.addEventListener("visibilitychange", () => {
+  // ao focar, força um refresh rápido; ao desfocar, só res agenda
+  if (document.visibilityState === "visible") {
+    updateHudBars(true).then(scheduleNextPoll);
+  } else {
+    scheduleNextPoll();
+  }
+});
 
-setInterval(() => updateHudBars(), 2200);
-
+// Sem setInterval agressivo — o loop acima já cuida do refresh
 export {};

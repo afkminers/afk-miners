@@ -55,6 +55,67 @@ const { loadAll, loadMap } = require('./content/loader');
 const CONTENT_PIPELINE = process.env.CONTENT_PIPELINE || 'off';
 // =====================================
 
+
+// ---- Autoridade de movimento (Tibia-like) ----
+const TILE = 32;
+const SPEED_CAP_PX_S = 180; // ~0.18 s por tile
+const MIN_STEP_MS = Math.floor((TILE / SPEED_CAP_PX_S) * 1000 * 0.60); // 20% folga
+
+function isAdjacentStep(lx, ly, nx, ny) {
+  const dx = Math.abs(nx - lx), dy = Math.abs(ny - ly);
+  return (dx === TILE && dy === 0) || (dx === 0 && dy === TILE);
+}
+
+// ---- [MMO] Posições vivas em RAM + flush periódico p/ DB ----
+const livePositions = new Map(); // playerId -> { x, y, mapKey, ts }
+const FLUSH_POS_INTERVAL_MS = Number(process.env.FLUSH_POS_INTERVAL_MS || 30000);
+let posFlushTimer = null;
+
+async function flushOnePlayerPos(pid) {
+  const p = livePositions.get(String(pid));
+  if (!p) return;
+  try {
+    await run(`
+      INSERT INTO player_last_pos (player_id, map_key, x, y, last_seq, updated_at)
+      VALUES ($1, $2, $3, $4,
+              COALESCE((SELECT last_seq FROM player_last_pos WHERE player_id=$1 AND map_key=$2), 0) + 1,
+              now())
+      ON CONFLICT (player_id, map_key)
+      DO UPDATE SET
+        x = EXCLUDED.x,
+        y = EXCLUDED.y,
+        last_seq = player_last_pos.last_seq + 1,
+        updated_at = now()
+    `, [String(pid), p.mapKey, p.x | 0, p.y | 0]);
+  } catch (e) {
+    console.warn('[pos:flush] fail:', e?.message);
+  }
+}
+
+async function flushAllPlayerPos() {
+  const ids = Array.from(livePositions.keys());
+  for (const pid of ids) {
+    await flushOnePlayerPos(pid);
+  }
+}
+
+function startPosFlusher() {
+  if (posFlushTimer) return;
+  posFlushTimer = setInterval(async () => {
+    for (const pid of livePositions.keys()) {
+      await flushOnePlayerPos(pid);
+    }
+  }, FLUSH_POS_INTERVAL_MS);
+}
+
+function stopPosFlusher() {
+  if (posFlushTimer) {
+    clearInterval(posFlushTimer);
+    posFlushTimer = null;
+  }
+}
+
+
 // === Sync automático de instâncias de spawn (opcional) ===
 let syncSpawns = async () => {};
 try {
@@ -107,7 +168,6 @@ app.get('/api/csrf', csrfRoute);
 app.use(requireCsrf);
 
 // Rate limits direcionados (sem alterar resposta das rotas)
-app.use('/api/player/pos', makeLimiter({ windowMs: 1000, max: 10 }));
 app.use('/api/game/tick',  makeLimiter({ windowMs: 1000, max: 6  }));
 
 /* ========= Bootstrap: tabelas do pipeline (Postgres) ========= */
@@ -283,37 +343,6 @@ app.use('/api/backpack', requireAuth, backpackRoutes);
 
 // Game tick aggregated endpoint
 app.use('/api/game', requireAuth, gameTickRoutes);
-
-// --- Persistência de posição via HTTP (além do WS) ---
-app.post('/api/player/pos', requireAuth, async (req, res) => {
-  try {
-    const pid = String(req.user.id);
-    const x = Number(req.body?.x || 0) | 0;
-    const y = Number(req.body?.y || 0) | 0;
-    const mapKey = String(req.body?.mapKey || 'house');
-
-    await run(`
-      INSERT INTO player_last_pos (player_id, map_key, x, y, last_seq, updated_at)
-      VALUES ($1, $2, $3, $4,
-              COALESCE((SELECT last_seq FROM player_last_pos WHERE player_id=$1 AND map_key=$2), 0) + 1,
-              now())
-      ON CONFLICT (player_id, map_key)
-      DO UPDATE SET
-        x = EXCLUDED.x,
-        y = EXCLUDED.y,
-        last_seq = player_last_pos.last_seq + 1,
-        updated_at = now()
-    `, [pid, mapKey, x, y]);
-
-    // reforça presença online com o mapa atual
-    try { await upsertOnlineByPlayer(pid, mapKey); } catch {}
-
-    return res.json({ ok: true });
-  } catch (e) {
-    console.warn('[player/pos] persist failed:', e?.message);
-    return res.status(500).json({ error: 'failed to persist pos' });
-  }
-});
 
 
 /* ========= Helpers (Treino) ========= */
@@ -957,7 +986,9 @@ async function seedAIMobsFromDB(aiMobs) {
         ws._mapKey = 'house'; // padrão até resolver abaixo
         ws.isAlive = true; // compat com heartbeat
         ws._presenceTimer = null;
+        ws._pos = null; // cache local da pos autorizada
 
+        // Tenta validar sessão via cookie JWT
         try {
           const cookies = parseCookies(req.headers.cookie || '');
           const token = cookies[COOKIE_NAME] || null;
@@ -996,6 +1027,24 @@ async function seedAIMobsFromDB(aiMobs) {
           } catch {
             ws._mapKey = 'house';
             joinMapSocket('house', ws);
+          }
+
+          // [MMO] Carrega última posição do DB e envia SNAP inicial; inicializa RAM
+          try {
+            if (ws._player?.id) {
+              const row2 = await get(
+                `SELECT x, y FROM player_last_pos WHERE player_id=$1 AND map_key=$2`,
+                [ws._player.id, ws._mapKey]
+              );
+              if (row2 && Number.isFinite(row2.x) && Number.isFinite(row2.y)) {
+                const px = row2.x | 0, py = row2.y | 0;
+                livePositions.set(String(ws._player.id), { x: px, y: py, mapKey: ws._mapKey, ts: Date.now() });
+                ws._pos = { x: px, y: py, mapKey: ws._mapKey, ts: Date.now() };
+                try { ws.send(JSON.stringify({ type: 'pos_snap', x: px, y: py, mapKey: ws._mapKey })); } catch {}
+              }
+            }
+          } catch (e) {
+            // segue sem travar
           }
 
           // >>> NOVO: marca presença assim que conectar (e renova a cada 15s)
@@ -1082,43 +1131,52 @@ async function seedAIMobsFromDB(aiMobs) {
           }
 
           if (data.type === 'pos') {
-            // Novo: persistir posição para AI ter nearest/aggro
+            // Autoridade de movimento + RAM cache (persistência é batelada pelo flusher)
             const pid = ws._player?.id || String(data.id || '');
-            const x = Number(data.x || 0);
-            const y = Number(data.y || 0);
-            const name = String(data.name || '');
+            if (!pid) return;
+
+            const nx = Number(data.x || 0) | 0;
+            const ny = Number(data.y || 0) | 0;
             const mapKey = String(data.mapKey || ws._mapKey || 'house');
 
-            // 1) rebroadcast (como antes)
-            const out = { type:'pos', id:String(pid), x, y, name };
+            // Base anterior (RAM ou bootstrap)
+            if (!ws._pos || ws._pos.mapKey !== mapKey) {
+              const prev = livePositions.get(String(pid));
+              if (prev && prev.mapKey === mapKey) {
+                ws._pos = { ...prev };
+              } else {
+                ws._pos = { x: nx, y: ny, mapKey, ts: Date.now() };
+                livePositions.set(String(pid), { ...ws._pos });
+              }
+            }
+
+            const { x: lx, y: ly, ts: lts } = ws._pos;
+            const now = Date.now();
+            const dt = now - (lts || 0);
+
+            const okAdj = isAdjacentStep(lx, ly, nx, ny);
+            const okTime = dt >= MIN_STEP_MS;
+
+            if (!okAdj || !okTime) {
+              try { ws.send(JSON.stringify({ type: 'pos_snap', x: lx, y: ly, mapKey })); } catch {}
+              return;
+            }
+
+            // Autoriza: atualiza RAM
+            ws._pos = { x: nx, y: ny, mapKey, ts: now };
+            livePositions.set(String(pid), { x: nx, y: ny, mapKey, ts: now });
+            ws._mapKey = mapKey;
+
+            // presença online
+            try { await upsertOnlineByPlayer(pid, mapKey); } catch {}
+
+            // broadcast p/ outros jogadores
+            const out = { type:'pos', id:String(pid), x: nx, y: ny, name: ws._player?.name || '' };
             wss.clients.forEach(c => {
               if (c !== ws && c.readyState === WebSocketLib.OPEN) {
                 try { c.send(JSON.stringify(out)); } catch {}
               }
             });
-
-            // 2) persistência no DB (ESSENCIAL)
-            try {
-              await run(`
-                INSERT INTO player_last_pos (player_id, map_key, x, y, last_seq, updated_at)
-                VALUES ($1, $2, $3, $4,
-                        COALESCE((SELECT last_seq FROM player_last_pos WHERE player_id=$1 AND map_key=$2), 0) + 1,
-                        now())
-                ON CONFLICT (player_id, map_key)
-                DO UPDATE SET
-                  x = EXCLUDED.x,
-                  y = EXCLUDED.y,
-                  last_seq = player_last_pos.last_seq + 1,
-                  updated_at = now()
-              `, [pid, mapKey, x, y]);
-            } catch (e) {
-              console.warn('[ws] failed to persist player_last_pos:', e?.message);
-            }
-
-            // 3) >>> NOVO: mantém mapKey atual no socket e reforça presença
-            ws._mapKey = mapKey;
-            try { await upsertOnlineByPlayer(pid, mapKey); } catch {}
-
             return;
           }
         });
@@ -1126,12 +1184,16 @@ async function seedAIMobsFromDB(aiMobs) {
         ws.on('pong', () => { ws.isAlive = true; }); // compat extra
 
         ws.on('close', () => {
-          console.log(`[ws] close from ${addr} — clients=${wss.clients.size}`);
+          const addr2 = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+          console.log(`[ws] close from ${addr2} — clients=${wss.clients.size}`);
           if (ws._presenceTimer) {
             clearInterval(ws._presenceTimer);
             ws._presenceTimer = null;
           }
           if (ws._player?.id) {
+            // flush posição no logout + remove presença
+            flushOnePlayerPos(ws._player.id).catch(() => {});
+            livePositions.delete(String(ws._player.id));
             markOfflineByPlayer(ws._player.id).catch(() => {});
           }
         });
@@ -1162,20 +1224,23 @@ async function seedAIMobsFromDB(aiMobs) {
       if (typeof startLootCleanupLoop === 'function') {
         try { startLootCleanupLoop({ run }); } catch {}
       }
+
+      // [MMO] inicia flusher periódico de posições (persistência em lote)
+      startPosFlusher();
     });
 
-    // Encerramento limpo (Ctrl+C / kill)
-    process.on('SIGINT',  () => {
-      try {
-        try { const aiMobs = require('./combat/ai-mobs'); aiMobs.stop?.(); } catch {}
-        stopRespawnLoop();
-      } finally { process.exit(0); }
+    // Encerramento limpo (Ctrl+C / kill) com flush completo de posições
+    process.on('SIGINT',  async () => {
+      try { const ai = require('./combat/ai-mobs'); ai.stop?.(); } catch {}
+      try { stopPosFlusher(); await flushAllPlayerPos(); } catch {}
+      try { stopRespawnLoop(); } catch {}
+      process.exit(0);
     });
-    process.on('SIGTERM', () => {
-      try {
-        try { const aiMobs = require('./combat/ai-mobs'); aiMobs.stop?.(); } catch {}
-        stopRespawnLoop();
-      } finally { process.exit(0); }
+    process.on('SIGTERM', async () => {
+      try { const ai = require('./combat/ai-mobs'); ai.stop?.(); } catch {}
+      try { stopPosFlusher(); await flushAllPlayerPos(); } catch {}
+      try { stopRespawnLoop(); } catch {}
+      process.exit(0);
     });
 
   } catch (err) {
@@ -1183,6 +1248,7 @@ async function seedAIMobsFromDB(aiMobs) {
     process.exit(1);
   }
 })();
+
 
 /* ========= Chat HTTP API ========= */
 

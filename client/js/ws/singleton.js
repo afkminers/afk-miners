@@ -1,3 +1,4 @@
+// client/js/ws/singleton.js
 // WS singleton com reconexão, fila de envio e roteamento por "type"
 const listeners = new Map(); // type -> Set<fn>
 let ws = null;

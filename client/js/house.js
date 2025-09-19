@@ -1,69 +1,61 @@
-/*
-  Substituição/versão ampliada de house.js
-  - WASD / setas para mover o player
-  - game loop (rAF)
-  - câmera que segue o player
-  - carrega spawns do endpoint /api/admin/content/map/:map/spawns
-  - carrega dados de monsters do endpoint /api/admin/content/monsters
-  - tenta conectar WebSocket para sincronizar posições (fallback polling)
-  - desenha sprites se spriteKey estiver disponível em monsters_master.lookJSON
+/* client/js/house.js
+   Cena “house” com step-by-tile (Tibia-like) e WS sem spam.
+   - WASD/setas => 1 passo de 32px
+   - Envia WS apenas quando o passo é válido e completado
+   - Respeita cooldown ~150ms entre passos (alinha com servidor)
+   - Aceita pos_snap do servidor
 */
 
-/*
-  Substituição/versão ampliada de house.js
-  - WASD / setas para mover o player
-  - game loop (rAF)
-  - câmera que segue o player
-  - carrega spawns do endpoint /api/admin/content/map/:map/spawns
-  - carrega dados de monsters do endpoint /api/admin/content/monsters
-  - usa WebSocket singleton para posições e chat (um único WS por aba)
-  - desenha sprites com fallback seguro evitando erro de drawImage quando PNG 404
-*/
-
-/* client/js/house.js */
 import { getSocket, onMessage, wsSend, authenticate } from './ws/singleton.js';
 
 const MAP_KEY = 'house';
 const TILE = 32;
+
+// ===== DOM refs =====
 const $ = (id) => document.getElementById(id);
 const canvas = $('scene');
 const ctx = canvas?.getContext?.('2d');
 const statusEl = $('status');
-const startPosEl = $('startPos');
-const spawnListEl = $('spawnList');
 const btnReload = $('btnReload');
 
-function setStatus(t) { if (statusEl) statusEl.textContent = t; }
-function clearCanvas() { if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height); }
+const setStatus = (t) => { if (statusEl) statusEl.textContent = t; };
+const clearCanvas = () => { if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height); };
 
-/* ---------------- HTTP helpers (mantive fetch com credentials) ---------------- */
+// ===== HTTP helpers =====
 async function jget(url) {
-  const r = await fetch(url, { credentials: 'include' });
+  const r = await fetch(url, { credentials: 'include', cache: 'no-store' });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @GET ${url}`);
   return r.json();
 }
 async function postWithCsrf(url) {
-  const t = await fetch('/api/csrf', { credentials: 'include' }).then(r => r.json());
+  const t = await fetch('/api/csrf', { credentials: 'include', cache: 'no-store' }).then(r => r.json()).catch(()=>({}));
+  const token = t.csrfToken || t.token || t.csrf;
   const r = await fetch(url, {
     method: 'POST',
     credentials: 'include',
-    headers: { 'X-CSRF-Token': t.csrfToken }
+    headers: token ? { 'X-CSRF-Token': token } : {},
   });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText} @POST ${url}`);
   return r.json();
 }
 
-/* ---------------- world / camera / entities ---------------- */
+// ===== World / Camera / Entities =====
 let mapData = null;
 let groundLayer = null;
 let tileset = null;
 let tilesetImg = null;
 
-const player = { id: 'me', type: 'player', x: 160, y: 160, w: 28, h: 40, speed: 140, name: 'Você', hp: 100, maxHp: 100 };
+const player = {
+  type: 'player',
+  x: 160, y: 160,
+  w: 28, h: 40,
+  name: 'Você',
+  hp: 100, maxHp: 100
+};
 let entities = [];           // monsters + remote players
-let monstersByKey = {};      // master de monstros por key
+let monstersByKey = {};      // catalog
 
-const camera = { x: 0, y: 0, w: canvas?.width || 0, h: canvas?.height || 0, lerp: 0.2, follow: player };
+const camera = { x: 0, y: 0, w: canvas?.width || 0, h: canvas?.height || 0, lerp: 0.22, follow: player };
 function syncCameraSize() {
   if (!canvas) return;
   camera.w = canvas.width;
@@ -72,38 +64,39 @@ function syncCameraSize() {
 window.addEventListener('resize', syncCameraSize);
 syncCameraSize();
 
-let keys = {};
+// ===== Input (WASD/Arrows) -> step intent por tile =====
+const keys = Object.create(null);
 window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; });
 window.addEventListener('keyup',   e => { keys[e.key.toLowerCase()] = false; });
 
-/* ---------------- Sprite loader com fallback seguro ---------------- */
-const IMG_CACHE = new Map();
+function takeStepIntent() {
+  // prioridade cardinal N/S/L/O
+  if (keys['w'] || keys['arrowup'])    return { dx: 0, dy: -1, face: 'north' };
+  if (keys['s'] || keys['arrowdown'])  return { dx: 0, dy:  1, face: 'south' };
+  if (keys['a'] || keys['arrowleft'])  return { dx:-1, dy:  0, face: 'west'  };
+  if (keys['d'] || keys['arrowright']) return { dx: 1, dy:  0, face: 'east'  };
+  return null;
+}
 
+// ===== Sprite loader com fallback (sem quebrar drawImage) =====
+const IMG_CACHE = new Map();
 function loadImgWithCandidates(candidates) {
   const key = candidates.join('|');
   if (IMG_CACHE.has(key)) return IMG_CACHE.get(key);
-
   const img = new Image();
   img.__candidates = candidates.slice();
   img.__idx = 0;
   img.__broken = false;
-
-  img.onload = () => { /* ok */ };
+  img.onload = () => {};
   img.onerror = () => {
     const next = ++img.__idx;
-    if (next < img.__candidates.length) {
-      img.src = img.__candidates[next];
-    } else {
-      img.__broken = true;
-    }
+    if (next < img.__candidates.length) img.src = img.__candidates[next];
+    else img.__broken = true;
   };
-
-  // inicia com o primeiro candidato
   img.src = img.__candidates[0];
   IMG_CACHE.set(key, img);
   return img;
 }
-
 function resolveSprite(look, monsterKey) {
   const paths = [];
   if (look?.image) paths.push(String(look.image));
@@ -120,7 +113,7 @@ function resolveSprite(look, monsterKey) {
   return candidates.length ? loadImgWithCandidates(candidates) : null;
 }
 
-/* ---------------- draw helpers (map + entities) ---------------- */
+// ===== Draw helpers =====
 function drawGrid(cols, rows) {
   if (!ctx) return;
   ctx.save();
@@ -130,14 +123,10 @@ function drawGrid(cols, rows) {
   for (let y = 0; y <= rows; y++) { ctx.beginPath(); ctx.moveTo(0, y * TILE + .5); ctx.lineTo(cols * TILE, y * TILE + .5); ctx.stroke(); }
   ctx.restore();
 }
-
-function worldToScreen(wx, wy) {
-  return { x: Math.round(wx - camera.x), y: Math.round(wy - camera.y) };
-}
+function worldToScreen(wx, wy) { return { x: Math.round(wx - camera.x), y: Math.round(wy - camera.y) }; }
 
 function drawGround() {
   if (!ctx || !groundLayer || !tileset || !tilesetImg || !tilesetImg.complete || tilesetImg.naturalWidth === 0) return;
-
   const data = groundLayer.data;
   const cols = mapData.width, rows = mapData.height;
   const first = tileset.firstgid || 1;
@@ -162,7 +151,6 @@ function drawGround() {
     }
   }
 }
-
 function drawEntity(e) {
   if (!ctx) return;
   const s = worldToScreen(e.x, e.y);
@@ -171,7 +159,6 @@ function drawEntity(e) {
     const dw = e.w || 32, dh = e.h || 32;
     ctx.drawImage(e._img, s.x - dw / 2, s.y - dh, dw, dh);
   } else {
-    // placeholder caso sprite não exista
     ctx.fillStyle = e.type === 'player' ? '#3b82f6' : '#f97316';
     ctx.fillRect(s.x - (e.w || 28) / 2, s.y - (e.h || 36), e.w || 28, e.h || 36);
   }
@@ -187,51 +174,88 @@ function drawEntity(e) {
   ctx.restore();
 }
 
-/* ---------------- update loop ---------------- */
-function update(dt) {
-  let vx = 0, vy = 0;
-  if (keys['w'] || keys['arrowup'])    vy -= 1;
-  if (keys['s'] || keys['arrowdown'])  vy += 1;
-  if (keys['a'] || keys['arrowleft'])  vx -= 1;
-  if (keys['d'] || keys['arrowright']) vx += 1;
+// ===== Step-by-tile (cliente) =====
+const CLIENT_MIN_STEP_MS = 150;         // ~150ms por tile (alinha com servidor)
+let stepState = {
+  moving: false,
+  tx: 0, ty: 0,
+  nextAllowedAt: 0
+};
 
-  if (vx !== 0 || vy !== 0) {
-    const mag = Math.hypot(vx, vy) || 1;
-    player.x += (vx / mag) * player.speed * dt;
-    player.y += (vy / mag) * player.speed * dt;
-    sendMyPos();
+function tryStartStep(now) {
+  if (stepState.moving) return false;
+  if (now < stepState.nextAllowedAt) return false;
+
+  const intent = takeStepIntent();
+  if (!intent) return false;
+
+  const nx = player.x + intent.dx * TILE;
+  const ny = player.y + intent.dy * TILE;
+
+  // inicia movimento para o centro do próximo tile
+  stepState.moving = true;
+  stepState.tx = Math.round(nx);
+  stepState.ty = Math.round(ny);
+  return true;
+}
+
+function updateStep(dt, now) {
+  if (!stepState.moving) {
+    // tentar começar um novo passo
+    tryStartStep(now);
+    return;
   }
 
-  // câmera segue o player
-  camera.x += (player.x - camera.x - camera.w / 2) * camera.lerp;
-  camera.y += (player.y - camera.y - camera.h / 2) * camera.lerp;
+  // move em velocidade alta até encostar no target do próximo tile
+  const spd = 480; // px/s (rápido para “pular” ao próximo tile em ~67ms)
+  const dx = stepState.tx - player.x;
+  const dy = stepState.ty - player.y;
+  const dist = Math.hypot(dx, dy);
 
-  // animação simples de monstros
-  for (const e of entities) {
-    if (e.type === 'monster') {
-      e._tick = (e._tick || 0) + dt;
-      e.x += Math.sin(e._tick * 0.5) * 0.4;
-    }
+  if (dist <= 1.0) {
+    player.x = stepState.tx;
+    player.y = stepState.ty;
+    stepState.moving = false;
+    stepState.nextAllowedAt = now + CLIENT_MIN_STEP_MS;
+
+    // envia POS apenas quando conclui o passo
+    sendMyPos();
+  } else {
+    const ux = dx / (dist || 1);
+    const uy = dy / (dist || 1);
+    player.x += ux * spd * dt;
+    player.y += uy * spd * dt;
   }
 }
 
-/* ---------------- Networking (WS singleton): posições ---------------- */
+// ===== WS posições (sem spam) =====
 function initPosSync() {
-  getSocket(); // garante conexão
+  getSocket();
+
+  // recebe outros jogadores
   onMessage('pos', (d) => {
-    if (!d || !d.id || d.id === player.id) return;
-    let p = entities.find(x => x.id === d.id && x.type === 'player_remote');
-    if (!p) {
-      p = { id: d.id, type: 'player_remote', x: d.x, y: d.y, w: 28, h: 40, name: d.name || 'Player', hp: 100, maxHp: 100 };
-      entities.push(p);
-    } else { p.x = d.x; p.y = d.y; }
+    if (!d || !d.id || d.scope === 'pos_snap') return;
+    // opcionalmente render remotos…
+  });
+
+  // autoridade do servidor: corrige se necessário
+  onMessage('pos_snap', (msg) => {
+    // respeita apenas se for o mesmo mapa
+    if (msg.mapKey && msg.mapKey !== MAP_KEY) return;
+    // aplica snap
+    player.x = (msg.x | 0);
+    player.y = (msg.y | 0);
+    // bloqueia spam de novo passo até o próximo slot
+    stepState.moving = false;
+    stepState.nextAllowedAt = performance.now() + CLIENT_MIN_STEP_MS;
   });
 }
 function sendMyPos() {
-  wsSend({ type: 'pos', id: String(player.id), x: Math.round(player.x), y: Math.round(player.y), name: player.name });
+  // NÃO manda id; servidor usa sessão do cookie
+  wsSend({ type: 'pos', x: Math.round(player.x), y: Math.round(player.y), mapKey: MAP_KEY });
 }
 
-/* ---------------- merge helpers ---------------- */
+// ===== Merge spawns =====
 function mergeSpawns(spawnsRows) {
   const existing = new Map(entities.filter(e => e.type === 'monster').map(e => [e._spawnId, e]));
   for (const s of spawnsRows) {
@@ -257,35 +281,103 @@ function mergeSpawns(spawnsRows) {
   }
 }
 
-/* ---------------- boot / start loop ---------------- */
+// ===== Loop =====
 let last = performance.now();
 function loop(now) {
-  const dt = Math.min(0.05, (now - last) / 1000);
+  const dt = Math.min(0.05, (now - last) / 1000); // clamp 50ms
   last = now;
-  update(dt);
+
+  updateStep(dt, now);
+
+  // câmera suave
+  camera.x += (player.x - camera.x - camera.w / 2) * camera.lerp;
+  camera.y += (player.y - camera.y - camera.h / 2) * camera.lerp;
+
+  // render
   clearCanvas();
   if (mapData) drawGround(); else drawGrid(20, 15);
   for (const e of entities) drawEntity(e);
   drawEntity(player);
+
   requestAnimationFrame(loop);
 }
 
+// ===== Chat (igual ao teu) =====
+const btnDefault = document.getElementById('btnDefault');
+const btnGlobal  = document.getElementById('btnGlobal');
+const chatBox    = document.getElementById('chatBox');
+const chatInput  = document.getElementById('chatInput');
+const chatSend   = document.getElementById('chatSend');
+
+const esc = (s)=> String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function appendChatRow(msg) {
+  if (!chatBox) return;
+  const d = document.createElement('div');
+  d.className = 'chat-row';
+  const time = new Date(msg.ts || Date.now()).toLocaleTimeString();
+  d.innerHTML = `<strong>${esc(msg.fromName || 'Anon')}</strong>: ${esc(msg.text)} <span class="muted">(${time})</span>`;
+  chatBox.appendChild(d);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+async function initChat() {
+  if (!chatBox || !chatInput || !chatSend || !btnDefault || !btnGlobal) return;
+
+  getSocket();
+
+  await authenticate(async () => {
+    const meRaw = await jget('/api/player/me').catch(()=>null);
+    const me = (meRaw && meRaw.profile) ? meRaw.profile : meRaw;
+    const id = String((me && (me.id || me.playerId)) || '');
+    const name = (me && (me.name || me.username || me.displayName)) || 'Você';
+    try { window._chat_me = { id, name }; } catch {}
+    return { id, name };
+  });
+
+  try {
+    const hist = await jget('/api/chat/global?limit=200');
+    for (const m of hist) {
+      appendChatRow({ fromName: m.fromName || 'Anon', text: m.text, ts: (new Date(m.created_at)).getTime() });
+    }
+  } catch {}
+
+  onMessage('chat', (d) => {
+    if (d.scope !== 'global') return;
+    appendChatRow({ fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
+  });
+
+  let chatScope = 'default';
+  btnDefault.addEventListener('click', ()=>{ chatScope='default'; btnDefault.classList.add('active'); btnGlobal.classList.remove('active'); });
+  btnGlobal.addEventListener('click',  ()=>{ chatScope='global';  btnGlobal.classList.add('active');  btnDefault.classList.remove('active'); });
+
+  function sendChat() {
+    const text = (chatInput.value || '').trim();
+    if (!text) return;
+    if (chatScope === 'global') {
+      wsSend({ type: 'chat', scope: 'global', text });
+      chatInput.value = '';
+    } else {
+      appendChatRow({ fromName: 'Você', text, ts: Date.now() });
+      chatInput.value = '';
+    }
+  }
+  chatSend.addEventListener('click', sendChat);
+  chatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
+}
+
+// ===== Boot =====
 async function startHub() {
   try {
     setStatus('Carregando mapa e conteúdo…');
 
-    // Mapa (Tiled JSON embutido)
+    // Mapa (Tiled JSON embed)
     try {
       let raw = await jget(`/api/admin/content/map/${MAP_KEY}/data`);
       if (Array.isArray(raw)) raw = raw[0];
-      if (typeof raw === 'string') {
-        try { raw = JSON.parse(raw); } catch {}
-      }
+      if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch {} }
       mapData = raw;
 
       tileset = (mapData && mapData.tilesets && mapData.tilesets[0]) || null;
       if (tileset && tileset.image) {
-        // normaliza caminhos tipo "../../../client/..." ou sem barra
         const imgPath = tileset.image
           .replace(/^(\.\.\/)+/, '/')
           .replace(/^client\//, '')
@@ -306,7 +398,7 @@ async function startHub() {
       console.warn('map data not available', e.message);
     }
 
-    // Monsters master
+    // Monsters
     try {
       const mons = await jget('/api/admin/content/monsters');
       monstersByKey = {};
@@ -324,7 +416,7 @@ async function startHub() {
     const sp = await jget(`/api/admin/content/map/${MAP_KEY}/spawns`);
     mergeSpawns(sp);
 
-    // Inicia handlers de posição via WS singleton
+    // WS pos (autoridade do servidor)
     initPosSync();
 
     // Loop
@@ -337,12 +429,11 @@ async function startHub() {
   }
 }
 
-// btn reload on UI
+// reload do mapa
 if (btnReload) btnReload.addEventListener('click', async () => {
   try {
     setStatus('Recarregando mapa no servidor…');
-    const j = await postWithCsrf(`/api/admin/content/reload-map?map=${MAP_KEY}`);
-    console.log('reload response:', j);
+    await postWithCsrf(`/api/admin/content/reload-map?map=${MAP_KEY}`);
     await startHub();
   } catch (e) {
     console.error(e);
@@ -350,79 +441,8 @@ if (btnReload) btnReload.addEventListener('click', async () => {
   }
 });
 
-/* ---------------- chat UI (global) usando singleton ---------------- */
-const btnDefault = document.getElementById('btnDefault');
-const btnGlobal  = document.getElementById('btnGlobal');
-const chatBox    = document.getElementById('chatBox');
-const chatInput  = document.getElementById('chatInput');
-const chatSend   = document.getElementById('chatSend');
-
-function escapeHtml(s) {
-  return (s || '').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-function appendChatRow(msg) {
-  if (!chatBox) return;
-  const d = document.createElement('div');
-  d.className = 'chat-row';
-  const time = new Date(msg.ts || Date.now()).toLocaleTimeString();
-  d.innerHTML = `<strong>${escapeHtml(msg.fromName || 'Anon')}</strong>: ${escapeHtml(msg.text)} <span class="muted">(${time})</span>`;
-  chatBox.appendChild(d);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-async function initChat() {
-  if (!chatBox || !chatInput || !chatSend || !btnDefault || !btnGlobal) return;
-
-  getSocket(); // garante conexão única
-
-  // autentica e salva identidade (para o servidor vincular mensagens)
-  await authenticate(async () => {
-    const meRaw = await jget('/api/player/me').catch(()=>null);
-    const me = (meRaw && meRaw.profile) ? meRaw.profile : meRaw;
-    const id = String((me && (me.id || me.playerId)) || '');
-    const name = (me && (me.name || me.username || me.displayName)) || 'Você';
-    try { window._chat_me = { id, name }; } catch {}
-    return { id, name };
-  });
-
-  // histórico (uma vez)
-  try {
-    const hist = await jget('/api/chat/global?limit=200');
-    for (const m of hist) {
-      appendChatRow({ fromName: m.fromName || 'Anon', text: m.text, ts: (new Date(m.created_at)).getTime() });
-    }
-  } catch {}
-
-  // recebe mensagens via WS
-  onMessage('chat', (d) => {
-    if (d.scope !== 'global') return;
-    appendChatRow({ fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
-  });
-
-  // UI
-  let chatScope = 'default';
-  btnDefault.addEventListener('click', ()=>{ chatScope='default'; btnDefault.classList.add('active'); btnGlobal.classList.remove('active'); });
-  btnGlobal.addEventListener('click',  ()=>{ chatScope='global';  btnGlobal.classList.add('active');  btnDefault.classList.remove('active'); });
-
-  function sendChat() {
-    const text = (chatInput.value || '').trim();
-    if (!text) return;
-    if (chatScope === 'global') {
-      wsSend({ type: 'chat', scope: 'global', text });
-      chatInput.value = '';
-    } else {
-      appendChatRow({ fromName: 'Você', text, ts: Date.now() });
-      chatInput.value = '';
-    }
-  }
-  chatSend.addEventListener('click', sendChat);
-  chatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
-}
-
-/* ---------------- start ---------------- */
+// start
 (async function start() {
-  try {
-    await initChat();
-  } catch {}
+  try { await initChat(); } catch {}
   await startHub();
 })();

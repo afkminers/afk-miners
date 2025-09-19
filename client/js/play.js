@@ -1,14 +1,20 @@
+// /client/js/play.js
 // Cena jogável genérica (House/PvP): usa ?map=<key> (padrão house).
+// Agora 100% WS para posição: cliente publica (publishPos) e aceita correção (pos_snap).
 // Input (WASD/Numpad/Mouse) + PlayerController + Camera2D + AStarGrid + ClickToMove.
 // Requests HTTP centralizadas em client/js/api.js (CSRF automático).
-// /client/js/play.js
 
-import { getCsrf, apiGet, apiPost } from './api.js';
+import { getCsrf, apiGet } from './api.js';
 import { CombatActions } from './combat/actions.js';
+import { publishPos, setMapKey } from './pos-publisher.js';
+import { onMessage } from './ws/singleton.js';
 
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
 const TILE = 32;
+
+// registra o mapKey para o publicador WS
+setMapKey(MAP_KEY);
 
 // ----------------- namespace público p/ outros módulos -----------------
 window.GameScene = window.GameScene || {};
@@ -27,25 +33,19 @@ window.setActiveHero = function setActiveHero(id) {
 
 /** Estado leve do time: até 3 heróis. */
 window.Team = window.Team || (function () {
-  const state = {
-    activeIds: [] // array de heroIds (string)
-  };
-
+  const state = { activeIds: [] };
   function uniq(arr) {
     const seen = new Set(); const out = [];
     for (const x of arr) { const k = String(x); if (!seen.has(k)) { seen.add(k); out.push(k); } }
     return out;
   }
-
   return {
-    /** Seta o time inteiro (máx 3). Mantém o herói ativo como o primeiro. */
     setActiveTeam(ids) {
       const list = Array.isArray(ids) ? ids.map(String) : [];
       state.activeIds = uniq(list).slice(0, 3);
       if (state.activeIds.length > 0) window.setActiveHero(state.activeIds[0]);
       window.dispatchEvent(new CustomEvent('team:changed', { detail: { heroIds: state.activeIds.slice() } }));
     },
-    /** Adiciona um herói ao time. */
     add(id) {
       const s = String(id);
       if (!s) return;
@@ -54,7 +54,6 @@ window.Team = window.Team || (function () {
       if (!window.ActiveHeroId) window.setActiveHero(next[0]);
       window.dispatchEvent(new CustomEvent('team:changed', { detail: { heroIds: state.activeIds.slice() } }));
     },
-    /** Remove um herói do time. */
     remove(id) {
       const s = String(id);
       state.activeIds = (state.activeIds || []).filter(x => String(x) !== s);
@@ -64,19 +63,13 @@ window.Team = window.Team || (function () {
       }
       window.dispatchEvent(new CustomEvent('team:changed', { detail: { heroIds: state.activeIds.slice() } }));
     },
-    /** Retorna cópia do time atual. */
-    getActiveTeamIds() {
-      return (state.activeIds || []).slice(0,3);
-    },
-    /** Retorna o herói ativo (fallback: primeiro do time). */
-    getActiveHeroId() {
-      return window.ActiveHeroId || (state.activeIds && state.activeIds[0]) || null;
-    }
+    getActiveTeamIds() { return (state.activeIds || []).slice(0,3); },
+    getActiveHeroId() { return window.ActiveHeroId || (state.activeIds && state.activeIds[0]) || null; }
   };
 })();
 
 // ==== BINDING ESTÁVEL (sem gambiarra): instanceId <-> sprite; spawnId -> Set<sprites> ====
-const MOB_BY_INSTANCE = new Map();        // instanceId (UUID) -> sprite (obj do array mobs)
+const MOB_BY_INSTANCE = new Map();        // instanceId (UUID) -> sprite
 const MOB_SPRITES_BY_SPAWN = new Map();   // spawnId (int) -> Set<sprite>
 
 window.GameScene.getMobByInstanceId = (id) => MOB_BY_INSTANCE.get(String(id)) || null;
@@ -101,7 +94,6 @@ window.GameScene.bindInstanceToAnySpriteByKey = (instanceId, monsterKey) => {
   best._animFrozen = false;
   best._animFrozenFrame = 0;
 
-  // garantir lookup
   MOB_BY_INSTANCE.set(String(instanceId), best);
   return best;
 };
@@ -119,11 +111,10 @@ window.GameScene.registerMobSprite = (sprite, meta = {}) => {
   }
 };
 
-// escolhe uma sprite “livre” daquele spawn (sem instanceId ou marcada morta/oculta)
+// escolhe uma sprite “livre” daquele spawn
 function pickFreeSpriteForSpawn(spawnId) {
   const set = MOB_SPRITES_BY_SPAWN.get(Number(spawnId));
   if (!set || set.size === 0) return null;
-  // preferência: sem vínculo; depois mortas; depois qualquer uma
   let candidate = null;
   for (const s of set) { if (!s.instanceId) return s; if (!candidate && (s.dead || s.hidden)) candidate = s; }
   return candidate || [...set][0];
@@ -132,7 +123,6 @@ function pickFreeSpriteForSpawn(spawnId) {
 window.GameScene.bindInstanceToSpawn = (instanceId, spawnId) => {
   const s = pickFreeSpriteForSpawn(spawnId);
   if (!s) return null;
-  // limpa estado de morte/oculto e congelações
   s.instanceId = String(instanceId);
   s.dead = false;
   s.hidden = false;
@@ -145,10 +135,10 @@ window.GameScene.bindInstanceToSpawn = (instanceId, spawnId) => {
 window.GameScene.onMonsterDead = (instanceId) => {
   const s = MOB_BY_INSTANCE.get(String(instanceId));
   if (!s) return;
-  s.dead = true;            // congela AI/movimento
-  s._animFrozen = true;     // congela animação no 1º frame
+  s.dead = true;
+  s._animFrozen = true;
   s._animFrozenFrame = 0;
-  MOB_BY_INSTANCE.delete(String(instanceId)); // solta vínculo da instância (respawn reusa a sprite)
+  MOB_BY_INSTANCE.delete(String(instanceId));
 };
 
 // =============== Canvas/HUD flexível (querystring + auto) ===============
@@ -182,7 +172,7 @@ canvas.addEventListener('touchstart', () => { try { canvas.focus(); } catch { } 
 // helper DOM
 const $ = (s) => document.querySelector(s);
 
-// camera hoisted (evita TDZ)
+// camera hoisted
 let camera;
 
 /* ===================== Assets: normalização de paths ===================== */
@@ -229,14 +219,12 @@ async function loadTilesetImage(rawPath) {
 /* ============================= Settings (pixel art global) ============================= */
 function applySmoothing() {
   try {
-    // suavização off
     ctx.imageSmoothingEnabled = false;
     ctx.mozImageSmoothingEnabled = false;
     ctx.webkitImageSmoothingEnabled = false;
   } catch {}
   try {
-    // CSS: pixelado nativo pra todos
-    canvas.style.imageRendering = 'pixelated';       // Chrome/Firefox
+    canvas.style.imageRendering = 'pixelated';
     canvas.style.setProperty('image-rendering', 'pixelated');
   } catch {}
 }
@@ -253,7 +241,6 @@ function resize() {
   const dprBase = window.devicePixelRatio || 1;
   const dpr = Math.min(dprBase, Number(st.dprCap || dprBase));
 
-  // tamanho CSS (aparência) + tamanho real (resolução)
   canvas.style.width = wCSS + 'px';
   canvas.style.height = hCSS + 'px';
   const w = Math.round(wCSS * dpr);
@@ -261,7 +248,6 @@ function resize() {
   if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
   if (camera?.resize) camera.resize(canvas.width, canvas.height);
 
-  // recalcula zoom baseado na altura do canvas e tiles visíveis
   applyCameraZoom();
 }
 window.addEventListener('resize', resize);
@@ -277,7 +263,6 @@ function loadImg(src) {
   return img;
 }
 function imgReady(img) { return img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0; }
-
 async function ensureImgLoaded(img) {
   if (imgReady(img)) return true;
   try { await img.decode(); return imgReady(img); } catch { return imgReady(img); }
@@ -301,13 +286,8 @@ function indexSpriteMeta(obj) {
   SPRITE_INDEX.clear();
   for (const [key, data] of Object.entries(obj || {})) {
     const nk = normKey(key);
-    // indexa por key normalizada
     SPRITE_INDEX.set(nk, data);
-
-    // indexa também por caminho da imagem do YAML
     if (data?.image) SPRITE_INDEX.set(normKey(data.image), data);
-
-    // apelidos opcionais
     if (Array.isArray(data?.aliases)) {
       for (const a of data.aliases) SPRITE_INDEX.set(normKey(a), data);
     }
@@ -316,56 +296,40 @@ function indexSpriteMeta(obj) {
 
 function asObj(v) {
   if (!v) return null;
-  if (typeof v === 'string') {
-    try { return JSON.parse(v); } catch { return null; }
-  }
+  if (typeof v === 'string') { try { return JSON.parse(v); } catch { return null; } }
   return v;
 }
 
 async function loadSpriteMeta() {
   const list = await apiGet('/api/assets/sprites'); // [{ key, kind, data }]
-  SPRITES_META = Object.fromEntries(
-    (list || []).map(e => [e.key, asObj(e.data)])
-  );
+  SPRITES_META = Object.fromEntries((list || []).map(e => [e.key, asObj(e.data)]));
   indexSpriteMeta(SPRITES_META);
 }
 
 function findMetaFor(spawnKey) {
   const k = String(spawnKey || '').trim();
   if (!k) return null;
-  const tries = [
-    k,
-    k.toLowerCase(),
-    k.replace(/[\s_]+/g, '-'),
-    k.replace(/[\s\-]+/g, '_'),
-  ];
+  const tries = [k, k.toLowerCase(), k.replace(/[\s_]+/g, '-'), k.replace(/[\s\-]+/g, '_')];
   for (const t of tries) {
     const m = SPRITE_INDEX.get(normKey(t));
     if (m) return m;
   }
   const nk = normKey(k);
-  for (const [idx, m] of SPRITE_INDEX.entries()) {
-    if (idx.includes(nk)) return m;
-  }
+  for (const [idx, m] of SPRITE_INDEX.entries()) if (idx.includes(nk)) return m;
   return null;
 }
 
 function buildMonsterCandidates(kindNorm, meta, rawKey) {
   const list = [];
-
-  // 1) Caminho explícito do YAML (prioritário)
   if (meta?.image) {
     const p = meta.image.replace(/^(\.\/)+/, '');
-    list.push('/' + p); // ex: /sprites/monsters/cave_rat.png
-    list.push(p);       // ex: sprites/monsters/cave_rat.png
+    list.push('/' + p);
+    list.push(p);
   }
-
-  // 2) Fallbacks: gera variações de nome
-  const vKebab = String(kindNorm || '').trim();                 // ex: cave-rat
-  const vRaw = String(rawKey || '').trim();                     // ex: cave_rat
-  const vUnder = vRaw.toLowerCase().replace(/[\s\-]+/g, '_');   // ex: cave_rat
-  const vKebabFromRaw = vRaw.toLowerCase().replace(/[\s_]+/g, '-'); // ex: cave-rat
-
+  const vKebab = String(kindNorm || '').trim();
+  const vRaw = String(rawKey || '').trim();
+  const vUnder = vRaw.toLowerCase().replace(/[\s\-]+/g, '_');
+  const vKebabFromRaw = vRaw.toLowerCase().replace(/[\s_]+/g, '-');
   const variants = [...new Set([vKebab, vUnder, vKebabFromRaw])];
 
   for (const v of variants) {
@@ -375,8 +339,6 @@ function buildMonsterCandidates(kindNorm, meta, rawKey) {
     list.push(`/img/${v}.png`);
     list.push(`/${v}.png`);
   }
-
-  // remove duplicatas mantendo a ordem
   return [...new Set(list)];
 }
 
@@ -394,25 +356,13 @@ async function loadMonsterImg(kindNorm, meta, rawKey) {
 // Auto-meta: tenta 64x64 → 48x32 → 32x32 e define animações padrão
 function inferMetaFromImage(img, rawKey) {
   if (!img || !img.naturalWidth || !img.naturalHeight) return null;
-
-  // ordem de tentativa de frame size
-  const candidates = [
-    { w: 64, h: 64 },
-    { w: 48, h: 32 },
-    { w: 32, h: 32 },
-  ];
-
-  // escolhe o 1º que divide exatamente a imagem
+  const candidates = [{ w: 64, h: 64 }, { w: 48, h: 32 }, { w: 32, h: 32 }];
   let fw = 32, fh = 32;
   for (const c of candidates) {
-    if (img.naturalWidth % c.w === 0 && img.naturalHeight % c.h === 0) {
-      fw = c.w; fh = c.h; break;
-    }
+    if (img.naturalWidth % c.w === 0 && img.naturalHeight % c.h === 0) { fw = c.w; fh = c.h; break; }
   }
-
   const cols = Math.max(1, Math.floor(img.naturalWidth / fw));
   const rows = Math.max(1, Math.floor(img.naturalHeight / fh));
-
   return {
     key: String(rawKey || '').trim(),
     kind: 'monster',
@@ -425,16 +375,12 @@ function inferMetaFromImage(img, rawKey) {
         fps: 8,
         frames: Math.min(4, cols),
         startCol: 0,
-        rowByDir:
-          (rows >= 5)
-            ? { south: 1, west: 2, east: 3, north: 4 }
-            : (rows >= 4) ? { south: 0, west: 1, east: 2, north: 3 } : null,
+        rowByDir: (rows >= 5) ? { south: 1, west: 2, east: 3, north: 4 }
+                              : (rows >= 4) ? { south: 0, west: 1, east: 2, north: 3 } : null,
         row: 0,
         loop: true
       },
-      dead: (rows >= 6)
-        ? { row: 5, frames: Math.min(4, cols), startCol: 0, loop: false }
-        : null
+      dead: (rows >= 6) ? { row: 5, frames: Math.min(4, cols), startCol: 0, loop: false } : null
     }
   };
 }
@@ -459,17 +405,14 @@ const loots = new Map(); // id -> { id, x, y, items:[...] }
 window.GameScene.loots = loots;
 
 function lootAtWorld(x, y) {
-  for (const l of loots.values()) {
-    if (Math.abs(x - l.x) <= 16 && Math.abs(y - l.y) <= 16) return l;
-  }
+  for (const l of loots.values()) if (Math.abs(x - l.x) <= 16 && Math.abs(y - l.y) <= 16) return l;
   return null;
 }
 
 function drawLoot(l) {
-  // desenho simples (você pode trocar por sprite/baú depois)
   ctx.save();
   ctx.globalAlpha = 0.9;
-  ctx.fillStyle = '#d97706'; // âmbar
+  ctx.fillStyle = '#d97706';
   ctx.fillRect(l.x - 6, l.y - 10, 12, 10);
   ctx.fillStyle = '#92400e';
   ctx.fillRect(l.x - 6, l.y - 6, 12, 6);
@@ -525,7 +468,6 @@ function drawPlayer(controller) {
 function drawMob(m) {
   if (m.hidden) return;
 
-  // Auto-meta se só a imagem carregou
   if ((!m.meta || !m.meta.frame || !m.meta.grid) && imgReady(m.img)) {
     const auto = inferMetaFromImage(m.img, m.rawKey || m.kind);
     if (auto) m.meta = auto;
@@ -542,25 +484,18 @@ function drawMob(m) {
   }
 
   const meta = m.meta;
-
-  // frame & grid
   const frameW  = Number(meta.frame?.width)  || 32;
   const frameH  = Number(meta.frame?.height) || 32;
   const margin  = Number(meta.frame?.margin)  || 0;
   const spacing = Number(meta.frame?.spacing) || 0;
   const cols    = Math.max(1, Number(meta.grid?.cols) || 1);
   const rows    = Math.max(1, Number(meta.grid?.rows) || 1);
-  const EPS     = Number.isFinite(Number(meta.frame?.bleedFix)) ? Number(meta.frame?.bleedFix) : 0.25;
-
-  // animações
   const animIdle = meta.anims?.idle || null;
   const animWalk = meta.anims?.walk || { fps: 8, frames: cols, row: 0, startCol: 0, loop: true };
   const animDead = meta.anims?.dead || null;
 
-  // escolher anima
+  const face = m.face || 'south';
   let anim = m.dead && animDead ? animDead : (animIdle && m._animFrozen ? animIdle : animWalk);
-
-  // parâmetros base
   let fps = Number(anim.fps); if (!Number.isFinite(fps) || fps < 0) fps = 8;
 
   let seq = Array.isArray(anim.seq) ? anim.seq.slice() : null;
@@ -569,10 +504,7 @@ function drawMob(m) {
   if (!Number.isFinite(frames) || frames <= 0) frames = cols;
   if (!Number.isFinite(startCol) || startCol < 0) startCol = 0;
 
-  // direção (linha/frames/startCol/seq)
-  const face = m.face || 'south';
   let row = Number(anim.row); if (!Number.isFinite(row)) row = 0;
-
   if (anim.rowByDir && anim.rowByDir[face] != null) {
     const r = Number(anim.rowByDir[face]); if (Number.isFinite(r)) row = r;
   }
@@ -582,17 +514,12 @@ function drawMob(m) {
   if (anim.startColByDir && anim.startColByDir[face] != null) {
     const sd = Number(anim.startColByDir[face]); if (Number.isFinite(sd) && sd >= 0) startCol = sd;
   }
-  if (!seq && anim.seqByDir && Array.isArray(anim.seqByDir[face])) {
-    seq = anim.seqByDir[face].slice();
-  }
+  if (!seq && anim.seqByDir && Array.isArray(anim.seqByDir[face])) seq = anim.seqByDir[face].slice();
 
-  // clamp do row ao grid
   row = Math.max(0, Math.min(rows - 1, row));
 
-  // estado morto: congelar 1º frame
   if (m.dead && animDead) {
-    fps = 0;
-    frames = 1;
+    fps = 0; frames = 1;
     if (Number.isFinite(animDead.startCol)) startCol = Number(animDead.startCol);
     if (Number.isFinite(animDead.row)) row = Math.max(0, Math.min(rows - 1, Number(animDead.row)));
     seq = null;
@@ -600,7 +527,6 @@ function drawMob(m) {
     m._animFrozenFrame = 0;
   }
 
-  // calcular frame atual
   const t = performance.now() / 1000;
   const baseLen = Math.max(1, seq ? seq.length : frames);
   let f;
@@ -611,7 +537,6 @@ function drawMob(m) {
     f = m._animFrozen ? m._animFrozenFrame : Math.floor(t * Math.max(0, fps)) % baseLen;
   }
 
-  // coluna
   let col;
   if (seq && seq.length > 0) {
     const pick = Number(seq[f]);
@@ -627,25 +552,22 @@ function drawMob(m) {
     if (col < 0) col = 0;
   }
 
-  // recorte
-  const sx = margin + col * (frameW + spacing) + 0.25;
-  const sy = margin + row * (frameH + spacing) + 0.25;
-  const sw = frameW - 0.5;
-  const sh = frameH - 0.5;
+  const EPS = Number.isFinite(Number(meta.frame?.bleedFix)) ? Number(meta.frame?.bleedFix) : 0.25;
+  const sx = margin + col * (frameW + spacing) + EPS;
+  const sy = margin + row * (frameH + spacing) + EPS;
+  const sw = frameW - 2 * EPS;
+  const sh = frameH - 2 * EPS;
 
-  // âncora
   const anchorX = (meta.anchor?.x ?? 0.5);
   const anchorY = (meta.anchor?.y ?? 0.9);
   const dw = frameW, dh = frameH;
   const ox = Math.round(m.x - dw * anchorX);
   const oy = Math.round(m.y - dh * anchorY);
 
-  // flipX (1 linha, sem rowByDir)
   const canFlipX = !anim.rowByDir && rows === 1 && face === 'west';
 
   ctx.save();
   if (m.dead) ctx.globalAlpha = 0.55;
-
   if (canFlipX) {
     ctx.translate(ox + dw, oy);
     ctx.scale(-1, 1);
@@ -654,106 +576,6 @@ function drawMob(m) {
     ctx.drawImage(m.img, sx, sy, sw, sh, ox, oy, dw, dh);
   }
   ctx.restore();
-}
-
-/* ======================= Posição Persistente ======================= */
-let POS_SYNC_ENABLED = true;
-let lastPostAt = 0;
-
-// contador de sequência enviado ao servidor
-let posSeq = 0;
-// marca se já sincronizamos o contador com o servidor
-let posSeqReady = false;
-// evita posts concorrentes
-let posInFlight = false;
-// evita post quando não mudou
-let lastSent = { x: null, y: null };
-
-/** Lê posição salva do servidor e já sincroniza o seq local */
-async function getSavedPos() {
-  try {
-    const p = await apiGet(`/api/player/pos?map=${encodeURIComponent(MAP_KEY)}`);
-    if (p && Number.isFinite(p.seq)) {
-      posSeq = Number(p.seq);
-      posSeqReady = true;
-    }
-    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
-      return { x: p.x, y: p.y };
-    }
-  } catch {
-    // ok, começa do default
-  }
-  return null;
-}
-
-/** Envia posição com rate-limit, dedupe e seq sincronizado com o servidor */
-async function postPosThrottled(mapKey, x, y) {
-  if (!POS_SYNC_ENABLED) return;
-
-  // tenta sincronizar seq uma única vez no 1º envio
-  if (!posSeqReady) {
-    try {
-      const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
-      if (chk && Number.isFinite(chk.seq)) {
-        posSeq = Number(chk.seq);
-        posSeqReady = true;
-      }
-    } catch { /* segue mesmo assim */ }
-  }
-
-  // sem flooding: servidor aceita ~12 vezes por 5s → ~1 a cada ~500ms
-  const now = performance.now();
-  if ((now - lastPostAt) < 500) return;
-
-  // não reenvia se não mudou nada
-  const nx = Math.round(x), ny = Math.round(y);
-  if (lastSent.x === nx && lastSent.y === ny) return;
-
-  // sem concorrência
-  if (posInFlight) return;
-  posInFlight = true;
-
-  const doSend = async () => {
-    posSeq += 1;
-    lastPostAt = now;
-    await apiPost('/api/player/pos', {
-      mapKey,
-      x: nx,
-      y: ny,
-      seq: posSeq,
-      clientTs: Date.now()
-    });
-    lastSent = { x: nx, y: ny };
-  };
-
-  try {
-    await doSend();
-  } catch (e) {
-    const msg = String(e?.message || '');
-    // conflito de sequência: rebaseia e tenta UMA vez
-    if (msg.includes('409') || /stale-seq/i.test(msg)) {
-      try {
-        const chk = await apiGet(`/api/player/pos?map=${encodeURIComponent(mapKey)}`);
-        if (chk && Number.isFinite(chk.seq)) {
-          posSeq = Number(chk.seq);
-          posSeqReady = true;
-          await doSend();
-        }
-      } catch { /* ignorar - próxima iteração tenta de novo */ }
-    } else if (/429/.test(msg)) {
-      // rate limited: apenas ignore; próxima janela envia
-    } else if (/202/.test(msg)) {
-      // too-fast do anti-speed: não desliga; apenas ignore este tick
-    } else if (/403|csrf/i.test(msg)) {
-      // auth/csrf: desliga para não poluir
-      POS_SYNC_ENABLED = false;
-      console.warn('[pos] desabilitado (auth/csrf):', msg);
-    } else {
-      console.warn('pos sync failed:', msg);
-    }
-  } finally {
-    posInFlight = false;
-  }
 }
 
 /* ==================== Colisão e Spawns do Tiled ==================== */
@@ -812,48 +634,38 @@ async function resolvePlayerSprite() {
   try {
     const me = await apiGet('/api/player/me');
     const heroes = Array.isArray(me.heroes) ? me.heroes : [];
-
-    // Time padrão: até 3 primeiros heróis do jogador
     const teamIds = heroes.slice(0, 3).map(h => String(h.id));
-    if (teamIds.length > 0) {
-      try { window.Team.setActiveTeam(teamIds); } catch {}
-    }
+    if (teamIds.length > 0) { try { window.Team.setActiveTeam(teamIds); } catch {} }
 
-    // Define herói ativo como o primeiro do time (fallback: starter/primeiro)
     const preferred =
       heroes.find(h => h.isStarter === 1 || h.isStarter === true) ||
       heroes[0] || null;
 
     if (preferred) {
       try { window.setActiveHero(preferred.id); } catch {}
-
       playerVis.heroKey = preferred.heroKey || preferred.key || null;
-
       const candidate = playerVis.heroKey ? `/sprites/characters/${playerVis.heroKey}.png` : null;
       if (candidate) {
         playerVis.img = loadImg(candidate);
-        await ensureImgLoaded(playerVis.img).catch(() => { });
+        await ensureImgLoaded(playerVis.img).catch(() => {});
         if (imgReady(playerVis.img)) return;
       }
       if (preferred.imageUrl) {
         playerVis.img = loadImg(preferred.imageUrl);
-        await ensureImgLoaded(playerVis.img).catch(() => { });
+        await ensureImgLoaded(playerVis.img).catch(() => {});
         if (imgReady(playerVis.img)) return;
       }
     }
   } catch (e) { console.warn('resolvePlayerSprite:', e.message); }
 
-  // fallback visual padrão
   playerVis.img = loadImg("/sprites/characters/player.png");
-  ensureImgLoaded(playerVis.img).catch(() => { });
+  ensureImgLoaded(playerVis.img).catch(() => {});
 }
 
 /* =========================== Respawn Manager ========================== */
 function addMobFromSpawn(spDef) {
   const rawKey = spDef.monsterKey || spDef.monster || "goblin";
   const kindNorm = normKey(rawKey);
-
-  // <<< AQUI: meta sempre como OBJETO (se vier string, fazemos JSON.parse)
   const meta = asObj(findMetaFor(rawKey)) || null;
 
   const m = {
@@ -862,12 +674,12 @@ function addMobFromSpawn(spDef) {
     rawKey,
     x: (spDef.x || 0) + Math.random() * (spDef.w || TILE),
     y: (spDef.y || 0) + Math.random() * (spDef.h || TILE),
-    w: 32, h: 32,                              // tamanho visual padrão; o draw usa meta.frame.*
+    w: 32, h: 32,
     speed: 40 + Math.random() * 20,
     dirX: 0, dirY: 0, changeAt: 0,
     face: 'east',
     img: null,
-    meta,                                      // meta já parseado
+    meta,
     bound: (spDef.w || spDef.h)
       ? { x: spDef.x || 0, y: spDef.y || 0, w: spDef.w || TILE, h: spDef.h || TILE }
       : null,
@@ -879,12 +691,9 @@ function addMobFromSpawn(spDef) {
     _animFrozenFrame: 0,
   };
 
-  // carrega a imagem usando o meta (que pode ter .image correto do YAML)
   loadMonsterImg(kindNorm, meta, rawKey).then(img => {
     if (!img) return;
     m.img = img;
-
-    // Só infere automaticamente se NÃO veio meta válido do YAML
     if (!m.meta || !m.meta.frame || !m.meta.grid) {
       const auto = inferMetaFromImage(img, rawKey);
       if (auto) m.meta = auto;
@@ -892,11 +701,7 @@ function addMobFromSpawn(spDef) {
   });
 
   mobs.push(m);
-
-  if (m.spawnId != null) {
-    window.GameScene.registerMobSprite(m, { spawnId: m.spawnId });
-  }
-
+  if (m.spawnId != null) window.GameScene.registerMobSprite(m, { spawnId: m.spawnId });
   return m.id;
 }
 
@@ -906,9 +711,7 @@ function buildSpawnersFromDefs(defs) {
     const want = Math.max(1, Number(d.count || 1));
     const respawnMs = Math.max(1, Number(d.respawnSec || d.respawn || 20)) * 1000;
     spawners.push({
-      def: d,
-      want,
-      respawnMs,
+      def: d, want, respawnMs,
       nextAt: performance.now(),
       area: { x: d.x || 0, y: d.y || 0, w: d.w || TILE, h: d.h || TILE },
       liveIds: new Set()
@@ -931,24 +734,19 @@ function updateRespawns(now) {
 
 /* ================================ Boot ================================ */
 (async function main() {
-  // 1) garante CSRF/cookies antes de qualquer POST
   await getCsrf().catch(() => {});
-
   await loadSpriteMeta();
 
-  // cria a câmera
   const maps = await apiGet("/api/admin/content/maps");
   if (!maps.some((m) => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
 
-  // helper para normalizar payloads que podem vir string/array/obj
   function normalizeApiJson(payload) {
     let v = payload;
     if (Array.isArray(v)) v = v[0];
-    if (typeof v === 'string') { try { v = JSON.parse(v); } catch { } }
+    if (typeof v === 'string') { try { v = JSON.parse(v); } catch {} }
     return v;
   }
 
-  // Objetos do mapa (starts/solids)
   const rawObjs = await apiGet(`/api/admin/content/map/${MAP_KEY}/objects`);
   const objsNorm = normalizeApiJson(rawObjs);
   const objArr = Array.isArray(objsNorm)
@@ -956,12 +754,10 @@ function updateRespawns(now) {
     : (objsNorm && Array.isArray(objsNorm.objects) ? objsNorm.objects : []);
   starts = objArr.filter(o => (o.type || '').toLowerCase() === 'start');
 
-  // Data (tiles)
   const rawMap = await apiGet(`/api/admin/content/map/${MAP_KEY}/data`);
   mapData = normalizeApiJson(rawMap);
 
   tileset = (mapData && mapData.tilesets && mapData.tilesets[0]) || null;
-
   if (!tileset || !tileset.image) {
     console.warn("Tileset não embedado. No Tiled: 'Embed Tileset' e exporte novamente o JSON.");
   } else {
@@ -972,7 +768,6 @@ function updateRespawns(now) {
     (l) => l.type === "tilelayer" && l.name && l.name.toLowerCase() === "ground"
   );
 
-  // Colisão (objetos sólidos preferidos; fallback layer "collision")
   const mapW = (mapData.width || 64) * TILE;
   const mapH = (mapData.height || 64) * TILE;
 
@@ -987,7 +782,6 @@ function updateRespawns(now) {
   const worldH = rows * TILE;
   const grid = collBuild.grid || new Uint8Array(cols * rows);
 
-  // Instâncias centrais
   camera = new Camera2D({
     width: canvas.width,
     height: canvas.height,
@@ -995,7 +789,6 @@ function updateRespawns(now) {
     worldHeight: worldH
   });
 
-  // Polyfills úteis na câmera
   if (typeof camera.getZoom !== 'function') camera.getZoom = () => (camera.zoom && Number(camera.zoom)) || 1;
   if (typeof camera.setZoom !== 'function') camera.setZoom = (z) => { camera.zoom = Number(z) || 1; };
   if (typeof camera.screenToWorld !== 'function') camera.screenToWorld = (sx, sy) => {
@@ -1007,7 +800,6 @@ function updateRespawns(now) {
     return { x: (wx - camera.x) * z, y: (wy - camera.y) * z };
   };
   if (typeof camera.apply !== 'function') {
-    // IMPORTANTE: aplica translate depois scale para obter (p - cam) * z (pixel art real)
     camera.apply = (ctx, draw) => {
       ctx.save();
       const z = (typeof camera.getZoom === 'function') ? Number(camera.getZoom()) || 1 : 1;
@@ -1020,17 +812,14 @@ function updateRespawns(now) {
 
   function applyCameraZoom() {
     const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
-
-    // Zoom por quantidade de tiles na altura da tela (estilo Tibia)
     if (st.zoomByTiles) {
-      const tilesY = Math.max(6, Number(st.tilesY || 13)); // 13 ≈ Tibia clássico
+      const tilesY = Math.max(6, Number(st.tilesY || 13));
       const zRaw = canvas.height / (tilesY * TILE);
       const zMin = Number.isFinite(st.zoomMin) ? st.zoomMin : 0.5;
       const zMax = Number.isFinite(st.zoomMax) ? st.zoomMax : 4;
       const zClamped = Math.max(zMin, Math.min(zMax, zRaw));
       if (typeof camera.setZoom === 'function') camera.setZoom(zClamped);
     } else {
-      // Modo antigo: zoom numérico direto
       const zRaw = Number(st.zoom || 1);
       const zMin = Number.isFinite(st.zoomMin) ? st.zoomMin : 0.5;
       const zMax = Number.isFinite(st.zoomMax) ? st.zoomMax : 4;
@@ -1039,14 +828,14 @@ function updateRespawns(now) {
     }
   }
 
-  // recalcula tamanho do canvas e zoom já no boot
   resize();
 
   const controller = new PlayerController({
     speed: 140,
     collisionGrid: grid,
     cols, rows,
-    onMoved: (x, y) => postPosThrottled(MAP_KEY, x, y)
+    // WS-only: publica cada passo válido
+    onMoved: (x, y) => publishPos(x, y),
   });
 
   // expõe camera/controller/mapKey p/ outros módulos (combate, etc.)
@@ -1061,10 +850,8 @@ function updateRespawns(now) {
   // Input
   Input.attach(window, canvas);
 
-  // Posição inicial
-  const saved = await getSavedPos();
-  if (saved) controller.setPosition(saved.x, saved.y);
-  else if (starts[0]) controller.setPosition(starts[0].x, starts[0].y);
+  // Posição inicial local (spawn do mapa). O servidor corrigirá com 'pos_snap' na conexão.
+  if (starts[0]) controller.setPosition(starts[0].x, starts[0].y);
   else controller.setPosition(TILE * 2 + TILE / 2, TILE * 2 + TILE / 2);
 
   camera.follow(controller);
@@ -1089,20 +876,22 @@ function updateRespawns(now) {
     s.nextAt = now0 + s.respawnMs;
   }
 
-  // === WS → loot (o seu ws-combat.js deve disparar 'ws:message' com {detail:{msg}})
-  window.addEventListener('ws:message', (ev) => {
-    const msg = ev.detail?.msg;
-    if (!msg || !msg.type) return;
-    if (msg.type === 'loot_spawned') {
-      loots.set(String(msg.id), { id: String(msg.id), x: msg.x, y: msg.y, items: msg.items || [] });
-    } else if (msg.type === 'loot_removed') {
-      loots.delete(String(msg.id));
-    }
+  // === WS: correção de posição (autoridade do servidor)
+  onMessage('pos_snap', (msg) => {
+    if (msg.mapKey && msg.mapKey !== MAP_KEY) return;
+    try { controller.setPosition(msg.x | 0, msg.y | 0); } catch {}
+  });
+
+  // === WS: loot
+  onMessage('loot_spawned', (msg) => {
+    loots.set(String(msg.id), { id: String(msg.id), x: msg.x, y: msg.y, items: msg.items || [] });
+  });
+  onMessage('loot_removed', (msg) => {
+    loots.delete(String(msg.id));
   });
 
   // sinaliza que a cena está pronta (outros módulos podem iniciar)
   window.dispatchEvent(new CustomEvent('game:ready', { detail: { canvas, ctx, camera, controller } }));
-  // >>> avisa o overlay de combate para re-vincular barras imediatamente <<<
   window.dispatchEvent(new Event('gamescene:ready'));
 
   // Loop principal
@@ -1134,7 +923,6 @@ function updateRespawns(now) {
     camera.update(dt);
 
     // ===== IA dos mobs em passos de 32x32 (apenas N/S/L/O) =====
-    const TILE = 32;
     const hasGrid = !!grid && Number.isFinite(cols) && Number.isFinite(rows);
     const cellOf   = (wx, wy) => ({ cx: Math.floor(wx / TILE), cy: Math.floor(wy / TILE) });
     const centerOf = (cx, cy) => ({ x: cx * TILE + TILE / 2, y: cy * TILE + TILE / 2 });
@@ -1143,7 +931,6 @@ function updateRespawns(now) {
       if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) return true;
       return grid[cy * cols + cx] === 1;
     };
-    // Bound inteligente: área <= 1 SQM => não limita o mob
     const inBound = (mob, cx, cy) => {
       if (!mob.bound) return true;
       const { x, y, w, h } = mob.bound;
@@ -1156,29 +943,16 @@ function updateRespawns(now) {
 
     for (const mob of mobs) {
       if (mob.hidden || mob.dead) continue;
-
-      // estado interno do passo
       if (!mob._step) mob._step = { moving: false, tx: 0, ty: 0, nextAt: 0 };
       const st = mob._step;
 
       if (!st.moving) {
-        // congela animação quando parado
         mob._animFrozen = true;
         mob._animFrozenFrame = 0;
 
         if (now >= st.nextAt) {
-          // tenta uma direção válida entre N/S/L/O
-          const dirs = [
-            { dx: 0, dy: -1 }, // N
-            { dx: 0, dy:  1 }, // S
-            { dx: -1, dy: 0 }, // L
-            { dx:  1, dy: 0 }, // O
-          ];
-          // embaralhar (Fisher–Yates simples)
-          for (let i = dirs.length - 1; i > 0; i--) {
-            const j = (Math.random() * (i + 1)) | 0;
-            [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
-          }
+          const dirs = [ { dx:0, dy:-1 }, { dx:0, dy:1 }, { dx:-1, dy:0 }, { dx:1, dy:0 } ];
+          for (let i = dirs.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [dirs[i], dirs[j]] = [dirs[j], dirs[i]]; }
           const c = cellOf(mob.x, mob.y);
           let pick = null;
           for (const d of dirs) {
@@ -1191,27 +965,21 @@ function updateRespawns(now) {
             const tgt = centerOf(c.cx + pick.dx, c.cy + pick.dy);
             st.tx = tgt.x; st.ty = tgt.y; st.moving = true;
             mob.face = faceFrom(pick.dx, pick.dy);
-            // destrava anima para “walk”
             mob._animFrozen = false;
           } else {
-            // sem passo válido agora: espera um pouco e tenta de novo
             st.nextAt = now + 400 + Math.random() * 400;
           }
         }
       } else {
-        // movendo: destrava anima
         mob._animFrozen = false;
-
         const vx = st.tx - mob.x, vy = st.ty - mob.y;
         const dist = Math.hypot(vx, vy);
         const spd = Math.max(60, Number(mob.speed) || 60);
         if (dist <= 1.0) {
-          // chegou no centro do tile
           mob.x = Math.round(st.tx);
           mob.y = Math.round(st.ty);
           st.moving = false;
           st.nextAt = now + 120 + Math.random() * 120;
-          // após chegar, congela até escolher o próximo passo
           mob._animFrozen = true;
           mob._animFrozenFrame = 0;
         } else {
@@ -1222,28 +990,23 @@ function updateRespawns(now) {
       }
     }
 
-    // Respawn local (placeholder visual)
     updateRespawns(now);
 
-    // Render (mundo)
+    // Render
     clear();
     camera.apply(ctx, () => {
       drawGround(camera);
-      // desenha loots antes dos mobs
       for (const l of loots.values()) drawLoot(l);
       for (const m of mobs) drawMob(m);
       drawPlayer(controller);
     });
 
-    // Overlay de combate
     if (window.CombatUI && typeof window.CombatUI.render === 'function') {
-      try { window.CombatUI.render(ctx, camera, dt); } catch (e) { /* não quebrar jogo */ }
+      try { window.CombatUI.render(ctx, camera, dt); } catch (e) {}
     }
 
-    // evento por frame
     window.dispatchEvent(new CustomEvent('game:frame', { detail: { ctx, camera, dt } }));
 
-    // Remover HUD de informações do jogo
     if (hud) {
       const hudGameInfo = document.getElementById('hud-gameinfo');
       if (hudGameInfo) hudGameInfo.remove();
@@ -1253,8 +1016,6 @@ function updateRespawns(now) {
   }
 
   requestAnimationFrame(frame);
-
-  // listeners finais (settings/resize já ligados no topo)
   document.addEventListener('settings:changed', () => { resize(); });
 })().catch((err) => {
   console.error(err);
@@ -1262,8 +1023,6 @@ function updateRespawns(now) {
 });
 
 /* ============================ util local ============================ */
-// Aplica zoom por tiles sempre que o canvas mudar de tamanho.
-// (Definição repetida aqui para o resize() do topo poder chamá-la)
 function applyCameraZoom() {
   if (!camera) return;
   const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
