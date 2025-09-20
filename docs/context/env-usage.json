@@ -139,7 +139,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 4859
+        "index": 4860
       }
     ],
     "defaults": [
@@ -229,7 +229,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2055
+        "index": 2056
       }
     ],
     "defaults": [
@@ -253,7 +253,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21903
+        "index": 21904
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -449,7 +449,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2674
+        "index": 2675
       }
     ],
     "defaults": [
@@ -461,7 +461,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 29437
+        "index": 29438
       }
     ],
     "defaults": []
@@ -471,7 +471,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 4724
+        "index": 4725
       }
     ],
     "defaults": [
@@ -495,7 +495,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21810
+        "index": 21811
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -558,7 +558,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 4373
+        "index": 4374
       },
       {
         "file": "server\\skills\\routes.js",
@@ -617,7 +617,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 4432
+        "index": 4433
       }
     ],
     "defaults": [
@@ -629,7 +629,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21760
+        "index": 21761
       }
     ],
     "defaults": [
@@ -665,7 +665,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21868
+        "index": 21869
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -694,7 +694,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 4998
+        "index": 4999
       }
     ],
     "defaults": []
@@ -704,7 +704,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 4616
+        "index": 4617
       }
     ],
     "defaults": [

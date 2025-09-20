@@ -1176,6 +1176,14 @@ async function seedAIMobsFromDB(aiMobs) {
             // presença online
             try { await upsertOnlineByPlayer(pid, mapKey); } catch {}
 
+            // >>>>>> FAST FLUSH (1s): deixa player_last_pos.updated_at sempre fresco para a IA
+            if (!global.__posFastFlush) global.__posFastFlush = new Map(); // pid -> lastWriteMs
+            const lastW = global.__posFastFlush.get(String(pid)) || 0;
+            if (now - lastW >= 1000) {
+              try { await flushOnePlayerPos(pid); } catch {}
+              global.__posFastFlush.set(String(pid), now);
+            }
+
             // broadcast p/ outros jogadores
             const out = { type:'pos', id:String(pid), x: nx, y: ny, name: ws._player?.name || '' };
             wss.clients.forEach(c => {
@@ -1255,6 +1263,7 @@ async function seedAIMobsFromDB(aiMobs) {
     process.exit(1);
   }
 })();
+
 
 
 /* ========= Chat HTTP API ========= */

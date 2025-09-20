@@ -345,7 +345,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 583,
+    "line": 584,
     "sample": {
       "params": {
         "key": "value"
@@ -379,7 +379,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 558,
+    "line": 559,
     "sample": {
       "params": {
         "key": "value"
@@ -421,7 +421,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 570,
+    "line": 571,
     "sample": {
       "params": {
         "key": "value"
@@ -459,7 +459,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 547,
+    "line": 548,
     "sample": {
       "query": {
         "map": "value"
@@ -502,7 +502,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 491,
+    "line": 492,
     "sample": {
       "query": {
         "map": "value"
@@ -557,7 +557,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 593,
+    "line": 594,
     "sample": {
       "query": {
         "map": "value"
@@ -580,7 +580,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 502,
+    "line": 503,
     "sample": {
       "query": {
         "map": "value"
@@ -631,7 +631,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 524,
+    "line": 525,
     "sample": {
       "query": {
         "map": "value"
@@ -678,7 +678,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1256,
+    "line": 1263,
     "sample": {
       "query": {
         "limit": 1
@@ -709,7 +709,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1279,
+    "line": 1286,
     "sample": {},
     "errors": [
       {
@@ -766,7 +766,7 @@
     "method": "GET",
     "path": "/api/csrf",
     "file": "server\\index.js",
-    "line": 165,
+    "line": 166,
     "sample": {},
     "errors": []
   },
@@ -1352,7 +1352,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 625,
+    "line": 626,
     "sample": {},
     "errors": []
   },

@@ -1,6 +1,6 @@
-// HUD in-game: barras HP/Mana/Cap/Xp do herói ativo
-// Modular, minimalista, ocupa pouco espaço mas mostra tudo essencial
 // client/js/ui/hud_status.js
+// HUD in-game: barras HP/Mana/Cap/Xp do herói ativo
+// Minimalista, sincronizado com o servidor, sem recalcular HP/Mana localmente.
 
 const HUD_CONTAINER_ID = "hud";
 
@@ -42,9 +42,7 @@ async function getMe(force = false, signal) {
   if (MeCache.inflight) return MeCache.inflight;
 
   const controller = new AbortController();
-  const link = signal;
-  // Se for passado um AbortSignal de fora, encadeia o cancelamento
-  if (link) link.addEventListener("abort", () => controller.abort(), { once: true });
+  if (signal) signal.addEventListener("abort", () => controller.abort(), { once: true });
 
   MeCache.inflight = fetch("/api/player/me", {
     credentials: "include",
@@ -58,7 +56,6 @@ async function getMe(force = false, signal) {
       return MeCache.data;
     })
     .catch((err) => {
-      // Se abort, apenas ignora silenciosamente
       if (err && err.name === "AbortError") return MeCache.data;
       return MeCache.data; // mantém último snapshot
     })
@@ -69,6 +66,51 @@ async function getMe(force = false, signal) {
   return MeCache.inflight;
 }
 
+/* =====================================================================================
+   Fallback opcional para vitais (HP/Mana/Cap) — só usado se /me não trouxer hp
+   Tenta endpoints comuns; se não existir, ignora silenciosamente.
+===================================================================================== */
+const VitalsCache = new Map(); // heroId -> { hp, mana, cap, ts }
+
+async function fetchHeroVitals(heroId, signal) {
+  if (!heroId) return null;
+
+  // cache leve de 5s
+  const cached = VitalsCache.get(String(heroId));
+  if (cached && Date.now() - cached.ts < 5000) return cached;
+
+  const controller = new AbortController();
+  if (signal) signal.addEventListener("abort", () => controller.abort(), { once: true });
+
+  // tenta alguns caminhos comuns sem quebrar se não existirem
+  const candidates = [
+    `/api/hero/vitals/${encodeURIComponent(heroId)}`,
+    `/api/hero/vitals?id=${encodeURIComponent(heroId)}`,
+  ];
+
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { credentials: "include", cache: "no-store", signal: controller.signal });
+      if (!res.ok) continue;
+      const v = await res.json();
+      const vitals = {
+        hp: Number(v.hp ?? v.currentHp ?? v.curHp ?? NaN),
+        mana: Number(v.mana ?? v.currentMana ?? NaN),
+        cap: Number(v.cap ?? v.capacity ?? NaN),
+        maxHp: Number(v.maxHp ?? NaN),
+        maxMana: Number(v.maxMana ?? NaN),
+        maxCap: Number(v.maxCap ?? NaN),
+        ts: Date.now(),
+      };
+      VitalsCache.set(String(heroId), vitals);
+      return vitals;
+    } catch {
+      // ignora e tenta o próximo
+    }
+  }
+  return null;
+}
+
 async function fetchActiveHeroData(options = {}) {
   const { force = false, signal } = options;
   const data = await getMe(force, signal);
@@ -76,7 +118,30 @@ async function fetchActiveHeroData(options = {}) {
 
   const heroId = getActiveHeroId();
   if (!heroId) return null;
-  return data.heroes.find((h) => String(h.id) === String(heroId)) || null;
+
+  const hero = data.heroes.find((h) => String(h.id) === String(heroId)) || null;
+  if (!hero) return null;
+
+  // Se a rota /me já trouxer hp/mana/cap, usamos como fonte única da verdade.
+  const hasHpFromServer = typeof hero.hp === "number";
+
+  // Caso não venha hp: tenta fallback opcional de vitais (se backend expor).
+  if (!hasHpFromServer) {
+    const v = await fetchHeroVitals(hero.id, signal);
+    if (v) {
+      // mescla de forma não-destrutiva
+      return {
+        ...hero,
+        hp: Number.isFinite(v.hp) ? v.hp : hero.hp,
+        mana: Number.isFinite(v.mana) ? v.mana : hero.mana,
+        cap: Number.isFinite(v.cap) ? v.cap : hero.cap,
+        maxHp: Number.isFinite(v.maxHp) ? v.maxHp : hero.maxHp,
+        maxMana: Number.isFinite(v.maxMana) ? v.maxMana : hero.maxMana,
+        maxCap: Number.isFinite(v.maxCap) ? v.maxCap : hero.maxCap,
+      };
+    }
+  }
+  return hero;
 }
 
 /* =====================================================================================
@@ -92,15 +157,18 @@ function pct(cur, max) {
 function renderHudBars(hero, minimized = false) {
   if (!hero) return "";
 
-  const maxHp = hero.maxHp ?? hero.hp ?? 0;
-  const curHp = hero.hp ?? maxHp;
-  const maxMana = hero.maxMana ?? hero.mana ?? 0;
-  const curMana = hero.mana ?? maxMana;
-  const maxCap = hero.maxCap ?? hero.cap ?? 0;
-  const curCap = hero.cap ?? maxCap;
+  // >>> NÃO recalcular nada localmente. Sempre usar o que veio do servidor (ou fallback de vitais).
+  const maxHp = Number(hero.maxHp ?? hero.hp ?? 0);
+  const curHp = Number(hero.hp ?? maxHp);
 
-  const xpAtual = hero.xp ?? 0;
-  const xpParaProximo = hero.xp_needed_next_level ?? 1;
+  const maxMana = Number(hero.maxMana ?? hero.mana ?? 0);
+  const curMana = Number(hero.mana ?? maxMana);
+
+  const maxCap = Number(hero.maxCap ?? hero.cap ?? 0);
+  const curCap = Number(hero.cap ?? maxCap);
+
+  const xpAtual = Number(hero.xp ?? 0);
+  const xpParaProximo = Number(hero.xp_needed_next_level ?? 1);
   const pctXp = pct(xpAtual, xpParaProximo);
 
   if (minimized) {
@@ -215,27 +283,9 @@ async function updateHudBars(force = false) {
     }
 
     container.innerHTML = renderHudBars(hero, HUD_MINIMIZED);
+    wireToggles(hero, container);
 
-    // Toggle listeners (remove anteriores e adiciona 1x por render)
-    const minimizeBtn = document.getElementById("hud-minimize-btn");
-    if (minimizeBtn) {
-      minimizeBtn.onclick = () => {
-        HUD_MINIMIZED = true;
-        // render local sem refetch
-        container.innerHTML = renderHudBars(hero, HUD_MINIMIZED);
-        wireToggles(hero, container);
-      };
-    }
-    const expandBtn = document.getElementById("hud-expand-btn");
-    if (expandBtn) {
-      expandBtn.onclick = () => {
-        HUD_MINIMIZED = false;
-        container.innerHTML = renderHudBars(hero, HUD_MINIMIZED);
-        wireToggles(hero, container);
-      };
-    }
-
-    // Evento de level up
+    // Evento de level up (apenas efeito local — servidor é a fonte da verdade)
     if (force || lastHeroId !== hero.id || hero.level !== lastHeroLevel) {
       if (lastHeroLevel !== null && hero.level > lastHeroLevel) {
         window.dispatchEvent(new CustomEvent("hero:levelup", { detail: { hero } }));
@@ -288,7 +338,6 @@ window.addEventListener("hero:active-changed", () => updateHudBars(true));
 window.addEventListener("tick:hero", () => updateHudBars(false)); // usa cache TTL
 window.addEventListener("player-updated", () => updateHudBars(true));
 document.addEventListener("visibilitychange", () => {
-  // ao focar, força um refresh rápido; ao desfocar, só res agenda
   if (document.visibilityState === "visible") {
     updateHudBars(true).then(scheduleNextPoll);
   } else {
@@ -296,5 +345,27 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
+/* =====================================================================================
+   (Opcional futuro) Hook para WS hero_hp -> atualizar instantaneamente
+   Quando você tiver um bus de mensagens, chame applyHeroHpUpdate(heroId, hp, maxHp).
+===================================================================================== */
+
+function applyHeroHpUpdate(heroId, hp, maxHp) {
+  if (!heroId) return;
+  const cur = VitalsCache.get(String(heroId)) || { ts: 0 };
+  const merged = {
+    ...cur,
+    hp: typeof hp === 'number' ? hp : cur.hp,
+    maxHp: typeof maxHp === 'number' ? maxHp : cur.maxHp,
+    ts: Date.now(),
+  };
+  VitalsCache.set(String(heroId), merged);
+  // força refresh leve (respeita dedupe do /me)
+  updateHudBars(false);
+}
+
+// Exponha no global para fácil integração com o seu listener de WS
+window.HUD_ApplyHeroHpUpdate = applyHeroHpUpdate;
+  
 // Sem setInterval agressivo — o loop acima já cuida do refresh
 export {};

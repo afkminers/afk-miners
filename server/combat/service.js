@@ -7,6 +7,21 @@ const { broadcast } = require('../ws/bus');
 // Se você usa este serviço central de XP:
 const { giveXp } = require('../services/heroProgress');
 
+// lazy require p/ evitar ciclo (ai-mobs -> service -> ai-mobs)
+let _aiMobs = null;
+function ai() {
+  if (!_aiMobs) {
+    try { _aiMobs = require('./ai-mobs'); } catch { _aiMobs = null; }
+  }
+  return _aiMobs;
+}
+
+/** =======================
+ *  Config de Respawn
+ *  ======================= */
+const RESPAWN_MS = 5000; // 5s de espera na tela de morte
+const RESPAWN_FALLBACK = { mapKey: 'house', x: 912, y: 880 }; // ajuste conforme seu mapa
+
 /** Dano estilo Tibia (sem dano mínimo garantido) */
 function computeDamageTibiaLike(weaponAtk, skillLevel, monsterArmor, variance = K.DAMAGE_VARIANCE) {
   const base = weaponAtk * (1 + skillLevel / 50);
@@ -62,8 +77,8 @@ async function getInstanceWithMonster(instanceId) {
   return await get(
     `SELECT mi.id, mi.hp, mi.max_hp, mi.state, mi.spawn_id, mi.map_key,
             m.id AS monster_id, m.key AS monster_key,
-            COALESCE(m.xp,25)            AS xp_reward,
-            COALESCE(m."lootJSON",'[]'::jsonb)     AS loot_json,
+            COALESCE(m.xp,25)                    AS xp_reward,
+            COALESCE(m."lootJSON",'[]'::jsonb)   AS loot_json,
             COALESCE(m."defensesJSON",'{}'::jsonb) AS defenses_json
        FROM monster_instances mi
        JOIN monsters_master m ON m.id = mi.monster_id
@@ -118,7 +133,44 @@ async function persistDrops(heroId, instanceId, drops) {
   return drops.length;
 }
 
-/** Hit do herói em monstro */
+/** =======================
+ *  Respawn de herói
+ *  ======================= */
+async function respawnHero(targetHeroId) {
+  // lê max_hp e playerId
+  const row = await get(`SELECT max_hp, "playerId"::text AS player_id FROM player_heroes WHERE id=$1`, [targetHeroId]);
+  const maxHp = Number(row?.max_hp || 100);
+  const playerId = row?.player_id;
+
+  const mapKey = RESPAWN_FALLBACK.mapKey;
+  const x = RESPAWN_FALLBACK.x | 0;
+  const y = RESPAWN_FALLBACK.y | 0;
+
+  // cura
+  await run(`
+    UPDATE player_heroes
+       SET hp = $2, "updatedAt" = now()
+     WHERE id = $1
+  `, [targetHeroId, maxHp]);
+
+  // persiste posição de respawn
+  if (playerId) {
+    await run(`
+      INSERT INTO player_last_pos (player_id, map_key, x, y, last_seq, updated_at)
+      VALUES ($1, $2, $3, $4, 0, now())
+      ON CONFLICT (player_id, map_key)
+        DO UPDATE SET x = EXCLUDED.x, y = EXCLUDED.y, updated_at = now()
+    `, [playerId, mapKey, x, y]);
+  }
+
+  // notifica cliente (snap + respawn)
+  broadcast({ type: 'pos_snap_hero', heroId: targetHeroId, mapKey, x, y });
+  broadcast({ type: 'hero_respawn', heroId: targetHeroId, hp: maxHp, mapKey, x, y });
+}
+
+/** =======================
+ *  Hit do herói em monstro
+ *  ======================= */
 async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
   const hero = await getHeroStats(attackerHeroId);
   const inst = await getInstanceWithMonster(targetInstanceId);
@@ -160,6 +212,16 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
     byHero: hero.hero_id,
     dmg
   });
+
+  // >>> AGGRO: informar ai-mobs que ESTE herói bateu nesse monstro
+  if (dmg > 0) {
+    try {
+      const mod = ai();
+      if (mod && typeof mod.addThreatFromHeroHit === 'function') {
+        mod.addThreatFromHeroHit(inst.id, hero.hero_id, 5);
+      }
+    } catch {}
+  }
 
   if (skillType && dmg > 0) {
     const rate = await getClassRate(hero.class || null, skillType);
@@ -208,10 +270,10 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
   };
 }
 
-/**
- * Hit do monstro no herói (ataque ativo do mob).
- * Usa player_heroes.hp / max_hp e atualiza "updatedAt" (camelCase).
- */
+/** =======================
+ *  Hit do monstro no herói
+ *  (tela de morte + countdown + respawn)
+ *  ======================= */
 async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
   const hero = await getHeroStats(targetHeroId);
   if (!hero) return { ok: false, message: 'target hero not found' };
@@ -229,10 +291,10 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
   const row = await get(`SELECT hp, max_hp FROM player_heroes WHERE id=$1`, [targetHeroId]);
   if (!row) return { ok: false, message: 'hero stats not found' };
 
-  const newHp = Math.max(0, Number(row.hp) - dmg);
+  const curHp = Number(row.hp);
+  const newHp = Math.max(0, curHp - dmg);
   const dead  = newHp === 0;
 
-  // >>>>>>>>>>>>>>>>>>>>>>>>> CORREÇÃO AQUI: "updatedAt" (camelCase)
   await run(
     `UPDATE player_heroes
         SET hp = $2, "updatedAt" = now()
@@ -240,7 +302,6 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
     [targetHeroId, newHp]
   );
 
-  // Evento principal: barra de HP
   broadcast({
     type: 'hero_hp',
     heroId: targetHeroId,
@@ -251,7 +312,6 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
     dmg
   });
 
-  // (Opcional) evento de “dano” para flutuante/sangue, caso seu front use
   broadcast({
     type: 'hero_dmg',
     heroId: targetHeroId,
@@ -261,12 +321,22 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
   });
 
   if (dead) {
+    const respawnAt = Date.now() + RESPAWN_MS;
+
+    // evento para abrir "tela de morte" no cliente com countdown
     broadcast({
       type: 'hero_dead',
       heroId: targetHeroId,
       byMob: inst.monster_key,
-      instanceId: inst.id
+      instanceId: inst.id,
+      respawnAt,           // timestamp (ms) p/ o HUD contar
+      respawnMs: RESPAWN_MS
     });
+
+    // respawn automático após o countdown
+    setTimeout(() => {
+      respawnHero(targetHeroId).catch(() => {});
+    }, RESPAWN_MS);
   }
 
   return {
@@ -280,4 +350,4 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
   };
 }
 
-module.exports = { applyHit, applyMobHit };
+module.exports = { applyHit, applyMobHit, respawnHero };

@@ -361,6 +361,7 @@
   {
     "file": "client\\js\\play.js",
     "symbols": [
+      "_applyEarlySnapIfAny",
       "addMobFromSpawn",
       "applyCameraZoom",
       "applySmoothing",
@@ -428,6 +429,8 @@
   {
     "file": "client\\js\\pos-publisher.js",
     "symbols": [
+      "flushBeforeExit",
+      "flushNow",
       "getMapKey",
       "isAdjacent32",
       "setMapKey",

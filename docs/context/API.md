@@ -61,7 +61,7 @@
 
 ### GET /
 
-Arquivo: `server\index.js:625`
+Arquivo: `server\index.js:626`
 
 _Sem payload inferido_
 
@@ -189,7 +189,7 @@ Arquivo: `server\combat\routes.js:39`
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:583`
+Arquivo: `server\index.js:584`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -217,7 +217,7 @@ Arquivo: `server\index.js:583`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:558`
+Arquivo: `server\index.js:559`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -247,7 +247,7 @@ Arquivo: `server\index.js:558`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:570`
+Arquivo: `server\index.js:571`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -276,7 +276,7 @@ Arquivo: `server\index.js:570`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:547`
+Arquivo: `server\index.js:548`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -301,7 +301,7 @@ Arquivo: `server\index.js:547`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:491`
+Arquivo: `server\index.js:492`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -329,7 +329,7 @@ Arquivo: `server\index.js:491`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:502`
+Arquivo: `server\index.js:503`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -356,7 +356,7 @@ Arquivo: `server\index.js:502`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:524`
+Arquivo: `server\index.js:525`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -382,7 +382,7 @@ Arquivo: `server\index.js:524`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1256`
+Arquivo: `server\index.js:1263`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -429,7 +429,7 @@ Arquivo: `server\routes\combat_nearest.js:30`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:165`
+Arquivo: `server\index.js:166`
 
 _Sem payload inferido_
 
@@ -860,7 +860,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:593`
+Arquivo: `server\index.js:594`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -880,7 +880,7 @@ Arquivo: `server\index.js:593`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1279`
+Arquivo: `server\index.js:1286`
 
 _Sem payload inferido_
 

@@ -1,5 +1,6 @@
 // server/combat/pos.js
-const { get } = require('../models/db');
+const { get, run } = require('../models/db');
+
 
 /** Pega playerId dono do herói + classe (útil p/ cálculos) */
 async function getHeroOwner(heroId) {
@@ -67,4 +68,16 @@ async function getMonsterPos(instanceId) {
   );
 }
 
-module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos };
+/** Persiste posição do monstro (e map_key) */
+async function setMonsterPos(instanceId, mapKey, x, y) {
+  await run(
+    `UPDATE monster_instances
+        SET map_key = $2, x = $3, y = $4, updated_at = now()
+      WHERE id = $1`,
+    [String(instanceId), String(mapKey), x|0, y|0]
+  );
+}
+
+
+module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos, setMonsterPos };
+
