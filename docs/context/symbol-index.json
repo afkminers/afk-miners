@@ -302,6 +302,18 @@
     ]
   },
   {
+    "file": "client\\js\\hud\\death-overlay.js",
+    "symbols": [
+      "ensureDom",
+      "hideOverlay",
+      "onClickRevive",
+      "showOverlay",
+      "startTimer",
+      "stopTimer",
+      "updateCountdown"
+    ]
+  },
+  {
     "file": "client\\js\\landing_fx.js",
     "symbols": [
       "addSpark",
@@ -471,6 +483,12 @@
       "jpost",
       "main",
       "spriteUrlFrom"
+    ]
+  },
+  {
+    "file": "client\\js\\state\\hero-state.js",
+    "symbols": [
+      "HeroState"
     ]
   },
   {
@@ -668,7 +686,9 @@
   {
     "file": "server\\combat\\routes.js",
     "symbols": [
+      "assertHeroAliveOwned",
       "getEquippedWeaponType",
+      "getHeroOwnedBy",
       "getWeaponTypeFallback"
     ]
   },
@@ -865,6 +885,7 @@
   {
     "file": "server\\routes\\equipment.js",
     "symbols": [
+      "assertHeroAliveOwned",
       "begin",
       "commit",
       "rollback"
@@ -880,6 +901,7 @@
   {
     "file": "server\\routes\\loot.js",
     "symbols": [
+      "assertHeroAliveOwned",
       "takeFromBackpack"
     ]
   },

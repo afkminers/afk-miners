@@ -59,7 +59,7 @@ _Sem payload inferido_
 
 ### GET /:heroId
 
-Arquivo: `server\routes\equipment.js:11`
+Arquivo: `server\routes\equipment.js:31`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -125,8 +125,7 @@ Arquivo: `server\combat\routes.js:38`
 {
   "heroId": 1,
   "try {\n    const { heroId": 1,
-  "targetInstanceId": 1,
-  "weaponType": "value"
+  "targetInstanceId": 1
 }
 ```
 
@@ -140,12 +139,12 @@ Arquivo: `server\combat\routes.js:38`
 - `HTTP 400` → {ok:false,error:'mob-pos-missing' }
 - `HTTP 400` → {ok:false,error:'hero-pos-missing' }
 - `HTTP 500` → {ok:false,error:'start-failed' }
+- `HTTP 404` → {ok:false,error:'hero-not-found' }
 - `HTTP 500` → {ok:false,error:'stop-failed' }
 - `HTTP 400` → {ok:false,error:'missing-id' }
 - `HTTP 400` → {ok:false,error:'missing-hero-id' }
 - `HTTP 400` → {ok:false,error:'mob-pos-missing' }
 - `HTTP 400` → {ok:false,error:'hero-pos-missing' }
-- `HTTP 400` → {ok:false,error:result.message }
 
 ### GET /_routes
 
@@ -157,8 +156,7 @@ Arquivo: `server\combat\routes.js:39`
 {
   "heroId": 1,
   "try {\n    const { heroId": 1,
-  "targetInstanceId": 1,
-  "weaponType": "value"
+  "targetInstanceId": 1
 }
 ```
 
@@ -172,12 +170,12 @@ Arquivo: `server\combat\routes.js:39`
 - `HTTP 400` → {ok:false,error:'mob-pos-missing' }
 - `HTTP 400` → {ok:false,error:'hero-pos-missing' }
 - `HTTP 500` → {ok:false,error:'start-failed' }
+- `HTTP 404` → {ok:false,error:'hero-not-found' }
 - `HTTP 500` → {ok:false,error:'stop-failed' }
 - `HTTP 400` → {ok:false,error:'missing-id' }
 - `HTTP 400` → {ok:false,error:'missing-hero-id' }
 - `HTTP 400` → {ok:false,error:'mob-pos-missing' }
 - `HTTP 400` → {ok:false,error:'hero-pos-missing' }
-- `HTTP 400` → {ok:false,error:result.message }
 
 ### GET /api/admin/content/map/:key/data
 
@@ -446,7 +444,7 @@ _Sem payload inferido_
 
 ### GET /cache/stats
 
-Arquivo: `server\routes\loot.js:173`
+Arquivo: `server\routes\loot.js:191`
 
 _Sem payload inferido_
 
@@ -596,7 +594,7 @@ Arquivo: `server\starter\routes.js:42`
 
 ### GET /map/:mapKey/loot
 
-Arquivo: `server\routes\loot.js:63`
+Arquivo: `server\routes\loot.js:73`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -916,7 +914,7 @@ Arquivo: `server\routes\afk.js:65`
 
 ### POST /attack/start
 
-Arquivo: `server\combat\routes.js:68`
+Arquivo: `server\combat\routes.js:87`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -924,8 +922,7 @@ Arquivo: `server\combat\routes.js:68`
 {
   "heroId": 1,
   "try {\n    const { heroId": 1,
-  "targetInstanceId": 1,
-  "weaponType": "value"
+  "targetInstanceId": 1
 }
 ```
 
@@ -939,6 +936,7 @@ Arquivo: `server\combat\routes.js:68`
 - `HTTP 400` → {ok:false,error:'mob-pos-missing' }
 - `HTTP 400` → {ok:false,error:'hero-pos-missing' }
 - `HTTP 500` → {ok:false,error:'start-failed' }
+- `HTTP 404` → {ok:false,error:'hero-not-found' }
 - `HTTP 500` → {ok:false,error:'stop-failed' }
 - `HTTP 400` → {ok:false,error:'missing-id' }
 - `HTTP 400` → {ok:false,error:'missing-hero-id' }
@@ -949,7 +947,7 @@ Arquivo: `server\combat\routes.js:68`
 
 ### POST /attack/stop
 
-Arquivo: `server\combat\routes.js:109`
+Arquivo: `server\combat\routes.js:132`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -968,6 +966,7 @@ Arquivo: `server\combat\routes.js:109`
 ```
 
 **Erros conhecidos:**
+- `HTTP 404` → {ok:false,error:'hero-not-found' }
 - `HTTP 500` → {ok:false,error:'stop-failed' }
 - `HTTP 400` → {ok:false,error:'missing-id' }
 - `HTTP 400` → {ok:false,error:'missing-hero-id' }
@@ -975,6 +974,10 @@ Arquivo: `server\combat\routes.js:109`
 - `HTTP 400` → {ok:false,error:'hero-pos-missing' }
 - `HTTP 400` → {ok:false,error:result.message }
 - `HTTP 500` → {ok:false,error:'hit-failed' }
+- `HTTP 400` → {ok:false,error:'missing-hero-id' }
+- `HTTP 404` → {ok:false,error:'hero-not-found' }
+- `HTTP 409` → {ok:false,error:'hero-not-dead' }
+- `HTTP 500` → {ok:false,error:'revive-failed' }
 
 ### POST /collect
 
@@ -1046,7 +1049,7 @@ Arquivo: `server\routes\farm.js:240`
 
 ### POST /equip
 
-Arquivo: `server\routes\equipment.js:30`
+Arquivo: `server\routes\equipment.js:50`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1123,13 +1126,14 @@ Arquivo: `server\routes\farm.js:181`
 
 ### POST /hit
 
-Arquivo: `server\combat\routes.js:139`
+Arquivo: `server\combat\routes.js:163`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "heroId": 1
+  "heroId": 1,
+  "try {\n    const { heroId": 1
 }
 ```
 
@@ -1145,6 +1149,10 @@ Arquivo: `server\combat\routes.js:139`
 - `HTTP 400` → {ok:false,error:'hero-pos-missing' }
 - `HTTP 400` → {ok:false,error:result.message }
 - `HTTP 500` → {ok:false,error:'hit-failed' }
+- `HTTP 400` → {ok:false,error:'missing-hero-id' }
+- `HTTP 404` → {ok:false,error:'hero-not-found' }
+- `HTTP 409` → {ok:false,error:'hero-not-dead' }
+- `HTTP 500` → {ok:false,error:'revive-failed' }
 
 ### POST /login
 
@@ -1185,7 +1193,7 @@ _Sem payload inferido_
 
 ### POST /loot/drop
 
-Arquivo: `server\routes\loot.js:129`
+Arquivo: `server\routes\loot.js:143`
 
 _Sem payload inferido_
 
@@ -1202,7 +1210,7 @@ _Sem payload inferido_
 
 ### POST /loot/pickup
 
-Arquivo: `server\routes\loot.js:75`
+Arquivo: `server\routes\loot.js:85`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1384,6 +1392,28 @@ _Sem payload inferido_
 - `HTTP 404` → {error:'Jogador não encontrado' }
 - `HTTP 500` → {error:'Falha ao obter perfil' }
 
+### POST /revive
+
+Arquivo: `server\routes\revive.js:2`
+
+**Payloads (exemplos inferidos):**
+- body:
+```json
+{
+  "const { heroId": 1
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,heroId:hero.id,hp:hpOnRevive,map_key,x,y }
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {ok:false,error:'missing-hero-id' }
+- `HTTP 404` → {ok:false,error:'hero-not-found' }
+- `HTTP 409` → {ok:false,error:'hero-not-dead' }
+
 ### POST /select
 
 Arquivo: `server\starter\routes.js:104`
@@ -1424,23 +1454,23 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 400: {ok:false,error:'mob-pos-missing' }
   - HTTP 400: {ok:false,error:'hero-pos-missing' }
   - HTTP 500: {ok:false,error:'start-failed' }
+  - HTTP 404: {ok:false,error:'hero-not-found' }
   - HTTP 500: {ok:false,error:'stop-failed' }
   - HTTP 400: {ok:false,error:'missing-id' }
   - HTTP 400: {ok:false,error:'missing-hero-id' }
   - HTTP 400: {ok:false,error:'mob-pos-missing' }
   - HTTP 400: {ok:false,error:'hero-pos-missing' }
-  - HTTP 400: {ok:false,error:result.message }
 - **GET /_routes**
   - HTTP 400: {ok:false,error:'missing-params' }
   - HTTP 400: {ok:false,error:'mob-pos-missing' }
   - HTTP 400: {ok:false,error:'hero-pos-missing' }
   - HTTP 500: {ok:false,error:'start-failed' }
+  - HTTP 404: {ok:false,error:'hero-not-found' }
   - HTTP 500: {ok:false,error:'stop-failed' }
   - HTTP 400: {ok:false,error:'missing-id' }
   - HTTP 400: {ok:false,error:'missing-hero-id' }
   - HTTP 400: {ok:false,error:'mob-pos-missing' }
   - HTTP 400: {ok:false,error:'hero-pos-missing' }
-  - HTTP 400: {ok:false,error:result.message }
 - **GET /api/admin/content/map/:key/data**
   - HTTP 404: {error:'map not found' }
   - HTTP 500: {error:err.message }
@@ -1630,6 +1660,7 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 400: {ok:false,error:'mob-pos-missing' }
   - HTTP 400: {ok:false,error:'hero-pos-missing' }
   - HTTP 500: {ok:false,error:'start-failed' }
+  - HTTP 404: {ok:false,error:'hero-not-found' }
   - HTTP 500: {ok:false,error:'stop-failed' }
   - HTTP 400: {ok:false,error:'missing-id' }
   - HTTP 400: {ok:false,error:'missing-hero-id' }
@@ -1638,6 +1669,7 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 400: {ok:false,error:result.message }
   - HTTP 500: {ok:false,error:'hit-failed' }
 - **POST /attack/stop**
+  - HTTP 404: {ok:false,error:'hero-not-found' }
   - HTTP 500: {ok:false,error:'stop-failed' }
   - HTTP 400: {ok:false,error:'missing-id' }
   - HTTP 400: {ok:false,error:'missing-hero-id' }
@@ -1645,6 +1677,10 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 400: {ok:false,error:'hero-pos-missing' }
   - HTTP 400: {ok:false,error:result.message }
   - HTTP 500: {ok:false,error:'hit-failed' }
+  - HTTP 400: {ok:false,error:'missing-hero-id' }
+  - HTTP 404: {ok:false,error:'hero-not-found' }
+  - HTTP 409: {ok:false,error:'hero-not-dead' }
+  - HTTP 500: {ok:false,error:'revive-failed' }
 - **POST /collect**
   - HTTP 500: {error:'collect_failed' }
 - **POST /create-worker**
@@ -1685,6 +1721,10 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 400: {ok:false,error:'hero-pos-missing' }
   - HTTP 400: {ok:false,error:result.message }
   - HTTP 500: {ok:false,error:'hit-failed' }
+  - HTTP 400: {ok:false,error:'missing-hero-id' }
+  - HTTP 404: {ok:false,error:'hero-not-found' }
+  - HTTP 409: {ok:false,error:'hero-not-dead' }
+  - HTTP 500: {ok:false,error:'revive-failed' }
 - **POST /login**
   - HTTP 401: {error:'Credenciais inválidas' }
   - HTTP 401: {error:'Credenciais inválidas' }
@@ -1757,6 +1797,14 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 500: {error:'Falha ao autenticar' }
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
+- **POST /revive**
+  - HTTP 400: {ok:false,error:'missing-hero-id' }
+  - HTTP 404: {ok:false,error:'hero-not-found' }
+  - HTTP 409: {ok:false,error:'hero-not-dead' }
+  - HTTP 400: {ok:false,error:'missing-hero-id' }
+  - HTTP 404: {ok:false,error:'hero-not-found' }
+  - HTTP 409: {ok:false,error:'hero-not-dead' }
+  - HTTP 500: {ok:false,error:'revive-failed' }
 - **POST /select**
   - HTTP 400: {error:'heroKey é obrigatório' }
   - HTTP 400: {error:'starter já escolhido' }

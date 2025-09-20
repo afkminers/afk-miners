@@ -7,6 +7,15 @@ const { broadcast } = require('../ws/bus');
 // Se você usa este serviço central de XP:
 const { giveXp } = require('../services/heroProgress');
 
+// posição do herói (para validar mapa/alvo)
+let _pos = null;
+function posMod() {
+  if (!_pos) {
+    try { _pos = require('./pos'); } catch { _pos = null; }
+  }
+  return _pos;
+}
+
 // lazy require p/ evitar ciclo (ai-mobs -> service -> ai-mobs)
 let _aiMobs = null;
 function ai() {
@@ -21,7 +30,7 @@ function ai() {
  *  ======================= */
 const RESPAWN_MS = 5000; // 5s de espera na tela de morte
 const RESPAWN_FALLBACK = { mapKey: 'house', x: 912, y: 880 }; // ajuste conforme seu mapa
-const RESPAWN_HP_FRACTION = 0.30; // 30% da vida ao reviver (mín. 1)
+const RESPAWN_HP_FRACTION = 1.0; // 100% da vida ao reviver (mín. 1)
 
 /** Dano estilo Tibia (sem dano mínimo garantido) */
 function computeDamageTibiaLike(weaponAtk, skillLevel, monsterArmor, variance = K.DAMAGE_VARIANCE) {
@@ -77,16 +86,26 @@ LEFT JOIN items_master     i ON i.key = eq.item_key
 async function getInstanceWithMonster(instanceId) {
   return await get(
     `SELECT mi.id, mi.hp, mi.max_hp, mi.state, mi.spawn_id, mi.map_key,
+            mi.x, mi.y,
             m.id AS monster_id, m.key AS monster_key,
-            COALESCE(m.xp,25)                    AS xp_reward,
-            COALESCE(m."lootJSON",'[]'::jsonb)   AS loot_json,
-            COALESCE(m."defensesJSON",'{}'::jsonb) AS defenses_json
+            COALESCE(m.xp,25)                      AS xp_reward,
+            COALESCE(m."lootJSON",'[]'::jsonb)     AS loot_json,
+            COALESCE(m."defensesJSON",'{}'::jsonb) AS defenses_json,
+            COALESCE(
+              NULLIF(m."aiJSON"->>'reach','')::int,      -- se tiver em aiJSON
+              NULLIF(m."attackRange", 0),                -- se você tiver essa coluna
+              48                                         -- padrão (px)
+            ) AS reach_px
        FROM monster_instances mi
        JOIN monsters_master m ON m.id = mi.monster_id
       WHERE mi.id = $1`,
     [instanceId]
   );
 }
+
+// fallback se quiser usar separado em outros pontos
+function getDefaultReachPx() { return 48; } // ~1.5 tiles
+
 
 async function getRespawnSeconds(spawnId) {
   if (!spawnId) return 30;
@@ -227,6 +246,16 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
     dmg
   });
 
+  // Log para o canal "Server/Log" do cliente
+  broadcast({
+    type: 'combat_log',
+    fromHeroId: hero.hero_id,
+    to: inst.monster_key,
+    instanceId: inst.id,
+    amount: dmg,
+    hpAfter: newHp
+  });
+
   // >>> AGGRO: informar ai-mobs que ESTE herói bateu nesse monstro
   if (dmg > 0) {
     try {
@@ -295,6 +324,34 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
   const inst = await getInstanceWithMonster(attackerInstanceId);
   if (!inst || inst.state !== 'ALIVE') return { ok: false, message: 'attacker not alive' };
 
+  // --- TRAVAS DE MAPA E ALCANCE ---
+  let hpos = null;
+  try {
+    const mod = posMod();
+    if (mod && typeof mod.getHeroPos === 'function') {
+      hpos = await mod.getHeroPos(hero.hero_id, inst.map_key); // {map_key,x,y}
+    }
+  } catch {}
+
+  if (!hpos || String(hpos.map_key) !== String(inst.map_key)) {
+    return { ok: false, message: 'target not in same map' };
+  }
+
+  // Alcance (px). Vem do SELECT; se faltar, usa default.
+  const reachPx = Number(inst.reach_px) || getDefaultReachPx();
+  // distância euclidiana em px
+  const dx = Number(hpos.x) - Number(inst.x || 0);
+  const dy = Number(hpos.y) - Number(inst.y || 0);
+  const distPx = Math.hypot(dx, dy);
+
+  // margem de tolerância p/ latência (~0.6 tile)
+  const TOLERANCE = 18;
+  // Se está FORA do alcance, cancela o hit.
+  if (distPx > (reachPx + TOLERANCE)) {
+    return { ok: false, message: `out of range (${Math.round(distPx)} > ${reachPx})` };
+  }
+
+
   const min = Number(attackInfo?.min ?? 1);
   const max = Number(attackInfo?.max ?? 2);
   let dmg = min + Math.floor(Math.random() * (max - min + 1));
@@ -304,6 +361,10 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
   // lê HP atual
   const row = await get(`SELECT hp, max_hp, alive FROM player_heroes WHERE id=$1`, [targetHeroId]);
   if (!row) return { ok: false, message: 'hero stats not found' };
+
+  if (row.alive === false) {
+    return { ok: false, message: 'target already dead' };
+  }
 
   const curHp = Number(row.hp);
   const newHp = Math.max(0, curHp - dmg);
@@ -355,6 +416,27 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
     byMob: inst.monster_key,
     instanceId: inst.id
   });
+
+  // >>> Log textual de combate (consumido pelo cliente)
+  broadcast({
+    type: 'combat_log',
+    targetHeroId,
+    byMob: inst.monster_key,
+    instanceId: inst.id,
+    amount: dmg,
+    hpAfter: newHp,
+    maxHp: row.max_hp
+  });
+
+  broadcast({
+  type: 'combat_log',
+  targetHeroId,
+  byMob: inst.monster_key,
+  instanceId: inst.id,
+  amount: 0,
+  note: `cancelado: fora de alcance (dist=${Math.round(distPx)}px, reach=${reachPx}px)`
+  });
+
 
   if (dead && wasAlive) {
     const respawnAt = Date.now() + RESPAWN_MS;

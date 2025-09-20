@@ -4,6 +4,7 @@ client\js\play.js -> ./api.js
 client\js\play.js -> ./combat/actions.js
 client\js\play.js -> ./pos-publisher.js
 client\js\play.js -> ./ws/singleton.js
+client\js\play.js -> ./state/hero-state.js
 client\js\gacha.js -> ./api.js
 client\js\boot.js -> ./api.js
 client\js\boot.js -> ./auth.js
@@ -13,7 +14,12 @@ client\js\auth.js -> ./api.js
 client\js\app.js -> ./tick.js
 client\js\app.js -> ./app_panels.js
 client\js\app.js -> ./ws/singleton.js
+client\js\app.js -> ./state/hero-state.js
+client\js\ui\hud_status.js -> ../state/hero-state.js
+client\js\hud\death-overlay.js -> ../ws/singleton.js
+client\js\hud\death-overlay.js -> ../api.js
 client\js\combat\render-combat.js -> ../ws/singleton.js
 client\js\combat\attack-controls.js -> ../api.js
+client\js\combat\attack-controls.js -> ../state/hero-state.js
 client\js\combat\actions.js -> ../api.js
 client\js\backpack\ui.js -> ../api.js

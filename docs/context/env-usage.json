@@ -107,7 +107,7 @@
       },
       {
         "file": "server\\combat\\routes.js",
-        "index": 903
+        "index": 912
       },
       {
         "file": "server\\combat\\autoloop.js",
@@ -579,7 +579,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\routes.js",
-        "index": 1208
+        "index": 1217
       }
     ],
     "defaults": [

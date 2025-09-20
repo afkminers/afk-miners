@@ -59,6 +59,36 @@ async function bootAuth() {
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+// HP em tempo real -> HUD
+onMessage('hero_hp', (msg) => {
+  if (window.HUD_ApplyHeroHpUpdate) {
+    const hid = String(msg.heroId);
+    window.HUD_ApplyHeroHpUpdate(hid, Number(msg.hp), Number(msg.maxHp));
+  }
+  // Log básico (se o chat ainda não tiver aba "Log")
+  const line = `[Dano] Mob ${msg.byMob ?? msg.instanceId} acertou você por ${msg.dmg} (HP: ${msg.hp}/${msg.maxHp})`;
+  if (window.Chat?.pushLog) window.Chat.pushLog(line); else console.log('[LOG]', line);
+});
+
+// Respawn -> força refresh HUD imediato
+onMessage('hero_respawn', (msg) => {
+  if (window.HUD_ApplyHeroHpUpdate) {
+    const hid = String(msg.heroId);
+    window.HUD_ApplyHeroHpUpdate(hid, Number(msg.hp), Number(msg.hp));
+  }
+});
+
+// Log genérico de combate (quando implementarmos no server)
+onMessage('combat_log', (m) => {
+  let line = '';
+  if (m.to) {
+    line = `[Você] causou ${m.amount} em ${m.to} (hp alvo: ${m.hpAfter ?? '—'})`;
+  } else {
+    line = `[Dano] Mob ${m.byMob ?? m.instanceId} acertou você por ${m.amount} (HP: ${m.hpAfter ?? '—'}/${m.maxHp ?? '—'})`;
+  }
+  if (window.Chat?.pushLog) window.Chat.pushLog(line); else console.log('[LOG]', line);
+});
+
 
 // registra o mapKey para o publicador WS
 setMapKey(MAP_KEY);
@@ -1090,6 +1120,11 @@ function updateRespawns(now) {
 
     if (window.CombatUI && typeof window.CombatUI.render === 'function') {
       try { window.CombatUI.render(ctx, camera, dt); } catch (e) {}
+    }
+
+    // >>> ADICIONE ESTA LINHA:
+    if (window.HeroDamageUI && typeof window.HeroDamageUI.render === 'function') {
+      try { window.HeroDamageUI.render(ctx, camera, dt); } catch {}
     }
 
     window.dispatchEvent(new CustomEvent('game:frame', { detail: { ctx, camera, dt } }));

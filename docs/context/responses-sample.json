@@ -9,9 +9,7 @@
     "{ok:true }",
     "{ok:true }",
     "{ok:false,error:'no-weapon-equipped' }",
-    "{ok:false,error:'map-diff' }",
-    "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }"
+    "{ok:false,error:'map-diff' }"
   ],
   "GET /_routes": [
     "{routes:list }",
@@ -23,8 +21,7 @@
     "{ok:true }",
     "{ok:false,error:'no-weapon-equipped' }",
     "{ok:false,error:'map-diff' }",
-    "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }"
+    "{ok:false,error:'out_of_range' }"
   ],
   "POST /:heroId/deposit": [
     "{ok:true,placed }"
@@ -94,7 +91,8 @@
     "{ok:false,error:'no-weapon-equipped' }",
     "{ok:false,error:'map-diff' }",
     "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }"
+    "{ok:false,error:'no_los' }",
+    "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y }"
   ],
   "GET /cache/stats": [],
   "GET /class-rates": [
@@ -134,7 +132,8 @@
     "{ok:false,error:'no-weapon-equipped' }",
     "{ok:false,error:'map-diff' }",
     "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }"
+    "{ok:false,error:'no_los' }",
+    "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y }"
   ],
   "GET /list": [
     "{canSelect:!row }"
@@ -199,6 +198,9 @@
     "{ok:true }",
     "{ok:true }",
     "{profile }"
+  ],
+  "POST /revive": [
+    "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y }"
   ],
   "POST /select": [],
   "GET /state": [

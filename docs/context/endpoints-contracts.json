@@ -8,8 +8,7 @@
       "body": {
         "heroId": 1,
         "try {\n    const { heroId": 1,
-        "targetInstanceId": 1,
-        "weaponType": "value"
+        "targetInstanceId": 1
       }
     },
     "errors": [
@@ -30,6 +29,10 @@
         "body": "{ok:false,error:'start-failed' }"
       },
       {
+        "status": 404,
+        "body": "{ok:false,error:'hero-not-found' }"
+      },
+      {
         "status": 500,
         "body": "{ok:false,error:'stop-failed' }"
       },
@@ -48,10 +51,6 @@
       {
         "status": 400,
         "body": "{ok:false,error:'hero-pos-missing' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:result.message }"
       }
     ],
     "ok": [
@@ -94,14 +93,6 @@
       {
         "status": 200,
         "body": "{ok:false,error:'map-diff' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'out_of_range' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no_los' }"
       }
     ]
   },
@@ -114,8 +105,7 @@
       "body": {
         "heroId": 1,
         "try {\n    const { heroId": 1,
-        "targetInstanceId": 1,
-        "weaponType": "value"
+        "targetInstanceId": 1
       }
     },
     "errors": [
@@ -136,6 +126,10 @@
         "body": "{ok:false,error:'start-failed' }"
       },
       {
+        "status": 404,
+        "body": "{ok:false,error:'hero-not-found' }"
+      },
+      {
         "status": 500,
         "body": "{ok:false,error:'stop-failed' }"
       },
@@ -154,10 +148,6 @@
       {
         "status": 400,
         "body": "{ok:false,error:'hero-pos-missing' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:result.message }"
       }
     ],
     "ok": [
@@ -200,10 +190,6 @@
       {
         "status": 200,
         "body": "{ok:false,error:'out_of_range' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no_los' }"
       }
     ]
   },
@@ -277,7 +263,7 @@
     "method": "GET",
     "path": "/:heroId",
     "file": "server\\routes\\equipment.js",
-    "line": 11,
+    "line": 31,
     "sample": {
       "params": {
         "heroId": 1
@@ -848,13 +834,12 @@
     "method": "POST",
     "path": "/attack/start",
     "file": "server\\combat\\routes.js",
-    "line": 68,
+    "line": 87,
     "sample": {
       "body": {
         "heroId": 1,
         "try {\n    const { heroId": 1,
-        "targetInstanceId": 1,
-        "weaponType": "value"
+        "targetInstanceId": 1
       }
     },
     "errors": [
@@ -873,6 +858,10 @@
       {
         "status": 500,
         "body": "{ok:false,error:'start-failed' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'hero-not-found' }"
       },
       {
         "status": 500,
@@ -950,7 +939,7 @@
     "method": "POST",
     "path": "/attack/stop",
     "file": "server\\combat\\routes.js",
-    "line": 109,
+    "line": 132,
     "sample": {
       "body": {
         "heroId": 1,
@@ -958,6 +947,10 @@
       }
     },
     "errors": [
+      {
+        "status": 404,
+        "body": "{ok:false,error:'hero-not-found' }"
+      },
       {
         "status": 500,
         "body": "{ok:false,error:'stop-failed' }"
@@ -985,6 +978,22 @@
       {
         "status": 500,
         "body": "{ok:false,error:'hit-failed' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-hero-id' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'hero-not-found' }"
+      },
+      {
+        "status": 409,
+        "body": "{ok:false,error:'hero-not-dead' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'revive-failed' }"
       }
     ],
     "ok": [
@@ -1007,6 +1016,10 @@
       {
         "status": 200,
         "body": "{ok:false,error:'no_los' }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y }"
       }
     ]
   },
@@ -1014,7 +1027,7 @@
     "method": "GET",
     "path": "/cache/stats",
     "file": "server\\routes\\loot.js",
-    "line": 173,
+    "line": 191,
     "sample": {},
     "errors": [
       {
@@ -1272,7 +1285,7 @@
     "method": "POST",
     "path": "/equip",
     "file": "server\\routes\\equipment.js",
-    "line": 30,
+    "line": 50,
     "sample": {
       "body": {
         "const { heroId": 1,
@@ -1489,10 +1502,11 @@
     "method": "POST",
     "path": "/hit",
     "file": "server\\combat\\routes.js",
-    "line": 139,
+    "line": 163,
     "sample": {
       "body": {
-        "heroId": 1
+        "heroId": 1,
+        "try {\n    const { heroId": 1
       }
     },
     "errors": [
@@ -1519,6 +1533,22 @@
       {
         "status": 500,
         "body": "{ok:false,error:'hit-failed' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-hero-id' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'hero-not-found' }"
+      },
+      {
+        "status": 409,
+        "body": "{ok:false,error:'hero-not-dead' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'revive-failed' }"
       }
     ],
     "ok": [
@@ -1537,6 +1567,10 @@
       {
         "status": 200,
         "body": "{ok:false,error:'no_los' }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y }"
       }
     ]
   },
@@ -1653,7 +1687,7 @@
     "method": "POST",
     "path": "/loot/drop",
     "file": "server\\routes\\loot.js",
-    "line": 129,
+    "line": 143,
     "sample": {},
     "errors": [
       {
@@ -1684,7 +1718,7 @@
     "method": "POST",
     "path": "/loot/pickup",
     "file": "server\\routes\\loot.js",
-    "line": 75,
+    "line": 85,
     "sample": {
       "body": {
         "try {\n    const { heroId": 1,
@@ -1744,7 +1778,7 @@
     "method": "GET",
     "path": "/map/:mapKey/loot",
     "file": "server\\routes\\loot.js",
-    "line": 63,
+    "line": 73,
     "sample": {
       "params": {
         "mapKey": "value"
@@ -2365,6 +2399,72 @@
       {
         "status": 200,
         "body": "{profile }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/revive",
+    "file": "server\\routes\\revive.js",
+    "line": 2,
+    "sample": {
+      "body": {
+        "const { heroId": 1
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-hero-id' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'hero-not-found' }"
+      },
+      {
+        "status": 409,
+        "body": "{ok:false,error:'hero-not-dead' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,heroId:hero.id,hp:hpOnRevive,map_key,x,y }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/revive",
+    "file": "server\\combat\\routes.js",
+    "line": 249,
+    "sample": {
+      "body": {
+        "try {\n    const { heroId": 1
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-hero-id' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'hero-not-found' }"
+      },
+      {
+        "status": 409,
+        "body": "{ok:false,error:'hero-not-dead' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'revive-failed' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y }"
       }
     ]
   },

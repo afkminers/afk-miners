@@ -17,6 +17,10 @@
       "body": "{ok:false,error:'start-failed' }"
     },
     {
+      "status": 404,
+      "body": "{ok:false,error:'hero-not-found' }"
+    },
+    {
       "status": 500,
       "body": "{ok:false,error:'stop-failed' }"
     },
@@ -35,10 +39,6 @@
     {
       "status": 400,
       "body": "{ok:false,error:'hero-pos-missing' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:result.message }"
     }
   ],
   "GET /_routes": [
@@ -59,6 +59,10 @@
       "body": "{ok:false,error:'start-failed' }"
     },
     {
+      "status": 404,
+      "body": "{ok:false,error:'hero-not-found' }"
+    },
+    {
       "status": 500,
       "body": "{ok:false,error:'stop-failed' }"
     },
@@ -77,10 +81,6 @@
     {
       "status": 400,
       "body": "{ok:false,error:'hero-pos-missing' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:result.message }"
     }
   ],
   "POST /:heroId/deposit": [
@@ -432,6 +432,10 @@
       "body": "{ok:false,error:'start-failed' }"
     },
     {
+      "status": 404,
+      "body": "{ok:false,error:'hero-not-found' }"
+    },
+    {
       "status": 500,
       "body": "{ok:false,error:'stop-failed' }"
     },
@@ -462,6 +466,10 @@
   ],
   "POST /attack/stop": [
     {
+      "status": 404,
+      "body": "{ok:false,error:'hero-not-found' }"
+    },
+    {
       "status": 500,
       "body": "{ok:false,error:'stop-failed' }"
     },
@@ -488,6 +496,22 @@
     {
       "status": 500,
       "body": "{ok:false,error:'hit-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero-id' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'hero-not-found' }"
+    },
+    {
+      "status": 409,
+      "body": "{ok:false,error:'hero-not-dead' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'revive-failed' }"
     }
   ],
   "GET /cache/stats": [
@@ -758,6 +782,22 @@
     {
       "status": 500,
       "body": "{ok:false,error:'hit-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero-id' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'hero-not-found' }"
+    },
+    {
+      "status": 409,
+      "body": "{ok:false,error:'hero-not-dead' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'revive-failed' }"
     }
   ],
   "GET /list": [
@@ -1200,6 +1240,36 @@
     {
       "status": 500,
       "body": "{error:'Falha ao obter perfil' }"
+    }
+  ],
+  "POST /revive": [
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero-id' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'hero-not-found' }"
+    },
+    {
+      "status": 409,
+      "body": "{ok:false,error:'hero-not-dead' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero-id' }"
+    },
+    {
+      "status": 404,
+      "body": "{ok:false,error:'hero-not-found' }"
+    },
+    {
+      "status": 409,
+      "body": "{ok:false,error:'hero-not-dead' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'revive-failed' }"
     }
   ],
   "POST /select": [

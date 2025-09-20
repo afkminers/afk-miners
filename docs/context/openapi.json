@@ -28,6 +28,16 @@
               }
             }
           },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Error 500 (inferred)",
             "content": {
@@ -54,9 +64,6 @@
                   },
                   "targetInstanceId": {
                     "type": "number"
-                  },
-                  "weaponType": {
-                    "type": "string"
                   }
                 }
               }
@@ -88,6 +95,16 @@
               }
             }
           },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Error 500 (inferred)",
             "content": {
@@ -114,9 +131,6 @@
                   },
                   "targetInstanceId": {
                     "type": "number"
-                  },
-                  "weaponType": {
-                    "type": "string"
                   }
                 }
               }
@@ -994,6 +1008,16 @@
               }
             }
           },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Error 500 (inferred)",
             "content": {
@@ -1020,9 +1044,6 @@
                   },
                   "targetInstanceId": {
                     "type": "number"
-                  },
-                  "weaponType": {
-                    "type": "string"
                   }
                 }
               }
@@ -1051,6 +1072,26 @@
           },
           "400": {
             "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409 (inferred)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1829,6 +1870,26 @@
               }
             }
           },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Error 500 (inferred)",
             "content": {
@@ -1848,6 +1909,9 @@
                 "type": "object",
                 "properties": {
                   "heroId": {
+                    "type": "number"
+                  },
+                  "try {\n    const { heroId": {
                     "type": "number"
                   }
                 }
@@ -2786,6 +2850,77 @@
               "application/json": {
                 "schema": {
                   "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/revive": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "try {\n    const { heroId": {
+                    "type": "number"
+                  }
                 }
               }
             }

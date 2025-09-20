@@ -24,6 +24,10 @@
     "to": "./ws/singleton.js"
   },
   {
+    "from": "client\\js\\play.js",
+    "to": "./state/hero-state.js"
+  },
+  {
     "from": "client\\js\\gacha.js",
     "to": "./api.js"
   },
@@ -60,12 +64,32 @@
     "to": "./ws/singleton.js"
   },
   {
+    "from": "client\\js\\app.js",
+    "to": "./state/hero-state.js"
+  },
+  {
+    "from": "client\\js\\ui\\hud_status.js",
+    "to": "../state/hero-state.js"
+  },
+  {
+    "from": "client\\js\\hud\\death-overlay.js",
+    "to": "../ws/singleton.js"
+  },
+  {
+    "from": "client\\js\\hud\\death-overlay.js",
+    "to": "../api.js"
+  },
+  {
     "from": "client\\js\\combat\\render-combat.js",
     "to": "../ws/singleton.js"
   },
   {
     "from": "client\\js\\combat\\attack-controls.js",
     "to": "../api.js"
+  },
+  {
+    "from": "client\\js\\combat\\attack-controls.js",
+    "to": "../state/hero-state.js"
   },
   {
     "from": "client\\js\\combat\\actions.js",

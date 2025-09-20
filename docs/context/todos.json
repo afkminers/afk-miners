@@ -1,5 +1,17 @@
 [
   {
+    "file": "client\\js\\hud\\death-overlay.js",
+    "line": 51,
+    "tag": "NOTE",
+    "text": "{"
+  },
+  {
+    "file": "client\\js\\hud\\death-overlay.js",
+    "line": 79,
+    "tag": "NOTE",
+    "text": "\">Durante a morte, movimento/ataque e interações ficam bloqueados.</div>"
+  },
+  {
     "file": "docs\\COMBAT_FLAGS.md",
     "line": 72,
     "tag": "NOTE",
@@ -7,7 +19,7 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 64,
+    "line": 83,
     "tag": "NOTE",
     "text": "/nearest endpoint moved to routes/combat_nearest.js for better sprite intersection"
   },
