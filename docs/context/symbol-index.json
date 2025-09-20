@@ -504,6 +504,23 @@
     ]
   },
   {
+    "file": "client\\js\\ui\\chat-log.js",
+    "symbols": [
+      "ensureContainer",
+      "push",
+      "showTab"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\hero-floating-damage.js",
+    "symbols": [
+      "addPopup",
+      "getHeroWorldPos",
+      "now",
+      "render"
+    ]
+  },
+  {
     "file": "client\\js\\ui\\hud_status.js",
     "symbols": [
       "applyHeroHpUpdate",
@@ -706,11 +723,13 @@
       "applyHit",
       "applyMobHit",
       "computeDamageTibiaLike",
+      "getDefaultReachPx",
       "getHeroSkillLevel",
       "getHeroStats",
       "getInstanceWithMonster",
       "getRespawnSeconds",
       "persistDrops",
+      "posMod",
       "resolveSkillFromWeapon",
       "respawnHero",
       "rollLoot"

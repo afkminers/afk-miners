@@ -16,6 +16,7 @@ client\js\app.js -> ./app_panels.js
 client\js\app.js -> ./ws/singleton.js
 client\js\app.js -> ./state/hero-state.js
 client\js\ui\hud_status.js -> ../state/hero-state.js
+client\js\ui\hero-floating-damage.js -> ../ws/singleton.js
 client\js\hud\death-overlay.js -> ../ws/singleton.js
 client\js\hud\death-overlay.js -> ../api.js
 client\js\combat\render-combat.js -> ../ws/singleton.js

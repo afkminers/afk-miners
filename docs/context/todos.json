@@ -24,6 +24,12 @@
     "text": "/nearest endpoint moved to routes/combat_nearest.js for better sprite intersection"
   },
   {
+    "file": "server\\combat\\service.js",
+    "line": 437,
+    "tag": "NOTE",
+    "text": "`cancelado: fora de alcance (dist=${Math.round(distPx)}px, reach=${reachPx}px)`"
+  },
+  {
     "file": "server\\combat\\worker.js",
     "line": 13,
     "tag": "TODO",

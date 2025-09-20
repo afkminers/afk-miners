@@ -72,6 +72,10 @@
     "to": "../state/hero-state.js"
   },
   {
+    "from": "client\\js\\ui\\hero-floating-damage.js",
+    "to": "../ws/singleton.js"
+  },
+  {
     "from": "client\\js\\hud\\death-overlay.js",
     "to": "../ws/singleton.js"
   },

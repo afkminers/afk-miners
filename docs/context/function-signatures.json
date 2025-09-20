@@ -2163,12 +2163,19 @@
     "file": "server\\combat\\service.js",
     "line": 12,
     "kind": "function",
+    "name": "posMod",
+    "params": []
+  },
+  {
+    "file": "server\\combat\\service.js",
+    "line": 21,
+    "kind": "function",
     "name": "ai",
     "params": []
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 27,
+    "line": 36,
     "kind": "function",
     "name": "computeDamageTibiaLike",
     "params": [
@@ -2180,7 +2187,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 37,
+    "line": 46,
     "kind": "function",
     "name": "resolveSkillFromWeapon",
     "params": [
@@ -2189,7 +2196,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 47,
+    "line": 56,
     "kind": "function",
     "name": "getHeroSkillLevel",
     "params": [
@@ -2199,7 +2206,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 57,
+    "line": 66,
     "kind": "function",
     "name": "getHeroStats",
     "params": [
@@ -2208,7 +2215,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 77,
+    "line": 86,
     "kind": "function",
     "name": "getInstanceWithMonster",
     "params": [
@@ -2217,7 +2224,14 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 91,
+    "line": 107,
+    "kind": "function",
+    "name": "getDefaultReachPx",
+    "params": []
+  },
+  {
+    "file": "server\\combat\\service.js",
+    "line": 110,
     "kind": "function",
     "name": "getRespawnSeconds",
     "params": [
@@ -2226,7 +2240,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 101,
+    "line": 120,
     "kind": "function",
     "name": "rollLoot",
     "params": [
@@ -2235,7 +2249,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 120,
+    "line": 139,
     "kind": "function",
     "name": "persistDrops",
     "params": [
@@ -2246,7 +2260,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 140,
+    "line": 159,
     "kind": "function",
     "name": "respawnHero",
     "params": [
@@ -2255,7 +2269,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 188,
+    "line": 207,
     "kind": "function",
     "name": "applyHit",
     "params": [
@@ -2266,7 +2280,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 291,
+    "line": 320,
     "kind": "function",
     "name": "applyMobHit",
     "params": [
@@ -3252,7 +3266,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 84,
+    "line": 114,
     "kind": "function",
     "name": "uniq",
     "params": [
@@ -3261,7 +3275,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 162,
+    "line": 192,
     "kind": "function",
     "name": "pickFreeSpriteForSpawn",
     "params": [
@@ -3270,7 +3284,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 192,
+    "line": 222,
     "kind": "function",
     "name": "pickElByIds",
     "params": [
@@ -3280,7 +3294,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 220,
+    "line": 250,
     "kind": "arrow",
     "name": "$",
     "params": [
@@ -3289,7 +3303,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 226,
+    "line": 256,
     "kind": "function",
     "name": "assetUrl",
     "params": [
@@ -3299,7 +3313,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 238,
+    "line": 268,
     "kind": "function",
     "name": "normalizeTilesetPath",
     "params": [
@@ -3308,7 +3322,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 246,
+    "line": 276,
     "kind": "function",
     "name": "loadTilesetImage",
     "params": [
@@ -3317,21 +3331,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 267,
+    "line": 297,
     "kind": "function",
     "name": "applySmoothing",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 282,
+    "line": 312,
     "kind": "function",
     "name": "resize",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 304,
+    "line": 334,
     "kind": "function",
     "name": "loadImg",
     "params": [
@@ -3340,7 +3354,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 312,
+    "line": 342,
     "kind": "function",
     "name": "imgReady",
     "params": [
@@ -3349,7 +3363,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 313,
+    "line": 343,
     "kind": "function",
     "name": "ensureImgLoaded",
     "params": [
@@ -3358,7 +3372,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 322,
+    "line": 352,
     "kind": "function",
     "name": "normKey",
     "params": [
@@ -3367,7 +3381,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 332,
+    "line": 362,
     "kind": "function",
     "name": "indexSpriteMeta",
     "params": [
@@ -3376,7 +3390,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 344,
+    "line": 374,
     "kind": "function",
     "name": "asObj",
     "params": [
@@ -3385,14 +3399,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 350,
+    "line": 380,
     "kind": "function",
     "name": "loadSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 356,
+    "line": 386,
     "kind": "function",
     "name": "findMetaFor",
     "params": [
@@ -3401,7 +3415,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 369,
+    "line": 399,
     "kind": "function",
     "name": "buildMonsterCandidates",
     "params": [
@@ -3412,7 +3426,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 392,
+    "line": 422,
     "kind": "function",
     "name": "loadMonsterImg",
     "params": [
@@ -3423,7 +3437,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 404,
+    "line": 434,
     "kind": "function",
     "name": "inferMetaFromImage",
     "params": [
@@ -3433,7 +3447,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 454,
+    "line": 484,
     "kind": "function",
     "name": "lootAtWorld",
     "params": [
@@ -3443,7 +3457,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 459,
+    "line": 489,
     "kind": "function",
     "name": "drawLoot",
     "params": [
@@ -3452,14 +3466,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 473,
+    "line": 503,
     "kind": "function",
     "name": "clear",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 475,
+    "line": 505,
     "kind": "function",
     "name": "drawGround",
     "params": [
@@ -3468,7 +3482,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 501,
+    "line": 531,
     "kind": "function",
     "name": "drawPlayer",
     "params": [
@@ -3477,7 +3491,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 515,
+    "line": 545,
     "kind": "function",
     "name": "drawMob",
     "params": [
@@ -3486,7 +3500,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 629,
+    "line": 659,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -3497,7 +3511,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 647,
+    "line": 677,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -3506,7 +3520,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 657,
+    "line": 687,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -3515,14 +3529,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 680,
+    "line": 710,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 718,
+    "line": 748,
     "kind": "function",
     "name": "addMobFromSpawn",
     "params": [
@@ -3531,7 +3545,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 760,
+    "line": 790,
     "kind": "function",
     "name": "buildSpawnersFromDefs",
     "params": [
@@ -3540,7 +3554,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 774,
+    "line": 804,
     "kind": "function",
     "name": "updateRespawns",
     "params": [
@@ -3549,7 +3563,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 797,
+    "line": 827,
     "kind": "function",
     "name": "normalizeApiJson",
     "params": [
@@ -3558,7 +3572,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 828,
+    "line": 858,
     "kind": "function",
     "name": "hasSolidProp",
     "params": [
@@ -3567,14 +3581,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 867,
+    "line": 897,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 986,
+    "line": 1016,
     "kind": "function",
     "name": "frame",
     "params": [
@@ -3583,7 +3597,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1014,
+    "line": 1044,
     "kind": "arrow",
     "name": "cellOf",
     "params": [
@@ -3593,7 +3607,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1015,
+    "line": 1045,
     "kind": "arrow",
     "name": "centerOf",
     "params": [
@@ -3603,7 +3617,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1016,
+    "line": 1046,
     "kind": "arrow",
     "name": "isBlocked",
     "params": [
@@ -3613,7 +3627,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1021,
+    "line": 1051,
     "kind": "arrow",
     "name": "inBound",
     "params": [
@@ -3624,7 +3638,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1029,
+    "line": 1059,
     "kind": "arrow",
     "name": "faceFrom",
     "params": [
@@ -3634,7 +3648,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1113,
+    "line": 1148,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
@@ -5777,6 +5791,78 @@
       "heroId",
       "hp",
       "maxHp"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\hero-floating-damage.js",
+    "line": 8,
+    "kind": "function",
+    "name": "now",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\hero-floating-damage.js",
+    "line": 11,
+    "kind": "function",
+    "name": "getHeroWorldPos",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\hero-floating-damage.js",
+    "line": 19,
+    "kind": "function",
+    "name": "addPopup",
+    "params": [
+      "text",
+      "{ x",
+      "y }"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\hero-floating-damage.js",
+    "line": 49,
+    "kind": "function",
+    "name": "render",
+    "params": [
+      "ctx",
+      "camera",
+      "dt"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-log.js",
+    "line": 7,
+    "kind": "function",
+    "name": "ensureContainer",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\chat-log.js",
+    "line": 33,
+    "kind": "arrow",
+    "name": "makeBtn",
+    "params": [
+      "label",
+      "id"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-log.js",
+    "line": 66,
+    "kind": "function",
+    "name": "showTab",
+    "params": [
+      "id"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-log.js",
+    "line": 76,
+    "kind": "function",
+    "name": "push",
+    "params": [
+      "line",
+      "{ color = '#d1fae5' } = {}"
     ]
   },
   {
