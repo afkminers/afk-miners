@@ -1,111 +1,13 @@
 [
   {
-    "key": "AI_ATTACK_RANGE",
+    "key": "AI_MOBS_DEBUG",
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 916
+        "index": 1648
       }
     ],
-    "defaults": [
-      "(TILE"
-    ]
-  },
-  {
-    "key": "AI_FORCE_RANGE",
-    "occurrences": [
-      {
-        "file": "server\\combat\\ai-mobs.js",
-        "index": 1300
-      }
-    ],
-    "defaults": [
-      "0"
-    ]
-  },
-  {
-    "key": "AI_HERO_RECENT_SEC",
-    "occurrences": [
-      {
-        "file": "server\\combat\\ai-mobs.js",
-        "index": 1400
-      }
-    ],
-    "defaults": [
-      "0"
-    ]
-  },
-  {
-    "key": "AI_IGNORE_LOS",
-    "occurrences": [
-      {
-        "file": "server\\combat\\ai-mobs.js",
-        "index": 1198
-      }
-    ],
-    "defaults": [
-      ""
-    ]
-  },
-  {
-    "key": "AI_LEASH_MARGIN",
-    "occurrences": [
-      {
-        "file": "server\\combat\\ai-mobs.js",
-        "index": 996
-      }
-    ],
-    "defaults": [
-      "96"
-    ]
-  },
-  {
-    "key": "AI_ONLINE_WINDOW_SEC",
-    "occurrences": [
-      {
-        "file": "server\\combat\\ai-mobs.js",
-        "index": 1732
-      }
-    ],
-    "defaults": [
-      "20"
-    ]
-  },
-  {
-    "key": "AI_POOL_WAIT_MAX",
-    "occurrences": [
-      {
-        "file": "server\\combat\\ai-mobs.js",
-        "index": 1521
-      }
-    ],
-    "defaults": [
-      "0"
-    ]
-  },
-  {
-    "key": "AI_REQUIRE_ONLINE",
-    "occurrences": [
-      {
-        "file": "server\\combat\\ai-mobs.js",
-        "index": 1626
-      }
-    ],
-    "defaults": [
-      "1"
-    ]
-  },
-  {
-    "key": "AI_TICK_MS",
-    "occurrences": [
-      {
-        "file": "server\\combat\\ai-mobs.js",
-        "index": 848
-      }
-    ],
-    "defaults": [
-      "350"
-    ]
+    "defaults": []
   },
   {
     "key": "APP_ORIGIN",
@@ -210,14 +112,9 @@
       {
         "file": "server\\combat\\autoloop.js",
         "index": 518
-      },
-      {
-        "file": "server\\combat\\ai-mobs.js",
-        "index": 1085
       }
     ],
     "defaults": [
-      "",
       "",
       "",
       "",

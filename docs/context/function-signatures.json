@@ -836,26 +836,36 @@
   },
   {
     "file": "server\\services\\heroStats.js",
-    "line": 12,
+    "line": 15,
     "kind": "function",
     "name": "computeHeroStats",
     "params": [
-      "hero",
+      "heroOrId",
       "opts = {}"
     ]
   },
   {
     "file": "server\\services\\heroStats.js",
-    "line": 81,
+    "line": 108,
     "kind": "function",
-    "name": "computeMaxHp",
+    "name": "syncVitalsIfOutdated",
+    "params": [
+      "heroId",
+      "opts = {}"
+    ]
+  },
+  {
+    "file": "server\\services\\heroStats.js",
+    "line": 163,
+    "kind": "function",
+    "name": "computeMaxHpLegacy",
     "params": [
       "hero"
     ]
   },
   {
     "file": "server\\services\\heroProgress.js",
-    "line": 5,
+    "line": 10,
     "kind": "function",
     "name": "xpNeededForLevel",
     "params": [
@@ -864,7 +874,7 @@
   },
   {
     "file": "server\\services\\heroProgress.js",
-    "line": 12,
+    "line": 22,
     "kind": "function",
     "name": "giveXp",
     "params": [
@@ -874,7 +884,7 @@
   },
   {
     "file": "server\\services\\heroProgress.js",
-    "line": 23,
+    "line": 38,
     "kind": "function",
     "name": "applyLevelUp",
     "params": [
@@ -883,7 +893,7 @@
   },
   {
     "file": "server\\services\\heroProgress.js",
-    "line": 46,
+    "line": 92,
     "kind": "function",
     "name": "getXpNeededForHero",
     "params": [
@@ -892,7 +902,7 @@
   },
   {
     "file": "server\\services\\heroProgress.js",
-    "line": 52,
+    "line": 98,
     "kind": "function",
     "name": "notifyLevelUpClient",
     "params": [
@@ -2131,7 +2141,14 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 11,
+    "line": 12,
+    "kind": "function",
+    "name": "ai",
+    "params": []
+  },
+  {
+    "file": "server\\combat\\service.js",
+    "line": 26,
     "kind": "function",
     "name": "computeDamageTibiaLike",
     "params": [
@@ -2143,7 +2160,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 21,
+    "line": 36,
     "kind": "function",
     "name": "resolveSkillFromWeapon",
     "params": [
@@ -2152,7 +2169,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 31,
+    "line": 46,
     "kind": "function",
     "name": "getHeroSkillLevel",
     "params": [
@@ -2162,7 +2179,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 41,
+    "line": 56,
     "kind": "function",
     "name": "getHeroStats",
     "params": [
@@ -2171,7 +2188,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 61,
+    "line": 76,
     "kind": "function",
     "name": "getInstanceWithMonster",
     "params": [
@@ -2180,7 +2197,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 75,
+    "line": 90,
     "kind": "function",
     "name": "getRespawnSeconds",
     "params": [
@@ -2189,7 +2206,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 85,
+    "line": 100,
     "kind": "function",
     "name": "rollLoot",
     "params": [
@@ -2198,7 +2215,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 104,
+    "line": 119,
     "kind": "function",
     "name": "persistDrops",
     "params": [
@@ -2209,7 +2226,16 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 122,
+    "line": 139,
+    "kind": "function",
+    "name": "respawnHero",
+    "params": [
+      "targetHeroId"
+    ]
+  },
+  {
+    "file": "server\\combat\\service.js",
+    "line": 174,
     "kind": "function",
     "name": "applyHit",
     "params": [
@@ -2220,7 +2246,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 215,
+    "line": 277,
     "kind": "function",
     "name": "applyMobHit",
     "params": [
@@ -2265,7 +2291,7 @@
   },
   {
     "file": "server\\combat\\pos.js",
-    "line": 5,
+    "line": 6,
     "kind": "function",
     "name": "getHeroOwner",
     "params": [
@@ -2274,7 +2300,7 @@
   },
   {
     "file": "server\\combat\\pos.js",
-    "line": 16,
+    "line": 17,
     "kind": "function",
     "name": "getPlayerLastPos",
     "params": [
@@ -2284,7 +2310,7 @@
   },
   {
     "file": "server\\combat\\pos.js",
-    "line": 26,
+    "line": 27,
     "kind": "function",
     "name": "getHeroPos",
     "params": [
@@ -2294,11 +2320,23 @@
   },
   {
     "file": "server\\combat\\pos.js",
-    "line": 61,
+    "line": 62,
     "kind": "function",
     "name": "getMonsterPos",
     "params": [
       "instanceId"
+    ]
+  },
+  {
+    "file": "server\\combat\\pos.js",
+    "line": 72,
+    "kind": "function",
+    "name": "setMonsterPos",
+    "params": [
+      "instanceId",
+      "mapKey",
+      "x",
+      "y"
     ]
   },
   {
@@ -2440,104 +2478,160 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 46,
+    "line": 15,
+    "kind": "arrow",
+    "name": "broadcast",
+    "params": []
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 43,
     "kind": "function",
-    "name": "getMonsterYmlStats",
+    "name": "fetchAliveMonsters",
+    "params": []
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 53,
+    "kind": "function",
+    "name": "fetchOnlineHeroesInMap",
     "params": [
-      "monsterKey"
+      "mapKey"
     ]
   },
   {
     "file": "server\\combat\\ai-mobs.js",
     "line": 78,
     "kind": "function",
-    "name": "clampToRect",
+    "name": "ensureMob",
     "params": [
-      "x",
-      "y",
-      "r"
+      "instanceId",
+      "patch = {}"
     ]
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 83,
-    "kind": "function",
-    "name": "expandRect",
-    "params": [
-      "r",
-      "margin"
-    ]
-  },
-  {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 87,
-    "kind": "function",
-    "name": "getGridCached",
-    "params": [
-      "mapKey"
-    ]
-  },
-  {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 96,
-    "kind": "function",
-    "name": "getHeroesWithPosByMap",
-    "params": [
-      "mapKey"
-    ]
-  },
-  {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 144,
-    "kind": "function",
-    "name": "getHeroesWithPosByMapCached",
-    "params": [
-      "mapKey"
-    ]
-  },
-  {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 154,
+    "line": 100,
     "kind": "function",
     "name": "seedPosition",
     "params": [
       "{ id",
       "x",
       "y",
-      "mapKey",
-      "spawnRect",
-      "monsterKey }"
+      "mapKey }"
     ]
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 176,
+    "line": 105,
     "kind": "function",
-    "name": "forget",
+    "name": "addThreatFromHeroHit",
     "params": [
-      "id"
+      "instanceId",
+      "heroId",
+      "amount = THREAT_ON_HIT"
     ]
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 181,
-    "kind": "function",
-    "name": "tick",
-    "params": []
-  },
-  {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 308,
+    "line": 115,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 313,
+    "line": 124,
     "kind": "function",
     "name": "stop",
     "params": []
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 132,
+    "kind": "function",
+    "name": "tickLoop",
+    "params": []
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 165,
+    "kind": "function",
+    "name": "stepMob",
+    "params": [
+      "now",
+      "dt",
+      "mob",
+      "heroes",
+      "losGrid"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 211,
+    "kind": "function",
+    "name": "chebTiles",
+    "params": [
+      "ax",
+      "ay",
+      "bx",
+      "by"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 217,
+    "kind": "function",
+    "name": "decayThreat",
+    "params": [
+      "mob",
+      "dt"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 227,
+    "kind": "function",
+    "name": "selectTargetByThreat",
+    "params": [
+      "now",
+      "mob",
+      "heroes",
+      "losGrid"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 258,
+    "kind": "function",
+    "name": "isBlockedPx",
+    "params": [
+      "losGrid",
+      "wx",
+      "wy"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 265,
+    "kind": "function",
+    "name": "pickStepGreedy",
+    "params": [
+      "mob",
+      "tgtPos",
+      "losGrid"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 287,
+    "kind": "function",
+    "name": "moveMobAndPersist",
+    "params": [
+      "mob",
+      "step",
+      "dt"
+    ]
   },
   {
     "file": "server\\balance\\config.js",
@@ -5571,7 +5665,17 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 72,
+    "line": 75,
+    "kind": "function",
+    "name": "fetchHeroVitals",
+    "params": [
+      "heroId",
+      "signal"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\hud_status.js",
+    "line": 114,
     "kind": "function",
     "name": "fetchActiveHeroData",
     "params": [
@@ -5580,7 +5684,7 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 86,
+    "line": 151,
     "kind": "function",
     "name": "pct",
     "params": [
@@ -5590,7 +5694,7 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 92,
+    "line": 157,
     "kind": "function",
     "name": "renderHudBars",
     "params": [
@@ -5600,7 +5704,7 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 195,
+    "line": 263,
     "kind": "function",
     "name": "updateHudBars",
     "params": [
@@ -5609,7 +5713,7 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 252,
+    "line": 302,
     "kind": "function",
     "name": "wireToggles",
     "params": [
@@ -5619,10 +5723,21 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 277,
+    "line": 327,
     "kind": "function",
     "name": "scheduleNextPoll",
     "params": []
+  },
+  {
+    "file": "client\\js\\ui\\hud_status.js",
+    "line": 353,
+    "kind": "function",
+    "name": "applyHeroHpUpdate",
+    "params": [
+      "heroId",
+      "hp",
+      "maxHp"
+    ]
   },
   {
     "file": "client\\js\\scenes\\house.js",

@@ -488,8 +488,10 @@
   {
     "file": "client\\js\\ui\\hud_status.js",
     "symbols": [
+      "applyHeroHpUpdate",
       "cacheTTL",
       "fetchActiveHeroData",
+      "fetchHeroVitals",
       "getActiveHeroId",
       "getMe",
       "pct",
@@ -610,17 +612,21 @@
   {
     "file": "server\\combat\\ai-mobs.js",
     "symbols": [
-      "clampToRect",
-      "expandRect",
-      "forget",
-      "getGridCached",
-      "getHeroesWithPosByMap",
-      "getHeroesWithPosByMapCached",
-      "getMonsterYmlStats",
+      "addThreatFromHeroHit",
+      "chebTiles",
+      "decayThreat",
+      "ensureMob",
+      "fetchAliveMonsters",
+      "fetchOnlineHeroesInMap",
+      "isBlockedPx",
+      "moveMobAndPersist",
+      "pickStepGreedy",
       "seedPosition",
+      "selectTargetByThreat",
       "start",
+      "stepMob",
       "stop",
-      "tick"
+      "tickLoop"
     ]
   },
   {
@@ -655,7 +661,8 @@
       "getHeroOwner",
       "getHeroPos",
       "getMonsterPos",
-      "getPlayerLastPos"
+      "getPlayerLastPos",
+      "setMonsterPos"
     ]
   },
   {
@@ -675,6 +682,7 @@
   {
     "file": "server\\combat\\service.js",
     "symbols": [
+      "ai",
       "applyHit",
       "applyMobHit",
       "computeDamageTibiaLike",
@@ -684,6 +692,7 @@
       "getRespawnSeconds",
       "persistDrops",
       "resolveSkillFromWeapon",
+      "respawnHero",
       "rollLoot"
     ]
   },
@@ -974,7 +983,8 @@
     "file": "server\\services\\heroStats.js",
     "symbols": [
       "computeHeroStats",
-      "computeMaxHp"
+      "computeMaxHpLegacy",
+      "syncVitalsIfOutdated"
     ]
   },
   {

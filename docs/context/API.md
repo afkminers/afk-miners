@@ -2,15 +2,7 @@
 
 ## Variáveis de ambiente
 
-- `AI_ATTACK_RANGE` (defaults: (TILE)
-- `AI_FORCE_RANGE` (defaults: 0)
-- `AI_HERO_RECENT_SEC` (defaults: 0)
-- `AI_IGNORE_LOS` (defaults: )
-- `AI_LEASH_MARGIN` (defaults: 96)
-- `AI_ONLINE_WINDOW_SEC` (defaults: 20)
-- `AI_POOL_WAIT_MAX` (defaults: 0)
-- `AI_REQUIRE_ONLINE` (defaults: 1)
-- `AI_TICK_MS` (defaults: 350)
+- `AI_MOBS_DEBUG`
 - `APP_ORIGIN`
 - `APP_ORIGINS` (defaults: http://localhost:3000, process.env.APP_ORIGIN)
 - `ASSETS_CACHE_TTL_MS` (defaults: 300000)
@@ -382,7 +374,7 @@ Arquivo: `server\index.js:525`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1263`
+Arquivo: `server\index.js:1272`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -880,7 +872,7 @@ Arquivo: `server\index.js:594`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1286`
+Arquivo: `server\index.js:1295`
 
 _Sem payload inferido_
 
