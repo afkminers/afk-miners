@@ -10,6 +10,8 @@
   <title>AFK Miners — Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/css/app.css" />
+  <!-- Fonte usada pelo HUD -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <style>
     .sidebar,
     .rightbar {
@@ -273,6 +275,9 @@
     import installCombatOverlay from "/js/combat/render-combat.js";
     try { installCombatOverlay(); } catch (e) { console.error("[overlay] init failed:", e); }
   </script>
+
+  <!-- HUD de morte / revive -->
+  <script type="module" src="/js/hud/death-overlay.js"></script>
 
   <!-- loot-mapa -->
   <script src="/js/map/loot-layer.js"></script>

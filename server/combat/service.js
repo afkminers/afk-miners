@@ -21,6 +21,7 @@ function ai() {
  *  ======================= */
 const RESPAWN_MS = 5000; // 5s de espera na tela de morte
 const RESPAWN_FALLBACK = { mapKey: 'house', x: 912, y: 880 }; // ajuste conforme seu mapa
+const RESPAWN_HP_FRACTION = 0.30; // 30% da vida ao reviver (mín. 1)
 
 /** Dano estilo Tibia (sem dano mínimo garantido) */
 function computeDamageTibiaLike(weaponAtk, skillLevel, monsterArmor, variance = K.DAMAGE_VARIANCE) {
@@ -138,7 +139,10 @@ async function persistDrops(heroId, instanceId, drops) {
  *  ======================= */
 async function respawnHero(targetHeroId) {
   // lê max_hp e playerId
-  const row = await get(`SELECT max_hp, "playerId"::text AS player_id FROM player_heroes WHERE id=$1`, [targetHeroId]);
+  const row = await get(
+    `SELECT max_hp, "playerId"::text AS player_id FROM player_heroes WHERE id=$1`,
+    [targetHeroId]
+  );
   const maxHp = Number(row?.max_hp || 100);
   const playerId = row?.player_id;
 
@@ -146,12 +150,16 @@ async function respawnHero(targetHeroId) {
   const x = RESPAWN_FALLBACK.x | 0;
   const y = RESPAWN_FALLBACK.y | 0;
 
-  // cura
+  const hpOnRevive = Math.max(1, Math.floor(maxHp * RESPAWN_HP_FRACTION));
+
+  // revive: hp + alive=true
   await run(`
     UPDATE player_heroes
-       SET hp = $2, "updatedAt" = now()
+       SET hp = $2,
+           alive = true,
+           "updatedAt" = now()
      WHERE id = $1
-  `, [targetHeroId, maxHp]);
+  `, [targetHeroId, hpOnRevive]);
 
   // persiste posição de respawn
   if (playerId) {
@@ -165,7 +173,13 @@ async function respawnHero(targetHeroId) {
 
   // notifica cliente (snap + respawn)
   broadcast({ type: 'pos_snap_hero', heroId: targetHeroId, mapKey, x, y });
-  broadcast({ type: 'hero_respawn', heroId: targetHeroId, hp: maxHp, mapKey, x, y });
+  broadcast({ type: 'hero_respawn', heroId: targetHeroId, hp: hpOnRevive, mapKey, x, y });
+
+  // limpa ameaças para não nascer "em combate"
+  try {
+    const mod = ai();
+    if (mod?.removeHeroThreat) mod.removeHeroThreat(targetHeroId);
+  } catch {}
 }
 
 /** =======================
@@ -288,20 +302,42 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
   dmg = Math.max(0, dmg - Math.floor(Math.random() * (heroDefense + 1)));
 
   // lê HP atual
-  const row = await get(`SELECT hp, max_hp FROM player_heroes WHERE id=$1`, [targetHeroId]);
+  const row = await get(`SELECT hp, max_hp, alive FROM player_heroes WHERE id=$1`, [targetHeroId]);
   if (!row) return { ok: false, message: 'hero stats not found' };
 
   const curHp = Number(row.hp);
   const newHp = Math.max(0, curHp - dmg);
   const dead  = newHp === 0;
+  const wasAlive = row.alive !== false; // trata null/undefined como true
 
-  await run(
-    `UPDATE player_heroes
-        SET hp = $2, "updatedAt" = now()
-      WHERE id = $1`,
-    [targetHeroId, newHp]
-  );
+  if (!dead) {
+    // apenas aplica dano
+    await run(
+      `UPDATE player_heroes
+          SET hp = $2, "updatedAt" = now()
+        WHERE id = $1`,
+      [targetHeroId, newHp]
+    );
+  } else {
+    // morte determinística: grava estado morto no banco
+    await run(`
+      UPDATE player_heroes
+         SET hp = 0,
+             alive = false,
+             death_count = COALESCE(death_count,0)+1,
+             last_respawn_at = NOW(),
+             "updatedAt" = now()
+       WHERE id = $1
+    `, [targetHeroId]);
 
+    // opcional: limpa threat do herói morto
+    try {
+      const mod = ai();
+      if (mod?.removeHeroThreat) mod.removeHeroThreat(targetHeroId);
+    } catch {}
+  }
+
+  // eventos de HP e dano sempre
   broadcast({
     type: 'hero_hp',
     heroId: targetHeroId,
@@ -320,7 +356,7 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
     instanceId: inst.id
   });
 
-  if (dead) {
+  if (dead && wasAlive) {
     const respawnAt = Date.now() + RESPAWN_MS;
 
     // evento para abrir "tela de morte" no cliente com countdown

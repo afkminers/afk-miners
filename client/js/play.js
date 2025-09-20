@@ -8,6 +8,8 @@ import { getCsrf, apiGet } from './api.js';
 import { CombatActions } from './combat/actions.js';
 import { publishPos, setMapKey } from './pos-publisher.js';
 import { onMessage, authenticate } from './ws/singleton.js';
+import { HeroState } from './state/hero-state.js';
+
 
 
 const QS = new URLSearchParams(location.search);
@@ -41,6 +43,9 @@ async function bootAuth() {
     // usa teu endpoint atual
     const me = await apiGet('/api/player/me').catch(() => null);
 
+    // >>> NOVO: alimenta o estado global do herói (idempotente)
+    try { HeroState.setFromServer(me); } catch {}
+
     // em alguns lugares o payload vem como { profile: {...} }, noutros, direto
     const p = (me && me.profile) ? me.profile : me;
 
@@ -51,6 +56,7 @@ async function bootAuth() {
     };
   });
 }
+
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
@@ -674,6 +680,10 @@ function mapSpawnsFromTiledJSON(json) {
 async function resolvePlayerSprite() {
   try {
     const me = await apiGet('/api/player/me');
+
+    // >>> NOVO: sincroniza estado de herói sempre que carregarmos /me
+    try { HeroState.setFromServer(me); } catch {}
+
     const heroes = Array.isArray(me.heroes) ? me.heroes : [];
     const teamIds = heroes.slice(0, 3).map(h => String(h.id));
     if (teamIds.length > 0) { try { window.Team.setActiveTeam(teamIds); } catch {} }
@@ -702,6 +712,7 @@ async function resolvePlayerSprite() {
   playerVis.img = loadImg("/sprites/characters/player.png");
   ensureImgLoaded(playerVis.img).catch(() => {});
 }
+
 
 /* =========================== Respawn Manager ========================== */
 function addMobFromSpawn(spDef) {

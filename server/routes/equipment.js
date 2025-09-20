@@ -7,7 +7,27 @@ const { requireAuth } = require('../auth/middleware');
 
 router.use(requireAuth);
 
-// pega equipamento atual de um herói
+/* =========================================================================
+   Guardião: ownership + alive=true
+   ========================================================================== */
+async function assertHeroAliveOwned(playerId, heroId) {
+  const row = await get(
+    `SELECT "playerId"::text AS player_id, COALESCE(alive, true) AS alive
+       FROM player_heroes
+      WHERE id = $1`,
+    [String(heroId)]
+  );
+  if (!row) return { ok:false, code:404, error:'hero-not-found' };
+  if (String(row.player_id) !== String(playerId)) {
+    return { ok:false, code:403, error:'not-owner' };
+  }
+  if (row.alive === false) {
+    return { ok:false, code:409, error:'hero-dead' };
+  }
+  return { ok:true };
+}
+
+// pega equipamento atual de um herói (apenas leitura – sem guardião de alive)
 router.get('/:heroId', async (req, res) => {
   try {
     const heroId = String(req.params.heroId);
@@ -40,15 +60,19 @@ router.post('/equip', express.json(), async (req, res) => {
     const { heroId, slot, itemKey } = req.body || {};
     if (!heroId || !slot) return res.status(400).json({ ok:false, error:'missing-params' });
 
+    // Guardião: dono + vivo
+    const g = await assertHeroAliveOwned(req.user.id, heroId);
+    if (!g.ok) return res.status(g.code).json({ ok:false, error:g.error });
+
     // Normaliza o slot em UMA única forma (MAIÚSCULO)
     const SLOT = String(slot).toUpperCase();
     const SLOTS = new Set(['AMULET','HELMET','BACK','WEAPON','ARMOR','SHIELD','RING','LEGS','BOOTS']);
     if (!SLOTS.has(SLOT)) return res.status(400).json({ ok:false, error:'bad-slot' });
 
-    // descobre o player dono do herói
-    const hero = await get(`SELECT "playerId" FROM player_heroes WHERE id = $1`, [String(heroId)]);
-    if (!hero) return res.status(404).json({ ok:false, error:'hero-not-found' });
-    const playerId = String(hero.playerId);
+    // descobre o player dono do herói (já validado acima, mas precisamos do id para inventário)
+    const heroRow = await get(`SELECT "playerId"::text AS player_id FROM player_heroes WHERE id = $1`, [String(heroId)]);
+    if (!heroRow) return res.status(404).json({ ok:false, error:'hero-not-found' });
+    const playerId = String(heroRow.player_id);
 
     // qual item está equipado nesse slot? (tolerante a registros antigos com case diferente)
     const cur = await get(
@@ -60,7 +84,7 @@ router.post('/equip', express.json(), async (req, res) => {
     );
     const prevItem = cur?.item_key || null;
 
-    // unequip
+    // ======== UNEQUIP ========
     if (!itemKey) {
       if (!prevItem) {
         return res.json({ ok:true }); // nada para retirar
@@ -89,7 +113,7 @@ router.post('/equip', express.json(), async (req, res) => {
       return res.json({ ok:true, unequipped: prevItem });
     }
 
-    // equip com itemKey
+    // ======== EQUIP ========
     const desiredKey = String(itemKey);
 
     // valida se item existe e corresponde ao slot

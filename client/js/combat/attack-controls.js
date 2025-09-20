@@ -1,5 +1,7 @@
 //client/js/combat/attack-controls.js
 import { apiGet, apiPost, getCsrf } from '../api.js';
+import { HeroState } from '../state/hero-state.js';
+
 
 const combatState = (window.combatState = window.combatState || {
   monsters: new Map(),
@@ -78,6 +80,10 @@ async function ensureActiveHero() {
   if (ACTIVE_HERO.id) return ACTIVE_HERO;
   try {
     const me = await apiGet('/api/player/me');
+
+    // >>> NOVO: manter estado global sincronizado (idempotente)
+    try { HeroState.setFromServer(me); } catch {}
+
     const heroes = Array.isArray(me?.heroes) ? me.heroes : [];
     const main = heroes.find(h => h.isStarter === 1 || h.isStarter === true) || heroes[0];
     if (main) {
@@ -87,6 +93,7 @@ async function ensureActiveHero() {
   } catch {}
   return ACTIVE_HERO;
 }
+
 
 /** resolve alvo no servidor; retorna { id, x, y, hp, maxHp } ou null */
 async function resolveServerTarget(pxClick, pyClick) {
@@ -171,8 +178,16 @@ async function doHit() {
 
     window.dispatchEvent(new CustomEvent('combat:hit', { detail:{ id, dmg, hp:hpNow, maxHp:hpMax, dead } }));
     if (dead) stopAttack();
-  } catch (e) { console.warn('[attack] hit failed', e?.message || e); }
+  } catch (e) {
+    const msg = String(e?.message || '');
+    console.warn('[attack] hit failed', msg);
+    // >>> NOVO: se o servidor disser que o alvo não está vivo/é inválido, cancela o loop
+    if (msg.includes('400') || /not alive|invalid target|not found/i.test(msg)) {
+      stopAttack();
+    }
+  }
 }
+
 function startLoop(){ if (!combatState.loopHandle) combatState.loopHandle = setInterval(doHit, 600); }
 
 export async function startAttack(targetId) {

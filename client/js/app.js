@@ -5,6 +5,7 @@
 import './tick.js';
 import { openSkills, openHeroes, openInventory, openSummonPanel } from './app_panels.js';
 import { getSocket, onMessage, wsSend, authenticate } from './ws/singleton.js';
+import { HeroState } from './state/hero-state.js';
 
 /* ---------- HTTP helpers + CSRF ---------- */
 let CSRF = null;
@@ -233,37 +234,42 @@ function findPendingRowFor(msg) {
 function appendChatRow(msg){
   const chatBox = document.getElementById('chatBox');
   if (!chatBox) return null;
-  const id  = msg.id ?? msg.messageId ?? null;
-  const ts  = getTs(msg.createdAt || msg.ts || Date.now());
-  const me  = window._chat_me || {};
+
+  const id   = msg?.id ?? msg?.messageId ?? null;
+  const ts   = getTs(msg?.createdAt || msg?.ts || Date.now());
+  const me   = window._chat_me || {};
   const myId = String(me.id || '');
   const myName = String(me.name || 'Você');
-  const fromId = msg.fromId ? String(msg.fromId) : '';
-  const isMe = !!myId && fromId && (fromId === myId);
+  const fromId = msg?.fromId ? String(msg.fromId) : '';
+  const isMe = !!myId && !!fromId && (fromId === myId);
 
-  const fromName = normStr(msg.fromName || (isMe ? myName : 'Anon'));
-  const text = normStr(msg.text || '');
+  const fromName = normStr(msg?.fromName || (isMe ? myName : 'Anon'));
+  const text     = normStr(msg?.text || '');
 
+  // evita duplicatas
   if (id && hasSeenId(id)) return null;
 
-  const d = document.createElement('div');
-  d.className = 'chat-row';
-  if (id != null) { d.setAttribute('data-chat-id', String(id)); markSeenId(id); }
-  d.setAttribute('data-from', fromName);
-  d.setAttribute('data-text', text);
-  d.setAttribute('data-ts', String(ts));
-  d.classList.add(isMe ? 'me' : 'other');
+  const row = document.createElement('div');
+  row.className = 'chat-row';
+  if (id != null) { row.setAttribute('data-chat-id', String(id)); markSeenId(id); }
+  row.setAttribute('data-from', fromName);
+  row.setAttribute('data-text', text);
+  row.setAttribute('data-ts', String(ts));
+  row.classList.add(isMe ? 'me' : 'other');
 
-  const time = new Date(ts).toLocaleTimeString();
+  const timeStr = new Date(ts).toLocaleTimeString();
   const esc = (s)=> String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const displayName = esc(fromName);
   const extraYou = isMe ? ' <span class="you-tag">(Você)</span>' : '';
-  d.innerHTML = `<strong class="name">${displayName}</strong>${extraYou}: ${esc(text)}
-    <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${time})</span>`;
-  chatBox.appendChild(d);
+  row.innerHTML =
+    `<strong class="name">${displayName}</strong>${extraYou}: ${esc(text)}
+     <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${timeStr})</span>`;
+
+  chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;
-  return d;
+  return row;
 }
+
 
 window.addEventListener('tick:chat:append', (ev)=>{
   const list = ev.detail || [];
@@ -279,7 +285,14 @@ window.addEventListener('tick:chat:append', (ev)=>{
     appendChatRow({ id: m.id, fromId: m.fromId, fromName: m.fromName || m.from, text: m.text, createdAt: m.createdAt || m.created_at });
   }
 });
-window.addEventListener('tick:hero', (ev)=>{ try { window.ActiveHeroSummary = ev.detail; } catch {} });
+
+// >>>>>>> alteração: também alimenta o HeroState com snapshots do tick
+window.addEventListener('tick:hero', (ev)=>{ 
+  try { 
+    window.ActiveHeroSummary = ev.detail; 
+    HeroState.setFromServer(ev.detail);
+  } catch {} 
+});
 
 /* ===================== Chat: UI + WS (singleton) ===================== */
 async function initGlobalChatUI() {
@@ -295,6 +308,10 @@ async function initGlobalChatUI() {
 
   await authenticate(async () => {
     const raw = await fetch('/api/player/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+
+    // >>>>>>> alteração: atualiza o singleton com o payload bruto
+    try { HeroState.setFromServer(raw); } catch {}
+
     const me = (raw && raw.profile) ? raw.profile : raw;
     const id = String((me && (me.id || me.playerId)) || '');
     const name = (me && (me.name || me.username || me.displayName)) || 'Você';

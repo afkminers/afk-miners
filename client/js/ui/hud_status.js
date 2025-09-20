@@ -1,8 +1,10 @@
 // client/js/ui/hud_status.js
 // HUD in-game: barras HP/Mana/Cap/Xp do herói ativo
 // Minimalista, sincronizado com o servidor, sem recalcular HP/Mana localmente.
+import { HeroState } from '../state/hero-state.js';
 
 const HUD_CONTAINER_ID = "hud";
+
 
 /* =====================================================================================
    UTIL: herói ativo + cache /api/player/me com dedupe e throttle
@@ -51,6 +53,9 @@ async function getMe(force = false, signal) {
   })
     .then((r) => r.json())
     .then((data) => {
+      // >>> NOVO: sincroniza o estado global a cada snapshot
+      try { HeroState.setFromServer(data); } catch {}
+
       MeCache.data = data || null;
       MeCache.ts = Date.now();
       return MeCache.data;
@@ -65,6 +70,7 @@ async function getMe(force = false, signal) {
 
   return MeCache.inflight;
 }
+
 
 /* =====================================================================================
    Fallback opcional para vitais (HP/Mana/Cap) — só usado se /me não trouxer hp
@@ -366,6 +372,6 @@ function applyHeroHpUpdate(heroId, hp, maxHp) {
 
 // Exponha no global para fácil integração com o seu listener de WS
 window.HUD_ApplyHeroHpUpdate = applyHeroHpUpdate;
-  
+
 // Sem setInterval agressivo — o loop acima já cuida do refresh
 export {};

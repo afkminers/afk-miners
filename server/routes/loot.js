@@ -3,11 +3,8 @@ const express = require('express');
 const router = express.Router();
 
 const { requireAuth } = require('../auth/middleware');
-// Ajuste este require conforme seu projeto:
-// - Se você criou server/db/index.js, mantenha:
-const { run, all, get } = require('../db');
-// - Se seus helpers ficam em server/models/db.js, use:
-// const { run, all, get } = require('../models/db');
+// Use o helper de DB do teu projeto:
+const { run, all, get } = require('../models/db');
 
 const { listBackpack, getBackpackSpec } = require('../services/backpack');
 const lootSvc = require('../services/loot');
@@ -17,6 +14,19 @@ let broadcastToMap = () => {};
 try { ({ broadcastToMap } = require('../ws/bus')); } catch {}
 
 router.use(requireAuth);
+
+/* =========================================================================
+   Guardião: ownership + alive=true
+   ========================================================================== */
+async function assertHeroAliveOwned(playerId, heroId) {
+  const row = await get(
+    `SELECT alive FROM player_heroes WHERE id=$1 AND "playerId"=$2`,
+    [String(heroId), String(playerId)]
+  );
+  if (!row) return { ok:false, code:404, error:'hero-not-found' };
+  if (row.alive === false) return { ok:false, code:409, error:'hero-dead' };
+  return { ok:true };
+}
 
 // Remoção de itens da mochila (distribui entre slots)
 async function takeFromBackpack(heroId, itemKey, qty) {
@@ -71,11 +81,15 @@ router.get('/map/:mapKey/loot', async (req, res) => {
   }
 });
 
-// Pickup (já existente no seu projeto — mantenha se já tiver)
+// Pickup
 router.post('/loot/pickup', express.json(), async (req, res) => {
   try {
     const { heroId, lootId } = req.body || {};
     if (!heroId || !lootId) return res.status(400).json({ error: 'bad-args' });
+
+    // Guardião: dono + vivo
+    const chk = await assertHeroAliveOwned(req.user.id, heroId);
+    if (!chk.ok) return res.status(chk.code).json({ ok:false, error:chk.error });
 
     const spec = await getBackpackSpec(heroId);
     const capacity = Number(spec?.slots || 0);
@@ -139,6 +153,10 @@ router.post('/loot/drop', express.json(), async (req, res) => {
       return res.status(400).json({ error: 'bad-args' });
     }
 
+    // Guardião: dono + vivo
+    const chk = await assertHeroAliveOwned(req.user.id, heroId);
+    if (!chk.ok) return res.status(chk.code).json({ ok:false, error:chk.error });
+
     const removed = await takeFromBackpack(heroId, itemKey, qty);
     if (removed < qty) return res.status(400).json({ error: 'not-enough-qty' });
 
@@ -170,7 +188,7 @@ router.post('/loot/drop', express.json(), async (req, res) => {
 });
 
 // Debug endpoint to check cache stats (development only)
-router.get('/cache/stats', async (req, res) => {
+router.get('/cache/stats', async (_req, res) => {
   try {
     const stats = lootCache.getStats();
     res.json(stats);
