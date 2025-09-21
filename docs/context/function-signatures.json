@@ -2551,7 +2551,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 56,
+    "line": 58,
     "kind": "function",
     "name": "hasLoSpx",
     "params": [
@@ -2564,7 +2564,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 64,
+    "line": 66,
     "kind": "function",
     "name": "chebyPx",
     "params": [
@@ -2576,7 +2576,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 68,
+    "line": 70,
     "kind": "function",
     "name": "canMobHitNow",
     "params": [
@@ -2588,14 +2588,14 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 98,
+    "line": 106,
     "kind": "function",
     "name": "fetchAliveMonsters",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 114,
+    "line": 122,
     "kind": "function",
     "name": "fetchOnlineHeroesInMap",
     "params": [
@@ -2604,7 +2604,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 132,
+    "line": 140,
     "kind": "function",
     "name": "getHeroLastPosPx",
     "params": [
@@ -2614,7 +2614,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 151,
+    "line": 164,
     "kind": "function",
     "name": "ensureMob",
     "params": [
@@ -2624,7 +2624,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 193,
+    "line": 206,
     "kind": "function",
     "name": "seedPosition",
     "params": [
@@ -2636,7 +2636,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 207,
+    "line": 220,
     "kind": "function",
     "name": "addThreatFromHeroHit",
     "params": [
@@ -2647,28 +2647,28 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 217,
+    "line": 230,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 240,
+    "line": 253,
     "kind": "function",
     "name": "stop",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 248,
+    "line": 261,
     "kind": "function",
     "name": "tickLoop",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 293,
+    "line": 306,
     "kind": "function",
     "name": "stepMob",
     "params": [
@@ -2681,7 +2681,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 408,
+    "line": 428,
     "kind": "function",
     "name": "decayThreat",
     "params": [
@@ -2691,7 +2691,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 418,
+    "line": 438,
     "kind": "function",
     "name": "selectTargetByThreat",
     "params": [
@@ -2703,7 +2703,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 483,
+    "line": 506,
     "kind": "function",
     "name": "isBlockedPx",
     "params": [
@@ -2714,7 +2714,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 492,
+    "line": 515,
     "kind": "function",
     "name": "pickStepGreedy",
     "params": [
@@ -2725,7 +2725,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 524,
+    "line": 547,
     "kind": "function",
     "name": "clampToMapPx",
     "params": [
@@ -2735,7 +2735,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 535,
+    "line": 558,
     "kind": "function",
     "name": "moveMobAndPersist",
     "params": [
@@ -2747,7 +2747,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 573,
+    "line": 596,
     "kind": "function",
     "name": "removeHeroThreat",
     "params": [
@@ -2776,7 +2776,7 @@
   },
   {
     "file": "server\\auth\\routes.js",
-    "line": 16,
+    "line": 17,
     "kind": "function",
     "name": "validateName",
     "params": [
@@ -2785,7 +2785,7 @@
   },
   {
     "file": "server\\auth\\routes.js",
-    "line": 24,
+    "line": 25,
     "kind": "function",
     "name": "validatePassword",
     "params": [
@@ -2794,7 +2794,7 @@
   },
   {
     "file": "server\\auth\\routes.js",
-    "line": 29,
+    "line": 30,
     "kind": "function",
     "name": "noStore",
     "params": [

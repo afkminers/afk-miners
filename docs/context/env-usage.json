@@ -4,7 +4,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1843
+        "index": 1957
       }
     ],
     "defaults": []
@@ -14,7 +14,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 2026
+        "index": 2140
       }
     ],
     "defaults": []
@@ -24,7 +24,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1959
+        "index": 2073
       }
     ],
     "defaults": []

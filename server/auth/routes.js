@@ -1,5 +1,4 @@
 // REMOVIDO createStarterHeroIfMissing para restaurar fluxo original de seleção
-//server/auth/routes.js
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { randomUUID } = require('crypto');

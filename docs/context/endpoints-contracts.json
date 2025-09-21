@@ -1617,7 +1617,7 @@
     "method": "POST",
     "path": "/login",
     "file": "server\\auth\\routes.js",
-    "line": 70,
+    "line": 71,
     "sample": {},
     "errors": [
       {
@@ -1660,7 +1660,7 @@
     "method": "POST",
     "path": "/logout",
     "file": "server\\auth\\routes.js",
-    "line": 87,
+    "line": 88,
     "sample": {},
     "errors": [
       {
@@ -1916,7 +1916,7 @@
     "method": "GET",
     "path": "/me",
     "file": "server\\auth\\routes.js",
-    "line": 94,
+    "line": 95,
     "sample": {},
     "errors": [
       {
@@ -2343,7 +2343,7 @@
     "method": "POST",
     "path": "/register",
     "file": "server\\auth\\routes.js",
-    "line": 34,
+    "line": 35,
     "sample": {},
     "errors": [
       {
