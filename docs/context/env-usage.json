@@ -4,7 +4,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1637
+        "index": 1843
       }
     ],
     "defaults": []
@@ -14,7 +14,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1820
+        "index": 2026
       }
     ],
     "defaults": []
@@ -24,7 +24,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1753
+        "index": 1959
       }
     ],
     "defaults": []
@@ -126,8 +126,12 @@
         "index": 198
       },
       {
+        "file": "server\\combat\\service.js",
+        "index": 10186
+      },
+      {
         "file": "server\\combat\\routes.js",
-        "index": 912
+        "index": 847
       },
       {
         "file": "server\\combat\\autoloop.js",
@@ -135,6 +139,7 @@
       }
     ],
     "defaults": [
+      "",
       "",
       "",
       "",
@@ -599,7 +604,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\routes.js",
-        "index": 1217
+        "index": 1152
       }
     ],
     "defaults": [

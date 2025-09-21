@@ -648,6 +648,8 @@
     "file": "server\\combat\\ai-mobs.js",
     "symbols": [
       "addThreatFromHeroHit",
+      "canMobHitNow",
+      "chebyPx",
       "clampToMapPx",
       "decayThreat",
       "ensureMob",
@@ -658,6 +660,7 @@
       "isBlockedPx",
       "moveMobAndPersist",
       "pickStepGreedy",
+      "removeHeroThreat",
       "seedPosition",
       "selectTargetByThreat",
       "start",
@@ -681,6 +684,7 @@
   {
     "file": "server\\combat\\geom.js",
     "symbols": [
+      "chebyPx",
       "chebyshevTiles",
       "inReachPx",
       "toTile"

@@ -27,11 +27,13 @@
   const CHASE_SPEED_PX_S = 90;          // px/s
   const REPATH_MS = 500;                // recálculo de direção
   const GIVEUP_MS = 8000;               // desiste se perder o alvo por muito tempo
-  const ONLINE_RECENT_MS = 20000;       // presença considerada “viva” nos últimos 20s
+  const ONLINE_RECENT_MS = 3000;       // presença considerada “viva” nos últimos 3s
 
   // Anti-hit fantasma (idades máximas aceitáveis das posições)
-  const STALE_HERO_MS = 1000;           // herói precisa ter pos ≤ 1s
-  const STALE_MOB_MS  = 1500;           // mob precisa ter pos ≤ 1.5s
+  // A posição no banco só muda quando há movimento. Se player/mob ficar parado, não devemos travar.
+  const STALE_HERO_MS = 8000;           // até 8s parado ainda é aceitável
+  const STALE_MOB_MS  = 0;              // não bloqueie mob parado por “stale”
+
 
 
   // Threat / Aggro
@@ -66,32 +68,38 @@
   }
 
   function canMobHitNow({ now, mob, tgtPos, losGrid }) {
-    // posições
-    const mx = mob.x, my = mob.y;
-    const hx = tgtPos?.x, hy = tgtPos?.y;
-
-    if (hx == null || hy == null || mx == null || my == null) {
-      return { ok:false, reason:'no_pos' };
-    }
-
-    // frescor das posições
-    const heroAge = now - (tgtPos.updatedMs ?? 0);
-    const mobAge  = now - (mob.posUpdatedAt ?? 0);
-
-    if (heroAge > STALE_HERO_MS) return { ok:false, reason:`stale_hero_${heroAge}ms` };
-    if (mobAge  > STALE_MOB_MS)  return { ok:false, reason:`stale_mob_${mobAge}ms`  };
-
-    // alcance em px (usa o mesmo que já calculamos no ensureMob)
-    const atkPx   = Math.max(mob.attackRangePx || STEP_PX, STEP_PX);
-    const distPxC = chebyPx(mx, my, hx, hy); // chebyshev (robusto p/ grid)
-    if (distPxC > atkPx) return { ok:false, reason:`out_of_range_${distPxC}gt${atkPx}` };
-
-    // LOS real
-    const canSee  = IGNORE_LOS ? true : hasLoSpx(losGrid, mx, my, hx, hy);
-    if (!canSee)  return { ok:false, reason:'no_los' };
-
-    return { ok:true, distPxC: distPxC, atkPx };
+  const mx = mob.x, my = mob.y;
+  const hx = tgtPos?.x, hy = tgtPos?.y;
+  if (hx == null || hy == null || mx == null || my == null) {
+    return { ok:false, reason:'no_pos' };
   }
+
+  // frescor (clamp contra clock skew)
+  const heroAge = Math.max(0, now - (tgtPos.updatedMs ?? 0));
+  if (heroAge > STALE_HERO_MS) return { ok:false, reason:`stale_hero_${heroAge}ms` };
+
+  // LOS real
+  const canSee = IGNORE_LOS ? true : hasLoSpx(losGrid, mx, my, hx, hy);
+  if (!canSee) return { ok:false, reason:'no_los' };
+
+  // alcance: aceita adjacência em 8-direções OU alcance em px
+  const atkPx = Math.max(mob.attackRangePx || STEP_PX, STEP_PX);
+
+  const mobCx  = Math.floor(mx / STEP_PX);
+  const mobCy  = Math.floor(my / STEP_PX);
+  const heroCx = Math.floor(hx / STEP_PX);
+  const heroCy = Math.floor(hy / STEP_PX);
+  const isAdj8Cell = Math.max(Math.abs(mobCx - heroCx), Math.abs(mobCy - heroCy)) <= 1;
+
+  if (!isAdj8Cell) {
+    const distPxC = chebyPx(mx, my, hx, hy);
+    if (distPxC > atkPx) return { ok:false, reason:`out_of_range_${distPxC}gt${atkPx}` };
+  }
+
+  return { ok:true };
+}
+
+
 
 
   // --------- DB helpers ----------
@@ -125,14 +133,14 @@
         AND ph.hp > 0
         AND plp.updated_at >= NOW() - ($2 || ' milliseconds')::interval
       ORDER BY plp.updated_at DESC
-    `, [mapKey, String(Math.max(ONLINE_RECENT_MS, 60000))]);
+    `, [mapKey, String(ONLINE_RECENT_MS)]);
   }
 
 
   async function getHeroLastPosPx(heroId, mapKey) {
     const row = await all(`
       SELECT plp.x|0 AS x, plp.y|0 AS y,
-             (EXTRACT(EPOCH FROM plp.updated_at) * 1000)::bigint AS updated_ms
+            (EXTRACT(EPOCH FROM plp.updated_at) * 1000)::bigint AS updated_ms
         FROM player_last_pos plp
         JOIN player_heroes ph ON ph."playerId"::text = plp.player_id::text
       WHERE ph.id::text = $1
@@ -141,10 +149,15 @@
       LIMIT 1
     `, [String(heroId), String(mapKey)]);
 
-    return row?.[0]
-      ? { x: row[0].x | 0, y: row[0].y | 0, updatedMs: Number(row[0].updated_ms || 0) }
-      : null;
+    if (!row?.[0]) return null;
+
+    const updatedMs = Number(row[0].updated_ms || 0);
+    // descarte posição antiga: trata como “sem alvo”
+    if (Date.now() - updatedMs > ONLINE_RECENT_MS) return null;
+
+    return { x: row[0].x|0, y: row[0].y|0, updatedMs };
   }
+
 
 
   // --------- State helpers ----------
@@ -291,20 +304,27 @@
   }
 
 async function stepMob(now, dt, mob, heroes, losGrid) {
+  // Mesmo parado, consideramos o estado do mob "fresco".
+  mob.posUpdatedAt = now;
+
   decayThreat(mob, dt);
   selectTargetByThreat(now, mob, heroes, losGrid);
-
   if (!mob.targetHeroId) { mob.mode = 'idle'; return; }
 
-  // 1) Posição do alvo: tentar "ao vivo" na lista heroes; se não houver, cair pro DB.
+  // 1) Posição do alvo: só aceita “ao vivo” se fresco; senão cai pro DB.
   let tgtPos =
-    heroes.find(h => h.heroId === mob.targetHeroId) ||
+    heroes.find(h => h.heroId === mob.targetHeroId && (now - (h.updatedMs || 0)) <= ONLINE_RECENT_MS) ||
     await getHeroLastPosPx(mob.targetHeroId, mob.mapKey);
 
   if (!tgtPos) {
-    if (now - mob.lastSeenAt > GIVEUP_MS) { mob.targetHeroId = null; mob.mode = 'idle'; }
+    if (now - mob.lastSeenAt > GIVEUP_MS) {
+      mob.targetHeroId = null;
+      mob.mode = 'idle';
+      mob.lastAttackAt = 0; // garante que não “rajada” ao voltar
+    }
     return;
   }
+
 
   // 2) Melee estilo Tibia: aceita adjacência em 8-direções (inclui diagonal)
   //    e também checa alcance real do monstro em pixels com tolerância.
@@ -415,23 +435,26 @@ async function stepMob(now, dt, mob, heroes, losGrid) {
     }
   }
 
-  function selectTargetByThreat(now, mob, heroes, losGrid) {
-    const aggroR2 = (mob.aggroRangePx || (8 * PX_PER_TILE)) ** 2;
+function selectTargetByThreat(now, mob, heroes, losGrid) {
+  const aggroR2 = (mob.aggroRangePx || (8 * PX_PER_TILE)) ** 2;
 
-    // DEBUG: distância mais próxima (mesmo que fora do aggro)
-    let nearest = { id: null, d2: Infinity };
+  let nearest = { id: null, d2: Infinity };
 
-    for (const h of heroes) {
-      const dx = mob.x - h.x, dy = mob.y - h.y;
-      const d2 = dx*dx + dy*dy;
-      if (d2 < nearest.d2) nearest = { id: h.heroId, d2 };
+  for (const h of heroes) {
+    // >>> ignore “fantasma”: posição mais velha que a janela de presença
+    const hAge = now - (h.updatedMs || 0);
+    if (hAge > ONLINE_RECENT_MS) continue;
 
-      if (d2 <= aggroR2) {
-        const canSee = IGNORE_LOS ? true : hasLoSpx(losGrid, mob.x, mob.y, h.x, h.y);
-        const base = canSee ? THREAT_ON_SIGHT : THREAT_ON_SIGHT * 0.4;
-        const cur = mob.threat.get(h.heroId) || 0;
-        const next = cur + base;
-        mob.threat.set(h.heroId, next);
+    const dx = mob.x - h.x, dy = mob.y - h.y;
+    const d2 = dx*dx + dy*dy;
+    if (d2 < nearest.d2) nearest = { id: h.heroId, d2 };
+
+    if (d2 <= aggroR2) {
+      const canSee = IGNORE_LOS ? true : hasLoSpx(losGrid, mob.x, mob.y, h.x, h.y);
+      const base = canSee ? THREAT_ON_SIGHT : THREAT_ON_SIGHT * 0.4;
+      const cur = mob.threat.get(h.heroId) || 0;
+      const next = cur + base;
+      mob.threat.set(h.heroId, next);
 
         if (DEBUG_AI) {
           const cheby = Math.max(Math.abs(dx), Math.abs(dy)) | 0;
