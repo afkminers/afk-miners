@@ -2539,7 +2539,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 48,
+    "line": 51,
     "kind": "function",
     "name": "hasLoSpx",
     "params": [
@@ -2552,14 +2552,14 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 57,
+    "line": 60,
     "kind": "function",
     "name": "fetchAliveMonsters",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 73,
+    "line": 76,
     "kind": "function",
     "name": "fetchOnlineHeroesInMap",
     "params": [
@@ -2568,7 +2568,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 91,
+    "line": 92,
     "kind": "function",
     "name": "getHeroLastPosPx",
     "params": [
@@ -2632,7 +2632,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 243,
+    "line": 244,
     "kind": "function",
     "name": "stepMob",
     "params": [
@@ -2645,7 +2645,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 311,
+    "line": 329,
     "kind": "function",
     "name": "decayThreat",
     "params": [
@@ -2655,7 +2655,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 321,
+    "line": 339,
     "kind": "function",
     "name": "selectTargetByThreat",
     "params": [
@@ -2667,7 +2667,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 370,
+    "line": 398,
     "kind": "function",
     "name": "isBlockedPx",
     "params": [
@@ -2678,7 +2678,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 377,
+    "line": 407,
     "kind": "function",
     "name": "pickStepGreedy",
     "params": [
@@ -2689,13 +2689,24 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 399,
+    "line": 439,
+    "kind": "function",
+    "name": "clampToMapPx",
+    "params": [
+      "losGrid",
+      "px"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 450,
     "kind": "function",
     "name": "moveMobAndPersist",
     "params": [
       "mob",
       "step",
-      "dt"
+      "dt",
+      "losGrid"
     ]
   },
   {

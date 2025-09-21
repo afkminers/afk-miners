@@ -3,6 +3,8 @@
 ## Variáveis de ambiente
 
 - `AI_MOBS_DEBUG`
+- `AI_MOBS_IGNORE_COLLISION`
+- `AI_MOBS_IGNORE_LOS`
 - `APP_ORIGIN`
 - `APP_ORIGINS` (defaults: http://localhost:3000, process.env.APP_ORIGIN)
 - `ASSETS_CACHE_TTL_MS` (defaults: 300000)

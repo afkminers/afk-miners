@@ -329,19 +329,23 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
  *  Hit do monstro no herói
  *  (tela de morte + countdown + respawn)
  *  ======================= */
+// server/combat/service.js
 async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
+  const DEBUG_COMBAT = String(process.env.COMBAT_DEBUG || '').trim() === '1';
+  const TILE = 32;
+
   const hero = await getHeroStats(targetHeroId);
   if (!hero) return { ok: false, message: 'target hero not found' };
 
   const inst = await getInstanceWithMonster(attackerInstanceId);
   if (!inst || inst.state !== 'ALIVE') return { ok: false, message: 'attacker not alive' };
 
-  // --- TRAVAS DE MAPA E ALCANCE ---
+  // --- TRAVAS DE MAPA/ALCANCE/LoS (HARD-GUARD 8-dir + px + LoS) ---
   let hpos = null;
   try {
     const mod = posMod();
     if (mod && typeof mod.getHeroPos === 'function') {
-      hpos = await mod.getHeroPos(hero.hero_id, inst.map_key); // {map_key,x,y}
+      hpos = await mod.getHeroPos(hero.hero_id, inst.map_key); // { map_key, x, y }
     }
   } catch {}
 
@@ -349,32 +353,54 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
     return { ok: false, message: 'target not in same map' };
   }
 
-// --- TRAVAS DE MAPA E ALCANCE (adjacente 4-direções) ---
-const TILE = 32;
+  // Corrige unidade: se vier em tiles, converte pra px (centro do tile)
+  let hx = Number(hpos.x || 0);
+  let hy = Number(hpos.y || 0);
+  const toPx = v => (v * TILE) + TILE/2;
+  const dRaw = Math.hypot(hx - Number(inst.x||0), hy - Number(inst.y||0));
+  const dPx  = Math.hypot(toPx(hx) - Number(inst.x||0), toPx(hy) - Number(inst.y||0));
+  if (dPx < dRaw) { hx = toPx(hx); hy = toPx(hy); }
 
-// 1) Corrige unidade do hpos se vier em TILES
-let hx = Number(hpos.x || 0);
-let hy = Number(hpos.y || 0);
+  // Célula (Chebyshev 8-direções — Tibia-like)
+  const mobCx  = Math.floor(Number(inst.x || 0) / TILE);
+  const mobCy  = Math.floor(Number(inst.y || 0) / TILE);
+  const heroCx = Math.floor(hx / TILE);
+  const heroCy = Math.floor(hy / TILE);
+  const cheby  = Math.max(Math.abs(heroCx - mobCx), Math.abs(heroCy - mobCy));
 
-// Heurística: se converter p/ px ficar "mais perto" do mob, usa a versão em px
-const toPx = v => (v * TILE) + TILE / 2;
-const dRaw = Math.hypot(hx - Number(inst.x||0), hy - Number(inst.y||0));
-const dPx  = Math.hypot(toPx(hx) - Number(inst.x||0), toPx(hy) - Number(inst.y||0));
-if (dPx < dRaw) { hx = toPx(hx); hy = toPx(hy); }
+  // Alcance real em PX (pelo monstro) — garante pelo menos 1 tile
+  const atkPx = Math.max(
+    Number(inst.reach_px || inst.attack_range_px || TILE * 1),
+    TILE
+  );
 
-// 2) Checa adjacência por célula (4-direções) — igual Tibia
-const mobCx  = Math.floor(Number(inst.x || 0) / TILE);
-const mobCy  = Math.floor(Number(inst.y || 0) / TILE);
-const heroCx = Math.floor(hx / TILE);
-const heroCy = Math.floor(hy / TILE);
-const manhattan = Math.abs(heroCx - mobCx) + Math.abs(heroCy - mobCy);
+  // Distância centro-a-centro em PX
+  const dx = hx - Number(inst.x||0);
+  const dy = hy - Number(inst.y||0);
+  const inRangePx = (dx*dx + dy*dy) <= (atkPx*atkPx);
 
-if (manhattan > 1) {
-  return { ok: false, message: 'out of range (adjacent required)' };
-}
+  // Linha de visão (carrega sob demanda p/ não quebrar ciclo)
+  let hasLOS = true;
+  try {
+    const { getGrid } = require('../maps/grid');
+    const { hasLineOfSight } = require('./los');
+    const { grid, cols } = await getGrid(inst.map_key);
+    hasLOS = hasLineOfSight({ data: grid, cols }, Number(inst.x||0), Number(inst.y||0), hx, hy);
+  } catch {
+    // se não houver LoS disponível, assume true (evita hard-crash),
+    // mas COMBAT_DEBUG mostrará os bloqueios quando houver suporte
+  }
 
-
-
+  // HARD-GUARD (estrito): SÓ permite se estiver no alcance em pixels **e** com LoS
+  if (!(inRangePx && hasLOS)) {
+    if (DEBUG_COMBAT) {
+      console.log(
+        `[HARD-GUARD] BLOCK inst=${inst.id} hero=${targetHeroId} ` +
+        `inRangePx=${inRangePx} atkPx=${atkPx} los=${hasLOS} dx,dy=${dx|0},${dy|0} chebyCells=${cheby}`
+      );
+    }
+    return { ok: false, message: 'out of reach or no los' };
+  }
 
 
   // --- Cálculo do dano ---
@@ -398,7 +424,6 @@ if (manhattan > 1) {
   const wasAlive = row.alive !== false; // trata null/undefined como true
 
   if (!dead) {
-    // apenas aplica dano
     await run(
       `UPDATE player_heroes
           SET hp = $2, "updatedAt" = now()
@@ -406,7 +431,6 @@ if (manhattan > 1) {
       [targetHeroId, newHp]
     );
   } else {
-    // morte determinística: grava estado morto no banco
     await run(`
       UPDATE player_heroes
          SET hp = 0,
@@ -417,14 +441,12 @@ if (manhattan > 1) {
        WHERE id = $1
     `, [targetHeroId]);
 
-    // opcional: limpa threat do herói morto
     try {
       const mod = ai();
       if (mod?.removeHeroThreat) mod.removeHeroThreat(targetHeroId);
     } catch {}
   }
 
-  // eventos de HP e dano sempre
   broadcast({
     type: 'hero_hp',
     heroId: targetHeroId,
@@ -443,7 +465,6 @@ if (manhattan > 1) {
     instanceId: inst.id
   });
 
-  // >>> Log estruturado de combate
   broadcast({
     type: 'combat_log',
     targetHeroId,
@@ -454,7 +475,6 @@ if (manhattan > 1) {
     maxHp: row.max_hp
   });
 
-  // >>> Log “legado” para aparecer como antes no F12
   broadcast({
     type: 'log',
     channel: 'Dano',
@@ -464,17 +484,15 @@ if (manhattan > 1) {
   if (dead && wasAlive) {
     const respawnAt = Date.now() + RESPAWN_MS;
 
-    // evento para abrir "tela de morte" no cliente com countdown
     broadcast({
       type: 'hero_dead',
       heroId: targetHeroId,
       byMob: inst.monster_key,
       instanceId: inst.id,
-      respawnAt,           // timestamp (ms) p/ o HUD contar
+      respawnAt,
       respawnMs: RESPAWN_MS
     });
 
-    // respawn automático após o countdown
     setTimeout(() => {
       respawnHero(targetHeroId).catch(() => {});
     }, RESPAWN_MS);
@@ -490,5 +508,7 @@ if (manhattan > 1) {
     attackerInstanceId
   };
 }
+
+
 
 module.exports = { applyHit, applyMobHit, respawnHero };

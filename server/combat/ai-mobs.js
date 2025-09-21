@@ -29,6 +29,11 @@
   const GIVEUP_MS = 8000;               // desiste se perder o alvo por muito tempo
   const ONLINE_RECENT_MS = 20000;       // presença considerada “viva” nos últimos 20s
 
+  // Anti-hit fantasma (idades máximas aceitáveis das posições)
+  const STALE_HERO_MS = 1000;           // herói precisa ter pos ≤ 1s
+  const STALE_MOB_MS  = 1500;           // mob precisa ter pos ≤ 1.5s
+
+
   // Threat / Aggro
   const THREAT_ON_SIGHT = 2.5;          // ganho por tick quando vê
   const THREAT_ON_HIT   = 7;            // ganho quando herói bate no mob
@@ -56,6 +61,39 @@
     return hasLineOfSight(losGrid, aCx, aCy, bCx, bCy);
   }
 
+    function chebyPx(ax, ay, bx, by) {
+    return Math.max(Math.abs(ax - bx), Math.abs(ay - by));
+  }
+
+  function canMobHitNow({ now, mob, tgtPos, losGrid }) {
+    // posições
+    const mx = mob.x, my = mob.y;
+    const hx = tgtPos?.x, hy = tgtPos?.y;
+
+    if (hx == null || hy == null || mx == null || my == null) {
+      return { ok:false, reason:'no_pos' };
+    }
+
+    // frescor das posições
+    const heroAge = now - (tgtPos.updatedMs ?? 0);
+    const mobAge  = now - (mob.posUpdatedAt ?? 0);
+
+    if (heroAge > STALE_HERO_MS) return { ok:false, reason:`stale_hero_${heroAge}ms` };
+    if (mobAge  > STALE_MOB_MS)  return { ok:false, reason:`stale_mob_${mobAge}ms`  };
+
+    // alcance em px (usa o mesmo que já calculamos no ensureMob)
+    const atkPx   = Math.max(mob.attackRangePx || STEP_PX, STEP_PX);
+    const distPxC = chebyPx(mx, my, hx, hy); // chebyshev (robusto p/ grid)
+    if (distPxC > atkPx) return { ok:false, reason:`out_of_range_${distPxC}gt${atkPx}` };
+
+    // LOS real
+    const canSee  = IGNORE_LOS ? true : hasLoSpx(losGrid, mx, my, hx, hy);
+    if (!canSee)  return { ok:false, reason:'no_los' };
+
+    return { ok:true, distPxC: distPxC, atkPx };
+  }
+
+
   // --------- DB helpers ----------
   async function fetchAliveMonsters() {
     return (await all(`
@@ -78,7 +116,8 @@
       SELECT plp.player_id::text AS player_id,
             ph.id::text         AS hero_id,
             plp.x|0             AS x,
-            plp.y|0             AS y
+            plp.y|0             AS y,
+            (EXTRACT(EPOCH FROM plp.updated_at) * 1000)::bigint AS updated_ms
         FROM player_last_pos plp
         JOIN player_heroes ph
           ON ph."playerId"::text = plp.player_id::text
@@ -89,9 +128,11 @@
     `, [mapKey, String(Math.max(ONLINE_RECENT_MS, 60000))]);
   }
 
+
   async function getHeroLastPosPx(heroId, mapKey) {
     const row = await all(`
-      SELECT plp.x|0 AS x, plp.y|0 AS y
+      SELECT plp.x|0 AS x, plp.y|0 AS y,
+             (EXTRACT(EPOCH FROM plp.updated_at) * 1000)::bigint AS updated_ms
         FROM player_last_pos plp
         JOIN player_heroes ph ON ph."playerId"::text = plp.player_id::text
       WHERE ph.id::text = $1
@@ -100,8 +141,11 @@
       LIMIT 1
     `, [String(heroId), String(mapKey)]);
 
-    return row?.[0] ? { x: row[0].x | 0, y: row[0].y | 0 } : null;
+    return row?.[0]
+      ? { x: row[0].x | 0, y: row[0].y | 0, updatedMs: Number(row[0].updated_ms || 0) }
+      : null;
   }
+
 
   // --------- State helpers ----------
   function ensureMob(instanceId, patch = {}) {
@@ -120,12 +164,14 @@
       y: (patch.y ?? cur.y ?? 0) | 0,
 
       // runtime
+      posUpdatedAt: Number(patch.posUpdatedAt ?? cur.posUpdatedAt ?? Date.now()),
       mode: cur.mode || 'idle',
       targetHeroId: cur.targetHeroId || null,
       lastSeenAt: cur.lastSeenAt || 0,
       repathAt: cur.repathAt || 0,
       lastSwitchAt: cur.lastSwitchAt || 0,
       threat: cur.threat || new Map(),
+
 
       // === Ranges em PX e cooldown em ms, todos no mesmo relógio (ms) ===
       attackRangePx: (attackRangeTiles * PX_PER_TILE) | 0,
@@ -145,15 +191,16 @@
 
   // Exposta para seed inicial a partir do index.js
   function seedPosition({ id, x, y, mapKey }) {
-    // x,y JÁ em PIXELS (sem conversão)
     ensureMob(id, {
       x: (x | 0),
       y: (y | 0),
       mapKey: String(mapKey),
       mode: 'idle',
-      targetHeroId: null
+      targetHeroId: null,
+      posUpdatedAt: Date.now(),
     });
   }
+
 
 
   // Exposta para herói->mob (quando herói bate, aumenta threat)
@@ -214,12 +261,14 @@
     for (const [mapKey, list] of byMap.entries()) {
       const heroesRows = await fetchOnlineHeroesInMap(mapKey);
 
-      // player_last_pos.x/y já estão em PIXELS (server/index.js persiste assim)
+      // x/y em pixels + updated_ms (idade da posição)
       const heroes = heroesRows.map(r => ({
         heroId: r.hero_id,
         x: (r.x | 0),
         y: (r.y | 0),
+        updatedMs: Number(r.updated_ms || 0),
       }));
+
 
       const { grid, cols } = await getGrid(mapKey);
       const losGrid = { data: grid, cols };
@@ -241,89 +290,119 @@
     }
   }
 
-  async function stepMob(now, dt, mob, heroes, losGrid) {
-    decayThreat(mob, dt);
-    selectTargetByThreat(now, mob, heroes, losGrid);
+async function stepMob(now, dt, mob, heroes, losGrid) {
+  decayThreat(mob, dt);
+  selectTargetByThreat(now, mob, heroes, losGrid);
 
-    if (!mob.targetHeroId) { mob.mode = 'idle'; return; }
+  if (!mob.targetHeroId) { mob.mode = 'idle'; return; }
 
-    // 1) Posição do alvo: tentar "ao vivo" na lista heroes; se não houver, cair pro DB.
-    let tgtPos =
-      heroes.find(h => h.heroId === mob.targetHeroId) ||
-      await getHeroLastPosPx(mob.targetHeroId, mob.mapKey);
+  // 1) Posição do alvo: tentar "ao vivo" na lista heroes; se não houver, cair pro DB.
+  let tgtPos =
+    heroes.find(h => h.heroId === mob.targetHeroId) ||
+    await getHeroLastPosPx(mob.targetHeroId, mob.mapKey);
 
-    if (!tgtPos) {
-      if (now - mob.lastSeenAt > GIVEUP_MS) { mob.targetHeroId = null; mob.mode = 'idle'; }
-      return;
-    }
-
-    // 2) Melee estilo Tibia: aceita adjacência em 8-direções (inclui diagonal)
-    //    e também checa alcance real do monstro em pixels com tolerância.
-    const TILE = PX_PER_TILE;
-    const dx = tgtPos.x - mob.x;
-    const dy = tgtPos.y - mob.y;
-
-    const mobCx  = Math.floor(mob.x / TILE);
-    const mobCy  = Math.floor(mob.y / TILE);
-    const heroCx = Math.floor(tgtPos.x / TILE);
-    const heroCy = Math.floor(tgtPos.y / TILE);
-
-    // Chebyshev distance: <= 1 significa mesmo tile ou qualquer adjacente (8-dir)
-    const dxC = Math.abs(mobCx - heroCx);
-    const dyC = Math.abs(mobCy - heroCy);
-    const isAdj8Cell = Math.max(dxC, dyC) <= 1;
-
-    // Use o alcance em pixels do mob (+ tolerância) como fallback
-    const PX_TOL = 0; // sem tolerância: evita “hit de longe”
-    const atkPx = Math.max(mob.attackRangePx || TILE, TILE);
-    const inRangePx = (dx * dx + dy * dy) <= (atkPx + PX_TOL) * (atkPx + PX_TOL);
-
-    // Precisa ter linha de visão...
-    const canSeeNow = IGNORE_LOS ? true : hasLoSpx(losGrid, mob.x, mob.y, tgtPos.x, tgtPos.y);
-
-    if (DEBUG_AI) {
-      const dist = Math.hypot(dx, dy) | 0;
-      console.log(
-        `[ai-mobs] tgt mob=${mob.instanceId} -> hero=${mob.targetHeroId} dist=${dist}px cells mob=(${mobCx},${mobCy}) hero=(${heroCx},${heroCy}) inRangePx=${inRangePx} los=${canSeeNow}`
-      );
-    }
-
-    // ATAQUE APENAS SE ESTIVER EM ALCANCE REAL (px) + LOS
-    if (inRangePx && canSeeNow) {
-      mob.mode = 'attack';
-      mob.lastSeenAt = now;
-
-      const cd = Number(mob.attackMs || (K.MONSTER_SPEED_MS && K.MONSTER_SPEED_MS.DEFAULT) || 1200);
-      if ((now - (mob.lastAttackAt || 0)) >= cd) {
-        mob.lastAttackAt = now;
-        if (DEBUG_AI) {
-          console.log('[ai-mobs] atk (melee px-range)', mob.instanceId, '->', mob.targetHeroId,
-            'cells mob=', mobCx, mobCy, 'hero=', heroCx, heroCy, 'dx,dy=', dx|0, dy|0);
-        }
-        try {
-          await applyMobHit({
-            attackerInstanceId: String(mob.instanceId),
-            targetHeroId: String(mob.targetHeroId),
-            attackInfo: { min: 1, max: 3 }
-          });
-        } catch (e) {
-          console.warn('[ai-mobs] applyMobHit error:', e?.message);
-        }
-      }
-      return;
-    }
-
-
-
-    // 3) CHASE (greedy cardinal com colisão no servidor)
-    mob.mode = 'chase';
-    if (now >= mob.repathAt) {
-      mob.repathAt = now + REPATH_MS;
-      const step = pickStepGreedy(mob, tgtPos, losGrid);
-      if (step) await moveMobAndPersist(mob, step, dt, losGrid);
-    }
-
+  if (!tgtPos) {
+    if (now - mob.lastSeenAt > GIVEUP_MS) { mob.targetHeroId = null; mob.mode = 'idle'; }
+    return;
   }
+
+  // 2) Melee estilo Tibia: aceita adjacência em 8-direções (inclui diagonal)
+  //    e também checa alcance real do monstro em pixels com tolerância.
+  const TILE = PX_PER_TILE;
+  const dx = tgtPos.x - mob.x;
+  const dy = tgtPos.y - mob.y;
+
+  const mobCx  = Math.floor(mob.x / TILE);
+  const mobCy  = Math.floor(mob.y / TILE);
+  const heroCx = Math.floor(tgtPos.x / TILE);
+  const heroCy = Math.floor(tgtPos.y / TILE);
+
+  // Chebyshev distance: <= 1 significa mesmo tile ou qualquer adjacente (8-dir)
+  const dxC = Math.abs(mobCx - heroCx);
+  const dyC = Math.abs(mobCy - heroCy);
+  const isAdj8Cell = Math.max(dxC, dyC) <= 1;
+
+  // Use o alcance em pixels do mob (+ tolerância) como fallback
+  const PX_TOL = 0; // sem tolerância: evita “hit de longe”
+  const atkPx = Math.max(mob.attackRangePx || TILE, TILE);
+  const inRangePx = (dx * dx + dy * dy) <= (atkPx + PX_TOL) * (atkPx + PX_TOL);
+
+  // Precisa ter linha de visão...
+  const canSeeNow = IGNORE_LOS ? true : hasLoSpx(losGrid, mob.x, mob.y, tgtPos.x, tgtPos.y);
+
+  if (DEBUG_AI) {
+    const cheby = Math.max(Math.abs(dx), Math.abs(dy)) | 0;
+    console.log(
+      `[ai-mobs] tgt mob=${mob.instanceId} -> hero=${mob.targetHeroId} cheby=${cheby}px ` +
+      `cells mob=(${mobCx},${mobCy}) hero=(${heroCx},${heroCy}) inRangePx=${inRangePx} los=${canSeeNow}`
+    );
+  }
+
+
+  // >>> DESARME quando sair do alcance/LoS (evita "rajada" ao reentrar)
+  if (!(inRangePx && canSeeNow)) {
+    if (mob.mode === 'attack') mob.mode = 'chase';
+    mob.lastAttackAt = 0; // força cooldown completo ao reentrar
+  }
+
+  // ATAQUE: SOMENTE se alcance/LOS ok E posições "frescas" (anti-stale hard-guard)
+  if ((inRangePx || isAdj8Cell) && canSeeNow) {
+    // compõe alvo com timestamp (se veio do DB, virá velho)
+    let tgt = heroes.find(h => h.heroId === mob.targetHeroId);
+    if (!tgt) {
+      const fb = await getHeroLastPosPx(mob.targetHeroId, mob.mapKey);
+      tgt = fb ? { heroId: mob.targetHeroId, x: fb.x, y: fb.y, updatedMs: fb.updatedMs || 0 } : null;
+    }
+
+    const gate = canMobHitNow({ now, mob, tgtPos: tgt, losGrid });
+    if (!gate.ok) {
+      if (DEBUG_AI) {
+        console.log('[ai-mobs] HIT BLOQUEADO', gate.reason,
+          'mob=', mob.instanceId, 'hero=', mob.targetHeroId,
+          'mobPos=', {x:mob.x,y:mob.y, age: now-(mob.posUpdatedAt||0)},
+          'heroPos=', tgt ? {x:tgt.x,y:tgt.y, age: now-(tgt.updatedMs||0)} : null
+        );
+      }
+      // desarma ataque e volta a perseguir
+      if (mob.mode === 'attack') mob.mode = 'chase';
+      mob.lastAttackAt = 0;
+      return;
+    }
+
+    mob.mode = 'attack';
+    mob.lastSeenAt = now;
+
+    const cd = Number(mob.attackMs || (K.MONSTER_SPEED_MS && K.MONSTER_SPEED_MS.DEFAULT) || 1200);
+    if ((now - (mob.lastAttackAt || 0)) >= cd) {
+      mob.lastAttackAt = now;
+      if (DEBUG_AI) {
+        console.log('[ai-mobs] atk (melee px-range)', mob.instanceId, '->', mob.targetHeroId,
+          'cells mob=', mobCx, mobCy, 'hero=', heroCx, heroCy, 'dx,dy=', dx|0, dy|0);
+      }
+      try {
+        await applyMobHit({
+          attackerInstanceId: String(mob.instanceId),
+          targetHeroId: String(mob.targetHeroId),
+          attackInfo: { min: 1, max: 3 }
+        });
+      } catch (e) {
+        console.warn('[ai-mobs] applyMobHit error:', e?.message);
+      }
+    }
+    return;
+  }
+
+
+
+  // 3) CHASE (greedy cardinal com colisão no servidor)
+  mob.mode = 'chase';
+  if (now >= mob.repathAt) {
+    mob.repathAt = now + REPATH_MS;
+    const step = pickStepGreedy(mob, tgtPos, losGrid);
+    if (step) await moveMobAndPersist(mob, step, dt, losGrid);
+  }
+
+}
 
   // --------- Threat ----------
   function decayThreat(mob, dt) {
@@ -355,21 +434,26 @@
         mob.threat.set(h.heroId, next);
 
         if (DEBUG_AI) {
-          const dist = Math.sqrt(d2) | 0;
+          const cheby = Math.max(Math.abs(dx), Math.abs(dy)) | 0;
           console.log(
-            `[ai-mobs] inRange mob=${mob.instanceId} hero=${h.heroId} dist=${dist}px canSee=${canSee} threat=${next.toFixed(2)}`
+            `[ai-mobs] inRange mob=${mob.instanceId} hero=${h.heroId} cheby=${cheby}px canSee=${canSee} threat=${next.toFixed(2)}`
           );
         }
+
 
         if (canSee) mob.lastSeenAt = now;
       }
     }
 
     if (DEBUG_AI && nearest.id) {
-      const dist = Math.sqrt(nearest.d2) | 0;
-      const aggro = Math.sqrt(aggroR2) | 0;
-      console.log(`[ai-mobs] nearest mob=${mob.instanceId} -> hero=${nearest.id} dist=${dist}px (aggro=${aggro}px)`);
+      const cheby = Math.max(
+        Math.abs(mob.x - heroes.find(h => h.heroId === nearest.id).x),
+        Math.abs(mob.y - heroes.find(h => h.heroId === nearest.id).y)
+      ) | 0;
+      const aggro = Math.sqrt(aggroR2) | 0; // pode manter esse, é só info
+      console.log(`[ai-mobs] nearest mob=${mob.instanceId} -> hero=${nearest.id} cheby=${cheby}px (aggro≈${aggro}px)`);
     }
+
 
     // Escolhe o maior threat; troca só se superar atual + histerese
     let bestId = null, bestV = -1;
@@ -387,9 +471,10 @@
     if (bestId !== mob.targetHeroId) {
       const curV = mob.threat.get(mob.targetHeroId) || 0;
       if (bestV >= curV + SWITCH_HYSTERESIS) {
-        if (DEBUG_AI) console.log(`[ai-mobs] switch target mob=${mob.instanceId} -> ${bestId} (best=${bestV.toFixed(2)} cur=${curV.toFixed(2)})`);
+        if (DEBUG_AI) console.log(`[ai-mobs] switch target ...`);
         mob.targetHeroId = bestId;
         mob.lastSwitchAt = now;
+        mob.lastAttackAt = 0; // <<< evita hit “de graça” ao trocar de alvo
       }
     }
   }
@@ -462,6 +547,7 @@ async function moveMobAndPersist(mob, step, dt, losGrid) {
   // clamp dentro do mapa (evita OOB por arredondamento/velocidade)
   const clamped = losGrid ? clampToMapPx(losGrid, { x: nx|0, y: ny|0 }) : { x: nx|0, y: ny|0 };
   mob.x = clamped.x; mob.y = clamped.y;
+  mob.posUpdatedAt = Date.now(); // <<< posição do mob ficou "fresca" agora
 
   const nextCell = (Math.floor(mob.x/STEP_PX) << 16) | Math.floor(mob.y/STEP_PX);
 
@@ -471,6 +557,7 @@ async function moveMobAndPersist(mob, step, dt, losGrid) {
         `UPDATE monster_instances SET x=$2, y=$3, updated_at=now() WHERE id=$1`,
         [mob.instanceId, mob.x | 0, mob.y | 0]
       );
+
 
       try {
         broadcast({ type:'mob_pos', instanceId: mob.instanceId, mapKey: mob.mapKey, x: mob.x, y: mob.y });
@@ -482,11 +569,26 @@ async function moveMobAndPersist(mob, step, dt, losGrid) {
 }
 
 
+  // limpa threat de um herói (ex.: ao morrer/respawnar)
+  function removeHeroThreat(heroId) {
+    const hid = String(heroId);
+    for (const mob of mobs.values()) {
+      if (mob?.threat?.has(hid)) mob.threat.delete(hid);
+      if (mob.targetHeroId === hid) {
+        mob.targetHeroId = null;
+        mob.mode = 'idle';
+        mob.lastAttackAt = 0;
+      }
+    }
+  }
+
   // --------- Exports ----------
   module.exports = {
     start,
     stop,
     seedPosition,
     addThreatFromHeroHit,
+    removeHeroThreat,
     _state: mobs
   };
+

@@ -18,12 +18,6 @@
     "text": "There is NO class-based fallback - a weapon must be equipped to attack"
   },
   {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 290,
-    "tag": "TODO",
-    "text": "puxar do master depois"
-  },
-  {
     "file": "server\\combat\\routes.js",
     "line": 83,
     "tag": "NOTE",

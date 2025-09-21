@@ -1136,6 +1136,19 @@ async function seedAIMobsFromDB(aiMobs) {
             const pid = ws._player?.id || String(data.id || '');
             if (!pid) return;
 
+            // >>> BLOQUEIO DE MOVIMENTO PARA HERÓI MORTO (server-authoritative)
+            try {
+              const activeHeroId = await resolveActiveHeroId(pid);
+              if (activeHeroId) {
+                const rowAlive = await get(`SELECT alive FROM player_heroes WHERE id=$1`, [activeHeroId]);
+                if (rowAlive && rowAlive.alive === false) {
+                  // opcional: reforça overlay de morte no cliente
+                  try { ws.send(JSON.stringify({ type:'hero_dead', heroId: String(activeHeroId) })); } catch {}
+                  return; // morto não move
+                }
+              }
+            } catch {}
+
             const nx = Number(data.x || 0) | 0;
             const ny = Number(data.y || 0) | 0;
             const mapKey = String(data.mapKey || ws._mapKey || 'house');

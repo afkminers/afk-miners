@@ -648,6 +648,7 @@
     "file": "server\\combat\\ai-mobs.js",
     "symbols": [
       "addThreatFromHeroHit",
+      "clampToMapPx",
       "decayThreat",
       "ensureMob",
       "fetchAliveMonsters",

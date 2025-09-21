@@ -13,13 +13,13 @@ const { getHeroPos, getMonsterPos } = require('./pos');
 const { inReachPx } = require('./geom');
 const { hasLineOfSight } = require('./los');
 const { getGrid } = require('../maps/grid');
-const { broadcast } = require('../ws/bus'); // <- necessário p/ atualizar UI em tempo real
 
 // >>> loot service (em memória)
 const { createLootFromKill } = require('../services/loot');
 
-// deixe true por enquanto; quando LOS/alcance estiverem 100% a gente liga de novo
-const PERMISSIVE_START = true;
+// Strict por padrão: revalida alcance/LOS a cada hit quando ATTACK_STRICT_MODE=1
+const PERMISSIVE_START = !Boolean(K.ATTACK_STRICT_MODE);
+
 
 const DEBUG = String(process.env.COMBAT_DEBUG || '').trim() === '1';
 

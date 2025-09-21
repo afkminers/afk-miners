@@ -4,7 +4,27 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 1557
+        "index": 1637
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "AI_MOBS_IGNORE_COLLISION",
+    "occurrences": [
+      {
+        "file": "server\\combat\\ai-mobs.js",
+        "index": 1820
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "AI_MOBS_IGNORE_LOS",
+    "occurrences": [
+      {
+        "file": "server\\combat\\ai-mobs.js",
+        "index": 1753
       }
     ],
     "defaults": []
