@@ -648,11 +648,12 @@
     "file": "server\\combat\\ai-mobs.js",
     "symbols": [
       "addThreatFromHeroHit",
-      "chebTiles",
       "decayThreat",
       "ensureMob",
       "fetchAliveMonsters",
       "fetchOnlineHeroesInMap",
+      "getHeroLastPosPx",
+      "hasLoSpx",
       "isBlockedPx",
       "moveMobAndPersist",
       "pickStepGreedy",

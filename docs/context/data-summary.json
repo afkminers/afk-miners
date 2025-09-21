@@ -1,5 +1,9 @@
 [
   {
+    "file": "docs\\releases\\2025-09-20_023409-auto\\ctx.yml",
+    "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
+  },
+  {
     "file": "docs\\releases\\2025-09-20_022913-auto\\ctx.yml",
     "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
   },
@@ -238,7 +242,7 @@
   {
     "file": "data\\monsters\\wolf.yml",
     "kind": "object",
-    "size": 11,
+    "size": 14,
     "topKeys": [
       "key",
       "name",
@@ -248,6 +252,9 @@
       "look",
       "flags",
       "elements",
+      "attack_range",
+      "aggro_range",
+      "attack_ms",
       "attacks",
       "defenses",
       "loot"
@@ -256,7 +263,7 @@
   {
     "file": "data\\monsters\\teste.yml",
     "kind": "object",
-    "size": 11,
+    "size": 14,
     "topKeys": [
       "key",
       "name",
@@ -266,6 +273,9 @@
       "look",
       "flags",
       "elements",
+      "attack_range",
+      "aggro_range",
+      "attack_ms",
       "attacks",
       "defenses",
       "loot"
@@ -292,7 +302,7 @@
   {
     "file": "data\\monsters\\rotmaw.yml",
     "kind": "object",
-    "size": 11,
+    "size": 14,
     "topKeys": [
       "key",
       "name",
@@ -302,6 +312,9 @@
       "look",
       "flags",
       "elements",
+      "attack_range",
+      "aggro_range",
+      "attack_ms",
       "attacks",
       "defenses",
       "loot"
@@ -351,7 +364,7 @@
   {
     "file": "data\\monsters\\demon_bonefiend.yml",
     "kind": "object",
-    "size": 11,
+    "size": 14,
     "topKeys": [
       "key",
       "name",
@@ -361,6 +374,9 @@
       "look",
       "flags",
       "elements",
+      "attack_range",
+      "aggro_range",
+      "attack_ms",
       "attacks",
       "defenses",
       "loot"
@@ -423,7 +439,7 @@
   {
     "file": "data\\monsters\\balor.yml",
     "kind": "object",
-    "size": 11,
+    "size": 14,
     "topKeys": [
       "key",
       "name",
@@ -433,6 +449,9 @@
       "look",
       "flags",
       "elements",
+      "attack_range",
+      "aggro_range",
+      "attack_ms",
       "attacks",
       "defenses",
       "loot"

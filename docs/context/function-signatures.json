@@ -2182,7 +2182,7 @@
       "weaponAtk",
       "skillLevel",
       "monsterArmor",
-      "variance = K.DAMAGE_VARIANCE"
+      "variance = K.DAMAGE_VARIANCE || 0.15"
     ]
   },
   {
@@ -2224,14 +2224,14 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 107,
+    "line": 120,
     "kind": "function",
     "name": "getDefaultReachPx",
     "params": []
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 110,
+    "line": 122,
     "kind": "function",
     "name": "getRespawnSeconds",
     "params": [
@@ -2240,7 +2240,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 120,
+    "line": 132,
     "kind": "function",
     "name": "rollLoot",
     "params": [
@@ -2249,7 +2249,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 139,
+    "line": 151,
     "kind": "function",
     "name": "persistDrops",
     "params": [
@@ -2260,7 +2260,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 159,
+    "line": 171,
     "kind": "function",
     "name": "respawnHero",
     "params": [
@@ -2269,7 +2269,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 207,
+    "line": 219,
     "kind": "function",
     "name": "applyHit",
     "params": [
@@ -2280,7 +2280,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 320,
+    "line": 332,
     "kind": "function",
     "name": "applyMobHit",
     "params": [
@@ -2532,21 +2532,34 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 15,
+    "line": 18,
     "kind": "arrow",
     "name": "broadcast",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 43,
+    "line": 48,
+    "kind": "function",
+    "name": "hasLoSpx",
+    "params": [
+      "losGrid",
+      "ax",
+      "ay",
+      "bx",
+      "by"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 57,
     "kind": "function",
     "name": "fetchAliveMonsters",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 53,
+    "line": 73,
     "kind": "function",
     "name": "fetchOnlineHeroesInMap",
     "params": [
@@ -2555,7 +2568,17 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 78,
+    "line": 91,
+    "kind": "function",
+    "name": "getHeroLastPosPx",
+    "params": [
+      "heroId",
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 107,
     "kind": "function",
     "name": "ensureMob",
     "params": [
@@ -2565,7 +2588,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 100,
+    "line": 147,
     "kind": "function",
     "name": "seedPosition",
     "params": [
@@ -2577,7 +2600,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 105,
+    "line": 160,
     "kind": "function",
     "name": "addThreatFromHeroHit",
     "params": [
@@ -2588,28 +2611,28 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 115,
+    "line": 170,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 124,
+    "line": 193,
     "kind": "function",
     "name": "stop",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 132,
+    "line": 201,
     "kind": "function",
     "name": "tickLoop",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 165,
+    "line": 243,
     "kind": "function",
     "name": "stepMob",
     "params": [
@@ -2622,19 +2645,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 211,
-    "kind": "function",
-    "name": "chebTiles",
-    "params": [
-      "ax",
-      "ay",
-      "bx",
-      "by"
-    ]
-  },
-  {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 217,
+    "line": 311,
     "kind": "function",
     "name": "decayThreat",
     "params": [
@@ -2644,7 +2655,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 227,
+    "line": 321,
     "kind": "function",
     "name": "selectTargetByThreat",
     "params": [
@@ -2656,7 +2667,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 258,
+    "line": 370,
     "kind": "function",
     "name": "isBlockedPx",
     "params": [
@@ -2667,7 +2678,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 265,
+    "line": 377,
     "kind": "function",
     "name": "pickStepGreedy",
     "params": [
@@ -2678,7 +2689,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 287,
+    "line": 399,
     "kind": "function",
     "name": "moveMobAndPersist",
     "params": [
