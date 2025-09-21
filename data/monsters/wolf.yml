@@ -11,6 +11,12 @@ flags:
   hostile: true
 elements:
   physical: 0
+
+# === campos para a IA server-side ===
+attack_range: 1 # tiles
+aggro_range: 8 # tiles
+attack_ms: 2000 # ms (do melee.intervalMs)
+
 attacks:
 - type: melee
   intervalMs: 2000

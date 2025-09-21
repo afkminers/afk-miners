@@ -57,7 +57,9 @@ module.exports = {
     BOW:      envNum('BOW_RANGE_TILES', 5),
     DISTANCE: envNum('DISTANCE_RANGE_TILES', envNum('BOW_RANGE_TILES', 5)),
     MAGIC:    envNum('MAGIC_RANGE_TILES', 8),
+    MONSTER:  envNum('MONSTER_RANGE_TILES', 1), // << claro e tunável
   },
+
 
   // === Combat target selection ===
   CLICK_MAX_DIST_PX: envNum('CLICK_MAX_DIST_PX', 280),      // max click distance

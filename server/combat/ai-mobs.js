@@ -3,15 +3,18 @@
 // - Capta alvos via player_online (presença real) + player_last_pos (última posição conhecida).
 // - Threat/Agro com decaimento + histerese (troca de alvo “natural” entre heróis).
 // - Chase cardinal com colisão no servidor.
-// - Ataque com alcance (tiles) + LOS (Bresenham).
+// - Ataque com alcance (px) + LOS (Bresenham).
 // - Sem targeting.js e sem dependências no cliente.
 
 const K = require('../balance/config');
 const { all, run } = require('../models/db');
 const { getGrid } = require('../maps/grid');
 const { hasLineOfSight } = require('./los');
-const { inReachPx } = require('./geom');
+// const { inReachPx } = require('./geom');
 const { applyMobHit } = require('./service');
+
+const PX_PER_TILE = 32;
+
 let broadcast = () => {};
 try {
   // se existir, usamos para notificar clientes da posição do mob
@@ -27,11 +30,10 @@ const GIVEUP_MS = 8000;               // desiste se perder o alvo por muito temp
 const ONLINE_RECENT_MS = 20000;       // presença considerada “viva” nos últimos 20s
 
 // Threat / Aggro
-const AGGRO_TILES = Number(K.AGGRO_TILES ?? 8); // raio de captação em tiles
-const THREAT_ON_SIGHT = 2.5;                    // ganho por tick quando vê
-const THREAT_ON_HIT   = 7;                      // ganho quando herói bate no mob
-const THREAT_DECAY    = 0.9;                    // decaimento por segundo
-const SWITCH_HYSTERESIS = 5;                    // delta para trocar de alvo
+const THREAT_ON_SIGHT = 2.5;          // ganho por tick quando vê
+const THREAT_ON_HIT   = 7;            // ganho quando herói bate no mob
+const THREAT_DECAY    = 0.9;          // decaimento por segundo
+const SWITCH_HYSTERESIS = 5;          // delta para trocar de alvo
 const DEBUG_AI = process.env.AI_MOBS_DEBUG === '1';
 
 // --------- Estado ----------
@@ -39,12 +41,30 @@ const mobs = new Map(); // instanceId -> state
 let loopTimer = null;
 let lastTickAt = 0;
 
+// --------- Helpers ----------
+/**
+ * Converte coordenadas em pixels para tiles antes de checar LOS.
+ */
+function hasLoSpx(losGrid, ax, ay, bx, by) {
+  const aCx = Math.floor(ax / STEP_PX);
+  const aCy = Math.floor(ay / STEP_PX);
+  const bCx = Math.floor(bx / STEP_PX);
+  const bCy = Math.floor(by / STEP_PX);
+  return hasLineOfSight(losGrid, aCx, aCy, bCx, bCy);
+}
+
 // --------- DB helpers ----------
 async function fetchAliveMonsters() {
   return (await all(`
-    SELECT id, map_key, x, y
-      FROM monster_instances
-     WHERE state = 'ALIVE' AND hp > 0
+    SELECT mi.id,
+           mi.map_key,
+           mi.x, mi.y,
+           mm.attack_range,      -- tiles
+           mm.aggro_range,       -- tiles
+           mm.attack_ms          -- ms
+      FROM monster_instances mi
+      JOIN monsters_master mm ON mm.id = mi.monster_id
+     WHERE mi.state = 'ALIVE' AND mi.hp > 0
   `)) || [];
 }
 
@@ -52,25 +72,34 @@ async function fetchAliveMonsters() {
 //    **Filtra só heróis VIVOS (hp > 0)** para não mirar em morto.
 async function fetchOnlineHeroesInMap(mapKey) {
   return await all(`
-    SELECT po.player_id::text                AS player_id,
-           ph.id::text                       AS hero_id,
-           plp.x|0                           AS x,
-           plp.y|0                           AS y
-      FROM player_online po
-      JOIN LATERAL (
-        SELECT id, hp
-          FROM player_heroes
-         WHERE "playerId"::text = po.player_id::text
-           AND hp > 0                  -- <<<<<< só vivo
-         ORDER BY id
-         LIMIT 1
-      ) ph ON TRUE
-      JOIN player_last_pos plp
-        ON plp.player_id::text = po.player_id::text
-       AND plp.map_key = $1
-     WHERE po.map_key = $1
-       AND po.last_seen >= NOW() - ($2 || ' milliseconds')::interval
-  `, [mapKey, String(ONLINE_RECENT_MS)]);
+    SELECT plp.player_id::text AS player_id,
+           ph.id::text         AS hero_id,
+           plp.x|0             AS x,
+           plp.y|0             AS y
+      FROM player_last_pos plp
+      JOIN player_heroes ph
+        ON ph."playerId"::text = plp.player_id::text
+     WHERE plp.map_key = $1
+       AND ph.hp > 0
+       AND plp.updated_at >= NOW() - ($2 || ' milliseconds')::interval
+     ORDER BY plp.updated_at DESC
+  `, [mapKey, String(Math.max(ONLINE_RECENT_MS, 60000))]);
+}
+
+
+
+async function getHeroLastPosPx(heroId, mapKey) {
+  const row = await all(`
+    SELECT plp.x|0 AS x, plp.y|0 AS y
+      FROM player_last_pos plp
+      JOIN player_heroes ph ON ph."playerId"::text = plp.player_id::text
+     WHERE ph.id::text = $1
+       AND plp.map_key = $2
+     ORDER BY plp.updated_at DESC
+     LIMIT 1
+  `, [String(heroId), String(mapKey)]);
+
+  return row?.[0] ? { x: row[0].x | 0, y: row[0].y | 0 } : null;
 }
 
 
@@ -78,28 +107,54 @@ async function fetchOnlineHeroesInMap(mapKey) {
 function ensureMob(instanceId, patch = {}) {
   const id = String(instanceId);
   const cur = mobs.get(id) || {};
+
+  // tiles recebidos do SELECT (fallback para valores anteriores/constantes)
+  const attackRangeTiles = Number(patch.attack_range ?? cur.attack_range ?? 1);
+  const aggroRangeTiles  = Math.max(1, Number(patch.aggro_range ?? cur.aggro_range ?? 8));
+  const attackMs         = Number(patch.attack_ms    ?? cur.attack_ms    ?? 1200);
+
   const next = {
     instanceId: id,
-    mapKey: cur.mapKey || null,
-    x: cur.x ?? 0,
-    y: cur.y ?? 0,
-    mode: cur.mode || 'idle',           // idle | chase | attack
+    mapKey: patch.mapKey ?? cur.mapKey ?? null,
+    x: (patch.x ?? cur.x ?? 0) | 0,
+    y: (patch.y ?? cur.y ?? 0) | 0,
+
+    // runtime
+    mode: cur.mode || 'idle',
     targetHeroId: cur.targetHeroId || null,
     lastSeenAt: cur.lastSeenAt || 0,
-    nextAttackAt: cur.nextAttackAt || 0,
     repathAt: cur.repathAt || 0,
     lastSwitchAt: cur.lastSwitchAt || 0,
-    threat: cur.threat || new Map(),    // heroId -> value
-    ...patch
+    threat: cur.threat || new Map(),
+
+    // === Ranges em PX e cooldown em ms, todos no mesmo relógio (ms) ===
+    attackRangePx: (attackRangeTiles * PX_PER_TILE) | 0,
+    aggroRangePx:  (aggroRangeTiles  * PX_PER_TILE) | 0,
+    attackMs,
+    lastAttackAt: Number(cur.lastAttackAt || 0),
+
+    // mantém os originais para debug (opcional)
+    attack_range: attackRangeTiles,
+    aggro_range:  aggroRangeTiles,
+    attack_ms:    attackMs,
   };
+
   mobs.set(id, next);
   return next;
 }
 
 // Exposta para seed inicial a partir do index.js
 function seedPosition({ id, x, y, mapKey }) {
-  ensureMob(id, { x: x|0, y: y|0, mapKey: String(mapKey), mode: 'idle', targetHeroId: null });
+  // x,y do seed/DB em TILES -> runtime em PIXELS (centro do tile)
+  ensureMob(id, {
+    x: (x | 0) * PX_PER_TILE + PX_PER_TILE / 2,
+    y: (y | 0) * PX_PER_TILE + PX_PER_TILE / 2,
+    mapKey: String(mapKey),
+    mode: 'idle',
+    targetHeroId: null
+  });
 }
+
 
 // Exposta para herói->mob (quando herói bate, aumenta threat)
 function addThreatFromHeroHit(instanceId, heroId, amount = THREAT_ON_HIT) {
@@ -114,8 +169,22 @@ function addThreatFromHeroHit(instanceId, heroId, amount = THREAT_ON_HIT) {
 // --------- Boot/Stop ----------
 async function start() {
   if (loopTimer) return;
+
   const alive = await fetchAliveMonsters();
-  for (const r of alive) ensureMob(r.id, { mapKey: r.map_key, x: r.x|0, y: r.y|0, mode: 'idle' });
+  for (const r of alive) {
+    ensureMob(r.id, {
+      mapKey: r.map_key,
+      // DB em TILES -> runtime em PIXELS (centro do tile)
+      x: (r.x | 0) * PX_PER_TILE + PX_PER_TILE / 2,
+      y: (r.y | 0) * PX_PER_TILE + PX_PER_TILE / 2,
+      mode: 'idle',
+      attack_range: r.attack_range,
+      aggro_range:  r.aggro_range,
+      attack_ms:    r.attack_ms,
+    });
+
+  }
+
   lastTickAt = Date.now();
   loopTimer = setInterval(tickLoop, TICK_MS);
   console.log('[ai-mobs] started. alive=', alive.length);
@@ -144,7 +213,16 @@ async function tickLoop() {
 
   for (const [mapKey, list] of byMap.entries()) {
     const heroesRows = await fetchOnlineHeroesInMap(mapKey);
-    const heroes = heroesRows.map(r => ({ heroId: r.hero_id, x: r.x|0, y: r.y|0 }));
+
+    // player_last_pos.x/y já estão em PIXELS (server/index.js persiste assim)
+    const heroes = heroesRows.map(r => ({
+      heroId: r.hero_id,
+      x: (r.x | 0),
+      y: (r.y | 0),
+    }));
+
+
+
     const { grid, cols } = await getGrid(mapKey);
     const losGrid = { data: grid, cols };
 
@@ -168,28 +246,48 @@ async function stepMob(now, dt, mob, heroes, losGrid) {
 
   if (!mob.targetHeroId) { mob.mode = 'idle'; return; }
 
-  const tgtPos = heroes.find(h => h.heroId === mob.targetHeroId);
+  // 1) Posição do alvo: tentar "ao vivo" na lista heroes; se não houver, cair pro DB.
+  let tgtPos =
+    heroes.find(h => h.heroId === mob.targetHeroId) ||
+    await getHeroLastPosPx(mob.targetHeroId, mob.mapKey);
+
   if (!tgtPos) {
     if (now - mob.lastSeenAt > GIVEUP_MS) { mob.targetHeroId = null; mob.mode = 'idle'; }
     return;
   }
 
-  // ATK: alcance + LOS
-  if (inReachPx({x:mob.x,y:mob.y}, {x:tgtPos.x,y:tgtPos.y}, 'MONSTER', K)
-      && hasLineOfSight(losGrid, mob.x, mob.y, tgtPos.x, tgtPos.y)) {
+  // 2) Melee estilo Tibia: mesmo tile ou adjacente 4-direções
+  //    + tolerância em pixels pra não falhar por centro de tile/latência.
+  const TILE = PX_PER_TILE;
+  const dx = tgtPos.x - mob.x;
+  const dy = tgtPos.y - mob.y;
 
+  const mobCx  = Math.floor(mob.x / TILE);
+  const mobCy  = Math.floor(mob.y / TILE);
+  const heroCx = Math.floor(tgtPos.x / TILE);
+  const heroCy = Math.floor(tgtPos.y / TILE);
+
+  const isAdj4Cell = Math.abs(mobCx - heroCx) + Math.abs(mobCy - heroCy) <= 1;
+
+  const PX_TOL = 10; // ~1/3 de tile
+  const closePx = (dx*dx + dy*dy) <= (TILE + PX_TOL) * (TILE + PX_TOL);
+
+  if (isAdj4Cell || closePx) {
     mob.mode = 'attack';
     mob.lastSeenAt = now;
 
-    if (now >= mob.nextAttackAt) {
-      const cd = (K.MONSTER_SPEED_MS && K.MONSTER_SPEED_MS.DEFAULT) || 1200;
-      mob.nextAttackAt = now + cd;
-
+    const cd = Number(mob.attackMs || (K.MONSTER_SPEED_MS && K.MONSTER_SPEED_MS.DEFAULT) || 1200);
+    if ((now - (mob.lastAttackAt || 0)) >= cd) {
+      mob.lastAttackAt = now;
+      if (DEBUG_AI) {
+        console.log('[ai-mobs] atk (melee adj/px)', mob.instanceId, '->', mob.targetHeroId,
+          'cells mob=', mobCx, mobCy, 'hero=', heroCx, heroCy, 'dx,dy=', dx|0, dy|0);
+      }
       try {
         await applyMobHit({
           attackerInstanceId: String(mob.instanceId),
           targetHeroId: String(mob.targetHeroId),
-          attackInfo: { min: 1, max: 3 } // ajuste por monstro depois
+          attackInfo: { min: 1, max: 3 } // TODO: puxar do master depois
         });
       } catch (e) {
         console.warn('[ai-mobs] applyMobHit error:', e?.message);
@@ -198,7 +296,7 @@ async function stepMob(now, dt, mob, heroes, losGrid) {
     return;
   }
 
-  // CHASE
+  // 3) CHASE (greedy cardinal com colisão no servidor)
   mob.mode = 'chase';
   if (now >= mob.repathAt) {
     mob.repathAt = now + REPATH_MS;
@@ -207,13 +305,9 @@ async function stepMob(now, dt, mob, heroes, losGrid) {
   }
 }
 
-// --------- Threat ----------
-function chebTiles(ax, ay, bx, by) {
-  const cax = Math.floor(ax / STEP_PX), cay = Math.floor(ay / STEP_PX);
-  const cbx = Math.floor(bx / STEP_PX), cby = Math.floor(by / STEP_PX);
-  return Math.max(Math.abs(cax - cbx), Math.abs(cay - cby));
-}
 
+
+// --------- Threat ----------
 function decayThreat(mob, dt) {
   if (!mob.threat || mob.threat.size === 0) return;
   const dec = THREAT_DECAY * dt;
@@ -225,14 +319,25 @@ function decayThreat(mob, dt) {
 }
 
 function selectTargetByThreat(now, mob, heroes, losGrid) {
-  // Alimenta threat por proximidade/visão (AGGRO_TILES)
+  const aggroR2 = (mob.aggroRangePx || (8 * PX_PER_TILE)) ** 2;
+
   for (const h of heroes) {
-    const dTiles = chebTiles(mob.x, mob.y, h.x, h.y);
-    if (dTiles <= AGGRO_TILES) {
-      const canSee = hasLineOfSight(losGrid, mob.x, mob.y, h.x, h.y);
+    const dx = mob.x - h.x, dy = mob.y - h.y;
+    const d2 = dx*dx + dy*dy;
+    if (d2 <= aggroR2) {
+      const canSee = hasLoSpx(losGrid, mob.x, mob.y, h.x, h.y);
       const base = canSee ? THREAT_ON_SIGHT : THREAT_ON_SIGHT * 0.4;
       const cur = mob.threat.get(h.heroId) || 0;
-      mob.threat.set(h.heroId, cur + base);
+      const next = cur + base;
+      mob.threat.set(h.heroId, next);
+
+      if (DEBUG_AI) {
+        const dist = Math.sqrt(d2) | 0;
+        console.log(
+          `[ai-mobs] inRange mob=${mob.instanceId} hero=${h.heroId} dist=${dist}px canSee=${canSee} threat=${next.toFixed(2)}`
+        );
+      }
+
       if (canSee) mob.lastSeenAt = now;
     }
   }
@@ -242,7 +347,13 @@ function selectTargetByThreat(now, mob, heroes, losGrid) {
   for (const [hid, v] of mob.threat.entries()) if (v > bestV) { bestV = v; bestId = hid; }
 
   if (!bestId) { mob.targetHeroId = null; return; }
-  if (!mob.targetHeroId) { mob.targetHeroId = bestId; mob.lastSwitchAt = now; return; }
+  if (!mob.targetHeroId) {
+    mob.targetHeroId = bestId;
+    mob.lastSwitchAt = now;
+    mob.lastSeenAt = now;
+    if (DEBUG_AI) console.log(`[ai-mobs] target set mob=${mob.instanceId} -> ${bestId} (threat=${bestV.toFixed(2)})`);
+    return;
+  }
 
   if (bestId !== mob.targetHeroId) {
     const curV = mob.threat.get(mob.targetHeroId) || 0;
@@ -253,6 +364,7 @@ function selectTargetByThreat(now, mob, heroes, losGrid) {
     }
   }
 }
+
 
 // --------- Movement ----------
 function isBlockedPx(losGrid, wx, wy) {
@@ -301,10 +413,13 @@ async function moveMobAndPersist(mob, step, dt) {
 
   if (prevCell !== nextCell) {
     try {
+      const tx = Math.floor(mob.x / PX_PER_TILE);
+      const ty = Math.floor(mob.y / PX_PER_TILE);
       await run(
         `UPDATE monster_instances SET x=$2, y=$3, updated_at=now() WHERE id=$1`,
-        [mob.instanceId, mob.x, mob.y]
+        [mob.instanceId, tx, ty]
       );
+
       try {
         broadcast({ type:'mob_pos', instanceId: mob.instanceId, mapKey: mob.mapKey, x: mob.x, y: mob.y });
       } catch {}

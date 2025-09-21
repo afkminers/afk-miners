@@ -1,3 +1,4 @@
+# data/monsters/teste.yml
 key: teste
 name: Teste
 xp: 6200
@@ -20,6 +21,12 @@ elements:
   ice: -10
   holy: -15
   death: 15
+
+# === campos para a IA server-side ===
+attack_range: 1 # tiles
+aggro_range: 8 # tiles
+attack_ms: 2000 # ms (do melee.intervalMs)
+
 attacks:
 - type: melee
   intervalMs: 2000

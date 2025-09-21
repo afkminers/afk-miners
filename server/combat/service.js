@@ -28,12 +28,12 @@ function ai() {
 /** =======================
  *  Config de Respawn
  *  ======================= */
-const RESPAWN_MS = 5000; // 5s de espera na tela de morte
+const RESPAWN_MS = 10000; // 5s de espera na tela de morte
 const RESPAWN_FALLBACK = { mapKey: 'house', x: 912, y: 880 }; // ajuste conforme seu mapa
 const RESPAWN_HP_FRACTION = 1.0; // 100% da vida ao reviver (mín. 1)
 
 /** Dano estilo Tibia (sem dano mínimo garantido) */
-function computeDamageTibiaLike(weaponAtk, skillLevel, monsterArmor, variance = K.DAMAGE_VARIANCE) {
+function computeDamageTibiaLike(weaponAtk, skillLevel, monsterArmor, variance = K.DAMAGE_VARIANCE || 0.15) {
   const base = weaponAtk * (1 + skillLevel / 50);
   const minDmg = Math.floor(base * (1 - variance));
   const maxDmg = Math.ceil(base * (1 + variance));
@@ -84,6 +84,9 @@ LEFT JOIN items_master     i ON i.key = eq.item_key
 
 /** Instância do monstro + dados do monstro (xp/loot/armor) */
 async function getInstanceWithMonster(instanceId) {
+  // se precisar, troque 32 pelo tamanho do seu tile
+  const TILE = 32;
+
   return await get(
     `SELECT mi.id, mi.hp, mi.max_hp, mi.state, mi.spawn_id, mi.map_key,
             mi.x, mi.y,
@@ -91,11 +94,20 @@ async function getInstanceWithMonster(instanceId) {
             COALESCE(m.xp,25)                      AS xp_reward,
             COALESCE(m."lootJSON",'[]'::jsonb)     AS loot_json,
             COALESCE(m."defensesJSON",'{}'::jsonb) AS defenses_json,
+
+            /* alcance em tiles: aiJSON.reach -> attack_range -> 1 */
             COALESCE(
-              NULLIF(m."aiJSON"->>'reach','')::int,      -- se tiver em aiJSON
-              NULLIF(m."attackRange", 0),                -- se você tiver essa coluna
-              48                                         -- padrão (px)
-            ) AS reach_px
+              NULLIF((m."aiJSON"->>'reach')::int, 0),
+              NULLIF(m.attack_range, 0),
+              1
+            ) AS reach_tiles,
+
+            /* alcance em pixels para a IA/combate */
+            COALESCE(
+              NULLIF((m."aiJSON"->>'reach')::int, 0),
+              NULLIF(m.attack_range, 0),
+              1
+            ) * ${TILE} AS reach_px
        FROM monster_instances mi
        JOIN monsters_master m ON m.id = mi.monster_id
       WHERE mi.id = $1`,
@@ -103,9 +115,9 @@ async function getInstanceWithMonster(instanceId) {
   );
 }
 
+
 // fallback se quiser usar separado em outros pontos
 function getDefaultReachPx() { return 48; } // ~1.5 tiles
-
 
 async function getRespawnSeconds(spawnId) {
   if (!spawnId) return 30;
@@ -246,7 +258,7 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
     dmg
   });
 
-  // Log para o canal "Server/Log" do cliente
+  // Log estruturado
   broadcast({
     type: 'combat_log',
     fromHeroId: hero.hero_id,
@@ -337,21 +349,35 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
     return { ok: false, message: 'target not in same map' };
   }
 
-  // Alcance (px). Vem do SELECT; se faltar, usa default.
-  const reachPx = Number(inst.reach_px) || getDefaultReachPx();
-  // distância euclidiana em px
-  const dx = Number(hpos.x) - Number(inst.x || 0);
-  const dy = Number(hpos.y) - Number(inst.y || 0);
-  const distPx = Math.hypot(dx, dy);
+// --- TRAVAS DE MAPA E ALCANCE (adjacente 4-direções) ---
+const TILE = 32;
 
-  // margem de tolerância p/ latência (~0.6 tile)
-  const TOLERANCE = 18;
-  // Se está FORA do alcance, cancela o hit.
-  if (distPx > (reachPx + TOLERANCE)) {
-    return { ok: false, message: `out of range (${Math.round(distPx)} > ${reachPx})` };
-  }
+// 1) Corrige unidade do hpos se vier em TILES
+let hx = Number(hpos.x || 0);
+let hy = Number(hpos.y || 0);
+
+// Heurística: se converter p/ px ficar "mais perto" do mob, usa a versão em px
+const toPx = v => (v * TILE) + TILE / 2;
+const dRaw = Math.hypot(hx - Number(inst.x||0), hy - Number(inst.y||0));
+const dPx  = Math.hypot(toPx(hx) - Number(inst.x||0), toPx(hy) - Number(inst.y||0));
+if (dPx < dRaw) { hx = toPx(hx); hy = toPx(hy); }
+
+// 2) Checa adjacência por célula (4-direções) — igual Tibia
+const mobCx  = Math.floor(Number(inst.x || 0) / TILE);
+const mobCy  = Math.floor(Number(inst.y || 0) / TILE);
+const heroCx = Math.floor(hx / TILE);
+const heroCy = Math.floor(hy / TILE);
+const manhattan = Math.abs(heroCx - mobCx) + Math.abs(heroCy - mobCy);
+
+if (manhattan > 1) {
+  return { ok: false, message: 'out of range (adjacent required)' };
+}
 
 
+
+
+
+  // --- Cálculo do dano ---
   const min = Number(attackInfo?.min ?? 1);
   const max = Number(attackInfo?.max ?? 2);
   let dmg = min + Math.floor(Math.random() * (max - min + 1));
@@ -417,7 +443,7 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
     instanceId: inst.id
   });
 
-  // >>> Log textual de combate (consumido pelo cliente)
+  // >>> Log estruturado de combate
   broadcast({
     type: 'combat_log',
     targetHeroId,
@@ -428,15 +454,12 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
     maxHp: row.max_hp
   });
 
+  // >>> Log “legado” para aparecer como antes no F12
   broadcast({
-  type: 'combat_log',
-  targetHeroId,
-  byMob: inst.monster_key,
-  instanceId: inst.id,
-  amount: 0,
-  note: `cancelado: fora de alcance (dist=${Math.round(distPx)}px, reach=${reachPx}px)`
+    type: 'log',
+    channel: 'Dano',
+    text: `Mob ${inst.monster_key} acertou você por ${dmg} (HP: ${newHp}/${row.max_hp})`
   });
-
 
   if (dead && wasAlive) {
     const respawnAt = Date.now() + RESPAWN_MS;
