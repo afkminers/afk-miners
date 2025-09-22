@@ -15,6 +15,9 @@ import { HeroState } from './state/hero-state.js';
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
 const TILE = 32;
+// Desliga a IA local de mobs; posição deve vir do servidor
+const ENABLE_LOCAL_MOB_AI = false;
+
 
 // === buffer de pos_snap recebido cedo (antes do controller existir)
 let _earlySnap = null;
@@ -87,6 +90,56 @@ onMessage('combat_log', (m) => {
     line = `[Dano] Mob ${m.byMob ?? m.instanceId} acertou você por ${m.amount} (HP: ${m.hpAfter ?? '—'}/${m.maxHp ?? '—'})`;
   }
   if (window.Chat?.pushLog) window.Chat.pushLog(line); else console.log('[LOG]', line);
+});
+
+// == NOVO: evento rico dizendo "quem bateu" ==
+onMessage('hero_hit', (msg) => {
+  // Atualiza HUD de HP do herói
+  if (window.HUD_ApplyHeroHpUpdate && msg.heroId != null) {
+    const cur = Number(msg.hp);
+    const max = Number(msg.hpMax ?? msg.maxHp ?? msg.hp_max ?? msg.maxhp);
+    window.HUD_ApplyHeroHpUpdate(String(msg.heroId), cur, max);
+  }
+
+  // Nome do bicho que bateu (cai em chaves até achar algo útil)
+  const mobName =
+    msg?.monster?.name ||
+    msg?.monster?.key ||
+    msg?.monsterKey ||
+    `Mob ${msg?.monster?.id ?? msg?.instanceId ?? '?'}`;
+
+  const amount = Number(msg.dmg ?? msg.amount ?? 0);
+  const hpStr  = `${msg.hp}/${msg.hpMax ?? msg.maxHp ?? '—'}`;
+
+  // Log de combate
+  const line = `[Dano] ${mobName} te acertou por ${amount} (HP: ${hpStr})`;
+  if (window.Chat?.pushLog) window.Chat.pushLog(line); else console.log('[LOG]', line);
+
+  // Dano flutuante acima do monstro (se soubermos posição) — cai pro player se não tiver
+  if (window.HeroDamageUI && typeof window.HeroDamageUI.spawn === 'function') {
+    let x = Number(msg?.monster?.x), y = Number(msg?.monster?.y);
+
+    // Se só veio instanceId, tenta achar a sprite do mob ligado ao instanceId
+    if ((!Number.isFinite(x) || !Number.isFinite(y)) && msg.instanceId && window.GameScene?.getMobByInstanceId) {
+      const s = window.GameScene.getMobByInstanceId(String(msg.instanceId));
+      if (s) { x = s.x; y = s.y; }
+    }
+
+    // Fallback: usa a posição do player
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      const p = window.GameScene?.controller?.getPosition?.();
+      if (p) { x = p.x; y = p.y - 16; }
+    }
+
+    if (Number.isFinite(x) && Number.isFinite(y)) {
+      window.HeroDamageUI.spawn({ x, y, amount, kind: 'from_mob' });
+    }
+  }
+
+  // Se morreu, deixa o overlay/efeito a seu gosto
+  if (msg.died && typeof window.showDeathOverlay === 'function') {
+    window.showDeathOverlay();
+  }
 });
 
 
@@ -750,14 +803,17 @@ function addMobFromSpawn(spDef) {
   const kindNorm = normKey(rawKey);
   const meta = asObj(findMetaFor(rawKey)) || null;
 
+  // dentro de addMobFromSpawn(spDef)
   const m = {
     id: mobAutoId++,
     kind: kindNorm,
     rawKey,
-    x: (spDef.x || 0) + Math.random() * (spDef.w || TILE),
-    y: (spDef.y || 0) + Math.random() * (spDef.h || TILE),
+    // centraliza no retângulo do spawn (sem aleatório)
+    x: (spDef.x || 0) + ((spDef.w || TILE) / 2),
+    y: (spDef.y || 0) + ((spDef.h || TILE) / 2),
     w: 32, h: 32,
-    speed: 40 + Math.random() * 20,
+    // velocidade fixa
+    speed: 80,
     dirX: 0, dirY: 0, changeAt: 0,
     face: 'east',
     img: null,
@@ -772,6 +828,7 @@ function addMobFromSpawn(spDef) {
     _animFrozen: false,
     _animFrozenFrame: 0,
   };
+
 
   loadMonsterImg(kindNorm, meta, rawKey).then(img => {
     if (!img) return;
@@ -813,6 +870,47 @@ function updateRespawns(now) {
     }
   }
 }
+
+// === UI mínima: números de dano flutuantes ===
+(function(){
+  const ACTIVE = []; // {x,y,amt,t,life}
+  const LIFE_MS = 900;
+
+  function spawn({ x, y, amount, kind }) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    ACTIVE.push({ x, y, amt: Number(amount)||0, t: performance.now(), life: LIFE_MS, kind: String(kind||'') });
+  }
+
+  function render(ctx, camera, dt) {
+    if (!ACTIVE.length) return;
+    const now = performance.now();
+    for (let i = ACTIVE.length - 1; i >= 0; i--) {
+      const p = ACTIVE[i];
+      const age = now - p.t;
+      if (age >= p.life) { ACTIVE.splice(i,1); continue; }
+      const alpha = 1 - (age / p.life);
+      const rise = Math.min(22, age * 0.04);
+      const sx = (p.x - camera.x) * (camera.getZoom?.()||1);
+      const sy = (p.y - camera.y - rise) * (camera.getZoom?.()||1);
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // contorno simples
+      ctx.fillStyle = 'black';
+      ctx.fillText(String(p.amt), Math.round(sx)+1, Math.round(sy)+1);
+      // dentro (vermelho padrão para dano recebido)
+      ctx.fillStyle = (p.kind === 'from_mob') ? '#ff6767' : '#ffd54a';
+      ctx.fillText(String(p.amt), Math.round(sx), Math.round(sy));
+      ctx.restore();
+    }
+  }
+
+  window.HeroDamageUI = { spawn, render };
+})();
+
 
 /* ================================ Boot ================================ */
 (async function main() {
@@ -1039,7 +1137,7 @@ function updateRespawns(now) {
     // Camera
     camera.update(dt);
 
-    // ===== IA dos mobs em passos de 32x32 (apenas N/S/L/O) =====
+    // ===== IA dos mobs em passos de 32x32 (DESATIVADA; servidor manda posição) =====
     const hasGrid = !!grid && Number.isFinite(cols) && Number.isFinite(rows);
     const cellOf   = (wx, wy) => ({ cx: Math.floor(wx / TILE), cy: Math.floor(wy / TILE) });
     const centerOf = (cx, cy) => ({ x: cx * TILE + TILE / 2, y: cy * TILE + TILE / 2 });
@@ -1058,54 +1156,11 @@ function updateRespawns(now) {
     };
     const faceFrom = (dx, dy) => (dx === 1 ? 'east' : dx === -1 ? 'west' : dy === 1 ? 'south' : 'north');
 
-    for (const mob of mobs) {
-      if (mob.hidden || mob.dead) continue;
-      if (!mob._step) mob._step = { moving: false, tx: 0, ty: 0, nextAt: 0 };
-      const st = mob._step;
-
-      if (!st.moving) {
-        mob._animFrozen = true;
-        mob._animFrozenFrame = 0;
-
-        if (now >= st.nextAt) {
-          const dirs = [ { dx:0, dy:-1 }, { dx:0, dy:1 }, { dx:-1, dy:0 }, { dx:1, dy:0 } ];
-          for (let i = dirs.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [dirs[i], dirs[j]] = [dirs[j], dirs[i]]; }
-          const c = cellOf(mob.x, mob.y);
-          let pick = null;
-          for (const d of dirs) {
-            const nx = c.cx + d.dx, ny = c.cy + d.dy;
-            if (isBlocked(nx, ny)) continue;
-            if (!inBound(mob, nx, ny)) continue;
-            pick = d; break;
-          }
-          if (pick) {
-            const tgt = centerOf(c.cx + pick.dx, c.cy + pick.dy);
-            st.tx = tgt.x; st.ty = tgt.y; st.moving = true;
-            mob.face = faceFrom(pick.dx, pick.dy);
-            mob._animFrozen = false;
-          } else {
-            st.nextAt = now + 400 + Math.random() * 400;
-          }
-        }
-      } else {
-        mob._animFrozen = false;
-        const vx = st.tx - mob.x, vy = st.ty - mob.y;
-        const dist = Math.hypot(vx, vy);
-        const spd = Math.max(60, Number(mob.speed) || 60);
-        if (dist <= 1.0) {
-          mob.x = Math.round(st.tx);
-          mob.y = Math.round(st.ty);
-          st.moving = false;
-          st.nextAt = now + 120 + Math.random() * 120;
-          mob._animFrozen = true;
-          mob._animFrozenFrame = 0;
-        } else {
-          const ux = vx / (dist || 1), uy = vy / (dist || 1);
-          mob.x += ux * spd * dt;
-          mob.y += uy * spd * dt;
-        }
-      }
+    // Toggle: se quiser testar local, troque para true
+    if (ENABLE_LOCAL_MOB_AI) {
+      // (cole aqui o bloco ANTES, se um dia quiser reativar a IA local)
     }
+
 
     updateRespawns(now);
 

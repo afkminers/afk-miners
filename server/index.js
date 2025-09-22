@@ -5,6 +5,10 @@ const path = require('path');
 const express = require('express');
 const http = require('http');
 
+// ==== Combat mode flag (simple vs legacy)
+const SIMPLE_MODE = String(process.env.MONSTER_ATK_MODE || '').toLowerCase() === 'simple';
+
+
 // Segurança e performance
 const compression = require('compression');
 const helmetMiddleware = require('./middleware/security-headers');
@@ -314,13 +318,15 @@ async function bootstrapContentTables() {
 // públicas / auth
 app.use('/api/auth', authRoutes);
 
-// Combat (sempre protegido por auth)
+// Combat HTTP routes (sempre ligadas, mesmo no SIMPLE_MODE)
 const combatRoutes = require('./combat/routes');
 app.use('/api/combat', requireAuth, combatRoutes);
 
-// endpoint auxiliar de nearest (se precisar, mantenha aqui)
+
+// endpoint auxiliar de nearest (aqui pode ficar ligado sem problema)
 const combatNearest = require('./routes/combat_nearest');
 app.use(combatNearest);
+
 
 // protegidas
 app.use('/api/player', requireAuth, playerRoutes);
@@ -598,13 +604,16 @@ app.post('/api/admin/content/reload-map', async (req, res) => {
     await loadMap({ all, get, run }, path.join(__dirname, '..'), mapKey);
     await syncSpawns(); // garante instâncias após recarregar o mapa
 
-    // <<< NOVO: re-semeia o AI com as instâncias vivas após o reload
-    try { 
-      const aiMobs = require('./combat/ai-mobs');
-      await seedAIMobsFromDB(aiMobs);
-    } catch (e) {
-      console.warn('[ai-mobs] seed after reload failed:', e?.message);
+    // Re-semeia AI apenas no modo legacy
+    if (!SIMPLE_MODE) {
+      try { 
+        const aiMobs = require('./combat/ai-mobs');
+        await seedAIMobsFromDB(aiMobs);
+      } catch (e) {
+        console.warn('[ai-mobs] seed after reload failed:', e?.message);
+      }
     }
+
 
     res.json({ ok: true, reloaded: mapKey });
   } catch (e) {
@@ -933,25 +942,28 @@ async function seedAIMobsFromDB(aiMobs) {
       await loadAll({ all, get, run }, path.join(__dirname, '..'));
     }
     
-    // AI dos monstros
-    const aiMobs = require('./combat/ai-mobs');
-    aiMobs.start();
-
-    // Garante instâncias e semeia o AI
+    // Garante instâncias (sempre)
     try { await syncSpawns(); } catch (e) { console.warn('[sync_spawns] initial failed:', e?.message); }
-    await seedAIMobsFromDB(aiMobs);
 
-    if (shouldGenerateContext) {
-      console.log('[context] generation enabled by GEN_CONTEXT_ON_START=1');
+    if (!SIMPLE_MODE) {
+      // ===== Legacy AI =====
+      const aiMobs = require('./combat/ai-mobs');
+      aiMobs.start();
+
+      await seedAIMobsFromDB(aiMobs);
+
+      // Mantém spawns atualizados + scheduler
+      try { await syncSpawns(); } catch (e) { console.warn('[sync_spawns] initial failed:', e?.message); }
+      startIdleScheduler();
+      console.log('[combat] LEGACY AI/respawn habilitados');
     } else {
-      console.log('[context] generation disabled (set GEN_CONTEXT_ON_START=1 to enable)');
+      // ===== SIMPLE MODE =====
+      require('./combat/monster_atk_simple').start();
+      // Ainda podemos manter o respawn/scheduler se quiser, mas o ataque é do worker simples
+      startIdleScheduler();
+      console.log('[combat] SIMPLE monster attack mode ENABLED');
     }
 
-    // Garante instâncias de todos os spawns (e mantém atualizadas periodicamente)
-    try { await syncSpawns(); } catch (e) { console.warn('[sync_spawns] initial failed:', e?.message); }
-    
-    // Start idle-aware scheduler instead of fixed interval
-    startIdleScheduler();
 
     server = http.createServer(app);
 
@@ -959,6 +971,18 @@ async function seedAIMobsFromDB(aiMobs) {
       const WebSocketServer = WebSocketLib.Server;
       // Hardening: limita payload do WS
       wss = new WebSocketServer({ server, path: '/ws', maxPayload: 32 * 1024 });
+            // >>>>>>>>>>>>>>> NOVO: helper global para broadcast por mapa <<<<<<<<<<<<<<<
+      global._sendToMap = (mapKey, payload) => {
+        if (!wss) return;
+        const key = String(mapKey || 'house');
+        const msg = JSON.stringify(payload);
+        wss.clients.forEach((c) => {
+          if (c && c.readyState === WebSocketLib.OPEN && c._mapKey === key) {
+            try { c.send(msg); } catch {}
+          }
+        });
+      };
+      // >>>>>>>>>>>>>>> FIM DO TRECHO NOVO <<<<<<<<<<<<<<<
       attachWsBus(wss);
       setupHeartbeat(wss); // <<< Heartbeat habilitado
       setupRedis(wss).catch(() => {});

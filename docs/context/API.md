@@ -1158,7 +1158,7 @@ Arquivo: `server\combat\routes.js:163`
 
 ### POST /login
 
-Arquivo: `server\auth\routes.js:71`
+Arquivo: `server\auth\routes.js:70`
 
 _Sem payload inferido_
 
@@ -1178,7 +1178,7 @@ _Sem payload inferido_
 
 ### POST /logout
 
-Arquivo: `server\auth\routes.js:88`
+Arquivo: `server\auth\routes.js:87`
 
 _Sem payload inferido_
 
@@ -1371,7 +1371,7 @@ Arquivo: `server\routes\player.old.js:23`
 
 ### POST /register
 
-Arquivo: `server\auth\routes.js:35`
+Arquivo: `server\auth\routes.js:34`
 
 _Sem payload inferido_
 
