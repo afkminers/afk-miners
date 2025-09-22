@@ -407,8 +407,10 @@
       "normalizeTilesetPath",
       "pickElByIds",
       "pickFreeSpriteForSpawn",
+      "render",
       "resize",
       "resolvePlayerSprite",
+      "spawn",
       "uniq",
       "updateRespawns"
     ]
@@ -694,6 +696,23 @@
     "file": "server\\combat\\los.js",
     "symbols": [
       "hasLineOfSight"
+    ]
+  },
+  {
+    "file": "server\\combat\\monster_atk_simple.js",
+    "symbols": [
+      "applyDamageToHero",
+      "fetchAliveHeroesWithPos",
+      "fetchAliveMonsters",
+      "isAdjacent4Tiles",
+      "isInsideSpawnRect",
+      "markLastHit",
+      "nextTileToward",
+      "rand",
+      "start",
+      "stop",
+      "tick",
+      "updateMonsterPos"
     ]
   },
   {

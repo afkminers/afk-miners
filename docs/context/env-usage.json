@@ -61,7 +61,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 4860
+        "index": 4997
       }
     ],
     "defaults": [
@@ -151,7 +151,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2056
+        "index": 2193
       }
     ],
     "defaults": [
@@ -175,7 +175,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21904
+        "index": 22090
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -371,7 +371,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2675
+        "index": 2812
       }
     ],
     "defaults": [
@@ -383,7 +383,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 29438
+        "index": 29624
       }
     ],
     "defaults": []
@@ -393,7 +393,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 4725
+        "index": 4862
       }
     ],
     "defaults": [
@@ -417,7 +417,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21811
+        "index": 21997
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -476,11 +476,131 @@
     ]
   },
   {
+    "key": "MONSTER_ATK_COOLDOWN_MS",
+    "occurrences": [
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 530
+      }
+    ],
+    "defaults": [
+      "900"
+    ]
+  },
+  {
+    "key": "MONSTER_ATK_MODE",
+    "occurrences": [
+      {
+        "file": "server\\index.js",
+        "index": 216
+      }
+    ],
+    "defaults": [
+      ""
+    ]
+  },
+  {
+    "key": "MONSTER_ATK_TICK_MS",
+    "occurrences": [
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 199
+      }
+    ],
+    "defaults": [
+      "300"
+    ]
+  },
+  {
+    "key": "MONSTER_BASE_DMG_MAX",
+    "occurrences": [
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 655
+      }
+    ],
+    "defaults": [
+      "12"
+    ]
+  },
+  {
+    "key": "MONSTER_BASE_DMG_MIN",
+    "occurrences": [
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 595
+      }
+    ],
+    "defaults": [
+      "6"
+    ]
+  },
+  {
+    "key": "MONSTER_CHASE_INSIDE_SPAWN_ONLY",
+    "occurrences": [
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 779
+      }
+    ],
+    "defaults": [
+      "0"
+    ]
+  },
+  {
+    "key": "MONSTER_CHASE_MAX_TILES",
+    "occurrences": [
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 1009
+      }
+    ],
+    "defaults": [
+      "25"
+    ]
+  },
+  {
+    "key": "MONSTER_MAX_PER_TICK",
+    "occurrences": [
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 1145
+      }
+    ],
+    "defaults": [
+      "40"
+    ]
+  },
+  {
+    "key": "MONSTER_PERSIST_POS_MS",
+    "occurrences": [
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 396
+      }
+    ],
+    "defaults": [
+      "1000"
+    ]
+  },
+  {
+    "key": "MONSTER_STEP_MS",
+    "occurrences": [
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 290
+      }
+    ],
+    "defaults": [
+      "250"
+    ]
+  },
+  {
     "key": "NODE_ENV",
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 4374
+        "index": 4511
       },
       {
         "file": "server\\skills\\routes.js",
@@ -539,7 +659,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 4433
+        "index": 4570
       }
     ],
     "defaults": [
@@ -551,7 +671,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21761
+        "index": 21947
       }
     ],
     "defaults": [
@@ -587,7 +707,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 21869
+        "index": 22055
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -616,7 +736,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 4999
+        "index": 5136
       }
     ],
     "defaults": []
@@ -626,7 +746,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 4617
+        "index": 4754
       }
     ],
     "defaults": [

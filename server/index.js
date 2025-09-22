@@ -64,7 +64,7 @@ const CONTENT_PIPELINE = process.env.CONTENT_PIPELINE || 'off';
 // ---- Autoridade de movimento (Tibia-like) ----
 const TILE = 32;
 const SPEED_CAP_PX_S = 180; // ~0.18 s por tile
-const MIN_STEP_MS = Math.floor((TILE / SPEED_CAP_PX_S) * 1000 * 0.60); // 20% folga
+const MIN_STEP_MS = Math.floor((TILE / SPEED_CAP_PX_S) * 1000 * 0.75); // 20% folga
 
 function isAdjacentStep(lx, ly, nx, ny) {
   const dx = Math.abs(nx - lx), dy = Math.abs(ny - ly);
@@ -73,7 +73,7 @@ function isAdjacentStep(lx, ly, nx, ny) {
 
 // ---- [MMO] Posições vivas em RAM + flush periódico p/ DB ----
 const livePositions = new Map(); // playerId -> { x, y, mapKey, ts }
-const FLUSH_POS_INTERVAL_MS = Number(process.env.FLUSH_POS_INTERVAL_MS || 30000);
+const FLUSH_POS_INTERVAL_MS = Number(process.env.FLUSH_POS_INTERVAL_MS || 1000);
 let posFlushTimer = null;
 
 async function flushOnePlayerPos(pid) {
@@ -1213,13 +1213,15 @@ async function seedAIMobsFromDB(aiMobs) {
             // presença online
             try { await upsertOnlineByPlayer(pid, mapKey); } catch {}
 
-            // >>>>>> FAST FLUSH (1s): deixa player_last_pos.updated_at sempre fresco para a IA
+            // >>>>>> FAST FLUSH (200ms enquanto estiver se movendo)
             if (!global.__posFastFlush) global.__posFastFlush = new Map(); // pid -> lastWriteMs
             const lastW = global.__posFastFlush.get(String(pid)) || 0;
-            if (now - lastW >= 1000) {
+            const FAST_FLUSH_MS = 200;
+            if (now - lastW >= FAST_FLUSH_MS) {
               try { await flushOnePlayerPos(pid); } catch {}
               global.__posFastFlush.set(String(pid), now);
             }
+
 
             // broadcast p/ outros jogadores
             const out = { type:'pos', id:String(pid), x: nx, y: ny, name: ws._player?.name || '' };

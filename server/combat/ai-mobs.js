@@ -27,11 +27,11 @@
   const CHASE_SPEED_PX_S = 90;          // px/s
   const REPATH_MS = 500;                // recálculo de direção
   const GIVEUP_MS = 8000;               // desiste se perder o alvo por muito tempo
-  const ONLINE_RECENT_MS = 20000;       // presença considerada “viva” nos últimos 20s
+  const ONLINE_RECENT_MS = 2000;       // presença considerada “viva” nos últimos 2s
 
   // Anti-hit fantasma (idades máximas aceitáveis das posições)
-  const STALE_HERO_MS = 1000;           // herói precisa ter pos ≤ 1s
-  const STALE_MOB_MS  = 1500;           // mob precisa ter pos ≤ 1.5s
+  const STALE_HERO_MS = 400;           // herói precisa ter pos ≤ 400ms
+  const STALE_MOB_MS  = 800;           // mob precisa ter pos ≤ 800ms
 
 
   // Threat / Aggro

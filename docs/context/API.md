@@ -39,6 +39,16 @@
 - `LOOT_CACHE_TTL_SEC` (defaults: 5)
 - `LOOT_CLEANUP_EVERY_SECONDS` (defaults: 30)
 - `LOOT_EXPIRE_SECONDS` (defaults: 120)
+- `MONSTER_ATK_COOLDOWN_MS` (defaults: 900)
+- `MONSTER_ATK_MODE` (defaults: )
+- `MONSTER_ATK_TICK_MS` (defaults: 300)
+- `MONSTER_BASE_DMG_MAX` (defaults: 12)
+- `MONSTER_BASE_DMG_MIN` (defaults: 6)
+- `MONSTER_CHASE_INSIDE_SPAWN_ONLY` (defaults: 0)
+- `MONSTER_CHASE_MAX_TILES` (defaults: 25)
+- `MONSTER_MAX_PER_TICK` (defaults: 40)
+- `MONSTER_PERSIST_POS_MS` (defaults: 1000)
+- `MONSTER_STEP_MS` (defaults: 250)
 - `NODE_ENV` (defaults: development)
 - `PG_DUMP_PATH`
 - `PGSSLMODE`
@@ -55,7 +65,7 @@
 
 ### GET /
 
-Arquivo: `server\index.js:626`
+Arquivo: `server\index.js:635`
 
 _Sem payload inferido_
 
@@ -181,7 +191,7 @@ Arquivo: `server\combat\routes.js:39`
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:584`
+Arquivo: `server\index.js:590`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -209,7 +219,7 @@ Arquivo: `server\index.js:584`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:559`
+Arquivo: `server\index.js:565`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -239,7 +249,7 @@ Arquivo: `server\index.js:559`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:571`
+Arquivo: `server\index.js:577`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -268,7 +278,7 @@ Arquivo: `server\index.js:571`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:548`
+Arquivo: `server\index.js:554`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -293,7 +303,7 @@ Arquivo: `server\index.js:548`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:492`
+Arquivo: `server\index.js:498`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -321,7 +331,7 @@ Arquivo: `server\index.js:492`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:503`
+Arquivo: `server\index.js:509`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -348,7 +358,7 @@ Arquivo: `server\index.js:503`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:525`
+Arquivo: `server\index.js:531`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -374,7 +384,7 @@ Arquivo: `server\index.js:525`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1285`
+Arquivo: `server\index.js:1309`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -421,7 +431,7 @@ Arquivo: `server\routes\combat_nearest.js:30`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:166`
+Arquivo: `server\index.js:170`
 
 _Sem payload inferido_
 
@@ -852,7 +862,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:594`
+Arquivo: `server\index.js:600`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -872,7 +882,7 @@ Arquivo: `server\index.js:594`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1308`
+Arquivo: `server\index.js:1332`
 
 _Sem payload inferido_
 
