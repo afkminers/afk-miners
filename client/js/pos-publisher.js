@@ -1,7 +1,7 @@
 // /client/js/pos-publisher.js
 // Publica posição quantizada no centro do tile (32px) via WS,
 // com flush ao parar, flush periódico e flush ao fechar a aba.
-// Ajustado para respeitar o MIN_STEP_MS do servidor e evitar "rubber-banding".
+// Mantém o ritmo alinhado ao speed-cap servidor (≈180px/s) para evitar "rubber-banding".
 
 import { wsSend } from './ws/singleton.js';
 
@@ -16,7 +16,7 @@ const state = {
   idleTimer: null,
 };
 
-// Server aceita 1 passo/≈106ms (32px / 180px/s × 0.60). Aqui damos folga.
+// Server aceita 1 passo/≈124ms (32px / 180px/s × 0.70). Aqui damos folga.
 // Você pode sobrepor via window.ENV.MIN_TILE_MS.
 const MIN_TILE_MS = Number(window.ENV?.MIN_TILE_MS || 130);
 
