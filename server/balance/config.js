@@ -54,9 +54,9 @@ module.exports = {
     SWORD:    envNum('SWORD_RANGE_TILES', 1),
     AXE:      envNum('AXE_RANGE_TILES', 1),
     CLUB:     envNum('CLUB_RANGE_TILES', 1),
-    BOW:      envNum('BOW_RANGE_TILES', 5),
-    DISTANCE: envNum('DISTANCE_RANGE_TILES', envNum('BOW_RANGE_TILES', 5)),
-    MAGIC:    envNum('MAGIC_RANGE_TILES', 8),
+    BOW:      envNum('BOW_RANGE_TILES', 4),
+    DISTANCE: envNum('DISTANCE_RANGE_TILES', envNum('BOW_RANGE_TILES', 4)),
+    MAGIC:    envNum('MAGIC_RANGE_TILES', 4),
     MONSTER:  envNum('MONSTER_RANGE_TILES', 1), // << claro e tunável
   },
 

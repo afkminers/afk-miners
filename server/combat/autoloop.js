@@ -38,7 +38,7 @@ async function tickOnce(heroId, targetInstanceId, weaponType) {
   const { grid, cols } = await getGrid(heroPos.map_key);
   const losGrid = { data: grid, cols };
 
-  if (!inReachPx(heroPos, mobPos, weaponType, K)) {
+  if (!inReachPx(heroPos, mobPos, weaponType, K, heroPos.class)) {
     if (DEBUG) console.log('[autoloop] out_of_range');
     return { ok:false, reason:'out_of_range' };
   }
