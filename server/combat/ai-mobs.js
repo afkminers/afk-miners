@@ -12,6 +12,7 @@
   const { hasLineOfSight } = require('./los');
   // const { inReachPx } = require('./geom');
   const { applyMobHit } = require('./service');
+  const { listFreshHeroesByMap } = require('../player/live_positions');
 
   const PX_PER_TILE = 32;
 
@@ -27,7 +28,7 @@
   const CHASE_SPEED_PX_S = 90;          // px/s
   const REPATH_MS = 500;                // recálculo de direção
   const GIVEUP_MS = 8000;               // desiste se perder o alvo por muito tempo
-  const ONLINE_RECENT_MS = 2000;       // presença considerada “viva” nos últimos 2s
+  const ONLINE_RECENT_MS = 4000;       // presença considerada “viva” nos últimos 4s
 
   // Anti-hit fantasma (idades máximas aceitáveis das posições)
   const STALE_HERO_MS = 400;           // herói precisa ter pos ≤ 400ms
@@ -61,8 +62,43 @@
     return hasLineOfSight(losGrid, aCx, aCy, bCx, bCy);
   }
 
-    function chebyPx(ax, ay, bx, by) {
+  function chebyPx(ax, ay, bx, by) {
     return Math.max(Math.abs(ax - bx), Math.abs(ay - by));
+  }
+
+  function normalizeMonsterPos({ x, y, spawnRect }) {
+    let rawX = Number(x ?? 0);
+    let rawY = Number(y ?? 0);
+    if (!Number.isFinite(rawX)) rawX = 0;
+    if (!Number.isFinite(rawY)) rawY = 0;
+
+    let px = Math.round(rawX);
+    let py = Math.round(rawY);
+
+    if (spawnRect && Number.isFinite(spawnRect.x) && Number.isFinite(spawnRect.y)) {
+      const sx = Number(spawnRect.x);
+      const sy = Number(spawnRect.y);
+      const rawW = Number(spawnRect.w);
+      const rawH = Number(spawnRect.h);
+      const sw = Number.isFinite(rawW) && rawW > 0 ? rawW : PX_PER_TILE;
+      const sh = Number.isFinite(rawH) && rawH > 0 ? rawH : PX_PER_TILE;
+
+      const centerX = sx + sw / 2;
+      const centerY = sy + sh / 2;
+
+      const rawDist = Math.hypot(px - centerX, py - centerY);
+
+      const tilePx = Math.round(rawX) * PX_PER_TILE + PX_PER_TILE / 2;
+      const tilePy = Math.round(rawY) * PX_PER_TILE + PX_PER_TILE / 2;
+      const tileDist = Math.hypot(tilePx - centerX, tilePy - centerY);
+
+      if (tileDist + (PX_PER_TILE * 0.75) < rawDist) {
+        px = Math.round(tilePx);
+        py = Math.round(tilePy);
+      }
+    }
+
+    return { x: px, y: py };
   }
 
   function canMobHitNow({ now, mob, tgtPos, losGrid }) {
@@ -102,9 +138,14 @@
             mi.x, mi.y,
             mm.attack_range,      -- tiles
             mm.aggro_range,       -- tiles
-            mm.attack_ms          -- ms
+            mm.attack_ms,         -- ms
+            s.x  AS spawn_x,
+            s.y  AS spawn_y,
+            COALESCE(s.w, 0) AS spawn_w,
+            COALESCE(s.h, 0) AS spawn_h
         FROM monster_instances mi
         JOIN monsters_master mm ON mm.id = mi.monster_id
+        LEFT JOIN spawns s ON s.id = mi.spawn_id
       WHERE mi.state = 'ALIVE' AND mi.hp > 0
     `)) || [];
   }
@@ -112,9 +153,26 @@
   // 💡 Usa player_online (presença real) + última posição daquele player no mesmo mapa.
   //    **Filtra só heróis VIVOS (hp > 0)** para não mirar em morto.
   async function fetchOnlineHeroesInMap(mapKey) {
-    return await all(`
-      SELECT plp.player_id::text AS player_id,
-            ph.id::text         AS hero_id,
+    const now = Date.now();
+    const merged = [];
+    const seen = new Set();
+
+    const live = listFreshHeroesByMap(mapKey, ONLINE_RECENT_MS) || [];
+    for (const lp of live) {
+      if (!lp?.heroId) continue;
+      const hid = String(lp.heroId);
+      if (seen.has(hid)) continue;
+      merged.push({
+        heroId: hid,
+        x: lp.x | 0,
+        y: lp.y | 0,
+        updatedMs: Number(lp.updatedMs || now),
+      });
+      seen.add(hid);
+    }
+
+    const rows = await all(`
+      SELECT ph.id::text         AS hero_id,
             plp.x|0             AS x,
             plp.y|0             AS y,
             (EXTRACT(EPOCH FROM plp.updated_at) * 1000)::bigint AS updated_ms
@@ -125,7 +183,21 @@
         AND ph.hp > 0
         AND plp.updated_at >= NOW() - ($2 || ' milliseconds')::interval
       ORDER BY plp.updated_at DESC
-    `, [mapKey, String(Math.max(ONLINE_RECENT_MS, 60000))]);
+    `, [mapKey, String(Math.max(ONLINE_RECENT_MS, 60000))]) || [];
+
+    for (const row of rows) {
+      const hid = row?.hero_id ? String(row.hero_id) : null;
+      if (!hid || seen.has(hid)) continue;
+      merged.push({
+        heroId: hid,
+        x: row.x | 0,
+        y: row.y | 0,
+        updatedMs: Number(row.updated_ms || now),
+      });
+      seen.add(hid);
+    }
+
+    return merged;
   }
 
 
@@ -152,6 +224,13 @@
     const id = String(instanceId);
     const cur = mobs.get(id) || {};
 
+    const spawnRect = patch.spawnRect || cur.spawnRect || null;
+    const pos = normalizeMonsterPos({
+      x: patch.x ?? cur.x ?? 0,
+      y: patch.y ?? cur.y ?? 0,
+      spawnRect
+    });
+
     // tiles recebidos do SELECT (fallback para valores anteriores/constantes)
     const attackRangeTiles = Number(patch.attack_range ?? cur.attack_range ?? 1);
     const aggroRangeTiles  = Math.max(1, Number(patch.aggro_range ?? cur.aggro_range ?? 8));
@@ -160,8 +239,8 @@
     const next = {
       instanceId: id,
       mapKey: patch.mapKey ?? cur.mapKey ?? null,
-      x: (patch.x ?? cur.x ?? 0) | 0,
-      y: (patch.y ?? cur.y ?? 0) | 0,
+      x: pos.x | 0,
+      y: pos.y | 0,
 
       // runtime
       posUpdatedAt: Number(patch.posUpdatedAt ?? cur.posUpdatedAt ?? Date.now()),
@@ -183,6 +262,9 @@
       attack_range: attackRangeTiles,
       aggro_range:  aggroRangeTiles,
       attack_ms:    attackMs,
+
+      // debug
+      spawnRect,
     };
 
     mobs.set(id, next);
@@ -190,7 +272,7 @@
   }
 
   // Exposta para seed inicial a partir do index.js
-  function seedPosition({ id, x, y, mapKey }) {
+  function seedPosition({ id, x, y, mapKey, spawnRect }) {
     ensureMob(id, {
       x: (x | 0),
       y: (y | 0),
@@ -198,6 +280,7 @@
       mode: 'idle',
       targetHeroId: null,
       posUpdatedAt: Date.now(),
+      spawnRect,
     });
   }
 
@@ -219,7 +302,18 @@
 
     const alive = await fetchAliveMonsters();
     for (const r of alive) {
-      // DB já em PIXELS -> usar direto
+      const sx = Number(r.spawn_x);
+      const sy = Number(r.spawn_y);
+      const hasSpawn = Number.isFinite(sx) && Number.isFinite(sy);
+      const spawnRect = hasSpawn
+        ? {
+            x: sx,
+            y: sy,
+            w: Number(r.spawn_w),
+            h: Number(r.spawn_h)
+          }
+        : null;
+
       ensureMob(r.id, {
         mapKey: r.map_key,
         x: (r.x | 0),
@@ -228,6 +322,7 @@
         attack_range: r.attack_range,  // ainda em tiles (ok)
         aggro_range:  r.aggro_range,   // ainda em tiles (ok)
         attack_ms:    r.attack_ms,
+        spawnRect,
       });
 
     }
@@ -259,15 +354,7 @@
     }
 
     for (const [mapKey, list] of byMap.entries()) {
-      const heroesRows = await fetchOnlineHeroesInMap(mapKey);
-
-      // x/y em pixels + updated_ms (idade da posição)
-      const heroes = heroesRows.map(r => ({
-        heroId: r.hero_id,
-        x: (r.x | 0),
-        y: (r.y | 0),
-        updatedMs: Number(r.updated_ms || 0),
-      }));
+      const heroes = await fetchOnlineHeroesInMap(mapKey);
 
 
       const { grid, cols } = await getGrid(mapKey);
