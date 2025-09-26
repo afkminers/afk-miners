@@ -64,11 +64,32 @@ const CONTENT_PIPELINE = process.env.CONTENT_PIPELINE || 'off';
 // ---- Autoridade de movimento (Tibia-like) ----
 const TILE = 32;
 const SPEED_CAP_PX_S = 180; // ~0.18 s por tile
-const MIN_STEP_MS = Math.floor((TILE / SPEED_CAP_PX_S) * 1000 * 0.75); // 20% folga
+const STEP_LAG_TOLERANCE_MS = Number(process.env.STEP_LAG_TOLERANCE_MS || 90);
+const STEP_MIN_RATIO = (() => {
+  const raw = Number(process.env.STEP_MIN_RATIO);
+  if (Number.isFinite(raw) && raw > 0 && raw < 1) return raw;
+  return 0.7;
+})();
+const MAX_STEP_PX = Math.hypot(TILE, TILE) + 1; // aceita diagonais como no Tibia
 
-function isAdjacentStep(lx, ly, nx, ny) {
-  const dx = Math.abs(nx - lx), dy = Math.abs(ny - ly);
-  return (dx === TILE && dy === 0) || (dx === 0 && dy === TILE);
+function isStepWithinSpeedCap(lx, ly, nx, ny, dtMs) {
+  const dx = nx - lx;
+  const dy = ny - ly;
+  const dist = Math.hypot(dx, dy);
+
+  if (!Number.isFinite(dist)) return false;
+  if (dist === 0) return true; // mesmo tile (keep-alive)
+  if (dist > MAX_STEP_PX) return false; // teleporte (>1 tile) bloqueado
+
+  const minMsForStep = (dist / SPEED_CAP_PX_S) * 1000;
+  const elapsed = Math.max(0, Number(dtMs) || 0);
+
+  if (elapsed >= minMsForStep) return true;
+
+  const minRatioMs = minMsForStep * STEP_MIN_RATIO;
+  if (elapsed < minRatioMs) return false;
+
+  return (elapsed + STEP_LAG_TOLERANCE_MS) >= minMsForStep;
 }
 
 // ---- [MMO] Posições vivas em RAM + flush periódico p/ DB ----
@@ -1192,15 +1213,11 @@ async function seedAIMobsFromDB(aiMobs) {
             const now = Date.now();
             const dt = now - (lts || 0);
 
-            // helpers
             const sameTile = (a, b) => Math.floor(a / TILE) === Math.floor(b / TILE);
-            const okAdj = isAdjacentStep(lx, ly, nx, ny);
-            const okTime = dt >= MIN_STEP_MS;
+            const allowSameTile = sameTile(lx, nx) && sameTile(ly, ny); // keep-alive/quantização
+            const okSpeed = isStepWithinSpeedCap(lx, ly, nx, ny, dt);
 
-            // --- NOVO: se o último ponto não estava quantizado, aceite o 1º passo dentro do MESMO tile
-            const tolerateSameTileFirstStep = (!okAdj && sameTile(lx, nx) && sameTile(ly, ny));
-
-            if (!(okAdj && okTime) && !tolerateSameTileFirstStep) {
+            if (!okSpeed && !allowSameTile) {
               try { ws.send(JSON.stringify({ type: 'pos_snap', x: lx, y: ly, mapKey })); } catch {}
               return;
             }
