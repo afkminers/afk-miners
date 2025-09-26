@@ -10,16 +10,12 @@ const K = require('../balance/config');
 
 const { get, run } = require('../models/db');
 const { getHeroPos, getMonsterPos } = require('./pos');
-const { inReachPx } = require('./geom');
+const { inReachPx, resolveRangeTiles, chebyPx, chebyshevTiles, TILE } = require('./geom');
 const { hasLineOfSight } = require('./los');
 const { getGrid } = require('../maps/grid');
 
 // >>> loot service (em memória)
 const { createLootFromKill } = require('../services/loot');
-
-// Strict por padrão: revalida alcance/LOS a cada hit quando ATTACK_STRICT_MODE=1
-const PERMISSIVE_START = !Boolean(K.ATTACK_STRICT_MODE);
-
 
 const DEBUG = String(process.env.COMBAT_DEBUG || '').trim() === '1';
 
@@ -29,6 +25,61 @@ const attackSessions = new Map();
 
 // quanto cada hit vale (em "tries"), antes de multiplicar pelos rates de classe
 const BASE_TRY_PER_HIT = Number(process.env.SKILL_TRY_PER_HIT || 1);
+
+function buildRangeTelemetry(heroPos, mobPos, weaponType) {
+  if (!heroPos || !mobPos || !weaponType) return null;
+  const rangeTiles = resolveRangeTiles(weaponType, heroPos.class, K);
+  const rangePx = rangeTiles * TILE;
+  const distTiles = chebyshevTiles(heroPos.x, heroPos.y, mobPos.x, mobPos.y);
+  const distPx = chebyPx(heroPos.x, heroPos.y, mobPos.x, mobPos.y);
+  return {
+    range: { tiles: rangeTiles, px: rangePx },
+    distance: { tiles: distTiles, px: distPx },
+  };
+}
+
+function formatRangeMessage(ctx) {
+  if (!ctx) return 'Alvo fora do alcance.';
+  const distTiles = Number(ctx?.distance?.tiles);
+  const rangeTiles = Number(ctx?.range?.tiles);
+  if (Number.isFinite(distTiles) && Number.isFinite(rangeTiles)) {
+    return `Você está longe do alvo (${distTiles} > ${rangeTiles} sqm).`;
+  }
+  const distPx = Number(ctx?.distance?.px);
+  const rangePx = Number(ctx?.range?.px);
+  if (Number.isFinite(distPx) && Number.isFinite(rangePx)) {
+    return `Você está longe do alvo (${Math.round(distPx)} > ${Math.round(rangePx)} px).`;
+  }
+  return 'Você está longe do alvo.';
+}
+
+function buildOutOfRangePayload(ctx) {
+  const message = formatRangeMessage(ctx);
+  return {
+    ok: false,
+    error: 'out_of_range',
+    inRange: false,
+    hasLineOfSight: true,
+    range: ctx?.range || null,
+    distance: ctx?.distance || null,
+    message,
+    warnings: [{ code: 'out_of_range', message }],
+  };
+}
+
+function buildNoLoSPayload(ctx) {
+  const message = 'Sem linha de visão com o alvo.';
+  return {
+    ok: false,
+    error: 'no_los',
+    inRange: ctx?.inRange ?? null,
+    hasLineOfSight: false,
+    range: ctx?.range || null,
+    distance: ctx?.distance || null,
+    message,
+    warnings: [{ code: 'no_los', message }],
+  };
+}
 
 router.use((req, _res, next) => {
   if (DEBUG) console.log(`[combat] ${req.method} ${req.originalUrl}`);
@@ -101,20 +152,17 @@ router.post('/attack/start', express.json(), async (req, res) => {
       return res.json({ ok: false, error: 'no-weapon-equipped' });
     }
 
-    if (!PERMISSIVE_START) {
-      const mobPos = await getMonsterPos(targetInstanceId);
-      if (!mobPos) return res.status(400).json({ ok:false, error:'mob-pos-missing' });
+    const mobPos = await getMonsterPos(targetInstanceId);
+    if (!mobPos) return res.status(404).json({ ok:false, error:'mob-pos-missing' });
 
-      const heroPos = await getHeroPos(heroId, mobPos.map_key);
-      if (!heroPos) return res.status(400).json({ ok:false, error:'hero-pos-missing' });
-      if (heroPos.map_key !== mobPos.map_key) return res.json({ ok:false, error:'map-diff' });
-
-      const { grid, cols } = await getGrid(heroPos.map_key);
-      const losGrid = { data: grid, cols };
-
-      if (!inReachPx(heroPos, mobPos, resolvedWeaponType, K, heroPos.class)) return res.json({ ok:false, error:'out_of_range' });
-      if (!hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y)) return res.json({ ok:false, error:'no_los' });
+    const heroPos = await getHeroPos(heroId, mobPos.map_key);
+    if (!heroPos) return res.status(400).json({ ok:false, error:'hero-pos-missing' });
+    if (heroPos.map_key !== mobPos.map_key) {
+      return res.json({ ok:false, error:'map-diff', message: 'Alvo está em outro mapa.' });
     }
+
+    const { grid, cols } = await getGrid(heroPos.map_key);
+    const losGrid = { data: grid, cols };
 
     attackSessions.set(String(targetInstanceId), {
       heroId: String(heroId),
@@ -122,7 +170,21 @@ router.post('/attack/start', express.json(), async (req, res) => {
       startedAt: Date.now()
     });
 
-    return res.json({ ok:true });
+    const warnings = [];
+    if (!inRange) warnings.push({ code: 'out_of_range', message: formatRangeMessage(context) });
+    if (!hasLos) warnings.push({ code: 'no_los', message: 'Sem linha de visão com o alvo.' });
+
+    const payload = {
+      ok: true,
+      inRange,
+      hasLineOfSight: hasLos,
+      range: telemetry?.range || null,
+      distance: telemetry?.distance || null,
+      warnings,
+    };
+    if (warnings.length) payload.message = warnings[0].message;
+
+    return res.json(payload);
   } catch (e) {
     console.error('[combat] /attack/start error:', e);
     return res.status(500).json({ ok:false, error:'start-failed' });
@@ -183,28 +245,29 @@ router.post('/hit', express.json(), async (req, res) => {
       return res.json({ ok: false, error: 'no-weapon-equipped' });
     }
 
-    // Validate range/LOS first if not permissive
-    if (!PERMISSIVE_START) {
-      const mobPos = await getMonsterPos(raw);
-      if (!mobPos) return res.status(400).json({ ok:false, error:'mob-pos-missing' });
+    const mobPos = await getMonsterPos(raw);
+    if (!mobPos) return res.status(400).json({ ok:false, error:'mob-pos-missing' });
 
-      const heroPos = await getHeroPos(heroIdFromSess, mobPos.map_key);
-      if (!heroPos) return res.status(400).json({ ok:false, error:'hero-pos-missing' });
-      if (heroPos.map_key !== mobPos.map_key) return res.json({ ok:false, error:'map-diff' });
-
-      const { grid, cols } = await getGrid(heroPos.map_key);
-      const losGrid = { data: grid, cols };
-
-      // FIX: usar weaponType (antes referenciava var inexistente)
-      if (!inReachPx(heroPos, mobPos, weaponType, K, heroPos.class)) return res.json({ ok:false, error:'out_of_range' });
-      if (!hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y)) return res.json({ ok:false, error:'no_los' });
+    const heroPos = await getHeroPos(heroIdFromSess, mobPos.map_key);
+    if (!heroPos) return res.status(400).json({ ok:false, error:'hero-pos-missing' });
+    if (heroPos.map_key !== mobPos.map_key) {
+      return res.json({ ok:false, error:'map-diff', message: 'Alvo está em outro mapa.' });
     }
-    
+
+    const { grid, cols } = await getGrid(heroPos.map_key);
+    const losGrid = { data: grid, cols };
+
+    const inRange = inReachPx(heroPos, mobPos, weaponType, K, heroPos.class);
+    const hasLos = hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y);
+    const telemetry = buildRangeTelemetry(heroPos, mobPos, weaponType);
+    const context = telemetry ? { ...telemetry, inRange } : { inRange };
+    }
+
     // Call the service to apply hit
-    const result = await applyHit({ 
-      attackerHeroId: heroIdFromSess, 
-      targetInstanceId: String(raw), 
-      weaponType 
+    const result = await applyHit({
+      attackerHeroId: heroIdFromSess,
+      targetInstanceId: String(raw),
+      weaponType
     });
 
     if (!result.ok) {
@@ -233,6 +296,13 @@ router.post('/hit', express.json(), async (req, res) => {
       hpBefore: result.hpAfter + result.damage, // aproximação
       dead: result.dead
     };
+
+    if (telemetry) {
+      payload.range = telemetry.range;
+      payload.distance = telemetry.distance;
+      payload.inRange = true;
+      payload.hasLineOfSight = true;
+    }
 
     return res.json(payload);
   } catch (e) {
