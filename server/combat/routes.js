@@ -164,11 +164,6 @@ router.post('/attack/start', express.json(), async (req, res) => {
     const { grid, cols } = await getGrid(heroPos.map_key);
     const losGrid = { data: grid, cols };
 
-    const inRange = inReachPx(heroPos, mobPos, resolvedWeaponType, K, heroPos.class);
-    const hasLos = hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y);
-    const telemetry = buildRangeTelemetry(heroPos, mobPos, resolvedWeaponType);
-    const context = telemetry ? { ...telemetry, inRange } : { inRange };
-
     attackSessions.set(String(targetInstanceId), {
       heroId: String(heroId),
       weaponType: resolvedWeaponType,
@@ -266,12 +261,6 @@ router.post('/hit', express.json(), async (req, res) => {
     const hasLos = hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y);
     const telemetry = buildRangeTelemetry(heroPos, mobPos, weaponType);
     const context = telemetry ? { ...telemetry, inRange } : { inRange };
-
-    if (!inRange) {
-      return res.json(buildOutOfRangePayload(context));
-    }
-    if (!hasLos) {
-      return res.json(buildNoLoSPayload({ ...context, hasLineOfSight: false }));
     }
 
     // Call the service to apply hit
