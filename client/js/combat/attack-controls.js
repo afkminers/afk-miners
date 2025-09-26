@@ -1,6 +1,7 @@
 //client/js/combat/attack-controls.js
 import { apiGet, apiPost, getCsrf } from '../api.js';
 import { HeroState } from '../state/hero-state.js';
+import { showCombatMessage, hideCombatMessage } from '../ui/combat-message.js';
 
 
 const combatState = (window.combatState = window.combatState || {
@@ -9,6 +10,8 @@ const combatState = (window.combatState = window.combatState || {
   attacking: false,
   loopHandle: null,
   selectedTargetId: null,
+  lastWarningCode: null,
+  lastWarningAt: 0,
 });
 
 // Check environment flag for RMB attack mode
@@ -95,6 +98,80 @@ async function ensureActiveHero() {
 }
 
 
+function emitCombatWarning(code, message) {
+  if (!message) return;
+  const now = Date.now();
+  if (combatState.lastWarningCode === code && now - (combatState.lastWarningAt || 0) < 700) {
+    return;
+  }
+  combatState.lastWarningCode = code;
+  combatState.lastWarningAt = now;
+  showCombatMessage(message);
+}
+
+function clearCombatWarnings() {
+  combatState.lastWarningCode = null;
+  combatState.lastWarningAt = 0;
+  hideCombatMessage();
+}
+
+function resolveWarningFromPayload(payload) {
+  if (!payload) return null;
+  if (Array.isArray(payload.warnings) && payload.warnings.length) {
+    const first = payload.warnings.find(w => w && (w.message || w.code)) || payload.warnings[0];
+    if (first) {
+      return {
+        code: String(first.code || payload.error || 'warn'),
+        message: first.message || payload.message || null,
+      };
+    }
+  }
+  const code = payload.error ? String(payload.error) : null;
+  const message = payload.message || null;
+  if (!code && !message) return null;
+  return { code: code || 'warn', message };
+}
+
+function friendlyMessage(code, fallback) {
+  const c = String(code || '').toLowerCase();
+  if (c === 'out_of_range' || c === 'out-of-range') return fallback || 'Você está longe do alvo.';
+  if (c === 'no_los' || c === 'no-los') return fallback || 'Sem linha de visão com o alvo.';
+  if (c === 'no-weapon-equipped') return fallback || 'Equipe uma arma para atacar.';
+  if (c === 'map-diff') return fallback || 'Alvo está em outro local.';
+  if (c === 'hero-dead') return fallback || 'Seu herói está morto.';
+  return fallback || null;
+}
+
+function handleCombatWarning(payload, opts = {}) {
+  const info = resolveWarningFromPayload(payload);
+  if (!info) return false;
+
+  const code = info.code || 'warn';
+  const message = friendlyMessage(code, info.message);
+
+  const lower = String(code).toLowerCase();
+  if (lower === 'map-diff' || lower === 'no-weapon-equipped' || lower === 'hero-not-found' || lower === 'hero-dead') {
+    emitCombatWarning(code, message || 'Ação não permitida.');
+    stopAttack({ keepWarnings: true });
+    return true;
+  }
+
+  if (lower === 'out_of_range' || lower === 'out-of-range' || lower === 'no_los' || lower === 'no-los') {
+    emitCombatWarning(code, message || 'Ação não permitida.');
+    return true;
+  }
+
+  if (opts.stopOnFail) {
+    emitCombatWarning(code, message || 'Ação não permitida.');
+    stopAttack({ keepWarnings: true });
+    return true;
+  }
+
+  if (message) emitCombatWarning(code, message);
+  return true;
+}
+
+
 /** resolve alvo no servidor; retorna { id, x, y, hp, maxHp } ou null */
 async function resolveServerTarget(pxClick, pyClick) {
   const map = window.GameScene?.mapKey || 'house';
@@ -164,6 +241,13 @@ async function doHit() {
       damage: 10
     });
 
+    if (!resp?.ok) {
+      if (handleCombatWarning(resp)) return;
+      return;
+    }
+
+    clearCombatWarnings();
+
     const id     = String(resp.id || resp.targetId || combatState.targetId);
     const hpNow  = Number(resp.hpAfter ?? resp.hp);
     const hpPrev = Number(resp.hpBefore ?? (isFinite(hpNow) ? hpNow + Number(resp.dmg || 0) : 0));
@@ -206,7 +290,19 @@ export async function startAttack(targetId) {
 
   try {
     const resp = await apiPost('/api/combat/attack/start', payload);
-    if (!resp?.ok) { console.warn('[attack] start recusado:', resp?.error || 'start-rejected'); return; }
+    if (!resp?.ok) {
+      if (handleCombatWarning(resp, { stopOnFail: true })) return;
+      console.warn('[attack] start recusado:', resp?.error || 'start-rejected');
+      return;
+    }
+
+    if (Array.isArray(resp.warnings) && resp.warnings.length) {
+      handleCombatWarning(resp);
+    } else if (resp?.message) {
+      handleCombatWarning({ error: 'info', message: resp.message });
+    } else {
+      clearCombatWarnings();
+    }
   } catch (err) { console.warn('[attack] start falhou:', err?.message || err); return; }
 
   combatState.targetId = String(targetId);
@@ -216,11 +312,13 @@ export async function startAttack(targetId) {
   window.dispatchEvent(new CustomEvent('combat:attack:start', { detail:{ targetId: combatState.targetId } }));
 }
 
-export async function stopAttack() {
+export async function stopAttack(options = {}) {
+  const opts = (options && typeof options === 'object') ? options : {};
   const hero = await ensureActiveHero();
   combatState.attacking = false;
   combatState.targetId = null;
   window.combatState.selectedTargetId = null;
+  if (!opts.keepWarnings) clearCombatWarnings();
   if (combatState.loopHandle) { clearInterval(combatState.loopHandle); combatState.loopHandle = null; }
   try { await apiPost('/api/combat/attack/stop', { heroId: hero?.id || null }); } catch {}
   window.dispatchEvent(new CustomEvent('combat:attack:stop'));
