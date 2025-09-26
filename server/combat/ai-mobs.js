@@ -61,8 +61,43 @@
     return hasLineOfSight(losGrid, aCx, aCy, bCx, bCy);
   }
 
-    function chebyPx(ax, ay, bx, by) {
+  function chebyPx(ax, ay, bx, by) {
     return Math.max(Math.abs(ax - bx), Math.abs(ay - by));
+  }
+
+  function normalizeMonsterPos({ x, y, spawnRect }) {
+    let rawX = Number(x ?? 0);
+    let rawY = Number(y ?? 0);
+    if (!Number.isFinite(rawX)) rawX = 0;
+    if (!Number.isFinite(rawY)) rawY = 0;
+
+    let px = Math.round(rawX);
+    let py = Math.round(rawY);
+
+    if (spawnRect && Number.isFinite(spawnRect.x) && Number.isFinite(spawnRect.y)) {
+      const sx = Number(spawnRect.x);
+      const sy = Number(spawnRect.y);
+      const rawW = Number(spawnRect.w);
+      const rawH = Number(spawnRect.h);
+      const sw = Number.isFinite(rawW) && rawW > 0 ? rawW : PX_PER_TILE;
+      const sh = Number.isFinite(rawH) && rawH > 0 ? rawH : PX_PER_TILE;
+
+      const centerX = sx + sw / 2;
+      const centerY = sy + sh / 2;
+
+      const rawDist = Math.hypot(px - centerX, py - centerY);
+
+      const tilePx = Math.round(rawX) * PX_PER_TILE + PX_PER_TILE / 2;
+      const tilePy = Math.round(rawY) * PX_PER_TILE + PX_PER_TILE / 2;
+      const tileDist = Math.hypot(tilePx - centerX, tilePy - centerY);
+
+      if (tileDist + (PX_PER_TILE * 0.75) < rawDist) {
+        px = Math.round(tilePx);
+        py = Math.round(tilePy);
+      }
+    }
+
+    return { x: px, y: py };
   }
 
   function canMobHitNow({ now, mob, tgtPos, losGrid }) {
@@ -102,9 +137,14 @@
             mi.x, mi.y,
             mm.attack_range,      -- tiles
             mm.aggro_range,       -- tiles
-            mm.attack_ms          -- ms
+            mm.attack_ms,         -- ms
+            s.x  AS spawn_x,
+            s.y  AS spawn_y,
+            COALESCE(s.w, 0) AS spawn_w,
+            COALESCE(s.h, 0) AS spawn_h
         FROM monster_instances mi
         JOIN monsters_master mm ON mm.id = mi.monster_id
+        LEFT JOIN spawns s ON s.id = mi.spawn_id
       WHERE mi.state = 'ALIVE' AND mi.hp > 0
     `)) || [];
   }
@@ -152,6 +192,13 @@
     const id = String(instanceId);
     const cur = mobs.get(id) || {};
 
+    const spawnRect = patch.spawnRect || cur.spawnRect || null;
+    const pos = normalizeMonsterPos({
+      x: patch.x ?? cur.x ?? 0,
+      y: patch.y ?? cur.y ?? 0,
+      spawnRect
+    });
+
     // tiles recebidos do SELECT (fallback para valores anteriores/constantes)
     const attackRangeTiles = Number(patch.attack_range ?? cur.attack_range ?? 1);
     const aggroRangeTiles  = Math.max(1, Number(patch.aggro_range ?? cur.aggro_range ?? 8));
@@ -160,8 +207,8 @@
     const next = {
       instanceId: id,
       mapKey: patch.mapKey ?? cur.mapKey ?? null,
-      x: (patch.x ?? cur.x ?? 0) | 0,
-      y: (patch.y ?? cur.y ?? 0) | 0,
+      x: pos.x | 0,
+      y: pos.y | 0,
 
       // runtime
       posUpdatedAt: Number(patch.posUpdatedAt ?? cur.posUpdatedAt ?? Date.now()),
@@ -183,6 +230,9 @@
       attack_range: attackRangeTiles,
       aggro_range:  aggroRangeTiles,
       attack_ms:    attackMs,
+
+      // debug
+      spawnRect,
     };
 
     mobs.set(id, next);
@@ -190,7 +240,7 @@
   }
 
   // Exposta para seed inicial a partir do index.js
-  function seedPosition({ id, x, y, mapKey }) {
+  function seedPosition({ id, x, y, mapKey, spawnRect }) {
     ensureMob(id, {
       x: (x | 0),
       y: (y | 0),
@@ -198,6 +248,7 @@
       mode: 'idle',
       targetHeroId: null,
       posUpdatedAt: Date.now(),
+      spawnRect,
     });
   }
 
@@ -219,7 +270,18 @@
 
     const alive = await fetchAliveMonsters();
     for (const r of alive) {
-      // DB já em PIXELS -> usar direto
+      const sx = Number(r.spawn_x);
+      const sy = Number(r.spawn_y);
+      const hasSpawn = Number.isFinite(sx) && Number.isFinite(sy);
+      const spawnRect = hasSpawn
+        ? {
+            x: sx,
+            y: sy,
+            w: Number(r.spawn_w),
+            h: Number(r.spawn_h)
+          }
+        : null;
+
       ensureMob(r.id, {
         mapKey: r.map_key,
         x: (r.x | 0),
@@ -228,6 +290,7 @@
         attack_range: r.attack_range,  // ainda em tiles (ok)
         aggro_range:  r.aggro_range,   // ainda em tiles (ok)
         attack_ms:    r.attack_ms,
+        spawnRect,
       });
 
     }
