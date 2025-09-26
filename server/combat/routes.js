@@ -112,7 +112,7 @@ router.post('/attack/start', express.json(), async (req, res) => {
       const { grid, cols } = await getGrid(heroPos.map_key);
       const losGrid = { data: grid, cols };
 
-      if (!inReachPx(heroPos, mobPos, resolvedWeaponType, K)) return res.json({ ok:false, error:'out_of_range' });
+      if (!inReachPx(heroPos, mobPos, resolvedWeaponType, K, heroPos.class)) return res.json({ ok:false, error:'out_of_range' });
       if (!hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y)) return res.json({ ok:false, error:'no_los' });
     }
 
@@ -196,7 +196,7 @@ router.post('/hit', express.json(), async (req, res) => {
       const losGrid = { data: grid, cols };
 
       // FIX: usar weaponType (antes referenciava var inexistente)
-      if (!inReachPx(heroPos, mobPos, weaponType, K)) return res.json({ ok:false, error:'out_of_range' });
+      if (!inReachPx(heroPos, mobPos, weaponType, K, heroPos.class)) return res.json({ ok:false, error:'out_of_range' });
       if (!hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y)) return res.json({ ok:false, error:'no_los' });
     }
     

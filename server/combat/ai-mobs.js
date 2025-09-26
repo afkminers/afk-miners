@@ -12,6 +12,7 @@
   const { hasLineOfSight } = require('./los');
   // const { inReachPx } = require('./geom');
   const { applyMobHit } = require('./service');
+  const { listFreshHeroesByMap } = require('../player/live_positions');
 
   const PX_PER_TILE = 32;
 
@@ -27,7 +28,7 @@
   const CHASE_SPEED_PX_S = 90;          // px/s
   const REPATH_MS = 500;                // recálculo de direção
   const GIVEUP_MS = 8000;               // desiste se perder o alvo por muito tempo
-  const ONLINE_RECENT_MS = 2000;       // presença considerada “viva” nos últimos 2s
+  const ONLINE_RECENT_MS = 4000;       // presença considerada “viva” nos últimos 4s
 
   // Anti-hit fantasma (idades máximas aceitáveis das posições)
   const STALE_HERO_MS = 400;           // herói precisa ter pos ≤ 400ms
@@ -152,9 +153,26 @@
   // 💡 Usa player_online (presença real) + última posição daquele player no mesmo mapa.
   //    **Filtra só heróis VIVOS (hp > 0)** para não mirar em morto.
   async function fetchOnlineHeroesInMap(mapKey) {
-    return await all(`
-      SELECT plp.player_id::text AS player_id,
-            ph.id::text         AS hero_id,
+    const now = Date.now();
+    const merged = [];
+    const seen = new Set();
+
+    const live = listFreshHeroesByMap(mapKey, ONLINE_RECENT_MS) || [];
+    for (const lp of live) {
+      if (!lp?.heroId) continue;
+      const hid = String(lp.heroId);
+      if (seen.has(hid)) continue;
+      merged.push({
+        heroId: hid,
+        x: lp.x | 0,
+        y: lp.y | 0,
+        updatedMs: Number(lp.updatedMs || now),
+      });
+      seen.add(hid);
+    }
+
+    const rows = await all(`
+      SELECT ph.id::text         AS hero_id,
             plp.x|0             AS x,
             plp.y|0             AS y,
             (EXTRACT(EPOCH FROM plp.updated_at) * 1000)::bigint AS updated_ms
@@ -165,7 +183,21 @@
         AND ph.hp > 0
         AND plp.updated_at >= NOW() - ($2 || ' milliseconds')::interval
       ORDER BY plp.updated_at DESC
-    `, [mapKey, String(Math.max(ONLINE_RECENT_MS, 60000))]);
+    `, [mapKey, String(Math.max(ONLINE_RECENT_MS, 60000))]) || [];
+
+    for (const row of rows) {
+      const hid = row?.hero_id ? String(row.hero_id) : null;
+      if (!hid || seen.has(hid)) continue;
+      merged.push({
+        heroId: hid,
+        x: row.x | 0,
+        y: row.y | 0,
+        updatedMs: Number(row.updated_ms || now),
+      });
+      seen.add(hid);
+    }
+
+    return merged;
   }
 
 
@@ -322,15 +354,7 @@
     }
 
     for (const [mapKey, list] of byMap.entries()) {
-      const heroesRows = await fetchOnlineHeroesInMap(mapKey);
-
-      // x/y em pixels + updated_ms (idade da posição)
-      const heroes = heroesRows.map(r => ({
-        heroId: r.hero_id,
-        x: (r.x | 0),
-        y: (r.y | 0),
-        updatedMs: Number(r.updated_ms || 0),
-      }));
+      const heroes = await fetchOnlineHeroesInMap(mapKey);
 
 
       const { grid, cols } = await getGrid(mapKey);
