@@ -1,6 +1,7 @@
 //client/js/combat/attack-controls.js
 import { apiGet, apiPost, getCsrf } from '../api.js';
 import { HeroState } from '../state/hero-state.js';
+import { showCombatMessage, hideCombatMessage } from '../ui/combat-message.js';
 
 import { showCombatMessage, hideCombatMessage } from '../ui/combat-message.js';
 
@@ -14,6 +15,10 @@ const combatState = (window.combatState = window.combatState || {
   attacking: false,
   loopHandle: null,
   selectedTargetId: null,
+
+  lastWarningCode: null,
+  lastWarningAt: 0,
+
 
   lastWarningCode: null,
   lastWarningAt: 0,
@@ -360,22 +365,6 @@ async function doHit() {
     clearCombatWarnings();
 
 
-    if (resp?.range) combatState.rangeInfo = resp.range;
-    if (resp?.distance) combatState.distanceInfo = resp.distance;
-
-    if (!resp || resp.ok === false) {
-      if (resp?.error === 'out_of_range') {
-        warnRange(resp);
-        return;
-      }
-      if (resp?.error === 'no_los') {
-        warnLos(resp);
-        return;
-      }
-      if (resp?.message) pushCombatLog(resp.message);
-      return;
-    }
-
 
     const id     = String(resp.id || resp.targetId || combatState.targetId);
     const hpNow  = Number(resp.hpAfter ?? resp.hp);
@@ -433,27 +422,6 @@ export async function startAttack(targetId) {
     } else {
       clearCombatWarnings();
 
-      console.warn('[attack] start recusado:', resp?.error || 'start-rejected');
-      if (resp?.error === 'out_of_range') warnRange(resp);
-      if (resp?.error === 'no_los') warnLos(resp);
-      if (resp?.message && resp?.error !== 'out_of_range' && resp?.error !== 'no_los') pushCombatLog(resp.message);
-      return;
-    }
-
-    combatState.rangeInfo = resp.range || null;
-    combatState.distanceInfo = resp.distance || null;
-
-    if (resp?.warnings) {
-      if (hasWarning(resp, 'out_of_range') || resp?.inRange === false) {
-        warnRange(resp, { warning: extractWarning(resp, 'out_of_range') });
-      }
-      if (hasWarning(resp, 'no_los') || resp?.hasLineOfSight === false) {
-        warnLos(resp, { warning: extractWarning(resp, 'no_los') });
-      }
-    } else {
-      if (resp?.inRange === false) warnRange(resp);
-      if (resp?.hasLineOfSight === false) warnLos(resp);
-
     }
   } catch (err) { console.warn('[attack] start falhou:', err?.message || err); return; }
 
@@ -472,11 +440,6 @@ export async function stopAttack(options = {}) {
   window.combatState.selectedTargetId = null;
 
   if (!opts.keepWarnings) clearCombatWarnings();
-
-  combatState.rangeInfo = null;
-  combatState.distanceInfo = null;
-  combatState.lastRangeWarningAt = 0;
-  combatState.lastLosWarningAt = 0;
 
   if (combatState.loopHandle) { clearInterval(combatState.loopHandle); combatState.loopHandle = null; }
   try { await apiPost('/api/combat/attack/stop', { heroId: hero?.id || null }); } catch {}

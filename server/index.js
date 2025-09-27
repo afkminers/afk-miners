@@ -99,11 +99,21 @@ function isStepWithinSpeedCap(lx, ly, nx, ny, dtMs) {
 }
 
 // ---- [MMO] Posições vivas em RAM + flush periódico p/ DB ----
+
+const {
+  livePositions,
+  setLivePlayerPosition,
+  getLivePlayerPosition,
+  removeLivePlayerPosition,
+} = require('./state/live-positions');
+
 const FLUSH_POS_INTERVAL_MS = Number(process.env.FLUSH_POS_INTERVAL_MS || 1000);
 let posFlushTimer = null;
 
 async function flushOnePlayerPos(pid) {
-  const p = getLivePosition(pid);
+
+  const p = getLivePlayerPosition(pid);
+
   if (!p) return;
   try {
     await run(`
@@ -1090,28 +1100,11 @@ async function seedAIMobsFromDB(aiMobs) {
                 [ws._player.id, ws._mapKey]
               );
               if (row2 && Number.isFinite(row2.x) && Number.isFinite(row2.y)) {
-                const snapTs = Date.now();
-                const px = row2.x | 0;
-                const py = row2.y | 0;
-                let heroAlive = true;
-                try {
-                  const heroId = await resolveActiveHeroId(ws._player.id);
-                  if (heroId) {
-                    ws._activeHeroId = String(heroId);
-                    const aliveRow = await get(`SELECT alive FROM player_heroes WHERE id=$1`, [heroId]);
-                    heroAlive = !(aliveRow && aliveRow.alive === false);
-                  }
-                } catch {}
-                ws._heroAlive = heroAlive;
-                setLivePosition(ws._player.id, {
-                  x: px,
-                  y: py,
-                  mapKey: ws._mapKey,
-                  heroId: ws._activeHeroId || null,
-                  heroAlive,
-                  ts: snapTs,
-                });
-                ws._pos = { x: px, y: py, mapKey: ws._mapKey, ts: snapTs };
+
+                const px = row2.x | 0, py = row2.y | 0;
+                setLivePlayerPosition(ws._player.id, { x: px, y: py, mapKey: ws._mapKey, ts: Date.now() });
+                ws._pos = { x: px, y: py, mapKey: ws._mapKey, ts: Date.now() };
+
                 try { ws.send(JSON.stringify({ type: 'pos_snap', x: px, y: py, mapKey: ws._mapKey })); } catch {}
               }
             }
@@ -1235,20 +1228,16 @@ async function seedAIMobsFromDB(aiMobs) {
 
             // Base anterior (RAM ou bootstrap)
             if (!ws._pos || ws._pos.mapKey !== mapKey) {
-              const prev = getLivePosition(pid);
+
+              const prev = getLivePlayerPosition(pid);
+
               if (prev && prev.mapKey === mapKey) {
                 ws._pos = { x: prev.x | 0, y: prev.y | 0, mapKey: prev.mapKey, ts: prev.ts || Date.now() };
               } else {
-                const baseTs = Date.now();
-                ws._pos = { x: nx, y: ny, mapKey, ts: baseTs };
-                setLivePosition(pid, {
-                  x: nx,
-                  y: ny,
-                  mapKey,
-                  heroId: ws._activeHeroId || activeHeroId || null,
-                  heroAlive: heroAlive !== false,
-                  ts: baseTs,
-                });
+
+                ws._pos = { x: nx, y: ny, mapKey, ts: Date.now() };
+                setLivePlayerPosition(pid, ws._pos);
+
               }
             }
 
@@ -1267,14 +1256,9 @@ async function seedAIMobsFromDB(aiMobs) {
 
             // Autoriza: atualiza RAM
             ws._pos = { x: nx, y: ny, mapKey, ts: now };
-            setLivePosition(pid, {
-              x: nx,
-              y: ny,
-              mapKey,
-              heroId: ws._activeHeroId || activeHeroId || null,
-              heroAlive: heroAlive !== false,
-              ts: now,
-            });
+
+            setLivePlayerPosition(pid, { x: nx, y: ny, mapKey, ts: now });
+
             ws._mapKey = mapKey;
 
             // presença online
@@ -1314,7 +1298,9 @@ async function seedAIMobsFromDB(aiMobs) {
           if (ws._player?.id) {
             // flush posição no logout + remove presença
             flushOnePlayerPos(ws._player.id).catch(() => {});
-            removeLivePosition(ws._player.id);
+
+            removeLivePlayerPosition(ws._player.id);
+
             markOfflineByPlayer(ws._player.id).catch(() => {});
           }
         });
