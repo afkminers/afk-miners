@@ -72,12 +72,17 @@ function isAdjacentStep(lx, ly, nx, ny) {
 }
 
 // ---- [MMO] Posições vivas em RAM + flush periódico p/ DB ----
-const livePositions = new Map(); // playerId -> { x, y, mapKey, ts }
+const {
+  livePositions,
+  setLivePlayerPosition,
+  getLivePlayerPosition,
+  removeLivePlayerPosition,
+} = require('./state/live-positions');
 const FLUSH_POS_INTERVAL_MS = Number(process.env.FLUSH_POS_INTERVAL_MS || 1000);
 let posFlushTimer = null;
 
 async function flushOnePlayerPos(pid) {
-  const p = livePositions.get(String(pid));
+  const p = getLivePlayerPosition(pid);
   if (!p) return;
   try {
     await run(`
@@ -1063,7 +1068,7 @@ async function seedAIMobsFromDB(aiMobs) {
               );
               if (row2 && Number.isFinite(row2.x) && Number.isFinite(row2.y)) {
                 const px = row2.x | 0, py = row2.y | 0;
-                livePositions.set(String(ws._player.id), { x: px, y: py, mapKey: ws._mapKey, ts: Date.now() });
+                setLivePlayerPosition(ws._player.id, { x: px, y: py, mapKey: ws._mapKey, ts: Date.now() });
                 ws._pos = { x: px, y: py, mapKey: ws._mapKey, ts: Date.now() };
                 try { ws.send(JSON.stringify({ type: 'pos_snap', x: px, y: py, mapKey: ws._mapKey })); } catch {}
               }
@@ -1179,12 +1184,12 @@ async function seedAIMobsFromDB(aiMobs) {
 
             // Base anterior (RAM ou bootstrap)
             if (!ws._pos || ws._pos.mapKey !== mapKey) {
-              const prev = livePositions.get(String(pid));
+              const prev = getLivePlayerPosition(pid);
               if (prev && prev.mapKey === mapKey) {
                 ws._pos = { ...prev };
               } else {
                 ws._pos = { x: nx, y: ny, mapKey, ts: Date.now() };
-                livePositions.set(String(pid), { ...ws._pos });
+                setLivePlayerPosition(pid, ws._pos);
               }
             }
 
@@ -1207,7 +1212,7 @@ async function seedAIMobsFromDB(aiMobs) {
 
             // Autoriza: atualiza RAM
             ws._pos = { x: nx, y: ny, mapKey, ts: now };
-            livePositions.set(String(pid), { x: nx, y: ny, mapKey, ts: now });
+            setLivePlayerPosition(pid, { x: nx, y: ny, mapKey, ts: now });
             ws._mapKey = mapKey;
 
             // presença online
@@ -1247,7 +1252,7 @@ async function seedAIMobsFromDB(aiMobs) {
           if (ws._player?.id) {
             // flush posição no logout + remove presença
             flushOnePlayerPos(ws._player.id).catch(() => {});
-            livePositions.delete(String(ws._player.id));
+            removeLivePlayerPosition(ws._player.id);
             markOfflineByPlayer(ws._player.id).catch(() => {});
           }
         });
