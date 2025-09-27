@@ -47,6 +47,23 @@ async function getHeroPos(heroId, preferMapKey = null) {
     }
   }
 
+  const classKey = owner.class || null;
+  const live = getLivePlayerPosition(owner.playerId);
+  let liveCandidate = null;
+  if (live) {
+    liveCandidate = {
+      x: Number(live.x || 0) | 0,
+      y: Number(live.y || 0) | 0,
+      map_key: String(live.mapKey || live.map_key || preferMapKey || 'house'),
+      class: classKey,
+      source: 'live',
+      updatedAt: Number(live.ts || Date.now()),
+    };
+    if (!preferMapKey || liveCandidate.map_key === preferMapKey) {
+      return liveCandidate;
+    }
+  }
+
   // Se não soubermos o mapa ainda, retorna a última posição global (qualquer mapa)
   if (!preferMapKey) {
     const any = await get(

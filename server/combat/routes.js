@@ -153,6 +153,84 @@ function buildNoLoSPayload(ctx) {
 }
 
 
+function buildRangeTelemetry(heroPos, mobPos, weaponType) {
+  if (!heroPos || !mobPos || !weaponType) return null;
+  const hx = Number(heroPos.x || 0) | 0;
+  const hy = Number(heroPos.y || 0) | 0;
+  const mx = Number(mobPos.x || 0) | 0;
+  const my = Number(mobPos.y || 0) | 0;
+  const rangeTiles = resolveRangeTiles(weaponType, heroPos.class, K);
+  const rangePx = rangeTiles * TILE;
+  const distTiles = chebyshevTiles(hx, hy, mx, my);
+  const distPx = chebyPx(hx, hy, mx, my);
+  return {
+    range: { tiles: rangeTiles, px: rangePx },
+    distance: { tiles: distTiles, px: distPx },
+    hero: {
+      x: hx,
+      y: hy,
+      mapKey: heroPos.map_key || heroPos.mapKey || null,
+      updatedAt: Number(heroPos.updatedAt || 0) || null,
+      source: heroPos.source || null,
+    },
+    monster: {
+      x: mx,
+      y: my,
+      mapKey: mobPos.map_key || mobPos.mapKey || null,
+    },
+    computedAt: Date.now(),
+  };
+}
+
+function formatRangeMessage(ctx) {
+  if (!ctx) return 'Você está longe do alvo.';
+  const distTiles = Number(ctx?.distance?.tiles);
+  const rangeTiles = Number(ctx?.range?.tiles);
+  if (Number.isFinite(distTiles) && Number.isFinite(rangeTiles)) {
+    return `Você está longe do alvo (${distTiles} > ${rangeTiles} sqm).`;
+  }
+  const distPx = Number(ctx?.distance?.px);
+  const rangePx = Number(ctx?.range?.px);
+  if (Number.isFinite(distPx) && Number.isFinite(rangePx)) {
+    return `Você está longe do alvo (${Math.round(distPx)} > ${Math.round(rangePx)} px).`;
+  }
+  return 'Você está longe do alvo.';
+}
+
+function buildOutOfRangePayload(ctx) {
+  const message = formatRangeMessage(ctx);
+  return {
+    ok: false,
+    error: 'out_of_range',
+    inRange: false,
+    hasLineOfSight: ctx?.hasLineOfSight ?? true,
+    range: ctx?.range || null,
+    distance: ctx?.distance || null,
+    hero: ctx?.hero || null,
+    monster: ctx?.monster || null,
+    computedAt: ctx?.computedAt || Date.now(),
+    message,
+    warnings: [{ code: 'out_of_range', message }],
+  };
+}
+
+function buildNoLoSPayload(ctx) {
+  const message = 'Sem linha de visão com o alvo.';
+  return {
+    ok: false,
+    error: 'no_los',
+    inRange: ctx?.inRange ?? null,
+    hasLineOfSight: false,
+    range: ctx?.range || null,
+    distance: ctx?.distance || null,
+    hero: ctx?.hero || null,
+    monster: ctx?.monster || null,
+    computedAt: ctx?.computedAt || Date.now(),
+    message,
+    warnings: [{ code: 'no_los', message }],
+  };
+}
+
 router.use((req, _res, next) => {
   if (DEBUG) console.log(`[combat] ${req.method} ${req.originalUrl}`);
   next();
@@ -231,6 +309,7 @@ router.post('/attack/start', express.json(), async (req, res) => {
 
     const { grid, cols } = await getGrid(heroPos.map_key);
     const losGrid = { data: grid, cols };
+
 
     const inRange = inReachPx(heroPos, mobPos, resolvedWeaponType, K, heroPos.class);
     const hasLos = hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y);

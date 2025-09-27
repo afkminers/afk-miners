@@ -3,10 +3,6 @@ import { apiGet, apiPost, getCsrf } from '../api.js';
 import { HeroState } from '../state/hero-state.js';
 import { showCombatMessage, hideCombatMessage } from '../ui/combat-message.js';
 
-import { showCombatMessage, hideCombatMessage } from '../ui/combat-message.js';
-
-import '../ui/combat-range-hint.js';
-
 
 
 const combatState = (window.combatState = window.combatState || {
@@ -18,15 +14,6 @@ const combatState = (window.combatState = window.combatState || {
 
   lastWarningCode: null,
   lastWarningAt: 0,
-
-
-  lastWarningCode: null,
-  lastWarningAt: 0,
-
-  rangeInfo: null,
-  distanceInfo: null,
-  lastRangeWarningAt: 0,
-  lastLosWarningAt: 0,
 
 });
 
@@ -365,7 +352,6 @@ async function doHit() {
     clearCombatWarnings();
 
 
-
     const id     = String(resp.id || resp.targetId || combatState.targetId);
     const hpNow  = Number(resp.hpAfter ?? resp.hp);
     const hpPrev = Number(resp.hpBefore ?? (isFinite(hpNow) ? hpNow + Number(resp.dmg || 0) : 0));
@@ -453,10 +439,17 @@ function attachControls() {
   const canvas = pickCanvas(); if (!canvas) return;
 
   // Handle context menu - prevent browser menu but allow our RMB logic
-  canvas.addEventListener('contextmenu', (e) => { 
-    e.preventDefault(); 
-    // Don't stop attack immediately here - let the mousedown handler decide
-  });
+  const suppressContextMenu = (e) => {
+    if (!ATTACK_USE_RMB) return;
+    const target = e.target;
+    if (target === canvas || canvas.contains(target)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  document.addEventListener('contextmenu', suppressContextMenu, true);
+  canvas.addEventListener('contextmenu', suppressContextMenu);
 
   const onPointerDown = async (e) => {
     const hero = await ensureActiveHero(); 
