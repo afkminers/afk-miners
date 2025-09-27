@@ -313,8 +313,8 @@ async function bootstrapContentTables() {
     // posição do player por mapa
     await run(`
       CREATE TABLE IF NOT EXISTS player_last_pos (
-        player_id BIGINT NOT NULL,
-        map_key   TEXT   NOT NULL,
+        player_id TEXT NOT NULL,
+        map_key   TEXT NOT NULL,
         x INTEGER NOT NULL,
         y INTEGER NOT NULL,
         last_seq BIGINT DEFAULT 0,
