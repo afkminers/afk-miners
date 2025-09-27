@@ -28,6 +28,7 @@ async function getPlayerLastPos(playerId, mapKey) {
 async function getHeroPos(heroId, preferMapKey = null) {
   const owner = await getHeroOwner(heroId);
   if (!owner) return null;
+  const heroClass = owner.class ? String(owner.class).toUpperCase() : null;
 
   const classKey = owner.class || null;
   const live = getLivePlayerPosition(owner.playerId);
@@ -56,6 +57,7 @@ async function getHeroPos(heroId, preferMapKey = null) {
         LIMIT 1`,
       [owner.playerId]
     );
+
     if (any) {
       return {
         x: Number(any.x || 0) | 0,
@@ -67,10 +69,12 @@ async function getHeroPos(heroId, preferMapKey = null) {
       };
     }
     return liveCandidate;
+
   }
 
   // Preferimos a posição já no mapa do alvo
   const row = await getPlayerLastPos(owner.playerId, preferMapKey);
+
   if (row) {
     return {
       x: Number(row.x || 0) | 0,
@@ -82,6 +86,7 @@ async function getHeroPos(heroId, preferMapKey = null) {
     };
   }
 
+
   // Fallback: última posição em qualquer mapa
   const any = await get(
     `SELECT x, y, map_key AS "mapKey", updated_at AS "updatedAt"
@@ -91,6 +96,7 @@ async function getHeroPos(heroId, preferMapKey = null) {
       LIMIT 1`,
     [owner.playerId]
   );
+
   if (any) {
     return {
       x: Number(any.x || 0) | 0,
@@ -103,6 +109,7 @@ async function getHeroPos(heroId, preferMapKey = null) {
   }
 
   return liveCandidate;
+
 }
 
 /** Posição do monstro pela instância */
