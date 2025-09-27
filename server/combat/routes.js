@@ -15,10 +15,12 @@ const { hasLineOfSight } = require('./los');
 const { getGrid } = require('../maps/grid');
 const { applyHit, respawnHero } = require('./service');
 
-// >>> loot service (em memória) — ok manter import, mesmo sem uso agora
+// >>> loot service (em memória) — ok manter import mesmo sem uso agora
 const { createLootFromKill } = require('../services/loot');
 
 const DEBUG = String(process.env.COMBAT_DEBUG || '').trim() === '1';
+// Strict por padrão: quando ATTACK_STRICT_MODE=1 o /attack/start não inicia fora de alcance/LOS
+const PERMISSIVE_START = !Boolean(K.ATTACK_STRICT_MODE);
 
 // ===== SESSÕES DE ATAQUE EM MEMÓRIA =====
 // chave: targetInstanceId -> { heroId, weaponType, startedAt }
@@ -30,7 +32,6 @@ const attackSessions = new Map();
 function buildRangeTelemetry(heroPos, mobPos, weaponType) {
   if (!heroPos || !mobPos || !weaponType) return null;
 
-  // usa números inteiros (evita NaN)
   const hx = Number(heroPos.x || 0) | 0;
   const hy = Number(heroPos.y || 0) | 0;
   const mx = Number(mobPos.x || 0) | 0;
@@ -196,6 +197,22 @@ router.post('/attack/start', express.json(), async (req, res) => {
     const warnings = [];
     if (!inRange) warnings.push({ code:'out_of_range', message: formatRangeMessage({ ...telemetry, inRange }) });
     if (!hasLos) warnings.push({ code:'no_los', message: 'Sem linha de visão com o alvo.' });
+
+    // Modo estrito: não inicia sessão se inválido; Modo permissivo: inicia e apenas avisa
+    if (!PERMISSIVE_START && warnings.length > 0) {
+      return res.json({
+        ok: true,
+        inRange,
+        hasLineOfSight: hasLos,
+        range: telemetry?.range || null,
+        distance: telemetry?.distance || null,
+        hero: telemetry?.hero || null,
+        monster: telemetry?.monster || null,
+        computedAt: telemetry?.computedAt || Date.now(),
+        warnings,
+        message: warnings[0]?.message,
+      });
+    }
 
     // Registra sessão
     attackSessions.set(String(targetInstanceId), {
