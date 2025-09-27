@@ -8,11 +8,13 @@ const router = express.Router();
 const K = require('../balance/config');
 // const autoloop = require('./autoloop'); // ← desativado por enquanto
 
-const { get, run } = require('../models/db');
+const { get } = require('../models/db');
 const { getHeroPos, getMonsterPos } = require('./pos');
 const { inReachPx, resolveRangeTiles, chebyPx, chebyshevTiles, TILE } = require('./geom');
 const { hasLineOfSight } = require('./los');
 const { getGrid } = require('../maps/grid');
+const { applyHit, respawnHero } = require('./service');
+
 
 // >>> loot service (em memória)
 const { createLootFromKill } = require('../services/loot');
@@ -24,8 +26,132 @@ const DEBUG = String(process.env.COMBAT_DEBUG || '').trim() === '1';
 // chave: targetInstanceId -> { heroId, weaponType, startedAt }
 const attackSessions = new Map();
 
-// quanto cada hit vale (em "tries"), antes de multiplicar pelos rates de classe
-const BASE_TRY_PER_HIT = Number(process.env.SKILL_TRY_PER_HIT || 1);
+/* =========================================================================
+   Telemetria / mensagens
+   ========================================================================== */
+function buildRangeTelemetry(heroPos, mobPos, weaponType) {
+  if (!heroPos || !mobPos || !weaponType) return null;
+  const rangeTiles = resolveRangeTiles(weaponType, heroPos.class, K);
+  const rangePx = rangeTiles * TILE;
+  const distTiles = chebyshevTiles(heroPos.x, heroPos.y, mobPos.x, mobPos.y);
+  const distPx = chebyPx(heroPos.x, heroPos.y, mobPos.x, mobPos.y);
+  return {
+    range: { tiles: rangeTiles, px: rangePx },
+    distance: { tiles: distTiles, px: distPx },
+  };
+}
+
+function formatRangeMessage(ctx) {
+  if (!ctx) return 'Você está longe do alvo.';
+  const distTiles = Number(ctx?.distance?.tiles);
+  const rangeTiles = Number(ctx?.range?.tiles);
+  if (Number.isFinite(distTiles) && Number.isFinite(rangeTiles)) {
+    return `Você está longe do alvo (${distTiles} > ${rangeTiles} sqm).`;
+  }
+  const distPx = Number(ctx?.distance?.px);
+  const rangePx = Number(ctx?.range?.px);
+  if (Number.isFinite(distPx) && Number.isFinite(rangePx)) {
+    return `Você está longe do alvo (${Math.round(distPx)} > ${Math.round(rangePx)} px).`;
+  }
+  return 'Você está longe do alvo.';
+}
+
+function buildOutOfRangePayload(ctx) {
+  const message = formatRangeMessage(ctx);
+  return {
+    ok: false,
+    error: 'out_of_range',
+    inRange: false,
+    hasLineOfSight: ctx?.hasLineOfSight ?? true,
+    range: ctx?.range || null,
+    distance: ctx?.distance || null,
+    message,
+    warnings: [{ code: 'out_of_range', message }],
+  };
+}
+
+
+function buildRangeTelemetry(heroPos, mobPos, weaponType) {
+  if (!heroPos || !mobPos || !weaponType) return null;
+  const hx = Number(heroPos.x || 0) | 0;
+  const hy = Number(heroPos.y || 0) | 0;
+  const mx = Number(mobPos.x || 0) | 0;
+  const my = Number(mobPos.y || 0) | 0;
+  const rangeTiles = resolveRangeTiles(weaponType, heroPos.class, K);
+  const rangePx = rangeTiles * TILE;
+  const distTiles = chebyshevTiles(hx, hy, mx, my);
+  const distPx = chebyPx(hx, hy, mx, my);
+  return {
+    range: { tiles: rangeTiles, px: rangePx },
+    distance: { tiles: distTiles, px: distPx },
+    hero: {
+      x: hx,
+      y: hy,
+      mapKey: heroPos.map_key || heroPos.mapKey || null,
+      updatedAt: Number(heroPos.updatedAt || 0) || null,
+      source: heroPos.source || null,
+    },
+    monster: {
+      x: mx,
+      y: my,
+      mapKey: mobPos.map_key || mobPos.mapKey || null,
+    },
+    computedAt: Date.now(),
+  };
+}
+
+function formatRangeMessage(ctx) {
+  if (!ctx) return 'Você está longe do alvo.';
+  const distTiles = Number(ctx?.distance?.tiles);
+  const rangeTiles = Number(ctx?.range?.tiles);
+  if (Number.isFinite(distTiles) && Number.isFinite(rangeTiles)) {
+    return `Você está longe do alvo (${distTiles} > ${rangeTiles} sqm).`;
+  }
+  const distPx = Number(ctx?.distance?.px);
+  const rangePx = Number(ctx?.range?.px);
+  if (Number.isFinite(distPx) && Number.isFinite(rangePx)) {
+    return `Você está longe do alvo (${Math.round(distPx)} > ${Math.round(rangePx)} px).`;
+  }
+  return 'Você está longe do alvo.';
+}
+
+function buildOutOfRangePayload(ctx) {
+  const message = formatRangeMessage(ctx);
+  return {
+    ok: false,
+    error: 'out_of_range',
+    inRange: false,
+    hasLineOfSight: ctx?.hasLineOfSight ?? true,
+    range: ctx?.range || null,
+    distance: ctx?.distance || null,
+    hero: ctx?.hero || null,
+    monster: ctx?.monster || null,
+    computedAt: ctx?.computedAt || Date.now(),
+    message,
+    warnings: [{ code: 'out_of_range', message }],
+  };
+}
+
+
+function buildNoLoSPayload(ctx) {
+  const message = 'Sem linha de visão com o alvo.';
+  return {
+    ok: false,
+    error: 'no_los',
+    inRange: ctx?.inRange ?? null,
+    hasLineOfSight: false,
+    range: ctx?.range || null,
+    distance: ctx?.distance || null,
+
+    hero: ctx?.hero || null,
+    monster: ctx?.monster || null,
+    computedAt: ctx?.computedAt || Date.now(),
+
+    message,
+    warnings: [{ code: 'no_los', message }],
+  };
+}
+
 
 function buildRangeTelemetry(heroPos, mobPos, weaponType) {
   if (!heroPos || !mobPos || !weaponType) return null;
@@ -137,10 +263,6 @@ async function assertHeroAliveOwned(playerId, heroId) {
   return { ok:true, hero: row };
 }
 
-/* =========================================================================
-   Helpers de Skill
-   ========================================================================== */
-
 /** Resolve weapon_type a partir do equipamento atual do herói (slot WEAPON). */
 async function getEquippedWeaponType(heroId) {
   const row = await get(
@@ -155,10 +277,9 @@ async function getEquippedWeaponType(heroId) {
 
 /* =========================================================================
    Combat Routes: /attack/start, /attack/stop, /hit, /revive
-   Note: /nearest endpoint moved to routes/combat_nearest.js for better sprite intersection
    ========================================================================== */
 
-// ====== START/STOP =========================================================
+// ====== START ==============================================================
 router.post('/attack/start', express.json(), async (req, res) => {
   try {
     const { heroId, targetInstanceId } = req.body || {};
@@ -170,10 +291,10 @@ router.post('/attack/start', express.json(), async (req, res) => {
     const chk = await assertHeroAliveOwned(req.user.id, heroId);
     if (!chk.ok) return res.status(chk.code).json({ ok:false, error:chk.error });
 
-    // Require equipped weapon via getEquippedWeaponType(heroId) - no class fallback
-    const resolvedWeaponType = await getEquippedWeaponType(heroId);
-    if (!resolvedWeaponType) {
-      return res.json({ ok: false, error: 'no-weapon-equipped' });
+    // Require equipped weapon
+    const weaponType = await getEquippedWeaponType(heroId);
+    if (!weaponType) {
+      return res.json({ ok:false, error:'no-weapon-equipped' });
     }
 
     const mobPos = await getMonsterPos(targetInstanceId);
@@ -185,8 +306,10 @@ router.post('/attack/start', express.json(), async (req, res) => {
       return res.json({ ok:false, error:'map-diff', message:'Alvo está em outro mapa.' });
     }
 
+
     const { grid, cols } = await getGrid(heroPos.map_key);
     const losGrid = { data: grid, cols };
+
 
     const inRange = inReachPx(heroPos, mobPos, resolvedWeaponType, K, heroPos.class);
     const hasLos = hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y);
@@ -195,10 +318,12 @@ router.post('/attack/start', express.json(), async (req, res) => {
     if (!inRange) warnings.push({ code:'out_of_range', message: formatRangeMessage({ ...telemetry, inRange }) });
     if (!hasLos) warnings.push({ code:'no_los', message: 'Sem linha de visão com o alvo.' });
 
+
+    // Registra sessão (modo permissivo sempre, modo estrito se válido)
     attackSessions.set(String(targetInstanceId), {
       heroId: String(heroId),
-      weaponType: resolvedWeaponType,
-      startedAt: Date.now()
+      weaponType,
+      startedAt: Date.now(),
     });
 
     const payload = {
@@ -207,9 +332,11 @@ router.post('/attack/start', express.json(), async (req, res) => {
       hasLineOfSight: hasLos,
       range: telemetry?.range || null,
       distance: telemetry?.distance || null,
+
       hero: telemetry?.hero || null,
       monster: telemetry?.monster || null,
       computedAt: telemetry?.computedAt || Date.now(),
+
       warnings,
     };
     if (warnings.length) payload.message = warnings[0].message;
@@ -221,10 +348,10 @@ router.post('/attack/start', express.json(), async (req, res) => {
   }
 });
 
+// ====== STOP ===============================================================
 router.post('/attack/stop', express.json(), async (req, res) => {
   try {
     const { heroId } = req.body || {};
-
     // Se informou heroId, valida ownership (se estiver morto, só não precisa limpar sessão)
     if (heroId) {
       const chk = await getHeroOwnedBy(req.user.id, heroId);
@@ -233,7 +360,6 @@ router.post('/attack/stop', express.json(), async (req, res) => {
         if (sess.heroId === String(heroId)) attackSessions.delete(instId);
       }
     }
-
     return res.json({ ok:true });
   } catch (e) {
     console.error('[combat] /attack/stop error:', e);
@@ -241,17 +367,7 @@ router.post('/attack/stop', express.json(), async (req, res) => {
   }
 });
 
-// ====== HIT ===============================================
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-// Import the combat service
-const { applyHit, respawnHero } = require('./service');
-
-/** Get weapon type fallback based on class (desligado: sem fallback) */
-async function getWeaponTypeFallback(_heroId) {
-  return null;
-}
-
+// ====== HIT ================================================================
 router.post('/hit', express.json(), async (req, res) => {
   try {
     // pode vir como id, targetInstanceId, ou query ?id
@@ -272,7 +388,7 @@ router.post('/hit', express.json(), async (req, res) => {
     // Require equipped weapon for the hero session - no class fallback
     const weaponType = await getEquippedWeaponType(heroIdFromSess);
     if (!weaponType) {
-      return res.json({ ok: false, error: 'no-weapon-equipped' });
+      return res.json({ ok:false, error:'no-weapon-equipped' });
     }
 
     const mobPos = await getMonsterPos(raw);
@@ -280,7 +396,9 @@ router.post('/hit', express.json(), async (req, res) => {
 
     const heroPos = await getHeroPos(heroIdFromSess, mobPos.map_key);
     if (!heroPos) return res.status(400).json({ ok:false, error:'hero-pos-missing' });
+
     if (heroPos.map_key !== mobPos.map_key) return res.json({ ok:false, error:'map-diff', message:'Alvo está em outro mapa.' });
+
 
     const { grid, cols } = await getGrid(heroPos.map_key);
     const losGrid = { data: grid, cols };
@@ -288,6 +406,7 @@ router.post('/hit', express.json(), async (req, res) => {
     const inRange = inReachPx(heroPos, mobPos, weaponType, K, heroPos.class);
     const hasLos = hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y);
     const telemetry = buildRangeTelemetry(heroPos, mobPos, weaponType);
+
     const context = telemetry ? { ...telemetry, inRange, hasLineOfSight: hasLos } : { inRange, hasLineOfSight: hasLos };
 
     if (!inRange) return res.json(buildOutOfRangePayload(context));
@@ -298,23 +417,24 @@ router.post('/hit', express.json(), async (req, res) => {
       attackerHeroId: heroIdFromSess,
       targetInstanceId: String(raw),
       weaponType 
+
     });
 
     if (!result.ok) {
-      return res.status(400).json({ ok: false, error: result.message });
+      return res.status(400).json({ ok:false, error: result.message });
     }
 
-    // Get maxHp from instance
+    // Max HP da instância (pra HUD legacy)
     const instance = await get(
       `SELECT mi.max_hp, s."monsterKey"
          FROM monster_instances mi
-         JOIN spawns s ON s.id = mi.spawn_id  
+         JOIN spawns s ON s.id = mi.spawn_id
         WHERE mi.id = $1`,
       [String(raw)]
     );
     const maxHp = instance?.max_hp || 100;
 
-    // Build client-compatible payload with both legacy and new fields
+    // Payload compatível (legacy + novo)
     const payload = {
       ok: true,
       id: String(raw),             // legacy
@@ -324,7 +444,7 @@ router.post('/hit', express.json(), async (req, res) => {
       damage: result.damage,
       hpAfter: result.hpAfter,
       hpBefore: result.hpAfter + result.damage, // aproximação
-      dead: result.dead
+      dead: result.dead,
     };
 
     if (telemetry) {
@@ -332,9 +452,11 @@ router.post('/hit', express.json(), async (req, res) => {
       payload.distance = telemetry.distance;
       payload.inRange = true;
       payload.hasLineOfSight = true;
+
       payload.hero = telemetry.hero;
       payload.monster = telemetry.monster;
       payload.computedAt = telemetry.computedAt;
+
     }
 
     return res.json(payload);
@@ -346,8 +468,6 @@ router.post('/hit', express.json(), async (req, res) => {
 
 /* =========================================================================
    REVIVE manual (botão no HUD)
-   - só permite se: herói é do jogador e está morto
-   - usa respawnHero do service (centraliza regra: hp fraction, pos fallback, broadcasts)
    ========================================================================== */
 router.post('/revive', express.json(), async (req, res) => {
   try {
@@ -358,12 +478,13 @@ router.post('/revive', express.json(), async (req, res) => {
     if (!row) return res.status(404).json({ ok:false, error:'hero-not-found' });
     if (row.alive === true) return res.status(409).json({ ok:false, error:'hero-not-dead' });
 
-    // Chama a lógica central de respawn (cura, alive=true, salva pos, broadcasts)
+    // Lógica central de respawn (cura, alive=true, salva pos, broadcasts)
     await respawnHero(String(heroId));
 
-    // Lê última posição salva p/ responder ao HUD
+    // Última posição salva p/ responder ao HUD
     const last = await get(
-      `SELECT map_key, x, y FROM player_last_pos WHERE player_id=$1 ORDER BY updated_at DESC LIMIT 1`,
+      `SELECT map_key, x, y FROM player_last_pos
+        WHERE player_id=$1 ORDER BY updated_at DESC LIMIT 1`,
       [req.user.id]
     );
     const mapKey = last?.map_key || 'house';
@@ -377,7 +498,7 @@ router.post('/revive', express.json(), async (req, res) => {
       ok: true,
       heroId: String(heroId),
       hp: Number(h2?.hp || 1),
-      mapKey, x, y
+      mapKey, x, y,
     });
   } catch (e) {
     console.error('[combat] /revive error:', e?.message || e);

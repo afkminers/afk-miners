@@ -27,6 +27,12 @@ const { endpointMetrics } = require('./middleware/endpoint-metrics');
 const catalogCache = require('./services/catalogCache');
 const idlePoolCloser = require('./services/idlePoolCloser');
 const httpCache = require('./services/httpCache');
+const {
+  setLivePosition,
+  getLivePosition,
+  removeLivePosition,
+  listPlayerIds,
+} = require('./player/live_positions');
 
 const authRoutes = require('./auth/routes');
 const playerRoutes = require('./player/routes'); // mantém seu caminho atual
@@ -64,25 +70,50 @@ const CONTENT_PIPELINE = process.env.CONTENT_PIPELINE || 'off';
 // ---- Autoridade de movimento (Tibia-like) ----
 const TILE = 32;
 const SPEED_CAP_PX_S = 180; // ~0.18 s por tile
-const MIN_STEP_MS = Math.floor((TILE / SPEED_CAP_PX_S) * 1000 * 0.75); // 20% folga
+const STEP_LAG_TOLERANCE_MS = Number(process.env.STEP_LAG_TOLERANCE_MS || 90);
+const STEP_MIN_RATIO = (() => {
+  const raw = Number(process.env.STEP_MIN_RATIO);
+  if (Number.isFinite(raw) && raw > 0 && raw < 1) return raw;
+  return 0.7;
+})();
+const MAX_STEP_PX = Math.hypot(TILE, TILE) + 1; // aceita diagonais como no Tibia
 
-function isAdjacentStep(lx, ly, nx, ny) {
-  const dx = Math.abs(nx - lx), dy = Math.abs(ny - ly);
-  return (dx === TILE && dy === 0) || (dx === 0 && dy === TILE);
+function isStepWithinSpeedCap(lx, ly, nx, ny, dtMs) {
+  const dx = nx - lx;
+  const dy = ny - ly;
+  const dist = Math.hypot(dx, dy);
+
+  if (!Number.isFinite(dist)) return false;
+  if (dist === 0) return true; // mesmo tile (keep-alive)
+  if (dist > MAX_STEP_PX) return false; // teleporte (>1 tile) bloqueado
+
+  const minMsForStep = (dist / SPEED_CAP_PX_S) * 1000;
+  const elapsed = Math.max(0, Number(dtMs) || 0);
+
+  if (elapsed >= minMsForStep) return true;
+
+  const minRatioMs = minMsForStep * STEP_MIN_RATIO;
+  if (elapsed < minRatioMs) return false;
+
+  return (elapsed + STEP_LAG_TOLERANCE_MS) >= minMsForStep;
 }
 
 // ---- [MMO] Posições vivas em RAM + flush periódico p/ DB ----
+
 const {
   livePositions,
   setLivePlayerPosition,
   getLivePlayerPosition,
   removeLivePlayerPosition,
 } = require('./state/live-positions');
+
 const FLUSH_POS_INTERVAL_MS = Number(process.env.FLUSH_POS_INTERVAL_MS || 1000);
 let posFlushTimer = null;
 
 async function flushOnePlayerPos(pid) {
+
   const p = getLivePlayerPosition(pid);
+
   if (!p) return;
   try {
     await run(`
@@ -103,7 +134,7 @@ async function flushOnePlayerPos(pid) {
 }
 
 async function flushAllPlayerPos() {
-  const ids = Array.from(livePositions.keys());
+  const ids = listPlayerIds();
   for (const pid of ids) {
     await flushOnePlayerPos(pid);
   }
@@ -112,7 +143,7 @@ async function flushAllPlayerPos() {
 function startPosFlusher() {
   if (posFlushTimer) return;
   posFlushTimer = setInterval(async () => {
-    for (const pid of livePositions.keys()) {
+    for (const pid of listPlayerIds()) {
       await flushOnePlayerPos(pid);
     }
   }, FLUSH_POS_INTERVAL_MS);
@@ -1017,6 +1048,8 @@ async function seedAIMobsFromDB(aiMobs) {
         ws.isAlive = true; // compat com heartbeat
         ws._presenceTimer = null;
         ws._pos = null; // cache local da pos autorizada
+        ws._activeHeroId = null;
+        ws._heroAlive = true;
 
         // Tenta validar sessão via cookie JWT
         try {
@@ -1067,9 +1100,11 @@ async function seedAIMobsFromDB(aiMobs) {
                 [ws._player.id, ws._mapKey]
               );
               if (row2 && Number.isFinite(row2.x) && Number.isFinite(row2.y)) {
+
                 const px = row2.x | 0, py = row2.y | 0;
                 setLivePlayerPosition(ws._player.id, { x: px, y: py, mapKey: ws._mapKey, ts: Date.now() });
                 ws._pos = { x: px, y: py, mapKey: ws._mapKey, ts: Date.now() };
+
                 try { ws.send(JSON.stringify({ type: 'pos_snap', x: px, y: py, mapKey: ws._mapKey })); } catch {}
               }
             }
@@ -1165,31 +1200,44 @@ async function seedAIMobsFromDB(aiMobs) {
             const pid = ws._player?.id || String(data.id || '');
             if (!pid) return;
 
-            // >>> BLOQUEIO DE MOVIMENTO PARA HERÓI MORTO (server-authoritative)
-            try {
-              const activeHeroId = await resolveActiveHeroId(pid);
-              if (activeHeroId) {
-                const rowAlive = await get(`SELECT alive FROM player_heroes WHERE id=$1`, [activeHeroId]);
-                if (rowAlive && rowAlive.alive === false) {
-                  // opcional: reforça overlay de morte no cliente
-                  try { ws.send(JSON.stringify({ type:'hero_dead', heroId: String(activeHeroId) })); } catch {}
-                  return; // morto não move
-                }
-              }
-            } catch {}
-
             const nx = Number(data.x || 0) | 0;
             const ny = Number(data.y || 0) | 0;
             const mapKey = String(data.mapKey || ws._mapKey || 'house');
 
+            // >>> BLOQUEIO DE MOVIMENTO PARA HERÓI MORTO (server-authoritative)
+            let activeHeroId = null;
+            let heroAlive = true;
+            try {
+              activeHeroId = await resolveActiveHeroId(pid);
+              if (activeHeroId) {
+                ws._activeHeroId = String(activeHeroId);
+                const rowAlive = await get(`SELECT alive FROM player_heroes WHERE id=$1`, [activeHeroId]);
+                heroAlive = !(rowAlive && rowAlive.alive === false);
+                ws._heroAlive = heroAlive;
+                if (!heroAlive) {
+                  setLivePosition(pid, { heroAlive: false, mapKey });
+                  try { ws.send(JSON.stringify({ type:'hero_dead', heroId: String(activeHeroId) })); } catch {}
+                  return; // morto não move
+                }
+              } else if (ws._heroAlive === false) {
+                heroAlive = false;
+              }
+            } catch {
+              if (ws._heroAlive === false) heroAlive = false;
+            }
+
             // Base anterior (RAM ou bootstrap)
             if (!ws._pos || ws._pos.mapKey !== mapKey) {
+
               const prev = getLivePlayerPosition(pid);
+
               if (prev && prev.mapKey === mapKey) {
-                ws._pos = { ...prev };
+                ws._pos = { x: prev.x | 0, y: prev.y | 0, mapKey: prev.mapKey, ts: prev.ts || Date.now() };
               } else {
+
                 ws._pos = { x: nx, y: ny, mapKey, ts: Date.now() };
                 setLivePlayerPosition(pid, ws._pos);
+
               }
             }
 
@@ -1197,22 +1245,20 @@ async function seedAIMobsFromDB(aiMobs) {
             const now = Date.now();
             const dt = now - (lts || 0);
 
-            // helpers
             const sameTile = (a, b) => Math.floor(a / TILE) === Math.floor(b / TILE);
-            const okAdj = isAdjacentStep(lx, ly, nx, ny);
-            const okTime = dt >= MIN_STEP_MS;
+            const allowSameTile = sameTile(lx, nx) && sameTile(ly, ny); // keep-alive/quantização
+            const okSpeed = isStepWithinSpeedCap(lx, ly, nx, ny, dt);
 
-            // --- NOVO: se o último ponto não estava quantizado, aceite o 1º passo dentro do MESMO tile
-            const tolerateSameTileFirstStep = (!okAdj && sameTile(lx, nx) && sameTile(ly, ny));
-
-            if (!(okAdj && okTime) && !tolerateSameTileFirstStep) {
+            if (!okSpeed && !allowSameTile) {
               try { ws.send(JSON.stringify({ type: 'pos_snap', x: lx, y: ly, mapKey })); } catch {}
               return;
             }
 
             // Autoriza: atualiza RAM
             ws._pos = { x: nx, y: ny, mapKey, ts: now };
+
             setLivePlayerPosition(pid, { x: nx, y: ny, mapKey, ts: now });
+
             ws._mapKey = mapKey;
 
             // presença online
@@ -1252,7 +1298,9 @@ async function seedAIMobsFromDB(aiMobs) {
           if (ws._player?.id) {
             // flush posição no logout + remove presença
             flushOnePlayerPos(ws._player.id).catch(() => {});
+
             removeLivePlayerPosition(ws._player.id);
+
             markOfflineByPlayer(ws._player.id).catch(() => {});
           }
         });

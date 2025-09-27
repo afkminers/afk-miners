@@ -74,6 +74,9 @@ async function respawnTick({ all, run }) {
     // Escolhe uma posição dentro da área do spawn (em pixels)
     const pos = pickPosInSpawnRect(r);
 
+    const px = Math.round(pos.x);
+    const py = Math.round(pos.y);
+
     await run(
       `UPDATE monster_instances
           SET state            = 'ALIVE',
@@ -81,10 +84,25 @@ async function respawnTick({ all, run }) {
               respawn_at       = NULL,
               last_hit_hero_id = NULL,
               last_hit_at      = NULL,
+              x                = $3,
+              y                = $4,
               updated_at       = now()
         WHERE id = $1`,
-      [r.id, hpFull]
+      [r.id, hpFull, px, py]
     );
+
+    try {
+      const aiMobs = require('../combat/ai-mobs');
+      if (aiMobs && typeof aiMobs.seedPosition === 'function') {
+        aiMobs.seedPosition({
+          id: r.id,
+          x: px,
+          y: py,
+          mapKey: r.map_key,
+          spawnRect: { x: r.x, y: r.y, w: r.w, h: r.h }
+        });
+      }
+    } catch {}
 
     // Notifica frontend que a instância renasceu, COM x,y em pixels
     try {
