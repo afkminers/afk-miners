@@ -27,6 +27,7 @@ async function getPlayerLastPos(playerId, mapKey) {
 async function getHeroPos(heroId, preferMapKey = null) {
   const owner = await getHeroOwner(heroId);
   if (!owner) return null;
+  const heroClass = owner.class ? String(owner.class).toUpperCase() : null;
 
   // Se não soubermos o mapa ainda, retorna a última posição global (qualquer mapa)
   if (!preferMapKey) {
@@ -38,13 +39,13 @@ async function getHeroPos(heroId, preferMapKey = null) {
         LIMIT 1`,
       [owner.playerId]
     );
-    if (any) return { x: any.x, y: any.y, map_key: any.mapKey, class: owner.class || null };
+    if (any) return { x: any.x, y: any.y, map_key: any.mapKey, class: heroClass };
     return null;
   }
 
   // Preferimos a posição já no mapa do alvo
   const row = await getPlayerLastPos(owner.playerId, preferMapKey);
-  if (row) return { x: row.x, y: row.y, map_key: row.mapKey, class: owner.class || null };
+  if (row) return { x: row.x, y: row.y, map_key: row.mapKey, class: heroClass };
 
   // Fallback: última posição em qualquer mapa
   const any = await get(
@@ -55,7 +56,7 @@ async function getHeroPos(heroId, preferMapKey = null) {
       LIMIT 1`,
     [owner.playerId]
   );
-  return any ? { x: any.x, y: any.y, map_key: any.mapKey, class: owner.class || null } : null;
+  return any ? { x: any.x, y: any.y, map_key: any.mapKey, class: heroClass } : null;
 }
 
 /** Posição do monstro pela instância */

@@ -18,6 +18,8 @@ const { getGrid } = require('../maps/grid');
 const { createLootFromKill } = require('../services/loot');
 
 
+
+
 const DEBUG = String(process.env.COMBAT_DEBUG || '').trim() === '1';
 
 // ===== SESSÕES DE ATAQUE EM MEMÓRIA =====
@@ -40,7 +42,9 @@ function buildRangeTelemetry(heroPos, mobPos, weaponType) {
 }
 
 function formatRangeMessage(ctx) {
+
   if (!ctx) return 'Você está longe do alvo.';
+
   const distTiles = Number(ctx?.distance?.tiles);
   const rangeTiles = Number(ctx?.range?.tiles);
   if (Number.isFinite(distTiles) && Number.isFinite(rangeTiles)) {
@@ -60,7 +64,9 @@ function buildOutOfRangePayload(ctx) {
     ok: false,
     error: 'out_of_range',
     inRange: false,
+
     hasLineOfSight: ctx?.hasLineOfSight ?? true,
+
     range: ctx?.range || null,
     distance: ctx?.distance || null,
     message,
@@ -154,6 +160,7 @@ router.post('/attack/start', express.json(), async (req, res) => {
     }
 
     const mobPos = await getMonsterPos(targetInstanceId);
+
     if (!mobPos) return res.status(400).json({ ok:false, error:'mob-pos-missing' });
 
     const heroPos = await getHeroPos(heroId, mobPos.map_key);
@@ -172,11 +179,16 @@ router.post('/attack/start', express.json(), async (req, res) => {
     if (!inRange) warnings.push({ code:'out_of_range', message: formatRangeMessage({ ...telemetry, inRange }) });
     if (!hasLos) warnings.push({ code:'no_los', message: 'Sem linha de visão com o alvo.' });
 
+
+    const { grid, cols } = await getGrid(heroPos.map_key);
+    const losGrid = { data: grid, cols };
+
     attackSessions.set(String(targetInstanceId), {
       heroId: String(heroId),
       weaponType: resolvedWeaponType,
       startedAt: Date.now()
     });
+
 
     const payload = {
       ok: true,
@@ -254,6 +266,7 @@ router.post('/hit', express.json(), async (req, res) => {
 
     const heroPos = await getHeroPos(heroIdFromSess, mobPos.map_key);
     if (!heroPos) return res.status(400).json({ ok:false, error:'hero-pos-missing' });
+
     if (heroPos.map_key !== mobPos.map_key) return res.json({ ok:false, error:'map-diff', message:'Alvo está em outro mapa.' });
 
     const { grid, cols } = await getGrid(heroPos.map_key);
@@ -267,11 +280,14 @@ router.post('/hit', express.json(), async (req, res) => {
     if (!inRange) return res.json(buildOutOfRangePayload(context));
     if (!hasLos) return res.json(buildNoLoSPayload(context));
 
+
     // Call the service to apply hit
     const result = await applyHit({
       attackerHeroId: heroIdFromSess,
       targetInstanceId: String(raw),
+
       weaponType 
+
     });
 
     if (!result.ok) {
