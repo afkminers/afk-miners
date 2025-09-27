@@ -17,6 +17,9 @@ const { getGrid } = require('../maps/grid');
 // >>> loot service (em memória)
 const { createLootFromKill } = require('../services/loot');
 
+
+
+
 const DEBUG = String(process.env.COMBAT_DEBUG || '').trim() === '1';
 
 // ===== SESSÕES DE ATAQUE EM MEMÓRIA =====
@@ -39,7 +42,9 @@ function buildRangeTelemetry(heroPos, mobPos, weaponType) {
 }
 
 function formatRangeMessage(ctx) {
-  if (!ctx) return 'Alvo fora do alcance.';
+
+  if (!ctx) return 'Você está longe do alvo.';
+
   const distTiles = Number(ctx?.distance?.tiles);
   const rangeTiles = Number(ctx?.range?.tiles);
   if (Number.isFinite(distTiles) && Number.isFinite(rangeTiles)) {
@@ -59,7 +64,9 @@ function buildOutOfRangePayload(ctx) {
     ok: false,
     error: 'out_of_range',
     inRange: false,
-    hasLineOfSight: true,
+
+    hasLineOfSight: ctx?.hasLineOfSight ?? true,
+
     range: ctx?.range || null,
     distance: ctx?.distance || null,
     message,
@@ -153,13 +160,25 @@ router.post('/attack/start', express.json(), async (req, res) => {
     }
 
     const mobPos = await getMonsterPos(targetInstanceId);
-    if (!mobPos) return res.status(404).json({ ok:false, error:'mob-pos-missing' });
+
+    if (!mobPos) return res.status(400).json({ ok:false, error:'mob-pos-missing' });
 
     const heroPos = await getHeroPos(heroId, mobPos.map_key);
     if (!heroPos) return res.status(400).json({ ok:false, error:'hero-pos-missing' });
     if (heroPos.map_key !== mobPos.map_key) {
-      return res.json({ ok:false, error:'map-diff', message: 'Alvo está em outro mapa.' });
+      return res.json({ ok:false, error:'map-diff', message:'Alvo está em outro mapa.' });
     }
+
+    const { grid, cols } = await getGrid(heroPos.map_key);
+    const losGrid = { data: grid, cols };
+
+    const inRange = inReachPx(heroPos, mobPos, resolvedWeaponType, K, heroPos.class);
+    const hasLos = hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y);
+    const telemetry = buildRangeTelemetry(heroPos, mobPos, resolvedWeaponType);
+    const warnings = [];
+    if (!inRange) warnings.push({ code:'out_of_range', message: formatRangeMessage({ ...telemetry, inRange }) });
+    if (!hasLos) warnings.push({ code:'no_los', message: 'Sem linha de visão com o alvo.' });
+
 
     const { grid, cols } = await getGrid(heroPos.map_key);
     const losGrid = { data: grid, cols };
@@ -170,9 +189,6 @@ router.post('/attack/start', express.json(), async (req, res) => {
       startedAt: Date.now()
     });
 
-    const warnings = [];
-    if (!inRange) warnings.push({ code: 'out_of_range', message: formatRangeMessage(context) });
-    if (!hasLos) warnings.push({ code: 'no_los', message: 'Sem linha de visão com o alvo.' });
 
     const payload = {
       ok: true,
@@ -250,9 +266,8 @@ router.post('/hit', express.json(), async (req, res) => {
 
     const heroPos = await getHeroPos(heroIdFromSess, mobPos.map_key);
     if (!heroPos) return res.status(400).json({ ok:false, error:'hero-pos-missing' });
-    if (heroPos.map_key !== mobPos.map_key) {
-      return res.json({ ok:false, error:'map-diff', message: 'Alvo está em outro mapa.' });
-    }
+
+    if (heroPos.map_key !== mobPos.map_key) return res.json({ ok:false, error:'map-diff', message:'Alvo está em outro mapa.' });
 
     const { grid, cols } = await getGrid(heroPos.map_key);
     const losGrid = { data: grid, cols };
@@ -260,14 +275,19 @@ router.post('/hit', express.json(), async (req, res) => {
     const inRange = inReachPx(heroPos, mobPos, weaponType, K, heroPos.class);
     const hasLos = hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y);
     const telemetry = buildRangeTelemetry(heroPos, mobPos, weaponType);
-    const context = telemetry ? { ...telemetry, inRange } : { inRange };
-    }
+    const context = telemetry ? { ...telemetry, inRange, hasLineOfSight: hasLos } : { inRange, hasLineOfSight: hasLos };
+
+    if (!inRange) return res.json(buildOutOfRangePayload(context));
+    if (!hasLos) return res.json(buildNoLoSPayload(context));
+
 
     // Call the service to apply hit
     const result = await applyHit({
       attackerHeroId: heroIdFromSess,
       targetInstanceId: String(raw),
-      weaponType
+
+      weaponType 
+
     });
 
     if (!result.ok) {

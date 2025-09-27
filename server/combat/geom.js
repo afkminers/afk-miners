@@ -3,7 +3,9 @@ const TILE = 32;
 const EPS  = 1; // margem mínima anti-oscilação para comparações em PX
 
 const DISTANCE_ALIASES = new Set(['BOW', 'CROSSBOW', 'SPEAR', 'JAVELIN', 'THROWING_KNIFE', 'DISTANCE']);
-const MAGIC_ALIASES = new Set(['MAGIC', 'WAND', 'ROD', 'TOME']);
+
+const MAGIC_ALIASES = new Set(['MAGIC', 'WAND', 'ROD', 'TOME', 'STAFF']);
+
 const CLASS_RANGE_CAP = { KNIGHT: 1, RANGER: 4, MAGE: 4 };
 
 function toTile(v) {
@@ -35,9 +37,12 @@ function resolveRangeTiles(weaponType, heroClass, K) {
       rangeTiles = Number(table.MAGIC);
     }
   }
+
+
   if (!Number.isFinite(rangeTiles) && Number.isFinite(table.SWORD)) {
     rangeTiles = Number(table.SWORD);
   }
+
   if (!Number.isFinite(rangeTiles) || rangeTiles <= 0) {
     rangeTiles = 1;
   }
