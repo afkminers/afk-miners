@@ -2,7 +2,6 @@
 const { get, run } = require('../models/db');
 const { getLivePlayerPosition } = require('../state/live-positions');
 
-
 /** Pega playerId dono do herói + classe (útil p/ cálculos) */
 async function getHeroOwner(heroId) {
   return await get(
@@ -28,43 +27,29 @@ async function getPlayerLastPos(playerId, mapKey) {
 async function getHeroPos(heroId, preferMapKey = null) {
   const owner = await getHeroOwner(heroId);
   if (!owner) return null;
-  const heroClass = owner.class ? String(owner.class).toUpperCase() : null;
 
   const classKey = owner.class || null;
+
+  // 1) Tenta posição "ao vivo"
   const live = getLivePlayerPosition(owner.playerId);
   let liveCandidate = null;
   if (live) {
+    const liveMapKey = String(live.mapKey || live.map_key || preferMapKey || 'house');
     liveCandidate = {
       x: Number(live.x || 0) | 0,
       y: Number(live.y || 0) | 0,
-      map_key: String(live.mapKey || live.map_key || preferMapKey || 'house'),
+      map_key: liveMapKey,
       class: classKey,
       source: 'live',
       updatedAt: Number(live.ts || Date.now()),
     };
-    if (!preferMapKey || liveCandidate.map_key === preferMapKey) {
+    // Se não exigiram mapa específico, ou já bateu com o preferMapKey, pode retornar já
+    if (!preferMapKey || liveMapKey === preferMapKey) {
       return liveCandidate;
     }
   }
 
-  const classKey = owner.class || null;
-  const live = getLivePlayerPosition(owner.playerId);
-  let liveCandidate = null;
-  if (live) {
-    liveCandidate = {
-      x: Number(live.x || 0) | 0,
-      y: Number(live.y || 0) | 0,
-      map_key: String(live.mapKey || live.map_key || preferMapKey || 'house'),
-      class: classKey,
-      source: 'live',
-      updatedAt: Number(live.ts || Date.now()),
-    };
-    if (!preferMapKey || liveCandidate.map_key === preferMapKey) {
-      return liveCandidate;
-    }
-  }
-
-  // Se não soubermos o mapa ainda, retorna a última posição global (qualquer mapa)
+  // 2) Se não foi exigido mapa específico, retorna a última posição global (qualquer mapa)
   if (!preferMapKey) {
     const any = await get(
       `SELECT x, y, map_key AS "mapKey", updated_at AS "updatedAt"
@@ -85,13 +70,12 @@ async function getHeroPos(heroId, preferMapKey = null) {
         updatedAt: any.updatedAt ? new Date(any.updatedAt).getTime() : null,
       };
     }
+    // Sem nada no banco? devolve o candidato do live (mesmo se for outro mapa)
     return liveCandidate;
-
   }
 
-  // Preferimos a posição já no mapa do alvo
+  // 3) Preferimos a posição já no mapa do alvo (preferMapKey)
   const row = await getPlayerLastPos(owner.playerId, preferMapKey);
-
   if (row) {
     return {
       x: Number(row.x || 0) | 0,
@@ -103,9 +87,8 @@ async function getHeroPos(heroId, preferMapKey = null) {
     };
   }
 
-
-  // Fallback: última posição em qualquer mapa
-  const any = await get(
+  // 4) Fallback final: última posição em qualquer mapa
+  const any2 = await get(
     `SELECT x, y, map_key AS "mapKey", updated_at AS "updatedAt"
        FROM player_last_pos
       WHERE player_id = $1
@@ -114,19 +97,19 @@ async function getHeroPos(heroId, preferMapKey = null) {
     [owner.playerId]
   );
 
-  if (any) {
+  if (any2) {
     return {
-      x: Number(any.x || 0) | 0,
-      y: Number(any.y || 0) | 0,
-      map_key: any.mapKey,
+      x: Number(any2.x || 0) | 0,
+      y: Number(any2.y || 0) | 0,
+      map_key: any2.mapKey,
       class: classKey,
       source: 'db',
-      updatedAt: any.updatedAt ? new Date(any.updatedAt).getTime() : null,
+      updatedAt: any2.updatedAt ? new Date(any2.updatedAt).getTime() : null,
     };
   }
 
+  // 5) Nada no banco: volta o liveCandidate (se existir) ou null
   return liveCandidate;
-
 }
 
 /** Posição do monstro pela instância */
@@ -145,10 +128,8 @@ async function setMonsterPos(instanceId, mapKey, x, y) {
     `UPDATE monster_instances
         SET map_key = $2, x = $3, y = $4, updated_at = now()
       WHERE id = $1`,
-    [String(instanceId), String(mapKey), x|0, y|0]
+    [String(instanceId), String(mapKey), x | 0, y | 0]
   );
 }
 
-
 module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos, setMonsterPos };
-
