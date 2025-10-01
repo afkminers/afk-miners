@@ -29,6 +29,9 @@ const attackSessions = new Map();
 /* =========================================================================
    Telemetria / mensagens
    ========================================================================== */
+// ✅ CORREÇÃO: buildRangeTelemetry() em server/combat/routes.js
+// Substitua APENAS esta função no arquivo routes.js
+
 function buildRangeTelemetry(heroPos, mobPos, weaponType) {
   if (!heroPos || !mobPos || !weaponType) return null;
 
@@ -39,8 +42,12 @@ function buildRangeTelemetry(heroPos, mobPos, weaponType) {
 
   const rangeTiles = resolveRangeTiles(weaponType, heroPos.class, K);
   const rangePx = rangeTiles * TILE;
-  const distTiles = chebyshevTiles(hx, hy, mx, my);
+  
+  // ✅ CORREÇÃO: calcula distância em PX primeiro (Chebyshev)
   const distPx = chebyPx(hx, hy, mx, my);
+  
+  // ✅ CORREÇÃO: converte para tiles DEPOIS (consistente com validação)
+  const distTiles = Math.floor(distPx / TILE);
 
   return {
     range: { tiles: rangeTiles, px: rangePx },
