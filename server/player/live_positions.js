@@ -1,89 +1,120 @@
 // server/player/live_positions.js
-// In-memory authority of player positions shared between WS and combat AI.
+// Autoridade em memória das posições ao vivo dos jogadores (por playerId).
+// Mantém compat: heroId, heroAlive, listFreshHeroesByMap.
+// TTL configurável por env: LIVE_POS_TTL_MS (default 1500ms)
 
-const livePositions = new Map(); // playerId -> { x, y, mapKey, heroId, heroAlive, ts }
+const TTL_MS = Math.max(300, Number(process.env.LIVE_POS_TTL_MS || 1500));
+const GC_MS  = Math.max(TTL_MS, Number(process.env.LIVE_POS_GC_MS  || 5000));
 
-function sanitizeInt(value, fallback = 0) {
-  const n = Number(value);
-  return Number.isFinite(n) ? (n | 0) : (fallback | 0);
-}
+/** store: playerId -> { x, y, mapKey, heroId, heroAlive, ts } */
+const store = new Map();
 
-function sanitizeTs(ts) {
-  const n = Number(ts);
-  return Number.isFinite(n) && n > 0 ? n : Date.now();
-}
+/**
+ * setLivePlayerPosition
+ * Assinaturas aceitas:
+ *  - setLivePlayerPosition(playerId, x, y, mapKey, heroId?, heroAlive?, ts?)
+ *  - setLivePlayerPosition(playerId, {x,y,mapKey,heroId,heroAlive,ts})
+ */
+function setLivePlayerPosition(playerId, xOrObj, y, mapKey, heroId, heroAlive, ts) {
+  const id = String(playerId || '').trim();
+  if (!id) return null;
 
-function sanitizeMapKey(mapKey, fallback = 'house') {
-  const key = String(mapKey || '').trim();
-  return key ? key : String(fallback || 'house');
-}
+  let nx, ny, nMap, nHeroId, nAlive, nTs;
 
-function setLivePosition(playerId, pos = {}) {
-  const pid = String(playerId || '').trim();
-  if (!pid) return null;
+  if (xOrObj && typeof xOrObj === 'object') {
+    nx      = Number(xOrObj.x ?? 0);
+    ny      = Number(xOrObj.y ?? 0);
+    nMap    = String(xOrObj.mapKey || 'house');
+    nHeroId = xOrObj.heroId != null ? String(xOrObj.heroId) : null;
+    nAlive  = xOrObj.heroAlive === false ? false : true;
+    nTs     = Number(xOrObj.ts) > 0 ? Number(xOrObj.ts) : Date.now();
+  } else {
+    nx      = Number(xOrObj ?? 0);
+    ny      = Number(y ?? 0);
+    nMap    = String(mapKey || 'house');
+    nHeroId = heroId != null ? String(heroId) : null;
+    nAlive  = heroAlive === false ? false : true;
+    nTs     = Number(ts) > 0 ? Number(ts) : Date.now();
+  }
 
-  const prev = livePositions.get(pid) || {};
-  const ts = sanitizeTs(pos.ts ?? prev.ts ?? Date.now());
-  const mapKey = sanitizeMapKey(pos.mapKey ?? prev.mapKey ?? 'house');
-  const heroId = pos.heroId != null ? String(pos.heroId) : (prev.heroId != null ? String(prev.heroId) : null);
-  const heroAlive = pos.heroAlive === false ? false : (pos.heroAlive === true ? true : (prev.heroAlive === false ? false : true));
-
+  const prev = store.get(id) || {};
   const next = {
-    x: sanitizeInt(pos.x ?? prev.x ?? 0),
-    y: sanitizeInt(pos.y ?? prev.y ?? 0),
-    mapKey,
-    heroId,
-    heroAlive,
-    ts,
+    x: nx | 0,
+    y: ny | 0,
+    mapKey: nMap || prev.mapKey || 'house',
+    heroId: nHeroId != null ? nHeroId : (prev.heroId ?? null),
+    heroAlive: nAlive ?? (prev.heroAlive ?? true),
+    ts: nTs,
   };
 
-  livePositions.set(pid, next);
+  store.set(id, next);
   return next;
 }
 
-function getLivePosition(playerId) {
-  const pid = String(playerId || '').trim();
-  if (!pid) return null;
-  return livePositions.get(pid) || null;
+function getLivePlayerPosition(playerId) {
+  const id = String(playerId || '').trim();
+  if (!id) return null;
+  const pos = store.get(id);
+  if (!pos) return null;
+  if (Date.now() - (pos.ts || 0) > TTL_MS) {
+    store.delete(id);
+    return null;
+  }
+  return pos;
 }
 
-function removeLivePosition(playerId) {
-  const pid = String(playerId || '').trim();
-  if (!pid) return;
-  livePositions.delete(pid);
+function clearLivePlayerPosition(playerId) {
+  const id = String(playerId || '').trim();
+  if (id) store.delete(id);
 }
 
-function listPlayerIds() {
-  return Array.from(livePositions.keys());
-}
-
-function listFreshHeroesByMap(mapKey, maxAgeMs = 1000) {
+/** Lista heróis “frescos” por mapa — compat com IA/aggro */
+function listFreshHeroesByMap(mapKey, maxAgeMs = TTL_MS) {
+  const key = String(mapKey || 'house');
   const now = Date.now();
-  const key = sanitizeMapKey(mapKey);
-  const maxAge = Number(maxAgeMs);
-
-  const fresh = [];
-  for (const [pid, pos] of livePositions.entries()) {
+  const out = [];
+  for (const [pid, pos] of store.entries()) {
     if (!pos) continue;
     if (pos.mapKey !== key) continue;
     if (pos.heroAlive === false) continue;
-    const age = now - (pos.ts || 0);
-    if (Number.isFinite(maxAge) && maxAge >= 0 && age > maxAge) continue;
-    fresh.push({
+    if (now - (pos.ts || 0) > maxAgeMs) continue;
+    out.push({
       playerId: pid,
-      heroId: pos.heroId || null,
+      heroId: pos.heroId ?? null,
       x: pos.x | 0,
       y: pos.y | 0,
       updatedMs: pos.ts || 0,
     });
   }
-  return fresh;
+  return out;
 }
 
+/** Útil quando o servidor sabe que o herói morreu/renasceu */
+function markHeroAlive(playerId, alive, heroId = null) {
+  const id = String(playerId || '').trim();
+  if (!id) return;
+  const cur = store.get(id);
+  if (!cur) return;
+  cur.heroAlive = !!alive;
+  if (heroId != null) cur.heroId = String(heroId);
+  cur.ts = Date.now();
+  store.set(id, cur);
+}
+
+/** GC periódico para limpar posições expiradas */
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, pos] of store.entries()) {
+    if (!pos || now - (pos.ts || 0) > TTL_MS) store.delete(id);
+  }
+}, GC_MS);
+
 module.exports = {
-  setLivePosition,
-  getLivePosition,
-  removeLivePosition,
-  listPlayerIds,
+  setLivePlayerPosition,
+  getLivePlayerPosition,
+  clearLivePlayerPosition,
   listFreshHeroesByMap,
+  markHeroAlive,
+  TTL_MS,
 };
+
