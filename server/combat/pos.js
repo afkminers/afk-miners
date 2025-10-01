@@ -1,8 +1,9 @@
 // server/combat/pos.js
-const { get, run } = require('../models/db');
+const { get } = require('../models/db');
 const { getLivePlayerPosition } = require('../state/live-positions');
 
-/** Pega playerId dono do herói + classe (útil p/ cálculos) */
+const TILE = 32;
+
 async function getHeroOwner(heroId) {
   return await get(
     `SELECT ph.id AS "heroId", ph."playerId" AS "playerId", hm.class AS class
@@ -13,7 +14,6 @@ async function getHeroOwner(heroId) {
   );
 }
 
-/** Última posição persistida do player (por mapa) — usamos a do mapa atual do alvo/partida */
 async function getPlayerLastPos(playerId, mapKey) {
   return await get(
     `SELECT x, y, map_key AS "mapKey", last_seq AS seq, updated_at AS "updatedAt"
@@ -23,72 +23,71 @@ async function getPlayerLastPos(playerId, mapKey) {
   );
 }
 
-/** Posição do herói, inferida pela última posição do player no mesmo mapKey do alvo */
+/**
+ * Retorna posição do herói SEMPRE EM PIXELS
+ * Prioridade: live > db no mapa preferido > db qualquer mapa
+ */
 async function getHeroPos(heroId, preferMapKey = null) {
   const owner = await getHeroOwner(heroId);
   if (!owner) return null;
 
   const classKey = owner.class || null;
 
-  // 1) Tenta posição "ao vivo"
+  // 1. SEMPRE tenta posição live primeiro (já em pixels)
   const live = getLivePlayerPosition(owner.playerId);
-  let liveCandidate = null;
   if (live) {
-    const liveMapKey = String(live.mapKey || live.map_key || preferMapKey || 'house');
-    liveCandidate = {
-      x: Number(live.x || 0) | 0,
-      y: Number(live.y || 0) | 0,
+    const liveMapKey = String(live.mapKey || preferMapKey || 'house');
+    
+    // Normaliza para pixels se vier em tiles (< 1000 geralmente)
+    let px = Number(live.x || 0);
+    let py = Number(live.y || 0);
+    
+    if (px < 1000 && py < 1000) {
+      px = (px * TILE) + (TILE / 2);
+      py = (py * TILE) + (TILE / 2);
+    }
+    
+    const livePos = {
+      x: px | 0,
+      y: py | 0,
       map_key: liveMapKey,
       class: classKey,
       source: 'live',
       updatedAt: Number(live.ts || Date.now()),
     };
-    // Se não exigiram mapa específico, ou já bateu com o preferMapKey, pode retornar já
+    
+    // Se não exigiram mapa específico, ou já bateu, retorna
     if (!preferMapKey || liveMapKey === preferMapKey) {
-      return liveCandidate;
+      return livePos;
     }
   }
 
-  // 2) Se não foi exigido mapa específico, retorna a última posição global (qualquer mapa)
-  if (!preferMapKey) {
-    const any = await get(
-      `SELECT x, y, map_key AS "mapKey", updated_at AS "updatedAt"
-         FROM player_last_pos
-        WHERE player_id = $1
-        ORDER BY updated_at DESC
-        LIMIT 1`,
-      [owner.playerId]
-    );
-
-    if (any) {
+  // 2. Se exigiu mapa específico, busca no banco
+  if (preferMapKey) {
+    const row = await getPlayerLastPos(owner.playerId, preferMapKey);
+    if (row) {
+      let px = Number(row.x || 0);
+      let py = Number(row.y || 0);
+      
+      // Converte tiles -> pixels se necessário
+      if (px < 1000 && py < 1000) {
+        px = (px * TILE) + (TILE / 2);
+        py = (py * TILE) + (TILE / 2);
+      }
+      
       return {
-        x: Number(any.x || 0) | 0,
-        y: Number(any.y || 0) | 0,
-        map_key: any.mapKey,
+        x: px | 0,
+        y: py | 0,
+        map_key: row.mapKey,
         class: classKey,
         source: 'db',
-        updatedAt: any.updatedAt ? new Date(any.updatedAt).getTime() : null,
+        updatedAt: row.updatedAt ? new Date(row.updatedAt).getTime() : null,
       };
     }
-    // Sem nada no banco? devolve o candidato do live (mesmo se for outro mapa)
-    return liveCandidate;
   }
 
-  // 3) Preferimos a posição já no mapa do alvo (preferMapKey)
-  const row = await getPlayerLastPos(owner.playerId, preferMapKey);
-  if (row) {
-    return {
-      x: Number(row.x || 0) | 0,
-      y: Number(row.y || 0) | 0,
-      map_key: row.mapKey,
-      class: classKey,
-      source: 'db',
-      updatedAt: row.updatedAt ? new Date(row.updatedAt).getTime() : null,
-    };
-  }
-
-  // 4) Fallback final: última posição em qualquer mapa
-  const any2 = await get(
+  // 3. Fallback: qualquer mapa no banco
+  const any = await get(
     `SELECT x, y, map_key AS "mapKey", updated_at AS "updatedAt"
        FROM player_last_pos
       WHERE player_id = $1
@@ -97,39 +96,61 @@ async function getHeroPos(heroId, preferMapKey = null) {
     [owner.playerId]
   );
 
-  if (any2) {
+  if (any) {
+    let px = Number(any.x || 0);
+    let py = Number(any.y || 0);
+    
+    if (px < 1000 && py < 1000) {
+      px = (px * TILE) + (TILE / 2);
+      py = (py * TILE) + (TILE / 2);
+    }
+    
     return {
-      x: Number(any2.x || 0) | 0,
-      y: Number(any2.y || 0) | 0,
-      map_key: any2.mapKey,
+      x: px | 0,
+      y: py | 0,
+      map_key: any.mapKey,
       class: classKey,
       source: 'db',
-      updatedAt: any2.updatedAt ? new Date(any2.updatedAt).getTime() : null,
+      updatedAt: any.updatedAt ? new Date(any.updatedAt).getTime() : null,
     };
   }
 
-  // 5) Nada no banco: volta o liveCandidate (se existir) ou null
-  return liveCandidate;
+  return null;
 }
 
-/** Posição do monstro pela instância */
+/**
+ * Retorna posição do monstro SEMPRE EM PIXELS
+ */
 async function getMonsterPos(instanceId) {
-  return await get(
-    `SELECT x, y, map_key AS "map_key"
-       FROM monster_instances
-      WHERE id = $1`,
+  const row = await get(
+    `SELECT mi.x, mi.y, mi.map_key AS "map_key",
+            COALESCE(sp.frame_w, 32) AS frame_w,
+            COALESCE(sp.frame_h, 32) AS frame_h
+       FROM monster_instances mi
+  LEFT JOIN spawns s ON s.id = mi.spawn_id
+  LEFT JOIN sprites_master sp ON sp.key = s."monsterKey" AND sp.kind = 'monster'
+      WHERE mi.id = $1`,
     [instanceId]
   );
+  
+  if (!row) return null;
+  
+  let px = Number(row.x || 0);
+  let py = Number(row.y || 0);
+  
+  // Converte tiles -> pixels se necessário
+  if (px < 1000 && py < 1000) {
+    px = (px * TILE) + (TILE / 2);
+    py = (py * TILE) + (TILE / 2);
+  }
+  
+  return {
+    x: px | 0,
+    y: py | 0,
+    map_key: row.map_key,
+    frame_w: Number(row.frame_w || 32),
+    frame_h: Number(row.frame_h || 32)
+  };
 }
 
-/** Persiste posição do monstro (e map_key) */
-async function setMonsterPos(instanceId, mapKey, x, y) {
-  await run(
-    `UPDATE monster_instances
-        SET map_key = $2, x = $3, y = $4, updated_at = now()
-      WHERE id = $1`,
-    [String(instanceId), String(mapKey), x | 0, y | 0]
-  );
-}
-
-module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos, setMonsterPos };
+module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos };
