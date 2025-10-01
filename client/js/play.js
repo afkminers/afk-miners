@@ -1134,17 +1134,6 @@ function updateRespawns(now) {
     if (step) window.GameScene?.controller?.requestStep?.(step);
     window.GameScene?.controller?.update?.(dt, null);
 
-    // === NOVO: “burst” de posição ~a cada 60ms, mesmo sem trocar de tile ===
-    {
-      window.__posBurstAt = window.__posBurstAt || 0;
-      const tNow = performance.now();
-      if (tNow - window.__posBurstAt >= 60) {
-        const p = window.GameScene?.controller?.getPosition?.();
-        if (p) publishPos(p.x | 0, p.y | 0);
-        window.__posBurstAt = tNow;
-      }
-    }
-
     // Camera
     camera.update(dt);
 
