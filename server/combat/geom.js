@@ -3,10 +3,11 @@ const TILE = 32;
 const EPS  = 1; // margem mínima anti-oscilação para comparações em PX
 
 const DISTANCE_ALIASES = new Set(['BOW', 'CROSSBOW', 'SPEAR', 'JAVELIN', 'THROWING_KNIFE', 'DISTANCE']);
-
 const MAGIC_ALIASES = new Set(['MAGIC', 'WAND', 'ROD', 'TOME', 'STAFF']);
 
-const CLASS_RANGE_CAP = { KNIGHT: 1, RANGER: 4, MAGE: 4 };
+// ❌ REMOVIDO: CLASS_RANGE_CAP
+// A limitação por classe estava causando o bug onde Knight e Hunter
+// tinham o mesmo alcance. Agora cada arma define seu próprio alcance.
 
 function toTile(v) {
   return Math.floor(v / TILE);
@@ -30,6 +31,8 @@ function resolveRangeTiles(weaponType, heroClass, K) {
   const key = rawKey || 'SWORD';
 
   let rangeTiles = Number(table[key]);
+  
+  // Tenta fallback por família de arma
   if (!Number.isFinite(rangeTiles)) {
     if (DISTANCE_ALIASES.has(key) && Number.isFinite(table.DISTANCE)) {
       rangeTiles = Number(table.DISTANCE);
@@ -38,19 +41,25 @@ function resolveRangeTiles(weaponType, heroClass, K) {
     }
   }
 
-
+  // Fallback final para espada (corpo a corpo)
   if (!Number.isFinite(rangeTiles) && Number.isFinite(table.SWORD)) {
     rangeTiles = Number(table.SWORD);
   }
 
+  // Mínimo absoluto: 1 tile (corpo a corpo)
   if (!Number.isFinite(rangeTiles) || rangeTiles <= 0) {
     rangeTiles = 1;
   }
 
-  const classKey = String(heroClass || '').toUpperCase();
-  if (classKey && CLASS_RANGE_CAP[classKey]) {
-    rangeTiles = Math.min(rangeTiles, CLASS_RANGE_CAP[classKey]);
-  }
+  // ✅ CORREÇÃO: Removida limitação por classe
+  // Antes: const classKey = String(heroClass || '').toUpperCase();
+  // Antes: if (classKey && CLASS_RANGE_CAP[classKey]) {
+  // Antes:   rangeTiles = Math.min(rangeTiles, CLASS_RANGE_CAP[classKey]);
+  // Antes: }
+  // 
+  // AGORA: A arma define o alcance, não a classe do herói.
+  // Knight com BOW pode atacar de longe (se conseguir equipar).
+  // Hunter com SWORD só ataca corpo a corpo.
 
   return Math.max(1, rangeTiles);
 }
