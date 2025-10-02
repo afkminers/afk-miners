@@ -1,33 +1,38 @@
-// server/combat/geom.js - VERSÃO FINAL CORRIGIDA
-const TILE = 32;
-const EPS = 0; // ✅ REMOVIDA margem de erro (causava ataques fora de alcance)
+// server/combat/geom.js
+// === Geometria de combate (distâncias/alcance) ===
+// Mantém compatibilidade com imports existentes:
+//   const { inReachPx, resolveRangeTiles, chebyPx, chebyshevTiles, TILE } = require('./geom');
 
+const TILE = 32;
+const EPS = 0; // sem margem de erro
+
+// aliases para mapear tipo de arma -> faixa comum
 const DISTANCE_ALIASES = new Set(['BOW', 'CROSSBOW', 'SPEAR', 'JAVELIN', 'THROWING_KNIFE', 'DISTANCE']);
-const MAGIC_ALIASES = new Set(['MAGIC', 'WAND', 'ROD', 'TOME', 'STAFF']);
+const MAGIC_ALIASES    = new Set(['MAGIC', 'WAND', 'ROD', 'TOME', 'STAFF']);
 
 function toTile(v) {
   return Math.floor(v / TILE);
 }
 
-/** Chebyshev em TILES - converte DEPOIS de calcular distância em PX */
+/** Chebyshev em TILES (calcula em px e converte) */
 function chebyshevTiles(ax, ay, bx, by) {
-  // ✅ CORREÇÃO: calcula distância em pixels PRIMEIRO, depois converte para tiles
   const distPx = chebyPx(ax, ay, bx, by);
   return Math.floor(distPx / TILE);
 }
 
-/** Chebyshev em PIXELS (padrão Tibia: max entre dx e dy) */
+/** Chebyshev em PIXELS (máx de dx, dy) */
 function chebyPx(ax, ay, bx, by) {
   return Math.max(Math.abs(ax - bx), Math.abs(ay - by));
 }
 
+/** Resolve alcance (em tiles) para o tipo de arma informado */
 function resolveRangeTiles(weaponType, heroClass, K) {
   const table = (K && K.WEAPON_RANGE_TILES) || {};
   const rawKey = String(weaponType || '').toUpperCase();
   const key = rawKey || 'SWORD';
 
   let rangeTiles = Number(table[key]);
-  
+
   if (!Number.isFinite(rangeTiles)) {
     if (DISTANCE_ALIASES.has(key) && Number.isFinite(table.DISTANCE)) {
       rangeTiles = Number(table.DISTANCE);
@@ -44,21 +49,17 @@ function resolveRangeTiles(weaponType, heroClass, K) {
     rangeTiles = 1;
   }
 
-  // ✅ Classe NÃO limita alcance (removido CLASS_RANGE_CAP)
   return Math.max(1, rangeTiles);
 }
 
-/** 
- * Alcance por arma comparando em PIXELS (estilo Tibia)
- * ✅ CORREÇÃO: sem margem de erro (EPS = 0)
+/**
+ * Verifica alcance comparando em PIXELS (estilo Tibia)
+ * distPx <= rangeTiles * TILE (sem margem EPS)
  */
 function inReachPx(attacker, target, weaponType, K, heroClass = null) {
   const rangeTiles = resolveRangeTiles(weaponType, heroClass, K);
   const rangePx = rangeTiles * TILE;
   const distPx = chebyPx(attacker.x, attacker.y, target.x, target.y);
-  
-  // ✅ CORREÇÃO: comparação estrita sem margem de erro
-  // Tibia: se alcance é 5 tiles (160px), distância máxima aceita é exatamente 160px
   return distPx <= rangePx;
 }
 
