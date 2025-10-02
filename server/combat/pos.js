@@ -1,8 +1,7 @@
 // server/combat/pos.js
 const { get } = require('../models/db');
-const { getLivePlayerPosition } = require('../player/live_positions');
-
-const TILE = 32;
+const { getLivePlayerPosition, TTL_MS } = require('../player/live_positions');
+const { resolveHitboxDimension } = require('./geom');
 
 async function getHeroOwner(heroId) {
   return await get(
@@ -34,46 +33,47 @@ async function getHeroPos(heroId, preferMapKey = null) {
   const classKey = owner.class || null;
 
   // 1) Live primeiro
-  const live = getLivePlayerPosition(owner.playerId);
+  const live = getLivePlayerPosition(owner.playerId, { allowStale: true });
+  let fallbackPos = null;
   if (live) {
     const liveMapKey = String(live.mapKey || preferMapKey || 'house');
 
-    let px = Number(live.x || 0);
-    let py = Number(live.y || 0);
-    if (px < 1000 && py < 1000) {
-      px = (px * TILE) + (TILE / 2);
-      py = (py * TILE) + (TILE / 2);
-    }
-
     const livePos = {
-      x: px | 0,
-      y: py | 0,
+      x: Math.round(Number(live.x || 0)),
+      y: Math.round(Number(live.y || 0)),
       map_key: liveMapKey,
       class: classKey,
-      source: 'live',
+      source: live.stale ? 'live_stale' : 'live',
+      stale: Boolean(live.stale),
+      fresh: !Boolean(live.stale),
       updatedAt: Number(live.ts || Date.now()),
     };
 
+    if (Number.isFinite(live.age)) {
+      livePos.ageMs = Number(live.age);
+    }
+
     if (!preferMapKey || liveMapKey === preferMapKey) return livePos;
+    fallbackPos = livePos;
   }
 
   // 2) DB no mapa preferido
   if (preferMapKey) {
     const row = await getPlayerLastPos(owner.playerId, preferMapKey);
     if (row) {
-      let px = Number(row.x || 0);
-      let py = Number(row.y || 0);
-      if (px < 1000 && py < 1000) {
-        px = (px * TILE) + (TILE / 2);
-        py = (py * TILE) + (TILE / 2);
-      }
+      const updatedAtMs = row.updatedAt ? new Date(row.updatedAt).getTime() : null;
+      const ageMs = Number.isFinite(updatedAtMs) ? Date.now() - updatedAtMs : null;
+
       return {
-        x: px | 0,
-        y: py | 0,
+        x: Math.round(Number(row.x || 0)),
+        y: Math.round(Number(row.y || 0)),
         map_key: row.mapKey,
         class: classKey,
         source: 'db',
-        updatedAt: row.updatedAt ? new Date(row.updatedAt).getTime() : null,
+        stale: true,
+        fresh: false,
+        updatedAt: updatedAtMs,
+        ageMs: Number.isFinite(ageMs) ? ageMs : null,
       };
     }
   }
@@ -89,23 +89,23 @@ async function getHeroPos(heroId, preferMapKey = null) {
   );
 
   if (any) {
-    let px = Number(any.x || 0);
-    let py = Number(any.y || 0);
-    if (px < 1000 && py < 1000) {
-      px = (px * TILE) + (TILE / 2);
-      py = (py * TILE) + (TILE / 2);
-    }
+    const updatedAtMs = any.updatedAt ? new Date(any.updatedAt).getTime() : null;
+    const ageMs = Number.isFinite(updatedAtMs) ? Date.now() - updatedAtMs : null;
+
     return {
-      x: px | 0,
-      y: py | 0,
+      x: Math.round(Number(any.x || 0)),
+      y: Math.round(Number(any.y || 0)),
       map_key: any.mapKey,
       class: classKey,
       source: 'db',
-      updatedAt: any.updatedAt ? new Date(any.updatedAt).getTime() : null,
+      stale: true,
+      fresh: false,
+      updatedAt: updatedAtMs,
+      ageMs: Number.isFinite(ageMs) ? ageMs : null,
     };
   }
 
-  return null;
+  return fallbackPos;
 }
 
 /**
@@ -135,17 +135,31 @@ async function getMonsterPos(instanceId) {
 
   if (!row) return null;
 
-  let px = Number(row.x || 0);
-  let py = Number(row.y || 0);
-  if (px < 1000 && py < 1000) { px = (px * TILE) + (TILE / 2); py = (py * TILE) + (TILE / 2); }
+  const frameW = resolveHitboxDimension(row, 'w');
+  const frameH = resolveHitboxDimension(row, 'h');
 
   return {
-    x: px | 0,
-    y: py | 0,
+    x: Math.round(Number(row.x || 0)),
+    y: Math.round(Number(row.y || 0)),
     map_key: row.map_key,
-    frame_w: Number(row.frame_w || 32),
-    frame_h: Number(row.frame_h || 32),
+    frame_w: frameW,
+    frame_h: frameH,
   };
 }
 
-module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos };
+function isHeroPosFresh(heroPos) {
+  if (!heroPos) return false;
+  if (heroPos.fresh === true) return true;
+  if (heroPos.source === 'live' && heroPos.stale === false) return true;
+  if (heroPos.stale === true) return false;
+
+  const age = Number(heroPos.ageMs);
+  if (Number.isFinite(age)) {
+    const maxAge = Math.max(300, Number(process.env.COMBAT_HERO_POS_MAX_AGE_MS || TTL_MS || 1500));
+    return age <= maxAge;
+  }
+
+  return false;
+}
+
+module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos, isHeroPosFresh };
