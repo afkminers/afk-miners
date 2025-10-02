@@ -4,7 +4,11 @@
 // TTL configurável por env: LIVE_POS_TTL_MS (default 1500ms)
 
 const TTL_MS = Math.max(300, Number(process.env.LIVE_POS_TTL_MS || 1500));
-const GC_MS  = Math.max(TTL_MS, Number(process.env.LIVE_POS_GC_MS  || 5000));
+const STALE_MS = Math.max(
+  TTL_MS,
+  Number(process.env.LIVE_POS_STALE_MS || (TTL_MS * 6))
+);
+const GC_MS  = Math.max(STALE_MS, Number(process.env.LIVE_POS_GC_MS  || STALE_MS));
 
 /** store: playerId -> { x, y, mapKey, heroId, heroAlive, ts } */
 const store = new Map();
@@ -51,16 +55,38 @@ function setLivePlayerPosition(playerId, xOrObj, y, mapKey, heroId, heroAlive, t
   return next;
 }
 
-function getLivePlayerPosition(playerId) {
+function getLivePlayerPosition(playerId, opts = {}) {
   const id = String(playerId || '').trim();
   if (!id) return null;
   const pos = store.get(id);
   if (!pos) return null;
-  if (Date.now() - (pos.ts || 0) > TTL_MS) {
+  const now = Date.now();
+  const age = now - (pos.ts || 0);
+  if (age > STALE_MS) {
     store.delete(id);
     return null;
   }
-  return pos;
+
+  const allowStale = Boolean(opts && opts.allowStale);
+  if (!allowStale && age > TTL_MS) {
+    return null;
+  }
+
+  const out = {
+    x: pos.x | 0,
+    y: pos.y | 0,
+    mapKey: pos.mapKey,
+    heroId: pos.heroId != null ? String(pos.heroId) : null,
+    heroAlive: pos.heroAlive === false ? false : true,
+    ts: pos.ts,
+  };
+
+  if (allowStale) {
+    out.stale = age > TTL_MS;
+    out.age = age;
+  }
+
+  return out;
 }
 
 function clearLivePlayerPosition(playerId) {
@@ -105,7 +131,7 @@ function markHeroAlive(playerId, alive, heroId = null) {
 setInterval(() => {
   const now = Date.now();
   for (const [id, pos] of store.entries()) {
-    if (!pos || now - (pos.ts || 0) > TTL_MS) store.delete(id);
+    if (!pos || now - (pos.ts || 0) > STALE_MS) store.delete(id);
   }
 }, GC_MS);
 
