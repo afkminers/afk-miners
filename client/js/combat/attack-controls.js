@@ -389,21 +389,29 @@ export async function startAttack(targetId) {
   const hero = await ensureActiveHero();
   if (!hero.id) { alert('Nenhum herói ativo encontrado para atacar.'); return; }
 
-  // --- pré-check local (evita pedir /attack/start se estiver claramente longe) ---
+  // --- pré-check local (só avisa; servidor continua como autoridade) ---
   try {
     const heroPos = getHeroWorldPos();
     const mob = window.GameScene?.getMobByInstanceId?.(String(targetId));
     if (heroPos && mob) {
-      // alcance padrão 1 sqm para melee; (o servidor valida com precisão por arma)
-      const localRangeSqm = 1;
-      const distSqm = chebyshevSqm(heroPos.x, heroPos.y, mob.x, mob.y);
-      if (distSqm > localRangeSqm) {
-        const msg = `Alvo fora do alcance (${distSqm} > ${localRangeSqm} sqm).`;
-        showCombatMessage(msg);
-        return;
+      // mesmo critério do servidor: Chebyshev em PIXELS
+      const distPx = Math.max(Math.abs(heroPos.x - mob.x), Math.abs(heroPos.y - mob.y));
+  
+      // palpite de alcance por tipo de arma (o servidor valida com precisão)
+      const RANGE_TILES = { SWORD: 1, BOW: 5, STAFF: 3 };
+      const w = weaponForClass(hero.heroClass);
+      const rangeTiles = RANGE_TILES[w] ?? 1;
+      const rangePx = rangeTiles * TILE;
+  
+      if (distPx > rangePx) {
+        const distTiles = Math.floor(distPx / TILE);
+        showCombatMessage(`Alvo fora do alcance (${distTiles} > ${rangeTiles} sqm).`);
+        // Se quiser bloquear o start no cliente, descomente a linha abaixo:
+        // return;
       }
     }
   } catch {}
+
 
   // >>> garante CSRF fresquinho ANTES do POST (evita "CSRF inválido")
   try { await getCsrf(); } catch {}
@@ -514,12 +522,13 @@ function attachControls() {
         await startAttack(String(m.id));
         return;
       } 
-      // Right-click on empty space or other mouse buttons cancel attack
-      else if (e.button === 2 || e.button === 0) {
+      // Right-click on empty space or left-click cancel attack
+      else if (e.button === 0) {
         console.log('[attack] RMB on empty space or left-click - canceling attack');
         stopAttack();
         return;
       }
+
     } else {
       // Legacy mode: left-click only
       if (e.button != null && e.button !== 0) return;
