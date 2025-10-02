@@ -1,7 +1,9 @@
 // server/combat/pos.js
 const { get } = require('../models/db');
 const { getLivePlayerPosition } = require('../player/live_positions');
+
 const { resolveHitboxDimension } = require('./geom');
+
 
 async function getHeroOwner(heroId) {
   return await get(
@@ -124,8 +126,10 @@ async function getMonsterPos(instanceId) {
 
   if (!row) return null;
 
+
   const frameW = resolveHitboxDimension(row, 'w');
   const frameH = resolveHitboxDimension(row, 'h');
+
 
   return {
     x: Math.round(Number(row.x || 0)),
