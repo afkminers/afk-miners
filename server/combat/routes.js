@@ -10,7 +10,7 @@ const K = require('../balance/config');
 
 const { get } = require('../models/db');
 const { getHeroPos, getMonsterPos } = require('./pos');
-const { inReachPx, resolveRangeTiles, chebyPx, chebyshevTiles, TILE } = require('./geom');
+const { inReachPx, resolveRangeTiles, distanceToTargetPx, TILE } = require('./geom');
 const { hasLineOfSight } = require('./los');
 const { getGrid } = require('../maps/grid');
 const { applyHit, respawnHero } = require('./service');
@@ -44,7 +44,7 @@ function buildRangeTelemetry(heroPos, mobPos, weaponType) {
   const rangePx = rangeTiles * TILE;
 
   // ✅ mede em PX (Chebyshev), depois converte pra tiles
-  const distPx = chebyPx(hx, hy, mx, my);
+  const distPx = distanceToTargetPx({ x: hx, y: hy }, mobPos);
   const distTiles = Math.floor(distPx / TILE);
 
   return {
@@ -56,6 +56,8 @@ function buildRangeTelemetry(heroPos, mobPos, weaponType) {
       mapKey: heroPos.map_key || heroPos.mapKey || null,
       updatedAt: Number(heroPos.updatedAt || 0) || null,
       source: heroPos.source || null,
+      stale: heroPos.stale === true,
+      ageMs: Number.isFinite(heroPos.ageMs) ? Number(heroPos.ageMs) : null,
     },
     monster: {
       x: mx,
