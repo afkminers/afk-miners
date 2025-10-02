@@ -1,7 +1,9 @@
 // server/combat/pos.js
 const { get } = require('../models/db');
+
 const { getLivePlayerPosition, TTL_MS } = require('../player/live_positions');
 const { resolveHitboxDimension } = require('./geom');
+
 
 async function getHeroOwner(heroId) {
   return await get(
@@ -45,7 +47,9 @@ async function getHeroPos(heroId, preferMapKey = null) {
       class: classKey,
       source: live.stale ? 'live_stale' : 'live',
       stale: Boolean(live.stale),
+
       fresh: !Boolean(live.stale),
+
       updatedAt: Number(live.ts || Date.now()),
     };
 
@@ -61,8 +65,10 @@ async function getHeroPos(heroId, preferMapKey = null) {
   if (preferMapKey) {
     const row = await getPlayerLastPos(owner.playerId, preferMapKey);
     if (row) {
+
       const updatedAtMs = row.updatedAt ? new Date(row.updatedAt).getTime() : null;
       const ageMs = Number.isFinite(updatedAtMs) ? Date.now() - updatedAtMs : null;
+
 
       return {
         x: Math.round(Number(row.x || 0)),
@@ -70,10 +76,12 @@ async function getHeroPos(heroId, preferMapKey = null) {
         map_key: row.mapKey,
         class: classKey,
         source: 'db',
+
         stale: true,
         fresh: false,
         updatedAt: updatedAtMs,
         ageMs: Number.isFinite(ageMs) ? ageMs : null,
+
       };
     }
   }
@@ -89,8 +97,10 @@ async function getHeroPos(heroId, preferMapKey = null) {
   );
 
   if (any) {
+
     const updatedAtMs = any.updatedAt ? new Date(any.updatedAt).getTime() : null;
     const ageMs = Number.isFinite(updatedAtMs) ? Date.now() - updatedAtMs : null;
+
 
     return {
       x: Math.round(Number(any.x || 0)),
@@ -98,10 +108,12 @@ async function getHeroPos(heroId, preferMapKey = null) {
       map_key: any.mapKey,
       class: classKey,
       source: 'db',
+
       stale: true,
       fresh: false,
       updatedAt: updatedAtMs,
       ageMs: Number.isFinite(ageMs) ? ageMs : null,
+
     };
   }
 
@@ -135,8 +147,10 @@ async function getMonsterPos(instanceId) {
 
   if (!row) return null;
 
+
   const frameW = resolveHitboxDimension(row, 'w');
   const frameH = resolveHitboxDimension(row, 'h');
+
 
   return {
     x: Math.round(Number(row.x || 0)),

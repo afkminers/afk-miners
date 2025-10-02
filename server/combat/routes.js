@@ -9,7 +9,9 @@ const K = require('../balance/config');
 // const autoloop = require('./autoloop'); // ← desativado por enquanto
 
 const { get } = require('../models/db');
+
 const { getHeroPos, getMonsterPos, isHeroPosFresh } = require('./pos');
+
 const { inReachPx, resolveRangeTiles, distanceToTargetPx, TILE } = require('./geom');
 const { hasLineOfSight } = require('./los');
 const { getGrid } = require('../maps/grid');
