@@ -4,6 +4,7 @@ const { get, run } = require('../models/db');
 const K = require('../balance/config');
 const { applyTries, getClassRate } = require('../skills/engine');
 const { broadcast } = require('../ws/bus');
+const { resolveHitboxDimension } = require('./geom');
 // Se você usa este serviço central de XP:
 const { giveXp } = require('../services/heroProgress');
 
@@ -373,8 +374,8 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
     my = (my * TILE) + (TILE / 2);
   }
 
-  const frameW = Number(inst.frame_w || 32);
-  const frameH = Number(inst.frame_h || 32);
+  const frameW = resolveHitboxDimension(inst, 'w');
+  const frameH = resolveHitboxDimension(inst, 'h');
   
   // Hitbox retangular centralizada no monstro
   const mobLeft = mx - (frameW / 2);

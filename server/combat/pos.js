@@ -2,6 +2,9 @@
 const { get } = require('../models/db');
 const { getLivePlayerPosition } = require('../player/live_positions');
 
+const { resolveHitboxDimension } = require('./geom');
+
+
 async function getHeroOwner(heroId) {
   return await get(
     `SELECT ph.id AS "heroId", ph."playerId" AS "playerId", hm.class AS class
@@ -123,12 +126,17 @@ async function getMonsterPos(instanceId) {
 
   if (!row) return null;
 
+
+  const frameW = resolveHitboxDimension(row, 'w');
+  const frameH = resolveHitboxDimension(row, 'h');
+
+
   return {
     x: Math.round(Number(row.x || 0)),
     y: Math.round(Number(row.y || 0)),
     map_key: row.map_key,
-    frame_w: Number(row.frame_w || 32),
-    frame_h: Number(row.frame_h || 32),
+    frame_w: frameW,
+    frame_h: frameH,
   };
 }
 
