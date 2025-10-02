@@ -1,6 +1,6 @@
 // server/combat/pos.js
 const { get } = require('../models/db');
-const { getLivePlayerPosition } = require('../state/live-positions');
+const { getLivePlayerPosition } = require('../player/live_positions');
 
 const TILE = 32;
 
