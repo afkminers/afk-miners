@@ -1,6 +1,6 @@
 // server/ws/singleton.js
 const WebSocket = require('ws');
-const { setLivePlayerPosition, clearLivePlayerPosition } = require('../state/live-positions');
+const { setLivePlayerPosition, clearLivePlayerPosition } = require('../player/live_positions');
 
 const wss = new WebSocket.Server({ noServer: true });
 const clients = new Map();
