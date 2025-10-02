@@ -114,14 +114,27 @@ function listPlayerIds() {
   return Array.from(store.keys());
 }
 
+function listPlayerIds(maxAgeMs = TTL_MS) {
+  const now = Date.now();
+  const out = [];
+  for (const [id, pos] of store.entries()) {
+    if (!pos) continue;
+    if (now - (pos.ts || 0) > maxAgeMs) continue;
+    out.push(id);
+  }
+  return out;
+}
+
 module.exports = {
   setLivePlayerPosition,
   getLivePlayerPosition,
   clearLivePlayerPosition,
   listFreshHeroesByMap,
   markHeroAlive,
-  listPlayerIds,           // <<<<< ADICIONADO
   TTL_MS,
+  // 👇 adicionar
+  listPlayerIds,
 };
+
 
 
