@@ -29,7 +29,7 @@ router.use((req, _res, next) => {
  */
 router.get('/api/combat/nearest', async (req, res) => {
   try {
-    const mapKey = String(req.query.map || 'house');
+    const mapKey = String(req.query.map || req.query.mapKey || 'house');
     const x = Number(req.query.x);
     const y = Number(req.query.y);
     const px = Number(req.query.px);
