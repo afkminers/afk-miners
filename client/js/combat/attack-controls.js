@@ -22,6 +22,13 @@ const ATTACK_USE_RMB = true; // Default to true as per requirements
 const RANGE_WARNING_COOLDOWN_MS = 900;
 const LOS_WARNING_COOLDOWN_MS = 1200;
 
+// ==== helpers de tiles/range para pré-check local ====
+const TILE = 32;
+const toTile = (n) => (Math.floor(n / TILE) | 0);
+const chebyshevSqm = (ax, ay, bx, by) =>
+  Math.max(Math.abs(toTile(ax) - toTile(bx)), Math.abs(toTile(ay) - toTile(by)));
+
+
 function safeNumber(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
