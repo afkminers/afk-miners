@@ -671,6 +671,14 @@ app.get('/', (_req, res) => {
 app.use('/sprites', express.static(path.join(__dirname, '../client/sprites')));
 
 // ========= STATIC
+// ========= STATIC
+// servir sprites direto da pasta client/sprites
+app.use('/sprites', express.static(path.join(__dirname, '../client/sprites')));
+
+// ✅ compat: URLs antigas que começam com /client/...
+app.use('/client', express.static(CLIENT_ROOT_DIR));
+
+// ========= STATIC raiz (serve / => client/)
 app.use(express.static(CLIENT_ROOT_DIR));
 
 // ========= SPA fallback
