@@ -1299,7 +1299,7 @@ async function seedAIMobsFromDB(aiMobs) {
             // flush posição no logout + remove presença
             flushOnePlayerPos(ws._player.id).catch(() => {});
 
-            removeLivePlayerPosition(ws._player.id);
+            clearLivePlayerPosition(ws._player.id);
 
             markOfflineByPlayer(ws._player.id).catch(() => {});
           }
