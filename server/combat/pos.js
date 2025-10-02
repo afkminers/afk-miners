@@ -1,7 +1,9 @@
 // server/combat/pos.js
 const { get } = require('../models/db');
+
 const { getLivePlayerPosition, TTL_MS } = require('../player/live_positions');
 const { resolveHitboxDimension, TILE } = require('./geom');
+
 
 async function getHeroOwner(heroId) {
   return await get(
@@ -45,7 +47,9 @@ async function getHeroPos(heroId, preferMapKey = null) {
       class: classKey,
       source: live.stale ? 'live_stale' : 'live',
       stale: Boolean(live.stale),
+
       fresh: !Boolean(live.stale),
+
       updatedAt: Number(live.ts || Date.now()),
     };
 
@@ -61,8 +65,10 @@ async function getHeroPos(heroId, preferMapKey = null) {
   if (preferMapKey) {
     const row = await getPlayerLastPos(owner.playerId, preferMapKey);
     if (row) {
+
       const updatedAtMs = row.updatedAt ? new Date(row.updatedAt).getTime() : null;
       const ageMs = Number.isFinite(updatedAtMs) ? Date.now() - updatedAtMs : null;
+
 
       return {
         x: Math.round(Number(row.x || 0)),
@@ -70,10 +76,12 @@ async function getHeroPos(heroId, preferMapKey = null) {
         map_key: row.mapKey,
         class: classKey,
         source: 'db',
+
         stale: true,
         fresh: false,
         updatedAt: updatedAtMs,
         ageMs: Number.isFinite(ageMs) ? ageMs : null,
+
       };
     }
   }
@@ -89,8 +97,10 @@ async function getHeroPos(heroId, preferMapKey = null) {
   );
 
   if (any) {
+
     const updatedAtMs = any.updatedAt ? new Date(any.updatedAt).getTime() : null;
     const ageMs = Number.isFinite(updatedAtMs) ? Date.now() - updatedAtMs : null;
+
 
     return {
       x: Math.round(Number(any.x || 0)),
@@ -98,14 +108,17 @@ async function getHeroPos(heroId, preferMapKey = null) {
       map_key: any.mapKey,
       class: classKey,
       source: 'db',
+
       stale: true,
       fresh: false,
       updatedAt: updatedAtMs,
       ageMs: Number.isFinite(ageMs) ? ageMs : null,
+
     };
   }
 
   return fallbackPos;
+
 }
 
 function adjustOrigin(raw, sizePx) {
@@ -169,6 +182,7 @@ function resolveCoord(raw, sizePx, spawnCoord, spawnSpan) {
   }
 
   return Math.round(originCandidate);
+
 }
 
 async function getMonsterPos(instanceId) {
@@ -215,6 +229,7 @@ async function getMonsterPos(instanceId) {
     cy: centerY,
     raw_x: Math.round(Number(row.x || 0)),
     raw_y: Math.round(Number(row.y || 0)),
+
     map_key: row.map_key,
     frame_w: frameW,
     frame_h: frameH,
@@ -224,6 +239,7 @@ async function getMonsterPos(instanceId) {
 function isHeroPosFresh(heroPos) {
   if (!heroPos) return false;
   if (heroPos.fresh === true) return true;
+
 
   const rawAge = Number(heroPos.ageMs ?? heroPos.age_ms ?? heroPos.ageMS);
   let age = Number.isFinite(rawAge) ? rawAge : null;
@@ -253,6 +269,7 @@ function isHeroPosFresh(heroPos) {
   }
 
   return heroPos.stale !== true;
+
 }
 
 module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos, isHeroPosFresh };

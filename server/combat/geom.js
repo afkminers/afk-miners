@@ -19,6 +19,7 @@ function clamp(v, min, max) {
   return v;
 }
 
+
 // aliases para mapear tipo de arma -> faixa comum
 const DISTANCE_ALIASES = new Set(['BOW', 'CROSSBOW', 'SPEAR', 'JAVELIN', 'THROWING_KNIFE', 'DISTANCE']);
 const MAGIC_ALIASES    = new Set(['MAGIC', 'WAND', 'ROD', 'TOME', 'STAFF']);
@@ -37,6 +38,7 @@ function chebyshevTiles(ax, ay, bx, by) {
 function chebyPx(ax, ay, bx, by) {
   return Math.max(Math.abs(ax - bx), Math.abs(ay - by));
 }
+
 
 function resolveHitboxDimension(target, axis) {
   if (!target) return TILE;
@@ -57,6 +59,7 @@ function resolveHitboxDimension(target, axis) {
   return TILE;
 }
 
+
 function pickCoord(source, axis) {
   if (!source) return 0;
   const keys = axis === 'x'
@@ -73,8 +76,10 @@ function pickCoord(source, axis) {
   return 0;
 }
 
+
 function distanceToTargetPx(attacker, target) {
   if (!attacker || !target) return Infinity;
+
 
   const ax = pickCoord(attacker, 'x');
   const ay = pickCoord(attacker, 'y');
@@ -84,12 +89,14 @@ function distanceToTargetPx(attacker, target) {
   const ty = pickCoord(target, 'y');
   if (!Number.isFinite(tx) || !Number.isFinite(ty)) return Infinity;
 
+
   const frameW = resolveHitboxDimension(target, 'w');
   const frameH = resolveHitboxDimension(target, 'h');
 
   if ((Number.isFinite(frameW) && frameW > 0) || (Number.isFinite(frameH) && frameH > 0)) {
     const halfW = Math.max(1, frameW) / 2;
     const halfH = Math.max(1, frameH) / 2;
+
     const closestX = clamp(ax, tx - halfW, tx + halfW);
     const closestY = clamp(ay, ty - halfH, ty + halfH);
     return chebyPx(ax, ay, closestX, closestY);
