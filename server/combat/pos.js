@@ -115,15 +115,15 @@ async function getMonsterPos(instanceId) {
   const row = await get(
     `SELECT mi.x, mi.y, mi.map_key AS "map_key",
             COALESCE(
-              NULLIF((sp."dataJSON"->>'frame_w'), '')::int,
-              NULLIF((sp."dataJSON"->>'frameW'), '')::int,
-              NULLIF((sp."dataJSON"->>'w'), '')::int,
+              NULLIF(((sp."dataJSON")::jsonb ->> 'frame_w'), '')::int,
+              NULLIF(((sp."dataJSON")::jsonb ->> 'frameW'), '')::int,
+              NULLIF(((sp."dataJSON")::jsonb ->> 'w'), '')::int,
               32
             ) AS frame_w,
             COALESCE(
-              NULLIF((sp."dataJSON"->>'frame_h'), '')::int,
-              NULLIF((sp."dataJSON"->>'frameH'), '')::int,
-              NULLIF((sp."dataJSON"->>'h'), '')::int,
+              NULLIF(((sp."dataJSON")::jsonb ->> 'frame_h'), '')::int,
+              NULLIF(((sp."dataJSON")::jsonb ->> 'frameH'), '')::int,
+              NULLIF(((sp."dataJSON")::jsonb ->> 'h'), '')::int,
               32
             ) AS frame_h
        FROM monster_instances mi
@@ -137,19 +137,14 @@ async function getMonsterPos(instanceId) {
 
   let px = Number(row.x || 0);
   let py = Number(row.y || 0);
-
-  // Converte tiles -> pixels se necessário
-  if (px < 1000 && py < 1000) {
-    px = (px * TILE) + (TILE / 2);
-    py = (py * TILE) + (TILE / 2);
-  }
+  if (px < 1000 && py < 1000) { px = (px * TILE) + (TILE / 2); py = (py * TILE) + (TILE / 2); }
 
   return {
     x: px | 0,
     y: py | 0,
     map_key: row.map_key,
     frame_w: Number(row.frame_w || 32),
-    frame_h: Number(row.frame_h || 32)
+    frame_h: Number(row.frame_h || 32),
   };
 }
 
