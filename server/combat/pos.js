@@ -32,7 +32,8 @@ async function getHeroPos(heroId, preferMapKey = null) {
   const classKey = owner.class || null;
 
   // 1) Live primeiro
-  const live = getLivePlayerPosition(owner.playerId);
+  const live = getLivePlayerPosition(owner.playerId, { allowStale: true });
+  let fallbackPos = null;
   if (live) {
     const liveMapKey = String(live.mapKey || preferMapKey || 'house');
 
@@ -41,11 +42,17 @@ async function getHeroPos(heroId, preferMapKey = null) {
       y: Math.round(Number(live.y || 0)),
       map_key: liveMapKey,
       class: classKey,
-      source: 'live',
+      source: live.stale ? 'live_stale' : 'live',
+      stale: Boolean(live.stale),
       updatedAt: Number(live.ts || Date.now()),
     };
 
+    if (Number.isFinite(live.age)) {
+      livePos.ageMs = Number(live.age);
+    }
+
     if (!preferMapKey || liveMapKey === preferMapKey) return livePos;
+    fallbackPos = livePos;
   }
 
   // 2) DB no mapa preferido
@@ -58,6 +65,7 @@ async function getHeroPos(heroId, preferMapKey = null) {
         map_key: row.mapKey,
         class: classKey,
         source: 'db',
+        stale: false,
         updatedAt: row.updatedAt ? new Date(row.updatedAt).getTime() : null,
       };
     }
@@ -80,11 +88,12 @@ async function getHeroPos(heroId, preferMapKey = null) {
       map_key: any.mapKey,
       class: classKey,
       source: 'db',
+      stale: false,
       updatedAt: any.updatedAt ? new Date(any.updatedAt).getTime() : null,
     };
   }
 
-  return null;
+  return fallbackPos;
 }
 
 /**

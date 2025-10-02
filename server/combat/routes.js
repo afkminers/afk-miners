@@ -56,6 +56,8 @@ function buildRangeTelemetry(heroPos, mobPos, weaponType) {
       mapKey: heroPos.map_key || heroPos.mapKey || null,
       updatedAt: Number(heroPos.updatedAt || 0) || null,
       source: heroPos.source || null,
+      stale: heroPos.stale === true,
+      ageMs: Number.isFinite(heroPos.ageMs) ? Number(heroPos.ageMs) : null,
     },
     monster: {
       x: mx,
