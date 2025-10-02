@@ -1,8 +1,7 @@
 // server/combat/pos.js
 const { get } = require('../models/db');
-const { getLivePlayerPosition } = require('../player/live_positions');
-
-const TILE = 32;
+const { getLivePlayerPosition, TTL_MS } = require('../player/live_positions');
+const { resolveHitboxDimension, TILE } = require('./geom');
 
 async function getHeroOwner(heroId) {
   return await get(
@@ -34,46 +33,47 @@ async function getHeroPos(heroId, preferMapKey = null) {
   const classKey = owner.class || null;
 
   // 1) Live primeiro
-  const live = getLivePlayerPosition(owner.playerId);
+  const live = getLivePlayerPosition(owner.playerId, { allowStale: true });
+  let fallbackPos = null;
   if (live) {
     const liveMapKey = String(live.mapKey || preferMapKey || 'house');
 
-    let px = Number(live.x || 0);
-    let py = Number(live.y || 0);
-    if (px < 1000 && py < 1000) {
-      px = (px * TILE) + (TILE / 2);
-      py = (py * TILE) + (TILE / 2);
-    }
-
     const livePos = {
-      x: px | 0,
-      y: py | 0,
+      x: Math.round(Number(live.x || 0)),
+      y: Math.round(Number(live.y || 0)),
       map_key: liveMapKey,
       class: classKey,
-      source: 'live',
+      source: live.stale ? 'live_stale' : 'live',
+      stale: Boolean(live.stale),
+      fresh: !Boolean(live.stale),
       updatedAt: Number(live.ts || Date.now()),
     };
 
+    if (Number.isFinite(live.age)) {
+      livePos.ageMs = Number(live.age);
+    }
+
     if (!preferMapKey || liveMapKey === preferMapKey) return livePos;
+    fallbackPos = livePos;
   }
 
   // 2) DB no mapa preferido
   if (preferMapKey) {
     const row = await getPlayerLastPos(owner.playerId, preferMapKey);
     if (row) {
-      let px = Number(row.x || 0);
-      let py = Number(row.y || 0);
-      if (px < 1000 && py < 1000) {
-        px = (px * TILE) + (TILE / 2);
-        py = (py * TILE) + (TILE / 2);
-      }
+      const updatedAtMs = row.updatedAt ? new Date(row.updatedAt).getTime() : null;
+      const ageMs = Number.isFinite(updatedAtMs) ? Date.now() - updatedAtMs : null;
+
       return {
-        x: px | 0,
-        y: py | 0,
+        x: Math.round(Number(row.x || 0)),
+        y: Math.round(Number(row.y || 0)),
         map_key: row.mapKey,
         class: classKey,
         source: 'db',
-        updatedAt: row.updatedAt ? new Date(row.updatedAt).getTime() : null,
+        stale: true,
+        fresh: false,
+        updatedAt: updatedAtMs,
+        ageMs: Number.isFinite(ageMs) ? ageMs : null,
       };
     }
   }
@@ -89,28 +89,88 @@ async function getHeroPos(heroId, preferMapKey = null) {
   );
 
   if (any) {
-    let px = Number(any.x || 0);
-    let py = Number(any.y || 0);
-    if (px < 1000 && py < 1000) {
-      px = (px * TILE) + (TILE / 2);
-      py = (py * TILE) + (TILE / 2);
-    }
+    const updatedAtMs = any.updatedAt ? new Date(any.updatedAt).getTime() : null;
+    const ageMs = Number.isFinite(updatedAtMs) ? Date.now() - updatedAtMs : null;
+
     return {
-      x: px | 0,
-      y: py | 0,
+      x: Math.round(Number(any.x || 0)),
+      y: Math.round(Number(any.y || 0)),
       map_key: any.mapKey,
       class: classKey,
       source: 'db',
-      updatedAt: any.updatedAt ? new Date(any.updatedAt).getTime() : null,
+      stale: true,
+      fresh: false,
+      updatedAt: updatedAtMs,
+      ageMs: Number.isFinite(ageMs) ? ageMs : null,
     };
   }
 
-  return null;
+  return fallbackPos;
 }
 
-/**
- * Retorna posição do monstro SEMPRE EM PIXELS
- */
+function adjustOrigin(raw, sizePx) {
+  const snapped = Math.round(Number(raw ?? 0));
+  if (!Number.isFinite(snapped)) return 0;
+
+  const span = (Number.isFinite(sizePx) && sizePx > 0) ? sizePx : TILE;
+  const half = Math.round(span / 2);
+
+  const mod = ((snapped % TILE) + TILE) % TILE;
+  const near = (value, target, tolerance = 1) => Math.abs(value - target) <= tolerance;
+
+  if (near(mod, TILE / 2)) {
+    return snapped;
+  }
+
+  if (near(mod, 0) || near(mod, TILE) || near(mod, TILE - 1)) {
+    return snapped + half;
+  }
+
+  if (span > TILE && !near(mod, TILE / 2)) {
+    return snapped + half;
+  }
+
+  return snapped;
+}
+
+function buildTileCandidate(raw, sizePx) {
+  const snapped = Math.round(Number(raw ?? 0));
+  if (!Number.isFinite(snapped)) return 0;
+  const span = (Number.isFinite(sizePx) && sizePx > 0) ? sizePx : TILE;
+  const half = Math.round(span / 2);
+  return (snapped * TILE) + half;
+}
+
+function resolveCoord(raw, sizePx, spawnCoord, spawnSpan) {
+  const originCandidate = adjustOrigin(raw, sizePx);
+  const tileCandidate = buildTileCandidate(raw, sizePx);
+
+  const spawnPos = Number(spawnCoord);
+  if (Number.isFinite(spawnPos)) {
+    const spanRaw = Number(spawnSpan);
+    const span = (Number.isFinite(spanRaw) && spanRaw > 0) ? spanRaw : TILE;
+    const spawnCenter = spawnPos + (span / 2);
+    const originDist = Math.abs(originCandidate - spawnCenter);
+    const tileDist = Math.abs(tileCandidate - spawnCenter);
+    if ((tileDist + (TILE * 0.75)) < originDist) {
+      return Math.round(tileCandidate);
+    }
+    return Math.round(originCandidate);
+  }
+
+  const snapped = Math.round(Number(raw ?? 0));
+  const mod = ((snapped % TILE) + TILE) % TILE;
+  const nearCenter = Math.abs(mod - (TILE / 2)) <= 1;
+  if (!nearCenter) {
+    const diff = Math.abs(tileCandidate - originCandidate);
+    if (diff > TILE / 2) {
+      return Math.round(tileCandidate);
+    }
+  }
+
+  return Math.round(originCandidate);
+}
+
 async function getMonsterPos(instanceId) {
   const row = await get(
     `SELECT mi.x, mi.y, mi.map_key AS "map_key",
@@ -125,7 +185,11 @@ async function getMonsterPos(instanceId) {
               NULLIF(((sp."dataJSON")::jsonb ->> 'frameH'), '')::int,
               NULLIF(((sp."dataJSON")::jsonb ->> 'h'), '')::int,
               32
-            ) AS frame_h
+            ) AS frame_h,
+            s.x  AS spawn_x,
+            s.y  AS spawn_y,
+            COALESCE(s.w, 0) AS spawn_w,
+            COALESCE(s.h, 0) AS spawn_h
        FROM monster_instances mi
   LEFT JOIN spawns s ON s.id = mi.spawn_id
   LEFT JOIN sprites_master sp ON sp.key = s."monsterKey" AND sp.kind = 'monster'
@@ -135,17 +199,60 @@ async function getMonsterPos(instanceId) {
 
   if (!row) return null;
 
-  let px = Number(row.x || 0);
-  let py = Number(row.y || 0);
-  if (px < 1000 && py < 1000) { px = (px * TILE) + (TILE / 2); py = (py * TILE) + (TILE / 2); }
+  const frameW = resolveHitboxDimension(row, 'w');
+  const frameH = resolveHitboxDimension(row, 'h');
+
+  const rawX = Number(row.x || 0);
+  const rawY = Number(row.y || 0);
+
+  const centerX = resolveCoord(rawX, frameW, row.spawn_x, row.spawn_w);
+  const centerY = resolveCoord(rawY, frameH, row.spawn_y, row.spawn_h);
 
   return {
-    x: px | 0,
-    y: py | 0,
+    x: centerX,
+    y: centerY,
+    cx: centerX,
+    cy: centerY,
+    raw_x: Math.round(Number(row.x || 0)),
+    raw_y: Math.round(Number(row.y || 0)),
     map_key: row.map_key,
-    frame_w: Number(row.frame_w || 32),
-    frame_h: Number(row.frame_h || 32),
+    frame_w: frameW,
+    frame_h: frameH,
   };
 }
 
-module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos };
+function isHeroPosFresh(heroPos) {
+  if (!heroPos) return false;
+  if (heroPos.fresh === true) return true;
+
+  const rawAge = Number(heroPos.ageMs ?? heroPos.age_ms ?? heroPos.ageMS);
+  let age = Number.isFinite(rawAge) ? rawAge : null;
+  if (!Number.isFinite(age) && heroPos.updatedAt) {
+    const ts = Number(heroPos.updatedAt);
+    if (Number.isFinite(ts)) age = Date.now() - ts;
+  }
+
+  const maxAgeEnv = Number(process.env.COMBAT_HERO_POS_MAX_AGE_MS);
+  const fallbackMax = Number.isFinite(maxAgeEnv) && maxAgeEnv > 0
+    ? maxAgeEnv
+    : (Number.isFinite(TTL_MS) ? TTL_MS * 3 : 4500);
+  const maxAge = Math.max(300, fallbackMax);
+
+  if (heroPos.source === 'live') {
+    if (heroPos.stale === false) return true;
+    if (Number.isFinite(age)) return age <= maxAge;
+    return false;
+  }
+
+  if (heroPos.stale === true && Number.isFinite(age)) {
+    return age <= maxAge;
+  }
+
+  if (Number.isFinite(age)) {
+    return age <= maxAge;
+  }
+
+  return heroPos.stale !== true;
+}
+
+module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos, isHeroPosFresh };
