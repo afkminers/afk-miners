@@ -121,17 +121,27 @@ async function getHeroPos(heroId, preferMapKey = null) {
 /**
  * Retorna posição do monstro SEMPRE EM PIXELS
  */
-async function getMonsterPos(instanceId) {
-  const row = await get(
-    `SELECT mi.x, mi.y, mi.map_key AS "map_key",
-            COALESCE(sp.frame_w, 32) AS frame_w,
-            COALESCE(sp.frame_h, 32) AS frame_h
-       FROM monster_instances mi
-  LEFT JOIN spawns s ON s.id = mi.spawn_id
-  LEFT JOIN sprites_master sp ON sp.key = s."monsterKey" AND sp.kind = 'monster'
-      WHERE mi.id = $1`,
-    [instanceId]
-  );
+const row = await get(
+  `SELECT mi.x, mi.y, mi.map_key AS "map_key",
+          COALESCE(
+            NULLIF((sp."dataJSON"->>'frame_w'), '')::int,
+            NULLIF((sp."dataJSON"->>'frameW'), '')::int,
+            NULLIF((sp."dataJSON"->>'w'), '')::int,
+            32
+          ) AS frame_w,
+          COALESCE(
+            NULLIF((sp."dataJSON"->>'frame_h'), '')::int,
+            NULLIF((sp."dataJSON"->>'frameH'), '')::int,
+            NULLIF((sp."dataJSON"->>'h'), '')::int,
+            32
+          ) AS frame_h
+     FROM monster_instances mi
+LEFT JOIN spawns s ON s.id = mi.spawn_id
+LEFT JOIN sprites_master sp ON sp.key = s."monsterKey" AND sp.kind = 'monster'
+    WHERE mi.id = $1`,
+  [instanceId]
+);
+
   
   if (!row) return null;
   
