@@ -60,15 +60,33 @@ function resolveHitboxDimension(target, axis) {
 }
 
 
+function pickCoord(source, axis) {
+  if (!source) return 0;
+  const keys = axis === 'x'
+    ? ['cx', 'centerX', 'center_x', 'center', 'x', 'X', 'left']
+    : ['cy', 'centerY', 'center_y', 'center', 'y', 'Y', 'top'];
+
+  for (const key of keys) {
+    if (key in source) {
+      const v = Number(source[key]);
+      if (Number.isFinite(v)) return v;
+    }
+  }
+
+  return 0;
+}
+
+
 function distanceToTargetPx(attacker, target) {
   if (!attacker || !target) return Infinity;
 
-  const ax = Number(attacker.x ?? attacker.X ?? attacker.left ?? attacker.cx ?? 0);
-  const ay = Number(attacker.y ?? attacker.Y ?? attacker.top ?? attacker.cy ?? 0);
+
+  const ax = pickCoord(attacker, 'x');
+  const ay = pickCoord(attacker, 'y');
   if (!Number.isFinite(ax) || !Number.isFinite(ay)) return Infinity;
 
-  const tx = Number(target.x ?? target.X ?? target.cx ?? 0);
-  const ty = Number(target.y ?? target.Y ?? target.cy ?? 0);
+  const tx = pickCoord(target, 'x');
+  const ty = pickCoord(target, 'y');
   if (!Number.isFinite(tx) || !Number.isFinite(ty)) return Infinity;
 
 
