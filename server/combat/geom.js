@@ -19,16 +19,6 @@ function clamp(v, min, max) {
   return v;
 }
 
-function clamp(v, min, max) {
-  if (!Number.isFinite(v)) {
-    if (Number.isFinite(min)) return min;
-    if (Number.isFinite(max)) return max;
-    return 0;
-  }
-  if (Number.isFinite(min) && v < min) return min;
-  if (Number.isFinite(max) && v > max) return max;
-  return v;
-}
 
 // aliases para mapear tipo de arma -> faixa comum
 const DISTANCE_ALIASES = new Set(['BOW', 'CROSSBOW', 'SPEAR', 'JAVELIN', 'THROWING_KNIFE', 'DISTANCE']);

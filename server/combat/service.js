@@ -345,15 +345,25 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
 
   // --- POSIÇÃO DO HERÓI (SEMPRE EM PIXELS) ---
   let hpos = null;
+  let heroPosFresh = false;
   try {
     const mod = posMod();
     if (mod && typeof mod.getHeroPos === 'function') {
       hpos = await mod.getHeroPos(hero.hero_id, inst.map_key);
+      if (hpos && typeof mod.isHeroPosFresh === 'function') {
+        heroPosFresh = mod.isHeroPosFresh(hpos);
+      } else if (hpos) {
+        heroPosFresh = hpos.fresh === true || (hpos.source === 'live' && hpos.stale === false);
+      }
     }
   } catch {}
 
   if (!hpos || String(hpos.map_key) !== String(inst.map_key)) {
     return { ok: false, message: 'target not in same map' };
+  }
+
+  if (!heroPosFresh) {
+    return { ok: false, message: 'target position stale' };
   }
 
   let hx = Number(hpos.x || 0);

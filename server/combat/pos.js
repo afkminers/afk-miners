@@ -1,7 +1,7 @@
 // server/combat/pos.js
 const { get } = require('../models/db');
-const { getLivePlayerPosition } = require('../player/live_positions');
 
+const { getLivePlayerPosition, TTL_MS } = require('../player/live_positions');
 const { resolveHitboxDimension } = require('./geom');
 
 
@@ -47,6 +47,9 @@ async function getHeroPos(heroId, preferMapKey = null) {
       class: classKey,
       source: live.stale ? 'live_stale' : 'live',
       stale: Boolean(live.stale),
+
+      fresh: !Boolean(live.stale),
+
       updatedAt: Number(live.ts || Date.now()),
     };
 
@@ -62,14 +65,23 @@ async function getHeroPos(heroId, preferMapKey = null) {
   if (preferMapKey) {
     const row = await getPlayerLastPos(owner.playerId, preferMapKey);
     if (row) {
+
+      const updatedAtMs = row.updatedAt ? new Date(row.updatedAt).getTime() : null;
+      const ageMs = Number.isFinite(updatedAtMs) ? Date.now() - updatedAtMs : null;
+
+
       return {
         x: Math.round(Number(row.x || 0)),
         y: Math.round(Number(row.y || 0)),
         map_key: row.mapKey,
         class: classKey,
         source: 'db',
-        stale: false,
-        updatedAt: row.updatedAt ? new Date(row.updatedAt).getTime() : null,
+
+        stale: true,
+        fresh: false,
+        updatedAt: updatedAtMs,
+        ageMs: Number.isFinite(ageMs) ? ageMs : null,
+
       };
     }
   }
@@ -85,14 +97,23 @@ async function getHeroPos(heroId, preferMapKey = null) {
   );
 
   if (any) {
+
+    const updatedAtMs = any.updatedAt ? new Date(any.updatedAt).getTime() : null;
+    const ageMs = Number.isFinite(updatedAtMs) ? Date.now() - updatedAtMs : null;
+
+
     return {
       x: Math.round(Number(any.x || 0)),
       y: Math.round(Number(any.y || 0)),
       map_key: any.mapKey,
       class: classKey,
       source: 'db',
-      stale: false,
-      updatedAt: any.updatedAt ? new Date(any.updatedAt).getTime() : null,
+
+      stale: true,
+      fresh: false,
+      updatedAt: updatedAtMs,
+      ageMs: Number.isFinite(ageMs) ? ageMs : null,
+
     };
   }
 
@@ -140,4 +161,19 @@ async function getMonsterPos(instanceId) {
   };
 }
 
-module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos };
+function isHeroPosFresh(heroPos) {
+  if (!heroPos) return false;
+  if (heroPos.fresh === true) return true;
+  if (heroPos.source === 'live' && heroPos.stale === false) return true;
+  if (heroPos.stale === true) return false;
+
+  const age = Number(heroPos.ageMs);
+  if (Number.isFinite(age)) {
+    const maxAge = Math.max(300, Number(process.env.COMBAT_HERO_POS_MAX_AGE_MS || TTL_MS || 1500));
+    return age <= maxAge;
+  }
+
+  return false;
+}
+
+module.exports = { getHeroPos, getMonsterPos, getHeroOwner, getPlayerLastPos, isHeroPosFresh };

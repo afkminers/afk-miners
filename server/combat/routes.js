@@ -9,7 +9,9 @@ const K = require('../balance/config');
 // const autoloop = require('./autoloop'); // ← desativado por enquanto
 
 const { get } = require('../models/db');
-const { getHeroPos, getMonsterPos } = require('./pos');
+
+const { getHeroPos, getMonsterPos, isHeroPosFresh } = require('./pos');
+
 const { inReachPx, resolveRangeTiles, distanceToTargetPx, TILE } = require('./geom');
 const { hasLineOfSight } = require('./los');
 const { getGrid } = require('../maps/grid');
@@ -118,6 +120,23 @@ function buildNoLoSPayload(ctx) {
   };
 }
 
+function buildStaleHeroPosPayload(ctx) {
+  const message = 'Posição do herói desatualizada. Aguarde sincronizar movendo o personagem.';
+  return {
+    ok: false,
+    error: 'hero-pos-stale',
+    inRange: false,
+    hasLineOfSight: ctx?.hasLineOfSight ?? null,
+    range: ctx?.range || null,
+    distance: ctx?.distance || null,
+    hero: ctx?.hero || null,
+    monster: ctx?.monster || null,
+    computedAt: ctx?.computedAt || Date.now(),
+    message,
+    warnings: [{ code: 'hero-pos-stale', message }],
+  };
+}
+
 /* =========================================================================
    Logging básico
    ========================================================================== */
@@ -196,12 +215,16 @@ router.post('/attack/start', express.json(), async (req, res) => {
       return res.json({ ok:false, error:'map-diff', message:'Alvo está em outro mapa.' });
     }
 
+    const telemetry = buildRangeTelemetry(heroPos, mobPos, weaponType);
+    if (!isHeroPosFresh(heroPos)) {
+      return res.json(buildStaleHeroPosPayload(telemetry));
+    }
+
     const { grid, cols } = await getGrid(heroPos.map_key);
     const losGrid = { data: grid, cols };
 
     const inRange = inReachPx(heroPos, mobPos, weaponType, K, heroPos.class);
     const hasLos = hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y);
-    const telemetry = buildRangeTelemetry(heroPos, mobPos, weaponType);
     const warnings = [];
     if (!inRange) warnings.push({ code:'out_of_range', message: formatRangeMessage({ ...telemetry, inRange }) });
     if (!hasLos) warnings.push({ code:'no_los', message: 'Sem linha de visão com o alvo.' });
@@ -301,12 +324,16 @@ router.post('/hit', express.json(), async (req, res) => {
       return res.json({ ok:false, error:'map-diff', message:'Alvo está em outro mapa.' });
     }
 
+    const telemetry = buildRangeTelemetry(heroPos, mobPos, weaponType);
+    if (!isHeroPosFresh(heroPos)) {
+      return res.json(buildStaleHeroPosPayload(telemetry));
+    }
+
     const { grid, cols } = await getGrid(heroPos.map_key);
     const losGrid = { data: grid, cols };
 
     const inRange = inReachPx(heroPos, mobPos, weaponType, K, heroPos.class);
     const hasLos = hasLineOfSight(losGrid, heroPos.x, heroPos.y, mobPos.x, mobPos.y);
-    const telemetry = buildRangeTelemetry(heroPos, mobPos, weaponType);
     const context = telemetry
       ? { ...telemetry, inRange, hasLineOfSight: hasLos }
       : { inRange, hasLineOfSight: hasLos };

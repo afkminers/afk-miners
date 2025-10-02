@@ -1,7 +1,7 @@
 // server/combat/autoloop.js
 const K = require('../balance/config');
 const { applyHit } = require('./service');
-const { getHeroPos, getMonsterPos } = require('./pos');   // posições
+const { getHeroPos, getMonsterPos, isHeroPosFresh } = require('./pos');   // posições
 const { inReachPx } = require('./geom');                  // Chebyshev
 const { hasLineOfSight } = require('./los');              // Bresenham
 const { getGrid } = require('../maps/grid');              // colisão server
@@ -33,6 +33,7 @@ async function tickOnce(heroId, targetInstanceId, weaponType) {
   const heroPos = await getHeroPos(heroId, mobPos.map_key);
   if (!heroPos) return { ok:false, reason:'hero-pos-missing' };
   if (heroPos.map_key !== mobPos.map_key) return { ok:false, reason:'map-diff' };
+  if (!isHeroPosFresh(heroPos)) return { ok:false, reason:'hero-pos-stale' };
 
   // pega grid linear e passa wrapper com metadata p/ LOS
   const { grid, cols } = await getGrid(heroPos.map_key);
