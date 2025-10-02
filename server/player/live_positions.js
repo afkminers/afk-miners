@@ -109,12 +109,19 @@ setInterval(() => {
   }
 }, GC_MS);
 
+/** Lista todos os playerIds presentes no cache live (útil para flusher) */
+function listPlayerIds() {
+  return Array.from(store.keys());
+}
+
 module.exports = {
   setLivePlayerPosition,
   getLivePlayerPosition,
   clearLivePlayerPosition,
   listFreshHeroesByMap,
   markHeroAlive,
+  listPlayerIds,           // <<<<< ADICIONADO
   TTL_MS,
 };
+
 
