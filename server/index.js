@@ -100,12 +100,6 @@ function isStepWithinSpeedCap(lx, ly, nx, ny, dtMs) {
 
 // ---- [MMO] Posições vivas em RAM + flush periódico p/ DB ----
 
-const {
-  livePositions,
-  setLivePlayerPosition,
-  getLivePlayerPosition,
-  removeLivePlayerPosition,
-} = require('./state/live-positions');
 
 const FLUSH_POS_INTERVAL_MS = Number(process.env.FLUSH_POS_INTERVAL_MS || 1000);
 let posFlushTimer = null;
@@ -1215,10 +1209,11 @@ async function seedAIMobsFromDB(aiMobs) {
                 heroAlive = !(rowAlive && rowAlive.alive === false);
                 ws._heroAlive = heroAlive;
                 if (!heroAlive) {
-                  setLivePosition(pid, { heroAlive: false, mapKey });
+                  setLivePlayerPosition(pid, { heroAlive: false, mapKey });
                   try { ws.send(JSON.stringify({ type:'hero_dead', heroId: String(activeHeroId) })); } catch {}
                   return; // morto não move
                 }
+
               } else if (ws._heroAlive === false) {
                 heroAlive = false;
               }
