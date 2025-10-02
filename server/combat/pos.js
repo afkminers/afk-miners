@@ -33,20 +33,18 @@ async function getHeroPos(heroId, preferMapKey = null) {
 
   const classKey = owner.class || null;
 
-  // 1. SEMPRE tenta posição live primeiro (já em pixels)
+  // 1) Live primeiro
   const live = getLivePlayerPosition(owner.playerId);
   if (live) {
     const liveMapKey = String(live.mapKey || preferMapKey || 'house');
-    
-    // Normaliza para pixels se vier em tiles (< 1000 geralmente)
+
     let px = Number(live.x || 0);
     let py = Number(live.y || 0);
-    
     if (px < 1000 && py < 1000) {
       px = (px * TILE) + (TILE / 2);
       py = (py * TILE) + (TILE / 2);
     }
-    
+
     const livePos = {
       x: px | 0,
       y: py | 0,
@@ -55,26 +53,20 @@ async function getHeroPos(heroId, preferMapKey = null) {
       source: 'live',
       updatedAt: Number(live.ts || Date.now()),
     };
-    
-    // Se não exigiram mapa específico, ou já bateu, retorna
-    if (!preferMapKey || liveMapKey === preferMapKey) {
-      return livePos;
-    }
+
+    if (!preferMapKey || liveMapKey === preferMapKey) return livePos;
   }
 
-  // 2. Se exigiu mapa específico, busca no banco
+  // 2) DB no mapa preferido
   if (preferMapKey) {
     const row = await getPlayerLastPos(owner.playerId, preferMapKey);
     if (row) {
       let px = Number(row.x || 0);
       let py = Number(row.y || 0);
-      
-      // Converte tiles -> pixels se necessário
       if (px < 1000 && py < 1000) {
         px = (px * TILE) + (TILE / 2);
         py = (py * TILE) + (TILE / 2);
       }
-      
       return {
         x: px | 0,
         y: py | 0,
@@ -86,7 +78,7 @@ async function getHeroPos(heroId, preferMapKey = null) {
     }
   }
 
-  // 3. Fallback: qualquer mapa no banco
+  // 3) DB em qualquer mapa (mais recente)
   const any = await get(
     `SELECT x, y, map_key AS "mapKey", updated_at AS "updatedAt"
        FROM player_last_pos
@@ -99,12 +91,10 @@ async function getHeroPos(heroId, preferMapKey = null) {
   if (any) {
     let px = Number(any.x || 0);
     let py = Number(any.y || 0);
-    
     if (px < 1000 && py < 1000) {
       px = (px * TILE) + (TILE / 2);
       py = (py * TILE) + (TILE / 2);
     }
-    
     return {
       x: px | 0,
       y: py | 0,
@@ -121,39 +111,39 @@ async function getHeroPos(heroId, preferMapKey = null) {
 /**
  * Retorna posição do monstro SEMPRE EM PIXELS
  */
-const row = await get(
-  `SELECT mi.x, mi.y, mi.map_key AS "map_key",
-          COALESCE(
-            NULLIF((sp."dataJSON"->>'frame_w'), '')::int,
-            NULLIF((sp."dataJSON"->>'frameW'), '')::int,
-            NULLIF((sp."dataJSON"->>'w'), '')::int,
-            32
-          ) AS frame_w,
-          COALESCE(
-            NULLIF((sp."dataJSON"->>'frame_h'), '')::int,
-            NULLIF((sp."dataJSON"->>'frameH'), '')::int,
-            NULLIF((sp."dataJSON"->>'h'), '')::int,
-            32
-          ) AS frame_h
-     FROM monster_instances mi
-LEFT JOIN spawns s ON s.id = mi.spawn_id
-LEFT JOIN sprites_master sp ON sp.key = s."monsterKey" AND sp.kind = 'monster'
-    WHERE mi.id = $1`,
-  [instanceId]
-);
+async function getMonsterPos(instanceId) {
+  const row = await get(
+    `SELECT mi.x, mi.y, mi.map_key AS "map_key",
+            COALESCE(
+              NULLIF((sp."dataJSON"->>'frame_w'), '')::int,
+              NULLIF((sp."dataJSON"->>'frameW'), '')::int,
+              NULLIF((sp."dataJSON"->>'w'), '')::int,
+              32
+            ) AS frame_w,
+            COALESCE(
+              NULLIF((sp."dataJSON"->>'frame_h'), '')::int,
+              NULLIF((sp."dataJSON"->>'frameH'), '')::int,
+              NULLIF((sp."dataJSON"->>'h'), '')::int,
+              32
+            ) AS frame_h
+       FROM monster_instances mi
+  LEFT JOIN spawns s ON s.id = mi.spawn_id
+  LEFT JOIN sprites_master sp ON sp.key = s."monsterKey" AND sp.kind = 'monster'
+      WHERE mi.id = $1`,
+    [instanceId]
+  );
 
-  
   if (!row) return null;
-  
+
   let px = Number(row.x || 0);
   let py = Number(row.y || 0);
-  
+
   // Converte tiles -> pixels se necessário
   if (px < 1000 && py < 1000) {
     px = (px * TILE) + (TILE / 2);
     py = (py * TILE) + (TILE / 2);
   }
-  
+
   return {
     x: px | 0,
     y: py | 0,
