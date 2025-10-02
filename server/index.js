@@ -28,9 +28,9 @@ const catalogCache = require('./services/catalogCache');
 const idlePoolCloser = require('./services/idlePoolCloser');
 const httpCache = require('./services/httpCache');
 const {
-  setLivePosition,
-  getLivePosition,
-  removeLivePosition,
+  setLivePlayerPosition,
+  getLivePlayerPosition,
+  clearLivePlayerPosition,
   listPlayerIds,
 } = require('./player/live_positions');
 
