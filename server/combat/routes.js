@@ -42,11 +42,9 @@ function buildRangeTelemetry(heroPos, mobPos, weaponType) {
 
   const rangeTiles = resolveRangeTiles(weaponType, heroPos.class, K);
   const rangePx = rangeTiles * TILE;
-  
-  // ✅ CORREÇÃO: calcula distância em PX primeiro (Chebyshev)
+
+  // ✅ mede em PX (Chebyshev), depois converte pra tiles
   const distPx = chebyPx(hx, hy, mx, my);
-  
-  // ✅ CORREÇÃO: converte para tiles DEPOIS (consistente com validação)
   const distTiles = Math.floor(distPx / TILE);
 
   return {
@@ -67,6 +65,7 @@ function buildRangeTelemetry(heroPos, mobPos, weaponType) {
     computedAt: Date.now(),
   };
 }
+
 
 function formatRangeMessage(ctx) {
   if (!ctx) return 'Você está longe do alvo.';
