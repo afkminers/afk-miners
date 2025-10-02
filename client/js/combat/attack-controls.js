@@ -389,6 +389,22 @@ export async function startAttack(targetId) {
   const hero = await ensureActiveHero();
   if (!hero.id) { alert('Nenhum herói ativo encontrado para atacar.'); return; }
 
+  // --- pré-check local (evita pedir /attack/start se estiver claramente longe) ---
+  try {
+    const heroPos = getHeroWorldPos();
+    const mob = window.GameScene?.getMobByInstanceId?.(String(targetId));
+    if (heroPos && mob) {
+      // alcance padrão 1 sqm para melee; (o servidor valida com precisão por arma)
+      const localRangeSqm = 1;
+      const distSqm = chebyshevSqm(heroPos.x, heroPos.y, mob.x, mob.y);
+      if (distSqm > localRangeSqm) {
+        const msg = `Alvo fora do alcance (${distSqm} > ${localRangeSqm} sqm).`;
+        showCombatMessage(msg);
+        return;
+      }
+    }
+  } catch {}
+
   // >>> garante CSRF fresquinho ANTES do POST (evita "CSRF inválido")
   try { await getCsrf(); } catch {}
 
@@ -402,7 +418,6 @@ export async function startAttack(targetId) {
   try {
     const resp = await apiPost('/api/combat/attack/start', payload);
     if (!resp?.ok) {
-
       if (handleCombatWarning(resp, { stopOnFail: true })) return;
       console.warn('[attack] start recusado:', resp?.error || 'start-rejected');
       return;
