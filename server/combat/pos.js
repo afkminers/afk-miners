@@ -2,8 +2,6 @@
 const { get } = require('../models/db');
 const { getLivePlayerPosition } = require('../player/live_positions');
 
-const TILE = 32;
-
 async function getHeroOwner(heroId) {
   return await get(
     `SELECT ph.id AS "heroId", ph."playerId" AS "playerId", hm.class AS class
@@ -38,16 +36,9 @@ async function getHeroPos(heroId, preferMapKey = null) {
   if (live) {
     const liveMapKey = String(live.mapKey || preferMapKey || 'house');
 
-    let px = Number(live.x || 0);
-    let py = Number(live.y || 0);
-    if (px < 1000 && py < 1000) {
-      px = (px * TILE) + (TILE / 2);
-      py = (py * TILE) + (TILE / 2);
-    }
-
     const livePos = {
-      x: px | 0,
-      y: py | 0,
+      x: Math.round(Number(live.x || 0)),
+      y: Math.round(Number(live.y || 0)),
       map_key: liveMapKey,
       class: classKey,
       source: 'live',
@@ -61,15 +52,9 @@ async function getHeroPos(heroId, preferMapKey = null) {
   if (preferMapKey) {
     const row = await getPlayerLastPos(owner.playerId, preferMapKey);
     if (row) {
-      let px = Number(row.x || 0);
-      let py = Number(row.y || 0);
-      if (px < 1000 && py < 1000) {
-        px = (px * TILE) + (TILE / 2);
-        py = (py * TILE) + (TILE / 2);
-      }
       return {
-        x: px | 0,
-        y: py | 0,
+        x: Math.round(Number(row.x || 0)),
+        y: Math.round(Number(row.y || 0)),
         map_key: row.mapKey,
         class: classKey,
         source: 'db',
@@ -89,15 +74,9 @@ async function getHeroPos(heroId, preferMapKey = null) {
   );
 
   if (any) {
-    let px = Number(any.x || 0);
-    let py = Number(any.y || 0);
-    if (px < 1000 && py < 1000) {
-      px = (px * TILE) + (TILE / 2);
-      py = (py * TILE) + (TILE / 2);
-    }
     return {
-      x: px | 0,
-      y: py | 0,
+      x: Math.round(Number(any.x || 0)),
+      y: Math.round(Number(any.y || 0)),
       map_key: any.mapKey,
       class: classKey,
       source: 'db',
@@ -135,13 +114,9 @@ async function getMonsterPos(instanceId) {
 
   if (!row) return null;
 
-  let px = Number(row.x || 0);
-  let py = Number(row.y || 0);
-  if (px < 1000 && py < 1000) { px = (px * TILE) + (TILE / 2); py = (py * TILE) + (TILE / 2); }
-
   return {
-    x: px | 0,
-    y: py | 0,
+    x: Math.round(Number(row.x || 0)),
+    y: Math.round(Number(row.y || 0)),
     map_key: row.map_key,
     frame_w: Number(row.frame_w || 32),
     frame_h: Number(row.frame_h || 32),
