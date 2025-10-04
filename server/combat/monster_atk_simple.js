@@ -306,6 +306,9 @@ async function tick() {
             _lastMoveAt.set(m.id, now);
             await updateMonsterPos(m.id, px, py, now);
 
+            if (!tilesForMap.has(destKey)) tilesForMap.set(destKey, new Set());
+            tilesForMap.get(destKey).add(m.id);
+
             if (global._sendToMap) {
               try { global._sendToMap(m.map_key, { type: 'monster_move', id: m.id, x: px, y: py }); } catch {}
             }
