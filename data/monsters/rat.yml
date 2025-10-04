@@ -9,6 +9,7 @@ look:
   spriteKey: rat
 flags:
   hostile: true
+  pushable: false
 elements:
   physical: 0
 attacks:
