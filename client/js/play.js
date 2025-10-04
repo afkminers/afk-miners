@@ -275,6 +275,7 @@ window.GameScene.onMonsterDead = (instanceId) => {
 };
 
 // ======= Server-driven monster state =======
+
 const SERVER_MONSTER_STATE = new Map(); // id -> { sprite, x, y, spawnId, monsterKey, mapKey, dead }
 const UNBOUND_SERVER_MONSTERS = new Set(); // ids aguardando sprite
 let _serverMonsterRetryScheduled = false;
@@ -298,6 +299,7 @@ function getOrCreateServerMonsterState(id) {
   return state;
 }
 
+
 function msgMatchesCurrentMap(msg = {}) {
   if (!msg || msg.mapKey == null) return true;
   try {
@@ -308,6 +310,7 @@ function msgMatchesCurrentMap(msg = {}) {
 }
 
 function ensureServerMonsterSprite(msg = {}) {
+
   const rawId = msg.id != null ? msg.id : (msg.instanceId != null ? msg.instanceId : null);
   if (rawId == null) return null;
   const id = String(rawId);
@@ -324,9 +327,11 @@ function ensureServerMonsterSprite(msg = {}) {
     sprite = window.GameScene.bindInstanceToSpawn(id, Number(state.spawnId));
   }
 
+
   if (!sprite && msg.spawnId != null && window.GameScene?.bindInstanceToSpawn) {
     sprite = window.GameScene.bindInstanceToSpawn(id, Number(msg.spawnId));
   }
+
 
   const keyCandidate = state.monsterKey || (msg.monsterKey ? String(msg.monsterKey) : null);
   if (!sprite && keyCandidate && window.GameScene?.bindInstanceToAnySpriteByKey) {
@@ -349,6 +354,7 @@ function ensureServerMonsterSprite(msg = {}) {
   UNBOUND_SERVER_MONSTERS.add(id);
   scheduleServerMonsterRetry();
   return null;
+
 }
 
 function updateSpriteFacingFromDelta(sprite, dx, dy) {
@@ -367,6 +373,7 @@ function updateSpriteFacingFromDelta(sprite, dx, dy) {
 }
 
 function applyServerPosition(id, sprite, x, y) {
+
   if (!Number.isFinite(x) || !Number.isFinite(y)) return;
   const state = getOrCreateServerMonsterState(id);
 
@@ -429,6 +436,7 @@ function scheduleServerMonsterRetry() {
     _serverMonsterRetryScheduled = false;
     try { retryBindPendingServerMonsters(); } catch (e) { console.warn('[mobs] retry bind failed', e?.message); }
   }, 0);
+
 }
 
 function handleServerMonsterRespawn(msg = {}) {
