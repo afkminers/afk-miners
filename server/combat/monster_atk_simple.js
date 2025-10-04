@@ -86,34 +86,46 @@ function isInsideSpawnRect(hx, hy, m, pad = 0) {
          hy >= sy - pad && hy <= sy + sh + pad;
 }
 
-function nextTileToward(mx, my, hx, hy, m) {
+function isTileInsideSpawn(tx, ty, m) {
+  if (!CHASE_INSIDE_SPAWN_ONLY) return true;
+  const sx = Number(m.sx) | 0, sy = Number(m.sy) | 0;
+  const sw = Math.max(1, Number(m.sw) || 32);
+  const sh = Math.max(1, Number(m.sh) || 32);
+  const minTx = tileOf(sx);
+  const maxTx = tileOf(sx + sw - 1);
+  const minTy = tileOf(sy);
+  const maxTy = tileOf(sy + sh - 1);
+  return tx >= minTx && tx <= maxTx && ty >= minTy && ty <= maxTy;
+}
+
+function candidateTilesToward(mx, my, hx, hy, m) {
   const dxTiles = hx - mx;
   const dyTiles = hy - my;
-  if (dxTiles === 0 && dyTiles === 0) return { nx: mx, ny: my, moved: false };
+  if (dxTiles === 0 && dyTiles === 0) return [];
 
   const preferX = Math.abs(dxTiles) >= Math.abs(dyTiles);
-  const tryDirs = preferX
+  const dirs = [];
+
+  const pushDir = (dx, dy) => {
+    if (!dx && !dy) return;
+    const candX = mx + dx;
+    const candY = my + dy;
+    if (!isTileInsideSpawn(candX, candY, m)) return;
+    const key = tileKey(candX, candY);
+    if (!dirs.some((d) => d.key === key)) dirs.push({ nx: candX, ny: candY, key });
+  };
+
+  const primary = preferX
     ? [{ dx: Math.sign(dxTiles), dy: 0 }, { dx: 0, dy: Math.sign(dyTiles) }]
     : [{ dx: 0, dy: Math.sign(dyTiles) }, { dx: Math.sign(dxTiles), dy: 0 }];
+  for (const d of primary) pushDir(d.dx, d.dy);
 
-  let minTx = -Infinity, maxTx = Infinity, minTy = -Infinity, maxTy = Infinity;
-  if (CHASE_INSIDE_SPAWN_ONLY) {
-    const sx = Number(m.sx) | 0, sy = Number(m.sy) | 0;
-    const sw = Math.max(1, Number(m.sw) || 32);
-    const sh = Math.max(1, Number(m.sh) || 32);
-    minTx = tileOf(sx);          maxTx = tileOf(sx + sw - 1);
-    minTy = tileOf(sy);          maxTy = tileOf(sy + sh - 1);
-  }
+  const lateral = preferX
+    ? [{ dx: 0, dy: 1 }, { dx: 0, dy: -1 }]
+    : [{ dx: 1, dy: 0 }, { dx: -1, dy: 0 }];
+  for (const d of lateral) pushDir(d.dx, d.dy);
 
-  for (const d of tryDirs) {
-    const candX = mx + d.dx;
-    const candY = my + d.dy;
-    const inside =
-      candX >= minTx && candX <= maxTx &&
-      candY >= minTy && candY <= maxTy;
-    if (inside) return { nx: candX, ny: candY, moved: true };
-  }
-  return { nx: mx, ny: my, moved: false };
+  return dirs;
 }
 
 // ======= DB =======
@@ -266,10 +278,18 @@ async function tick() {
       if (!adjacent) {
         const lastMove = _lastMoveAt.get(m.id) || 0;
         if (now - lastMove >= MONSTER_STEP_MS) {
-          const step = nextTileToward(mx, my, hx, hy, m);
-          if (step.moved) {
-            const fromKey = tileKey(mx, my);
+          const fromKey = tileKey(mx, my);
+          const candidates = candidateTilesToward(mx, my, hx, hy, m);
+          let moved = false;
+
+          for (const step of candidates) {
             const destKey = tileKey(step.nx, step.ny);
+            if (destKey === fromKey) continue;
+
+            const destSet = tilesForMap.get(destKey);
+            const blockedByMonster = destSet && destSet.size > 0;
+            const blockedByHero = heroTilesForMap.has(destKey);
+            if (blockedByMonster || blockedByHero) continue;
 
             let fromSet = tilesForMap.get(fromKey);
             if (fromSet) {
@@ -277,16 +297,8 @@ async function tick() {
               if (!fromSet.size) tilesForMap.delete(fromKey);
             }
 
-            const destSet = tilesForMap.get(destKey);
-            const blockedByMonster = destSet && (destSet.size > (destSet.has(m.id) ? 1 : 0));
-            const blockedByHero = heroTilesForMap.has(destKey);
-
-            if (blockedByMonster || blockedByHero) {
-              if (!tilesForMap.has(fromKey)) tilesForMap.set(fromKey, new Set());
-              tilesForMap.get(fromKey).add(m.id);
-              _lastMoveAt.set(m.id, now);
-              continue;
-            }
+            if (!tilesForMap.has(destKey)) tilesForMap.set(destKey, new Set());
+            tilesForMap.get(destKey).add(m.id);
 
             const px = centerOfTile(step.nx);
             const py = centerOfTile(step.ny);
@@ -300,7 +312,12 @@ async function tick() {
             if (global._sendToMap) {
               try { global._sendToMap(m.map_key, { type: 'monster_move', id: m.id, x: px, y: py }); } catch {}
             }
-          } else {
+
+            moved = true;
+            break;
+          }
+
+          if (!moved) {
             _lastMoveAt.set(m.id, now);
           }
         }

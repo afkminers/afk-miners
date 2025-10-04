@@ -13,6 +13,71 @@ const { broadcast } = require('../ws/bus');
 // Mundo em pixels (o cliente usa 32px por tile)
 const TILE = 32;
 
+function tileOf(v) {
+  return Math.floor(Number(v || 0) / TILE);
+}
+
+function centerOfTile(t) {
+  return (t * TILE) + TILE / 2;
+}
+
+function tileKey(tx, ty) {
+  return `${tx},${ty}`;
+}
+
+function pickTilesInSpawn(spawn) {
+  const x0 = Number(spawn.x) || 0;
+  const y0 = Number(spawn.y) || 0;
+  const w  = Math.max(TILE, Number(spawn.w) || 0);
+  const h  = Math.max(TILE, Number(spawn.h) || 0);
+
+  const minTx = tileOf(x0);
+  const minTy = tileOf(y0);
+  const maxTx = tileOf(x0 + w - 1);
+  const maxTy = tileOf(y0 + h - 1);
+
+  const tiles = [];
+  for (let tx = minTx; tx <= maxTx; tx++) {
+    for (let ty = minTy; ty <= maxTy; ty++) {
+      tiles.push({ tx, ty });
+    }
+  }
+  return tiles;
+}
+
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function getOccupiedTilesForMap(cache, mapKey) {
+  const key = mapKey == null ? '__null__' : String(mapKey);
+  if (!cache.has(key)) cache.set(key, new Set());
+  return cache.get(key);
+}
+
+function markTileOccupied(cache, mapKey, tx, ty) {
+  const set = getOccupiedTilesForMap(cache, mapKey);
+  set.add(tileKey(tx, ty));
+}
+
+function pickFreeTileCenter(spawn, mapKey, occupiedCache) {
+  const tiles = shuffleInPlace(pickTilesInSpawn(spawn));
+  if (!tiles.length) return null;
+  const occ = getOccupiedTilesForMap(occupiedCache, mapKey);
+  for (const t of tiles) {
+    const key = tileKey(t.tx, t.ty);
+    if (!occ.has(key)) {
+      occ.add(key);
+      return { x: centerOfTile(t.tx), y: centerOfTile(t.ty), tx: t.tx, ty: t.ty };
+    }
+  }
+  return null;
+}
+
 function pickPosInSpawnRect(spawn) {
   // x,y do Tiled já vêm em pixels (top-left). w,h podem ser 0/NULL → usar TILE como fallback.
   const x0 = Number(spawn.x) || 0;
@@ -64,6 +129,22 @@ async function respawnTick({ all, run }) {
 
   if (DEBUG) console.log('[respawn] due count =', due.length);
 
+  const occupiedByMap = new Map();
+  if (due.length) {
+    const aliveTiles = await all(`
+      SELECT map_key, x, y
+        FROM monster_instances
+       WHERE state = 'ALIVE'
+    `);
+
+    for (const row of aliveTiles) {
+      const tx = tileOf(row.x);
+      const ty = tileOf(row.y);
+      if (!Number.isFinite(tx) || !Number.isFinite(ty)) continue;
+      markTileOccupied(occupiedByMap, row.map_key, tx, ty);
+    }
+  }
+
   for (const r of due) {
     // HP que vamos usar pra voltar:
     const hpFull =
@@ -72,10 +153,23 @@ async function respawnTick({ all, run }) {
       : 1;
 
     // Escolhe uma posição dentro da área do spawn (em pixels)
-    const pos = pickPosInSpawnRect(r);
+    const mapKey = r.map_key == null ? '__null__' : String(r.map_key);
+    let chosen = pickFreeTileCenter(r, mapKey, occupiedByMap);
+    if (!chosen) {
+      const fallbackPos = pickPosInSpawnRect(r);
+      const tx = tileOf(fallbackPos.x);
+      const ty = tileOf(fallbackPos.y);
+      chosen = {
+        x: centerOfTile(tx),
+        y: centerOfTile(ty),
+        tx,
+        ty,
+      };
+      markTileOccupied(occupiedByMap, mapKey, tx, ty);
+    }
 
-    const px = Math.round(pos.x);
-    const py = Math.round(pos.y);
+    const px = Math.round(chosen.x);
+    const py = Math.round(chosen.y);
 
     await run(
       `UPDATE monster_instances
@@ -114,8 +208,8 @@ async function respawnTick({ all, run }) {
         spawnId: r.spawn_id,      // <-- opcional
         hp: hpFull,
         maxHp: hpFull,
-        x: pos.x,
-        y: pos.y,
+        x: px,
+        y: py,
       };
       if (DEBUG) console.log('[respawn] broadcast', payload);
       broadcast(payload);
