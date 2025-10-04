@@ -148,6 +148,7 @@ setMapKey(MAP_KEY);
 
 // ----------------- namespace público p/ outros módulos -----------------
 window.GameScene = window.GameScene || {};
+window.GameScene.mapKey = MAP_KEY;
 
 // ======= Time/Hero ativo (base para coleta e combate) =======
 /** Define o herói ativo globalmente e emite evento. */
@@ -223,6 +224,7 @@ window.GameScene.bindInstanceToAnySpriteByKey = (instanceId, monsterKey) => {
   best.hidden = false;
   best._animFrozen = false;
   best._animFrozenFrame = 0;
+  best._serverMove = null;
 
   MOB_BY_INSTANCE.set(String(instanceId), best);
   return best;
@@ -230,6 +232,7 @@ window.GameScene.bindInstanceToAnySpriteByKey = (instanceId, monsterKey) => {
 
 window.GameScene.registerMobSprite = (sprite, meta = {}) => {
   if (!sprite) return;
+  if (sprite._serverMove == null) sprite._serverMove = null;
   if (Number.isFinite(meta.spawnId)) {
     sprite.spawnId = Number(meta.spawnId);
     if (!MOB_SPRITES_BY_SPAWN.has(sprite.spawnId)) MOB_SPRITES_BY_SPAWN.set(sprite.spawnId, new Set());
@@ -239,6 +242,8 @@ window.GameScene.registerMobSprite = (sprite, meta = {}) => {
     sprite.instanceId = String(meta.instanceId);
     MOB_BY_INSTANCE.set(sprite.instanceId, sprite);
   }
+
+  retryBindPendingServerMonsters();
 };
 
 // escolhe uma sprite “livre” daquele spawn
@@ -258,6 +263,7 @@ window.GameScene.bindInstanceToSpawn = (instanceId, spawnId) => {
   s.hidden = false;
   s._animFrozen = false;
   s._animFrozenFrame = 0;
+  s._serverMove = null;
   MOB_BY_INSTANCE.set(String(instanceId), s);
   return s;
 };
@@ -268,8 +274,355 @@ window.GameScene.onMonsterDead = (instanceId) => {
   s.dead = true;
   s._animFrozen = true;
   s._animFrozenFrame = 0;
+  s._serverMove = null;
   MOB_BY_INSTANCE.delete(String(instanceId));
 };
+
+// ======= Server-driven monster state =======
+const SERVER_MONSTER_STATE = new Map(); // id -> { sprite, x, y, spawnId, monsterKey, mapKey, dead, renderX, renderY }
+const UNBOUND_SERVER_MONSTERS = new Set(); // ids aguardando sprite
+let _serverMonsterRetryScheduled = false;
+
+const SERVER_MONSTER_STEP_MS = 250;
+const SERVER_MONSTER_MIN_TWEEN_MS = 90;
+const SERVER_MONSTER_MAX_TWEEN_MS = 420;
+const SERVER_MONSTER_TELEPORT_THRESHOLD = TILE * 4; // deslocamentos maiores tratam como teleporte
+
+function getOrCreateServerMonsterState(id) {
+  const key = String(id);
+  let state = SERVER_MONSTER_STATE.get(key);
+  if (!state) {
+    state = {
+      id: key,
+      sprite: null,
+      x: null,
+      y: null,
+      spawnId: null,
+      monsterKey: null,
+      mapKey: null,
+      dead: false,
+      renderX: null,
+      renderY: null,
+    };
+    SERVER_MONSTER_STATE.set(key, state);
+  }
+  return state;
+}
+
+function currentSpriteRenderPos(sprite, now = performance.now()) {
+  if (!sprite) return { x: NaN, y: NaN };
+  const mv = sprite._serverMove;
+  if (!mv || !Number.isFinite(mv.duration) || mv.duration <= 0) {
+    return {
+      x: Number.isFinite(sprite.x) ? sprite.x : NaN,
+      y: Number.isFinite(sprite.y) ? sprite.y : NaN,
+    };
+  }
+
+  const elapsed = now - mv.startAt;
+  if (elapsed <= 0) {
+    return { x: mv.fromX, y: mv.fromY };
+  }
+
+  const t = Math.max(0, Math.min(1, elapsed / mv.duration));
+  return {
+    x: mv.fromX + (mv.toX - mv.fromX) * t,
+    y: mv.fromY + (mv.toY - mv.fromY) * t,
+  };
+}
+
+function computeTweenDuration(dx, dy) {
+  const dist = Math.hypot(dx, dy);
+  if (!Number.isFinite(dist) || dist < 1) return 0;
+  const tiles = Math.max(1, dist / TILE);
+  const base = SERVER_MONSTER_STEP_MS * tiles;
+  return Math.max(SERVER_MONSTER_MIN_TWEEN_MS, Math.min(SERVER_MONSTER_MAX_TWEEN_MS, base));
+}
+
+function msgMatchesCurrentMap(msg = {}) {
+  if (!msg || msg.mapKey == null) return true;
+  try {
+    return String(msg.mapKey) === MAP_KEY;
+  } catch {
+    return false;
+  }
+}
+
+function ensureServerMonsterSprite(msg = {}) {
+  const rawId = msg.id != null ? msg.id : (msg.instanceId != null ? msg.instanceId : null);
+  if (rawId == null) return null;
+  const id = String(rawId);
+
+  const state = getOrCreateServerMonsterState(id);
+  if (msg.mapKey != null) state.mapKey = String(msg.mapKey);
+  if (msg.spawnId != null && Number.isFinite(Number(msg.spawnId))) state.spawnId = Number(msg.spawnId);
+  if (msg.monsterKey) state.monsterKey = String(msg.monsterKey);
+  state.dead = false;
+
+  let sprite = window.GameScene?.getMobByInstanceId?.(id) || state.sprite || null;
+
+  if (!sprite && state.spawnId != null && window.GameScene?.bindInstanceToSpawn) {
+    sprite = window.GameScene.bindInstanceToSpawn(id, Number(state.spawnId));
+  }
+
+  if (!sprite && msg.spawnId != null && window.GameScene?.bindInstanceToSpawn) {
+    sprite = window.GameScene.bindInstanceToSpawn(id, Number(msg.spawnId));
+  }
+
+  const keyCandidate = state.monsterKey || (msg.monsterKey ? String(msg.monsterKey) : null);
+  if (!sprite && keyCandidate && window.GameScene?.bindInstanceToAnySpriteByKey) {
+    sprite = window.GameScene.bindInstanceToAnySpriteByKey(id, keyCandidate);
+  }
+
+  if (sprite) {
+    if (keyCandidate && !sprite.rawKey) sprite.rawKey = keyCandidate;
+    sprite.dead = false;
+    sprite.hidden = false;
+    sprite._animFrozen = false;
+    sprite._animFrozenFrame = 0;
+    if (!sprite._serverMove) sprite._serverMove = null;
+    state.sprite = sprite;
+    SERVER_MONSTER_STATE.set(id, state);
+    UNBOUND_SERVER_MONSTERS.delete(id);
+    return sprite;
+  }
+
+  SERVER_MONSTER_STATE.set(id, state);
+  UNBOUND_SERVER_MONSTERS.add(id);
+  scheduleServerMonsterRetry();
+  return null;
+}
+
+function updateSpriteFacingFromDelta(sprite, dx, dy) {
+  if (!sprite || (!Number.isFinite(dx) && !Number.isFinite(dy))) return;
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+  if (absDx < 0.5 && absDy < 0.5) return; // movimento insignificante
+
+  if (absDx >= absDy) {
+    if (dx > 0.5) sprite.face = 'east';
+    else if (dx < -0.5) sprite.face = 'west';
+  } else {
+    if (dy > 0.5) sprite.face = 'south';
+    else if (dy < -0.5) sprite.face = 'north';
+  }
+}
+
+function applyServerPosition(id, sprite, x, y) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+  const state = getOrCreateServerMonsterState(id);
+  const now = performance.now();
+
+  const current = sprite ? currentSpriteRenderPos(sprite, now) : {
+    x: Number.isFinite(state.renderX) ? state.renderX : (Number.isFinite(state.x) ? state.x : x),
+    y: Number.isFinite(state.renderY) ? state.renderY : (Number.isFinite(state.y) ? state.y : y),
+  };
+
+  const prevX = Number.isFinite(current.x) ? current.x : (Number.isFinite(state.renderX) ? state.renderX : x);
+  const prevY = Number.isFinite(current.y) ? current.y : (Number.isFinite(state.renderY) ? state.renderY : y);
+
+  const dx = x - prevX;
+  const dy = y - prevY;
+  const dist = Math.hypot(dx, dy);
+
+  state.x = x;
+  state.y = y;
+  state.dead = false;
+  state.lastServerAt = now;
+
+  if (sprite) {
+    sprite._animFrozen = false;
+    sprite.hidden = false;
+    sprite.dead = false;
+    state.sprite = sprite;
+    UNBOUND_SERVER_MONSTERS.delete(String(id));
+
+    const tweenDur = computeTweenDuration(dx, dy);
+    const shouldTeleport = !Number.isFinite(dist) || dist < 1 || dist > SERVER_MONSTER_TELEPORT_THRESHOLD;
+
+    if (shouldTeleport || tweenDur <= 0) {
+      sprite._serverMove = null;
+      sprite.x = x;
+      sprite.y = y;
+      updateSpriteFacingFromDelta(sprite, dx, dy);
+      state.renderX = x;
+      state.renderY = y;
+    } else {
+      const fromX = prevX;
+      const fromY = prevY;
+      updateSpriteFacingFromDelta(sprite, dx, dy);
+      sprite._serverMove = {
+        fromX,
+        fromY,
+        toX: x,
+        toY: y,
+        startAt: now,
+        duration: tweenDur,
+      };
+      sprite.x = fromX;
+      sprite.y = fromY;
+      state.renderX = fromX;
+      state.renderY = fromY;
+    }
+  } else {
+    state.sprite = null;
+    state.renderX = Number.isFinite(state.renderX) ? state.renderX : x;
+    state.renderY = Number.isFinite(state.renderY) ? state.renderY : y;
+  }
+
+  SERVER_MONSTER_STATE.set(String(id), state);
+}
+
+function updateServerDrivenMonsters(now = performance.now()) {
+  for (const state of SERVER_MONSTER_STATE.values()) {
+    const sprite = state.sprite;
+    if (!sprite) continue;
+
+    const mv = sprite._serverMove;
+    if (!mv || !Number.isFinite(mv.duration) || mv.duration <= 0) {
+      if (Number.isFinite(state.x)) sprite.x = state.x;
+      if (Number.isFinite(state.y)) sprite.y = state.y;
+      state.renderX = Number.isFinite(sprite.x) ? sprite.x : state.x;
+      state.renderY = Number.isFinite(sprite.y) ? sprite.y : state.y;
+      sprite._serverMove = null;
+      continue;
+    }
+
+    const elapsed = now - mv.startAt;
+    if (elapsed <= 0) {
+      sprite.x = mv.fromX;
+      sprite.y = mv.fromY;
+      state.renderX = sprite.x;
+      state.renderY = sprite.y;
+      continue;
+    }
+
+    const t = Math.max(0, Math.min(1, elapsed / mv.duration));
+    sprite.x = mv.fromX + (mv.toX - mv.fromX) * t;
+    sprite.y = mv.fromY + (mv.toY - mv.fromY) * t;
+    state.renderX = sprite.x;
+    state.renderY = sprite.y;
+
+    if (t >= 1) {
+      sprite._serverMove = null;
+      sprite.x = mv.toX;
+      sprite.y = mv.toY;
+      state.renderX = sprite.x;
+      state.renderY = sprite.y;
+    }
+  }
+}
+
+function retryBindPendingServerMonsters() {
+  if (!UNBOUND_SERVER_MONSTERS.size) return;
+  for (const id of Array.from(UNBOUND_SERVER_MONSTERS)) {
+    const state = SERVER_MONSTER_STATE.get(String(id));
+    if (!state || state.dead) {
+      UNBOUND_SERVER_MONSTERS.delete(id);
+      continue;
+    }
+
+    const sprite = ensureServerMonsterSprite({
+      id,
+      spawnId: state.spawnId,
+      monsterKey: state.monsterKey,
+      mapKey: state.mapKey,
+    });
+
+    if (!sprite) continue;
+
+    if (Number.isFinite(state.x) && Number.isFinite(state.y)) {
+      applyServerPosition(id, sprite, state.x, state.y);
+    } else {
+      state.sprite = sprite;
+      SERVER_MONSTER_STATE.set(String(id), state);
+    }
+
+    UNBOUND_SERVER_MONSTERS.delete(id);
+  }
+}
+
+function scheduleServerMonsterRetry() {
+  if (_serverMonsterRetryScheduled) return;
+  _serverMonsterRetryScheduled = true;
+  setTimeout(() => {
+    _serverMonsterRetryScheduled = false;
+    try { retryBindPendingServerMonsters(); } catch (e) { console.warn('[mobs] retry bind failed', e?.message); }
+  }, 0);
+}
+
+function handleServerMonsterRespawn(msg = {}) {
+  if (!msgMatchesCurrentMap(msg)) return;
+  const id = msg.id != null ? String(msg.id) : null;
+  if (!id) return;
+
+  const sprite = ensureServerMonsterSprite(msg);
+
+  const x = Number(msg.x);
+  const y = Number(msg.y);
+  if (sprite && Number.isFinite(x) && Number.isFinite(y)) {
+    applyServerPosition(id, sprite, x, y);
+  } else if (Number.isFinite(x) && Number.isFinite(y)) {
+    applyServerPosition(id, null, x, y);
+  }
+}
+
+function handleServerMonsterMove(msg = {}) {
+  if (!msgMatchesCurrentMap(msg)) return;
+  const id = msg.id != null ? String(msg.id) : null;
+  if (!id) return;
+
+  const x = Number(msg.x);
+  const y = Number(msg.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+  const sprite = ensureServerMonsterSprite(msg);
+  if (sprite) {
+    applyServerPosition(id, sprite, x, y);
+  } else {
+    applyServerPosition(id, null, x, y);
+  }
+}
+
+function handleServerMonsterDead(msg = {}) {
+  if (!msgMatchesCurrentMap(msg)) return;
+  const id = msg.id != null ? String(msg.id) : null;
+  if (!id) return;
+
+  const state = getOrCreateServerMonsterState(id);
+  state.dead = true;
+  state.sprite = null;
+  SERVER_MONSTER_STATE.set(id, state);
+  UNBOUND_SERVER_MONSTERS.delete(id);
+
+  try { window.GameScene?.onMonsterDead?.(id); } catch {}
+}
+
+function normalizeLegacyMobPos(msg = {}) {
+  const id = msg.instanceId != null ? String(msg.instanceId) : (msg.id != null ? String(msg.id) : null);
+  if (!id) return null;
+
+  return {
+    id,
+    x: Number(msg.x),
+    y: Number(msg.y),
+    mapKey: msg.mapKey ?? msg.map_key ?? null,
+    spawnId: msg.spawnId ?? msg.spawn_id ?? null,
+    monsterKey: msg.monsterKey ?? msg.monster_key ?? null,
+  };
+}
+
+function handleLegacyMobPos(msg = {}) {
+  const normalized = normalizeLegacyMobPos(msg);
+  if (!normalized) return;
+  handleServerMonsterMove(normalized);
+}
+
+onMessage('monster_respawned', handleServerMonsterRespawn);
+onMessage('monster_move', handleServerMonsterMove);
+onMessage('mob_pos', handleLegacyMobPos);
+onMessage('monster_dead', handleServerMonsterDead);
+window.GameScene.serverMonsters = SERVER_MONSTER_STATE;
 
 // =============== Canvas/HUD flexível (querystring + auto) ===============
 function pickElByIds(prefIds = [], fallbackSelectors = []) {
@@ -1164,6 +1517,7 @@ function updateRespawns(now) {
 
 
     updateRespawns(now);
+    updateServerDrivenMonsters(now);
 
     // Render
     clear();
