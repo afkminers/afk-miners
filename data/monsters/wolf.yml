@@ -9,6 +9,7 @@ look:
   spriteKey: wolf
 flags:
   hostile: true
+  pushable: false
 elements:
   physical: 0
 
