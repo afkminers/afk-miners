@@ -39,6 +39,37 @@ const _wasQuantized   = new Set(); // monsterId -> bool
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 const tileOf = (v) => Math.floor(Number(v || 0) / TILE);
 const centerOfTile = (t) => (t * TILE) + TILE / 2;
+const tileKey = (tx, ty) => `${tx},${ty}`;
+
+function buildMonsterTileMap(list = []) {
+  const byMap = new Map();
+  for (const m of list) {
+    const mapKey = m?.map_key == null ? '__null__' : String(m.map_key);
+    const tx = tileOf(m?.x);
+    const ty = tileOf(m?.y);
+    if (!Number.isFinite(tx) || !Number.isFinite(ty)) continue;
+    if (!byMap.has(mapKey)) byMap.set(mapKey, new Map());
+    const grid = byMap.get(mapKey);
+    const key = tileKey(tx, ty);
+    let set = grid.get(key);
+    if (!set) { set = new Set(); grid.set(key, set); }
+    set.add(m.id);
+  }
+  return byMap;
+}
+
+function buildHeroTileSet(list = []) {
+  const byMap = new Map();
+  for (const h of list) {
+    const mapKey = h?.map_key == null ? '__null__' : String(h.map_key);
+    const tx = tileOf(h?.x);
+    const ty = tileOf(h?.y);
+    if (!Number.isFinite(tx) || !Number.isFinite(ty)) continue;
+    if (!byMap.has(mapKey)) byMap.set(mapKey, new Set());
+    byMap.get(mapKey).add(tileKey(tx, ty));
+  }
+  return byMap;
+}
 
 function isAdjacent4Tiles(mx, my, hx, hy) {
   const dx = Math.abs(mx - hx);
@@ -162,6 +193,8 @@ async function tick() {
     if (!monsters.length || !heroes.length) { running = false; return; }
 
     const slice = monsters.slice(0, MONSTER_MAX_PER_TICK);
+    const monsterTilesByMap = buildMonsterTileMap(monsters);
+    const heroTilesByMap = buildHeroTileSet(heroes);
 
     const heroesByMap = new Map();
     for (const h of heroes) {
@@ -174,6 +207,14 @@ async function tick() {
     for (const m of slice) {
       const hs = heroesByMap.get(m.map_key);
       if (!hs || !hs.length) continue;
+
+      const mapKeyStr = m.map_key == null ? '__null__' : String(m.map_key);
+      let tilesForMap = monsterTilesByMap.get(mapKeyStr);
+      if (!tilesForMap) {
+        tilesForMap = new Map();
+        monsterTilesByMap.set(mapKeyStr, tilesForMap);
+      }
+      const heroTilesForMap = heroTilesByMap.get(mapKeyStr) || new Set();
 
       // Quantiza 1x: centraliza no tile
       if (!_wasQuantized.has(m.id)) {
@@ -191,6 +232,13 @@ async function tick() {
       let bestD = Infinity;
 
       const mx = tileOf(m.x), my = tileOf(m.y);
+      const currentTileKey = tileKey(mx, my);
+      if (!tilesForMap.has(currentTileKey)) {
+        tilesForMap.set(currentTileKey, new Set([m.id]));
+      } else {
+        const set = tilesForMap.get(currentTileKey);
+        if (!set.has(m.id)) set.add(m.id);
+      }
 
       // 1) tenta dentro do spawn
       for (const h of hs) {
@@ -220,11 +268,34 @@ async function tick() {
         if (now - lastMove >= MONSTER_STEP_MS) {
           const step = nextTileToward(mx, my, hx, hy, m);
           if (step.moved) {
+            const fromKey = tileKey(mx, my);
+            const destKey = tileKey(step.nx, step.ny);
+
+            let fromSet = tilesForMap.get(fromKey);
+            if (fromSet) {
+              fromSet.delete(m.id);
+              if (!fromSet.size) tilesForMap.delete(fromKey);
+            }
+
+            const destSet = tilesForMap.get(destKey);
+            const blockedByMonster = destSet && (destSet.size > (destSet.has(m.id) ? 1 : 0));
+            const blockedByHero = heroTilesForMap.has(destKey);
+
+            if (blockedByMonster || blockedByHero) {
+              if (!tilesForMap.has(fromKey)) tilesForMap.set(fromKey, new Set());
+              tilesForMap.get(fromKey).add(m.id);
+              _lastMoveAt.set(m.id, now);
+              continue;
+            }
+
             const px = centerOfTile(step.nx);
             const py = centerOfTile(step.ny);
             m.x = px; m.y = py;
             _lastMoveAt.set(m.id, now);
             await updateMonsterPos(m.id, px, py, now);
+
+            if (!tilesForMap.has(destKey)) tilesForMap.set(destKey, new Set());
+            tilesForMap.get(destKey).add(m.id);
 
             if (global._sendToMap) {
               try { global._sendToMap(m.map_key, { type: 'monster_move', id: m.id, x: px, y: py }); } catch {}

@@ -8,6 +8,7 @@ look:
   spriteKey: deer
 flags:
   hostile: false
+  pushable: false
 elements:
   physical: 0
 attacks:
