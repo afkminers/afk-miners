@@ -12,6 +12,104 @@ const { broadcast } = require('../ws/bus');
 
 // Mundo em pixels (o cliente usa 32px por tile)
 const TILE = 32;
+const RESPAWN_EXTRA_RADIUS = Number(process.env.RESPAWN_TILE_SEARCH_RADIUS || 6);
+const RESPAWN_RETRY_DELAY_MS = Number(process.env.RESPAWN_RETRY_DELAY_MS || 1000);
+
+function tileOf(v) {
+  return Math.floor(Number(v || 0) / TILE);
+}
+
+function centerOfTile(t) {
+  return (t * TILE) + TILE / 2;
+}
+
+function tileKey(tx, ty) {
+  return `${tx},${ty}`;
+}
+
+function spawnTileBounds(spawn) {
+  const x0 = Number(spawn.x) || 0;
+  const y0 = Number(spawn.y) || 0;
+  const w  = Math.max(TILE, Number(spawn.w) || 0);
+  const h  = Math.max(TILE, Number(spawn.h) || 0);
+
+  const minTx = tileOf(x0);
+  const minTy = tileOf(y0);
+  const maxTx = tileOf(x0 + w - 1);
+  const maxTy = tileOf(y0 + h - 1);
+
+  return { minTx, maxTx, minTy, maxTy };
+}
+
+function pickTilesInSpawn(spawn) {
+  const { minTx, maxTx, minTy, maxTy } = spawnTileBounds(spawn);
+
+  const tiles = [];
+  for (let tx = minTx; tx <= maxTx; tx++) {
+    for (let ty = minTy; ty <= maxTy; ty++) {
+      tiles.push({ tx, ty });
+    }
+  }
+  return tiles;
+}
+
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function getOccupiedTilesForMap(cache, mapKey) {
+  const key = mapKey == null ? '__null__' : String(mapKey);
+  if (!cache.has(key)) cache.set(key, new Set());
+  return cache.get(key);
+}
+
+function markTileOccupied(cache, mapKey, tx, ty) {
+  const set = getOccupiedTilesForMap(cache, mapKey);
+  set.add(tileKey(tx, ty));
+}
+
+function findFreeTileAroundSpawn(spawn, mapKey, occupiedCache) {
+  const occ = getOccupiedTilesForMap(occupiedCache, mapKey);
+  const bounds = spawnTileBounds(spawn);
+  const { minTx, maxTx, minTy, maxTy } = bounds;
+
+  for (let radius = 1; radius <= RESPAWN_EXTRA_RADIUS; radius++) {
+    const minX = minTx - radius;
+    const maxX = maxTx + radius;
+    const minY = minTy - radius;
+    const maxY = maxTy + radius;
+
+    for (let tx = minX; tx <= maxX; tx++) {
+      for (let ty = minY; ty <= maxY; ty++) {
+        const onPerimeter = tx === minX || tx === maxX || ty === minY || ty === maxY;
+        if (!onPerimeter) continue;
+        const key = tileKey(tx, ty);
+        if (occ.has(key)) continue;
+        occ.add(key);
+        return { x: centerOfTile(tx), y: centerOfTile(ty), tx, ty };
+      }
+    }
+  }
+  return null;
+}
+
+function reserveTileForSpawn(spawn, mapKey, occupiedCache) {
+  const tiles = shuffleInPlace(pickTilesInSpawn(spawn));
+  const occ = getOccupiedTilesForMap(occupiedCache, mapKey);
+
+  for (const t of tiles) {
+    const key = tileKey(t.tx, t.ty);
+    if (occ.has(key)) continue;
+    occ.add(key);
+    return { x: centerOfTile(t.tx), y: centerOfTile(t.ty), tx: t.tx, ty: t.ty };
+  }
+
+  return findFreeTileAroundSpawn(spawn, mapKey, occupiedCache);
+}
 
 function tileOf(v) {
   return Math.floor(Number(v || 0) / TILE);
@@ -154,18 +252,35 @@ async function respawnTick({ all, run }) {
 
     // Escolhe uma posição dentro da área do spawn (em pixels)
     const mapKey = r.map_key == null ? '__null__' : String(r.map_key);
-    let chosen = pickFreeTileCenter(r, mapKey, occupiedByMap);
+    let chosen = reserveTileForSpawn(r, mapKey, occupiedByMap);
     if (!chosen) {
-      const fallbackPos = pickPosInSpawnRect(r);
-      const tx = tileOf(fallbackPos.x);
-      const ty = tileOf(fallbackPos.y);
-      chosen = {
-        x: centerOfTile(tx),
-        y: centerOfTile(ty),
-        tx,
-        ty,
-      };
-      markTileOccupied(occupiedByMap, mapKey, tx, ty);
+      const occ = getOccupiedTilesForMap(occupiedByMap, mapKey);
+      for (let attempt = 0; attempt < 8 && !chosen; attempt++) {
+        const fallbackPos = pickPosInSpawnRect(r);
+        const tx = tileOf(fallbackPos.x);
+        const ty = tileOf(fallbackPos.y);
+        if (!Number.isFinite(tx) || !Number.isFinite(ty)) continue;
+        const key = tileKey(tx, ty);
+        if (occ.has(key)) continue;
+        occ.add(key);
+        chosen = {
+          x: centerOfTile(tx),
+          y: centerOfTile(ty),
+          tx,
+          ty,
+        };
+      }
+    }
+
+    if (!chosen) {
+      await run(
+        `UPDATE monster_instances
+            SET respawn_at = NOW() + ($2 || ' milliseconds')::interval
+          WHERE id = $1`,
+        [r.id, String(Math.max(250, RESPAWN_RETRY_DELAY_MS))]
+      );
+      if (DEBUG) console.log('[respawn] no free tile, delaying instance', r.id);
+      continue;
     }
 
     const px = Math.round(chosen.x);

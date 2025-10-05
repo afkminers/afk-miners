@@ -25,6 +25,8 @@ const CHASE_MAX_TILES = +(process.env.MONSTER_CHASE_MAX_TILES || 25);
 
 // Evita processar monstro demais por tick (alivia pool)
 const MONSTER_MAX_PER_TICK = +(process.env.MONSTER_MAX_PER_TICK || 40);
+const MONSTER_SEARCH_DEPTH = +(process.env.MONSTER_STEP_SEARCH_DEPTH || 4);
+const MONSTER_STEP_BACKTRACK_PENALTY = +(process.env.MONSTER_STEP_BACKTRACK_PENALTY || 2);
 
 // ======= Estado em RAM =======
 let timer = null;
@@ -98,34 +100,112 @@ function isTileInsideSpawn(tx, ty, m) {
   return tx >= minTx && tx <= maxTx && ty >= minTy && ty <= maxTy;
 }
 
-function candidateTilesToward(mx, my, hx, hy, m) {
-  const dxTiles = hx - mx;
-  const dyTiles = hy - my;
-  if (dxTiles === 0 && dyTiles === 0) return [];
+const CARDINAL_STEPS = [
+  { dx: 1, dy: 0 },
+  { dx: -1, dy: 0 },
+  { dx: 0, dy: 1 },
+  { dx: 0, dy: -1 },
+];
 
-  const preferX = Math.abs(dxTiles) >= Math.abs(dyTiles);
-  const dirs = [];
+function tilesOccupiedByOthers(set, monsterId) {
+  if (!set) return 0;
+  if (!set.size) return 0;
+  if (!set.has(monsterId)) return set.size;
+  if (set.size <= 1) return 0;
+  return set.size - 1;
+}
 
-  const pushDir = (dx, dy) => {
-    if (!dx && !dy) return;
-    const candX = mx + dx;
-    const candY = my + dy;
-    if (!isTileInsideSpawn(candX, candY, m)) return;
-    const key = tileKey(candX, candY);
-    if (!dirs.some((d) => d.key === key)) dirs.push({ nx: candX, ny: candY, key });
+function findBestStepToward({
+  mx,
+  my,
+  hx,
+  hy,
+  monster,
+  tilesForMap,
+  heroTiles,
+}) {
+  const heroTilesSet = heroTiles instanceof Set ? heroTiles : new Set();
+  const originKey = tileKey(mx, my);
+  const visited = new Set([originKey]);
+  const queue = [];
+  const currentDist = Math.abs(mx - hx) + Math.abs(my - hy);
+
+  const pushNode = (nx, ny, depth, firstStep) => {
+    if (depth > MONSTER_SEARCH_DEPTH) return;
+    if (!isTileInsideSpawn(nx, ny, monster)) return;
+    const key = tileKey(nx, ny);
+    if (visited.has(key)) return;
+    visited.add(key);
+    queue.push({
+      nx,
+      ny,
+      key,
+      depth,
+      firstStep,
+      dist: Math.abs(nx - hx) + Math.abs(ny - hy),
+    });
   };
 
-  const primary = preferX
-    ? [{ dx: Math.sign(dxTiles), dy: 0 }, { dx: 0, dy: Math.sign(dyTiles) }]
-    : [{ dx: 0, dy: Math.sign(dyTiles) }, { dx: Math.sign(dxTiles), dy: 0 }];
-  for (const d of primary) pushDir(d.dx, d.dy);
+  for (const step of CARDINAL_STEPS) {
+    const nx = mx + step.dx;
+    const ny = my + step.dy;
+    pushNode(nx, ny, 1, { nx, ny });
+  }
 
-  const lateral = preferX
-    ? [{ dx: 0, dy: 1 }, { dx: 0, dy: -1 }]
-    : [{ dx: 1, dy: 0 }, { dx: -1, dy: 0 }];
-  for (const d of lateral) pushDir(d.dx, d.dy);
+  let best = null;
 
-  return dirs;
+  const scoreNode = (node) => {
+    const firstDist = Math.abs(node.firstStep.nx - hx) + Math.abs(node.firstStep.ny - hy);
+    const distDelta = firstDist - currentDist;
+    const backtrackPenalty = distDelta > 0 ? distDelta * MONSTER_STEP_BACKTRACK_PENALTY : 0;
+    return node.dist + (node.depth * 0.1) + backtrackPenalty;
+  };
+
+  while (queue.length) {
+    queue.sort((a, b) => {
+      const sa = scoreNode(a);
+      const sb = scoreNode(b);
+      if (sa !== sb) return sa - sb;
+      if (a.dist !== b.dist) return a.dist - b.dist;
+      return a.depth - b.depth;
+    });
+
+    const node = queue.shift();
+    const destKey = node.key;
+    if (destKey === originKey) continue;
+
+    const blockedByHero = heroTilesSet.has(destKey);
+    const destSet = tilesForMap.get(destKey);
+    const blockedByMonster = tilesOccupiedByOthers(destSet, monster.id) > 0;
+
+    if (!blockedByHero && !blockedByMonster) {
+      const score = scoreNode(node);
+      const improves = !best || score < best.score;
+      const keepsDistanceReasonable = node.dist <= currentDist || currentDist <= 1;
+      if (improves && keepsDistanceReasonable) {
+        best = {
+          nx: node.firstStep.nx,
+          ny: node.firstStep.ny,
+          score,
+          dist: node.dist,
+          depth: node.depth,
+        };
+        if (node.depth === 1 && node.dist <= currentDist) break;
+      }
+    }
+
+    if (node.depth >= MONSTER_SEARCH_DEPTH) {
+      continue;
+    }
+
+    for (const step of CARDINAL_STEPS) {
+      const nx = node.nx + step.dx;
+      const ny = node.ny + step.dy;
+      pushNode(nx, ny, node.depth + 1, node.firstStep);
+    }
+  }
+
+  return best;
 }
 
 // ======= DB =======
@@ -279,17 +359,18 @@ async function tick() {
         const lastMove = _lastMoveAt.get(m.id) || 0;
         if (now - lastMove >= MONSTER_STEP_MS) {
           const fromKey = tileKey(mx, my);
-          const candidates = candidateTilesToward(mx, my, hx, hy, m);
-          let moved = false;
+          const bestStep = findBestStepToward({
+            mx,
+            my,
+            hx,
+            hy,
+            monster: m,
+            tilesForMap,
+            heroTiles: heroTilesForMap,
+          });
 
-          for (const step of candidates) {
-            const destKey = tileKey(step.nx, step.ny);
-            if (destKey === fromKey) continue;
-
-            const destSet = tilesForMap.get(destKey);
-            const blockedByMonster = destSet && destSet.size > 0;
-            const blockedByHero = heroTilesForMap.has(destKey);
-            if (blockedByMonster || blockedByHero) continue;
+          if (bestStep) {
+            const destKey = tileKey(bestStep.nx, bestStep.ny);
 
             let fromSet = tilesForMap.get(fromKey);
             if (fromSet) {
@@ -300,8 +381,8 @@ async function tick() {
             if (!tilesForMap.has(destKey)) tilesForMap.set(destKey, new Set());
             tilesForMap.get(destKey).add(m.id);
 
-            const px = centerOfTile(step.nx);
-            const py = centerOfTile(step.ny);
+            const px = centerOfTile(bestStep.nx);
+            const py = centerOfTile(bestStep.ny);
             m.x = px; m.y = py;
             _lastMoveAt.set(m.id, now);
             await updateMonsterPos(m.id, px, py, now);
