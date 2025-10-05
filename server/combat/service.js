@@ -362,10 +362,6 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
     return { ok: false, message: 'target not in same map' };
   }
 
-  if (!heroPosFresh) {
-    return { ok: false, message: 'target position stale' };
-  }
-
   let hx = Number(hpos.x || 0);
   let hy = Number(hpos.y || 0);
 
