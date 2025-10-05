@@ -137,22 +137,23 @@ function pickPosInSpawnRect(spawn) {
 async function respawnTick({ all, run }) {
   if (DEBUG) console.log('[respawn] tick...');
 
-  const due = await all(`
-    SELECT
-      mi.id,
-      mi.max_hp                   AS mi_max_hp,
-      mi.spawn_id,
-      mi.map_key,
-      s."monsterKey",
-      s.x, s.y,                   -- top-left do retângulo do spawn (px)
-      COALESCE(s.w, 0) AS w,
-      COALESCE(s.h, 0) AS h,
-      COALESCE(mm."healthMax", 0) AS health_max
-    FROM monster_instances mi
-    JOIN spawns s
-      ON s.id = mi.spawn_id
-    LEFT JOIN monsters_master mm
-      ON mm.key = s."monsterKey"
+    const due = await all(`
+      SELECT
+        mi.id,
+        mi.max_hp                   AS mi_max_hp,
+        mi.spawn_id,
+        mi.map_key,
+        s."monsterKey",
+        s.x, s.y,                   -- top-left do retângulo do spawn (px)
+        COALESCE(s.w, 0) AS w,
+        COALESCE(s.h, 0) AS h,
+        COALESCE(mm."healthMax", 0) AS health_max,
+        mm.speed                     AS speed
+      FROM monster_instances mi
+      JOIN spawns s
+        ON s.id = mi.spawn_id
+      LEFT JOIN monsters_master mm
+        ON mm.key = s."monsterKey"
     WHERE mi.state = 'DEAD'
       AND mi.respawn_at IS NOT NULL
       AND now() >= mi.respawn_at
@@ -243,7 +244,9 @@ async function respawnTick({ all, run }) {
           x: px,
           y: py,
           mapKey: r.map_key,
-          spawnRect: { x: r.x, y: r.y, w: r.w, h: r.h }
+          spawnRect: { x: r.x, y: r.y, w: r.w, h: r.h },
+          monsterKey: r.monsterKey,
+          speed: r.speed
         });
       }
     } catch {}

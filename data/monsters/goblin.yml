@@ -3,7 +3,7 @@ name: Goblin
 xp: 50
 health:
   max: 70
-speed: 80
+speed: 120
 look:
   spriteKey: goblin
 flags:

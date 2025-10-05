@@ -4,7 +4,7 @@ name: Rotmaw
 xp: 120
 health:
   max: 160
-speed: 60
+speed: 165
 look:
   spriteKey: rotmaw
 flags:

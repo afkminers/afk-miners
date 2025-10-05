@@ -3,7 +3,7 @@ name: Bear
 xp: 90
 health:
   max: 140
-speed: 70
+speed: 135
 look:
   spriteKey: bear
 flags:

@@ -5,7 +5,7 @@ xp: 6200
 health:
   max: 40
   regenPerSec: 3
-speed: 110
+speed: 180
 look:
   spriteKey: teste
 flags:

@@ -3,7 +3,7 @@ name: Deer
 xp: 20
 health:
   max: 40
-speed: 70
+speed: 150
 look:
   spriteKey: deer
 flags:
