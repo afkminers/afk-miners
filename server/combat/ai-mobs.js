@@ -47,8 +47,15 @@
   const IGNORE_LOS = process.env.AI_MOBS_IGNORE_LOS === '1';
   const IGNORE_COLLISION = process.env.AI_MOBS_IGNORE_COLLISION === '1';
 
+  const HERO_MEMORY_TTL_MS = 15000;
+  const HERO_PREDICTION_MAX_TILES = 2;
+  const CROWD_PENALTY_SCALE = 0.35;
+  const SURROUND_PENALTY = 0.9;
+  const FLANK_BONUS = 0.8;
+
   // --------- Estado ----------
   const mobs = new Map(); // instanceId -> state
+  const heroMemory = new Map(); // heroId -> { cx, cy, lastCx, lastCy, heading, updatedAt, mapKey }
   let loopTimer = null;
   let lastTickAt = 0;
 
@@ -127,6 +134,129 @@
     if (!canSee)  return { ok:false, reason:'no_los' };
 
     return { ok:true, distPxC: distPxC, atkPx };
+  }
+
+  function recordHeroObservation({ heroId, mapKey, x, y, now }) {
+    if (!heroId) return;
+    const cx = Math.floor(Number(x ?? 0) / STEP_PX);
+    const cy = Math.floor(Number(y ?? 0) / STEP_PX);
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) return;
+
+    const id = String(heroId);
+    const prev = heroMemory.get(id);
+    let heading = prev?.heading || null;
+    if (!prev || prev.cx !== cx || prev.cy !== cy) {
+      const dx = cx - (prev?.cx ?? cx);
+      const dy = cy - (prev?.cy ?? cy);
+      if (dx || dy) {
+        const clampedDx = Math.max(-HERO_PREDICTION_MAX_TILES, Math.min(dx, HERO_PREDICTION_MAX_TILES));
+        const clampedDy = Math.max(-HERO_PREDICTION_MAX_TILES, Math.min(dy, HERO_PREDICTION_MAX_TILES));
+        heading = (clampedDx || clampedDy) ? { dx: clampedDx, dy: clampedDy } : null;
+      }
+    }
+
+    heroMemory.set(id, {
+      cx,
+      cy,
+      lastCx: prev?.cx ?? cx,
+      lastCy: prev?.cy ?? cy,
+      heading: heading && (heading.dx || heading.dy) ? heading : null,
+      updatedAt: now,
+      mapKey,
+    });
+  }
+
+  function updateHeroMemoryForMap(mapKey, heroes, now) {
+    const seen = new Set();
+    if (Array.isArray(heroes)) {
+      for (const hero of heroes) {
+        if (!hero || hero.heroId == null) continue;
+        recordHeroObservation({ heroId: hero.heroId, mapKey, x: hero.x, y: hero.y, now });
+        seen.add(String(hero.heroId));
+      }
+    }
+
+    for (const [heroId, mem] of heroMemory.entries()) {
+      if (!mem || (mem.mapKey != null && mem.mapKey !== mapKey)) continue;
+      if (seen.has(heroId)) continue;
+      if (now - (mem.updatedAt || 0) > HERO_MEMORY_TTL_MS) {
+        heroMemory.delete(heroId);
+      }
+    }
+  }
+
+  function predictHeroTileCx(mem, fallbackCx, fallbackCy) {
+    if (!mem) return null;
+    let dx = 0;
+    let dy = 0;
+    if (mem.heading && (mem.heading.dx || mem.heading.dy)) {
+      dx = mem.heading.dx;
+      dy = mem.heading.dy;
+    } else if (Number.isFinite(mem.cx) && Number.isFinite(mem.lastCx)) {
+      dx = mem.cx - mem.lastCx;
+      dy = mem.cy - mem.lastCy;
+    }
+    dx = Math.max(-HERO_PREDICTION_MAX_TILES, Math.min(dx, HERO_PREDICTION_MAX_TILES));
+    dy = Math.max(-HERO_PREDICTION_MAX_TILES, Math.min(dy, HERO_PREDICTION_MAX_TILES));
+    if (!dx && !dy) return null;
+    return {
+      cx: fallbackCx + dx,
+      cy: fallbackCy + dy,
+      heading: mem.heading || null,
+      updatedAt: mem.updatedAt || Date.now(),
+    };
+  }
+
+  function computeMobDensityPenalty({ occupancy, cx, cy, mobId, heroCx, heroCy }) {
+    if (!occupancy) return 0;
+    let penalty = 0;
+
+    const key = tileKey(cx, cy);
+    const set = occupancy.get(key);
+    if (set && set.size) {
+      const others = set.has(mobId) ? Math.max(0, set.size - 1) : set.size;
+      if (others > 0) penalty += others * 4;
+    }
+
+    for (const dir of CARDINAL_DIRS) {
+      const nx = cx + dir.dx;
+      const ny = cy + dir.dy;
+      const nearSet = occupancy.get(tileKey(nx, ny));
+      if (nearSet && nearSet.size) {
+        penalty += Math.min(nearSet.size, 4) * CROWD_PENALTY_SCALE;
+      }
+    }
+
+    if (Number.isFinite(heroCx) && Number.isFinite(heroCy)) {
+      const distHero = Math.abs(cx - heroCx) + Math.abs(cy - heroCy);
+      if (distHero === 1) {
+        let adjacentCount = 0;
+        for (const dir of CARDINAL_DIRS) {
+          const adjSet = occupancy.get(tileKey(heroCx + dir.dx, heroCy + dir.dy));
+          if (adjSet && adjSet.size) adjacentCount += adjSet.size;
+        }
+        if (adjacentCount > 1) penalty += (adjacentCount - 1) * SURROUND_PENALTY;
+      }
+    }
+
+    return penalty;
+  }
+
+  function computeMobFlankBonus({ cx, cy, heroCx, heroCy, heading }) {
+    if (!heading || !(heading.dx || heading.dy)) return 0;
+    if (!Number.isFinite(heroCx) || !Number.isFinite(heroCy)) return 0;
+    const relX = cx - heroCx;
+    const relY = cy - heroCy;
+    const manhattan = Math.abs(relX) + Math.abs(relY);
+    if (manhattan !== 1) return 0;
+
+    const facingX = Math.sign(heading.dx || 0);
+    const facingY = Math.sign(heading.dy || 0);
+    if (facingX && relX === facingX) return FLANK_BONUS;
+    if (facingY && relY === facingY) return FLANK_BONUS;
+    if ((facingX && relY !== 0) || (facingY && relX !== 0)) return FLANK_BONUS * 0.6;
+    if ((relX && facingX && relX === -facingX) || (relY && facingY && relY === -facingY)) return -FLANK_BONUS * 0.5;
+    return 0;
   }
 
 
@@ -340,6 +470,211 @@
   }
 
   // --------- Loop principal ----------
+  const CARDINAL_DIRS = [
+    { dx: 1, dy: 0 },
+    { dx: -1, dy: 0 },
+    { dx: 0, dy: 1 },
+    { dx: 0, dy: -1 },
+  ];
+
+  function tileKey(cx, cy) {
+    return `${cx}|${cy}`;
+  }
+
+  function losGridRows(losGrid) {
+    if (!losGrid || !losGrid.cols) return 0;
+    return Math.floor(losGrid.data.length / losGrid.cols);
+  }
+
+  function isSolidTile(losGrid, cx, cy) {
+    if (!losGrid || !losGrid.data) return false;
+    if (cx < 0 || cy < 0) return true;
+    if (cx >= losGrid.cols) return true;
+    const rows = losGridRows(losGrid);
+    if (cy >= rows) return true;
+    const idx = cy * losGrid.cols + cx;
+    return losGrid.data[idx] === 1;
+  }
+
+  function isTileBlockedByMobs(occupancy, cx, cy, ignoreId) {
+    if (!occupancy) return false;
+    const key = tileKey(cx, cy);
+    const set = occupancy.get(key);
+    if (!set || set.size === 0) return false;
+    if (set.size === 1 && set.has(ignoreId)) return false;
+    return true;
+  }
+
+  function buildHeroTileSet(mapKey, heroes, now = Date.now()) {
+    const res = new Set();
+    if (Array.isArray(heroes)) {
+      for (const h of heroes) {
+        const cx = Math.floor(Number(h?.x) / STEP_PX);
+        const cy = Math.floor(Number(h?.y) / STEP_PX);
+        if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
+        res.add(tileKey(cx, cy));
+      }
+    }
+
+    const mapStr = mapKey != null ? String(mapKey) : null;
+    for (const mem of heroMemory.values()) {
+      if (!mem) continue;
+      if (mapStr && String(mem.mapKey) !== mapStr) continue;
+      if (now - (mem.updatedAt || 0) > HERO_MEMORY_TTL_MS) continue;
+      const cx = Number(mem.cx);
+      const cy = Number(mem.cy);
+      if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
+      res.add(tileKey(cx, cy));
+    }
+
+    return res;
+  }
+
+  function buildMobOccupancy(list) {
+    const occ = new Map();
+    if (!Array.isArray(list)) return occ;
+    for (const mob of list) {
+      const cx = Math.floor(Number(mob?.x) / STEP_PX);
+      const cy = Math.floor(Number(mob?.y) / STEP_PX);
+      if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
+      mob._tileCx = cx;
+      mob._tileCy = cy;
+      mob._tileKey = tileKey(cx, cy);
+      let set = occ.get(mob._tileKey);
+      if (!set) {
+        set = new Set();
+        occ.set(mob._tileKey, set);
+      }
+      set.add(mob.instanceId);
+    }
+    return occ;
+  }
+
+  function findNearestFreeTile({
+    startCx,
+    startCy,
+    occupancy,
+    heroTiles,
+    losGrid,
+    ignoreId,
+    maxDepth = 8,
+  }) {
+    const queue = [{ cx: startCx, cy: startCy, depth: 0 }];
+    const visited = new Set([tileKey(startCx, startCy)]);
+
+    while (queue.length) {
+      const node = queue.shift();
+      if (node.depth >= maxDepth) continue;
+
+      for (const dir of CARDINAL_DIRS) {
+        const nx = node.cx + dir.dx;
+        const ny = node.cy + dir.dy;
+        if (isSolidTile(losGrid, nx, ny)) continue;
+        const k = tileKey(nx, ny);
+        if (visited.has(k)) continue;
+        visited.add(k);
+        if (heroTiles && heroTiles.has(k)) {
+          // evita ocupar o mesmo tile que o herói, mas pode explorar ao redor
+          queue.push({ cx: nx, cy: ny, depth: node.depth + 1 });
+          continue;
+        }
+
+        const blocked = isTileBlockedByMobs(occupancy, nx, ny, ignoreId);
+        if (!blocked) {
+          return { cx: nx, cy: ny };
+        }
+
+        queue.push({ cx: nx, cy: ny, depth: node.depth + 1 });
+      }
+    }
+    return null;
+  }
+
+  async function teleportMobToTile({ mob, cx, cy, occupancy }) {
+    if (!mob) return;
+    const prevCx = Math.floor(Number(mob.x) / STEP_PX);
+    const prevCy = Math.floor(Number(mob.y) / STEP_PX);
+    const prevKey = tileKey(prevCx, prevCy);
+
+    const px = cx * STEP_PX + STEP_PX / 2;
+    const py = cy * STEP_PX + STEP_PX / 2;
+    mob.x = px | 0;
+    mob.y = py | 0;
+    mob.posUpdatedAt = Date.now();
+
+    if (occupancy) {
+      const prevSet = occupancy.get(prevKey);
+      if (prevSet) {
+        prevSet.delete(mob.instanceId);
+        if (!prevSet.size) occupancy.delete(prevKey);
+      }
+
+      const destKey = tileKey(cx, cy);
+      let set = occupancy.get(destKey);
+      if (!set) {
+        set = new Set();
+        occupancy.set(destKey, set);
+      }
+      set.add(mob.instanceId);
+
+      mob._tileCx = cx;
+      mob._tileCy = cy;
+      mob._tileKey = destKey;
+    }
+
+    try {
+      await run(
+        `UPDATE monster_instances SET x=$2, y=$3, updated_at=now() WHERE id=$1`,
+        [mob.instanceId, mob.x | 0, mob.y | 0]
+      );
+      try {
+        broadcast({ type: 'mob_pos', instanceId: mob.instanceId, mapKey: mob.mapKey, x: mob.x, y: mob.y });
+      } catch {}
+    } catch (e) {
+      console.warn('[ai-mobs] teleport persist error:', e?.message);
+    }
+  }
+
+  async function resolveMobStacks({ mobsInMap, occupancy, heroTiles, losGrid }) {
+    if (!Array.isArray(mobsInMap) || mobsInMap.length === 0) return;
+    const stacks = new Map();
+    for (const mob of mobsInMap) {
+      if (!mob || mob._tileKey == null) continue;
+      if (!stacks.has(mob._tileKey)) stacks.set(mob._tileKey, []);
+      stacks.get(mob._tileKey).push(mob);
+    }
+
+    for (const [key, stack] of stacks.entries()) {
+      if (!Array.isArray(stack) || stack.length <= 1) continue;
+      // mantém o primeiro no tile atual, desloca os demais
+      stack.sort((a, b) => {
+        const ia = Number(a?.instanceId) || 0;
+        const ib = Number(b?.instanceId) || 0;
+        return ia - ib;
+      });
+
+      for (let i = 1; i < stack.length; i++) {
+        const mob = stack[i];
+        const startCx = mob?._tileCx;
+        const startCy = mob?._tileCy;
+        if (!Number.isFinite(startCx) || !Number.isFinite(startCy)) continue;
+
+        const free = findNearestFreeTile({
+          startCx,
+          startCy,
+          occupancy,
+          heroTiles,
+          losGrid,
+          ignoreId: mob.instanceId,
+          maxDepth: 10,
+        });
+
+        if (!free) continue;
+        await teleportMobToTile({ mob, cx: free.cx, cy: free.cy, occupancy });
+      }
+    }
+  }
+
   async function tickLoop() {
     const now = Date.now();
     const dt = Math.min(0.25, (now - lastTickAt) / 1000);
@@ -356,9 +691,15 @@
     for (const [mapKey, list] of byMap.entries()) {
       const heroes = await fetchOnlineHeroesInMap(mapKey);
 
-
       const { grid, cols } = await getGrid(mapKey);
       const losGrid = { data: grid, cols };
+      const occupancy = buildMobOccupancy(list);
+
+      updateHeroMemoryForMap(mapKey, heroes, now);
+
+      const heroTiles = buildHeroTileSet(mapKey, heroes, now);
+
+      await resolveMobStacks({ mobsInMap: list, occupancy, heroTiles, losGrid });
 
       if (DEBUG_AI) {
         console.log(`[ai-mobs] tick map=${mapKey} heroes=${heroes.length} mobs=${list.length}`);
@@ -369,7 +710,7 @@
 
       for (const mob of list) {
         try {
-          await stepMob(now, dt, mob, heroes, losGrid);
+          await stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles);
         } catch (e) {
           console.warn('[ai-mobs] stepMob error:', e?.message);
         }
@@ -377,7 +718,7 @@
     }
   }
 
-async function stepMob(now, dt, mob, heroes, losGrid) {
+async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   decayThreat(mob, dt);
   selectTargetByThreat(now, mob, heroes, losGrid);
 
@@ -387,6 +728,22 @@ async function stepMob(now, dt, mob, heroes, losGrid) {
   let tgtPos =
     heroes.find(h => h.heroId === mob.targetHeroId) ||
     await getHeroLastPosPx(mob.targetHeroId, mob.mapKey);
+
+  if (!tgtPos) {
+    const mem = mob.targetHeroId ? heroMemory.get(String(mob.targetHeroId)) : null;
+    if (mem && mem.mapKey === mob.mapKey && now - (mem.updatedAt || 0) <= HERO_MEMORY_TTL_MS) {
+      tgtPos = {
+        heroId: mob.targetHeroId,
+        x: mem.cx * STEP_PX + STEP_PX / 2,
+        y: mem.cy * STEP_PX + STEP_PX / 2,
+        updatedMs: mem.updatedAt || now,
+      };
+    }
+  }
+
+  if (tgtPos && mob.targetHeroId) {
+    recordHeroObservation({ heroId: mob.targetHeroId, mapKey: mob.mapKey, x: tgtPos.x, y: tgtPos.y, now });
+  }
 
   if (!tgtPos) {
     if (now - mob.lastSeenAt > GIVEUP_MS) { mob.targetHeroId = null; mob.mode = 'idle'; }
@@ -403,6 +760,10 @@ async function stepMob(now, dt, mob, heroes, losGrid) {
   const mobCy  = Math.floor(mob.y / TILE);
   const heroCx = Math.floor(tgtPos.x / TILE);
   const heroCy = Math.floor(tgtPos.y / TILE);
+
+  if (heroTiles && Number.isFinite(heroCx) && Number.isFinite(heroCy)) {
+    heroTiles.add(tileKey(heroCx, heroCy));
+  }
 
   // Chebyshev distance: <= 1 significa mesmo tile ou qualquer adjacente (8-dir)
   const dxC = Math.abs(mobCx - heroCx);
@@ -485,8 +846,9 @@ async function stepMob(now, dt, mob, heroes, losGrid) {
   mob.mode = 'chase';
   if (now >= mob.repathAt) {
     mob.repathAt = now + REPATH_MS;
-    const step = pickStepGreedy(mob, tgtPos, losGrid);
-    if (step) await moveMobAndPersist(mob, step, dt, losGrid);
+    const heroMem = mob.targetHeroId ? heroMemory.get(String(mob.targetHeroId)) : null;
+    const step = pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem);
+    if (step) await moveMobAndPersist(mob, step, dt, losGrid, occupancy);
   }
 
 }
@@ -576,36 +938,63 @@ async function stepMob(now, dt, mob, heroes, losGrid) {
     return losGrid.data[cy * losGrid.cols + cx] === 1;
   }
 
-  function pickStepGreedy(mob, tgtPos, losGrid) {
+  function pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem) {
     const c0x = Math.floor(mob.x / STEP_PX), c0y = Math.floor(mob.y / STEP_PX);
-    const c1x = Math.floor(tgtPos.x / STEP_PX), c1y = Math.floor(tgtPos.y / STEP_PX);
-    const dx = Math.sign(c1x - c0x), dy = Math.sign(c1y - c0y);
+    const heroCx = Math.floor(tgtPos.x / STEP_PX), heroCy = Math.floor(tgtPos.y / STEP_PX);
+    const predicted = predictHeroTileCx(heroMem, heroCx, heroCy);
+    const goalCx = Number.isFinite(predicted?.cx) ? predicted.cx : heroCx;
+    const goalCy = Number.isFinite(predicted?.cy) ? predicted.cy : heroCy;
+    const currentDist = Math.abs(c0x - goalCx) + Math.abs(c0y - goalCy);
 
-    const cand = [];
-    if (Math.abs(c1x - c0x) >= Math.abs(c1y - c0y)) {
-      if (dx) cand.push({cx:c0x+dx, cy:c0y});
-      if (dy) cand.push({cx:c0x, cy:c0y+dy});
-    } else {
-      if (dy) cand.push({cx:c0x, cy:c0y+dy});
-      if (dx) cand.push({cx:c0x+dx, cy:c0y});
+    const heroTilesSet = heroTiles || new Set();
+
+    const candidates = [];
+    for (const dir of CARDINAL_DIRS) {
+      candidates.push({ cx: c0x + dir.dx, cy: c0y + dir.dy });
     }
 
-    if (DEBUG_AI) {
-      const dbg = cand.map(c => {
-        const idx = c.cy * losGrid.cols + c.cx;
-        const v = (idx >= 0 && idx < losGrid.data.length) ? losGrid.data[idx] : 'OOB';
-        return `(${c.cx},${c.cy})=${v}`;
-      }).join(' | ');
-      console.log(`[ai-mobs] path cand mob=${mob.instanceId} -> ${dbg}`);
+    let best = null;
+    let bestScore = Infinity;
+
+    for (const c of candidates) {
+      const wx = c.cx * STEP_PX + STEP_PX / 2;
+      const wy = c.cy * STEP_PX + STEP_PX / 2;
+      if (isBlockedPx(losGrid, wx, wy)) continue;
+      const key = tileKey(c.cx, c.cy);
+      if (heroTilesSet.has(key)) continue;
+      if (c.cx === heroCx && c.cy === heroCy) continue;
+      if (isTileBlockedByMobs(occupancy, c.cx, c.cy, mob.instanceId)) continue;
+
+      const distGoal = Math.abs(c.cx - goalCx) + Math.abs(c.cy - goalCy);
+      const distHero = Math.abs(c.cx - heroCx) + Math.abs(c.cy - heroCy);
+      const densityPenalty = computeMobDensityPenalty({
+        occupancy,
+        cx: c.cx,
+        cy: c.cy,
+        mobId: mob.instanceId,
+        heroCx,
+        heroCy,
+      });
+      const flank = computeMobFlankBonus({
+        cx: c.cx,
+        cy: c.cy,
+        heroCx,
+        heroCy,
+        heading: predicted?.heading,
+      });
+
+      let score = distGoal + densityPenalty - flank;
+      if (distHero <= 1 && densityPenalty < 0.6) score -= 0.25;
+      if (distGoal > currentDist && currentDist > 1) score += (distGoal - currentDist) * 1.4;
+
+      if (score < bestScore) {
+        bestScore = score;
+        best = { x: wx, y: wy };
+      }
     }
 
-    for (const c of cand) {
-      const wx = c.cx * STEP_PX + STEP_PX/2;
-      const wy = c.cy * STEP_PX + STEP_PX/2;
-      if (!isBlockedPx(losGrid, wx, wy)) return { x: wx, y: wy };
-    }
-    if (DEBUG_AI) console.log(`[ai-mobs] path blocked mob=${mob.instanceId}`);
-    return null;
+    if (!best && DEBUG_AI) console.log(`[ai-mobs] path blocked mob=${mob.instanceId}`);
+    return best;
   }
 
 function clampToMapPx(losGrid, px) {
@@ -619,7 +1008,7 @@ function clampToMapPx(losGrid, px) {
   };
 }
 
-async function moveMobAndPersist(mob, step, dt, losGrid) {
+async function moveMobAndPersist(mob, step, dt, losGrid, occupancy) {
   const speed = CHASE_SPEED_PX_S;
   const maxMove = speed * dt;
 
@@ -629,16 +1018,36 @@ async function moveMobAndPersist(mob, step, dt, losGrid) {
   const nx = dist <= maxMove ? step.x : (mob.x + ux * maxMove);
   const ny = dist <= maxMove ? step.y : (mob.y + uy * maxMove);
 
-  const prevCell = (Math.floor(mob.x/STEP_PX) << 16) | Math.floor(mob.y/STEP_PX);
+  const prevCx = Math.floor(mob.x / STEP_PX);
+  const prevCy = Math.floor(mob.y / STEP_PX);
 
   // clamp dentro do mapa (evita OOB por arredondamento/velocidade)
   const clamped = losGrid ? clampToMapPx(losGrid, { x: nx|0, y: ny|0 }) : { x: nx|0, y: ny|0 };
   mob.x = clamped.x; mob.y = clamped.y;
   mob.posUpdatedAt = Date.now(); // <<< posição do mob ficou "fresca" agora
 
-  const nextCell = (Math.floor(mob.x/STEP_PX) << 16) | Math.floor(mob.y/STEP_PX);
+  const nextCx = Math.floor(mob.x / STEP_PX);
+  const nextCy = Math.floor(mob.y / STEP_PX);
 
-  if (prevCell !== nextCell) {
+  if (prevCx !== nextCx || prevCy !== nextCy) {
+    if (occupancy) {
+      const prevKey = tileKey(prevCx, prevCy);
+      const prevSet = occupancy.get(prevKey);
+      if (prevSet) {
+        prevSet.delete(mob.instanceId);
+        if (!prevSet.size) occupancy.delete(prevKey);
+      }
+      const nextKey = tileKey(nextCx, nextCy);
+      let set = occupancy.get(nextKey);
+      if (!set) {
+        set = new Set();
+        occupancy.set(nextKey, set);
+      }
+      set.add(mob.instanceId);
+      mob._tileCx = nextCx;
+      mob._tileCy = nextCy;
+      mob._tileKey = nextKey;
+    }
     try {
       await run(
         `UPDATE monster_instances SET x=$2, y=$3, updated_at=now() WHERE id=$1`,

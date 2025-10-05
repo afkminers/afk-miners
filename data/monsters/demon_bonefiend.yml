@@ -9,6 +9,7 @@ look:
   spriteKey: demon_bonefiend
 flags:
   hostile: true
+  pushable: false
 elements:
   physical: 0
 
