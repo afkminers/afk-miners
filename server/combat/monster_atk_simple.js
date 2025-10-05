@@ -542,10 +542,18 @@ async function tick() {
             movesUsed++;
             await updateMonsterPos(m.id, px, py, now);
 
+            if (!tilesForMap.has(destKey)) tilesForMap.set(destKey, new Set());
+            tilesForMap.get(destKey).add(m.id);
+
             if (global._sendToMap) {
               try { global._sendToMap(m.map_key, { type: 'monster_move', id: m.id, x: px, y: py }); } catch {}
             }
-          } else {
+
+            moved = true;
+            break;
+          }
+
+          if (!moved) {
             _lastMoveAt.set(m.id, now);
           }
         }
