@@ -36,6 +36,7 @@ const _lastAtkAt      = new Map(); // monsterId -> ms
 const _lastMoveAt     = new Map(); // monsterId -> ms
 const _lastPosWriteAt = new Map(); // monsterId -> ms
 const _wasQuantized   = new Set(); // monsterId -> bool
+const _livePos        = new Map(); // monsterId -> { x, y, mapKey }
 
 // ======= Utils =======
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -282,6 +283,21 @@ async function tick() {
       fetchAliveMonsters(),
       fetchAliveHeroesWithPos(),
     ]);
+
+    for (const m of monsters) {
+      const live = _livePos.get(m.id);
+      if (!live) continue;
+      if (Number.isFinite(live.x)) m.x = live.x;
+      if (Number.isFinite(live.y)) m.y = live.y;
+      if (live.mapKey !== undefined && live.mapKey !== null) m.map_key = live.mapKey;
+    }
+
+    if (_livePos.size) {
+      const aliveIds = new Set(monsters.map(m => m.id));
+      for (const id of _livePos.keys()) {
+        if (!aliveIds.has(id)) _livePos.delete(id);
+      }
+    }
     if (!monsters.length || !heroes.length) { running = false; return; }
 
     const slice = monsters.slice(0, MONSTER_MAX_PER_TICK);
@@ -317,6 +333,7 @@ async function tick() {
           m.x = cx; m.y = cy;
         }
         _wasQuantized.add(m.id);
+        _livePos.set(m.id, { x: m.x, y: m.y, mapKey: m.map_key });
       }
 
       // Alvo mais próximo (aplica gate se ligado; senão, considera todos)
@@ -384,6 +401,7 @@ async function tick() {
             const px = centerOfTile(bestStep.nx);
             const py = centerOfTile(bestStep.ny);
             m.x = px; m.y = py;
+            _livePos.set(m.id, { x: px, y: py, mapKey: m.map_key });
             _lastMoveAt.set(m.id, now);
             await updateMonsterPos(m.id, px, py, now);
 
