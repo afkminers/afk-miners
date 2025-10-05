@@ -628,6 +628,24 @@ function updateServerDrivenMonsters(now = performance.now()) {
     const sprite = state.sprite;
     if (!sprite) continue;
 
+    if (state.dead) {
+      sprite._serverMove = null;
+      sprite._animIsMoving = false;
+      if (!Number.isFinite(state.animSpeedMultiplier)) state.animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
+      if (sprite._animSpeedMultiplier !== state.animSpeedMultiplier) {
+        sprite._animSpeedMultiplier = state.animSpeedMultiplier;
+      }
+      if (Number.isFinite(state.x)) {
+        sprite.x = state.x;
+        state.renderX = state.x;
+      }
+      if (Number.isFinite(state.y)) {
+        sprite.y = state.y;
+        state.renderY = state.y;
+      }
+      continue;
+    }
+
     const mv = sprite._serverMove;
     if (!mv || !Number.isFinite(mv.duration) || mv.duration <= 0) {
       if (Number.isFinite(state.x)) sprite.x = state.x;
@@ -758,15 +776,15 @@ function handleServerMonsterMove(msg = {}) {
 
   const state = getOrCreateServerMonsterState(id);
   if (state.dead) {
-    if (Number.isFinite(x)) {
-      state.x = x;
-      state.renderX = x;
+    // Ignore movement updates while dead; keep the corpse locked to its final spot.
+    if (!Number.isFinite(state.x) || !Number.isFinite(state.y)) {
+      const corpse = state.sprite || window.GameScene?.getMobByInstanceId?.(id) || null;
+      if (!Number.isFinite(state.x) && Number.isFinite(corpse?.x)) state.x = corpse.x;
+      if (!Number.isFinite(state.y) && Number.isFinite(corpse?.y)) state.y = corpse.y;
+      if (!Number.isFinite(state.renderX) && Number.isFinite(state.x)) state.renderX = state.x;
+      if (!Number.isFinite(state.renderY) && Number.isFinite(state.y)) state.renderY = state.y;
+      SERVER_MONSTER_STATE.set(id, state);
     }
-    if (Number.isFinite(y)) {
-      state.y = y;
-      state.renderY = y;
-    }
-    SERVER_MONSTER_STATE.set(id, state);
     return;
   }
 
