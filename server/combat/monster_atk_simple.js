@@ -27,6 +27,7 @@ const CHASE_MAX_TILES = +(process.env.MONSTER_CHASE_MAX_TILES || 25);
 const MONSTER_MAX_PER_TICK = +(process.env.MONSTER_MAX_PER_TICK || 40);
 const MONSTER_SEARCH_DEPTH = +(process.env.MONSTER_STEP_SEARCH_DEPTH || 4);
 const MONSTER_STEP_BACKTRACK_PENALTY = +(process.env.MONSTER_STEP_BACKTRACK_PENALTY || 2);
+const MONSTER_STACK_RESOLVE_DEPTH = +(process.env.MONSTER_STACK_RESOLVE_DEPTH || 6);
 
 // ======= Estado em RAM =======
 let timer = null;
@@ -107,6 +108,50 @@ const CARDINAL_STEPS = [
   { dx: 0, dy: 1 },
   { dx: 0, dy: -1 },
 ];
+
+function findNearestFreeTile({
+  startTx,
+  startTy,
+  monster,
+  tilesForMap,
+  heroTiles,
+  maxDepth = MONSTER_STACK_RESOLVE_DEPTH,
+}) {
+  if (maxDepth <= 0) return null;
+
+  const queue = [{ tx: startTx, ty: startTy, depth: 0 }];
+  const visited = new Set([tileKey(startTx, startTy)]);
+  const heroTileSet = heroTiles instanceof Set ? heroTiles : new Set();
+
+  while (queue.length) {
+    const node = queue.shift();
+    if (node.depth >= maxDepth) continue;
+
+    for (const step of CARDINAL_STEPS) {
+      const nx = node.tx + step.dx;
+      const ny = node.ty + step.dy;
+      if (!isTileInsideSpawn(nx, ny, monster)) continue;
+
+      const key = tileKey(nx, ny);
+      if (visited.has(key)) continue;
+      visited.add(key);
+
+      const blockedByHero = heroTileSet.has(key);
+      const occupantSet = tilesForMap.get(key);
+      const blockedByMonster = occupantSet && occupantSet.size > 0;
+
+      if (!blockedByHero && !blockedByMonster) {
+        return { tx: nx, ty: ny };
+      }
+
+      if (blockedByHero) continue;
+
+      queue.push({ tx: nx, ty: ny, depth: node.depth + 1 });
+    }
+  }
+
+  return null;
+}
 
 function tilesOccupiedByOthers(set, monsterId) {
   if (!set) return 0;
@@ -209,6 +254,79 @@ function findBestStepToward({
   return best;
 }
 
+async function resolveTileStacks({
+  tilesForMap,
+  heroTiles,
+  monstersById,
+  now,
+  budget,
+  movedSet,
+}) {
+  if (budget <= 0) return 0;
+  const heroTileSet = heroTiles instanceof Set ? heroTiles : new Set();
+  let used = 0;
+
+  for (const [tileKeyStr, occupants] of Array.from(tilesForMap.entries())) {
+    if (used >= budget) break;
+    if (!occupants || occupants.size <= 1) continue;
+
+    const ids = Array.from(occupants);
+    // Keep the first occupant, try to move the rest away
+    for (let i = 1; i < ids.length && used < budget; i++) {
+      const monsterId = ids[i];
+      const monster = monstersById.get(monsterId);
+      if (!monster) continue;
+
+      const lastMove = _lastMoveAt.get(monsterId) || 0;
+      if (now - lastMove < MONSTER_STEP_MS) continue;
+
+      const [txStr, tyStr] = tileKeyStr.split(',');
+      const tx = Number(txStr);
+      const ty = Number(tyStr);
+      if (!Number.isFinite(tx) || !Number.isFinite(ty)) continue;
+
+      const escape = findNearestFreeTile({
+        startTx: tx,
+        startTy: ty,
+        monster,
+        tilesForMap,
+        heroTiles: heroTileSet,
+      });
+
+      if (!escape) continue;
+
+      const fromSet = tilesForMap.get(tileKeyStr);
+      if (fromSet) {
+        fromSet.delete(monsterId);
+        if (!fromSet.size) tilesForMap.delete(tileKeyStr);
+      }
+
+      const destKey = tileKey(escape.tx, escape.ty);
+      if (!tilesForMap.has(destKey)) tilesForMap.set(destKey, new Set());
+      tilesForMap.get(destKey).add(monsterId);
+
+      const px = centerOfTile(escape.tx);
+      const py = centerOfTile(escape.ty);
+      monster.x = px;
+      monster.y = py;
+      _livePos.set(monsterId, { x: px, y: py, mapKey: monster.map_key });
+      _lastMoveAt.set(monsterId, now);
+      movedSet.add(monsterId);
+
+      try { await updateMonsterPos(monsterId, px, py, now); } catch {}
+
+      if (global._sendToMap) {
+        try { global._sendToMap(monster.map_key, { type: 'monster_move', id: monsterId, x: px, y: py }); } catch {}
+      }
+
+      used++;
+      if (used >= budget) break;
+    }
+  }
+
+  return used;
+}
+
 // ======= DB =======
 async function fetchAliveMonsters() {
   const sql = `
@@ -300,7 +418,6 @@ async function tick() {
     }
     if (!monsters.length || !heroes.length) { running = false; return; }
 
-    const slice = monsters.slice(0, MONSTER_MAX_PER_TICK);
     const monsterTilesByMap = buildMonsterTileMap(monsters);
     const heroTilesByMap = buildHeroTileSet(heroes);
 
@@ -311,8 +428,25 @@ async function tick() {
     }
 
     const now = Date.now();
+    const monstersById = new Map(monsters.map(m => [m.id, m]));
+    const movedThisTick = new Set();
+    let movesUsed = 0;
 
-    for (const m of slice) {
+    for (const [mapKeyStr, tilesForMap] of monsterTilesByMap.entries()) {
+      if (movesUsed >= MONSTER_MAX_PER_TICK) break;
+      const heroTilesForMap = heroTilesByMap.get(mapKeyStr) || new Set();
+      movesUsed += await resolveTileStacks({
+        tilesForMap,
+        heroTiles: heroTilesForMap,
+        monstersById,
+        now,
+        budget: MONSTER_MAX_PER_TICK - movesUsed,
+        movedSet: movedThisTick,
+      });
+    }
+
+    for (const m of monsters) {
+      const alreadyMoved = movedThisTick.has(m.id);
       const hs = heroesByMap.get(m.map_key);
       if (!hs || !hs.length) continue;
 
@@ -372,9 +506,10 @@ async function tick() {
       const adjacent = isAdjacent4Tiles(mx, my, hx, hy);
 
       // 1) mover se não adjacente
-      if (!adjacent) {
+      if (!adjacent && !alreadyMoved) {
         const lastMove = _lastMoveAt.get(m.id) || 0;
-        if (now - lastMove >= MONSTER_STEP_MS) {
+        const canMove = now - lastMove >= MONSTER_STEP_MS && movesUsed < MONSTER_MAX_PER_TICK;
+        if (canMove) {
           const fromKey = tileKey(mx, my);
           const bestStep = findBestStepToward({
             mx,
@@ -403,6 +538,8 @@ async function tick() {
             m.x = px; m.y = py;
             _livePos.set(m.id, { x: px, y: py, mapKey: m.map_key });
             _lastMoveAt.set(m.id, now);
+            movedThisTick.add(m.id);
+            movesUsed++;
             await updateMonsterPos(m.id, px, py, now);
 
             if (!tilesForMap.has(destKey)) tilesForMap.set(destKey, new Set());
@@ -421,6 +558,8 @@ async function tick() {
           }
         }
         continue; // não ataca enquanto não estiver ao lado
+      } else if (!adjacent) {
+        continue;
       }
 
       // 2) adjacente → tentar bater (cooldown)
