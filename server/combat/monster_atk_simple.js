@@ -1,14 +1,16 @@
 // server/combat/monster_atk_simple.js
-const { all, get, run } = require('../models/db'); // helpers do projeto
+const { all, run } = require('../models/db'); // helpers do projeto
+const { applyMobHit } = require('./service');
+const { getGrid } = require('../maps/grid');
 
 // ======= Tuning via .env =======
 const TILE = 32;
 
 // Loop
-const TICK_MS = +(process.env.MONSTER_ATK_TICK_MS || 300);
+const TICK_MS = +(process.env.MONSTER_ATK_TICK_MS || 150);
 
 // Movimento
-const MONSTER_STEP_MS        = +(process.env.MONSTER_STEP_MS || 250);    // 1 passo (1 tile) a cada X ms
+const MONSTER_STEP_MS        = +(process.env.MONSTER_STEP_MS || 150);    // 1 passo (1 tile) a cada X ms
 const MONSTER_PERSIST_POS_MS = +(process.env.MONSTER_PERSIST_POS_MS || 1000); // persiste pos no DB no máx. 1x/s
 
 // Ataque corpo-a-corpo
@@ -48,7 +50,7 @@ const _lastAtkAt      = new Map(); // monsterId -> ms
 const _lastMoveAt     = new Map(); // monsterId -> ms
 const _lastPosWriteAt = new Map(); // monsterId -> ms
 const _wasQuantized   = new Set(); // monsterId -> bool
-const _livePos        = new Map(); // monsterId -> { x, y, mapKey }
+const _livePos        = new Map(); // monsterId -> { x, y, mapKey, face }
 const _aggroTarget    = new Map(); // monsterId -> heroId
 const _aggroUntil     = new Map(); // monsterId -> ms timestamp
 const _patrolTargets  = new Map(); // monsterId -> { tx, ty, expiresAt }
@@ -56,10 +58,86 @@ const _lastPatrolMove = new Map(); // monsterId -> ms
 const _heroMemory     = new Map(); // heroId -> { tx, ty, lastTx, lastTy, heading, updatedAt, mapKey }
 
 // ======= Utils =======
-function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 const tileOf = (v) => Math.floor(Number(v || 0) / TILE);
 const centerOfTile = (t) => (t * TILE) + TILE / 2;
 const tileKey = (tx, ty) => `${tx},${ty}`;
+
+function toCenterPxCoord(raw) {
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return null;
+  if (Math.abs(n) < 1000) {
+    return (Math.round(n) * TILE) + TILE / 2;
+  }
+  return Math.round(n);
+}
+
+function pickFaceFromDelta(dx, dy, fallback = 'south') {
+  if (!Number.isFinite(dx) || !Number.isFinite(dy)) return fallback;
+  const adx = Math.abs(dx);
+  const ady = Math.abs(dy);
+  if (adx < 0.5 && ady < 0.5) return fallback;
+  if (adx > ady) {
+    if (dx > 0) return 'east';
+    if (dx < 0) return 'west';
+  } else if (ady > 0.5) {
+    if (dy > 0) return 'south';
+    if (dy < 0) return 'north';
+  }
+  return fallback;
+}
+
+function computeFaceToward(fromX, fromY, toX, toY, fallback = 'south') {
+  if (!Number.isFinite(fromX) || !Number.isFinite(fromY)) return fallback;
+  if (!Number.isFinite(toX) || !Number.isFinite(toY)) return fallback;
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return fallback;
+  return pickFaceFromDelta(dx, dy, fallback);
+}
+
+function directionFromStep(fromX, fromY, toX, toY, fallback = 'south') {
+  if (!Number.isFinite(fromX) || !Number.isFinite(fromY) || !Number.isFinite(toX) || !Number.isFinite(toY)) {
+    return fallback;
+  }
+  return computeFaceToward(fromX, fromY, toX, toY, fallback);
+}
+
+function isTileBlockedByCollision(mapCollision, tx, ty) {
+  if (!mapCollision) return false;
+  const { grid, cols, rows } = mapCollision;
+  if (!grid || !Number.isFinite(cols) || !Number.isFinite(rows)) return false;
+  if (tx < 0 || ty < 0 || tx >= cols || ty >= rows) return true;
+  const idx = (ty * cols) + tx;
+  return grid[idx] === 1;
+}
+
+function updateLivePos(monster) {
+  if (!monster || monster.id == null) return;
+  const face = typeof monster.face === 'string' ? monster.face : 'south';
+  _livePos.set(monster.id, {
+    x: Number(monster.x) || 0,
+    y: Number(monster.y) || 0,
+    mapKey: monster.map_key,
+    face,
+  });
+}
+
+function emitMonsterMove(monster, extra = {}) {
+  if (!monster || monster.id == null) return;
+  if (!global._sendToMap) return;
+  try {
+    const payload = {
+      type: 'monster_move',
+      id: monster.id,
+      x: Number(monster.x) || 0,
+      y: Number(monster.y) || 0,
+    };
+    const face = typeof monster.face === 'string' ? monster.face : null;
+    if (face) payload.face = face;
+    Object.assign(payload, extra);
+    global._sendToMap(monster.map_key, payload);
+  } catch {}
+}
 
 function buildMonsterTileMap(list = []) {
   const byMap = new Map();
@@ -220,7 +298,7 @@ function computeFlankBonus({ candidateTx, candidateTy, heroTx, heroTy, heading }
   return 0;
 }
 
-function ensurePatrolTarget({ monster, tilesForMap, heroTiles, now }) {
+function ensurePatrolTarget({ monster, tilesForMap, heroTiles, now, mapCollision }) {
   if (!monster) return null;
   const existing = _patrolTargets.get(monster.id);
   if (existing && now < (existing.expiresAt || 0)) {
@@ -238,7 +316,8 @@ function ensurePatrolTarget({ monster, tilesForMap, heroTiles, now }) {
       if (dx === 0 && dy === 0) continue;
       const tx = mx + dx;
       const ty = my + dy;
-      if (!isTileInsideSpawn(tx, ty, monster)) continue;
+    if (!isTileInsideSpawn(tx, ty, monster)) continue;
+    if (isTileBlockedByCollision(mapCollision, tx, ty)) continue;
       const key = tileKey(tx, ty);
       if (heroTileSet.has(key)) continue;
       const set = tilesForMap.get(key);
@@ -427,6 +506,7 @@ function findNearestFreeTile({
   tilesForMap,
   heroTiles,
   maxDepth = MONSTER_STACK_RESOLVE_DEPTH,
+  mapCollision = null,
 }) {
   if (maxDepth <= 0) return null;
 
@@ -443,6 +523,7 @@ function findNearestFreeTile({
       const ny = node.ty + step.dy;
       if (!isTileInsideSpawn(nx, ny, monster)) continue;
 
+      if (isTileBlockedByCollision(mapCollision, nx, ny)) continue;
       const key = tileKey(nx, ny);
       if (visited.has(key)) continue;
       visited.add(key);
@@ -472,6 +553,43 @@ function tilesOccupiedByOthers(set, monsterId) {
   return set.size - 1;
 }
 
+function pickChaseGoalTile({ monster, heroTx, heroTy, tilesForMap, mapCollision, heroTiles }) {
+  if (!monster) return null;
+  if (!Number.isFinite(heroTx) || !Number.isFinite(heroTy)) return null;
+
+  const heroTileSet = heroTiles instanceof Set ? heroTiles : new Set();
+  const mx = tileOf(monster.x);
+  const my = tileOf(monster.y);
+  if (!Number.isFinite(mx) || !Number.isFinite(my)) return null;
+
+  const candidates = [];
+  for (const step of CARDINAL_STEPS) {
+    const tx = heroTx + step.dx;
+    const ty = heroTy + step.dy;
+    if (!Number.isFinite(tx) || !Number.isFinite(ty)) continue;
+    if (!isTileInsideSpawn(tx, ty, monster)) continue;
+    if (isTileBlockedByCollision(mapCollision, tx, ty)) continue;
+    const key = tileKey(tx, ty);
+    if (heroTileSet.has(key)) continue;
+    const occ = tilesForMap.get(key);
+    const others = tilesOccupiedByOthers(occ, monster.id);
+    const dist = Math.abs(mx - tx) + Math.abs(my - ty);
+    const score = dist + (others * 3);
+    candidates.push({ tx, ty, key, others, dist, score });
+  }
+
+  if (!candidates.length) return null;
+
+  candidates.sort((a, b) => {
+    if (a.score !== b.score) return a.score - b.score;
+    if (a.others !== b.others) return a.others - b.others;
+    return a.dist - b.dist;
+  });
+
+  const best = candidates.find(c => c.others === 0) || candidates[0];
+  return best ? { tx: best.tx, ty: best.ty } : null;
+}
+
 function findBestStepToward({
   mx,
   my,
@@ -484,6 +602,7 @@ function findBestStepToward({
   heroId = null,
   predictedTile = null,
   heroHeading = null,
+  mapCollision = null,
 }) {
   const heroTilesSet = heroTiles instanceof Set ? heroTiles : new Set();
   const originKey = tileKey(mx, my);
@@ -502,6 +621,7 @@ function findBestStepToward({
   const pushNode = (nx, ny, depth, firstStep) => {
     if (depth > MONSTER_SEARCH_DEPTH) return;
     if (!isTileInsideSpawn(nx, ny, monster)) return;
+    if (isTileBlockedByCollision(mapCollision, nx, ny)) return;
     const key = tileKey(nx, ny);
     if (visited.has(key)) return;
     visited.add(key);
@@ -571,6 +691,7 @@ function findBestStepToward({
     if (destKey === originKey) continue;
 
     const blockedByHero = heroTilesSet.has(destKey);
+    if (isTileBlockedByCollision(mapCollision, node.nx, node.ny)) continue;
     const destSet = tilesForMap.get(destKey);
     const blockedByMonster = tilesOccupiedByOthers(destSet, monster.id) > 0;
 
@@ -624,6 +745,7 @@ async function resolveTileStacks({
   now,
   budget,
   movedSet,
+  mapCollision = null,
 }) {
   if (budget <= 0) return 0;
   const heroTileSet = heroTiles instanceof Set ? heroTiles : new Set();
@@ -654,6 +776,7 @@ async function resolveTileStacks({
         monster,
         tilesForMap,
         heroTiles: heroTileSet,
+        mapCollision,
       });
 
       if (!escape) continue;
@@ -668,19 +791,21 @@ async function resolveTileStacks({
       if (!tilesForMap.has(destKey)) tilesForMap.set(destKey, new Set());
       tilesForMap.get(destKey).add(monsterId);
 
+      const prevPx = Number(monster.x);
+      const prevPy = Number(monster.y);
       const px = centerOfTile(escape.tx);
       const py = centerOfTile(escape.ty);
       monster.x = px;
       monster.y = py;
-      _livePos.set(monsterId, { x: px, y: py, mapKey: monster.map_key });
+      const moveFace = directionFromStep(prevPx, prevPy, px, py, monster.face || 'south');
+      if (moveFace) monster.face = moveFace;
+      updateLivePos(monster);
       _lastMoveAt.set(monsterId, now);
       movedSet.add(monsterId);
 
       try { await updateMonsterPos(monsterId, px, py, now); } catch {}
 
-      if (global._sendToMap) {
-        try { global._sendToMap(monster.map_key, { type: 'monster_move', id: monsterId, x: px, y: py }); } catch {}
-      }
+      emitMonsterMove(monster);
 
       used++;
       if (used >= budget) break;
@@ -720,17 +845,6 @@ async function fetchAliveHeroesWithPos() {
      WHERE ph.alive = TRUE AND ph.hp > 0
   `;
   return await all(sql);
-}
-
-async function applyDamageToHero(heroId, dmg) {
-  const sql = `
-    UPDATE player_heroes
-       SET hp = GREATEST(hp - $2, 0),
-           alive = CASE WHEN hp - $2 <= 0 THEN FALSE ELSE alive END
-     WHERE id = $1
-     RETURNING id, hp, max_hp, alive
-  `;
-  return await get(sql, [heroId, dmg]);
 }
 
 async function markLastHit(monsterId, heroId) {
@@ -773,6 +887,7 @@ async function tick() {
       if (Number.isFinite(live.x)) m.x = live.x;
       if (Number.isFinite(live.y)) m.y = live.y;
       if (live.mapKey !== undefined && live.mapKey !== null) m.map_key = live.mapKey;
+      if (typeof live.face === 'string') m.face = live.face;
     }
 
     if (_livePos.size) {
@@ -816,9 +931,27 @@ async function tick() {
     const movedThisTick = new Set();
     let movesUsed = 0;
 
+    const collisionByMap = new Map();
+    const ensureCollisionFor = async (rawKey) => {
+      if (!rawKey && rawKey !== 0) return null;
+      const key = String(rawKey);
+      if (collisionByMap.has(key)) return collisionByMap.get(key);
+      try {
+        const info = await getGrid(rawKey);
+        collisionByMap.set(key, info);
+        return info;
+      } catch (err) {
+        collisionByMap.set(key, null);
+        console.warn('[monster_atk_simple] collision load failed:', rawKey, err?.message);
+        return null;
+      }
+    };
+
     for (const [mapKeyStr, tilesForMap] of monsterTilesByMap.entries()) {
       if (movesUsed >= MONSTER_MAX_PER_TICK) break;
       const heroTilesForMap = heroTilesByMap.get(mapKeyStr) || new Set();
+      const realKey = mapKeyStr === '__null__' ? null : mapKeyStr;
+      const mapCollision = realKey ? await ensureCollisionFor(realKey) : null;
       movesUsed += await resolveTileStacks({
         tilesForMap,
         heroTiles: heroTilesForMap,
@@ -826,6 +959,7 @@ async function tick() {
         now,
         budget: MONSTER_MAX_PER_TICK - movesUsed,
         movedSet: movedThisTick,
+        mapCollision,
       });
     }
 
@@ -840,6 +974,7 @@ async function tick() {
         monsterTilesByMap.set(mapKeyStr, tilesForMap);
       }
       const heroTilesForMap = heroTilesByMap.get(mapKeyStr) || new Set();
+      const mapCollision = await ensureCollisionFor(m.map_key);
 
       if (!_wasQuantized.has(m.id)) {
         const mx0 = tileOf(m.x), my0 = tileOf(m.y);
@@ -849,7 +984,8 @@ async function tick() {
           m.x = cx; m.y = cy;
         }
         _wasQuantized.add(m.id);
-        _livePos.set(m.id, { x: m.x, y: m.y, mapKey: m.map_key });
+        if (!m.face) m.face = 'south';
+        updateLivePos(m);
       }
 
       const mx = tileOf(m.x), my = tileOf(m.y);
@@ -863,8 +999,6 @@ async function tick() {
         if (!set.has(m.id)) set.add(m.id);
       }
 
-      const targetInfo = selectHeroTarget({ monster: m, heroes: hs, now });
-
       if (targetInfo) {
         _patrolTargets.delete(m.id);
 
@@ -875,25 +1009,55 @@ async function tick() {
         const heroHeading = targetInfo.heroHeading;
         const isGhost = !!targetInfo.ghost;
 
+        const heroPx = Number.isFinite(targetInfo.hero?.x)
+          ? toCenterPxCoord(targetInfo.hero.x)
+          : toCenterPxCoord(hx);
+        const heroPy = Number.isFinite(targetInfo.hero?.y)
+          ? toCenterPxCoord(targetInfo.hero.y)
+          : toCenterPxCoord(hy);
+
+        const currentFace = typeof m.face === 'string' ? m.face : 'south';
+        const faceTowardHero = (Number.isFinite(heroPx) && Number.isFinite(heroPy))
+          ? computeFaceToward(m.x, m.y, heroPx, heroPy, currentFace)
+          : currentFace;
+
+        const chaseGoal = (Number.isFinite(hx) && Number.isFinite(hy))
+          ? pickChaseGoalTile({
+              monster: m,
+              heroTx: hx,
+              heroTy: hy,
+              tilesForMap,
+              mapCollision,
+              heroTiles: heroTilesForMap,
+            })
+          : null;
+
+        const pathTargetTx = chaseGoal?.tx ?? hx;
+        const pathTargetTy = chaseGoal?.ty ?? hy;
+        const pathPrediction = chaseGoal
+          ? { tx: chaseGoal.tx, ty: chaseGoal.ty, heading: predicted?.heading || null }
+          : predicted;
+
         const adjacent = (Number.isFinite(hx) && Number.isFinite(hy)) ? isAdjacent4Tiles(mx, my, hx, hy) : false;
 
         if (!adjacent && !alreadyMoved) {
           const lastMove = _lastMoveAt.get(m.id) || 0;
           const canMove = now - lastMove >= MONSTER_STEP_MS && movesUsed < MONSTER_MAX_PER_TICK;
-          if (canMove && Number.isFinite(hx) && Number.isFinite(hy)) {
+          if (canMove && Number.isFinite(pathTargetTx) && Number.isFinite(pathTargetTy)) {
             const fromKey = tileKey(mx, my);
             const bestStep = findBestStepToward({
               mx,
               my,
-              targetTx: hx,
-              targetTy: hy,
+              targetTx: pathTargetTx,
+              targetTy: pathTargetTy,
               monster: m,
               tilesForMap,
               heroTiles: heroTilesForMap,
               mode: 'chase',
               heroId: heroIdForChase,
-              predictedTile: predicted,
+              predictedTile: pathPrediction,
               heroHeading,
+              mapCollision,
             });
 
             if (bestStep) {
@@ -908,25 +1072,51 @@ async function tick() {
               if (!tilesForMap.has(destKey)) tilesForMap.set(destKey, new Set());
               tilesForMap.get(destKey).add(m.id);
 
+              const prevPx = Number(m.x);
+              const prevPy = Number(m.y);
               const px = centerOfTile(bestStep.nx);
               const py = centerOfTile(bestStep.ny);
               m.x = px; m.y = py;
-              _livePos.set(m.id, { x: px, y: py, mapKey: m.map_key });
+
+              let faceAfterMove = faceTowardHero;
+              if (Number.isFinite(heroPx) && Number.isFinite(heroPy)) {
+                faceAfterMove = computeFaceToward(px, py, heroPx, heroPy,
+                  directionFromStep(prevPx, prevPy, px, py, faceTowardHero));
+              } else {
+                faceAfterMove = directionFromStep(prevPx, prevPy, px, py, faceTowardHero);
+              }
+              if (faceAfterMove) m.face = faceAfterMove;
+
+              updateLivePos(m);
               _lastMoveAt.set(m.id, now);
               movedThisTick.add(m.id);
               movesUsed++;
               await updateMonsterPos(m.id, px, py, now);
 
-              if (global._sendToMap) {
-                try { global._sendToMap(m.map_key, { type: 'monster_move', id: m.id, x: px, y: py }); } catch {}
-              }
+              emitMonsterMove(m);
             } else {
               _lastMoveAt.set(m.id, now);
+              if (faceTowardHero && faceTowardHero !== m.face) {
+                m.face = faceTowardHero;
+                updateLivePos(m);
+                emitMonsterMove(m);
+              }
             }
           }
           continue;
         } else if (!adjacent) {
+          if (faceTowardHero && faceTowardHero !== m.face) {
+            m.face = faceTowardHero;
+            updateLivePos(m);
+            emitMonsterMove(m);
+          }
           continue;
+        }
+
+        if (faceTowardHero && faceTowardHero !== m.face) {
+          m.face = faceTowardHero;
+          updateLivePos(m);
+          emitMonsterMove(m);
         }
 
         if (isGhost || !targetInfo.hero) continue;
@@ -935,45 +1125,55 @@ async function tick() {
         const lastAtk = _lastAtkAt.get(m.id) || 0;
         if (now - lastAtk < ATK_COOLDOWN_MS) continue;
 
-        const dmg = rand(DMG_MIN, DMG_MAX);
-
         try {
-          const resHero = await applyDamageToHero(targetHero.hero_id, dmg);
-          await markLastHit(m.id, targetHero.hero_id);
-          _lastAtkAt.set(m.id, now);
-          _aggroUntil.set(m.id, now + AGGRO_LOSS_MS);
+          const attackRes = await applyMobHit({
+            attackerInstanceId: m.id,
+            targetHeroId: targetHero.hero_id,
+            attackInfo: { min: DMG_MIN, max: DMG_MAX },
+          });
 
-          if (resHero?.alive === false) {
-            const arr = heroesByMap.get(targetHero.map_key);
-            if (arr) {
-              const idx = arr.findIndex(hh => String(hh.hero_id) === String(targetHero.hero_id));
-              if (idx >= 0) arr.splice(idx, 1);
+          if (attackRes?.ok) {
+            await markLastHit(m.id, targetHero.hero_id);
+            _lastAtkAt.set(m.id, now);
+            _aggroUntil.set(m.id, now + AGGRO_LOSS_MS);
+
+            if (attackRes.dead) {
+              const arr = heroesByMap.get(targetHero.map_key);
+              if (arr) {
+                const idx = arr.findIndex(hh => String(hh.hero_id) === String(targetHero.hero_id));
+                if (idx >= 0) arr.splice(idx, 1);
+              }
+            } else if (attackRes.hpAfter != null) {
+              targetHero.hp = attackRes.hpAfter;
             }
-          } else if (resHero) {
-            targetHero.hp = resHero.hp;
-          }
 
-          if (global._sendToMap) {
-            global._sendToMap(targetHero.map_key, {
-              type: 'hero_hit',
-              heroId: targetHero.hero_id,
-              dmg,
-              hp: resHero?.hp,
-              hpMax: resHero?.max_hp,
-              died: resHero?.alive === false,
-              instanceId: m.id,
-              monster: {
-                id: m.id,
-                key: m.monster_key || 'unknown',
-                name: m.monster_name || m.monster_key || 'Monster',
-                x: m.x, y: m.y,
-                mapKey: targetHero.map_key,
-                spawnId: m.spawn_id,
-              },
-            });
+            updateLivePos(m);
+            emitMonsterMove(m);
+
+            if (global._sendToMap) {
+              global._sendToMap(targetHero.map_key, {
+                type: 'hero_hit',
+                heroId: targetHero.hero_id,
+                dmg: attackRes.damage,
+                hp: attackRes.hpAfter,
+                hpMax: attackRes.maxHp ?? targetHero.max_hp,
+                died: attackRes.dead,
+                instanceId: m.id,
+                monster: {
+                  id: m.id,
+                  key: m.monster_key || 'unknown',
+                  name: m.monster_name || m.monster_key || 'Monster',
+                  x: m.x,
+                  y: m.y,
+                  mapKey: targetHero.map_key,
+                  spawnId: m.spawn_id,
+                  face: m.face,
+                },
+              });
+            }
           }
-        } catch {
-          // ignore DB errors
+        } catch (err) {
+          console.warn('[monster_atk_simple] applyMobHit error:', err?.message);
         }
 
         continue;
@@ -987,7 +1187,7 @@ async function tick() {
       const sincePatrol = now - (_lastPatrolMove.get(m.id) || 0);
       if (sincePatrol < PATROL_STEP_MS) continue;
 
-      const patrolGoal = ensurePatrolTarget({ monster: m, tilesForMap, heroTiles: heroTilesForMap, now });
+      const patrolGoal = ensurePatrolTarget({ monster: m, tilesForMap, heroTiles: heroTilesForMap, now, mapCollision });
       if (!patrolGoal) {
         _patrolTargets.delete(m.id);
         _lastPatrolMove.set(m.id, now);
@@ -1009,6 +1209,7 @@ async function tick() {
         tilesForMap,
         heroTiles: heroTilesForMap,
         mode: 'patrol',
+        mapCollision,
       });
 
       if (!bestStep) {
@@ -1028,19 +1229,21 @@ async function tick() {
       if (!tilesForMap.has(destKey)) tilesForMap.set(destKey, new Set());
       tilesForMap.get(destKey).add(m.id);
 
+      const prevPx = Number(m.x);
+      const prevPy = Number(m.y);
       const px = centerOfTile(bestStep.nx);
       const py = centerOfTile(bestStep.ny);
       m.x = px; m.y = py;
-      _livePos.set(m.id, { x: px, y: py, mapKey: m.map_key });
+      const patrolFace = directionFromStep(prevPx, prevPy, px, py, m.face || 'south');
+      if (patrolFace) m.face = patrolFace;
+      updateLivePos(m);
       _lastMoveAt.set(m.id, now);
       _lastPatrolMove.set(m.id, now);
       movedThisTick.add(m.id);
       movesUsed++;
       await updateMonsterPos(m.id, px, py, now);
 
-      if (global._sendToMap) {
-        try { global._sendToMap(m.map_key, { type: 'monster_move', id: m.id, x: px, y: py }); } catch {}
-      }
+      emitMonsterMove(m);
     }
   } catch (err) {
     console.warn('[monster_atk_simple] tick error:', err && err.message);
