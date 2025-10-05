@@ -7,10 +7,10 @@ const { getGrid } = require('../maps/grid');
 const TILE = 32;
 
 // Loop
-const TICK_MS = +(process.env.MONSTER_ATK_TICK_MS || 300);
+const TICK_MS = +(process.env.MONSTER_ATK_TICK_MS || 150);
 
 // Movimento
-const MONSTER_STEP_MS        = +(process.env.MONSTER_STEP_MS || 250);    // 1 passo (1 tile) a cada X ms
+const MONSTER_STEP_MS        = +(process.env.MONSTER_STEP_MS || 150);    // 1 passo (1 tile) a cada X ms
 const MONSTER_PERSIST_POS_MS = +(process.env.MONSTER_PERSIST_POS_MS || 1000); // persiste pos no DB no máx. 1x/s
 
 // Ataque corpo-a-corpo

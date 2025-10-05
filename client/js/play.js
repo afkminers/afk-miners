@@ -292,9 +292,9 @@ const UNBOUND_SERVER_MONSTERS = new Set(); // ids aguardando sprite
 const MONSTER_BLOCKED_TILES = new Map(); // "cx,cy" -> Set(instanceId)
 let _serverMonsterRetryScheduled = false;
 
-const SERVER_MONSTER_STEP_MS = 180;
+const SERVER_MONSTER_STEP_MS = 150;
 const SERVER_MONSTER_MIN_TWEEN_MS = 60;
-const SERVER_MONSTER_MAX_TWEEN_MS = 260;
+const SERVER_MONSTER_MAX_TWEEN_MS = 220;
 const SERVER_MONSTER_BASE_SPEED = TILE / (SERVER_MONSTER_STEP_MS / 1000);
 const SERVER_MONSTER_IDLE_ANIM = 0.8;
 const SERVER_MONSTER_MIN_ANIM = 0.65;
