@@ -505,15 +505,28 @@
     return true;
   }
 
-  function buildHeroTileSet(heroes) {
+  function buildHeroTileSet(mapKey, heroes, now = Date.now()) {
     const res = new Set();
-    if (!Array.isArray(heroes)) return res;
-    for (const h of heroes) {
-      const cx = Math.floor(Number(h?.x) / STEP_PX);
-      const cy = Math.floor(Number(h?.y) / STEP_PX);
+    if (Array.isArray(heroes)) {
+      for (const h of heroes) {
+        const cx = Math.floor(Number(h?.x) / STEP_PX);
+        const cy = Math.floor(Number(h?.y) / STEP_PX);
+        if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
+        res.add(tileKey(cx, cy));
+      }
+    }
+
+    const mapStr = mapKey != null ? String(mapKey) : null;
+    for (const mem of heroMemory.values()) {
+      if (!mem) continue;
+      if (mapStr && String(mem.mapKey) !== mapStr) continue;
+      if (now - (mem.updatedAt || 0) > HERO_MEMORY_TTL_MS) continue;
+      const cx = Number(mem.cx);
+      const cy = Number(mem.cy);
       if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
       res.add(tileKey(cx, cy));
     }
+
     return res;
   }
 
@@ -678,13 +691,13 @@
     for (const [mapKey, list] of byMap.entries()) {
       const heroes = await fetchOnlineHeroesInMap(mapKey);
 
-      const heroTiles = buildHeroTileSet(heroes);
-
       const { grid, cols } = await getGrid(mapKey);
       const losGrid = { data: grid, cols };
       const occupancy = buildMobOccupancy(list);
 
       updateHeroMemoryForMap(mapKey, heroes, now);
+
+      const heroTiles = buildHeroTileSet(mapKey, heroes, now);
 
       await resolveMobStacks({ mobsInMap: list, occupancy, heroTiles, losGrid });
 
@@ -747,6 +760,10 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   const mobCy  = Math.floor(mob.y / TILE);
   const heroCx = Math.floor(tgtPos.x / TILE);
   const heroCy = Math.floor(tgtPos.y / TILE);
+
+  if (heroTiles && Number.isFinite(heroCx) && Number.isFinite(heroCy)) {
+    heroTiles.add(tileKey(heroCx, heroCy));
+  }
 
   // Chebyshev distance: <= 1 significa mesmo tile ou qualquer adjacente (8-dir)
   const dxC = Math.abs(mobCx - heroCx);
@@ -945,6 +962,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       if (isBlockedPx(losGrid, wx, wy)) continue;
       const key = tileKey(c.cx, c.cy);
       if (heroTilesSet.has(key)) continue;
+      if (c.cx === heroCx && c.cy === heroCy) continue;
       if (isTileBlockedByMobs(occupancy, c.cx, c.cy, mob.instanceId)) continue;
 
       const distGoal = Math.abs(c.cx - goalCx) + Math.abs(c.cy - goalCy);

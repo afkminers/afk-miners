@@ -1083,16 +1083,51 @@ function drawMob(m) {
   const cols    = Math.max(1, Number(meta.grid?.cols) || 1);
   const rows    = Math.max(1, Number(meta.grid?.rows) || 1);
   const animIdle = meta.anims?.idle || null;
-  const animWalk = meta.anims?.walk || { fps: 8, frames: cols, row: 0, startCol: 0, loop: true };
+  const animWalk = meta.anims?.walk || null;
   const animDead = meta.anims?.dead || null;
+  const defaultWalk = animWalk || { fps: 8, frames: cols, row: 0, startCol: 0, loop: true };
 
   const face = m.face || 'south';
-  let anim = m.dead && animDead ? animDead : (animIdle && m._animFrozen ? animIdle : animWalk);
-  let fps = Number(anim.fps); if (!Number.isFinite(fps) || fps < 0) fps = 8;
+  const isMoving = !!m._animIsMoving;
+
+  let animType = 'walk';
+  let anim = defaultWalk;
+
+  if (m.dead && animDead) {
+    anim = animDead;
+    animType = 'dead';
+  } else if (!m.dead && !isMoving) {
+    if (animIdle) {
+      anim = animIdle;
+      animType = 'idle';
+    } else {
+      anim = defaultWalk;
+      animType = 'static';
+    }
+  } else if (!animWalk && animIdle) {
+    anim = animIdle;
+    animType = 'idle';
+  }
+
+  if (!anim) {
+    anim = { fps: 8, frames: cols, row: 0, startCol: 0, loop: true };
+    if (animType !== 'dead') animType = 'static';
+  }
+
   if (!Number.isFinite(m._animSpeedMultiplier)) m._animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
+  if (!m.dead) m._animFrozen = false;
+
+  let fps = Number(anim.fps);
+  if (!Number.isFinite(fps) || fps < 0) fps = 8;
   if (!m.dead) {
-    const speedMult = Math.max(0, Number(m._animSpeedMultiplier));
-    fps *= speedMult;
+    if (animType === 'walk') {
+      const speedMult = Math.max(0, Number(m._animSpeedMultiplier));
+      fps *= speedMult > 0 ? speedMult : 1;
+    } else if (animType === 'idle') {
+      fps = Math.max(0, fps);
+    } else if (animType === 'static') {
+      fps = 0;
+    }
   }
 
   let seq = Array.isArray(anim.seq) ? anim.seq.slice() : null;
@@ -1115,7 +1150,7 @@ function drawMob(m) {
 
   row = Math.max(0, Math.min(rows - 1, row));
 
-  if (m.dead && animDead) {
+  if (animType === 'dead') {
     fps = 0; frames = 1;
     if (Number.isFinite(animDead.startCol)) startCol = Number(animDead.startCol);
     if (Number.isFinite(animDead.row)) row = Math.max(0, Math.min(rows - 1, Number(animDead.row)));
