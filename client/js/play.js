@@ -295,7 +295,6 @@ let _serverMonsterRetryScheduled = false;
 const SERVER_MONSTER_STEP_MS = 180;
 const SERVER_MONSTER_MIN_TWEEN_MS = 60;
 const SERVER_MONSTER_MAX_TWEEN_MS = 260;
-const SERVER_MONSTER_TELEPORT_THRESHOLD = TILE * 4; // deslocamentos maiores tratam como teleporte
 const SERVER_MONSTER_BASE_SPEED = TILE / (SERVER_MONSTER_STEP_MS / 1000);
 const SERVER_MONSTER_IDLE_ANIM = 0.8;
 const SERVER_MONSTER_MIN_ANIM = 0.65;
@@ -435,7 +434,6 @@ function ensureServerMonsterSprite(msg = {}) {
   if (msg.mapKey != null) state.mapKey = String(msg.mapKey);
   if (msg.spawnId != null && Number.isFinite(Number(msg.spawnId))) state.spawnId = Number(msg.spawnId);
   if (msg.monsterKey) state.monsterKey = String(msg.monsterKey);
-  state.dead = false;
 
   let sprite = window.GameScene?.getMobByInstanceId?.(id) || state.sprite || null;
 
@@ -524,10 +522,12 @@ function setMonsterAction(state, sprite, action, { until = null, face = null } =
   }
 }
 
-function applyServerPosition(id, sprite, x, y) {
+function applyServerPosition(id, sprite, x, y, opts = {}) {
   if (!Number.isFinite(x) || !Number.isFinite(y)) return;
   const state = getOrCreateServerMonsterState(id);
   const now = performance.now();
+  const options = (opts && typeof opts === 'object') ? opts : {};
+  const forceTeleport = options.forceTeleport === true;
 
   const current = sprite ? currentSpriteRenderPos(sprite, now) : {
     x: Number.isFinite(state.renderX) ? state.renderX : (Number.isFinite(state.x) ? state.x : x),
@@ -549,11 +549,11 @@ function applyServerPosition(id, sprite, x, y) {
     if (tweenDur > cap) tweenDur = cap;
   }
 
-  const shouldTeleport = !Number.isFinite(dist) || dist < 1 || dist > SERVER_MONSTER_TELEPORT_THRESHOLD;
+  const shouldTeleport = forceTeleport || !Number.isFinite(dist) || dist < 1;
 
   let animMultiplier = SERVER_MONSTER_IDLE_ANIM;
   let isMoving = false;
-  let face = state.face || (sprite?.face) || 'south';
+  let face = (typeof options.face === 'string' && options.face) || state.face || (sprite?.face) || 'south';
   if (!shouldTeleport && tweenDur > 0 && dist >= 1) {
     const pxPerSec = dist / (tweenDur / 1000);
     if (Number.isFinite(pxPerSec) && SERVER_MONSTER_BASE_SPEED > 0) {
@@ -628,6 +628,24 @@ function updateServerDrivenMonsters(now = performance.now()) {
     const sprite = state.sprite;
     if (!sprite) continue;
 
+    if (state.dead) {
+      sprite._serverMove = null;
+      sprite._animIsMoving = false;
+      if (!Number.isFinite(state.animSpeedMultiplier)) state.animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
+      if (sprite._animSpeedMultiplier !== state.animSpeedMultiplier) {
+        sprite._animSpeedMultiplier = state.animSpeedMultiplier;
+      }
+      if (Number.isFinite(state.x)) {
+        sprite.x = state.x;
+        state.renderX = state.x;
+      }
+      if (Number.isFinite(state.y)) {
+        sprite.y = state.y;
+        state.renderY = state.y;
+      }
+      continue;
+    }
+
     const mv = sprite._serverMove;
     if (!mv || !Number.isFinite(mv.duration) || mv.duration <= 0) {
       if (Number.isFinite(state.x)) sprite.x = state.x;
@@ -701,7 +719,7 @@ function retryBindPendingServerMonsters() {
     if (!sprite) continue;
 
     if (Number.isFinite(state.x) && Number.isFinite(state.y)) {
-      applyServerPosition(id, sprite, state.x, state.y);
+      applyServerPosition(id, sprite, state.x, state.y, { face: state.face });
     } else {
       if (!Number.isFinite(state.animSpeedMultiplier)) state.animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
       sprite._animSpeedMultiplier = state.animSpeedMultiplier;
@@ -733,14 +751,18 @@ function handleServerMonsterRespawn(msg = {}) {
   if (!id) return;
 
   const sprite = ensureServerMonsterSprite(msg);
+  const state = getOrCreateServerMonsterState(id);
+  state.dead = false;
 
   const x = Number(msg.x);
   const y = Number(msg.y);
   if (sprite && Number.isFinite(x) && Number.isFinite(y)) {
-    applyServerPosition(id, sprite, x, y);
+    applyServerPosition(id, sprite, x, y, { forceTeleport: true, face: state.face });
   } else if (Number.isFinite(x) && Number.isFinite(y)) {
-    applyServerPosition(id, null, x, y);
+    applyServerPosition(id, null, x, y, { forceTeleport: true, face: state.face });
   }
+
+  SERVER_MONSTER_STATE.set(id, state);
 }
 
 function handleServerMonsterMove(msg = {}) {
@@ -752,11 +774,25 @@ function handleServerMonsterMove(msg = {}) {
   const y = Number(msg.y);
   if (!Number.isFinite(x) || !Number.isFinite(y)) return;
 
+  const state = getOrCreateServerMonsterState(id);
+  if (state.dead) {
+    // Ignore movement updates while dead; keep the corpse locked to its final spot.
+    if (!Number.isFinite(state.x) || !Number.isFinite(state.y)) {
+      const corpse = state.sprite || window.GameScene?.getMobByInstanceId?.(id) || null;
+      if (!Number.isFinite(state.x) && Number.isFinite(corpse?.x)) state.x = corpse.x;
+      if (!Number.isFinite(state.y) && Number.isFinite(corpse?.y)) state.y = corpse.y;
+      if (!Number.isFinite(state.renderX) && Number.isFinite(state.x)) state.renderX = state.x;
+      if (!Number.isFinite(state.renderY) && Number.isFinite(state.y)) state.renderY = state.y;
+      SERVER_MONSTER_STATE.set(id, state);
+    }
+    return;
+  }
+
   const sprite = ensureServerMonsterSprite(msg);
   if (sprite) {
-    applyServerPosition(id, sprite, x, y);
+    applyServerPosition(id, sprite, x, y, { face: state.face });
   } else {
-    applyServerPosition(id, null, x, y);
+    applyServerPosition(id, null, x, y, { face: state.face });
   }
 }
 
@@ -767,9 +803,46 @@ function handleServerMonsterDead(msg = {}) {
 
   const state = getOrCreateServerMonsterState(id);
   const sprite = state.sprite || window.GameScene?.getMobByInstanceId?.(id) || null;
+  const msgX = Number(msg.x);
+  const msgY = Number(msg.y);
+
+  if (sprite && sprite._serverMove) {
+    const mv = sprite._serverMove;
+    const toX = Number.isFinite(mv?.toX) ? mv.toX : null;
+    const toY = Number.isFinite(mv?.toY) ? mv.toY : null;
+    if (Number.isFinite(toX)) sprite.x = toX;
+    if (Number.isFinite(toY)) sprite.y = toY;
+  }
+
   state.dead = true;
   state.animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
   state.isMoving = false;
+  const finalX = Number.isFinite(msgX)
+    ? msgX
+    : Number.isFinite(sprite?.x)
+      ? sprite.x
+      : Number.isFinite(state.renderX)
+        ? state.renderX
+        : state.x;
+  const finalY = Number.isFinite(msgY)
+    ? msgY
+    : Number.isFinite(sprite?.y)
+      ? sprite.y
+      : Number.isFinite(state.renderY)
+        ? state.renderY
+        : state.y;
+
+  if (Number.isFinite(finalX)) {
+    state.x = finalX;
+    state.renderX = finalX;
+    if (sprite) sprite.x = finalX;
+  }
+  if (Number.isFinite(finalY)) {
+    state.y = finalY;
+    state.renderY = finalY;
+    if (sprite) sprite.y = finalY;
+  }
+
   const face = sprite?.face || state.face || 'south';
   setMonsterAction(state, sprite, 'dead', { face });
   state.face = face;
@@ -781,6 +854,7 @@ function handleServerMonsterDead(msg = {}) {
     sprite._animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
     sprite._animFrozen = false;
     sprite._animFrozenFrame = 0;
+    sprite._animIsMoving = false;
   }
   SERVER_MONSTER_STATE.set(id, state);
   UNBOUND_SERVER_MONSTERS.delete(id);
@@ -1099,13 +1173,15 @@ function inferMetaFromImage(img, rawKey) {
   }
   const cols = Math.max(1, Math.floor(img.naturalWidth / fw));
   const rows = Math.max(1, Math.floor(img.naturalHeight / fh));
-  const directionalSeq = (cols >= 4)
-    ? {
-        south: [0],
-        west: [1],
-        east: [2],
-        north: [3],
-      }
+  const directionalRows = (rows >= 5)
+    ? { south: 1, west: 2, east: 3, north: 4 }
+    : (rows >= 4)
+      ? { south: 0, west: 1, east: 2, north: 3 }
+      : null;
+  const baseDirRow = directionalRows ? directionalRows.south : 0;
+  const deadRowIndex = rows >= 5 ? Math.min(rows - 1, 4) : rows - 1;
+  const attackRows = rows >= 10
+    ? { west: 5, east: 6, south: 7, north: 8 }
     : null;
   return {
     key: String(rawKey || '').trim(),
@@ -1119,36 +1195,37 @@ function inferMetaFromImage(img, rawKey) {
         fps: 6,
         frames: Math.min(4, cols),
         startCol: 0,
-        rowByDir: (rows >= 5) ? { south: 1, west: 2, east: 3, north: 4 }
-                              : (rows >= 4) ? { south: 0, west: 1, east: 2, north: 3 } : null,
-        row: 0,
+        rowByDir: directionalRows || undefined,
+        row: baseDirRow,
         loop: true
       },
       idle: (rows >= 1)
         ? {
-            fps: 3,
-            frames: Math.min(4, cols),
-            row: 0,
-            loop: true,
-            seqByDir: directionalSeq || undefined,
+            fps: 2,
+            frames: 1,
+            row: baseDirRow,
+            loop: false,
+            rowByDir: directionalRows || undefined,
+            startCol: 0,
           }
         : null,
-      dead: (rows >= 6)
+      dead: (rows >= 2)
         ? {
             fps: 4,
             frames: Math.min(4, cols),
-            row: 5,
+            row: Math.max(0, deadRowIndex),
             loop: false,
-            seqByDir: directionalSeq || undefined,
+            startCol: 0,
           }
         : null,
       attack: (rows >= 10)
         ? {
             fps: 10,
             frames: Math.min(4, cols),
-            row: 6,
+            row: attackRows?.south ?? 5,
             loop: false,
-            rowByDir: { west: 6, east: 7, south: 8, north: 9 },
+            rowByDir: attackRows || undefined,
+            startCol: 0,
           }
         : null,
     }

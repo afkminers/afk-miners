@@ -40,6 +40,8 @@ const gachaRoutes = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 const skillsRoutes = require('./skills/routes');
 
+const { loadSpriteMetaFromDisk } = require('./utils/loadSpriteMetaFromDisk');
+
 // Loot (pickup + listar loots)
 const lootRoutes = require('./routes/loot'); // <<-- novo
 
@@ -561,18 +563,70 @@ app.get('/api/assets/items', async (req, res) => {
 app.get('/api/assets/sprites', async (req, res) => {
   try {
     const cacheKey = 'assets:sprites';
-    
+
     // Try cache first, then query database if needed
     let data;
     const cachedEntry = httpCache.get(cacheKey);
-    
+
     if (cachedEntry) {
       data = cachedEntry.value;
     } else {
-      const rows = await all('SELECT key, kind, "dataJSON" FROM sprites_master ORDER BY key');
-      data = rows.map(r => ({ key: r.key, kind: r.kind, data: r.dataJSON || {} }));
+      const rows = await all('SELECT key, kind, "dataJSON" FROM sprites_master ORDER BY key').catch(() => []);
+      const dbEntries = Array.isArray(rows)
+        ? rows.map((r) => {
+            const raw = r.dataJSON ?? r.datajson ?? null;
+            let parsed = raw;
+            if (typeof parsed === 'string') {
+              try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
+            }
+            if (!parsed || typeof parsed !== 'object') parsed = {};
+            return {
+              key: String(r.key),
+              kind: (r.kind && String(r.kind)) || null,
+              data: parsed,
+            };
+          })
+        : [];
+
+      const diskEntries = loadSpriteMetaFromDisk();
+
+      if (!dbEntries.length && Array.isArray(diskEntries) && diskEntries.length) {
+        data = diskEntries.map((entry) => ({
+          key: String(entry.key),
+          kind: (entry.kind && String(entry.kind)) || 'sprite',
+          data: entry.data || {},
+        }));
+      } else if (dbEntries.length) {
+        const merged = new Map();
+
+        if (Array.isArray(diskEntries)) {
+          for (const entry of diskEntries) {
+            if (!entry || !entry.key) continue;
+            const key = String(entry.key);
+            merged.set(key, {
+              key,
+              kind: (entry.kind && String(entry.kind)) || 'sprite',
+              data: entry.data || {},
+            });
+          }
+        }
+
+        for (const entry of dbEntries) {
+          if (!entry || !entry.key) continue;
+          const key = String(entry.key);
+          merged.set(key, {
+            key,
+            kind: entry.kind || (merged.get(key)?.kind) || 'sprite',
+            data: entry.data,
+          });
+        }
+
+        data = Array.from(merged.values());
+      } else {
+        data = [];
+      }
     }
-    
+
     // Handle ETag/304 response
     httpCache.handleEtagResponse(req, res, cacheKey, data, ASSETS_CACHE_TTL_MS);
   } catch (err) {
