@@ -691,6 +691,17 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
     tweenDur = segments.reduce((sum, seg) => sum + seg.duration, 0);
   }
 
+  if (segments && segments.length && typeof options.face === 'string' && options.face) {
+    segments = segments.map(seg => ({
+      fromX: seg.fromX,
+      fromY: seg.fromY,
+      toX: seg.toX,
+      toY: seg.toY,
+      duration: seg.duration,
+      face: options.face,
+    }));
+  }
+
   const movementAmount = segments ? (absDx + absDy) : dist;
   const shouldTeleport = forceTeleport || !Number.isFinite(movementAmount) || movementAmount < 1;
 
@@ -910,10 +921,12 @@ function handleServerMonsterRespawn(msg = {}) {
 
   const x = Number(msg.x);
   const y = Number(msg.y);
+  const msgFace = (typeof msg.face === 'string' && msg.face) ? msg.face : null;
+  const face = msgFace || state.face || sprite?.face || null;
   if (sprite && Number.isFinite(x) && Number.isFinite(y)) {
-    applyServerPosition(id, sprite, x, y, { forceTeleport: true, face: state.face });
+    applyServerPosition(id, sprite, x, y, { forceTeleport: true, face });
   } else if (Number.isFinite(x) && Number.isFinite(y)) {
-    applyServerPosition(id, null, x, y, { forceTeleport: true, face: state.face });
+    applyServerPosition(id, null, x, y, { forceTeleport: true, face });
   }
 
   SERVER_MONSTER_STATE.set(id, state);
@@ -943,11 +956,16 @@ function handleServerMonsterMove(msg = {}) {
   }
 
   const sprite = ensureServerMonsterSprite(msg);
+  const msgFace = (typeof msg.face === 'string' && msg.face) ? msg.face : null;
+  const face = msgFace || state.face || sprite?.face || null;
   if (sprite) {
-    applyServerPosition(id, sprite, x, y, { face: state.face });
+    applyServerPosition(id, sprite, x, y, { face });
+    if (sprite.face) state.face = sprite.face;
   } else {
-    applyServerPosition(id, null, x, y, { face: state.face });
+    applyServerPosition(id, null, x, y, { face });
+    if (face) state.face = face;
   }
+  if (!state.face && face) state.face = face;
 }
 
 function handleServerMonsterDead(msg = {}) {
@@ -1057,7 +1075,9 @@ function triggerMonsterAttackAnimation(msg = {}) {
     if (Number.isFinite(pmy)) my = pmy;
   }
 
-  let face = sprite?.face || state.face || 'south';
+  const msgFace = (typeof msg.face === 'string' && msg.face) ? msg.face : null;
+  const monsterFace = (typeof msg.monster?.face === 'string' && msg.monster.face) ? msg.monster.face : null;
+  let face = monsterFace || msgFace || sprite?.face || state.face || 'south';
   if (heroPos && Number.isFinite(mx) && Number.isFinite(my)) {
     const dx = heroPos.x - mx;
     const dy = heroPos.y - my;
@@ -1088,6 +1108,7 @@ function normalizeLegacyMobPos(msg = {}) {
     mapKey: msg.mapKey ?? msg.map_key ?? null,
     spawnId: msg.spawnId ?? msg.spawn_id ?? null,
     monsterKey: msg.monsterKey ?? msg.monster_key ?? null,
+    face: (typeof msg.face === 'string' && msg.face) ? msg.face : null,
   };
 }
 
