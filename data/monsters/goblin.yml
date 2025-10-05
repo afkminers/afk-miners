@@ -6,6 +6,9 @@ health:
 speed: 80
 look:
   spriteKey: goblin
+flags:
+  hostile: true
+  pushable: false
 attacks:
 - type: melee
   intervalMs: 1800

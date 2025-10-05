@@ -6,12 +6,17 @@
       this.grid = grid;
       this.cols = cols;
       this.rows = rows;
+      this.dynamicBlocker = null;
     }
 
     isBlocked(cx, cy) {
       if (cx < 0 || cy < 0 || cx >= this.cols || cy >= this.rows) return true;
-      return this.grid[cy * this.cols + cx] === 1;
+      if (this.grid[cy * this.cols + cx] === 1) return true;
+      if (this.dynamicBlocker && this.dynamicBlocker(cx, cy)) return true;
+      return false;
     }
+
+    setDynamicBlocker(fn) { this.dynamicBlocker = (typeof fn === 'function') ? fn : null; }
 
     // Apenas 4 vizinhos cardinais (sem diagonal).
     neighbors(cx, cy) {
