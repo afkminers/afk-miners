@@ -14,6 +14,8 @@
       this.onMoved = onMoved;             // callback (ex.: publishPos)
       this._accumMoved = 0;               // pixels desde o último autosave (modo contínuo)
 
+      this._dynamicBlocker = null;        // função (cx, cy) => true se houver bloqueio dinâmico
+
       // ====== STEP MODE (WASD — um tile por vez) ======
       this._moving = false;               // está executando um passo de tile?
       this._stepTarget = null;            // { x, y } centro do próximo tile
@@ -21,6 +23,7 @@
     }
 
     setCollision(grid, cols, rows) { this.coll = grid; this.cols = cols; this.rows = rows; }
+    setDynamicBlockChecker(fn) { this._dynamicBlocker = (typeof fn === 'function') ? fn : null; }
     setPosition(x, y) { this.x = x; this.y = y; }
     getPosition() { return { x: this.x, y: this.y }; }
 
@@ -38,9 +41,13 @@
 
     // retorna true se a célula (cx, cy) é sólida
     isBlockedCell(cx, cy) {
-      if (!this.coll) return false;
+      if (!Number.isFinite(this.cols) || !Number.isFinite(this.rows) || this.cols <= 0 || this.rows <= 0) {
+        return !!(this._dynamicBlocker && this._dynamicBlocker(cx, cy));
+      }
       if (cx < 0 || cy < 0 || cx >= this.cols || cy >= this.rows) return true;
-      return this.coll[cy * this.cols + cx] === 1;
+      if (this.coll && this.coll[cy * this.cols + cx] === 1) return true;
+      if (this._dynamicBlocker && this._dynamicBlocker(cx, cy)) return true;
+      return false;
     }
 
     // AABB simples: ocupa 1 tile “central”; pode refinar com bbox se quiser
