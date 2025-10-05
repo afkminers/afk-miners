@@ -1402,9 +1402,14 @@ function drawMob(m) {
   if (!Number.isFinite(frames) || frames <= 0) frames = cols;
   if (!Number.isFinite(startCol) || startCol < 0) startCol = 0;
 
+  const inheritedRowByDir =
+    (!anim.rowByDir && (animType === 'idle' || animType === 'static') && animWalk?.rowByDir)
+      ? animWalk.rowByDir
+      : null;
   let row = Number(anim.row); if (!Number.isFinite(row)) row = 0;
-  if (anim.rowByDir && anim.rowByDir[face] != null) {
-    const r = Number(anim.rowByDir[face]); if (Number.isFinite(r)) row = r;
+  const rowByDir = anim.rowByDir || inheritedRowByDir;
+  if (rowByDir && rowByDir[face] != null) {
+    const r = Number(rowByDir[face]); if (Number.isFinite(r)) row = r;
   }
   if (anim.framesByDir && anim.framesByDir[face] != null) {
     const fd = Number(anim.framesByDir[face]); if (Number.isFinite(fd) && fd > 0) frames = fd;
@@ -1473,7 +1478,7 @@ function drawMob(m) {
   const ox = Math.round(m.x - dw * anchorX);
   const oy = Math.round(m.y - dh * anchorY);
 
-  const canFlipX = !anim.rowByDir && rows === 1 && face === 'west';
+  const canFlipX = !rowByDir && rows === 1 && face === 'west';
 
   ctx.save();
   if (canFlipX) {
