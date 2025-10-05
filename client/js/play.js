@@ -435,7 +435,6 @@ function ensureServerMonsterSprite(msg = {}) {
   if (msg.mapKey != null) state.mapKey = String(msg.mapKey);
   if (msg.spawnId != null && Number.isFinite(Number(msg.spawnId))) state.spawnId = Number(msg.spawnId);
   if (msg.monsterKey) state.monsterKey = String(msg.monsterKey);
-  state.dead = false;
 
   let sprite = window.GameScene?.getMobByInstanceId?.(id) || state.sprite || null;
 
@@ -733,6 +732,8 @@ function handleServerMonsterRespawn(msg = {}) {
   if (!id) return;
 
   const sprite = ensureServerMonsterSprite(msg);
+  const state = getOrCreateServerMonsterState(id);
+  state.dead = false;
 
   const x = Number(msg.x);
   const y = Number(msg.y);
@@ -741,6 +742,8 @@ function handleServerMonsterRespawn(msg = {}) {
   } else if (Number.isFinite(x) && Number.isFinite(y)) {
     applyServerPosition(id, null, x, y);
   }
+
+  SERVER_MONSTER_STATE.set(id, state);
 }
 
 function handleServerMonsterMove(msg = {}) {
@@ -751,6 +754,20 @@ function handleServerMonsterMove(msg = {}) {
   const x = Number(msg.x);
   const y = Number(msg.y);
   if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+  const state = getOrCreateServerMonsterState(id);
+  if (state.dead) {
+    if (Number.isFinite(x)) {
+      state.x = x;
+      state.renderX = x;
+    }
+    if (Number.isFinite(y)) {
+      state.y = y;
+      state.renderY = y;
+    }
+    SERVER_MONSTER_STATE.set(id, state);
+    return;
+  }
 
   const sprite = ensureServerMonsterSprite(msg);
   if (sprite) {
@@ -767,9 +784,46 @@ function handleServerMonsterDead(msg = {}) {
 
   const state = getOrCreateServerMonsterState(id);
   const sprite = state.sprite || window.GameScene?.getMobByInstanceId?.(id) || null;
+  const msgX = Number(msg.x);
+  const msgY = Number(msg.y);
+
+  if (sprite && sprite._serverMove) {
+    const mv = sprite._serverMove;
+    const toX = Number.isFinite(mv?.toX) ? mv.toX : null;
+    const toY = Number.isFinite(mv?.toY) ? mv.toY : null;
+    if (Number.isFinite(toX)) sprite.x = toX;
+    if (Number.isFinite(toY)) sprite.y = toY;
+  }
+
   state.dead = true;
   state.animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
   state.isMoving = false;
+  const finalX = Number.isFinite(msgX)
+    ? msgX
+    : Number.isFinite(sprite?.x)
+      ? sprite.x
+      : Number.isFinite(state.renderX)
+        ? state.renderX
+        : state.x;
+  const finalY = Number.isFinite(msgY)
+    ? msgY
+    : Number.isFinite(sprite?.y)
+      ? sprite.y
+      : Number.isFinite(state.renderY)
+        ? state.renderY
+        : state.y;
+
+  if (Number.isFinite(finalX)) {
+    state.x = finalX;
+    state.renderX = finalX;
+    if (sprite) sprite.x = finalX;
+  }
+  if (Number.isFinite(finalY)) {
+    state.y = finalY;
+    state.renderY = finalY;
+    if (sprite) sprite.y = finalY;
+  }
+
   const face = sprite?.face || state.face || 'south';
   setMonsterAction(state, sprite, 'dead', { face });
   state.face = face;
@@ -781,6 +835,7 @@ function handleServerMonsterDead(msg = {}) {
     sprite._animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
     sprite._animFrozen = false;
     sprite._animFrozenFrame = 0;
+    sprite._animIsMoving = false;
   }
   SERVER_MONSTER_STATE.set(id, state);
   UNBOUND_SERVER_MONSTERS.delete(id);
@@ -1099,13 +1154,15 @@ function inferMetaFromImage(img, rawKey) {
   }
   const cols = Math.max(1, Math.floor(img.naturalWidth / fw));
   const rows = Math.max(1, Math.floor(img.naturalHeight / fh));
-  const directionalSeq = (cols >= 4)
-    ? {
-        south: [0],
-        west: [1],
-        east: [2],
-        north: [3],
-      }
+  const directionalRows = (rows >= 5)
+    ? { south: 1, west: 2, east: 3, north: 4 }
+    : (rows >= 4)
+      ? { south: 0, west: 1, east: 2, north: 3 }
+      : null;
+  const baseDirRow = directionalRows ? directionalRows.south : 0;
+  const deadRowIndex = rows >= 5 ? Math.min(rows - 1, 4) : rows - 1;
+  const attackRows = rows >= 10
+    ? { west: 5, east: 6, south: 7, north: 8 }
     : null;
   return {
     key: String(rawKey || '').trim(),
@@ -1119,36 +1176,37 @@ function inferMetaFromImage(img, rawKey) {
         fps: 6,
         frames: Math.min(4, cols),
         startCol: 0,
-        rowByDir: (rows >= 5) ? { south: 1, west: 2, east: 3, north: 4 }
-                              : (rows >= 4) ? { south: 0, west: 1, east: 2, north: 3 } : null,
-        row: 0,
+        rowByDir: directionalRows || undefined,
+        row: baseDirRow,
         loop: true
       },
       idle: (rows >= 1)
         ? {
-            fps: 3,
-            frames: Math.min(4, cols),
-            row: 0,
-            loop: true,
-            seqByDir: directionalSeq || undefined,
+            fps: 2,
+            frames: 1,
+            row: baseDirRow,
+            loop: false,
+            rowByDir: directionalRows || undefined,
+            startCol: 0,
           }
         : null,
-      dead: (rows >= 6)
+      dead: (rows >= 2)
         ? {
             fps: 4,
             frames: Math.min(4, cols),
-            row: 5,
+            row: Math.max(0, deadRowIndex),
             loop: false,
-            seqByDir: directionalSeq || undefined,
+            startCol: 0,
           }
         : null,
       attack: (rows >= 10)
         ? {
             fps: 10,
             frames: Math.min(4, cols),
-            row: 6,
+            row: attackRows?.south ?? 5,
             loop: false,
-            rowByDir: { west: 6, east: 7, south: 8, north: 9 },
+            rowByDir: attackRows || undefined,
+            startCol: 0,
           }
         : null,
     }
