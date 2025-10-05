@@ -435,7 +435,6 @@ function ensureServerMonsterSprite(msg = {}) {
   if (msg.mapKey != null) state.mapKey = String(msg.mapKey);
   if (msg.spawnId != null && Number.isFinite(Number(msg.spawnId))) state.spawnId = Number(msg.spawnId);
   if (msg.monsterKey) state.monsterKey = String(msg.monsterKey);
-  state.dead = false;
 
   let sprite = window.GameScene?.getMobByInstanceId?.(id) || state.sprite || null;
 
@@ -733,6 +732,8 @@ function handleServerMonsterRespawn(msg = {}) {
   if (!id) return;
 
   const sprite = ensureServerMonsterSprite(msg);
+  const state = getOrCreateServerMonsterState(id);
+  state.dead = false;
 
   const x = Number(msg.x);
   const y = Number(msg.y);
@@ -741,6 +742,8 @@ function handleServerMonsterRespawn(msg = {}) {
   } else if (Number.isFinite(x) && Number.isFinite(y)) {
     applyServerPosition(id, null, x, y);
   }
+
+  SERVER_MONSTER_STATE.set(id, state);
 }
 
 function handleServerMonsterMove(msg = {}) {
@@ -751,6 +754,20 @@ function handleServerMonsterMove(msg = {}) {
   const x = Number(msg.x);
   const y = Number(msg.y);
   if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+  const state = getOrCreateServerMonsterState(id);
+  if (state.dead) {
+    if (Number.isFinite(x)) {
+      state.x = x;
+      state.renderX = x;
+    }
+    if (Number.isFinite(y)) {
+      state.y = y;
+      state.renderY = y;
+    }
+    SERVER_MONSTER_STATE.set(id, state);
+    return;
+  }
 
   const sprite = ensureServerMonsterSprite(msg);
   if (sprite) {
