@@ -330,6 +330,72 @@ function getOrCreateServerMonsterState(id) {
   return state;
 }
 
+function resolveServerMoveSnapshot(move, now = performance.now()) {
+  if (!move || !Number.isFinite(move.startAt)) return null;
+  const totalDuration = Number.isFinite(move.totalDuration)
+    ? move.totalDuration
+    : (Number.isFinite(move.duration) ? move.duration : 0);
+  if (totalDuration <= 0) {
+    return {
+      x: Number.isFinite(move.toX) ? move.toX : move.fromX,
+      y: Number.isFinite(move.toY) ? move.toY : move.fromY,
+      face: move.finalFace || move.face || move.initialFace || null,
+      done: true,
+    };
+  }
+
+  const elapsed = now - move.startAt;
+  const segments = Array.isArray(move.segments) ? move.segments : null;
+  if (!segments || !segments.length) {
+    const ratio = Math.max(0, Math.min(1, elapsed / totalDuration));
+    return {
+      x: move.fromX + (move.toX - move.fromX) * ratio,
+      y: move.fromY + (move.toY - move.fromY) * ratio,
+      face: ratio >= 1 ? (move.finalFace || move.face || null) : (move.face || move.initialFace || null),
+      done: ratio >= 1,
+    };
+  }
+
+  let accumulated = 0;
+  let lastFace = move.initialFace || move.face || null;
+  const totalSegments = segments.reduce((sum, seg) => sum + Math.max(0, Number(seg.duration)), 0);
+  const limit = totalSegments > 0 ? totalSegments : totalDuration;
+  const clampedElapsed = Math.max(0, Math.min(elapsed, limit));
+
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    const segDur = Math.max(0, Number(seg.duration));
+    const segStart = accumulated;
+    const segEnd = segStart + segDur;
+
+    if (clampedElapsed < segEnd || i === segments.length - 1) {
+      const segElapsed = Math.max(0, Math.min(segDur, clampedElapsed - segStart));
+      const segRatio = segDur > 0 ? segElapsed / segDur : 1;
+      const x = seg.fromX + (seg.toX - seg.fromX) * segRatio;
+      const y = seg.fromY + (seg.toY - seg.fromY) * segRatio;
+      const activeFace = seg.face || lastFace;
+      const finished = elapsed >= limit && i === segments.length - 1 && segRatio >= 1;
+      return {
+        x,
+        y,
+        face: finished ? (move.finalFace || activeFace || null) : (activeFace || null),
+        done: finished,
+      };
+    }
+
+    accumulated = segEnd;
+    if (seg.face) lastFace = seg.face;
+  }
+
+  const finalSeg = segments[segments.length - 1];
+  return {
+    x: finalSeg ? finalSeg.toX : move.toX,
+    y: finalSeg ? finalSeg.toY : move.toY,
+    face: move.finalFace || lastFace || null,
+    done: true,
+  };
+}
+
 function currentSpriteRenderPos(sprite, now = performance.now()) {
   if (!sprite) return { x: NaN, y: NaN };
   const mv = sprite._serverMove;
@@ -340,16 +406,14 @@ function currentSpriteRenderPos(sprite, now = performance.now()) {
     };
   }
 
-  const elapsed = now - mv.startAt;
-  if (elapsed <= 0) {
-    return { x: mv.fromX, y: mv.fromY };
+  const snap = resolveServerMoveSnapshot(mv, now);
+  if (!snap) {
+    return {
+      x: Number.isFinite(sprite.x) ? sprite.x : NaN,
+      y: Number.isFinite(sprite.y) ? sprite.y : NaN,
+    };
   }
-
-  const t = Math.max(0, Math.min(1, elapsed / mv.duration));
-  return {
-    x: mv.fromX + (mv.toX - mv.fromX) * t,
-    y: mv.fromY + (mv.toY - mv.fromY) * t,
-  };
+  return { x: snap.x, y: snap.y };
 }
 
 function computeTweenDuration(dx, dy) {
@@ -539,9 +603,74 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
 
   const dx = x - prevX;
   const dy = y - prevY;
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
   const dist = Math.hypot(dx, dy);
 
+  let segments = null;
   let tweenDur = computeTweenDuration(dx, dy);
+  let baseTweenDur = tweenDur;
+
+  if (!forceTeleport && absDx >= 1 && absDy >= 1) {
+    const horizontalFirst = absDx >= absDy;
+    const segs = [];
+    const stepDurX = absDx >= 1 ? computeTweenDuration(dx, 0) : 0;
+    const stepDurY = absDy >= 1 ? computeTweenDuration(0, dy) : 0;
+    const faceX = dx > 0 ? 'east' : 'west';
+    const faceY = dy > 0 ? 'south' : 'north';
+
+    if (horizontalFirst) {
+      if (absDx >= 1) {
+        segs.push({
+          fromX: prevX,
+          fromY: prevY,
+          toX: x,
+          toY: prevY,
+          duration: stepDurX,
+          face: faceX,
+        });
+      }
+      if (absDy >= 1) {
+        segs.push({
+          fromX: x,
+          fromY: prevY,
+          toX: x,
+          toY: y,
+          duration: stepDurY,
+          face: faceY,
+        });
+      }
+    } else {
+      if (absDy >= 1) {
+        segs.push({
+          fromX: prevX,
+          fromY: prevY,
+          toX: prevX,
+          toY: y,
+          duration: stepDurY,
+          face: faceY,
+        });
+      }
+      if (absDx >= 1) {
+        segs.push({
+          fromX: prevX,
+          fromY: y,
+          toX: x,
+          toY: y,
+          duration: stepDurX,
+          face: faceX,
+        });
+      }
+    }
+
+    const segTotal = segs.reduce((sum, seg) => sum + Math.max(0, Number(seg.duration)), 0);
+    if (segs.length && segTotal > 0) {
+      segments = segs;
+      baseTweenDur = segTotal;
+      tweenDur = baseTweenDur;
+    }
+  }
+
   const prevServerAt = Number.isFinite(state.lastServerAt) ? state.lastServerAt : null;
   const serverDelta = (prevServerAt != null) ? Math.max(30, now - prevServerAt) : null;
   if (serverDelta != null && Number.isFinite(serverDelta)) {
@@ -549,13 +678,28 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
     if (tweenDur > cap) tweenDur = cap;
   }
 
-  const shouldTeleport = forceTeleport || !Number.isFinite(dist) || dist < 1;
+  if (segments && tweenDur !== baseTweenDur) {
+    const scale = tweenDur / Math.max(1, baseTweenDur);
+    segments = segments.map(seg => ({
+      fromX: seg.fromX,
+      fromY: seg.fromY,
+      toX: seg.toX,
+      toY: seg.toY,
+      face: seg.face,
+      duration: Math.max(1, Number(seg.duration) * scale),
+    }));
+    tweenDur = segments.reduce((sum, seg) => sum + seg.duration, 0);
+  }
+
+  const movementAmount = segments ? (absDx + absDy) : dist;
+  const shouldTeleport = forceTeleport || !Number.isFinite(movementAmount) || movementAmount < 1;
 
   let animMultiplier = SERVER_MONSTER_IDLE_ANIM;
   let isMoving = false;
   let face = (typeof options.face === 'string' && options.face) || state.face || (sprite?.face) || 'south';
-  if (!shouldTeleport && tweenDur > 0 && dist >= 1) {
-    const pxPerSec = dist / (tweenDur / 1000);
+  const travelForSpeed = movementAmount;
+  if (!shouldTeleport && tweenDur > 0 && movementAmount >= 1) {
+    const pxPerSec = travelForSpeed / (tweenDur / 1000);
     if (Number.isFinite(pxPerSec) && SERVER_MONSTER_BASE_SPEED > 0) {
       const ratio = pxPerSec / SERVER_MONSTER_BASE_SPEED;
       const clamped = Math.max(SERVER_MONSTER_MIN_ANIM, Math.min(SERVER_MONSTER_MAX_ANIM, ratio));
@@ -564,16 +708,21 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
       animMultiplier = 1;
     }
     isMoving = true;
-    face = updateSpriteFacingFromDelta(sprite, dx, dy, face);
+    if (!segments) {
+      face = updateSpriteFacingFromDelta(sprite, dx, dy, face);
+    }
   } else if (sprite && face) {
     sprite.face = face;
   }
+
+  const finalFace = segments && segments.length ? (segments[segments.length - 1].face || face) : face;
+  const initialFace = segments && segments.length ? (segments[0].face || finalFace) : finalFace;
 
   state.x = x;
   state.y = y;
   state.dead = false;
   state.animSpeedMultiplier = isMoving ? animMultiplier : SERVER_MONSTER_IDLE_ANIM;
-  state.face = face;
+  state.face = finalFace;
 
   if (sprite) {
     sprite._animFrozen = false;
@@ -587,13 +736,13 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
       sprite._serverMove = null;
       sprite.x = x;
       sprite.y = y;
-      setMonsterAction(state, sprite, 'idle', { face });
+      setMonsterAction(state, sprite, 'idle', { face: finalFace });
       state.renderX = x;
       state.renderY = y;
     } else {
       const fromX = prevX;
       const fromY = prevY;
-      setMonsterAction(state, sprite, 'walk', { face, until: now + tweenDur });
+      setMonsterAction(state, sprite, 'walk', { face: finalFace, until: now + tweenDur });
       sprite._serverMove = {
         fromX,
         fromY,
@@ -601,20 +750,27 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
         toY: y,
         startAt: now,
         duration: tweenDur,
+        totalDuration: tweenDur,
+        segments: segments || null,
+        finalFace,
+        initialFace,
       };
       sprite.x = fromX;
       sprite.y = fromY;
       state.renderX = fromX;
       state.renderY = fromY;
+      if (segments && segments.length && initialFace) {
+        sprite.face = initialFace;
+      }
     }
   } else {
     state.sprite = null;
     state.renderX = x;
     state.renderY = y;
     if (isMoving) {
-      setMonsterAction(state, null, 'walk', { face, until: now + tweenDur });
+      setMonsterAction(state, null, 'walk', { face: finalFace, until: now + tweenDur });
     } else {
-      setMonsterAction(state, null, 'idle', { face });
+      setMonsterAction(state, null, 'idle', { face: finalFace });
     }
   }
 
@@ -657,29 +813,27 @@ function updateServerDrivenMonsters(now = performance.now()) {
       sprite._animSpeedMultiplier = state.animSpeedMultiplier;
       sprite._animIsMoving = !!state.isMoving;
     } else {
-      const elapsed = now - mv.startAt;
-      if (elapsed <= 0) {
-        sprite.x = mv.fromX;
-        sprite.y = mv.fromY;
-        state.renderX = sprite.x;
-        state.renderY = sprite.y;
-      } else {
-        const t = Math.max(0, Math.min(1, elapsed / mv.duration));
-        sprite.x = mv.fromX + (mv.toX - mv.fromX) * t;
-        sprite.y = mv.fromY + (mv.toY - mv.fromY) * t;
-        state.renderX = sprite.x;
-        state.renderY = sprite.y;
+      const snap = resolveServerMoveSnapshot(mv, now);
+      if (snap) {
+        if (Number.isFinite(snap.x)) sprite.x = snap.x;
+        if (Number.isFinite(snap.y)) sprite.y = snap.y;
+        state.renderX = Number.isFinite(sprite.x) ? sprite.x : state.renderX;
+        state.renderY = Number.isFinite(sprite.y) ? sprite.y : state.renderY;
+        if (snap.face) {
+          sprite.face = snap.face;
+          state.face = snap.face;
+        }
 
-        if (t >= 1) {
+        if (snap.done) {
           sprite._serverMove = null;
-          sprite.x = mv.toX;
-          sprite.y = mv.toY;
-          state.renderX = sprite.x;
-          state.renderY = sprite.y;
-          state.animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
+          if (!Number.isFinite(state.animSpeedMultiplier) || state.animSpeedMultiplier !== SERVER_MONSTER_IDLE_ANIM) {
+            state.animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
+          }
           setMonsterAction(state, sprite, 'idle', { face: sprite.face || state.face });
           sprite._animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
         }
+      } else {
+        sprite._serverMove = null;
       }
     }
 
@@ -1378,6 +1532,8 @@ function drawMob(m) {
   }
 
   if (!Number.isFinite(m._animSpeedMultiplier)) m._animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
+
+  const freezeIdle = animType === 'idle' && !isMoving;
   if (!m.dead && action !== 'dead') m._animFrozen = false;
 
   let fps = Number(anim.fps);
@@ -1393,6 +1549,10 @@ function drawMob(m) {
   } else if (animType === 'dead') {
     fps = Math.min(4, Math.max(1, fps));
   } else if (animType === 'static') {
+    fps = 0;
+  }
+
+  if (freezeIdle) {
     fps = 0;
   }
 
@@ -1431,7 +1591,10 @@ function drawMob(m) {
   const t = performance.now() / 1000;
   const baseLen = Math.max(1, seq ? seq.length : frames);
   let f;
-  if (anim.loop === false) {
+  if (freezeIdle) {
+    m._animFrozenFrame = 0;
+    f = 0;
+  } else if (anim.loop === false) {
     const idx = Math.floor(t * Math.max(0, fps));
     f = Math.min(idx, baseLen - 1);
     if (f < baseLen - 1) {
