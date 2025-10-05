@@ -47,8 +47,15 @@
   const IGNORE_LOS = process.env.AI_MOBS_IGNORE_LOS === '1';
   const IGNORE_COLLISION = process.env.AI_MOBS_IGNORE_COLLISION === '1';
 
+  const HERO_MEMORY_TTL_MS = 15000;
+  const HERO_PREDICTION_MAX_TILES = 2;
+  const CROWD_PENALTY_SCALE = 0.35;
+  const SURROUND_PENALTY = 0.9;
+  const FLANK_BONUS = 0.8;
+
   // --------- Estado ----------
   const mobs = new Map(); // instanceId -> state
+  const heroMemory = new Map(); // heroId -> { cx, cy, lastCx, lastCy, heading, updatedAt, mapKey }
   let loopTimer = null;
   let lastTickAt = 0;
 
@@ -127,6 +134,129 @@
     if (!canSee)  return { ok:false, reason:'no_los' };
 
     return { ok:true, distPxC: distPxC, atkPx };
+  }
+
+  function recordHeroObservation({ heroId, mapKey, x, y, now }) {
+    if (!heroId) return;
+    const cx = Math.floor(Number(x ?? 0) / STEP_PX);
+    const cy = Math.floor(Number(y ?? 0) / STEP_PX);
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) return;
+
+    const id = String(heroId);
+    const prev = heroMemory.get(id);
+    let heading = prev?.heading || null;
+    if (!prev || prev.cx !== cx || prev.cy !== cy) {
+      const dx = cx - (prev?.cx ?? cx);
+      const dy = cy - (prev?.cy ?? cy);
+      if (dx || dy) {
+        const clampedDx = Math.max(-HERO_PREDICTION_MAX_TILES, Math.min(dx, HERO_PREDICTION_MAX_TILES));
+        const clampedDy = Math.max(-HERO_PREDICTION_MAX_TILES, Math.min(dy, HERO_PREDICTION_MAX_TILES));
+        heading = (clampedDx || clampedDy) ? { dx: clampedDx, dy: clampedDy } : null;
+      }
+    }
+
+    heroMemory.set(id, {
+      cx,
+      cy,
+      lastCx: prev?.cx ?? cx,
+      lastCy: prev?.cy ?? cy,
+      heading: heading && (heading.dx || heading.dy) ? heading : null,
+      updatedAt: now,
+      mapKey,
+    });
+  }
+
+  function updateHeroMemoryForMap(mapKey, heroes, now) {
+    const seen = new Set();
+    if (Array.isArray(heroes)) {
+      for (const hero of heroes) {
+        if (!hero || hero.heroId == null) continue;
+        recordHeroObservation({ heroId: hero.heroId, mapKey, x: hero.x, y: hero.y, now });
+        seen.add(String(hero.heroId));
+      }
+    }
+
+    for (const [heroId, mem] of heroMemory.entries()) {
+      if (!mem || (mem.mapKey != null && mem.mapKey !== mapKey)) continue;
+      if (seen.has(heroId)) continue;
+      if (now - (mem.updatedAt || 0) > HERO_MEMORY_TTL_MS) {
+        heroMemory.delete(heroId);
+      }
+    }
+  }
+
+  function predictHeroTileCx(mem, fallbackCx, fallbackCy) {
+    if (!mem) return null;
+    let dx = 0;
+    let dy = 0;
+    if (mem.heading && (mem.heading.dx || mem.heading.dy)) {
+      dx = mem.heading.dx;
+      dy = mem.heading.dy;
+    } else if (Number.isFinite(mem.cx) && Number.isFinite(mem.lastCx)) {
+      dx = mem.cx - mem.lastCx;
+      dy = mem.cy - mem.lastCy;
+    }
+    dx = Math.max(-HERO_PREDICTION_MAX_TILES, Math.min(dx, HERO_PREDICTION_MAX_TILES));
+    dy = Math.max(-HERO_PREDICTION_MAX_TILES, Math.min(dy, HERO_PREDICTION_MAX_TILES));
+    if (!dx && !dy) return null;
+    return {
+      cx: fallbackCx + dx,
+      cy: fallbackCy + dy,
+      heading: mem.heading || null,
+      updatedAt: mem.updatedAt || Date.now(),
+    };
+  }
+
+  function computeMobDensityPenalty({ occupancy, cx, cy, mobId, heroCx, heroCy }) {
+    if (!occupancy) return 0;
+    let penalty = 0;
+
+    const key = tileKey(cx, cy);
+    const set = occupancy.get(key);
+    if (set && set.size) {
+      const others = set.has(mobId) ? Math.max(0, set.size - 1) : set.size;
+      if (others > 0) penalty += others * 4;
+    }
+
+    for (const dir of CARDINAL_DIRS) {
+      const nx = cx + dir.dx;
+      const ny = cy + dir.dy;
+      const nearSet = occupancy.get(tileKey(nx, ny));
+      if (nearSet && nearSet.size) {
+        penalty += Math.min(nearSet.size, 4) * CROWD_PENALTY_SCALE;
+      }
+    }
+
+    if (Number.isFinite(heroCx) && Number.isFinite(heroCy)) {
+      const distHero = Math.abs(cx - heroCx) + Math.abs(cy - heroCy);
+      if (distHero === 1) {
+        let adjacentCount = 0;
+        for (const dir of CARDINAL_DIRS) {
+          const adjSet = occupancy.get(tileKey(heroCx + dir.dx, heroCy + dir.dy));
+          if (adjSet && adjSet.size) adjacentCount += adjSet.size;
+        }
+        if (adjacentCount > 1) penalty += (adjacentCount - 1) * SURROUND_PENALTY;
+      }
+    }
+
+    return penalty;
+  }
+
+  function computeMobFlankBonus({ cx, cy, heroCx, heroCy, heading }) {
+    if (!heading || !(heading.dx || heading.dy)) return 0;
+    if (!Number.isFinite(heroCx) || !Number.isFinite(heroCy)) return 0;
+    const relX = cx - heroCx;
+    const relY = cy - heroCy;
+    const manhattan = Math.abs(relX) + Math.abs(relY);
+    if (manhattan !== 1) return 0;
+
+    const facingX = Math.sign(heading.dx || 0);
+    const facingY = Math.sign(heading.dy || 0);
+    if (facingX && relX === facingX) return FLANK_BONUS;
+    if (facingY && relY === facingY) return FLANK_BONUS;
+    if ((facingX && relY !== 0) || (facingY && relX !== 0)) return FLANK_BONUS * 0.6;
+    if ((relX && facingX && relX === -facingX) || (relY && facingY && relY === -facingY)) return -FLANK_BONUS * 0.5;
+    return 0;
   }
 
 
@@ -554,6 +684,8 @@
       const losGrid = { data: grid, cols };
       const occupancy = buildMobOccupancy(list);
 
+      updateHeroMemoryForMap(mapKey, heroes, now);
+
       await resolveMobStacks({ mobsInMap: list, occupancy, heroTiles, losGrid });
 
       if (DEBUG_AI) {
@@ -583,6 +715,22 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   let tgtPos =
     heroes.find(h => h.heroId === mob.targetHeroId) ||
     await getHeroLastPosPx(mob.targetHeroId, mob.mapKey);
+
+  if (!tgtPos) {
+    const mem = mob.targetHeroId ? heroMemory.get(String(mob.targetHeroId)) : null;
+    if (mem && mem.mapKey === mob.mapKey && now - (mem.updatedAt || 0) <= HERO_MEMORY_TTL_MS) {
+      tgtPos = {
+        heroId: mob.targetHeroId,
+        x: mem.cx * STEP_PX + STEP_PX / 2,
+        y: mem.cy * STEP_PX + STEP_PX / 2,
+        updatedMs: mem.updatedAt || now,
+      };
+    }
+  }
+
+  if (tgtPos && mob.targetHeroId) {
+    recordHeroObservation({ heroId: mob.targetHeroId, mapKey: mob.mapKey, x: tgtPos.x, y: tgtPos.y, now });
+  }
 
   if (!tgtPos) {
     if (now - mob.lastSeenAt > GIVEUP_MS) { mob.targetHeroId = null; mob.mode = 'idle'; }
@@ -681,7 +829,8 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   mob.mode = 'chase';
   if (now >= mob.repathAt) {
     mob.repathAt = now + REPATH_MS;
-    const step = pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles);
+    const heroMem = mob.targetHeroId ? heroMemory.get(String(mob.targetHeroId)) : null;
+    const step = pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem);
     if (step) await moveMobAndPersist(mob, step, dt, losGrid, occupancy);
   }
 
@@ -772,62 +921,62 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     return losGrid.data[cy * losGrid.cols + cx] === 1;
   }
 
-  function pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles) {
+  function pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem) {
     const c0x = Math.floor(mob.x / STEP_PX), c0y = Math.floor(mob.y / STEP_PX);
-    const c1x = Math.floor(tgtPos.x / STEP_PX), c1y = Math.floor(tgtPos.y / STEP_PX);
-    const dx = Math.sign(c1x - c0x), dy = Math.sign(c1y - c0y);
+    const heroCx = Math.floor(tgtPos.x / STEP_PX), heroCy = Math.floor(tgtPos.y / STEP_PX);
+    const predicted = predictHeroTileCx(heroMem, heroCx, heroCy);
+    const goalCx = Number.isFinite(predicted?.cx) ? predicted.cx : heroCx;
+    const goalCy = Number.isFinite(predicted?.cy) ? predicted.cy : heroCy;
+    const currentDist = Math.abs(c0x - goalCx) + Math.abs(c0y - goalCy);
 
-    const cand = [];
-    if (Math.abs(c1x - c0x) >= Math.abs(c1y - c0y)) {
-      if (dx) cand.push({cx:c0x+dx, cy:c0y});
-      if (dy) cand.push({cx:c0x, cy:c0y+dy});
-    } else {
-      if (dy) cand.push({cx:c0x, cy:c0y+dy});
-      if (dx) cand.push({cx:c0x+dx, cy:c0y});
+    const heroTilesSet = heroTiles || new Set();
+
+    const candidates = [];
+    for (const dir of CARDINAL_DIRS) {
+      candidates.push({ cx: c0x + dir.dx, cy: c0y + dir.dy });
     }
 
-    if (DEBUG_AI) {
-      const dbg = cand.map(c => {
-        const idx = c.cy * losGrid.cols + c.cx;
-        const v = (idx >= 0 && idx < losGrid.data.length) ? losGrid.data[idx] : 'OOB';
-        return `(${c.cx},${c.cy})=${v}`;
-      }).join(' | ');
-      console.log(`[ai-mobs] path cand mob=${mob.instanceId} -> ${dbg}`);
-    }
+    let best = null;
+    let bestScore = Infinity;
 
-    const allCand = [];
-    const seen = new Set();
-    for (const c of cand) {
-      const key = tileKey(c.cx, c.cy);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      allCand.push(c);
-    }
-
-    // fallback: tenta os outros dois cardinais (caso prioridade inicial esteja bloqueada)
-    const fallback = [
-      { cx: c0x + 1, cy: c0y },
-      { cx: c0x - 1, cy: c0y },
-      { cx: c0x,     cy: c0y + 1 },
-      { cx: c0x,     cy: c0y - 1 },
-    ];
-    for (const f of fallback) {
-      const key = tileKey(f.cx, f.cy);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      allCand.push(f);
-    }
-
-    for (const c of allCand) {
-      const wx = c.cx * STEP_PX + STEP_PX/2;
-      const wy = c.cy * STEP_PX + STEP_PX/2;
+    for (const c of candidates) {
+      const wx = c.cx * STEP_PX + STEP_PX / 2;
+      const wy = c.cy * STEP_PX + STEP_PX / 2;
       if (isBlockedPx(losGrid, wx, wy)) continue;
-      if (heroTiles && heroTiles.has(tileKey(c.cx, c.cy))) continue;
+      const key = tileKey(c.cx, c.cy);
+      if (heroTilesSet.has(key)) continue;
       if (isTileBlockedByMobs(occupancy, c.cx, c.cy, mob.instanceId)) continue;
-      return { x: wx, y: wy };
+
+      const distGoal = Math.abs(c.cx - goalCx) + Math.abs(c.cy - goalCy);
+      const distHero = Math.abs(c.cx - heroCx) + Math.abs(c.cy - heroCy);
+      const densityPenalty = computeMobDensityPenalty({
+        occupancy,
+        cx: c.cx,
+        cy: c.cy,
+        mobId: mob.instanceId,
+        heroCx,
+        heroCy,
+      });
+      const flank = computeMobFlankBonus({
+        cx: c.cx,
+        cy: c.cy,
+        heroCx,
+        heroCy,
+        heading: predicted?.heading,
+      });
+
+      let score = distGoal + densityPenalty - flank;
+      if (distHero <= 1 && densityPenalty < 0.6) score -= 0.25;
+      if (distGoal > currentDist && currentDist > 1) score += (distGoal - currentDist) * 1.4;
+
+      if (score < bestScore) {
+        bestScore = score;
+        best = { x: wx, y: wy };
+      }
     }
-    if (DEBUG_AI) console.log(`[ai-mobs] path blocked mob=${mob.instanceId}`);
-    return null;
+
+    if (!best && DEBUG_AI) console.log(`[ai-mobs] path blocked mob=${mob.instanceId}`);
+    return best;
   }
 
 function clampToMapPx(losGrid, px) {
