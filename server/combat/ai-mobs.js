@@ -25,8 +25,9 @@
   // --------- Tuning ----------
   const TICK_MS = 100;                  // 10 tps
   const STEP_PX = 32;                   // 1 tile
-  const CHASE_SPEED_PX_S = 90;          // px/s
-  const REPATH_MS = 500;                // recálculo de direção
+  const DEFAULT_CHASE_SPEED_PX_S = 90;  // px/s
+  const MIN_CHASE_SPEED_PX_S = 32;      // px/s (≈1 tile/s)
+  const MAX_CHASE_SPEED_PX_S = 420;     // px/s (~Tibia haste early game)
   const GIVEUP_MS = 8000;               // desiste se perder o alvo por muito tempo
   const ONLINE_RECENT_MS = 4000;       // presença considerada “viva” nos últimos 4s
 
@@ -269,6 +270,8 @@
             mm.attack_range,      -- tiles
             mm.aggro_range,       -- tiles
             mm.attack_ms,         -- ms
+            mm.speed              AS speed,
+            mm.key                AS monster_key,
             s.x  AS spawn_x,
             s.y  AS spawn_y,
             COALESCE(s.w, 0) AS spawn_w,
@@ -350,6 +353,14 @@
 
 
   // --------- State helpers ----------
+  function resolveMobSpeedPx(stat) {
+    // `speed` no YAML (monsters_master.speed) é interpretado como pixels por segundo.
+    const raw = Number(stat);
+    if (!Number.isFinite(raw) || raw <= 0) return DEFAULT_CHASE_SPEED_PX_S;
+    const clamped = Math.max(MIN_CHASE_SPEED_PX_S, Math.min(MAX_CHASE_SPEED_PX_S, raw));
+    return clamped;
+  }
+
   function ensureMob(instanceId, patch = {}) {
     const id = String(instanceId);
     const cur = mobs.get(id) || {};
@@ -366,11 +377,29 @@
     const aggroRangeTiles  = Math.max(1, Number(patch.aggro_range ?? cur.aggro_range ?? 8));
     const attackMs         = Number(patch.attack_ms    ?? cur.attack_ms    ?? 1200);
 
+    let speedStat = null;
+    if (Number.isFinite(Number(patch.speed)) && Number(patch.speed) > 0) {
+      speedStat = Number(patch.speed);
+    } else if (Number.isFinite(Number(cur.speed)) && Number(cur.speed) > 0) {
+      speedStat = Number(cur.speed);
+    }
+    const moveSpeedPx = resolveMobSpeedPx(speedStat);
+
+    const pendingStepPatch = patch.pendingStep;
+    const pendingStep = pendingStepPatch === undefined
+      ? (cur.pendingStep || null)
+      : (pendingStepPatch && Number.isFinite(pendingStepPatch.x) && Number.isFinite(pendingStepPatch.y)
+          ? { x: pendingStepPatch.x | 0, y: pendingStepPatch.y | 0 }
+          : null);
+
     const next = {
       instanceId: id,
       mapKey: patch.mapKey ?? cur.mapKey ?? null,
       x: pos.x | 0,
       y: pos.y | 0,
+      speed: speedStat,
+      moveSpeedPx,
+      monsterKey: patch.monsterKey ?? cur.monsterKey ?? null,
 
       // runtime
       posUpdatedAt: Number(patch.posUpdatedAt ?? cur.posUpdatedAt ?? Date.now()),
@@ -380,6 +409,7 @@
       repathAt: cur.repathAt || 0,
       lastSwitchAt: cur.lastSwitchAt || 0,
       threat: cur.threat || new Map(),
+      pendingStep,
 
 
       // === Ranges em PX e cooldown em ms, todos no mesmo relógio (ms) ===
@@ -401,8 +431,14 @@
     return next;
   }
 
+  function computeRepathCooldownMs(mob) {
+    const speed = Number.isFinite(mob?.moveSpeedPx) ? mob.moveSpeedPx : DEFAULT_CHASE_SPEED_PX_S;
+    const travelMs = (STEP_PX / Math.max(1, speed)) * 1000;
+    return Math.max(90, Math.min(420, travelMs * 0.9));
+  }
+
   // Exposta para seed inicial a partir do index.js
-  function seedPosition({ id, x, y, mapKey, spawnRect }) {
+  function seedPosition({ id, x, y, mapKey, spawnRect, speed = null, monsterKey = null }) {
     ensureMob(id, {
       x: (x | 0),
       y: (y | 0),
@@ -411,6 +447,9 @@
       targetHeroId: null,
       posUpdatedAt: Date.now(),
       spawnRect,
+      speed,
+      monsterKey,
+      pendingStep: null,
     });
   }
 
@@ -453,6 +492,9 @@
         aggro_range:  r.aggro_range,   // ainda em tiles (ok)
         attack_ms:    r.attack_ms,
         spawnRect,
+        speed: r.speed,
+        monsterKey: r.monster_key,
+        pendingStep: null,
       });
 
     }
@@ -722,7 +764,11 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   decayThreat(mob, dt);
   selectTargetByThreat(now, mob, heroes, losGrid);
 
-  if (!mob.targetHeroId) { mob.mode = 'idle'; return; }
+  if (!mob.targetHeroId) {
+    mob.mode = 'idle';
+    mob.pendingStep = null;
+    return;
+  }
 
   // 1) Posição do alvo: tentar "ao vivo" na lista heroes; se não houver, cair pro DB.
   let tgtPos =
@@ -747,6 +793,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
 
   if (!tgtPos) {
     if (now - mob.lastSeenAt > GIVEUP_MS) { mob.targetHeroId = null; mob.mode = 'idle'; }
+    mob.pendingStep = null;
     return;
   }
 
@@ -818,6 +865,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     }
 
     mob.mode = 'attack';
+    mob.pendingStep = null;
     mob.lastSeenAt = now;
 
     const cd = Number(mob.attackMs || (K.MONSTER_SPEED_MS && K.MONSTER_SPEED_MS.DEFAULT) || 1200);
@@ -844,11 +892,30 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
 
   // 3) CHASE (greedy cardinal com colisão no servidor)
   mob.mode = 'chase';
-  if (now >= mob.repathAt) {
-    mob.repathAt = now + REPATH_MS;
+
+  const hasValidStep = mob.pendingStep && Number.isFinite(mob.pendingStep.x) && Number.isFinite(mob.pendingStep.y);
+  let stepTarget = hasValidStep ? mob.pendingStep : null;
+
+  if (!stepTarget && now >= mob.repathAt) {
     const heroMem = mob.targetHeroId ? heroMemory.get(String(mob.targetHeroId)) : null;
     const step = pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem);
-    if (step) await moveMobAndPersist(mob, step, dt, losGrid, occupancy);
+    if (step) {
+      mob.pendingStep = { x: step.x | 0, y: step.y | 0 };
+      stepTarget = mob.pendingStep;
+      const cooldown = computeRepathCooldownMs(mob);
+      mob.repathAt = now + cooldown;
+    } else {
+      mob.pendingStep = null;
+      mob.repathAt = now + Math.max(120, computeRepathCooldownMs(mob));
+    }
+  }
+
+  if (stepTarget) {
+    const reached = await moveMobAndPersist(mob, stepTarget, dt, losGrid, occupancy);
+    if (reached) {
+      mob.pendingStep = null;
+      mob.repathAt = now;
+    }
   }
 
 }
@@ -1009,12 +1076,22 @@ function clampToMapPx(losGrid, px) {
 }
 
 async function moveMobAndPersist(mob, step, dt, losGrid, occupancy) {
-  const speed = CHASE_SPEED_PX_S;
-  const maxMove = speed * dt;
+  if (!mob || !step) return true;
+  const speed = Number.isFinite(mob.moveSpeedPx) ? mob.moveSpeedPx : DEFAULT_CHASE_SPEED_PX_S;
+  const maxMove = Math.max(0, speed * Math.max(0, dt));
 
-  const dx = step.x - mob.x, dy = step.y - mob.y;
+  const dx = step.x - mob.x;
+  const dy = step.y - mob.y;
   const dist = Math.hypot(dx, dy);
-  const ux = dx / (dist || 1), uy = dy / (dist || 1);
+  if (dist <= 0.5) {
+    mob.x = step.x | 0;
+    mob.y = step.y | 0;
+    mob.posUpdatedAt = Date.now();
+    return true;
+  }
+
+  const ux = dx / dist;
+  const uy = dy / dist;
   const nx = dist <= maxMove ? step.x : (mob.x + ux * maxMove);
   const ny = dist <= maxMove ? step.y : (mob.y + uy * maxMove);
 
@@ -1062,6 +1139,9 @@ async function moveMobAndPersist(mob, step, dt, losGrid, occupancy) {
       console.warn('[ai-mobs] persist pos error:', e?.message);
     }
   }
+
+  const remaining = Math.hypot(step.x - mob.x, step.y - mob.y);
+  return remaining <= 1.25;
 }
 
 

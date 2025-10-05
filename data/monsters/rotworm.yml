@@ -4,7 +4,7 @@ name: Rotworm
 xp: 120
 health:
   max: 160
-speed: 60
+speed: 150
 look:
   spriteKey: rotmaw
 flags:

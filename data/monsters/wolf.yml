@@ -4,7 +4,7 @@ name: Wolf
 xp: 18
 health:
   max: 40
-speed: 60
+speed: 140
 look:
   spriteKey: wolf
 flags:

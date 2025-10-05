@@ -5,7 +5,7 @@ xp: 6200
 health:
   max: 9500
   regenPerSec: 3
-speed: 110
+speed: 210
 look:
   spriteKey: balor
 flags:

@@ -3,7 +3,7 @@ name: Cave Rat
 xp: 10
 health:
   max: 30
-speed: 80
+speed: 132
 look:
   spriteKey: cave_rat
   defaultAnim: idle

@@ -987,9 +987,11 @@ async function seedAIMobsFromDB(aiMobs) {
       SELECT mi.id,
              mi.x, mi.y, mi.map_key,
              s.x  AS sx, s.y  AS sy, s.w AS sw, s.h AS sh,
-             s."monsterKey" AS monster_key
+             s."monsterKey" AS monster_key,
+             mm.speed        AS speed
         FROM monster_instances mi
         JOIN spawns s ON s.id = mi.spawn_id
+        LEFT JOIN monsters_master mm ON mm.key = s."monsterKey"
        WHERE mi.state = 'ALIVE'
     `);
     for (const r of rows) {
@@ -999,7 +1001,8 @@ async function seedAIMobsFromDB(aiMobs) {
         y: r.y,
         mapKey: r.map_key,
         spawnRect: { x: r.sx, y: r.sy, w: r.sw, h: r.sh },
-        monsterKey: r.monster_key
+        monsterKey: r.monster_key,
+        speed: r.speed
       });
     }
     console.log(`[ai-mobs] seeded ${rows.length} alive instances from DB`);

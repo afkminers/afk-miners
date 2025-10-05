@@ -4,7 +4,7 @@ name: Rat
 xp: 5
 health:
   max: 20
-speed: 60
+speed: 88
 look:
   spriteKey: rat
 flags:

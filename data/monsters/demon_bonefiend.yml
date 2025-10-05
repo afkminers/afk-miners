@@ -4,7 +4,7 @@ name: Demon Bonefiend
 xp: 400
 health:
   max: 350
-speed: 70
+speed: 180
 look:
   spriteKey: demon_bonefiend
 flags:
