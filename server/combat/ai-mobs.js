@@ -340,6 +340,198 @@
   }
 
   // --------- Loop principal ----------
+  const CARDINAL_DIRS = [
+    { dx: 1, dy: 0 },
+    { dx: -1, dy: 0 },
+    { dx: 0, dy: 1 },
+    { dx: 0, dy: -1 },
+  ];
+
+  function tileKey(cx, cy) {
+    return `${cx}|${cy}`;
+  }
+
+  function losGridRows(losGrid) {
+    if (!losGrid || !losGrid.cols) return 0;
+    return Math.floor(losGrid.data.length / losGrid.cols);
+  }
+
+  function isSolidTile(losGrid, cx, cy) {
+    if (!losGrid || !losGrid.data) return false;
+    if (cx < 0 || cy < 0) return true;
+    if (cx >= losGrid.cols) return true;
+    const rows = losGridRows(losGrid);
+    if (cy >= rows) return true;
+    const idx = cy * losGrid.cols + cx;
+    return losGrid.data[idx] === 1;
+  }
+
+  function isTileBlockedByMobs(occupancy, cx, cy, ignoreId) {
+    if (!occupancy) return false;
+    const key = tileKey(cx, cy);
+    const set = occupancy.get(key);
+    if (!set || set.size === 0) return false;
+    if (set.size === 1 && set.has(ignoreId)) return false;
+    return true;
+  }
+
+  function buildHeroTileSet(heroes) {
+    const res = new Set();
+    if (!Array.isArray(heroes)) return res;
+    for (const h of heroes) {
+      const cx = Math.floor(Number(h?.x) / STEP_PX);
+      const cy = Math.floor(Number(h?.y) / STEP_PX);
+      if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
+      res.add(tileKey(cx, cy));
+    }
+    return res;
+  }
+
+  function buildMobOccupancy(list) {
+    const occ = new Map();
+    if (!Array.isArray(list)) return occ;
+    for (const mob of list) {
+      const cx = Math.floor(Number(mob?.x) / STEP_PX);
+      const cy = Math.floor(Number(mob?.y) / STEP_PX);
+      if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
+      mob._tileCx = cx;
+      mob._tileCy = cy;
+      mob._tileKey = tileKey(cx, cy);
+      let set = occ.get(mob._tileKey);
+      if (!set) {
+        set = new Set();
+        occ.set(mob._tileKey, set);
+      }
+      set.add(mob.instanceId);
+    }
+    return occ;
+  }
+
+  function findNearestFreeTile({
+    startCx,
+    startCy,
+    occupancy,
+    heroTiles,
+    losGrid,
+    ignoreId,
+    maxDepth = 8,
+  }) {
+    const queue = [{ cx: startCx, cy: startCy, depth: 0 }];
+    const visited = new Set([tileKey(startCx, startCy)]);
+
+    while (queue.length) {
+      const node = queue.shift();
+      if (node.depth >= maxDepth) continue;
+
+      for (const dir of CARDINAL_DIRS) {
+        const nx = node.cx + dir.dx;
+        const ny = node.cy + dir.dy;
+        if (isSolidTile(losGrid, nx, ny)) continue;
+        const k = tileKey(nx, ny);
+        if (visited.has(k)) continue;
+        visited.add(k);
+        if (heroTiles && heroTiles.has(k)) {
+          // evita ocupar o mesmo tile que o herói, mas pode explorar ao redor
+          queue.push({ cx: nx, cy: ny, depth: node.depth + 1 });
+          continue;
+        }
+
+        const blocked = isTileBlockedByMobs(occupancy, nx, ny, ignoreId);
+        if (!blocked) {
+          return { cx: nx, cy: ny };
+        }
+
+        queue.push({ cx: nx, cy: ny, depth: node.depth + 1 });
+      }
+    }
+    return null;
+  }
+
+  async function teleportMobToTile({ mob, cx, cy, occupancy }) {
+    if (!mob) return;
+    const prevCx = Math.floor(Number(mob.x) / STEP_PX);
+    const prevCy = Math.floor(Number(mob.y) / STEP_PX);
+    const prevKey = tileKey(prevCx, prevCy);
+
+    const px = cx * STEP_PX + STEP_PX / 2;
+    const py = cy * STEP_PX + STEP_PX / 2;
+    mob.x = px | 0;
+    mob.y = py | 0;
+    mob.posUpdatedAt = Date.now();
+
+    if (occupancy) {
+      const prevSet = occupancy.get(prevKey);
+      if (prevSet) {
+        prevSet.delete(mob.instanceId);
+        if (!prevSet.size) occupancy.delete(prevKey);
+      }
+
+      const destKey = tileKey(cx, cy);
+      let set = occupancy.get(destKey);
+      if (!set) {
+        set = new Set();
+        occupancy.set(destKey, set);
+      }
+      set.add(mob.instanceId);
+
+      mob._tileCx = cx;
+      mob._tileCy = cy;
+      mob._tileKey = destKey;
+    }
+
+    try {
+      await run(
+        `UPDATE monster_instances SET x=$2, y=$3, updated_at=now() WHERE id=$1`,
+        [mob.instanceId, mob.x | 0, mob.y | 0]
+      );
+      try {
+        broadcast({ type: 'mob_pos', instanceId: mob.instanceId, mapKey: mob.mapKey, x: mob.x, y: mob.y });
+      } catch {}
+    } catch (e) {
+      console.warn('[ai-mobs] teleport persist error:', e?.message);
+    }
+  }
+
+  async function resolveMobStacks({ mobsInMap, occupancy, heroTiles, losGrid }) {
+    if (!Array.isArray(mobsInMap) || mobsInMap.length === 0) return;
+    const stacks = new Map();
+    for (const mob of mobsInMap) {
+      if (!mob || mob._tileKey == null) continue;
+      if (!stacks.has(mob._tileKey)) stacks.set(mob._tileKey, []);
+      stacks.get(mob._tileKey).push(mob);
+    }
+
+    for (const [key, stack] of stacks.entries()) {
+      if (!Array.isArray(stack) || stack.length <= 1) continue;
+      // mantém o primeiro no tile atual, desloca os demais
+      stack.sort((a, b) => {
+        const ia = Number(a?.instanceId) || 0;
+        const ib = Number(b?.instanceId) || 0;
+        return ia - ib;
+      });
+
+      for (let i = 1; i < stack.length; i++) {
+        const mob = stack[i];
+        const startCx = mob?._tileCx;
+        const startCy = mob?._tileCy;
+        if (!Number.isFinite(startCx) || !Number.isFinite(startCy)) continue;
+
+        const free = findNearestFreeTile({
+          startCx,
+          startCy,
+          occupancy,
+          heroTiles,
+          losGrid,
+          ignoreId: mob.instanceId,
+          maxDepth: 10,
+        });
+
+        if (!free) continue;
+        await teleportMobToTile({ mob, cx: free.cx, cy: free.cy, occupancy });
+      }
+    }
+  }
+
   async function tickLoop() {
     const now = Date.now();
     const dt = Math.min(0.25, (now - lastTickAt) / 1000);
@@ -356,9 +548,13 @@
     for (const [mapKey, list] of byMap.entries()) {
       const heroes = await fetchOnlineHeroesInMap(mapKey);
 
+      const heroTiles = buildHeroTileSet(heroes);
 
       const { grid, cols } = await getGrid(mapKey);
       const losGrid = { data: grid, cols };
+      const occupancy = buildMobOccupancy(list);
+
+      await resolveMobStacks({ mobsInMap: list, occupancy, heroTiles, losGrid });
 
       if (DEBUG_AI) {
         console.log(`[ai-mobs] tick map=${mapKey} heroes=${heroes.length} mobs=${list.length}`);
@@ -369,7 +565,7 @@
 
       for (const mob of list) {
         try {
-          await stepMob(now, dt, mob, heroes, losGrid);
+          await stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles);
         } catch (e) {
           console.warn('[ai-mobs] stepMob error:', e?.message);
         }
@@ -377,7 +573,7 @@
     }
   }
 
-async function stepMob(now, dt, mob, heroes, losGrid) {
+async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   decayThreat(mob, dt);
   selectTargetByThreat(now, mob, heroes, losGrid);
 
@@ -485,8 +681,8 @@ async function stepMob(now, dt, mob, heroes, losGrid) {
   mob.mode = 'chase';
   if (now >= mob.repathAt) {
     mob.repathAt = now + REPATH_MS;
-    const step = pickStepGreedy(mob, tgtPos, losGrid);
-    if (step) await moveMobAndPersist(mob, step, dt, losGrid);
+    const step = pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles);
+    if (step) await moveMobAndPersist(mob, step, dt, losGrid, occupancy);
   }
 
 }
@@ -576,7 +772,7 @@ async function stepMob(now, dt, mob, heroes, losGrid) {
     return losGrid.data[cy * losGrid.cols + cx] === 1;
   }
 
-  function pickStepGreedy(mob, tgtPos, losGrid) {
+  function pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles) {
     const c0x = Math.floor(mob.x / STEP_PX), c0y = Math.floor(mob.y / STEP_PX);
     const c1x = Math.floor(tgtPos.x / STEP_PX), c1y = Math.floor(tgtPos.y / STEP_PX);
     const dx = Math.sign(c1x - c0x), dy = Math.sign(c1y - c0y);
@@ -599,10 +795,36 @@ async function stepMob(now, dt, mob, heroes, losGrid) {
       console.log(`[ai-mobs] path cand mob=${mob.instanceId} -> ${dbg}`);
     }
 
+    const allCand = [];
+    const seen = new Set();
     for (const c of cand) {
+      const key = tileKey(c.cx, c.cy);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      allCand.push(c);
+    }
+
+    // fallback: tenta os outros dois cardinais (caso prioridade inicial esteja bloqueada)
+    const fallback = [
+      { cx: c0x + 1, cy: c0y },
+      { cx: c0x - 1, cy: c0y },
+      { cx: c0x,     cy: c0y + 1 },
+      { cx: c0x,     cy: c0y - 1 },
+    ];
+    for (const f of fallback) {
+      const key = tileKey(f.cx, f.cy);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      allCand.push(f);
+    }
+
+    for (const c of allCand) {
       const wx = c.cx * STEP_PX + STEP_PX/2;
       const wy = c.cy * STEP_PX + STEP_PX/2;
-      if (!isBlockedPx(losGrid, wx, wy)) return { x: wx, y: wy };
+      if (isBlockedPx(losGrid, wx, wy)) continue;
+      if (heroTiles && heroTiles.has(tileKey(c.cx, c.cy))) continue;
+      if (isTileBlockedByMobs(occupancy, c.cx, c.cy, mob.instanceId)) continue;
+      return { x: wx, y: wy };
     }
     if (DEBUG_AI) console.log(`[ai-mobs] path blocked mob=${mob.instanceId}`);
     return null;
@@ -619,7 +841,7 @@ function clampToMapPx(losGrid, px) {
   };
 }
 
-async function moveMobAndPersist(mob, step, dt, losGrid) {
+async function moveMobAndPersist(mob, step, dt, losGrid, occupancy) {
   const speed = CHASE_SPEED_PX_S;
   const maxMove = speed * dt;
 
@@ -629,16 +851,36 @@ async function moveMobAndPersist(mob, step, dt, losGrid) {
   const nx = dist <= maxMove ? step.x : (mob.x + ux * maxMove);
   const ny = dist <= maxMove ? step.y : (mob.y + uy * maxMove);
 
-  const prevCell = (Math.floor(mob.x/STEP_PX) << 16) | Math.floor(mob.y/STEP_PX);
+  const prevCx = Math.floor(mob.x / STEP_PX);
+  const prevCy = Math.floor(mob.y / STEP_PX);
 
   // clamp dentro do mapa (evita OOB por arredondamento/velocidade)
   const clamped = losGrid ? clampToMapPx(losGrid, { x: nx|0, y: ny|0 }) : { x: nx|0, y: ny|0 };
   mob.x = clamped.x; mob.y = clamped.y;
   mob.posUpdatedAt = Date.now(); // <<< posição do mob ficou "fresca" agora
 
-  const nextCell = (Math.floor(mob.x/STEP_PX) << 16) | Math.floor(mob.y/STEP_PX);
+  const nextCx = Math.floor(mob.x / STEP_PX);
+  const nextCy = Math.floor(mob.y / STEP_PX);
 
-  if (prevCell !== nextCell) {
+  if (prevCx !== nextCx || prevCy !== nextCy) {
+    if (occupancy) {
+      const prevKey = tileKey(prevCx, prevCy);
+      const prevSet = occupancy.get(prevKey);
+      if (prevSet) {
+        prevSet.delete(mob.instanceId);
+        if (!prevSet.size) occupancy.delete(prevKey);
+      }
+      const nextKey = tileKey(nextCx, nextCy);
+      let set = occupancy.get(nextKey);
+      if (!set) {
+        set = new Set();
+        occupancy.set(nextKey, set);
+      }
+      set.add(mob.instanceId);
+      mob._tileCx = nextCx;
+      mob._tileCy = nextCy;
+      mob._tileKey = nextKey;
+    }
     try {
       await run(
         `UPDATE monster_instances SET x=$2, y=$3, updated_at=now() WHERE id=$1`,
