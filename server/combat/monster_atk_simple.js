@@ -1294,12 +1294,29 @@ async function tick() {
               min: attackProfile?.min ?? DMG_MIN,
               max: attackProfile?.max ?? DMG_MAX,
             },
+            attackerPos: {
+              x: Number.isFinite(m.x) ? m.x : undefined,
+              y: Number.isFinite(m.y) ? m.y : undefined,
+              mapKey: targetHero.map_key ?? m.map_key,
+              face: m.face,
+              unit: 'px',
+              assumeTiles: false,
+              assumePx: true,
+            },
           });
         } catch (err) {
           console.warn('[monster_atk_simple] applyMobHit error:', err?.message);
         }
 
         if (attackRes?.ok) {
+          if (attackRes.attackerPos) {
+            const ax = Number(attackRes.attackerPos.x);
+            const ay = Number(attackRes.attackerPos.y);
+            if (Number.isFinite(ax)) m.x = ax;
+            if (Number.isFinite(ay)) m.y = ay;
+            const faceFromHit = typeof attackRes.attackerPos.face === 'string' ? attackRes.attackerPos.face : null;
+            if (faceFromHit) m.face = faceFromHit;
+          }
           _lastAtkAt.set(m.id, now);
           await markLastHit(m.id, targetHero.hero_id);
           _aggroUntil.set(m.id, now + AGGRO_LOSS_MS);
@@ -1312,13 +1329,21 @@ async function tick() {
             }
           } else if (attackRes.hpAfter != null) {
             targetHero.hp = attackRes.hpAfter;
+            if (attackRes.heroPos) {
+              const hx2 = Number(attackRes.heroPos.x);
+              const hy2 = Number(attackRes.heroPos.y);
+              if (Number.isFinite(hx2)) targetHero.x = hx2;
+              if (Number.isFinite(hy2)) targetHero.y = hy2;
+            }
           }
 
           updateLivePos(m);
 
           if (global._sendToMap) {
             const attackIntervalMs = cooldownMs;
-            global._sendToMap(targetHero.map_key, {
+            const hitMapKey = attackRes.attackerPos?.mapKey ?? targetHero.map_key ?? m.map_key;
+            if (hitMapKey != null) targetHero.map_key = hitMapKey;
+            global._sendToMap(hitMapKey, {
               type: 'hero_hit',
               heroId: targetHero.hero_id,
               dmg: attackRes.damage,
@@ -1334,7 +1359,7 @@ async function tick() {
                 name: m.monster_name || m.monster_key || 'Monster',
                 x: m.x,
                 y: m.y,
-                mapKey: targetHero.map_key,
+                mapKey: hitMapKey,
                 spawnId: m.spawn_id,
                 face: m.face,
                 attackIntervalMs,
