@@ -1298,9 +1298,8 @@ async function tick() {
           console.warn('[monster_atk_simple] applyMobHit error:', err?.message);
         }
 
-        _lastAtkAt.set(m.id, now);
-
         if (attackRes?.ok) {
+          _lastAtkAt.set(m.id, now);
           await markLastHit(m.id, targetHero.hero_id);
           _aggroUntil.set(m.id, now + AGGRO_LOSS_MS);
 
@@ -1315,7 +1314,6 @@ async function tick() {
           }
 
           updateLivePos(m);
-          emitMonsterMove(m);
 
           if (global._sendToMap) {
             const attackIntervalMs = cooldownMs;
