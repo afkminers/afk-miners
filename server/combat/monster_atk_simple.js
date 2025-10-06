@@ -1123,6 +1123,7 @@ async function tick() {
       }
       const heroTilesForMap = heroTilesByMap.get(mapKeyStr) || new Set();
       const mapCollision = await ensureCollisionFor(m.map_key);
+      const targetInfo = selectHeroTarget({ monster: m, heroes: hs, now });
 
       if (!_wasQuantized.has(m.id)) {
         const mx0 = tileOf(m.x), my0 = tileOf(m.y);
