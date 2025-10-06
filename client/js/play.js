@@ -1084,7 +1084,16 @@ function triggerMonsterAttackAnimation(msg = {}) {
     face = pickFaceFromDelta(dx, dy, face);
   }
 
-  setMonsterAction(state, sprite, 'attack', { face, until: now + 520 });
+  const msgInterval = Number(msg.attackIntervalMs ?? msg.attackMs ?? msg.attack_ms);
+  const monsterInterval = Number(msg.monster?.attackIntervalMs ?? msg.monster?.attackInterval ?? msg.monster?.attack_ms);
+  let attackDuration = Number.isFinite(msgInterval) && msgInterval > 0
+    ? msgInterval
+    : Number.isFinite(monsterInterval) && monsterInterval > 0
+      ? monsterInterval
+      : 520;
+  attackDuration = Math.max(260, Math.min(attackDuration, 6000));
+
+  setMonsterAction(state, sprite, 'attack', { face, until: now + attackDuration });
   state.animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
   state.dead = false;
   state.face = face;
