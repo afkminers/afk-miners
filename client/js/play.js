@@ -534,10 +534,8 @@ function removeMonsterFromTile(state) {
   state.blockedTiles.clear();
 }
 
-function updateMonsterBlocking(state, worldX, worldY) {
-  if (!state) return;
-  if (!state.blockedTiles) state.blockedTiles = new Set();
-  removeMonsterFromTile(state);
+function computeMonsterBlockingInfo(state, worldX, worldY) {
+  if (!state) return null;
 
   const sprite = state.sprite || null;
   const metaCandidate = sprite?.meta || state.meta || (state.monsterKey ? findMetaFor(state.monsterKey) : null) || null;
@@ -569,7 +567,7 @@ function updateMonsterBlocking(state, worldX, worldY) {
     : (Number.isFinite(state.y)
         ? state.y
         : (Number.isFinite(sprite?.y) ? sprite.y : NaN));
-  if (!Number.isFinite(px) || !Number.isFinite(py)) return;
+  if (!Number.isFinite(px) || !Number.isFinite(py)) return null;
 
   const spriteLeft = px - frameW * anchorX;
   const spriteTop = py - frameH * anchorY;
@@ -587,20 +585,108 @@ function updateMonsterBlocking(state, worldX, worldY) {
   const minCy = Math.floor(rectTop / TILE);
   const maxCy = Math.floor((rectTop + rectHeight - 1) / TILE);
 
-  if (!Number.isFinite(minCx) || !Number.isFinite(maxCx) || !Number.isFinite(minCy) || !Number.isFinite(maxCy)) return;
+  if (!Number.isFinite(minCx) || !Number.isFinite(maxCx) || !Number.isFinite(minCy) || !Number.isFinite(maxCy)) return null;
 
+  const keys = [];
   for (let cy = minCy; cy <= maxCy; cy++) {
     for (let cx = minCx; cx <= maxCx; cx++) {
-      const key = monsterTileKey(cx, cy);
-      let set = MONSTER_BLOCKED_TILES.get(key);
-      if (!set) {
-        set = new Set();
-        MONSTER_BLOCKED_TILES.set(key, set);
-      }
-      set.add(state.id);
-      state.blockedTiles.add(key);
+      keys.push(monsterTileKey(cx, cy));
     }
   }
+
+  const heroTiles = HERO_BLOCK_STATE?.tiles;
+  let heroConflict = false;
+  if (heroTiles && typeof heroTiles.has === 'function' && heroTiles.size) {
+    for (const key of keys) {
+      if (heroTiles.has(key)) { heroConflict = true; break; }
+    }
+  }
+
+  return { keys, heroConflict };
+}
+
+function updateMonsterBlocking(state, worldX, worldY, opts = {}) {
+  if (!state) return false;
+  if (!state.blockedTiles) state.blockedTiles = new Set();
+
+  const info = (opts && typeof opts === 'object' && opts.info) || computeMonsterBlockingInfo(state, worldX, worldY);
+  const ignoreHero = !!(opts && typeof opts === 'object' && opts.ignoreHero);
+
+  if (!info || !Array.isArray(info.keys) || !info.keys.length) {
+    removeMonsterFromTile(state);
+    return true;
+  }
+
+  if (!ignoreHero && info.heroConflict) {
+    return false;
+  }
+
+  removeMonsterFromTile(state);
+  for (const key of info.keys) {
+    let set = MONSTER_BLOCKED_TILES.get(key);
+    if (!set) {
+      set = new Set();
+      MONSTER_BLOCKED_TILES.set(key, set);
+    }
+    set.add(state.id);
+    state.blockedTiles.add(key);
+  }
+  return true;
+}
+
+function resolveMonsterHeroConflict(state, desiredX, desiredY, prevX, prevY, initialInfo = null) {
+  if (!state) return null;
+
+  let info = initialInfo || computeMonsterBlockingInfo(state, desiredX, desiredY);
+  if (!info) return null;
+  if (!info.heroConflict) return { x: desiredX, y: desiredY, info };
+
+  const tried = new Set();
+  function pushCandidate(wx, wy) {
+    if (!Number.isFinite(wx) || !Number.isFinite(wy)) return;
+    const key = `${Math.floor(wx / TILE)},${Math.floor(wy / TILE)}`;
+    if (tried.has(key)) return;
+    tried.add(key);
+    candidates.push({ x: wx, y: wy });
+  }
+
+  const candidates = [];
+  if (Number.isFinite(prevX) && Number.isFinite(prevY)) pushCandidate(prevX, prevY);
+  if (Number.isFinite(state.x) && Number.isFinite(state.y)) pushCandidate(state.x, state.y);
+
+  const heroPos = window.GameScene?.controller?.getPosition?.();
+  if (heroPos && Number.isFinite(heroPos.x) && Number.isFinite(heroPos.y)) {
+    const dx = desiredX - heroPos.x;
+    const dy = desiredY - heroPos.y;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+    const signX = dx === 0 ? 0 : (dx > 0 ? 1 : -1);
+    const signY = dy === 0 ? 0 : (dy > 0 ? 1 : -1);
+
+    if (absDx >= absDy) {
+      pushCandidate(heroPos.x + (signX || 1) * TILE, heroPos.y);
+      pushCandidate(heroPos.x, heroPos.y + TILE);
+      pushCandidate(heroPos.x, heroPos.y - TILE);
+    } else {
+      pushCandidate(heroPos.x, heroPos.y + (signY || 1) * TILE);
+      pushCandidate(heroPos.x + TILE, heroPos.y);
+      pushCandidate(heroPos.x - TILE, heroPos.y);
+    }
+
+    pushCandidate(heroPos.x + TILE, heroPos.y);
+    pushCandidate(heroPos.x - TILE, heroPos.y);
+    pushCandidate(heroPos.x, heroPos.y + TILE);
+    pushCandidate(heroPos.x, heroPos.y - TILE);
+  }
+
+  for (const cand of candidates) {
+    const candInfo = computeMonsterBlockingInfo(state, cand.x, cand.y);
+    if (candInfo && !candInfo.heroConflict) {
+      return { x: cand.x, y: cand.y, info: candInfo };
+    }
+  }
+
+  return null;
 }
 
 function clearMonsterBlocking(id) {
@@ -748,6 +834,19 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
   const prevX = Number.isFinite(current.x) ? current.x : (Number.isFinite(state.renderX) ? state.renderX : x);
   const prevY = Number.isFinite(current.y) ? current.y : (Number.isFinite(state.renderY) ? state.renderY : y);
 
+  let blockingInfo = computeMonsterBlockingInfo(state, x, y);
+  if (blockingInfo && blockingInfo.heroConflict) {
+    const resolved = resolveMonsterHeroConflict(state, x, y, prevX, prevY, blockingInfo);
+    if (!resolved) {
+      state.lastServerAt = now;
+      SERVER_MONSTER_STATE.set(String(id), state);
+      return;
+    }
+    x = resolved.x;
+    y = resolved.y;
+    blockingInfo = resolved.info || computeMonsterBlockingInfo(state, x, y);
+  }
+
   const dx = x - prevX;
   const dy = y - prevY;
   const absDx = Math.abs(dx);
@@ -876,6 +975,13 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
   const finalFace = segments && segments.length ? (segments[segments.length - 1].face || face) : face;
   const initialFace = segments && segments.length ? (segments[0].face || finalFace) : finalFace;
 
+  const blockingApplied = updateMonsterBlocking(state, x, y, { info: blockingInfo });
+  if (!blockingApplied) {
+    state.lastServerAt = now;
+    SERVER_MONSTER_STATE.set(String(id), state);
+    return;
+  }
+
   state.x = x;
   state.y = y;
   state.dead = false;
@@ -932,7 +1038,6 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
     }
   }
 
-  updateMonsterBlocking(state, x, y);
   state.lastServerAt = now;
   SERVER_MONSTER_STATE.set(String(id), state);
 }
