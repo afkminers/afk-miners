@@ -27,7 +27,7 @@ anims:
     loop: true
 
   walk:
-    fps: 8
+    fps: 3
     frames: 5 # padrão
     framesByDir:
       # override por direção
