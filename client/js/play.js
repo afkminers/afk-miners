@@ -292,7 +292,7 @@ window.GameScene.onMonsterDead = (instanceId) => {
 const SERVER_MONSTER_STATE = new Map(); // id -> { sprite, x, y, spawnId, monsterKey, mapKey, dead, renderX, renderY, animSpeedMultiplier, isMoving, blockedTiles, lastServerAt }
 const UNBOUND_SERVER_MONSTERS = new Set(); // ids aguardando sprite
 const MONSTER_BLOCKED_TILES = new Map(); // "cx,cy" -> Set(instanceId)
-const HERO_BLOCK_STATE = { tiles: new Set(), lastX: null, lastY: null };
+const HERO_BLOCK_STATE = { tiles: new Set(), lastX: null, lastY: null, safeX: null, safeY: null };
 let _serverMonsterRetryScheduled = false;
 
 const SERVER_MONSTER_STEP_MS = 150;
@@ -432,10 +432,11 @@ function monsterTileKey(cx, cy) {
 
 function clearHeroBlocking() {
   if (!HERO_BLOCK_STATE || !HERO_BLOCK_STATE.tiles) return;
-  if (!HERO_BLOCK_STATE.tiles.size) return;
-  HERO_BLOCK_STATE.tiles.clear();
+  if (HERO_BLOCK_STATE.tiles.size) HERO_BLOCK_STATE.tiles.clear();
   HERO_BLOCK_STATE.lastX = null;
   HERO_BLOCK_STATE.lastY = null;
+  HERO_BLOCK_STATE.safeX = null;
+  HERO_BLOCK_STATE.safeY = null;
 }
 
 function heroSpriteMeta() {
@@ -488,37 +489,66 @@ function updateHeroBlocking(px, py) {
     return;
   }
 
-  const lastX = HERO_BLOCK_STATE.lastX;
-  const lastY = HERO_BLOCK_STATE.lastY;
-  if (Number.isFinite(lastX) && Number.isFinite(lastY)) {
-    const dx = Math.abs(px - lastX);
-    const dy = Math.abs(py - lastY);
-    if (dx < 0.1 && dy < 0.1) return;
+  const nextKeys = new Set(heroFootboxTiles(px, py));
+
+  let overlapsMonster = false;
+  for (const key of nextKeys) {
+    const [sx, sy] = String(key).split(',');
+    const cx = Number(sx);
+    const cy = Number(sy);
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
+    if (isTileBlockedByMonster(cx, cy, { ignoreHero: true })) {
+      overlapsMonster = true;
+      break;
+    }
   }
 
-  const nextKeys = new Set(heroFootboxTiles(px, py));
-  const current = HERO_BLOCK_STATE.tiles;
+  if (overlapsMonster) {
+    let safeX = Number.isFinite(HERO_BLOCK_STATE.safeX) ? HERO_BLOCK_STATE.safeX : null;
+    let safeY = Number.isFinite(HERO_BLOCK_STATE.safeY) ? HERO_BLOCK_STATE.safeY : null;
 
-  let changed = false;
+    if (!Number.isFinite(safeX) || !Number.isFinite(safeY)) {
+      const cx = Math.floor(px / TILE);
+      const cy = Math.floor(py / TILE);
+      safeX = cx * TILE + TILE / 2;
+      safeY = cy * TILE + TILE / 2;
+    }
+
+    if (Number.isFinite(safeX) && Number.isFinite(safeY)) {
+      HERO_BLOCK_STATE.safeX = safeX;
+      HERO_BLOCK_STATE.safeY = safeY;
+      const dx = Math.abs(px - safeX);
+      const dy = Math.abs(py - safeY);
+      if (dx > 0.1 || dy > 0.1) {
+        const ctrl = window.GameScene?.controller;
+        if (ctrl && typeof ctrl.setPosition === 'function') {
+          ctrl.setPosition(safeX, safeY);
+        } else {
+          HERO_BLOCK_STATE.lastX = safeX;
+          HERO_BLOCK_STATE.lastY = safeY;
+        }
+      }
+    }
+    return;
+  }
+
+  const current = HERO_BLOCK_STATE.tiles;
   const removals = [];
   for (const key of current) {
     if (!nextKeys.has(key)) removals.push(key);
   }
   for (const key of removals) {
     current.delete(key);
-    changed = true;
   }
 
   for (const key of nextKeys) {
-    if (!current.has(key)) {
-      current.add(key);
-      changed = true;
-    }
+    current.add(key);
   }
 
   HERO_BLOCK_STATE.lastX = px;
   HERO_BLOCK_STATE.lastY = py;
-  if (!changed) return;
+  HERO_BLOCK_STATE.safeX = px;
+  HERO_BLOCK_STATE.safeY = py;
 }
 
 function removeMonsterFromTile(state) {
