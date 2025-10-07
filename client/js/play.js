@@ -15,6 +15,7 @@ import { HeroState } from './state/hero-state.js';
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
 const TILE = 32;
+const playerVis = { w: 32, h: 32, img: null, heroKey: null, anchorX: 0.5, anchorY: 0.9 };
 // Desliga a IA local de mobs; posição deve vir do servidor
 const ENABLE_LOCAL_MOB_AI = false;
 
@@ -115,24 +116,25 @@ onMessage('hero_hit', (msg) => {
   const line = `[Dano] ${mobName} te acertou por ${amount} (HP: ${hpStr})`;
   if (window.Chat?.pushLog) window.Chat.pushLog(line); else console.log('[LOG]', line);
 
-  // Dano flutuante acima do monstro (se soubermos posição) — cai pro player se não tiver
-  if (window.HeroDamageUI && typeof window.HeroDamageUI.spawn === 'function') {
-    let x = Number(msg?.monster?.x), y = Number(msg?.monster?.y);
+  // Dano flutuante acima do herói atingido
+  if (window.HeroDamageUI) {
+    const spawn = typeof window.HeroDamageUI.spawn === 'function' ? window.HeroDamageUI.spawn : null;
+    const spawnAtHero = typeof window.HeroDamageUI.spawnAtHero === 'function' ? window.HeroDamageUI.spawnAtHero : null;
 
-    // Se só veio instanceId, tenta achar a sprite do mob ligado ao instanceId
-    if ((!Number.isFinite(x) || !Number.isFinite(y)) && msg.instanceId && window.GameScene?.getMobByInstanceId) {
-      const s = window.GameScene.getMobByInstanceId(String(msg.instanceId));
-      if (s) { x = s.x; y = s.y; }
+    let hx = null;
+    let hy = null;
+    const heroPos = getHeroWorldPosition(msg.heroId);
+    if (heroPos) { hx = heroPos.x; hy = heroPos.y; }
+
+    if ((!Number.isFinite(hx) || !Number.isFinite(hy)) && window.GameScene?.controller?.getPosition) {
+      const p = window.GameScene.controller.getPosition();
+      if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) { hx = p.x; hy = p.y; }
     }
 
-    // Fallback: usa a posição do player
-    if (!Number.isFinite(x) || !Number.isFinite(y)) {
-      const p = window.GameScene?.controller?.getPosition?.();
-      if (p) { x = p.x; y = p.y - 16; }
-    }
-
-    if (Number.isFinite(x) && Number.isFinite(y)) {
-      window.HeroDamageUI.spawn({ x, y, amount, kind: 'from_mob' });
+    if (Number.isFinite(hx) && Number.isFinite(hy) && spawn) {
+      spawn({ x: hx, y: hy, amount, kind: 'from_mob' });
+    } else if (spawnAtHero) {
+      spawnAtHero(amount, 'from_mob', msg.heroId);
     }
   }
 
@@ -287,9 +289,12 @@ window.GameScene.onMonsterDead = (instanceId) => {
 };
 
 // ======= Server-driven monster state =======
-const SERVER_MONSTER_STATE = new Map(); // id -> { sprite, x, y, spawnId, monsterKey, mapKey, dead, renderX, renderY, animSpeedMultiplier, isMoving, blockKey, tileX, tileY, lastServerAt }
+const SERVER_MONSTER_STATE = new Map(); // id -> { sprite, x, y, spawnId, monsterKey, mapKey, dead, renderX, renderY, animSpeedMultiplier, isMoving, blockedTiles, lastServerAt }
 const UNBOUND_SERVER_MONSTERS = new Set(); // ids aguardando sprite
 const MONSTER_BLOCKED_TILES = new Map(); // "cx,cy" -> Set(instanceId)
+const HERO_BLOCK_STATE = { tiles: new Set(), lastX: null, lastY: null, safeX: null, safeY: null };
+let heroFootboxBlockedFn = null;
+let _heroRepositioning = false;
 let _serverMonsterRetryScheduled = false;
 
 const SERVER_MONSTER_STEP_MS = 150;
@@ -317,13 +322,12 @@ function getOrCreateServerMonsterState(id) {
       renderY: null,
       animSpeedMultiplier: SERVER_MONSTER_IDLE_ANIM,
       isMoving: false,
-      blockKey: null,
-      tileX: null,
-      tileY: null,
+      blockedTiles: new Set(),
       lastServerAt: null,
       face: 'south',
       action: 'idle',
       actionUntil: null,
+      meta: null,
     };
     SERVER_MONSTER_STATE.set(key, state);
   }
@@ -428,34 +432,268 @@ function monsterTileKey(cx, cy) {
   return `${cx | 0},${cy | 0}`;
 }
 
-function removeMonsterFromTile(state) {
-  if (!state || !state.blockKey) return;
-  const set = MONSTER_BLOCKED_TILES.get(state.blockKey);
-  if (set) {
-    set.delete(state.id);
-    if (!set.size) MONSTER_BLOCKED_TILES.delete(state.blockKey);
-  }
-  state.blockKey = null;
-  state.tileX = null;
-  state.tileY = null;
+function clearHeroBlocking() {
+  if (!HERO_BLOCK_STATE || !HERO_BLOCK_STATE.tiles) return;
+  if (HERO_BLOCK_STATE.tiles.size) HERO_BLOCK_STATE.tiles.clear();
+  HERO_BLOCK_STATE.lastX = null;
+  HERO_BLOCK_STATE.lastY = null;
+  HERO_BLOCK_STATE.safeX = null;
+  HERO_BLOCK_STATE.safeY = null;
+  _heroRepositioning = false;
 }
 
-function updateMonsterBlocking(state, cx, cy) {
-  if (!state) return;
-  removeMonsterFromTile(state);
-  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return;
-  const ix = Math.floor(cx);
-  const iy = Math.floor(cy);
-  const key = monsterTileKey(ix, iy);
-  let set = MONSTER_BLOCKED_TILES.get(key);
-  if (!set) {
-    set = new Set();
-    MONSTER_BLOCKED_TILES.set(key, set);
+function heroSpriteMeta() {
+  const frameW = Number.isFinite(playerVis?.w) && playerVis.w > 0 ? playerVis.w : TILE;
+  const frameH = Number.isFinite(playerVis?.h) && playerVis.h > 0 ? playerVis.h : TILE;
+  let anchorX = Number.isFinite(playerVis?.anchorX) ? playerVis.anchorX : 0.5;
+  let anchorY = Number.isFinite(playerVis?.anchorY) ? playerVis.anchorY : 0.9;
+  anchorX = Math.max(0, Math.min(1, anchorX));
+  anchorY = Math.max(0, Math.min(1, anchorY));
+  return { frameW, frameH, anchorX, anchorY };
+}
+
+function heroFootboxTiles(px, py) {
+  if (!Number.isFinite(px) || !Number.isFinite(py)) return [];
+  const { frameW, frameH, anchorX, anchorY } = heroSpriteMeta();
+
+  const spriteLeft = px - frameW * anchorX;
+  const spriteTop = py - frameH * anchorY;
+  const spriteBottom = spriteTop + frameH;
+
+  const footHeight = Math.max(TILE / 2, Math.min(TILE, frameH));
+  const tolerance = 2;
+  const rectHeight = footHeight + tolerance * 2;
+  const rectTop = spriteBottom - footHeight - tolerance;
+  const rectWidth = frameW + tolerance * 2;
+  const rectLeft = spriteLeft - tolerance;
+
+  const minCx = Math.floor(rectLeft / TILE);
+  const maxCx = Math.floor((rectLeft + rectWidth - 1) / TILE);
+  const minCy = Math.floor(rectTop / TILE);
+  const maxCy = Math.floor((rectTop + rectHeight - 1) / TILE);
+
+  if (!Number.isFinite(minCx) || !Number.isFinite(maxCx) || !Number.isFinite(minCy) || !Number.isFinite(maxCy)) {
+    return [];
   }
-  set.add(state.id);
-  state.blockKey = key;
-  state.tileX = ix;
-  state.tileY = iy;
+
+  const keys = [];
+  for (let cy = minCy; cy <= maxCy; cy++) {
+    for (let cx = minCx; cx <= maxCx; cx++) {
+      keys.push(monsterTileKey(cx, cy));
+    }
+  }
+  return keys;
+}
+
+function findNearestHeroSafeSpot(px, py, maxRadius = 4) {
+  if (!Number.isFinite(px) || !Number.isFinite(py)) return null;
+  if (typeof heroFootboxBlockedFn !== 'function') return null;
+
+  const startCx = Math.floor(px / TILE);
+  const startCy = Math.floor(py / TILE);
+  if (!Number.isFinite(startCx) || !Number.isFinite(startCy)) return null;
+
+  const visited = new Set();
+  const queue = [{ cx: startCx, cy: startCy, dist: 0 }];
+  const steps = [
+    { dx: 1, dy: 0 },
+    { dx: -1, dy: 0 },
+    { dx: 0, dy: 1 },
+    { dx: 0, dy: -1 },
+    { dx: 1, dy: 1 },
+    { dx: 1, dy: -1 },
+    { dx: -1, dy: 1 },
+    { dx: -1, dy: -1 },
+  ];
+
+  while (queue.length) {
+    const node = queue.shift();
+    const key = monsterTileKey(node.cx, node.cy);
+    if (visited.has(key)) continue;
+    visited.add(key);
+
+    const centerX = node.cx * TILE + TILE / 2;
+    const centerY = node.cy * TILE + TILE / 2;
+    if (!heroFootboxBlockedFn(centerX, centerY)) {
+      return { x: centerX, y: centerY };
+    }
+
+    if (node.dist >= maxRadius) continue;
+    for (const step of steps) {
+      const nextCx = node.cx + step.dx;
+      const nextCy = node.cy + step.dy;
+      const nextKey = monsterTileKey(nextCx, nextCy);
+      if (visited.has(nextKey)) continue;
+      queue.push({ cx: nextCx, cy: nextCy, dist: node.dist + 1 });
+    }
+  }
+
+  return null;
+}
+
+function updateHeroBlocking(px, py) {
+  if (!HERO_BLOCK_STATE || !HERO_BLOCK_STATE.tiles) return;
+  if (!Number.isFinite(px) || !Number.isFinite(py)) {
+    clearHeroBlocking();
+    return;
+  }
+
+  const nextKeys = new Set(heroFootboxTiles(px, py));
+
+  const overlapsMonster = heroFootboxBlockedFn ? heroFootboxBlockedFn(px, py) : false;
+
+  if (overlapsMonster) {
+    if (_heroRepositioning) return;
+
+    let safeX = Number.isFinite(HERO_BLOCK_STATE.safeX) ? HERO_BLOCK_STATE.safeX : null;
+    let safeY = Number.isFinite(HERO_BLOCK_STATE.safeY) ? HERO_BLOCK_STATE.safeY : null;
+
+    if (!Number.isFinite(safeX) || !Number.isFinite(safeY)) {
+      safeX = Number.isFinite(HERO_BLOCK_STATE.lastX) ? HERO_BLOCK_STATE.lastX : null;
+      safeY = Number.isFinite(HERO_BLOCK_STATE.lastY) ? HERO_BLOCK_STATE.lastY : null;
+    }
+
+    if (!Number.isFinite(safeX) || !Number.isFinite(safeY)) {
+      const cx = Math.floor(px / TILE);
+      const cy = Math.floor(py / TILE);
+      safeX = cx * TILE + TILE / 2;
+      safeY = cy * TILE + TILE / 2;
+    }
+
+    let targetX = Number.isFinite(safeX) ? safeX : null;
+    let targetY = Number.isFinite(safeY) ? safeY : null;
+
+    if (Number.isFinite(targetX) && Number.isFinite(targetY) && heroFootboxBlockedFn && heroFootboxBlockedFn(targetX, targetY)) {
+      const fallback = findNearestHeroSafeSpot(px, py);
+      if (fallback && Number.isFinite(fallback.x) && Number.isFinite(fallback.y)) {
+        targetX = fallback.x;
+        targetY = fallback.y;
+      }
+    }
+
+    if (Number.isFinite(targetX) && Number.isFinite(targetY)) {
+      HERO_BLOCK_STATE.safeX = targetX;
+      HERO_BLOCK_STATE.safeY = targetY;
+
+      const dx = Math.abs(px - targetX);
+      const dy = Math.abs(py - targetY);
+      if (dx > 0.1 || dy > 0.1) {
+        const ctrl = window.GameScene?.controller;
+        if (ctrl && typeof ctrl.setPosition === 'function') {
+          _heroRepositioning = true;
+          try {
+            ctrl.setPosition(targetX, targetY);
+          } finally {
+            _heroRepositioning = false;
+          }
+        } else {
+          HERO_BLOCK_STATE.lastX = targetX;
+          HERO_BLOCK_STATE.lastY = targetY;
+        }
+      }
+    }
+    return;
+  }
+
+  const current = HERO_BLOCK_STATE.tiles;
+  const removals = [];
+  for (const key of current) {
+    if (!nextKeys.has(key)) removals.push(key);
+  }
+  for (const key of removals) {
+    current.delete(key);
+  }
+
+  for (const key of nextKeys) {
+    current.add(key);
+  }
+
+  HERO_BLOCK_STATE.lastX = px;
+  HERO_BLOCK_STATE.lastY = py;
+  HERO_BLOCK_STATE.safeX = px;
+  HERO_BLOCK_STATE.safeY = py;
+}
+
+function removeMonsterFromTile(state) {
+  if (!state) return;
+  if (!state.blockedTiles) state.blockedTiles = new Set();
+  if (state.blockedTiles.size === 0) return;
+  for (const key of state.blockedTiles) {
+    const set = MONSTER_BLOCKED_TILES.get(key);
+    if (!set) continue;
+    set.delete(state.id);
+    if (!set.size) MONSTER_BLOCKED_TILES.delete(key);
+  }
+  state.blockedTiles.clear();
+}
+
+function updateMonsterBlocking(state, worldX, worldY) {
+  if (!state) return;
+  if (!state.blockedTiles) state.blockedTiles = new Set();
+  removeMonsterFromTile(state);
+
+  const sprite = state.sprite || null;
+  const metaCandidate = sprite?.meta || state.meta || (state.monsterKey ? findMetaFor(state.monsterKey) : null) || null;
+  if (metaCandidate && !state.meta) state.meta = metaCandidate;
+  if (sprite && metaCandidate && !sprite.meta) sprite.meta = metaCandidate;
+
+  const meta = metaCandidate || {};
+  let frameW = Number(meta.frame?.width);
+  let frameH = Number(meta.frame?.height);
+  if (!Number.isFinite(frameW) || frameW <= 0) frameW = Number(sprite?.w) || TILE;
+  if (!Number.isFinite(frameH) || frameH <= 0) frameH = Number(sprite?.h) || TILE;
+  if (!Number.isFinite(frameW) || frameW <= 0) frameW = TILE;
+  if (!Number.isFinite(frameH) || frameH <= 0) frameH = TILE;
+
+  let anchorX = Number(meta.anchor?.x);
+  let anchorY = Number(meta.anchor?.y);
+  if (!Number.isFinite(anchorX)) anchorX = 0.5;
+  if (!Number.isFinite(anchorY)) anchorY = 0.9;
+  anchorX = Math.max(0, Math.min(1, anchorX));
+  anchorY = Math.max(0, Math.min(1, anchorY));
+
+  const px = Number.isFinite(worldX)
+    ? worldX
+    : (Number.isFinite(state.x)
+        ? state.x
+        : (Number.isFinite(sprite?.x) ? sprite.x : NaN));
+  const py = Number.isFinite(worldY)
+    ? worldY
+    : (Number.isFinite(state.y)
+        ? state.y
+        : (Number.isFinite(sprite?.y) ? sprite.y : NaN));
+  if (!Number.isFinite(px) || !Number.isFinite(py)) return;
+
+  const spriteLeft = px - frameW * anchorX;
+  const spriteTop = py - frameH * anchorY;
+  const spriteBottom = spriteTop + frameH;
+
+  const footHeight = Math.max(TILE / 2, Math.min(TILE, frameH));
+  const tolerance = 2;
+  const rectHeight = footHeight + tolerance * 2;
+  const rectTop = spriteBottom - footHeight - tolerance;
+  const rectWidth = frameW + tolerance * 2;
+  const rectLeft = spriteLeft - tolerance;
+
+  const minCx = Math.floor(rectLeft / TILE);
+  const maxCx = Math.floor((rectLeft + rectWidth - 1) / TILE);
+  const minCy = Math.floor(rectTop / TILE);
+  const maxCy = Math.floor((rectTop + rectHeight - 1) / TILE);
+
+  if (!Number.isFinite(minCx) || !Number.isFinite(maxCx) || !Number.isFinite(minCy) || !Number.isFinite(maxCy)) return;
+
+  for (let cy = minCy; cy <= maxCy; cy++) {
+    for (let cx = minCx; cx <= maxCx; cx++) {
+      const key = monsterTileKey(cx, cy);
+      let set = MONSTER_BLOCKED_TILES.get(key);
+      if (!set) {
+        set = new Set();
+        MONSTER_BLOCKED_TILES.set(key, set);
+      }
+      set.add(state.id);
+      state.blockedTiles.add(key);
+    }
+  }
 }
 
 function clearMonsterBlocking(id) {
@@ -464,8 +702,10 @@ function clearMonsterBlocking(id) {
   removeMonsterFromTile(state);
 }
 
-function isTileBlockedByMonster(cx, cy) {
+function isTileBlockedByMonster(cx, cy, opts = {}) {
+  const ignoreHero = !!(opts && typeof opts === 'object' && opts.ignoreHero);
   const key = monsterTileKey(cx, cy);
+  if (!ignoreHero && HERO_BLOCK_STATE?.tiles?.has?.(key)) return true;
   const set = MONSTER_BLOCKED_TILES.get(key);
   if (!set || !set.size) return false;
   let alive = false;
@@ -785,7 +1025,7 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
     }
   }
 
-  updateMonsterBlocking(state, x / TILE, y / TILE);
+  updateMonsterBlocking(state, x, y);
   state.lastServerAt = now;
   SERVER_MONSTER_STATE.set(String(id), state);
 }
@@ -1084,7 +1324,16 @@ function triggerMonsterAttackAnimation(msg = {}) {
     face = pickFaceFromDelta(dx, dy, face);
   }
 
-  setMonsterAction(state, sprite, 'attack', { face, until: now + 520 });
+  const msgInterval = Number(msg.attackIntervalMs ?? msg.attackMs ?? msg.attack_ms);
+  const monsterInterval = Number(msg.monster?.attackIntervalMs ?? msg.monster?.attackInterval ?? msg.monster?.attack_ms);
+  let attackDuration = Number.isFinite(msgInterval) && msgInterval > 0
+    ? msgInterval
+    : Number.isFinite(monsterInterval) && monsterInterval > 0
+      ? monsterInterval
+      : 520;
+  attackDuration = Math.max(260, Math.min(attackDuration, 6000));
+
+  setMonsterAction(state, sprite, 'attack', { face, until: now + attackDuration });
   state.animSpeedMultiplier = SERVER_MONSTER_IDLE_ANIM;
   state.dead = false;
   state.face = face;
@@ -1124,6 +1373,9 @@ onMessage('mob_pos', handleLegacyMobPos);
 onMessage('monster_dead', handleServerMonsterDead);
 window.GameScene.serverMonsters = SERVER_MONSTER_STATE;
 window.GameScene.isTileBlockedByMonster = isTileBlockedByMonster;
+window.GameScene.heroBlockedTiles = HERO_BLOCK_STATE.tiles;
+window.GameScene.updateHeroBlocking = updateHeroBlocking;
+window.GameScene.clearHeroBlocking = clearHeroBlocking;
 window.GameScene.monsterBlockedTiles = MONSTER_BLOCKED_TILES;
 
 // =============== Canvas/HUD flexível (querystring + auto) ===============
@@ -1441,9 +1693,6 @@ function drawLoot(l) {
   ctx.restore();
 }
 
-/* ========================= Player Visual ========================== */
-const playerVis = { w: 32, h: 32, img: null, heroKey: null };
-
 /* ============================== Render ============================ */
 function clear() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
@@ -1476,8 +1725,10 @@ function drawGround(cameraObj) {
 function drawPlayer(controller) {
   const p = controller.getPosition();
   if (imgReady(playerVis.img)) {
-    const ox = Math.round(p.x - playerVis.w * 0.5);
-    const oy = Math.round(p.y - playerVis.h * 0.9);
+    const anchorX = Number.isFinite(playerVis.anchorX) ? playerVis.anchorX : 0.5;
+    const anchorY = Number.isFinite(playerVis.anchorY) ? playerVis.anchorY : 0.9;
+    const ox = Math.round(p.x - playerVis.w * anchorX);
+    const oy = Math.round(p.y - playerVis.h * anchorY);
     ctx.drawImage(playerVis.img, ox, oy, playerVis.w, playerVis.h);
   } else {
     ctx.save();
@@ -1838,53 +2089,13 @@ function updateRespawns(now) {
   }
 }
 
-// === UI mínima: números de dano flutuantes ===
-(function(){
-  const ACTIVE = []; // {x,y,amt,t,life}
-  const LIFE_MS = 900;
-
-  function spawn({ x, y, amount, kind }) {
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    ACTIVE.push({ x, y, amt: Number(amount)||0, t: performance.now(), life: LIFE_MS, kind: String(kind||'') });
-  }
-
-  function render(ctx, camera, dt) {
-    if (!ACTIVE.length) return;
-    const now = performance.now();
-    for (let i = ACTIVE.length - 1; i >= 0; i--) {
-      const p = ACTIVE[i];
-      const age = now - p.t;
-      if (age >= p.life) { ACTIVE.splice(i,1); continue; }
-      const alpha = 1 - (age / p.life);
-      const rise = Math.min(22, age * 0.04);
-      const sx = (p.x - camera.x) * (camera.getZoom?.()||1);
-      const sy = (p.y - camera.y - rise) * (camera.getZoom?.()||1);
-
-      ctx.save();
-      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-      ctx.font = 'bold 14px monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      // contorno simples
-      ctx.fillStyle = 'black';
-      ctx.fillText(String(p.amt), Math.round(sx)+1, Math.round(sy)+1);
-      // dentro (vermelho padrão para dano recebido)
-      ctx.fillStyle = (p.kind === 'from_mob') ? '#ff6767' : '#ffd54a';
-      ctx.fillText(String(p.amt), Math.round(sx), Math.round(sy));
-      ctx.restore();
-    }
-  }
-
-  window.HeroDamageUI = { spawn, render };
-})();
-
-
 /* ================================ Boot ================================ */
 (async function main() {
   await getCsrf().catch(() => {});
   await bootAuth();
   console.log('[ws-auth] autenticado, o servidor agora conhece seu player_id');
   await loadSpriteMeta();
+  clearHeroBlocking();
 
   const maps = await apiGet("/api/admin/content/maps");
   if (!maps.some((m) => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
@@ -1979,7 +2190,32 @@ function updateRespawns(now) {
 
   resize();
 
-  const monsterBlockChecker = (cx, cy) => isTileBlockedByMonster(cx, cy);
+  const monsterBlockChecker = (cx, cy) => isTileBlockedByMonster(cx, cy, { ignoreHero: true });
+
+  const heroFootboxBlocked = (px, py) => {
+    if (!Number.isFinite(px) || !Number.isFinite(py)) return true;
+    const keys = heroFootboxTiles(px, py);
+    if (!keys || !keys.length) return false;
+
+    for (const key of keys) {
+      const [sx, sy] = String(key).split(',');
+      const cx = Number(sx);
+      const cy = Number(sy);
+      if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
+
+      const hasGrid = Number.isFinite(cols) && Number.isFinite(rows) && cols > 0 && rows > 0;
+      if (hasGrid) {
+        if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) return true;
+        if (grid && grid[cy * cols + cx] === 1) return true;
+      }
+
+      if (monsterBlockChecker(cx, cy)) return true;
+    }
+
+    return false;
+  };
+
+  heroFootboxBlockedFn = heroFootboxBlocked;
 
   const controller = new PlayerController({
     speed: 140,
@@ -1993,6 +2229,28 @@ function updateRespawns(now) {
       publishPos(x, y);
     },
   });
+
+  if (controller && typeof controller.setPosition === 'function') {
+    const originalSetPosition = controller.setPosition.bind(controller);
+    controller.setPosition = function patchedSetPosition(x, y) {
+      originalSetPosition(x, y);
+      if (Number.isFinite(x) && Number.isFinite(y)) updateHeroBlocking(x, y);
+    };
+  }
+
+  if (controller && typeof controller.tryMove === 'function') {
+    const originalTryMove = controller.tryMove.bind(controller);
+    controller.tryMove = function patchedTryMove(nx, ny) {
+      if (heroFootboxBlocked(nx, ny)) {
+        return { x: this.x, y: this.y, blocked: true };
+      }
+      const res = originalTryMove(nx, ny);
+      if (res && !res.blocked && Number.isFinite(res.x) && Number.isFinite(res.y)) {
+        updateHeroBlocking(res.x, res.y);
+      }
+      return res;
+    };
+  }
 
   if (typeof controller.setDynamicBlockChecker === 'function') {
     controller.setDynamicBlockChecker(monsterBlockChecker);
@@ -2109,7 +2367,14 @@ function updateRespawns(now) {
     // Teclado: 1 passo de 32x32 por tecla (N/S/L/O)
     const step = Input.getStepIntent && Input.getStepIntent();
     if (step) window.GameScene?.controller?.requestStep?.(step);
-    window.GameScene?.controller?.update?.(dt, null);
+    const ctrlInstance = window.GameScene?.controller;
+    ctrlInstance?.update?.(dt, null);
+    if (ctrlInstance?.getPosition) {
+      const pos = ctrlInstance.getPosition();
+      if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
+        updateHeroBlocking(pos.x, pos.y);
+      }
+    }
 
     // Camera
     camera.update(dt);
