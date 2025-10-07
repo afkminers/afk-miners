@@ -15,6 +15,7 @@ import { HeroState } from './state/hero-state.js';
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
 const TILE = 32;
+const playerVis = { w: 32, h: 32, img: null, heroKey: null, anchorX: 0.5, anchorY: 0.9 };
 // Desliga a IA local de mobs; posição deve vir do servidor
 const ENABLE_LOCAL_MOB_AI = false;
 
@@ -291,6 +292,7 @@ window.GameScene.onMonsterDead = (instanceId) => {
 const SERVER_MONSTER_STATE = new Map(); // id -> { sprite, x, y, spawnId, monsterKey, mapKey, dead, renderX, renderY, animSpeedMultiplier, isMoving, blockedTiles, lastServerAt }
 const UNBOUND_SERVER_MONSTERS = new Set(); // ids aguardando sprite
 const MONSTER_BLOCKED_TILES = new Map(); // "cx,cy" -> Set(instanceId)
+const HERO_BLOCK_STATE = { tiles: new Set(), lastX: null, lastY: null };
 let _serverMonsterRetryScheduled = false;
 
 const SERVER_MONSTER_STEP_MS = 150;
@@ -428,6 +430,97 @@ function monsterTileKey(cx, cy) {
   return `${cx | 0},${cy | 0}`;
 }
 
+function clearHeroBlocking() {
+  if (!HERO_BLOCK_STATE || !HERO_BLOCK_STATE.tiles) return;
+  if (!HERO_BLOCK_STATE.tiles.size) return;
+  HERO_BLOCK_STATE.tiles.clear();
+  HERO_BLOCK_STATE.lastX = null;
+  HERO_BLOCK_STATE.lastY = null;
+}
+
+function heroSpriteMeta() {
+  const frameW = Number.isFinite(playerVis?.w) && playerVis.w > 0 ? playerVis.w : TILE;
+  const frameH = Number.isFinite(playerVis?.h) && playerVis.h > 0 ? playerVis.h : TILE;
+  let anchorX = Number.isFinite(playerVis?.anchorX) ? playerVis.anchorX : 0.5;
+  let anchorY = Number.isFinite(playerVis?.anchorY) ? playerVis.anchorY : 0.9;
+  anchorX = Math.max(0, Math.min(1, anchorX));
+  anchorY = Math.max(0, Math.min(1, anchorY));
+  return { frameW, frameH, anchorX, anchorY };
+}
+
+function heroFootboxTiles(px, py) {
+  if (!Number.isFinite(px) || !Number.isFinite(py)) return [];
+  const { frameW, frameH, anchorX, anchorY } = heroSpriteMeta();
+
+  const spriteLeft = px - frameW * anchorX;
+  const spriteTop = py - frameH * anchorY;
+  const spriteBottom = spriteTop + frameH;
+
+  const footHeight = Math.max(TILE / 2, Math.min(TILE, frameH));
+  const tolerance = 2;
+  const rectHeight = footHeight + tolerance * 2;
+  const rectTop = spriteBottom - footHeight - tolerance;
+  const rectWidth = frameW + tolerance * 2;
+  const rectLeft = spriteLeft - tolerance;
+
+  const minCx = Math.floor(rectLeft / TILE);
+  const maxCx = Math.floor((rectLeft + rectWidth - 1) / TILE);
+  const minCy = Math.floor(rectTop / TILE);
+  const maxCy = Math.floor((rectTop + rectHeight - 1) / TILE);
+
+  if (!Number.isFinite(minCx) || !Number.isFinite(maxCx) || !Number.isFinite(minCy) || !Number.isFinite(maxCy)) {
+    return [];
+  }
+
+  const keys = [];
+  for (let cy = minCy; cy <= maxCy; cy++) {
+    for (let cx = minCx; cx <= maxCx; cx++) {
+      keys.push(monsterTileKey(cx, cy));
+    }
+  }
+  return keys;
+}
+
+function updateHeroBlocking(px, py) {
+  if (!HERO_BLOCK_STATE || !HERO_BLOCK_STATE.tiles) return;
+  if (!Number.isFinite(px) || !Number.isFinite(py)) {
+    clearHeroBlocking();
+    return;
+  }
+
+  const lastX = HERO_BLOCK_STATE.lastX;
+  const lastY = HERO_BLOCK_STATE.lastY;
+  if (Number.isFinite(lastX) && Number.isFinite(lastY)) {
+    const dx = Math.abs(px - lastX);
+    const dy = Math.abs(py - lastY);
+    if (dx < 0.1 && dy < 0.1) return;
+  }
+
+  const nextKeys = new Set(heroFootboxTiles(px, py));
+  const current = HERO_BLOCK_STATE.tiles;
+
+  let changed = false;
+  const removals = [];
+  for (const key of current) {
+    if (!nextKeys.has(key)) removals.push(key);
+  }
+  for (const key of removals) {
+    current.delete(key);
+    changed = true;
+  }
+
+  for (const key of nextKeys) {
+    if (!current.has(key)) {
+      current.add(key);
+      changed = true;
+    }
+  }
+
+  HERO_BLOCK_STATE.lastX = px;
+  HERO_BLOCK_STATE.lastY = py;
+  if (!changed) return;
+}
+
 function removeMonsterFromTile(state) {
   if (!state) return;
   if (!state.blockedTiles) state.blockedTiles = new Set();
@@ -516,8 +609,10 @@ function clearMonsterBlocking(id) {
   removeMonsterFromTile(state);
 }
 
-function isTileBlockedByMonster(cx, cy) {
+function isTileBlockedByMonster(cx, cy, opts = {}) {
+  const ignoreHero = !!(opts && typeof opts === 'object' && opts.ignoreHero);
   const key = monsterTileKey(cx, cy);
+  if (!ignoreHero && HERO_BLOCK_STATE?.tiles?.has?.(key)) return true;
   const set = MONSTER_BLOCKED_TILES.get(key);
   if (!set || !set.size) return false;
   let alive = false;
@@ -1185,6 +1280,9 @@ onMessage('mob_pos', handleLegacyMobPos);
 onMessage('monster_dead', handleServerMonsterDead);
 window.GameScene.serverMonsters = SERVER_MONSTER_STATE;
 window.GameScene.isTileBlockedByMonster = isTileBlockedByMonster;
+window.GameScene.heroBlockedTiles = HERO_BLOCK_STATE.tiles;
+window.GameScene.updateHeroBlocking = updateHeroBlocking;
+window.GameScene.clearHeroBlocking = clearHeroBlocking;
 window.GameScene.monsterBlockedTiles = MONSTER_BLOCKED_TILES;
 
 // =============== Canvas/HUD flexível (querystring + auto) ===============
@@ -1502,9 +1600,6 @@ function drawLoot(l) {
   ctx.restore();
 }
 
-/* ========================= Player Visual ========================== */
-const playerVis = { w: 32, h: 32, img: null, heroKey: null };
-
 /* ============================== Render ============================ */
 function clear() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
@@ -1537,8 +1632,10 @@ function drawGround(cameraObj) {
 function drawPlayer(controller) {
   const p = controller.getPosition();
   if (imgReady(playerVis.img)) {
-    const ox = Math.round(p.x - playerVis.w * 0.5);
-    const oy = Math.round(p.y - playerVis.h * 0.9);
+    const anchorX = Number.isFinite(playerVis.anchorX) ? playerVis.anchorX : 0.5;
+    const anchorY = Number.isFinite(playerVis.anchorY) ? playerVis.anchorY : 0.9;
+    const ox = Math.round(p.x - playerVis.w * anchorX);
+    const oy = Math.round(p.y - playerVis.h * anchorY);
     ctx.drawImage(playerVis.img, ox, oy, playerVis.w, playerVis.h);
   } else {
     ctx.save();
@@ -1905,6 +2002,7 @@ function updateRespawns(now) {
   await bootAuth();
   console.log('[ws-auth] autenticado, o servidor agora conhece seu player_id');
   await loadSpriteMeta();
+  clearHeroBlocking();
 
   const maps = await apiGet("/api/admin/content/maps");
   if (!maps.some((m) => m.key === MAP_KEY)) throw new Error(`map ${MAP_KEY} não encontrado`);
@@ -1999,7 +2097,7 @@ function updateRespawns(now) {
 
   resize();
 
-  const monsterBlockChecker = (cx, cy) => isTileBlockedByMonster(cx, cy);
+  const monsterBlockChecker = (cx, cy) => isTileBlockedByMonster(cx, cy, { ignoreHero: true });
 
   const controller = new PlayerController({
     speed: 140,
@@ -2013,6 +2111,14 @@ function updateRespawns(now) {
       publishPos(x, y);
     },
   });
+
+  if (controller && typeof controller.setPosition === 'function') {
+    const originalSetPosition = controller.setPosition.bind(controller);
+    controller.setPosition = function patchedSetPosition(x, y) {
+      originalSetPosition(x, y);
+      if (Number.isFinite(x) && Number.isFinite(y)) updateHeroBlocking(x, y);
+    };
+  }
 
   if (typeof controller.setDynamicBlockChecker === 'function') {
     controller.setDynamicBlockChecker(monsterBlockChecker);
@@ -2129,7 +2235,14 @@ function updateRespawns(now) {
     // Teclado: 1 passo de 32x32 por tecla (N/S/L/O)
     const step = Input.getStepIntent && Input.getStepIntent();
     if (step) window.GameScene?.controller?.requestStep?.(step);
-    window.GameScene?.controller?.update?.(dt, null);
+    const ctrlInstance = window.GameScene?.controller;
+    ctrlInstance?.update?.(dt, null);
+    if (ctrlInstance?.getPosition) {
+      const pos = ctrlInstance.getPosition();
+      if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
+        updateHeroBlocking(pos.x, pos.y);
+      }
+    }
 
     // Camera
     camera.update(dt);
