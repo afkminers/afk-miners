@@ -2,6 +2,7 @@
 const { all, run } = require('../models/db'); // helpers do projeto
 const { applyMobHit } = require('./service');
 const { getGrid } = require('../maps/grid');
+const { getMonster } = require('../services/catalogCache');
 
 // ======= Tuning via .env =======
 const TILE = 32;
@@ -17,6 +18,12 @@ const MONSTER_PERSIST_POS_MS = +(process.env.MONSTER_PERSIST_POS_MS || 1000); //
 const ATK_COOLDOWN_MS = +(process.env.MONSTER_ATK_COOLDOWN_MS || 900);
 const DMG_MIN  = +(process.env.MONSTER_BASE_DMG_MIN || 6);
 const DMG_MAX  = +(process.env.MONSTER_BASE_DMG_MAX || 12);
+const DEFAULT_ATTACK_PROFILE = Object.freeze({
+  min: DMG_MIN,
+  max: DMG_MAX,
+  intervalMs: ATK_COOLDOWN_MS,
+  chancePercent: 100,
+});
 
 // Gate do spawn (agora DESLIGADO por padrão)
 const CHASE_INSIDE_SPAWN_ONLY = (process.env.MONSTER_CHASE_INSIDE_SPAWN_ONLY ?? '0') === '1';
@@ -56,11 +63,150 @@ const _aggroUntil     = new Map(); // monsterId -> ms timestamp
 const _patrolTargets  = new Map(); // monsterId -> { tx, ty, expiresAt }
 const _lastPatrolMove = new Map(); // monsterId -> ms
 const _heroMemory     = new Map(); // heroId -> { tx, ty, lastTx, lastTy, heading, updatedAt, mapKey }
+const _attackProfileCache = new Map(); // monsterKey -> { profile, signature }
+const _attackWarnedKeys = new Set();
 
 // ======= Utils =======
 const tileOf = (v) => Math.floor(Number(v || 0) / TILE);
 const centerOfTile = (t) => (t * TILE) + TILE / 2;
 const tileKey = (tx, ty) => `${tx},${ty}`;
+
+function toFiniteNumber(value, fallback) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function clamp(value, min, max) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return min;
+  if (n < min) return min;
+  if (n > max) return max;
+  return n;
+}
+
+function parseAttacksPayload(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  if (typeof raw === 'object') {
+    if (Array.isArray(raw.attacks)) return raw.attacks;
+    if (Array.isArray(raw.list)) return raw.list;
+    if (Array.isArray(raw.data)) return raw.data;
+    if (Array.isArray(raw.entries)) return raw.entries;
+    if (Array.isArray(raw.values)) return raw.values;
+    if (Array.isArray(raw.melee)) return raw.melee;
+    try {
+      const values = Object.values(raw).filter(v => typeof v === 'object');
+      return Array.isArray(values) ? values : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function buildAttackProfile(entry, fallbackIntervalMs) {
+  if (!entry || typeof entry !== 'object') {
+    return { ...DEFAULT_ATTACK_PROFILE };
+  }
+
+  const min = toFiniteNumber(
+    entry.min ?? entry.minDamage ?? entry.min_dmg ?? entry.damageMin,
+    DEFAULT_ATTACK_PROFILE.min,
+  );
+  let max = toFiniteNumber(
+    entry.max ?? entry.maxDamage ?? entry.max_dmg ?? entry.damageMax,
+    Math.max(min, DEFAULT_ATTACK_PROFILE.max),
+  );
+  if (!Number.isFinite(max) || max < min) max = Math.max(min, DEFAULT_ATTACK_PROFILE.max);
+
+  let intervalMs = toFiniteNumber(
+    entry.intervalMs ?? entry.interval_ms ?? entry.cooldownMs ?? entry.cooldown,
+    Number.isFinite(fallbackIntervalMs) && fallbackIntervalMs > 0 ? fallbackIntervalMs : DEFAULT_ATTACK_PROFILE.intervalMs,
+  );
+  if (!Number.isFinite(intervalMs) || intervalMs <= 0) intervalMs = DEFAULT_ATTACK_PROFILE.intervalMs;
+
+  let chancePercent = clamp(
+    entry.chancePercent ?? entry.chance,
+    0,
+    100,
+  );
+  if (!Number.isFinite(chancePercent)) chancePercent = DEFAULT_ATTACK_PROFILE.chancePercent;
+
+  return {
+    min,
+    max,
+    intervalMs,
+    chancePercent,
+  };
+}
+
+function computeAttackSignature(monster) {
+  if (!monster) return null;
+  const raw = monster.attacks_json;
+  if (typeof raw === 'string') return raw.trim();
+  if (Array.isArray(raw)) {
+    try { return JSON.stringify(raw); } catch { return null; }
+  }
+  if (raw && typeof raw === 'object') {
+    try { return JSON.stringify(raw); } catch { return null; }
+  }
+  return null;
+}
+
+async function resolveMonsterAttackProfile(monster) {
+  if (!monster) return DEFAULT_ATTACK_PROFILE;
+  const key = monster.monster_key != null ? String(monster.monster_key) : null;
+  if (!key) return DEFAULT_ATTACK_PROFILE;
+
+  const signature = computeAttackSignature(monster);
+  const cached = _attackProfileCache.get(key);
+  if (cached && cached.profile && cached.signature === signature) {
+    return cached.profile;
+  }
+
+  let attacks = parseAttacksPayload(monster.attacks_json);
+
+  if (!attacks.length && typeof getMonster === 'function') {
+    try {
+      const catalogMonster = await getMonster(key);
+      if (catalogMonster) {
+        attacks = parseAttacksPayload(catalogMonster.attacks || catalogMonster.attacksJSON);
+      }
+    } catch (err) {
+      if (!_attackWarnedKeys.has(key)) {
+        console.warn(`[monster_atk_simple] failed to load attacks for ${key}:`, err?.message);
+        _attackWarnedKeys.add(key);
+      }
+    }
+  }
+
+  let chosen = null;
+  for (const entry of attacks) {
+    if (!entry || typeof entry !== 'object') continue;
+    const type = String(entry.type || '').toLowerCase();
+    if (type === 'melee') { chosen = entry; break; }
+    if (!chosen) chosen = entry;
+  }
+
+  if (!chosen && !_attackWarnedKeys.has(key)) {
+    console.warn(`[monster_atk_simple] no melee attack configured for ${key}, using defaults`);
+    _attackWarnedKeys.add(key);
+  }
+
+  const profile = Object.freeze(buildAttackProfile(chosen, monster.attack_ms));
+  _attackProfileCache.set(key, { profile, signature });
+  return profile;
+}
 
 function toCenterPxCoord(raw) {
   const n = Number(raw);
@@ -825,7 +971,9 @@ async function fetchAliveMonsters() {
            COALESCE(s.w,32)  AS sw,
            COALESCE(s.h,32)  AS sh,
            s."monsterKey"    AS monster_key,
-           COALESCE(mm.name, s."monsterKey") AS monster_name
+           COALESCE(mm.name, s."monsterKey") AS monster_name,
+           mm."attacksJSON" AS attacks_json,
+           mm.attack_ms     AS attack_ms
       FROM monster_instances mi
       LEFT JOIN spawns s ON s.id = mi.spawn_id
       LEFT JOIN monsters_master mm ON mm.key = s."monsterKey"
@@ -975,6 +1123,7 @@ async function tick() {
       }
       const heroTilesForMap = heroTilesByMap.get(mapKeyStr) || new Set();
       const mapCollision = await ensureCollisionFor(m.map_key);
+      const targetInfo = selectHeroTarget({ monster: m, heroes: hs, now });
 
       if (!_wasQuantized.has(m.id)) {
         const mx0 = tileOf(m.x), my0 = tileOf(m.y);
@@ -1122,58 +1271,101 @@ async function tick() {
         if (isGhost || !targetInfo.hero) continue;
 
         const targetHero = targetInfo.hero;
+        const attackProfile = await resolveMonsterAttackProfile(m);
+        const cooldownMs = Math.max(50, Number(attackProfile?.intervalMs || ATK_COOLDOWN_MS));
+        const chancePercent = clamp(attackProfile?.chancePercent ?? 100, 0, 100);
         const lastAtk = _lastAtkAt.get(m.id) || 0;
-        if (now - lastAtk < ATK_COOLDOWN_MS) continue;
+        if (now - lastAtk < cooldownMs) continue;
 
+        if (chancePercent < 100) {
+          const roll = Math.random() * 100;
+          if (roll >= chancePercent) {
+            _lastAtkAt.set(m.id, now);
+            continue;
+          }
+        }
+
+        let attackRes = null;
         try {
-          const attackRes = await applyMobHit({
+          attackRes = await applyMobHit({
             attackerInstanceId: m.id,
             targetHeroId: targetHero.hero_id,
-            attackInfo: { min: DMG_MIN, max: DMG_MAX },
+            attackInfo: {
+              min: attackProfile?.min ?? DMG_MIN,
+              max: attackProfile?.max ?? DMG_MAX,
+            },
+            attackerPos: {
+              x: Number.isFinite(m.x) ? m.x : undefined,
+              y: Number.isFinite(m.y) ? m.y : undefined,
+              mapKey: targetHero.map_key ?? m.map_key,
+              face: m.face,
+              unit: 'px',
+              assumeTiles: false,
+              assumePx: true,
+            },
           });
-
-          if (attackRes?.ok) {
-            await markLastHit(m.id, targetHero.hero_id);
-            _lastAtkAt.set(m.id, now);
-            _aggroUntil.set(m.id, now + AGGRO_LOSS_MS);
-
-            if (attackRes.dead) {
-              const arr = heroesByMap.get(targetHero.map_key);
-              if (arr) {
-                const idx = arr.findIndex(hh => String(hh.hero_id) === String(targetHero.hero_id));
-                if (idx >= 0) arr.splice(idx, 1);
-              }
-            } else if (attackRes.hpAfter != null) {
-              targetHero.hp = attackRes.hpAfter;
-            }
-
-            updateLivePos(m);
-            emitMonsterMove(m);
-
-            if (global._sendToMap) {
-              global._sendToMap(targetHero.map_key, {
-                type: 'hero_hit',
-                heroId: targetHero.hero_id,
-                dmg: attackRes.damage,
-                hp: attackRes.hpAfter,
-                hpMax: attackRes.maxHp ?? targetHero.max_hp,
-                died: attackRes.dead,
-                instanceId: m.id,
-                monster: {
-                  id: m.id,
-                  key: m.monster_key || 'unknown',
-                  name: m.monster_name || m.monster_key || 'Monster',
-                  x: m.x,
-                  y: m.y,
-                  mapKey: targetHero.map_key,
-                  spawnId: m.spawn_id,
-                  face: m.face,
-                },
-              });
-            }
-          }
         } catch (err) {
           console.warn('[monster_atk_simple] applyMobHit error:', err?.message);
+        }
+
+        if (attackRes?.ok) {
+          if (attackRes.attackerPos) {
+            const ax = Number(attackRes.attackerPos.x);
+            const ay = Number(attackRes.attackerPos.y);
+            if (Number.isFinite(ax)) m.x = ax;
+            if (Number.isFinite(ay)) m.y = ay;
+            const faceFromHit = typeof attackRes.attackerPos.face === 'string' ? attackRes.attackerPos.face : null;
+            if (faceFromHit) m.face = faceFromHit;
+          }
+          _lastAtkAt.set(m.id, now);
+          await markLastHit(m.id, targetHero.hero_id);
+          _aggroUntil.set(m.id, now + AGGRO_LOSS_MS);
+
+          if (attackRes.dead) {
+            const arr = heroesByMap.get(targetHero.map_key);
+            if (arr) {
+              const idx = arr.findIndex(hh => String(hh.hero_id) === String(targetHero.hero_id));
+              if (idx >= 0) arr.splice(idx, 1);
+            }
+          } else if (attackRes.hpAfter != null) {
+            targetHero.hp = attackRes.hpAfter;
+            if (attackRes.heroPos) {
+              const hx2 = Number(attackRes.heroPos.x);
+              const hy2 = Number(attackRes.heroPos.y);
+              if (Number.isFinite(hx2)) targetHero.x = hx2;
+              if (Number.isFinite(hy2)) targetHero.y = hy2;
+            }
+          }
+
+          updateLivePos(m);
+
+          if (global._sendToMap) {
+            const attackIntervalMs = cooldownMs;
+            const hitMapKey = attackRes.attackerPos?.mapKey ?? targetHero.map_key ?? m.map_key;
+            if (hitMapKey != null) targetHero.map_key = hitMapKey;
+            global._sendToMap(hitMapKey, {
+              type: 'hero_hit',
+              heroId: targetHero.hero_id,
+              dmg: attackRes.damage,
+              hp: attackRes.hpAfter,
+              hpMax: attackRes.maxHp ?? targetHero.max_hp,
+              died: attackRes.dead,
+              instanceId: m.id,
+              face: m.face,
+              attackIntervalMs,
+              monster: {
+                id: m.id,
+                key: m.monster_key || 'unknown',
+                name: m.monster_name || m.monster_key || 'Monster',
+                x: m.x,
+                y: m.y,
+                mapKey: hitMapKey,
+                spawnId: m.spawn_id,
+                face: m.face,
+                attackIntervalMs,
+              },
+            });
+          }
         }
 
         continue;
