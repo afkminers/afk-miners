@@ -10,7 +10,7 @@ const K = require('../balance/config');
 
 const { get } = require('../models/db');
 
-const { getHeroPos, getMonsterPos, isHeroPosFresh } = require('./pos');
+const { getHeroPos, getMonsterPos } = require('./pos');
 
 const { inReachPx, resolveRangeTiles, distanceToTargetPx, TILE } = require('./geom');
 const { hasLineOfSight } = require('./los');
@@ -120,23 +120,6 @@ function buildNoLoSPayload(ctx) {
   };
 }
 
-function buildStaleHeroPosPayload(ctx) {
-  const message = 'Posição do herói desatualizada. Aguarde sincronizar movendo o personagem.';
-  return {
-    ok: false,
-    error: 'hero-pos-stale',
-    inRange: false,
-    hasLineOfSight: ctx?.hasLineOfSight ?? null,
-    range: ctx?.range || null,
-    distance: ctx?.distance || null,
-    hero: ctx?.hero || null,
-    monster: ctx?.monster || null,
-    computedAt: ctx?.computedAt || Date.now(),
-    message,
-    warnings: [{ code: 'hero-pos-stale', message }],
-  };
-}
-
 /* =========================================================================
    Logging básico
    ========================================================================== */
@@ -216,10 +199,6 @@ router.post('/attack/start', express.json(), async (req, res) => {
     }
 
     const telemetry = buildRangeTelemetry(heroPos, mobPos, weaponType);
-    if (!isHeroPosFresh(heroPos)) {
-      return res.json(buildStaleHeroPosPayload(telemetry));
-    }
-
     const { grid, cols } = await getGrid(heroPos.map_key);
     const losGrid = { data: grid, cols };
 
@@ -325,10 +304,6 @@ router.post('/hit', express.json(), async (req, res) => {
     }
 
     const telemetry = buildRangeTelemetry(heroPos, mobPos, weaponType);
-    if (!isHeroPosFresh(heroPos)) {
-      return res.json(buildStaleHeroPosPayload(telemetry));
-    }
-
     const { grid, cols } = await getGrid(heroPos.map_key);
     const losGrid = { data: grid, cols };
 
