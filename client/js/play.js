@@ -115,24 +115,25 @@ onMessage('hero_hit', (msg) => {
   const line = `[Dano] ${mobName} te acertou por ${amount} (HP: ${hpStr})`;
   if (window.Chat?.pushLog) window.Chat.pushLog(line); else console.log('[LOG]', line);
 
-  // Dano flutuante acima do monstro (se soubermos posição) — cai pro player se não tiver
-  if (window.HeroDamageUI && typeof window.HeroDamageUI.spawn === 'function') {
-    let x = Number(msg?.monster?.x), y = Number(msg?.monster?.y);
+  // Dano flutuante acima do herói atingido
+  if (window.HeroDamageUI) {
+    const spawn = typeof window.HeroDamageUI.spawn === 'function' ? window.HeroDamageUI.spawn : null;
+    const spawnAtHero = typeof window.HeroDamageUI.spawnAtHero === 'function' ? window.HeroDamageUI.spawnAtHero : null;
 
-    // Se só veio instanceId, tenta achar a sprite do mob ligado ao instanceId
-    if ((!Number.isFinite(x) || !Number.isFinite(y)) && msg.instanceId && window.GameScene?.getMobByInstanceId) {
-      const s = window.GameScene.getMobByInstanceId(String(msg.instanceId));
-      if (s) { x = s.x; y = s.y; }
+    let hx = null;
+    let hy = null;
+    const heroPos = getHeroWorldPosition(msg.heroId);
+    if (heroPos) { hx = heroPos.x; hy = heroPos.y; }
+
+    if ((!Number.isFinite(hx) || !Number.isFinite(hy)) && window.GameScene?.controller?.getPosition) {
+      const p = window.GameScene.controller.getPosition();
+      if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) { hx = p.x; hy = p.y; }
     }
 
-    // Fallback: usa a posição do player
-    if (!Number.isFinite(x) || !Number.isFinite(y)) {
-      const p = window.GameScene?.controller?.getPosition?.();
-      if (p) { x = p.x; y = p.y - 16; }
-    }
-
-    if (Number.isFinite(x) && Number.isFinite(y)) {
-      window.HeroDamageUI.spawn({ x, y, amount, kind: 'from_mob' });
+    if (Number.isFinite(hx) && Number.isFinite(hy) && spawn) {
+      spawn({ x: hx, y: hy, amount, kind: 'from_mob' });
+    } else if (spawnAtHero) {
+      spawnAtHero(amount, 'from_mob', msg.heroId);
     }
   }
 
@@ -1846,47 +1847,6 @@ function updateRespawns(now) {
     }
   }
 }
-
-// === UI mínima: números de dano flutuantes ===
-(function(){
-  const ACTIVE = []; // {x,y,amt,t,life}
-  const LIFE_MS = 900;
-
-  function spawn({ x, y, amount, kind }) {
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    ACTIVE.push({ x, y, amt: Number(amount)||0, t: performance.now(), life: LIFE_MS, kind: String(kind||'') });
-  }
-
-  function render(ctx, camera, dt) {
-    if (!ACTIVE.length) return;
-    const now = performance.now();
-    for (let i = ACTIVE.length - 1; i >= 0; i--) {
-      const p = ACTIVE[i];
-      const age = now - p.t;
-      if (age >= p.life) { ACTIVE.splice(i,1); continue; }
-      const alpha = 1 - (age / p.life);
-      const rise = Math.min(22, age * 0.04);
-      const sx = (p.x - camera.x) * (camera.getZoom?.()||1);
-      const sy = (p.y - camera.y - rise) * (camera.getZoom?.()||1);
-
-      ctx.save();
-      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-      ctx.font = 'bold 14px monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      // contorno simples
-      ctx.fillStyle = 'black';
-      ctx.fillText(String(p.amt), Math.round(sx)+1, Math.round(sy)+1);
-      // dentro (vermelho padrão para dano recebido)
-      ctx.fillStyle = (p.kind === 'from_mob') ? '#ff6767' : '#ffd54a';
-      ctx.fillText(String(p.amt), Math.round(sx), Math.round(sy));
-      ctx.restore();
-    }
-  }
-
-  window.HeroDamageUI = { spawn, render };
-})();
-
 
 /* ================================ Boot ================================ */
 (async function main() {
