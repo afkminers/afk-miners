@@ -879,7 +879,16 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
         await applyMobHit({
           attackerInstanceId: String(mob.instanceId),
           targetHeroId: String(mob.targetHeroId),
-          attackInfo: { min: 1, max: 3 }
+          attackInfo: { min: 1, max: 3 },
+          attackerPos: {
+            x: Number.isFinite(mob.x) ? mob.x : undefined,
+            y: Number.isFinite(mob.y) ? mob.y : undefined,
+            mapKey: mob.mapKey,
+            face: mob.face,
+            unit: 'px',
+            assumeTiles: false,
+            assumePx: true,
+          },
         });
       } catch (e) {
         console.warn('[ai-mobs] applyMobHit error:', e?.message);

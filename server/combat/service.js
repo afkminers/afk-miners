@@ -4,7 +4,7 @@ const { get, run } = require('../models/db');
 const K = require('../balance/config');
 const { applyTries, getClassRate } = require('../skills/engine');
 const { broadcast } = require('../ws/bus');
-const { resolveHitboxDimension } = require('./geom');
+const { resolveHitboxDimension, TILE } = require('./geom');
 // Se você usa este serviço central de XP:
 const { giveXp } = require('../services/heroProgress');
 
@@ -85,9 +85,6 @@ LEFT JOIN items_master     i ON i.key = eq.item_key
 
 /** Instância do monstro + dados do monstro (xp/loot/armor) */
 async function getInstanceWithMonster(instanceId) {
-  // se precisar, troque 32 pelo tamanho do seu tile
-  const TILE = 32;
-
   return await get(
     `SELECT mi.id, mi.hp, mi.max_hp, mi.state, mi.spawn_id, mi.map_key,
             mi.x, mi.y,
@@ -333,9 +330,62 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
 // server/combat/service.js
 // server/combat/service.js - TRECHO applyMobHit CORRIGIDO
 
-async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
+function normalizeCombatPosition(rawPos, fallback = {}) {
+  const pos = rawPos || {};
+  const fb = fallback || {};
+
+  const mapKey =
+    pos.mapKey ?? pos.map_key ?? pos.map ??
+    fb.mapKey ?? fb.map_key ?? fb.map ??
+    null;
+
+  const face = pos.face ?? fb.face ?? null;
+
+  const unit = typeof pos.unit === 'string' ? pos.unit.toLowerCase() : null;
+  const explicitTiles = pos.inTiles === true || pos.tiles === true || unit === 'tile' || unit === 'tiles';
+  const explicitPx = pos.inPixels === true || pos.pixels === true || unit === 'px' || unit === 'pixel' || unit === 'pixels';
+  const assumeTiles = pos.assumeTiles;
+  const assumePx = pos.assumePx;
+
+  let x = Number(pos.x);
+  let y = Number(pos.y);
+
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    x = Number(fb.x);
+    y = Number(fb.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      return { x: null, y: null, mapKey, face };
+    }
+
+    const fbUnit = typeof fb.unit === 'string' ? fb.unit.toLowerCase() : null;
+    const fbTiles = fb.inTiles === true || fb.tiles === true || fbUnit === 'tile' || fbUnit === 'tiles';
+    const fbPx = fb.inPixels === true || fb.pixels === true || fbUnit === 'px' || fbUnit === 'pixel' || fbUnit === 'pixels';
+
+    if (fbTiles || (!fbPx && Math.abs(x) < 1000 && Math.abs(y) < 1000)) {
+      x = (x * TILE) + (TILE / 2);
+      y = (y * TILE) + (TILE / 2);
+    }
+
+    return { x, y, mapKey, face };
+  }
+
+  if (explicitTiles) {
+    x = (x * TILE) + (TILE / 2);
+    y = (y * TILE) + (TILE / 2);
+  } else if (!explicitPx) {
+    const shouldAssumeTiles = assumeTiles === true
+      || (assumeTiles !== false && !assumePx && Math.abs(x) < 1000 && Math.abs(y) < 1000);
+    if (shouldAssumeTiles) {
+      x = (x * TILE) + (TILE / 2);
+      y = (y * TILE) + (TILE / 2);
+    }
+  }
+
+  return { x, y, mapKey, face };
+}
+
+async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attackerPos = null, heroPos = null }) {
   const DEBUG_COMBAT = String(process.env.COMBAT_DEBUG || '').trim() === '1';
-  const TILE = 32;
 
   const hero = await getHeroStats(targetHeroId);
   if (!hero) return { ok: false, message: 'target hero not found' };
@@ -343,38 +393,93 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
   const inst = await getInstanceWithMonster(attackerInstanceId);
   if (!inst || inst.state !== 'ALIVE') return { ok: false, message: 'attacker not alive' };
 
+  const fallbackAttackerPos = {
+    x: inst.x,
+    y: inst.y,
+    mapKey: inst.map_key,
+    unit: (Math.abs(Number(inst.x) || 0) < 1000 && Math.abs(Number(inst.y) || 0) < 1000) ? 'tile' : 'px',
+  };
+
+  const attacker = normalizeCombatPosition(attackerPos, fallbackAttackerPos);
+  const effectiveMapKey = attacker.mapKey ?? inst.map_key;
+  let mx = Number(attacker.x);
+  let my = Number(attacker.y);
+  const attackerFace = attacker.face ?? null;
+
+  if (!Number.isFinite(mx) || !Number.isFinite(my)) {
+    mx = Number(inst.x || 0);
+    my = Number(inst.y || 0);
+    if (mx < 1000 && my < 1000) {
+      mx = (mx * TILE) + (TILE / 2);
+      my = (my * TILE) + (TILE / 2);
+    }
+  }
+
   // --- POSIÇÃO DO HERÓI (SEMPRE EM PIXELS) ---
   let hpos = null;
   let heroPosFresh = false;
-  try {
-    const mod = posMod();
-    if (mod && typeof mod.getHeroPos === 'function') {
-      hpos = await mod.getHeroPos(hero.hero_id, inst.map_key);
-      if (hpos && typeof mod.isHeroPosFresh === 'function') {
-        heroPosFresh = mod.isHeroPosFresh(hpos);
-      } else if (hpos) {
-        heroPosFresh = hpos.fresh === true || (hpos.source === 'live' && hpos.stale === false);
-      }
-    }
-  } catch {}
 
-  if (!hpos || String(hpos.map_key) !== String(inst.map_key)) {
+  if (heroPos) {
+    const heroOverride = normalizeCombatPosition(heroPos, { mapKey: effectiveMapKey });
+    if (Number.isFinite(heroOverride.x) && Number.isFinite(heroOverride.y)) {
+      hpos = {
+        x: heroOverride.x,
+        y: heroOverride.y,
+        map_key: heroOverride.mapKey ?? effectiveMapKey,
+        source: heroPos.source ?? 'override',
+        stale: heroPos.stale ?? false,
+        fresh: heroPos.fresh ?? true,
+      };
+      heroPosFresh = hpos.fresh === true;
+    }
+  }
+
+  if (!hpos) {
+    try {
+      const mod = posMod();
+      if (mod && typeof mod.getHeroPos === 'function') {
+        hpos = await mod.getHeroPos(hero.hero_id, effectiveMapKey);
+        if (hpos && typeof mod.isHeroPosFresh === 'function') {
+          heroPosFresh = mod.isHeroPosFresh(hpos);
+        } else if (hpos) {
+          heroPosFresh = hpos.fresh === true || (hpos.source === 'live' && hpos.stale === false);
+        }
+      }
+    } catch {}
+  }
+
+  if (hpos && hpos.map_key == null && effectiveMapKey != null) {
+    hpos.map_key = effectiveMapKey;
+  }
+
+  if (!hpos || String(hpos.map_key) !== String(effectiveMapKey)) {
     return { ok: false, message: 'target not in same map' };
   }
 
-  let hx = Number(hpos.x || 0);
-  let hy = Number(hpos.y || 0);
+  const heroNormInput = {
+    x: hpos.x,
+    y: hpos.y,
+    mapKey: hpos.map_key,
+  };
+  if (hpos.source === 'live' || hpos.source === 'live_stale') {
+    heroNormInput.assumeTiles = false;
+    heroNormInput.assumePx = true;
+  }
 
-  // Normaliza para pixels se vier em tiles
-  if (hx < 1000 && hy < 1000) {
-    hx = (hx * TILE) + (TILE / 2);
-    hy = (hy * TILE) + (TILE / 2);
+  const heroNorm = normalizeCombatPosition(heroNormInput, { x: hpos.x, y: hpos.y, mapKey: hpos.map_key });
+  let hx = Number(heroNorm.x || 0);
+  let hy = Number(heroNorm.y || 0);
+
+  if (!Number.isFinite(hx) || !Number.isFinite(hy)) {
+    hx = Number(hpos.x || 0);
+    hy = Number(hpos.y || 0);
+    if (hx < 1000 && hy < 1000) {
+      hx = (hx * TILE) + (TILE / 2);
+      hy = (hy * TILE) + (TILE / 2);
+    }
   }
 
   // --- HITBOX DO MONSTRO (considera tamanho da sprite) ---
-  let mx = Number(inst.x || 0);
-  let my = Number(inst.y || 0);
-  
   if (mx < 1000 && my < 1000) {
     mx = (mx * TILE) + (TILE / 2);
     my = (my * TILE) + (TILE / 2);
@@ -404,26 +509,30 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
 
   // Linha de visão
   let hasLOS = true;
-  try {
-    const { getGrid } = require('../maps/grid');
-    const { hasLineOfSight } = require('./los');
-    const { grid, cols } = await getGrid(inst.map_key);
-    hasLOS = hasLineOfSight({ data: grid, cols }, mx, my, hx, hy);
-  } catch {}
+  const mapKeyForLos = effectiveMapKey ?? inst.map_key;
+  if (mapKeyForLos != null) {
+    try {
+      const { getGrid } = require('../maps/grid');
+      const { hasLineOfSight } = require('./los');
+      const { grid, cols } = await getGrid(mapKeyForLos);
+      hasLOS = hasLineOfSight({ data: grid, cols }, mx, my, hx, hy);
+    } catch {}
+  }
 
   // DEBUG
   if (DEBUG_COMBAT) {
     console.log('[MOB-HIT-DEBUG]', {
       inst: inst.id,
       hero: targetHeroId,
-      heroPos: { x: hx, y: hy, source: hpos.source },
-      mobPos: { x: mx, y: my },
+      heroPos: { x: hx, y: hy, source: hpos.source, mapKey: hpos.map_key },
+      mobPos: { x: mx, y: my, mapKey: mapKeyForLos, face: attackerFace },
       mobHitbox: { left: mobLeft, right: mobRight, top: mobTop, bottom: mobBottom },
       closest: { x: closestX, y: closestY },
       distPx,
       atkPx,
       inRange: inRangePx,
-      hasLOS
+      hasLOS,
+      heroPosFresh
     });
   }
 
@@ -511,7 +620,9 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo }) {
     maxHp: row.max_hp,
     dead,
     targetHeroId,
-    attackerInstanceId
+    attackerInstanceId,
+    heroPos: { x: hx, y: hy, mapKey: hpos.map_key, fresh: heroPosFresh },
+    attackerPos: { x: mx, y: my, mapKey: mapKeyForLos, face: attackerFace },
   };
 }
 
