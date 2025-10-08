@@ -15,6 +15,7 @@
   const { listFreshHeroesByMap } = require('../player/live_positions');
 
   const PX_PER_TILE = 32;
+  const HOME_TOLERANCE_PX = PX_PER_TILE / 2;
 
   let broadcast = () => {};
   try {
@@ -107,6 +108,27 @@
     }
 
     return { x: px, y: py };
+  }
+
+  function computeSpawnCenterPx(spawnRect, fallbackPos = null) {
+    if (spawnRect && Number.isFinite(spawnRect.x) && Number.isFinite(spawnRect.y)) {
+      const sx = Number(spawnRect.x);
+      const sy = Number(spawnRect.y);
+      const rawW = Number(spawnRect.w);
+      const rawH = Number(spawnRect.h);
+      const sw = Number.isFinite(rawW) && rawW > 0 ? rawW : PX_PER_TILE;
+      const sh = Number.isFinite(rawH) && rawH > 0 ? rawH : PX_PER_TILE;
+      return {
+        x: Math.round(sx + sw / 2),
+        y: Math.round(sy + sh / 2),
+      };
+    }
+
+    if (fallbackPos && Number.isFinite(fallbackPos.x) && Number.isFinite(fallbackPos.y)) {
+      return { x: fallbackPos.x | 0, y: fallbackPos.y | 0 };
+    }
+
+    return { x: 0, y: 0 };
   }
 
   function canMobHitNow({ now, mob, tgtPos, losGrid }) {
@@ -372,6 +394,14 @@
       spawnRect
     });
 
+    const spawnHome = computeSpawnCenterPx(spawnRect, pos);
+    let home = spawnHome;
+    if (patch.home && Number.isFinite(patch.home.x) && Number.isFinite(patch.home.y)) {
+      home = { x: patch.home.x | 0, y: patch.home.y | 0 };
+    } else if (!spawnRect && cur.home && Number.isFinite(cur.home.x) && Number.isFinite(cur.home.y)) {
+      home = { x: cur.home.x | 0, y: cur.home.y | 0 };
+    }
+
     // tiles recebidos do SELECT (fallback para valores anteriores/constantes)
     const attackRangeTiles = Number(patch.attack_range ?? cur.attack_range ?? 1);
     const aggroRangeTiles  = Math.max(1, Number(patch.aggro_range ?? cur.aggro_range ?? 8));
@@ -425,6 +455,8 @@
 
       // debug
       spawnRect,
+      home,
+      _returningHome: cur._returningHome || false,
     };
 
     mobs.set(id, next);
@@ -590,6 +622,70 @@
       set.add(mob.instanceId);
     }
     return occ;
+  }
+
+  async function maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles }) {
+    if (!mob) return;
+
+    const homeX = Number(mob?.home?.x);
+    const homeY = Number(mob?.home?.y);
+    if (!Number.isFinite(homeX) || !Number.isFinite(homeY)) {
+      mob._returningHome = false;
+      mob.pendingStep = null;
+      return;
+    }
+
+    const distChebyPx = Math.max(Math.abs(mob.x - homeX), Math.abs(mob.y - homeY));
+    if (distChebyPx <= HOME_TOLERANCE_PX) {
+      mob._returningHome = false;
+      if (distChebyPx > 0) {
+        mob.x = homeX | 0;
+        mob.y = homeY | 0;
+        mob.posUpdatedAt = Date.now();
+        mob._tileCx = Math.floor(mob.x / STEP_PX);
+        mob._tileCy = Math.floor(mob.y / STEP_PX);
+        mob._tileKey = tileKey(mob._tileCx, mob._tileCy);
+        try {
+          await run(
+            `UPDATE monster_instances SET x=$2, y=$3, updated_at=now() WHERE id=$1`,
+            [mob.instanceId, mob.x | 0, mob.y | 0]
+          );
+          try {
+            broadcast({ type: 'mob_pos', instanceId: mob.instanceId, mapKey: mob.mapKey, x: mob.x, y: mob.y });
+          } catch {}
+        } catch (e) {
+          console.warn('[ai-mobs] home persist error:', e?.message);
+        }
+      }
+      mob.pendingStep = null;
+      return;
+    }
+
+    if (!mob._returningHome) {
+      mob.pendingStep = null;
+    }
+    mob._returningHome = true;
+
+    const target = { x: homeX, y: homeY };
+    let stepTarget = null;
+
+    const hasValidPending = mob.pendingStep && Number.isFinite(mob.pendingStep.x) && Number.isFinite(mob.pendingStep.y);
+    if (hasValidPending) {
+      stepTarget = mob.pendingStep;
+    } else {
+      const step = pickStepGreedy(mob, target, losGrid, occupancy, heroTiles, null);
+      if (!step) {
+        mob.pendingStep = null;
+        return;
+      }
+      stepTarget = { x: step.x | 0, y: step.y | 0 };
+      mob.pendingStep = stepTarget;
+    }
+
+    const reached = await moveMobAndPersist(mob, stepTarget, dt, losGrid, occupancy);
+    if (reached) {
+      mob.pendingStep = null;
+    }
   }
 
   function findNearestFreeTile({
@@ -766,7 +862,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
 
   if (!mob.targetHeroId) {
     mob.mode = 'idle';
-    mob.pendingStep = null;
+    await maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles });
     return;
   }
 

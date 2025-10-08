@@ -87,10 +87,22 @@ async function ensureItemColumns(db) {
 }
 
 /* ============================== LOADERS =============================== */
+async function ensureMonsterColumns(db) {
+  const { run } = db;
+  await run(`
+    ALTER TABLE monsters_master
+      ADD COLUMN IF NOT EXISTS attack_range INTEGER,
+      ADD COLUMN IF NOT EXISTS aggro_range INTEGER,
+      ADD COLUMN IF NOT EXISTS attack_ms   INTEGER
+  `);
+}
+
 async function loadMonsters(db, root) {
   const { get, run } = db;
   const idx = resolveMonstersIndex(root);
   if (!idx) return;
+
+  await ensureMonsterColumns(db);
 
   const index = YAML.parse(read(idx));
   const entries = Object.entries(index.monsters || {});
@@ -118,12 +130,16 @@ async function loadMonsters(db, root) {
 
     const data = MonsterYAML.parse(YAML.parse(src));
 
+    const attackRange = Number.isFinite(data.attack_range) ? data.attack_range : null;
+    const aggroRange  = Number.isFinite(data.aggro_range)  ? data.aggro_range  : null;
+    const attackMs    = Number.isFinite(data.attack_ms)    ? data.attack_ms    : null;
+
     await run(`
       INSERT INTO monsters_master
         (key, name, xp, "healthMax", speed,
          "flagsJSON","elementsJSON","attacksJSON","defensesJSON","lootJSON","lookJSON",
-         updated_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, now())
+         attack_range, aggro_range, attack_ms, updated_at)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14, now())
       ON CONFLICT (key) DO UPDATE SET
         name=EXCLUDED.name,
         xp=EXCLUDED.xp,
@@ -135,6 +151,9 @@ async function loadMonsters(db, root) {
         "defensesJSON"=EXCLUDED."defensesJSON",
         "lootJSON"=EXCLUDED."lootJSON",
         "lookJSON"=EXCLUDED."lookJSON",
+        attack_range=EXCLUDED.attack_range,
+        aggro_range=EXCLUDED.aggro_range,
+        attack_ms=EXCLUDED.attack_ms,
         updated_at=now()
     `, [
       data.key, data.name, data.xp, data.health.max, data.speed,
@@ -143,7 +162,10 @@ async function loadMonsters(db, root) {
       JSON.stringify(data.attacks || []),
       JSON.stringify(data.defenses || {}),
       JSON.stringify(data.loot || []),
-      JSON.stringify(data.look || {})
+      JSON.stringify(data.look || {}),
+      attackRange,
+      aggroRange,
+      attackMs
     ]);
 
     await run(`
