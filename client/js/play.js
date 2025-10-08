@@ -292,9 +292,7 @@ window.GameScene.onMonsterDead = (instanceId) => {
 const SERVER_MONSTER_STATE = new Map(); // id -> { sprite, x, y, spawnId, monsterKey, mapKey, dead, renderX, renderY, animSpeedMultiplier, isMoving, blockedTiles, lastServerAt }
 const UNBOUND_SERVER_MONSTERS = new Set(); // ids aguardando sprite
 const MONSTER_BLOCKED_TILES = new Map(); // "cx,cy" -> Set(instanceId)
-const HERO_BLOCK_STATE = { tiles: new Set(), lastX: null, lastY: null, safeX: null, safeY: null };
-let heroFootboxBlockedFn = null;
-let _heroRepositioning = false;
+const HERO_BLOCK_STATE = { tiles: new Set(), lastX: null, lastY: null };
 let _serverMonsterRetryScheduled = false;
 
 const SERVER_MONSTER_STEP_MS = 150;
@@ -434,12 +432,10 @@ function monsterTileKey(cx, cy) {
 
 function clearHeroBlocking() {
   if (!HERO_BLOCK_STATE || !HERO_BLOCK_STATE.tiles) return;
-  if (HERO_BLOCK_STATE.tiles.size) HERO_BLOCK_STATE.tiles.clear();
+  if (!HERO_BLOCK_STATE.tiles.size) return;
+  HERO_BLOCK_STATE.tiles.clear();
   HERO_BLOCK_STATE.lastX = null;
   HERO_BLOCK_STATE.lastY = null;
-  HERO_BLOCK_STATE.safeX = null;
-  HERO_BLOCK_STATE.safeY = null;
-  _heroRepositioning = false;
 }
 
 function heroSpriteMeta() {
@@ -485,52 +481,6 @@ function heroFootboxTiles(px, py) {
   return keys;
 }
 
-function findNearestHeroSafeSpot(px, py, maxRadius = 4) {
-  if (!Number.isFinite(px) || !Number.isFinite(py)) return null;
-  if (typeof heroFootboxBlockedFn !== 'function') return null;
-
-  const startCx = Math.floor(px / TILE);
-  const startCy = Math.floor(py / TILE);
-  if (!Number.isFinite(startCx) || !Number.isFinite(startCy)) return null;
-
-  const visited = new Set();
-  const queue = [{ cx: startCx, cy: startCy, dist: 0 }];
-  const steps = [
-    { dx: 1, dy: 0 },
-    { dx: -1, dy: 0 },
-    { dx: 0, dy: 1 },
-    { dx: 0, dy: -1 },
-    { dx: 1, dy: 1 },
-    { dx: 1, dy: -1 },
-    { dx: -1, dy: 1 },
-    { dx: -1, dy: -1 },
-  ];
-
-  while (queue.length) {
-    const node = queue.shift();
-    const key = monsterTileKey(node.cx, node.cy);
-    if (visited.has(key)) continue;
-    visited.add(key);
-
-    const centerX = node.cx * TILE + TILE / 2;
-    const centerY = node.cy * TILE + TILE / 2;
-    if (!heroFootboxBlockedFn(centerX, centerY)) {
-      return { x: centerX, y: centerY };
-    }
-
-    if (node.dist >= maxRadius) continue;
-    for (const step of steps) {
-      const nextCx = node.cx + step.dx;
-      const nextCy = node.cy + step.dy;
-      const nextKey = monsterTileKey(nextCx, nextCy);
-      if (visited.has(nextKey)) continue;
-      queue.push({ cx: nextCx, cy: nextCy, dist: node.dist + 1 });
-    }
-  }
-
-  return null;
-}
-
 function updateHeroBlocking(px, py) {
   if (!HERO_BLOCK_STATE || !HERO_BLOCK_STATE.tiles) return;
   if (!Number.isFinite(px) || !Number.isFinite(py)) {
@@ -538,153 +488,37 @@ function updateHeroBlocking(px, py) {
     return;
   }
 
-  const nextKeys = new Set(heroFootboxTiles(px, py));
-
-  const overlapsMonster = heroFootboxBlockedFn ? heroFootboxBlockedFn(px, py) : false;
-
-  if (overlapsMonster) {
-    if (_heroRepositioning) return;
-
-    let safeX = Number.isFinite(HERO_BLOCK_STATE.safeX) ? HERO_BLOCK_STATE.safeX : null;
-    let safeY = Number.isFinite(HERO_BLOCK_STATE.safeY) ? HERO_BLOCK_STATE.safeY : null;
-
-    if (!Number.isFinite(safeX) || !Number.isFinite(safeY)) {
-      safeX = Number.isFinite(HERO_BLOCK_STATE.lastX) ? HERO_BLOCK_STATE.lastX : null;
-      safeY = Number.isFinite(HERO_BLOCK_STATE.lastY) ? HERO_BLOCK_STATE.lastY : null;
-    }
-
-    if (!Number.isFinite(safeX) || !Number.isFinite(safeY)) {
-      const cx = Math.floor(px / TILE);
-      const cy = Math.floor(py / TILE);
-      safeX = cx * TILE + TILE / 2;
-      safeY = cy * TILE + TILE / 2;
-    }
-
-    let targetX = Number.isFinite(safeX) ? safeX : null;
-    let targetY = Number.isFinite(safeY) ? safeY : null;
-
-    if (Number.isFinite(targetX) && Number.isFinite(targetY) && heroFootboxBlockedFn && heroFootboxBlockedFn(targetX, targetY)) {
-      const fallback = findNearestHeroSafeSpot(px, py);
-      if (fallback && Number.isFinite(fallback.x) && Number.isFinite(fallback.y)) {
-        targetX = fallback.x;
-        targetY = fallback.y;
-      }
-    }
-
-    if (Number.isFinite(targetX) && Number.isFinite(targetY)) {
-      HERO_BLOCK_STATE.safeX = targetX;
-      HERO_BLOCK_STATE.safeY = targetY;
-
-      const dx = Math.abs(px - targetX);
-      const dy = Math.abs(py - targetY);
-      if (dx > 0.1 || dy > 0.1) {
-        const ctrl = window.GameScene?.controller;
-        if (ctrl && typeof ctrl.setPosition === 'function') {
-          _heroRepositioning = true;
-          try {
-            ctrl.setPosition(targetX, targetY);
-          } finally {
-            _heroRepositioning = false;
-          }
-        } else {
-          HERO_BLOCK_STATE.lastX = targetX;
-          HERO_BLOCK_STATE.lastY = targetY;
-        }
-      }
-    }
-    return;
+  const lastX = HERO_BLOCK_STATE.lastX;
+  const lastY = HERO_BLOCK_STATE.lastY;
+  if (Number.isFinite(lastX) && Number.isFinite(lastY)) {
+    const dx = Math.abs(px - lastX);
+    const dy = Math.abs(py - lastY);
+    if (dx < 0.1 && dy < 0.1) return;
   }
 
+  const nextKeys = new Set(heroFootboxTiles(px, py));
   const current = HERO_BLOCK_STATE.tiles;
+
+  let changed = false;
   const removals = [];
   for (const key of current) {
     if (!nextKeys.has(key)) removals.push(key);
   }
   for (const key of removals) {
     current.delete(key);
+    changed = true;
   }
 
   for (const key of nextKeys) {
-    current.add(key);
+    if (!current.has(key)) {
+      current.add(key);
+      changed = true;
+    }
   }
 
   HERO_BLOCK_STATE.lastX = px;
   HERO_BLOCK_STATE.lastY = py;
-  HERO_BLOCK_STATE.safeX = px;
-  HERO_BLOCK_STATE.safeY = py;
-}
-
-function ensureMonsterMeta(state) {
-  if (!state) return { frameW: TILE, frameH: TILE, anchorX: 0.5, anchorY: 0.9, meta: null };
-  const sprite = state.sprite || null;
-  const metaCandidate = sprite?.meta || state.meta || (state.monsterKey ? findMetaFor(state.monsterKey) : null) || null;
-  if (metaCandidate && !state.meta) state.meta = metaCandidate;
-  if (sprite && metaCandidate && !sprite.meta) sprite.meta = metaCandidate;
-
-  const meta = metaCandidate || {};
-  let frameW = Number(meta.frame?.width);
-  let frameH = Number(meta.frame?.height);
-  if (!Number.isFinite(frameW) || frameW <= 0) frameW = Number(sprite?.w) || TILE;
-  if (!Number.isFinite(frameH) || frameH <= 0) frameH = Number(sprite?.h) || TILE;
-  if (!Number.isFinite(frameW) || frameW <= 0) frameW = TILE;
-  if (!Number.isFinite(frameH) || frameH <= 0) frameH = TILE;
-
-  let anchorX = Number(meta.anchor?.x);
-  let anchorY = Number(meta.anchor?.y);
-  if (!Number.isFinite(anchorX)) anchorX = Number(sprite?.anchor?.x);
-  if (!Number.isFinite(anchorY)) anchorY = Number(sprite?.anchor?.y);
-  if (!Number.isFinite(anchorX)) anchorX = 0.5;
-  if (!Number.isFinite(anchorY)) anchorY = 0.9;
-  anchorX = Math.max(0, Math.min(1, anchorX));
-  anchorY = Math.max(0, Math.min(1, anchorY));
-
-  return { frameW, frameH, anchorX, anchorY, meta: metaCandidate };
-}
-
-function monsterFootboxTiles(state, worldX, worldY) {
-  if (!state) return [];
-  const sprite = state.sprite || null;
-  const { frameW, frameH, anchorX, anchorY } = ensureMonsterMeta(state);
-
-  const px = Number.isFinite(worldX)
-    ? worldX
-    : (Number.isFinite(state.x)
-        ? state.x
-        : (Number.isFinite(sprite?.x) ? sprite.x : NaN));
-  const py = Number.isFinite(worldY)
-    ? worldY
-    : (Number.isFinite(state.y)
-        ? state.y
-        : (Number.isFinite(sprite?.y) ? sprite.y : NaN));
-  if (!Number.isFinite(px) || !Number.isFinite(py)) return [];
-
-  const spriteLeft = px - frameW * anchorX;
-  const spriteTop = py - frameH * anchorY;
-  const spriteBottom = spriteTop + frameH;
-
-  const footHeight = Math.max(TILE / 2, Math.min(TILE, frameH));
-  const tolerance = 2;
-  const rectHeight = footHeight + tolerance * 2;
-  const rectTop = spriteBottom - footHeight - tolerance;
-  const rectWidth = frameW + tolerance * 2;
-  const rectLeft = spriteLeft - tolerance;
-
-  const minCx = Math.floor(rectLeft / TILE);
-  const maxCx = Math.floor((rectLeft + rectWidth - 1) / TILE);
-  const minCy = Math.floor(rectTop / TILE);
-  const maxCy = Math.floor((rectTop + rectHeight - 1) / TILE);
-
-  if (!Number.isFinite(minCx) || !Number.isFinite(maxCx) || !Number.isFinite(minCy) || !Number.isFinite(maxCy)) {
-    return [];
-  }
-
-  const tiles = [];
-  for (let cy = minCy; cy <= maxCy; cy++) {
-    for (let cx = minCx; cx <= maxCx; cx++) {
-      tiles.push(monsterTileKey(cx, cy));
-    }
-  }
-  return tiles;
+  if (!changed) return;
 }
 
 function removeMonsterFromTile(state) {
@@ -705,74 +539,68 @@ function updateMonsterBlocking(state, worldX, worldY) {
   if (!state.blockedTiles) state.blockedTiles = new Set();
   removeMonsterFromTile(state);
 
-  const tiles = monsterFootboxTiles(state, worldX, worldY);
-  if (!tiles.length) return;
+  const sprite = state.sprite || null;
+  const metaCandidate = sprite?.meta || state.meta || (state.monsterKey ? findMetaFor(state.monsterKey) : null) || null;
+  if (metaCandidate && !state.meta) state.meta = metaCandidate;
+  if (sprite && metaCandidate && !sprite.meta) sprite.meta = metaCandidate;
 
-  for (const key of tiles) {
-    let set = MONSTER_BLOCKED_TILES.get(key);
-    if (!set) {
-      set = new Set();
-      MONSTER_BLOCKED_TILES.set(key, set);
-    }
-    set.add(state.id);
-    state.blockedTiles.add(key);
-  }
-  return true;
-}
+  const meta = metaCandidate || {};
+  let frameW = Number(meta.frame?.width);
+  let frameH = Number(meta.frame?.height);
+  if (!Number.isFinite(frameW) || frameW <= 0) frameW = Number(sprite?.w) || TILE;
+  if (!Number.isFinite(frameH) || frameH <= 0) frameH = Number(sprite?.h) || TILE;
+  if (!Number.isFinite(frameW) || frameW <= 0) frameW = TILE;
+  if (!Number.isFinite(frameH) || frameH <= 0) frameH = TILE;
 
-function resolveMonsterHeroConflict(state, desiredX, desiredY, prevX, prevY, initialInfo = null) {
-  if (!state) return null;
+  let anchorX = Number(meta.anchor?.x);
+  let anchorY = Number(meta.anchor?.y);
+  if (!Number.isFinite(anchorX)) anchorX = 0.5;
+  if (!Number.isFinite(anchorY)) anchorY = 0.9;
+  anchorX = Math.max(0, Math.min(1, anchorX));
+  anchorY = Math.max(0, Math.min(1, anchorY));
 
-  let info = initialInfo || computeMonsterBlockingInfo(state, desiredX, desiredY);
-  if (!info) return null;
-  if (!info.heroConflict) return { x: desiredX, y: desiredY, info };
+  const px = Number.isFinite(worldX)
+    ? worldX
+    : (Number.isFinite(state.x)
+        ? state.x
+        : (Number.isFinite(sprite?.x) ? sprite.x : NaN));
+  const py = Number.isFinite(worldY)
+    ? worldY
+    : (Number.isFinite(state.y)
+        ? state.y
+        : (Number.isFinite(sprite?.y) ? sprite.y : NaN));
+  if (!Number.isFinite(px) || !Number.isFinite(py)) return;
 
-  const tried = new Set();
-  function pushCandidate(wx, wy) {
-    if (!Number.isFinite(wx) || !Number.isFinite(wy)) return;
-    const key = `${Math.floor(wx / TILE)},${Math.floor(wy / TILE)}`;
-    if (tried.has(key)) return;
-    tried.add(key);
-    candidates.push({ x: wx, y: wy });
-  }
+  const spriteLeft = px - frameW * anchorX;
+  const spriteTop = py - frameH * anchorY;
+  const spriteBottom = spriteTop + frameH;
 
-  const candidates = [];
-  if (Number.isFinite(prevX) && Number.isFinite(prevY)) pushCandidate(prevX, prevY);
-  if (Number.isFinite(state.x) && Number.isFinite(state.y)) pushCandidate(state.x, state.y);
+  const footHeight = Math.max(TILE / 2, Math.min(TILE, frameH));
+  const tolerance = 2;
+  const rectHeight = footHeight + tolerance * 2;
+  const rectTop = spriteBottom - footHeight - tolerance;
+  const rectWidth = frameW + tolerance * 2;
+  const rectLeft = spriteLeft - tolerance;
 
-  const heroPos = window.GameScene?.controller?.getPosition?.();
-  if (heroPos && Number.isFinite(heroPos.x) && Number.isFinite(heroPos.y)) {
-    const dx = desiredX - heroPos.x;
-    const dy = desiredY - heroPos.y;
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
-    const signX = dx === 0 ? 0 : (dx > 0 ? 1 : -1);
-    const signY = dy === 0 ? 0 : (dy > 0 ? 1 : -1);
+  const minCx = Math.floor(rectLeft / TILE);
+  const maxCx = Math.floor((rectLeft + rectWidth - 1) / TILE);
+  const minCy = Math.floor(rectTop / TILE);
+  const maxCy = Math.floor((rectTop + rectHeight - 1) / TILE);
 
-    if (absDx >= absDy) {
-      pushCandidate(heroPos.x + (signX || 1) * TILE, heroPos.y);
-      pushCandidate(heroPos.x, heroPos.y + TILE);
-      pushCandidate(heroPos.x, heroPos.y - TILE);
-    } else {
-      pushCandidate(heroPos.x, heroPos.y + (signY || 1) * TILE);
-      pushCandidate(heroPos.x + TILE, heroPos.y);
-      pushCandidate(heroPos.x - TILE, heroPos.y);
-    }
+  if (!Number.isFinite(minCx) || !Number.isFinite(maxCx) || !Number.isFinite(minCy) || !Number.isFinite(maxCy)) return;
 
-    pushCandidate(heroPos.x + TILE, heroPos.y);
-    pushCandidate(heroPos.x - TILE, heroPos.y);
-    pushCandidate(heroPos.x, heroPos.y + TILE);
-    pushCandidate(heroPos.x, heroPos.y - TILE);
-  }
-
-  for (const cand of candidates) {
-    const candInfo = computeMonsterBlockingInfo(state, cand.x, cand.y);
-    if (candInfo && !candInfo.heroConflict) {
-      return { x: cand.x, y: cand.y, info: candInfo };
+  for (let cy = minCy; cy <= maxCy; cy++) {
+    for (let cx = minCx; cx <= maxCx; cx++) {
+      const key = monsterTileKey(cx, cy);
+      let set = MONSTER_BLOCKED_TILES.get(key);
+      if (!set) {
+        set = new Set();
+        MONSTER_BLOCKED_TILES.set(key, set);
+      }
+      set.add(state.id);
+      state.blockedTiles.add(key);
     }
   }
-
-  return null;
 }
 
 function clearMonsterBlocking(id) {
@@ -920,48 +748,11 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
   const prevX = Number.isFinite(current.x) ? current.x : (Number.isFinite(state.renderX) ? state.renderX : x);
   const prevY = Number.isFinite(current.y) ? current.y : (Number.isFinite(state.renderY) ? state.renderY : y);
 
-  let blockingInfo = computeMonsterBlockingInfo(state, x, y);
-  if (blockingInfo && blockingInfo.heroConflict) {
-    const resolved = resolveMonsterHeroConflict(state, x, y, prevX, prevY, blockingInfo);
-    if (!resolved) {
-      state.lastServerAt = now;
-      SERVER_MONSTER_STATE.set(String(id), state);
-      return;
-    }
-    x = resolved.x;
-    y = resolved.y;
-    blockingInfo = resolved.info || computeMonsterBlockingInfo(state, x, y);
-  }
-
   const dx = x - prevX;
   const dy = y - prevY;
   const absDx = Math.abs(dx);
   const absDy = Math.abs(dy);
   const dist = Math.hypot(dx, dy);
-
-  const heroTiles = HERO_BLOCK_STATE?.tiles;
-  const heroConflict = (() => {
-    if (!heroTiles || !heroTiles.size) return false;
-    const tiles = monsterFootboxTiles(state, x, y);
-    if (!tiles.length) return false;
-    for (const key of tiles) {
-      if (heroTiles.has(key)) return true;
-    }
-    return false;
-  })();
-
-  if (heroConflict) {
-    if (sprite) {
-      sprite._serverMove = null;
-      if (Number.isFinite(prevX)) sprite.x = prevX;
-      if (Number.isFinite(prevY)) sprite.y = prevY;
-    }
-    state.lastServerAt = now;
-    const backX = Number.isFinite(prevX) ? prevX : (Number.isFinite(state.x) ? state.x : x);
-    const backY = Number.isFinite(prevY) ? prevY : (Number.isFinite(state.y) ? state.y : y);
-    updateMonsterBlocking(state, backX, backY);
-    return;
-  }
 
   let segments = null;
   let tweenDur = computeTweenDuration(dx, dy);
@@ -1085,13 +876,6 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
   const finalFace = segments && segments.length ? (segments[segments.length - 1].face || face) : face;
   const initialFace = segments && segments.length ? (segments[0].face || finalFace) : finalFace;
 
-  const blockingApplied = updateMonsterBlocking(state, x, y, { info: blockingInfo });
-  if (!blockingApplied) {
-    state.lastServerAt = now;
-    SERVER_MONSTER_STATE.set(String(id), state);
-    return;
-  }
-
   state.x = x;
   state.y = y;
   state.dead = false;
@@ -1148,6 +932,7 @@ function applyServerPosition(id, sprite, x, y, opts = {}) {
     }
   }
 
+  updateMonsterBlocking(state, x, y);
   state.lastServerAt = now;
   SERVER_MONSTER_STATE.set(String(id), state);
 }
@@ -2314,31 +2099,6 @@ function updateRespawns(now) {
 
   const monsterBlockChecker = (cx, cy) => isTileBlockedByMonster(cx, cy, { ignoreHero: true });
 
-  const heroFootboxBlocked = (px, py) => {
-    if (!Number.isFinite(px) || !Number.isFinite(py)) return true;
-    const keys = heroFootboxTiles(px, py);
-    if (!keys || !keys.length) return false;
-
-    for (const key of keys) {
-      const [sx, sy] = String(key).split(',');
-      const cx = Number(sx);
-      const cy = Number(sy);
-      if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
-
-      const hasGrid = Number.isFinite(cols) && Number.isFinite(rows) && cols > 0 && rows > 0;
-      if (hasGrid) {
-        if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) return true;
-        if (grid && grid[cy * cols + cx] === 1) return true;
-      }
-
-      if (monsterBlockChecker(cx, cy)) return true;
-    }
-
-    return false;
-  };
-
-  heroFootboxBlockedFn = heroFootboxBlocked;
-
   const controller = new PlayerController({
     speed: 140,
     collisionGrid: grid,
@@ -2357,20 +2117,6 @@ function updateRespawns(now) {
     controller.setPosition = function patchedSetPosition(x, y) {
       originalSetPosition(x, y);
       if (Number.isFinite(x) && Number.isFinite(y)) updateHeroBlocking(x, y);
-    };
-  }
-
-  if (controller && typeof controller.tryMove === 'function') {
-    const originalTryMove = controller.tryMove.bind(controller);
-    controller.tryMove = function patchedTryMove(nx, ny) {
-      if (heroFootboxBlocked(nx, ny)) {
-        return { x: this.x, y: this.y, blocked: true };
-      }
-      const res = originalTryMove(nx, ny);
-      if (res && !res.blocked && Number.isFinite(res.x) && Number.isFinite(res.y)) {
-        updateHeroBlocking(res.x, res.y);
-      }
-      return res;
     };
   }
 
