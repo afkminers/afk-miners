@@ -676,6 +676,18 @@ function findNearestFreeTile({
       const ny = node.ty + step.dy;
       if (!isTileInsideSpawn(nx, ny, monster)) continue;
 
+      const isDiagonal = step.dx !== 0 && step.dy !== 0;
+      if (isDiagonal) {
+        const cornerAX = node.tx + step.dx;
+        const cornerAY = node.ty;
+        const cornerBX = node.tx;
+        const cornerBY = node.ty + step.dy;
+        if (isTileBlockedByCollision(mapCollision, cornerAX, cornerAY) &&
+            isTileBlockedByCollision(mapCollision, cornerBX, cornerBY)) {
+          continue;
+        }
+      }
+
       if (isTileBlockedByCollision(mapCollision, nx, ny)) continue;
       const key = tileKey(nx, ny);
       if (visited.has(key)) continue;

@@ -717,6 +717,16 @@
       for (const dir of ADJACENT_DIRS) {
         const nx = node.cx + dir.dx;
         const ny = node.cy + dir.dy;
+        const isDiagonal = dir.dx !== 0 && dir.dy !== 0;
+        if (isDiagonal) {
+          const cardinalAX = node.cx + dir.dx;
+          const cardinalAY = node.cy;
+          const cardinalBX = node.cx;
+          const cardinalBY = node.cy + dir.dy;
+          if (isSolidTile(losGrid, cardinalAX, cardinalAY) && isSolidTile(losGrid, cardinalBX, cardinalBY)) {
+            continue;
+          }
+        }
         if (isSolidTile(losGrid, nx, ny)) continue;
         const k = tileKey(nx, ny);
         if (visited.has(k)) continue;
