@@ -38,7 +38,7 @@ async function listAliveMonsters({ mapKey: fallbackMapKey = 'house' } = {}) {
     sql: `
       SELECT
         mi.id::text                                AS id,
-        mi.map_key::text                           AS "mapKey",
+        COALESCE(mi.map_key, s."mapKey")::text    AS "mapKey",
         mi.spawn_id                                AS "spawnId",
         s."monsterKey"::text                       AS "monsterKey",
         COALESCE(mi.x, 0)                          AS x,

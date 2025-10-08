@@ -142,7 +142,7 @@ async function respawnTick({ all, run }) {
         mi.id,
         mi.max_hp                   AS mi_max_hp,
         mi.spawn_id,
-        mi.map_key,
+        COALESCE(mi.map_key, s."mapKey") AS map_key,
         s."monsterKey",
         s.x, s.y,                   -- top-left do retângulo do spawn (px)
         COALESCE(s.w, 0) AS w,
@@ -166,9 +166,12 @@ async function respawnTick({ all, run }) {
   const occupiedByMap = new Map();
   if (due.length) {
     const aliveTiles = await all(`
-      SELECT map_key, x, y
-        FROM monster_instances
-       WHERE state = 'ALIVE'
+      SELECT COALESCE(mi.map_key, s."mapKey") AS map_key,
+             mi.x,
+             mi.y
+        FROM monster_instances mi
+        LEFT JOIN spawns s ON s.id = mi.spawn_id
+       WHERE mi.state = 'ALIVE'
     `);
 
     for (const row of aliveTiles) {
@@ -187,10 +190,11 @@ async function respawnTick({ all, run }) {
       : 1;
 
     // Escolhe uma posição dentro da área do spawn (em pixels)
-    const mapKey = r.map_key == null ? '__null__' : String(r.map_key);
-    let chosen = reserveTileForSpawn(r, mapKey, occupiedByMap);
+    const resolvedMapKey = r.map_key == null ? null : String(r.map_key);
+    const occKey = resolvedMapKey ?? '__null__';
+    let chosen = reserveTileForSpawn(r, occKey, occupiedByMap);
     if (!chosen) {
-      const occ = getOccupiedTilesForMap(occupiedByMap, mapKey);
+      const occ = getOccupiedTilesForMap(occupiedByMap, occKey);
       for (let attempt = 0; attempt < 8 && !chosen; attempt++) {
         const fallbackPos = pickPosInSpawnRect(r);
         const tx = tileOf(fallbackPos.x);
@@ -231,9 +235,10 @@ async function respawnTick({ all, run }) {
               last_hit_at      = NULL,
               x                = $3,
               y                = $4,
+              map_key          = $5,
               updated_at       = now()
         WHERE id = $1`,
-      [r.id, hpFull, px, py]
+        [r.id, hpFull, px, py, resolvedMapKey]
     );
 
     try {
@@ -243,7 +248,7 @@ async function respawnTick({ all, run }) {
           id: r.id,
           x: px,
           y: py,
-          mapKey: r.map_key,
+          mapKey: resolvedMapKey,
           spawnRect: { x: r.x, y: r.y, w: r.w, h: r.h },
           monsterKey: r.monsterKey,
           speed: r.speed
@@ -256,7 +261,7 @@ async function respawnTick({ all, run }) {
       const payload = {
         type: 'monster_respawned',
         id: r.id,
-        mapKey: r.map_key,
+        mapKey: resolvedMapKey,
         monsterKey: r.monsterKey,
         spawnId: r.spawn_id,      // <-- opcional
         hp: hpFull,

@@ -86,7 +86,8 @@ LEFT JOIN items_master     i ON i.key = eq.item_key
 /** Instância do monstro + dados do monstro (xp/loot/armor) */
 async function getInstanceWithMonster(instanceId) {
   return await get(
-    `SELECT mi.id, mi.hp, mi.max_hp, mi.state, mi.spawn_id, mi.map_key,
+    `SELECT mi.id, mi.hp, mi.max_hp, mi.state, mi.spawn_id,
+            COALESCE(mi.map_key, s."mapKey") AS map_key,
             mi.x, mi.y,
             m.id AS monster_id, m.key AS monster_key,
             COALESCE(m.xp,25)                      AS xp_reward,
@@ -108,6 +109,7 @@ async function getInstanceWithMonster(instanceId) {
             ) * ${TILE} AS reach_px
        FROM monster_instances mi
        JOIN monsters_master m ON m.id = mi.monster_id
+  LEFT JOIN spawns s ON s.id = mi.spawn_id
       WHERE mi.id = $1`,
     [instanceId]
   );

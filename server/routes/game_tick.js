@@ -175,7 +175,8 @@ router.get('/tick', async (req, res) => {
         const combatRows = await all(
           `SELECT mi.id, mi.monster_key, mi.x, mi.y, mi.hp, mi.max_hp, mi.alive
              FROM monster_instances mi
-            WHERE mi.map_key = $1
+        LEFT JOIN spawns s ON s.id = mi.spawn_id
+            WHERE COALESCE(mi.map_key, s."mapKey") = $1
               AND mi.alive = true
             ORDER BY mi.id
             LIMIT 100`,
