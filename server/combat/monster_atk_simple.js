@@ -644,6 +644,13 @@ const CARDINAL_STEPS = [
   { dx: 0, dy: 1 },
   { dx: 0, dy: -1 },
 ];
+const ADJACENT_STEPS = [
+  ...CARDINAL_STEPS,
+  { dx: 1, dy: 1 },
+  { dx: 1, dy: -1 },
+  { dx: -1, dy: 1 },
+  { dx: -1, dy: -1 },
+];
 
 function findNearestFreeTile({
   startTx,
@@ -664,7 +671,7 @@ function findNearestFreeTile({
     const node = queue.shift();
     if (node.depth >= maxDepth) continue;
 
-    for (const step of CARDINAL_STEPS) {
+    for (const step of ADJACENT_STEPS) {
       const nx = node.tx + step.dx;
       const ny = node.ty + step.dy;
       if (!isTileInsideSpawn(nx, ny, monster)) continue;
