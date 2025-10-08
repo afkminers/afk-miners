@@ -964,7 +964,12 @@ async function resolveTileStacks({
 // ======= DB =======
 async function fetchAliveMonsters() {
   const sql = `
-    SELECT mi.id, mi.map_key, mi.x, mi.y, mi.hp, mi.hp_max,
+    SELECT mi.id,
+           COALESCE(mi.map_key, s."mapKey") AS map_key,
+           mi.x,
+           mi.y,
+           mi.hp,
+           mi.hp_max,
            s.id              AS spawn_id,
            s.x               AS sx,
            s.y               AS sy,

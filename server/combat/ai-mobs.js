@@ -265,7 +265,7 @@
   async function fetchAliveMonsters() {
     return (await all(`
       SELECT mi.id,
-            mi.map_key,
+            COALESCE(mi.map_key, s."mapKey") AS map_key,
             mi.x, mi.y,
             mm.attack_range,      -- tiles
             mm.aggro_range,       -- tiles

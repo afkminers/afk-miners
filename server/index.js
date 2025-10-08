@@ -985,7 +985,8 @@ async function seedAIMobsFromDB(aiMobs) {
   try {
     const rows = await all(`
       SELECT mi.id,
-             mi.x, mi.y, mi.map_key,
+             mi.x, mi.y,
+             COALESCE(mi.map_key, s."mapKey") AS map_key,
              s.x  AS sx, s.y  AS sy, s.w AS sw, s.h AS sh,
              s."monsterKey" AS monster_key,
              mm.speed        AS speed

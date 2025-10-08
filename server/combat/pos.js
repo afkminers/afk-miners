@@ -187,7 +187,8 @@ function resolveCoord(raw, sizePx, spawnCoord, spawnSpan) {
 
 async function getMonsterPos(instanceId) {
   const row = await get(
-    `SELECT mi.x, mi.y, mi.map_key AS "map_key",
+    `SELECT mi.x, mi.y,
+            COALESCE(mi.map_key, s."mapKey") AS "map_key",
             COALESCE(
               NULLIF(((sp."dataJSON")::jsonb ->> 'frame_w'), '')::int,
               NULLIF(((sp."dataJSON")::jsonb ->> 'frameW'), '')::int,
