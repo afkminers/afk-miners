@@ -34,6 +34,9 @@
   const MAX_CHASE_SPEED_PX_S = 420;     // px/s (~Tibia haste early game)
   const GIVEUP_MS = 8000;               // desiste se perder o alvo por muito tempo
   const ONLINE_RECENT_MS = 4000;       // presença considerada “viva” nos últimos 4s
+  const STUCK_RECHECK_MS = 2000;        // tempo em agro antes de forçar alternativa
+  const ALT_PATH_WINDOW_MS = 1200;      // quanto tempo mantém modo alternativo
+  const ALT_PATH_MAX_DEPTH = 16;        // profundidade máxima da busca alternativa
 
   // Anti-hit fantasma (idades máximas aceitáveis das posições)
   const STALE_HERO_MS = Math.max(900, Number(LIVE_POS_TTL_MS) + 350);
@@ -443,6 +446,10 @@
       lastSwitchAt: cur.lastSwitchAt || 0,
       threat: cur.threat || new Map(),
       pendingStep,
+
+      agroSince: Number(patch.agroSince ?? cur.agroSince ?? 0),
+      lastProgressAt: Number(patch.lastProgressAt ?? cur.lastProgressAt ?? Date.now()),
+      forcedAltUntil: Number(patch.forcedAltUntil ?? cur.forcedAltUntil ?? 0),
 
 
       // === Ranges em PX e cooldown em ms, todos no mesmo relógio (ms) ===
@@ -872,6 +879,10 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
 
   if (!mob.targetHeroId) {
     mob.mode = 'idle';
+    mob.agroSince = 0;
+    mob.forcedAltUntil = 0;
+    mob.lastProgressAt = mob.posUpdatedAt || now;
+    mob.pendingStep = null;
     await maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles });
     return;
   }
@@ -903,6 +914,8 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     return;
   }
 
+  let heroMem = mob.targetHeroId ? heroMemory.get(String(mob.targetHeroId)) : null;
+
   // 2) Melee estilo Tibia: aceita adjacência em 8-direções (inclui diagonal)
   //    e também checa alcance real do monstro em pixels com tolerância.
   const TILE = PX_PER_TILE;
@@ -917,6 +930,12 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   if (heroTiles && Number.isFinite(heroCx) && Number.isFinite(heroCy)) {
     heroTiles.add(tileKey(heroCx, heroCy));
   }
+
+  const stuckBaseline = Math.max(mob.lastProgressAt || 0, mob.agroSince || 0);
+  const stuckFor = now - stuckBaseline;
+  const agroActive = mob.agroSince > 0 && (now - mob.agroSince) < GIVEUP_MS * 2;
+  const shouldForceAlternate = agroActive && stuckFor >= STUCK_RECHECK_MS;
+  const altPathMode = shouldForceAlternate || (mob.forcedAltUntil || 0) > now;
 
   // Chebyshev distance: <= 1 significa mesmo tile ou qualquer adjacente (8-dir)
   const dxC = Math.abs(mobCx - heroCx);
@@ -944,6 +963,9 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   if (!(inRangePx && canSeeNow)) {
     if (mob.mode === 'attack') mob.mode = 'chase';
     mob.lastAttackAt = 0; // força cooldown completo ao reentrar
+    if (shouldForceAlternate) {
+      mob.forcedAltUntil = Math.max(mob.forcedAltUntil || 0, now + ALT_PATH_WINDOW_MS);
+    }
   }
 
   // ATAQUE: SOMENTE se alcance/LOS ok E posições "frescas" (anti-stale hard-guard)
@@ -955,7 +977,24 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       tgt = fb ? { heroId: mob.targetHeroId, x: fb.x, y: fb.y, updatedMs: fb.updatedMs || 0 } : null;
     }
 
-    const gate = canMobHitNow({ now, mob, tgtPos: tgt, losGrid });
+    let gate = canMobHitNow({ now, mob, tgtPos: tgt, losGrid });
+    if (!gate.ok && shouldForceAlternate && heroMem) {
+      const predictedHit = predictHeroTileCx(heroMem, heroCx, heroCy);
+      if (predictedHit && Number.isFinite(predictedHit.cx) && Number.isFinite(predictedHit.cy)) {
+        const alt = {
+          heroId: mob.targetHeroId,
+          x: predictedHit.cx * STEP_PX + STEP_PX / 2,
+          y: predictedHit.cy * STEP_PX + STEP_PX / 2,
+          updatedMs: predictedHit.updatedAt || now,
+        };
+        const altGate = canMobHitNow({ now, mob, tgtPos: alt, losGrid });
+        if (altGate.ok) {
+          gate = altGate;
+          tgt = alt;
+        }
+      }
+    }
+
     if (!gate.ok) {
       if (DEBUG_AI) {
         console.log('[ai-mobs] HIT BLOQUEADO', gate.reason,
@@ -967,12 +1006,17 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       // desarma ataque e volta a perseguir
       if (mob.mode === 'attack') mob.mode = 'chase';
       mob.lastAttackAt = 0;
+      if (shouldForceAlternate) {
+        mob.forcedAltUntil = Math.max(mob.forcedAltUntil || 0, now + ALT_PATH_WINDOW_MS);
+      }
       return;
     }
 
     mob.mode = 'attack';
     mob.pendingStep = null;
     mob.lastSeenAt = now;
+    mob.lastProgressAt = now;
+    mob.forcedAltUntil = 0;
 
     const cd = Number(mob.attackMs || (K.MONSTER_SPEED_MS && K.MONSTER_SPEED_MS.DEFAULT) || 1200);
     if ((now - (mob.lastAttackAt || 0)) >= cd) {
@@ -999,6 +1043,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       } catch (e) {
         console.warn('[ai-mobs] applyMobHit error:', e?.message);
       }
+      mob.lastProgressAt = now;
     }
     return;
   }
@@ -1009,19 +1054,41 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   mob.mode = 'chase';
 
   const hasValidStep = mob.pendingStep && Number.isFinite(mob.pendingStep.x) && Number.isFinite(mob.pendingStep.y);
-  let stepTarget = hasValidStep ? mob.pendingStep : null;
+  let stepTarget = null;
+  if (hasValidStep && !altPathMode) {
+    stepTarget = mob.pendingStep;
+  } else if (hasValidStep) {
+    mob.pendingStep = null;
+  }
 
   if (!stepTarget && now >= mob.repathAt) {
-    const heroMem = mob.targetHeroId ? heroMemory.get(String(mob.targetHeroId)) : null;
-    const step = pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem);
+    let usedAlternate = false;
+    let step = pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem);
+
+    if (!step && altPathMode) {
+      step = pickStepAlternate(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem, {
+        maxDepth: ALT_PATH_MAX_DEPTH,
+      });
+      if (step) {
+        usedAlternate = true;
+        mob.forcedAltUntil = Math.max(mob.forcedAltUntil || 0, now + ALT_PATH_WINDOW_MS);
+      }
+    }
+
     if (step) {
       mob.pendingStep = { x: step.x | 0, y: step.y | 0 };
       stepTarget = mob.pendingStep;
       const cooldown = computeRepathCooldownMs(mob);
-      mob.repathAt = now + cooldown;
+      const adjusted = usedAlternate ? Math.max(90, cooldown * 0.75) : cooldown;
+      mob.repathAt = now + adjusted;
     } else {
       mob.pendingStep = null;
-      mob.repathAt = now + Math.max(120, computeRepathCooldownMs(mob));
+      const base = computeRepathCooldownMs(mob);
+      const wait = altPathMode ? Math.max(90, base * 0.75) : Math.max(120, base);
+      mob.repathAt = now + wait;
+      if (altPathMode) {
+        mob.forcedAltUntil = Math.max(mob.forcedAltUntil || 0, now + ALT_PATH_WINDOW_MS);
+      }
     }
   }
 
@@ -1031,6 +1098,8 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       mob.pendingStep = null;
       mob.repathAt = now;
     }
+  } else if (shouldForceAlternate) {
+    mob.forcedAltUntil = Math.max(mob.forcedAltUntil || 0, now + ALT_PATH_WINDOW_MS);
   }
 
 }
@@ -1090,11 +1159,23 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     let bestId = null, bestV = -1;
     for (const [hid, v] of mob.threat.entries()) if (v > bestV) { bestV = v; bestId = hid; }
 
-    if (!bestId) { mob.targetHeroId = null; return; }
+    if (!bestId) {
+      mob.targetHeroId = null;
+      mob.mode = 'idle';
+      mob.agroSince = 0;
+      mob.forcedAltUntil = 0;
+      mob.lastProgressAt = mob.posUpdatedAt || now;
+      mob.pendingStep = null;
+      return;
+    }
     if (!mob.targetHeroId) {
       mob.targetHeroId = bestId;
       mob.lastSwitchAt = now;
       mob.lastSeenAt = now;
+      mob.agroSince = now;
+      mob.lastProgressAt = now;
+      mob.forcedAltUntil = 0;
+      mob.pendingStep = null;
       if (DEBUG_AI) console.log(`[ai-mobs] target set mob=${mob.instanceId} -> ${bestId} (threat=${bestV.toFixed(2)})`);
       return;
     }
@@ -1106,7 +1187,15 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
         mob.targetHeroId = bestId;
         mob.lastSwitchAt = now;
         mob.lastAttackAt = 0; // <<< evita hit “de graça” ao trocar de alvo
+        mob.agroSince = now;
+        mob.lastProgressAt = now;
+        mob.forcedAltUntil = 0;
+        mob.pendingStep = null;
       }
+    }
+
+    if (mob.targetHeroId && !mob.agroSince) {
+      mob.agroSince = now;
     }
   }
 
@@ -1179,6 +1268,98 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     return best;
   }
 
+  function pickStepAlternate(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem, opts = {}) {
+    if (!mob || !tgtPos) return null;
+
+    const maxDepth = Number.isFinite(opts.maxDepth) ? Math.max(1, opts.maxDepth | 0) : ALT_PATH_MAX_DEPTH;
+
+    const startCx = Math.floor(mob.x / STEP_PX);
+    const startCy = Math.floor(mob.y / STEP_PX);
+    const heroCx = Math.floor(tgtPos.x / STEP_PX);
+    const heroCy = Math.floor(tgtPos.y / STEP_PX);
+    const predicted = predictHeroTileCx(heroMem, heroCx, heroCy);
+    const goalCx = Number.isFinite(predicted?.cx) ? predicted.cx : heroCx;
+    const goalCy = Number.isFinite(predicted?.cy) ? predicted.cy : heroCy;
+
+    const heroTilesSet = heroTiles || new Set();
+    const startKey = tileKey(startCx, startCy);
+    const queue = [{ cx: startCx, cy: startCy, depth: 0 }];
+    const parents = new Map([[startKey, null]]);
+
+    let best = null;
+
+    while (queue.length) {
+      const node = queue.shift();
+      if (!node) break;
+      if (node.depth >= maxDepth) continue;
+
+      for (const dir of CARDINAL_DIRS) {
+        const nx = node.cx + dir.dx;
+        const ny = node.cy + dir.dy;
+        const key = tileKey(nx, ny);
+
+        if (parents.has(key)) continue;
+        if (isSolidTile(losGrid, nx, ny)) continue;
+
+        const isHeroTile = nx === heroCx && ny === heroCy;
+        const isGoalTile = nx === goalCx && ny === goalCy;
+        if (!opts.allowHeroTile && (isHeroTile || heroTilesSet.has(key)) && !isGoalTile) continue;
+
+        if (isTileBlockedByMobs(occupancy, nx, ny, mob.instanceId)) {
+          // permite explorar tiles ocupados apenas se forem o alvo final para tentar contornar depois
+          if (!opts.allowOccupied || (!isHeroTile && !isGoalTile)) continue;
+        }
+
+        parents.set(key, tileKey(node.cx, node.cy));
+
+        const manhattan = Math.abs(nx - goalCx) + Math.abs(ny - goalCy);
+        const depth = node.depth + 1;
+        const candidate = { cx: nx, cy: ny, manhattan, depth };
+
+        if (!best || manhattan < best.manhattan || (manhattan === best.manhattan && depth < best.depth)) {
+          best = candidate;
+        }
+
+        if (manhattan <= 1 && (!heroTilesSet.has(key) || opts.allowHeroTile)) {
+          best = candidate;
+          queue.length = 0;
+          break;
+        }
+
+        if (depth < maxDepth) {
+          queue.push({ cx: nx, cy: ny, depth });
+        }
+      }
+    }
+
+    if (!best || best.manhattan == null) return null;
+
+    let stepCx = best.cx;
+    let stepCy = best.cy;
+    let key = tileKey(stepCx, stepCy);
+    let parent = parents.get(key);
+
+    while (parent && parent !== startKey) {
+      const [pcx, pcy] = parent.split('|').map(Number);
+      if (!Number.isFinite(pcx) || !Number.isFinite(pcy)) break;
+      stepCx = pcx;
+      stepCy = pcy;
+      key = parent;
+      parent = parents.get(parent);
+    }
+
+    if (parent == null) {
+      // melhor tile é o próprio start (sem movimento)
+      return null;
+    }
+
+    const px = stepCx * STEP_PX + STEP_PX / 2;
+    const py = stepCy * STEP_PX + STEP_PX / 2;
+    if (isTileBlockedByMobs(occupancy, stepCx, stepCy, mob.instanceId)) return null;
+
+    return { x: px | 0, y: py | 0 };
+  }
+
 function clampToMapPx(losGrid, px) {
   const cols = losGrid.cols;
   const rows = Math.floor(losGrid.data.length / cols);
@@ -1198,10 +1379,14 @@ async function moveMobAndPersist(mob, step, dt, losGrid, occupancy) {
   const dx = step.x - mob.x;
   const dy = step.y - mob.y;
   const dist = Math.hypot(dx, dy);
+  const nowMs = Date.now();
+  const prevX = mob.x;
+  const prevY = mob.y;
   if (dist <= 0.5) {
     mob.x = step.x | 0;
     mob.y = step.y | 0;
-    mob.posUpdatedAt = Date.now();
+    mob.posUpdatedAt = nowMs;
+    mob.lastProgressAt = nowMs;
     return true;
   }
 
@@ -1216,12 +1401,14 @@ async function moveMobAndPersist(mob, step, dt, losGrid, occupancy) {
   // clamp dentro do mapa (evita OOB por arredondamento/velocidade)
   const clamped = losGrid ? clampToMapPx(losGrid, { x: nx|0, y: ny|0 }) : { x: nx|0, y: ny|0 };
   mob.x = clamped.x; mob.y = clamped.y;
-  mob.posUpdatedAt = Date.now(); // <<< posição do mob ficou "fresca" agora
+  mob.posUpdatedAt = nowMs; // <<< posição do mob ficou "fresca" agora
 
   const nextCx = Math.floor(mob.x / STEP_PX);
   const nextCy = Math.floor(mob.y / STEP_PX);
+  let progressed = false;
 
   if (prevCx !== nextCx || prevCy !== nextCy) {
+    progressed = true;
     if (occupancy) {
       const prevKey = tileKey(prevCx, prevCy);
       const prevSet = occupancy.get(prevKey);
@@ -1253,6 +1440,11 @@ async function moveMobAndPersist(mob, step, dt, losGrid, occupancy) {
     } catch (e) {
       console.warn('[ai-mobs] persist pos error:', e?.message);
     }
+  }
+
+  const movedDist = Math.hypot(mob.x - prevX, mob.y - prevY);
+  if (progressed || movedDist > 0.5) {
+    mob.lastProgressAt = nowMs;
   }
 
   const remaining = Math.hypot(step.x - mob.x, step.y - mob.y);
