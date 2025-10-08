@@ -67,6 +67,9 @@ const MonsterYAML = z.object({
     }),
     z.object({ table: z.string() }),
   ])).default([]),
+  attack_range: Int.optional(),
+  aggro_range: Int.optional(),
+  attack_ms: Int.optional(),
 }).catchall(z.any());
 
 /** YAML de Item
