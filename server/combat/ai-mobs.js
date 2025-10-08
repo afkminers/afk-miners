@@ -12,7 +12,10 @@
   const { hasLineOfSight } = require('./los');
   // const { inReachPx } = require('./geom');
   const { applyMobHit } = require('./service');
-  const { listFreshHeroesByMap } = require('../player/live_positions');
+  const {
+    listFreshHeroesByMap,
+    TTL_MS: LIVE_POS_TTL_MS = 1500,
+  } = require('../player/live_positions');
 
   const PX_PER_TILE = 32;
   const HOME_TOLERANCE_PX = PX_PER_TILE / 2;
@@ -33,8 +36,8 @@
   const ONLINE_RECENT_MS = 4000;       // presença considerada “viva” nos últimos 4s
 
   // Anti-hit fantasma (idades máximas aceitáveis das posições)
-  const STALE_HERO_MS = 400;           // herói precisa ter pos ≤ 400ms
-  const STALE_MOB_MS  = 800;           // mob precisa ter pos ≤ 800ms
+  const STALE_HERO_MS = Math.max(900, Number(LIVE_POS_TTL_MS) + 350);
+  const STALE_MOB_MS  = Math.max(3000, TICK_MS * 25);
 
 
   // Threat / Aggro
@@ -550,6 +553,13 @@
     { dx: 0, dy: 1 },
     { dx: 0, dy: -1 },
   ];
+  const ADJACENT_DIRS = [
+    ...CARDINAL_DIRS,
+    { dx: 1, dy: 1 },
+    { dx: 1, dy: -1 },
+    { dx: -1, dy: 1 },
+    { dx: -1, dy: -1 },
+  ];
 
   function tileKey(cx, cy) {
     return `${cx}|${cy}`;
@@ -704,7 +714,7 @@
       const node = queue.shift();
       if (node.depth >= maxDepth) continue;
 
-      for (const dir of CARDINAL_DIRS) {
+      for (const dir of ADJACENT_DIRS) {
         const nx = node.cx + dir.dx;
         const ny = node.cy + dir.dy;
         if (isSolidTile(losGrid, nx, ny)) continue;
