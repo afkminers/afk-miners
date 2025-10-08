@@ -1331,7 +1331,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       const key = tileKey(cx, cy);
 
       if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
-      if (heroTilesSet.has(key) && key !== heroKey) continue;
+      if (heroTilesSet.has(key)) continue;
       if (isSolidTile(losGrid, cx, cy)) continue;
       if (isTileBlockedByMobs(occupancy, cx, cy, mob.instanceId)) continue;
 
