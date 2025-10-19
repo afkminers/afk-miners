@@ -238,8 +238,15 @@ async function respawnTick({ all, run }) {
               map_key          = $5,
               updated_at       = now()
         WHERE id = $1`,
-        [r.id, hpFull, px, py, resolvedMapKey]
+      [r.id, hpFull, px, py, resolvedMapKey]
     );
+
+    try {
+      const simpleAi = require('../combat/monster_atk_simple');
+      if (simpleAi && typeof simpleAi.resetInstanceState === 'function') {
+        simpleAi.resetInstanceState(r.id);
+      }
+    } catch {}
 
     try {
       const aiMobs = require('../combat/ai-mobs');

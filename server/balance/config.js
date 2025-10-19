@@ -37,18 +37,20 @@ module.exports = {
   
   // === Velocidade por arma (ms entre golpes) ===
   WEAPON_SPEED_MS: {
-    SWORD:    envNum('SWORD_SPEED_MS', 900),   // 0.9s
-    AXE:      envNum('AXE_SPEED_MS', 1100),
-    CLUB:     envNum('CLUB_SPEED_MS', 1100),
-    BOW:      envNum('BOW_SPEED_MS', 700),
-    CROSSBOW: envNum('CROSSBOW_SPEED_MS', 700),
-    SPEAR:    envNum('SPEAR_SPEED_MS', 800),
+    SWORD:    envNum('SWORD_SPEED_MS', 1100),   // 1.1s
+    AXE:      envNum('AXE_SPEED_MS', 1300),
+    CLUB:     envNum('CLUB_SPEED_MS', 1300),
+    FIST:     envNum('FIST_SPEED_MS', envNum('SWORD_SPEED_MS', 1100)),
+    BOW:      envNum('BOW_SPEED_MS', 1500),
+    CROSSBOW: envNum('CROSSBOW_SPEED_MS', 1500),
+    SPEAR:    envNum('SPEAR_SPEED_MS', 1300),
     // Aliases:
-    DISTANCE: envNum('DISTANCE_SPEED_MS', envNum('BOW_SPEED_MS', 700)),
-    MAGIC:    envNum('MAGIC_SPEED_MS', 1200),
-    STAFF:    envNum('STAFF_SPEED_MS', 1200),
-    WAND:     envNum('WAND_SPEED_MS', 1000),
-    ROD:      envNum('ROD_SPEED_MS', 1000),
+    DISTANCE: envNum('DISTANCE_SPEED_MS', envNum('BOW_SPEED_MS', 1500)),
+    MAGIC:    envNum('MAGIC_SPEED_MS', 1600),
+    STAFF:    envNum('STAFF_SPEED_MS', 1600),
+    TOME:     envNum('TOME_SPEED_MS', envNum('MAGIC_SPEED_MS', 1600)),
+    WAND:     envNum('WAND_SPEED_MS', 1500),
+    ROD:      envNum('ROD_SPEED_MS', 1500),
   },
   
   // === ✅ ALCANCE POR ARMA (em TILES 32x32, estilo Tibia/OT) ===
