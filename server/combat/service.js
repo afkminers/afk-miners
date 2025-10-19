@@ -8,6 +8,8 @@ const { resolveHitboxDimension, TILE } = require('./geom');
 // Se você usa este serviço central de XP:
 const { giveXp } = require('../services/heroProgress');
 
+const HERO_LAST_HIT_AT = new Map();
+
 // posição do herói (para validar mapa/alvo)
 let _pos = null;
 function posMod() {
@@ -41,6 +43,32 @@ function computeDamageTibiaLike(weaponAtk, skillLevel, monsterArmor, variance = 
   const raw = Math.floor(Math.random() * (maxDmg - minDmg + 1)) + minDmg;
   const defenseReduction = Math.floor(Math.random() * (monsterArmor + 1));
   return Math.max(0, raw - defenseReduction);
+}
+
+function resolveWeaponSpeedMs(weaponType) {
+  const table = K.WEAPON_SPEED_MS || {};
+  const key = String(weaponType || '').toUpperCase();
+  const candidates = [key];
+
+  if (/BOW|CROSSBOW|SPEAR|JAVELIN|THROWING|DISTANCE/.test(key)) {
+    candidates.push('DISTANCE', 'BOW');
+  }
+
+  if (/STAFF|WAND|ROD|MAGIC|TOME/.test(key)) {
+    candidates.push('MAGIC', 'STAFF');
+  }
+
+  candidates.push('SWORD');
+
+  for (const candidate of candidates) {
+    const raw = table?.[candidate];
+    const value = Number(raw);
+    if (Number.isFinite(value) && value > 0) {
+      return value;
+    }
+  }
+
+  return 900;
 }
 
 /** Mapeia tipo de arma -> tipo de skill */
@@ -227,6 +255,23 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
   const skillLevel  = await getHeroSkillLevel(attackerHeroId, skillType);
   const weaponAtk   = hero.weapon_atk || 1;
 
+  const now = Date.now();
+  const swingMs = Math.max(400, resolveWeaponSpeedMs(resolvedWeaponType));
+  const heroKey = String(hero.hero_id);
+  const lastHeroHit = HERO_LAST_HIT_AT.get(heroKey);
+  if (Number.isFinite(lastHeroHit) && now - lastHeroHit < swingMs) {
+    const remaining = Math.max(0, swingMs - (now - lastHeroHit));
+    const message = 'Aguarde o tempo de recarga do ataque.';
+    return {
+      ok: false,
+      error: 'attack-cooldown',
+      message,
+      cooldownMs: swingMs,
+      remainingMs: remaining,
+      warnings: [{ code: 'attack-cooldown', message }],
+    };
+  }
+
   let monsterArmor = 0;
   try {
     const defenses = typeof inst.defenses_json === 'object' ? inst.defenses_json
@@ -248,6 +293,8 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
       WHERE id=$1`,
     [inst.id, newHp, hero.hero_id]
   );
+
+  HERO_LAST_HIT_AT.set(heroKey, now);
 
   broadcast({
     type: 'monster_hp',
@@ -311,6 +358,13 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
       xp: xpGained,
       drops
     });
+
+    try {
+      const simpleAi = require('./monster_atk_simple');
+      if (simpleAi && typeof simpleAi.resetInstanceState === 'function') {
+        simpleAi.resetInstanceState(inst.id);
+      }
+    } catch {}
   }
 
   return {
@@ -538,8 +592,19 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
     });
   }
 
+  const attackerTileX = Math.floor(mx / TILE);
+  const attackerTileY = Math.floor(my / TILE);
+  const heroTileX = Math.floor(hx / TILE);
+  const heroTileY = Math.floor(hy / TILE);
+  const manhattanTiles = Math.abs(attackerTileX - heroTileX) + Math.abs(attackerTileY - heroTileY);
+  const sameTile = attackerTileX === heroTileX && attackerTileY === heroTileY;
+  const adjacentTile = manhattanTiles === 1 || sameTile;
+  const meleeTolerancePx = Math.max(6, TILE / 4);
+  const effectiveInRange = inRangePx || (adjacentTile && distPx <= (atkPx + meleeTolerancePx));
+  const effectiveHasLOS = hasLOS || adjacentTile;
+
   // HARD-GUARD: só permite hit se estiver no alcance E com LoS
-  if (!(inRangePx && hasLOS)) {
+  if (!(effectiveInRange && effectiveHasLOS)) {
     if (DEBUG_COMBAT) {
       console.log(`[HARD-GUARD] BLOCK inst=${inst.id} hero=${targetHeroId}`);
     }

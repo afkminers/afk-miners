@@ -12,6 +12,8 @@ const combatState = (window.combatState = window.combatState || {
   loopHandle: null,
   selectedTargetId: null,
 
+  attackIntervalMs: 1100,
+
   lastWarningCode: null,
   lastWarningAt: 0,
 
@@ -21,6 +23,23 @@ const combatState = (window.combatState = window.combatState || {
 const ATTACK_USE_RMB = true; // Default to true as per requirements
 const RANGE_WARNING_COOLDOWN_MS = 900;
 const LOS_WARNING_COOLDOWN_MS = 1200;
+const DEFAULT_ATTACK_INTERVAL_MS = 1100;
+
+const ATTACK_SPEED_BY_WEAPON = Object.freeze({
+  SWORD: 1100,
+  AXE: 1300,
+  CLUB: 1300,
+  FIST: 1100,
+  SPEAR: 1300,
+  BOW: 1500,
+  CROSSBOW: 1500,
+  DISTANCE: 1500,
+  MAGIC: 1600,
+  STAFF: 1600,
+  TOME: 1600,
+  WAND: 1500,
+  ROD: 1500,
+});
 
 // ==== helpers de tiles/range para pré-check local ====
 const TILE = 32;
@@ -96,6 +115,18 @@ function weaponForClass(heroClass) {
   if (c.includes('MAGE') || c === 'WIZARD' || c === 'DRUID') return 'STAFF';
   return 'SWORD';
 }
+
+function attackIntervalForWeaponType(weaponType) {
+  const key = String(weaponType || '').toUpperCase();
+  if (ATTACK_SPEED_BY_WEAPON[key]) return ATTACK_SPEED_BY_WEAPON[key];
+  if (/BOW|CROSSBOW|SPEAR|JAVELIN|THROWING|DISTANCE/.test(key)) {
+    return ATTACK_SPEED_BY_WEAPON.DISTANCE;
+  }
+  if (/STAFF|WAND|ROD|MAGIC|TOME/.test(key)) {
+    return ATTACK_SPEED_BY_WEAPON.MAGIC;
+  }
+  return ATTACK_SPEED_BY_WEAPON.SWORD || DEFAULT_ATTACK_INTERVAL_MS;
+}
 async function ensureActiveHero() {
   if (ACTIVE_HERO.id) return ACTIVE_HERO;
   try {
@@ -156,6 +187,9 @@ function friendlyMessage(code, fallback) {
   if (c === 'no-weapon-equipped') return fallback || 'Equipe uma arma para atacar.';
   if (c === 'map-diff') return fallback || 'Alvo está em outro local.';
   if (c === 'hero-dead') return fallback || 'Seu herói está morto.';
+  if (c === 'attack-cooldown' || c === 'cooldown' || c === 'swing-too-fast') {
+    return fallback || 'Aguarde o tempo de recarga do ataque.';
+  }
   return fallback || null;
 }
 
@@ -383,11 +417,22 @@ async function doHit() {
   }
 }
 
-function startLoop(){ if (!combatState.loopHandle) combatState.loopHandle = setInterval(doHit, 600); }
+function startLoop(intervalMs) {
+  const ms = Math.max(400, Number(intervalMs) || combatState.attackIntervalMs || DEFAULT_ATTACK_INTERVAL_MS);
+  if (combatState.loopHandle) {
+    clearInterval(combatState.loopHandle);
+    combatState.loopHandle = null;
+  }
+  combatState.attackIntervalMs = ms;
+  combatState.loopHandle = setInterval(doHit, ms);
+}
 
 export async function startAttack(targetId) {
   const hero = await ensureActiveHero();
   if (!hero.id) { alert('Nenhum herói ativo encontrado para atacar.'); return; }
+
+  const weaponType = weaponForClass(hero.heroClass);
+  const swingInterval = attackIntervalForWeaponType(weaponType);
 
   // --- pré-check local (só avisa; servidor continua como autoridade) ---
   try {
@@ -418,7 +463,7 @@ export async function startAttack(targetId) {
 
   const payload = {
     heroId:            String(hero.id),
-    weaponType:        String(weaponForClass(hero.heroClass)),
+    weaponType:        String(weaponType),
     targetInstanceId:  String(targetId),
     targetId:          String(targetId),
   };
@@ -444,7 +489,7 @@ export async function startAttack(targetId) {
   combatState.targetId = String(targetId);
   combatState.attacking = true;
   window.combatState.selectedTargetId = combatState.targetId;
-  startLoop();
+  startLoop(swingInterval);
   window.dispatchEvent(new CustomEvent('combat:attack:start', { detail:{ targetId: combatState.targetId } }));
 }
 
@@ -458,6 +503,7 @@ export async function stopAttack(options = {}) {
   if (!opts.keepWarnings) clearCombatWarnings();
 
   if (combatState.loopHandle) { clearInterval(combatState.loopHandle); combatState.loopHandle = null; }
+  combatState.attackIntervalMs = DEFAULT_ATTACK_INTERVAL_MS;
   try { await apiPost('/api/combat/attack/stop', { heroId: hero?.id || null }); } catch {}
   window.dispatchEvent(new CustomEvent('combat:attack:stop'));
 }

@@ -67,6 +67,21 @@ const _attackProfileCache = new Map(); // monsterKey -> { profile, signature }
 const _attackWarnedKeys = new Set();
 
 // ======= Utils =======
+function resetInstanceState(monsterId) {
+  if (monsterId == null) return;
+  const id = Number(monsterId);
+  if (!Number.isFinite(id)) return;
+  _aggroTarget.delete(id);
+  _aggroUntil.delete(id);
+  _livePos.delete(id);
+  _lastAtkAt.delete(id);
+  _lastMoveAt.delete(id);
+  _lastPosWriteAt.delete(id);
+  _patrolTargets.delete(id);
+  _lastPatrolMove.delete(id);
+  _wasQuantized.delete(id);
+}
+
 const tileOf = (v) => Math.floor(Number(v || 0) / TILE);
 const centerOfTile = (t) => (t * TILE) + TILE / 2;
 const tileKey = (tx, ty) => `${tx},${ty}`;
@@ -1466,4 +1481,4 @@ function stop() {
   timer = null;
 }
 
-module.exports = { start, stop };
+module.exports = { start, stop, resetInstanceState };
