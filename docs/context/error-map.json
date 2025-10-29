@@ -31,14 +31,6 @@
     {
       "status": 400,
       "body": "{ok:false,error:'missing-hero-id' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'mob-pos-missing' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'hero-pos-missing' }"
     }
   ],
   "GET /_routes": [
@@ -73,14 +65,6 @@
     {
       "status": 400,
       "body": "{ok:false,error:'missing-hero-id' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'mob-pos-missing' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'hero-pos-missing' }"
     }
   ],
   "POST /:heroId/deposit": [
@@ -257,10 +241,6 @@
     {
       "status": 500,
       "body": "{error:err.message }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
     }
   ],
   "POST /api/admin/content/reload-map": [
@@ -297,10 +277,6 @@
     {
       "status": 500,
       "body": "{error:err.message }"
-    },
-    {
-      "status": 500,
-      "body": "{error:e.message }"
     }
   ],
   "GET /api/assets/sprites": [
@@ -458,10 +434,6 @@
     {
       "status": 400,
       "body": "{ok:false,error:result.message }"
-    },
-    {
-      "status": 500,
-      "body": "{ok:false,error:'hit-failed' }"
     }
   ],
   "POST /attack/stop": [

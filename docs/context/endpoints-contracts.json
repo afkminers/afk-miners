@@ -3,7 +3,7 @@
     "method": "GET",
     "path": "/_ping",
     "file": "server\\combat\\routes.js",
-    "line": 38,
+    "line": 131,
     "sample": {
       "body": {
         "heroId": 1,
@@ -43,14 +43,6 @@
       {
         "status": 400,
         "body": "{ok:false,error:'missing-hero-id' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'mob-pos-missing' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'hero-pos-missing' }"
       }
     ],
     "ok": [
@@ -68,31 +60,15 @@
       },
       {
         "status": 200,
-        "body": "{ok:false,error:'map-diff' }"
+        "body": "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }"
       },
       {
         "status": 200,
-        "body": "{ok:false,error:'out_of_range' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no_los' }"
+        "body": "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}"
       },
       {
         "status": 200,
         "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no-weapon-equipped' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'map-diff' }"
       }
     ]
   },
@@ -100,7 +76,7 @@
     "method": "GET",
     "path": "/_routes",
     "file": "server\\combat\\routes.js",
-    "line": 39,
+    "line": 132,
     "sample": {
       "body": {
         "heroId": 1,
@@ -140,14 +116,6 @@
       {
         "status": 400,
         "body": "{ok:false,error:'missing-hero-id' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'mob-pos-missing' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'hero-pos-missing' }"
       }
     ],
     "ok": [
@@ -161,35 +129,15 @@
       },
       {
         "status": 200,
-        "body": "{ok:false,error:'map-diff' }"
+        "body": "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }"
       },
       {
         "status": 200,
-        "body": "{ok:false,error:'out_of_range' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no_los' }"
+        "body": "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}"
       },
       {
         "status": 200,
         "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no-weapon-equipped' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'map-diff' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'out_of_range' }"
       }
     ]
   },
@@ -331,7 +279,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 590,
+    "line": 674,
     "sample": {
       "params": {
         "key": "value"
@@ -365,7 +313,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 565,
+    "line": 649,
     "sample": {
       "params": {
         "key": "value"
@@ -407,7 +355,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 577,
+    "line": 661,
     "sample": {
       "params": {
         "key": "value"
@@ -445,7 +393,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 554,
+    "line": 638,
     "sample": {
       "query": {
         "map": "value"
@@ -488,7 +436,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 498,
+    "line": 530,
     "sample": {
       "query": {
         "map": "value"
@@ -526,16 +474,6 @@
       {
         "status": 500,
         "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
       }
     ]
   },
@@ -543,7 +481,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 600,
+    "line": 684,
     "sample": {
       "query": {
         "map": "value"
@@ -566,7 +504,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 509,
+    "line": 541,
     "sample": {
       "query": {
         "map": "value"
@@ -600,16 +538,6 @@
       {
         "status": 500,
         "body": "{error:err.message }"
-      },
-      {
-        "status": 500,
-        "body": "{error:e.message }"
-      }
-    ],
-    "ok": [
-      {
-        "status": 200,
-        "body": "{ok:true,reloaded:mapKey }"
       }
     ]
   },
@@ -617,7 +545,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 531,
+    "line": 563,
     "sample": {
       "query": {
         "map": "value"
@@ -664,7 +592,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1309,
+    "line": 1425,
     "sample": {
       "query": {
         "limit": 1
@@ -695,7 +623,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1332,
+    "line": 1448,
     "sample": {},
     "errors": [
       {
@@ -722,6 +650,7 @@
     "sample": {
       "query": {
         "map": "value",
+        "mapKey": "value",
         "x": "value",
         "y": "value",
         "px": "value",
@@ -752,7 +681,7 @@
     "method": "GET",
     "path": "/api/csrf",
     "file": "server\\index.js",
-    "line": 170,
+    "line": 202,
     "sample": {},
     "errors": []
   },
@@ -834,7 +763,7 @@
     "method": "POST",
     "path": "/attack/start",
     "file": "server\\combat\\routes.js",
-    "line": 87,
+    "line": 175,
     "sample": {
       "body": {
         "heroId": 1,
@@ -886,10 +815,6 @@
       {
         "status": 400,
         "body": "{ok:false,error:result.message }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'hit-failed' }"
       }
     ],
     "ok": [
@@ -899,19 +824,11 @@
       },
       {
         "status": 200,
-        "body": "{ok:false,error:'map-diff' }"
+        "body": "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }"
       },
       {
         "status": 200,
-        "body": "{ok:false,error:'out_of_range' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no_los' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
+        "body": "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}"
       },
       {
         "status": 200,
@@ -923,15 +840,7 @@
       },
       {
         "status": 200,
-        "body": "{ok:false,error:'map-diff' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'out_of_range' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no_los' }"
+        "body": "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }"
       }
     ]
   },
@@ -939,7 +848,7 @@
     "method": "POST",
     "path": "/attack/stop",
     "file": "server\\combat\\routes.js",
-    "line": 132,
+    "line": 255,
     "sample": {
       "body": {
         "heroId": 1,
@@ -1007,19 +916,11 @@
       },
       {
         "status": 200,
-        "body": "{ok:false,error:'map-diff' }"
+        "body": "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }"
       },
       {
         "status": 200,
-        "body": "{ok:false,error:'out_of_range' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no_los' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y }"
+        "body": "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y,}"
       }
     ]
   },
@@ -1365,7 +1266,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 635,
+    "line": 719,
     "sample": {},
     "errors": []
   },
@@ -1502,7 +1403,7 @@
     "method": "POST",
     "path": "/hit",
     "file": "server\\combat\\routes.js",
-    "line": 163,
+    "line": 274,
     "sample": {
       "body": {
         "heroId": 1,
@@ -1558,19 +1459,11 @@
       },
       {
         "status": 200,
-        "body": "{ok:false,error:'map-diff' }"
+        "body": "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }"
       },
       {
         "status": 200,
-        "body": "{ok:false,error:'out_of_range' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no_los' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y }"
+        "body": "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y,}"
       }
     ]
   },
@@ -2437,7 +2330,7 @@
     "method": "POST",
     "path": "/revive",
     "file": "server\\combat\\routes.js",
-    "line": 249,
+    "line": 373,
     "sample": {
       "body": {
         "try {\n    const { heroId": 1
@@ -2464,7 +2357,7 @@
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y }"
+        "body": "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y,}"
       }
     ]
   },

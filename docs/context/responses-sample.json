@@ -3,25 +3,16 @@
     "{ok:true,ts:Date.now() }",
     "{routes:list }",
     "{ok:false,error:'no-weapon-equipped' }",
-    "{ok:false,error:'map-diff' }",
-    "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }",
-    "{ok:true }",
-    "{ok:true }",
-    "{ok:false,error:'no-weapon-equipped' }",
-    "{ok:false,error:'map-diff' }"
+    "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }",
+    "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}",
+    "{ok:true }"
   ],
   "GET /_routes": [
     "{routes:list }",
     "{ok:false,error:'no-weapon-equipped' }",
-    "{ok:false,error:'map-diff' }",
-    "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }",
-    "{ok:true }",
-    "{ok:true }",
-    "{ok:false,error:'no-weapon-equipped' }",
-    "{ok:false,error:'map-diff' }",
-    "{ok:false,error:'out_of_range' }"
+    "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }",
+    "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}",
+    "{ok:true }"
   ],
   "POST /:heroId/deposit": [
     "{ok:true,placed }"
@@ -48,15 +39,11 @@
   "GET /api/admin/content/maps": [
     "{ok:true,reloaded:mapKey }"
   ],
-  "GET /api/admin/content/monsters": [
-    "{ok:true,reloaded:mapKey }"
-  ],
+  "GET /api/admin/content/monsters": [],
   "POST /api/admin/content/reload-map": [
     "{ok:true,reloaded:mapKey }"
   ],
-  "GET /api/assets/items": [
-    "{ok:true,reloaded:mapKey }"
-  ],
+  "GET /api/assets/items": [],
   "GET /api/assets/sprites": [
     "{ok:true,reloaded:mapKey }"
   ],
@@ -76,23 +63,17 @@
   ],
   "POST /attack/start": [
     "{ok:false,error:'no-weapon-equipped' }",
-    "{ok:false,error:'map-diff' }",
-    "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }",
-    "{ok:true }",
+    "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }",
+    "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}",
     "{ok:true }",
     "{ok:false,error:'no-weapon-equipped' }",
-    "{ok:false,error:'map-diff' }",
-    "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }"
+    "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }"
   ],
   "POST /attack/stop": [
     "{ok:true }",
     "{ok:false,error:'no-weapon-equipped' }",
-    "{ok:false,error:'map-diff' }",
-    "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }",
-    "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y }"
+    "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }",
+    "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y,}"
   ],
   "GET /cache/stats": [],
   "GET /class-rates": [
@@ -130,10 +111,8 @@
   "GET /heroes/master": [],
   "POST /hit": [
     "{ok:false,error:'no-weapon-equipped' }",
-    "{ok:false,error:'map-diff' }",
-    "{ok:false,error:'out_of_range' }",
-    "{ok:false,error:'no_los' }",
-    "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y }"
+    "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }",
+    "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y,}"
   ],
   "GET /list": [
     "{canSelect:!row }"
@@ -200,7 +179,7 @@
     "{profile }"
   ],
   "POST /revive": [
-    "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y }"
+    "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y,}"
   ],
   "POST /select": [],
   "GET /state": [

@@ -520,14 +520,7 @@
       "get": {
         "responses": {
           "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": "OK"
           },
           "404": {
             "description": "Error 404 (inferred)",
@@ -602,14 +595,7 @@
       "get": {
         "responses": {
           "200": {
-            "description": "OK (inferred)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": "OK"
           },
           "404": {
             "description": "Error 404 (inferred)",
@@ -810,6 +796,14 @@
         "parameters": [
           {
             "name": "map",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mapKey",
             "in": "query",
             "required": false,
             "schema": {
