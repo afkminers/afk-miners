@@ -150,12 +150,16 @@ function buildAttackProfile(entry, fallbackIntervalMs) {
   );
   if (!Number.isFinite(intervalMs) || intervalMs <= 0) intervalMs = DEFAULT_ATTACK_PROFILE.intervalMs;
 
-  let chancePercent = clamp(
-    entry.chancePercent ?? entry.chance,
-    0,
-    100,
-  );
-  if (!Number.isFinite(chancePercent)) chancePercent = DEFAULT_ATTACK_PROFILE.chancePercent;
+  const chanceRaw = entry.chancePercent ?? entry.chance;
+  let chancePercent;
+  if (chanceRaw == null || chanceRaw === '') {
+    chancePercent = DEFAULT_ATTACK_PROFILE.chancePercent;
+  } else {
+    chancePercent = clamp(chanceRaw, 0, 100);
+    if (!Number.isFinite(chancePercent)) {
+      chancePercent = DEFAULT_ATTACK_PROFILE.chancePercent;
+    }
+  }
 
   return {
     min,
@@ -226,10 +230,16 @@ async function resolveMonsterAttackProfile(monster) {
 function toCenterPxCoord(raw) {
   const n = Number(raw);
   if (!Number.isFinite(n)) return null;
-  if (Math.abs(n) < 1000) {
-    return (Math.round(n) * TILE) + TILE / 2;
+
+  const snapped = Math.round(n);
+  const remainder = ((snapped % TILE) + TILE) % TILE;
+  const nearTileCenter = Math.abs(remainder - (TILE / 2)) <= 1;
+
+  if (nearTileCenter || Math.abs(snapped) >= TILE * 4) {
+    return snapped;
   }
-  return Math.round(n);
+
+  return (snapped * TILE) + (TILE / 2);
 }
 
 function pickFaceFromDelta(dx, dy, fallback = 'south') {
