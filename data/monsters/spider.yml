@@ -1,0 +1,29 @@
+# data/monsters/spider.yml
+key: spider
+name: Spider
+xp: 12
+health:
+  max: 20
+speed: 190
+look:
+  spriteKey: spider
+flags:
+  hostile: true
+  pushable: false
+elements:
+  physical: 0
+  earth: 20
+attacks:
+- type: melee
+  intervalMs: 1800
+  chancePercent: 100
+  min: 2
+  max: 8
+defenses:
+  armor: 4
+  defense: 8
+loot:
+- item: gold_coin
+  min: 1
+  max: 4
+  chance: 30000
