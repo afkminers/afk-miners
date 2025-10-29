@@ -94,10 +94,11 @@ async function getHeroSkillLevel(heroId, skillType) {
 /** Stats básicos do herói */
 async function getHeroStats(heroId) {
   return await get(
-    `SELECT 
+    `SELECT
         ph.id AS hero_id,
         COALESCE(ph.attack,10) + COALESCE(i.atk,0) AS attack,
         COALESCE(ph.defense,10) AS defense,
+        COALESCE(gear.total_def, 0) AS gear_defense,
         hm.class,
         eq.item_key    AS weapon_key,
         i.atk          AS weapon_atk,
@@ -106,6 +107,12 @@ async function getHeroStats(heroId) {
 LEFT JOIN heroes_master   hm ON hm."heroKey" = ph."heroKey"
 LEFT JOIN hero_equipment  eq ON eq.hero_id = ph.id::uuid AND eq.slot = 'WEAPON'
 LEFT JOIN items_master     i ON i.key = eq.item_key
+LEFT JOIN LATERAL (
+       SELECT COALESCE(SUM(im.def), 0) AS total_def
+         FROM hero_equipment he
+         JOIN items_master im ON im.key = he.item_key
+        WHERE he.hero_id = ph.id::uuid
+     ) gear ON TRUE
     WHERE ph.id = $1`,
     [heroId]
   );
@@ -612,11 +619,34 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
   }
 
   // --- DANO (resto do código mantido) ---
-  const min = Number(attackInfo?.min ?? 1);
-  const max = Number(attackInfo?.max ?? 2);
+  const minRaw = Number(attackInfo?.min ?? 1);
+  const maxRaw = Number(attackInfo?.max ?? minRaw);
+  const min = Number.isFinite(minRaw) && minRaw >= 0 ? minRaw : 0;
+  const max = Number.isFinite(maxRaw) && maxRaw >= min ? maxRaw : min;
+
   let dmg = min + Math.floor(Math.random() * (max - min + 1));
-  const heroDefense = Number(hero.defense || 0);
-  dmg = Math.max(0, dmg - Math.floor(Math.random() * (heroDefense + 1)));
+
+  const gearDefense = Math.max(0, Number(hero.gear_defense ?? 0));
+  if (gearDefense > 0 && dmg > 0) {
+    const armorMitigation = Math.floor(Math.random() * (gearDefense + 1));
+    dmg = Math.max(0, dmg - armorMitigation);
+  }
+
+  const defenseSkill = Math.max(0, Number(hero.defense ?? 0));
+  if (defenseSkill > 0 && dmg > 0) {
+    const mitigationPercent = Math.min(defenseSkill * 1.5, 70);
+    const mitigated = Math.round(dmg * (1 - mitigationPercent / 100));
+    dmg = Math.max(0, mitigated);
+  }
+
+  if (dmg <= 0 && max > 0) {
+    dmg = Math.max(1, Math.round(max * 0.25));
+  }
+
+  dmg = Math.max(0, Math.round(dmg));
+  if (dmg === 0 && max > 0) {
+    dmg = 1;
+  }
 
   const row = await get(`SELECT hp, max_hp, alive FROM player_heroes WHERE id=$1`, [targetHeroId]);
   if (!row || row.alive === false) {
