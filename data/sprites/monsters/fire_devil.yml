@@ -45,11 +45,11 @@ anims:
 
   attack:
     fps: 10
-    frames: 4
+    frames: 2
     rowByDir:
       south: 6
       west: 7
       east: 8
       north: 9
     startCol: 0
-    loop: false
+    loop: true
