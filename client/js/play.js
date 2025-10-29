@@ -295,9 +295,9 @@ const MONSTER_BLOCKED_TILES = new Map(); // "cx,cy" -> Set(instanceId)
 const HERO_BLOCK_STATE = { tiles: new Set(), lastX: null, lastY: null };
 let _serverMonsterRetryScheduled = false;
 
-const SERVER_MONSTER_STEP_MS = 150;
-const SERVER_MONSTER_MIN_TWEEN_MS = 60;
-const SERVER_MONSTER_MAX_TWEEN_MS = 220;
+const SERVER_MONSTER_STEP_MS = 350;
+const SERVER_MONSTER_MIN_TWEEN_MS = 180;
+const SERVER_MONSTER_MAX_TWEEN_MS = 520;
 const SERVER_MONSTER_BASE_SPEED = TILE / (SERVER_MONSTER_STEP_MS / 1000);
 const SERVER_MONSTER_IDLE_ANIM = 0.8;
 const SERVER_MONSTER_MIN_ANIM = 0.65;
@@ -1526,7 +1526,7 @@ function inferMetaFromImage(img, rawKey) {
     anchor: { x: 0.5, y: fw === 64 && fh === 64 ? 0.85 : 0.9 },
     anims: {
       walk: {
-        fps: 6,
+        fps: 4,
         frames: Math.min(4, cols),
         startCol: 0,
         rowByDir: directionalRows || undefined,
@@ -1535,7 +1535,7 @@ function inferMetaFromImage(img, rawKey) {
       },
       idle: (rows >= 1)
         ? {
-            fps: 2,
+            fps: 1,
             frames: 1,
             row: baseDirRow,
             loop: false,
@@ -1545,7 +1545,7 @@ function inferMetaFromImage(img, rawKey) {
         : null,
       dead: (rows >= 2)
         ? {
-            fps: 4,
+            fps: 3,
             frames: Math.min(4, cols),
             row: Math.max(0, deadRowIndex),
             loop: false,
@@ -1554,7 +1554,7 @@ function inferMetaFromImage(img, rawKey) {
         : null,
       attack: (rows >= 10)
         ? {
-            fps: 10,
+            fps: 6,
             frames: Math.min(4, cols),
             row: attackRows?.south ?? 5,
             loop: false,
@@ -1706,7 +1706,7 @@ function drawMob(m) {
   }
 
   if (!anim) {
-    anim = { fps: 6, frames: cols, row: 0, startCol: 0, loop: true };
+    anim = { fps: 4, frames: cols, row: 0, startCol: 0, loop: true };
     if (animType !== 'dead') animType = 'static';
   }
 
@@ -1716,17 +1716,17 @@ function drawMob(m) {
   if (!m.dead && action !== 'dead') m._animFrozen = false;
 
   let fps = Number(anim.fps);
-  if (!Number.isFinite(fps) || fps < 0) fps = 6;
+  if (!Number.isFinite(fps) || fps < 0) fps = 4;
   if (animType === 'walk') {
     const speedMult = Math.max(0, Number(m._animSpeedMultiplier));
     const mult = speedMult > 0 ? Math.max(SERVER_MONSTER_MIN_ANIM, Math.min(SERVER_MONSTER_MAX_ANIM, speedMult)) : 1;
-    fps = Math.min(8, Math.max(3, fps * mult));
+    fps = Math.min(5, Math.max(2, fps * mult));
   } else if (animType === 'idle') {
-    fps = Math.min(4, Math.max(1, fps));
+    fps = Math.min(2, Math.max(1, fps));
   } else if (animType === 'attack') {
-    fps = Math.min(8, Math.max(4, fps));
+    fps = Math.min(6, Math.max(3, fps));
   } else if (animType === 'dead') {
-    fps = Math.min(4, Math.max(1, fps));
+    fps = Math.min(3, Math.max(2, fps));
   } else if (animType === 'static') {
     fps = 0;
   }
