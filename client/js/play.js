@@ -450,35 +450,10 @@ function heroSpriteMeta() {
 
 function heroFootboxTiles(px, py) {
   if (!Number.isFinite(px) || !Number.isFinite(py)) return [];
-  const { frameW, frameH, anchorX, anchorY } = heroSpriteMeta();
-
-  const spriteLeft = px - frameW * anchorX;
-  const spriteTop = py - frameH * anchorY;
-  const spriteBottom = spriteTop + frameH;
-
-  const footHeight = Math.max(TILE / 2, Math.min(TILE, frameH));
-  const tolerance = 2;
-  const rectHeight = footHeight + tolerance * 2;
-  const rectTop = spriteBottom - footHeight - tolerance;
-  const rectWidth = frameW + tolerance * 2;
-  const rectLeft = spriteLeft - tolerance;
-
-  const minCx = Math.floor(rectLeft / TILE);
-  const maxCx = Math.floor((rectLeft + rectWidth - 1) / TILE);
-  const minCy = Math.floor(rectTop / TILE);
-  const maxCy = Math.floor((rectTop + rectHeight - 1) / TILE);
-
-  if (!Number.isFinite(minCx) || !Number.isFinite(maxCx) || !Number.isFinite(minCy) || !Number.isFinite(maxCy)) {
-    return [];
-  }
-
-  const keys = [];
-  for (let cy = minCy; cy <= maxCy; cy++) {
-    for (let cx = minCx; cx <= maxCx; cx++) {
-      keys.push(monsterTileKey(cx, cy));
-    }
-  }
-  return keys;
+  const cx = Math.floor(px / TILE);
+  const cy = Math.floor(py / TILE);
+  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return [];
+  return [monsterTileKey(cx, cy)];
 }
 
 function updateHeroBlocking(px, py) {
@@ -544,21 +519,6 @@ function updateMonsterBlocking(state, worldX, worldY) {
   if (metaCandidate && !state.meta) state.meta = metaCandidate;
   if (sprite && metaCandidate && !sprite.meta) sprite.meta = metaCandidate;
 
-  const meta = metaCandidate || {};
-  let frameW = Number(meta.frame?.width);
-  let frameH = Number(meta.frame?.height);
-  if (!Number.isFinite(frameW) || frameW <= 0) frameW = Number(sprite?.w) || TILE;
-  if (!Number.isFinite(frameH) || frameH <= 0) frameH = Number(sprite?.h) || TILE;
-  if (!Number.isFinite(frameW) || frameW <= 0) frameW = TILE;
-  if (!Number.isFinite(frameH) || frameH <= 0) frameH = TILE;
-
-  let anchorX = Number(meta.anchor?.x);
-  let anchorY = Number(meta.anchor?.y);
-  if (!Number.isFinite(anchorX)) anchorX = 0.5;
-  if (!Number.isFinite(anchorY)) anchorY = 0.9;
-  anchorX = Math.max(0, Math.min(1, anchorX));
-  anchorY = Math.max(0, Math.min(1, anchorY));
-
   const px = Number.isFinite(worldX)
     ? worldX
     : (Number.isFinite(state.x)
@@ -571,36 +531,19 @@ function updateMonsterBlocking(state, worldX, worldY) {
         : (Number.isFinite(sprite?.y) ? sprite.y : NaN));
   if (!Number.isFinite(px) || !Number.isFinite(py)) return;
 
-  const spriteLeft = px - frameW * anchorX;
-  const spriteTop = py - frameH * anchorY;
-  const spriteBottom = spriteTop + frameH;
+  const cx = Math.floor(px / TILE);
+  const cy = Math.floor(py / TILE);
 
-  const footHeight = Math.max(TILE / 2, Math.min(TILE, frameH));
-  const tolerance = 2;
-  const rectHeight = footHeight + tolerance * 2;
-  const rectTop = spriteBottom - footHeight - tolerance;
-  const rectWidth = frameW + tolerance * 2;
-  const rectLeft = spriteLeft - tolerance;
+  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return;
 
-  const minCx = Math.floor(rectLeft / TILE);
-  const maxCx = Math.floor((rectLeft + rectWidth - 1) / TILE);
-  const minCy = Math.floor(rectTop / TILE);
-  const maxCy = Math.floor((rectTop + rectHeight - 1) / TILE);
-
-  if (!Number.isFinite(minCx) || !Number.isFinite(maxCx) || !Number.isFinite(minCy) || !Number.isFinite(maxCy)) return;
-
-  for (let cy = minCy; cy <= maxCy; cy++) {
-    for (let cx = minCx; cx <= maxCx; cx++) {
-      const key = monsterTileKey(cx, cy);
-      let set = MONSTER_BLOCKED_TILES.get(key);
-      if (!set) {
-        set = new Set();
-        MONSTER_BLOCKED_TILES.set(key, set);
-      }
-      set.add(state.id);
-      state.blockedTiles.add(key);
-    }
+  const key = monsterTileKey(cx, cy);
+  let set = MONSTER_BLOCKED_TILES.get(key);
+  if (!set) {
+    set = new Set();
+    MONSTER_BLOCKED_TILES.set(key, set);
   }
+  set.add(state.id);
+  state.blockedTiles.add(key);
 }
 
 function clearMonsterBlocking(id) {
