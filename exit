@@ -1,0 +1,22 @@
+*   [33m32d7d12[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge pull request #77 from afkminers/codex/fix-monster-aggro-and-damage-issues
+[31m|[m[32m\[m  
+[31m|[m * [33m7f0801f[m[33m ([m[1;31morigin/codex/fix-monster-aggro-and-damage-issues[m[33m)[m Improve monster aggression reset and combat pacing
+[31m|[m[31m/[m  
+*   [33m5ac7988[m Merge pull request #75 from afkminers/codex/improve-enemy-ai-positioning-for-attacks-d798ew
+[33m|[m[34m\[m  
+[33m|[m *   [33me5bfef4[m[33m ([m[1;31morigin/codex/improve-enemy-ai-positioning-for-attacks-d798ew[m[33m)[m Merge branch 'main' into codex/improve-enemy-ai-positioning-for-attacks-d798ew
+[33m|[m [35m|[m[33m\[m  
+[33m|[m [35m|[m[33m/[m  
+[33m|[m[33m/[m[35m|[m   
+* [35m|[m   [33m764c396[m Merge pull request #74 from afkminers/codex/improve-enemy-ai-positioning-for-attacks
+[1;31m|[m[1;32m\[m [35m\[m  
+[1;31m|[m * [35m|[m [33m34397ea[m[33m ([m[1;31morigin/codex/improve-enemy-ai-positioning-for-attacks[m[33m)[m Improve monster chase intelligence
+[1;31m|[m[1;31m/[m [35m/[m  
+[1;31m|[m * [33m178abe1[m Teach mobs to flank and dance during attacks
+[1;31m|[m[1;31m/[m  
+*   [33m4af6350[m Merge pull request #72 from afkminers/codex/fix-monster-aggro-and-attack-logic
+[1;33m|[m[1;34m\[m  
+[1;33m|[m * [33mdc737c2[m Fix monster adjacency search and attack cadence
+[1;33m|[m[1;33m/[m  
+* [33md7d0d27[m Merge pull request #71 from afkminers/codex/fix-monster-respawn-and-aggro-mechanics
+* [33mf429239[m[33m ([m[1;31morigin/codex/fix-monster-respawn-and-aggro-mechanics[m[33m)[m Fix monster aggro range and home positioning
