@@ -1,0 +1,31 @@
+# data/monsters/ghost.yml
+key: ghost
+name: Ghost
+xp: 120
+health:
+  max: 120
+speed: 210
+look:
+  spriteKey: ghost
+flags:
+  hostile: true
+  pushable: false
+elements:
+  physical: 0
+  holy: -20
+  death: 40
+attack_ms: 1900
+attacks:
+- type: melee
+  intervalMs: 1900
+  chancePercent: 100
+  min: 15
+  max: 30
+defenses:
+  armor: 10
+  defense: 16
+loot:
+- item: gold_coin
+  min: 5
+  max: 20
+  chance: 60000

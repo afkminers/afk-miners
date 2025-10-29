@@ -12,6 +12,7 @@ flags:
   pushable: false
 elements:
   physical: 0
+attack_ms: 900
 attacks:
 - type: melee
   intervalMs: 900

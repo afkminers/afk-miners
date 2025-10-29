@@ -1,0 +1,31 @@
+# data/monsters/skeleton.yml
+key: skeleton
+name: Skeleton
+xp: 105
+health:
+  max: 120
+speed: 170
+look:
+  spriteKey: skeleton
+flags:
+  hostile: true
+  pushable: false
+elements:
+  physical: 0
+  holy: -10
+  death: 20
+attack_ms: 2000
+attacks:
+- type: melee
+  intervalMs: 2000
+  chancePercent: 100
+  min: 12
+  max: 25
+defenses:
+  armor: 8
+  defense: 14
+loot:
+- item: gold_coin
+  min: 3
+  max: 15
+  chance: 50000

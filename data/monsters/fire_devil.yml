@@ -1,0 +1,32 @@
+# data/monsters/fire_devil.yml
+key: fire_devil
+name: Fire Devil
+xp: 200
+health:
+  max: 135
+speed: 230
+look:
+  spriteKey: fire_devil
+flags:
+  hostile: true
+  pushable: false
+elements:
+  physical: 0
+  fire: 80
+  ice: -20
+  holy: 10
+attack_ms: 1700
+attacks:
+- type: melee
+  intervalMs: 1700
+  chancePercent: 100
+  min: 18
+  max: 40
+defenses:
+  armor: 12
+  defense: 18
+loot:
+- item: gold_coin
+  min: 8
+  max: 35
+  chance: 85000

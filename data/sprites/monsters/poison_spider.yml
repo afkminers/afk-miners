@@ -1,0 +1,55 @@
+# data/sprites/monsters/poison_spider.yml
+key: poison_spider
+kind: monster
+image: "sprites/monsters/poison-spider.png"
+
+frame:
+  width: 32
+  height: 32
+  margin: 1
+  spacing: 2
+
+grid:
+  cols: 6
+  rows: 10
+
+anchor:
+  x: 0.5
+  y: 0.5
+
+anims:
+  idle:
+    fps: 6
+    frames: 4
+    row: 0
+    startCol: 0
+    loop: true
+
+  walk:
+    fps: 8
+    frames: 4
+    rowByDir:
+      south: 1
+      west: 2
+      east: 3
+      north: 4
+    startCol: 0
+    loop: true
+
+  dead:
+    fps: 8
+    frames: 4
+    row: 5
+    startCol: 0
+    loop: false
+
+  attack:
+    fps: 10
+    frames: 4
+    rowByDir:
+      south: 6
+      west: 7
+      east: 8
+      north: 9
+    startCol: 0
+    loop: false
