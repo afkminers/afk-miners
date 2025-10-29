@@ -15,6 +15,8 @@ elements:
   fire: 80
   ice: -20
   holy: 10
+attack_range: 1
+aggro_range: 8
 attack_ms: 1700
 attacks:
 - type: melee
