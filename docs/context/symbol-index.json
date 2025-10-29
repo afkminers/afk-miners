@@ -114,17 +114,32 @@
     "file": "client\\js\\combat\\attack-controls.js",
     "symbols": [
       "attachControls",
+      "attackIntervalForWeaponType",
+      "clearCombatWarnings",
+      "composeRangeMessage",
       "doHit",
+      "emitCombatWarning",
       "ensureActiveHero",
+      "extractWarning",
+      "friendlyMessage",
+      "getHeroWorldPos",
       "getMouseWorldFromEvent",
+      "handleCombatWarning",
+      "hasWarning",
       "localPickUnderCursor",
+      "messageFromWarning",
       "pickCamera",
       "pickCanvas",
       "pickMobAtWorld",
+      "pushCombatLog",
       "resolveServerTarget",
+      "resolveWarningFromPayload",
+      "safeNumber",
       "screenToWorld",
       "startAttack",
       "startLoop",
+      "warnLos",
+      "warnRange",
       "weaponForClass"
     ]
   },
@@ -376,6 +391,7 @@
       "_applyEarlySnapIfAny",
       "addMobFromSpawn",
       "applyCameraZoom",
+      "applyServerPosition",
       "applySmoothing",
       "asObj",
       "assetUrl",
@@ -385,34 +401,60 @@
       "buildMonsterCandidates",
       "buildSpawnersFromDefs",
       "clear",
+      "clearHeroBlocking",
+      "clearMonsterBlocking",
+      "computeTweenDuration",
+      "currentSpriteRenderPos",
       "drawGround",
       "drawLoot",
       "drawMob",
       "drawPlayer",
       "ensureImgLoaded",
+      "ensureServerMonsterSprite",
       "findMetaFor",
       "frame",
+      "getHeroWorldPosition",
+      "getOrCreateServerMonsterState",
+      "handleLegacyMobPos",
+      "handleServerMonsterDead",
+      "handleServerMonsterMove",
+      "handleServerMonsterRespawn",
       "hasSolidProp",
+      "heroFootboxTiles",
+      "heroSpriteMeta",
       "imgReady",
       "indexSpriteMeta",
       "inferMetaFromImage",
+      "isTileBlockedByMonster",
       "loadImg",
       "loadMonsterImg",
       "loadSpriteMeta",
       "loadTilesetImage",
       "lootAtWorld",
       "mapSpawnsFromTiledJSON",
+      "monsterTileKey",
+      "msgMatchesCurrentMap",
       "normKey",
       "normalizeApiJson",
+      "normalizeLegacyMobPos",
       "normalizeTilesetPath",
       "pickElByIds",
+      "pickFaceFromDelta",
       "pickFreeSpriteForSpawn",
-      "render",
+      "removeMonsterFromTile",
       "resize",
       "resolvePlayerSprite",
-      "spawn",
+      "resolveServerMoveSnapshot",
+      "retryBindPendingServerMonsters",
+      "scheduleServerMonsterRetry",
+      "setMonsterAction",
+      "triggerMonsterAttackAnimation",
       "uniq",
-      "updateRespawns"
+      "updateHeroBlocking",
+      "updateMonsterBlocking",
+      "updateRespawns",
+      "updateServerDrivenMonsters",
+      "updateSpriteFacingFromDelta"
     ]
   },
   {
@@ -514,12 +556,33 @@
     ]
   },
   {
-    "file": "client\\js\\ui\\hero-floating-damage.js",
+    "file": "client\\js\\ui\\combat-message.js",
     "symbols": [
-      "addPopup",
+      "ensureContainer",
+      "showCombatMessage"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\combat-range-hint.js",
+    "symbols": [
       "getHeroWorldPos",
       "now",
+      "onFrame",
+      "pushHint",
       "render"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\hero-floating-damage.js",
+    "symbols": [
+      "activeHeroId",
+      "getHeroWorldPos",
+      "normalizeText",
+      "now",
+      "pushPopup",
+      "render",
+      "spawn",
+      "spawnAtHero"
     ]
   },
   {
@@ -588,7 +651,7 @@
       "getSocket",
       "notify",
       "scheduleReconnect",
-      "url"
+      "wsUrl"
     ]
   },
   {
@@ -650,25 +713,49 @@
     "file": "server\\combat\\ai-mobs.js",
     "symbols": [
       "addThreatFromHeroHit",
+      "buildHeroTileSet",
+      "buildMobOccupancy",
       "canMobHitNow",
       "chebyPx",
       "clampToMapPx",
+      "coerceTileSet",
+      "computeMobDensityPenalty",
+      "computeMobFlankBonus",
+      "computeRepathCooldownMs",
+      "computeSpawnCenterPx",
       "decayThreat",
       "ensureMob",
       "fetchAliveMonsters",
       "fetchOnlineHeroesInMap",
+      "findNearestFreeTile",
       "getHeroLastPosPx",
       "hasLoSpx",
       "isBlockedPx",
+      "isSolidTile",
+      "isTileBlockedByMobs",
+      "losGridRows",
+      "maybeHandleCombatDance",
+      "maybeReturnMobHome",
       "moveMobAndPersist",
+      "normalizeMonsterPos",
+      "pickCombatDanceStep",
+      "pickStepAlternate",
       "pickStepGreedy",
+      "predictHeroTileCx",
+      "recordHeroObservation",
       "removeHeroThreat",
+      "resolveMobSpeedPx",
+      "resolveMobStacks",
       "seedPosition",
+      "selectMobChaseGoal",
       "selectTargetByThreat",
       "start",
       "stepMob",
       "stop",
-      "tickLoop"
+      "teleportMobToTile",
+      "tickLoop",
+      "tileKey",
+      "updateHeroMemoryForMap"
     ]
   },
   {
@@ -688,7 +775,12 @@
     "symbols": [
       "chebyPx",
       "chebyshevTiles",
+      "clamp",
+      "distanceToTargetPx",
       "inReachPx",
+      "pickCoord",
+      "resolveHitboxDimension",
+      "resolveRangeTiles",
       "toTile"
     ]
   },
@@ -701,37 +793,68 @@
   {
     "file": "server\\combat\\monster_atk_simple.js",
     "symbols": [
-      "applyDamageToHero",
+      "buildAttackProfile",
+      "buildHeroTileSet",
+      "buildMonsterTileMap",
+      "clamp",
+      "computeAttackSignature",
+      "computeDensityPenalty",
+      "computeFaceToward",
+      "computeFlankBonus",
+      "directionFromStep",
+      "emitMonsterMove",
+      "ensurePatrolTarget",
       "fetchAliveHeroesWithPos",
       "fetchAliveMonsters",
+      "findBestStepToward",
+      "findNearestFreeTile",
       "isAdjacent4Tiles",
       "isInsideSpawnRect",
+      "isTileBlockedByCollision",
+      "isTileInsideSpawn",
       "markLastHit",
-      "nextTileToward",
-      "rand",
+      "parseAttacksPayload",
+      "pickChaseGoalTile",
+      "pickFaceFromDelta",
+      "predictHeroTile",
+      "resetInstanceState",
+      "resolveMonsterAttackProfile",
+      "resolveTileStacks",
+      "selectHeroTarget",
       "start",
       "stop",
       "tick",
+      "tilesOccupiedByOthers",
+      "toCenterPxCoord",
+      "toFiniteNumber",
+      "updateHeroMemory",
+      "updateLivePos",
       "updateMonsterPos"
     ]
   },
   {
     "file": "server\\combat\\pos.js",
     "symbols": [
+      "adjustOrigin",
+      "buildTileCandidate",
       "getHeroOwner",
       "getHeroPos",
       "getMonsterPos",
       "getPlayerLastPos",
-      "setMonsterPos"
+      "isHeroPosFresh",
+      "resolveCoord"
     ]
   },
   {
     "file": "server\\combat\\routes.js",
     "symbols": [
       "assertHeroAliveOwned",
+      "buildNoLoSPayload",
+      "buildOutOfRangePayload",
+      "buildRangeTelemetry",
+      "formatRangeMessage",
       "getEquippedWeaponType",
-      "getHeroOwnedBy",
-      "getWeaponTypeFallback"
+      "getHeroOwnedBy"
     ]
   },
   {
@@ -753,9 +876,11 @@
       "getHeroStats",
       "getInstanceWithMonster",
       "getRespawnSeconds",
+      "normalizeCombatPosition",
       "persistDrops",
       "posMod",
       "resolveSkillFromWeapon",
+      "resolveWeaponSpeedMs",
       "respawnHero",
       "rollLoot"
     ]
@@ -778,6 +903,7 @@
     "file": "server\\content\\loader.js",
     "symbols": [
       "ensureItemColumns",
+      "ensureMonsterColumns",
       "firstExistingPath",
       "inferSpriteKind",
       "listRecursive",
@@ -820,7 +946,7 @@
       "flushAllPlayerPos",
       "flushOnePlayerPos",
       "idleAwareSyncSpawns",
-      "isAdjacentStep",
+      "isStepWithinSpeedCap",
       "markOfflineByPlayer",
       "noop",
       "parseCookies",
@@ -910,12 +1036,33 @@
     ]
   },
   {
+    "file": "server\\player\\live_positions.js",
+    "symbols": [
+      "clearLivePlayerPosition",
+      "getLivePlayerPosition",
+      "listFreshHeroesByMap",
+      "listPlayerIds",
+      "markHeroAlive",
+      "setLivePlayerPosition"
+    ]
+  },
+  {
     "file": "server\\respawn\\worker.js",
     "symbols": [
+      "centerOfTile",
+      "findFreeTileAroundSpawn",
+      "getOccupiedTilesForMap",
+      "markTileOccupied",
       "pickPosInSpawnRect",
+      "pickTilesInSpawn",
+      "reserveTileForSpawn",
       "respawnTick",
+      "shuffleInPlace",
+      "spawnTileBounds",
       "startRespawnLoop",
-      "stopRespawnLoop"
+      "stopRespawnLoop",
+      "tileKey",
+      "tileOf"
     ]
   },
   {
@@ -1129,6 +1276,19 @@
       "buildStarterRouter",
       "hasHpColumns",
       "isHeroKeyGenerated"
+    ]
+  },
+  {
+    "file": "server\\utils\\loadSpriteMetaFromDisk.js",
+    "symbols": [
+      "firstExisting",
+      "inferKindFromPath",
+      "listYamlFilesRecursive",
+      "loadFromIndex",
+      "loadSpriteMetaFromBase",
+      "loadSpriteMetaFromDisk",
+      "normalizeKey",
+      "uniqueByKey"
     ]
   },
   {

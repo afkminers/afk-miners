@@ -13,6 +13,7 @@
 - `CLICK_PICK_RADIUS_PX` (defaults: 192)
 - `CLICK_REQUIRE_INTERSECT` (defaults: 1)
 - `COMBAT_DEBUG` (defaults: )
+- `COMBAT_HERO_POS_MAX_AGE_MS`
 - `CONTENT_PIPELINE` (defaults: off)
 - `COOKIE_DOMAIN` (defaults: undefined)
 - `COOKIE_NAME`
@@ -30,42 +31,60 @@
 - `ENDPOINT_METRICS_INTERVAL_MS` (defaults: 60000)
 - `ENDPOINT_METRICS_PROD`
 - `ENDPOINT_METRICS_TOP_N` (defaults: 10)
-- `FLUSH_POS_INTERVAL_MS` (defaults: 30000)
+- `FLUSH_POS_INTERVAL_MS` (defaults: 1000)
 - `GEN_CONTEXT_ON_START`
 - `IDLE_SCHEDULER_CHECK_MS` (defaults: 30000)
 - `JSON_LIMIT` (defaults: 64kb)
 - `JWT_SECRET` (defaults: changeme, CHANGE_ME_DEV_ONLY)
+- `LIVE_POS_GC_MS` (defaults: STALE_MS)
+- `LIVE_POS_STALE_MS` (defaults: (TTL_MS)
+- `LIVE_POS_TTL_MS` (defaults: 1500)
 - `LOOT_CACHE_ENABLED`
 - `LOOT_CACHE_TTL_SEC` (defaults: 5)
 - `LOOT_CLEANUP_EVERY_SECONDS` (defaults: 30)
 - `LOOT_EXPIRE_SECONDS` (defaults: 120)
+- `MONSTER_AGGRO_LOSS_MS` (defaults: 6000)
+- `MONSTER_AGGRO_PERSIST_BONUS` (defaults: 1.5)
+- `MONSTER_AGGRO_SWITCH_DELTA` (defaults: 2)
 - `MONSTER_ATK_COOLDOWN_MS` (defaults: 900)
 - `MONSTER_ATK_MODE` (defaults: )
-- `MONSTER_ATK_TICK_MS` (defaults: 300)
+- `MONSTER_ATK_TICK_MS` (defaults: 150)
 - `MONSTER_BASE_DMG_MAX` (defaults: 12)
 - `MONSTER_BASE_DMG_MIN` (defaults: 6)
 - `MONSTER_CHASE_INSIDE_SPAWN_ONLY` (defaults: 0)
 - `MONSTER_CHASE_MAX_TILES` (defaults: 25)
+- `MONSTER_DETECTION_RADIUS_TILES` (defaults: 8)
+- `MONSTER_HERO_PREDICTION_MAX_TILES` (defaults: 2)
 - `MONSTER_MAX_PER_TICK` (defaults: 40)
+- `MONSTER_PATROL_INTERVAL_MS` (defaults: 4500)
+- `MONSTER_PATROL_RADIUS_TILES` (defaults: 6)
+- `MONSTER_PATROL_STEP_MS` (defaults: 950)
+- `MONSTER_PATROL_TARGET_TTL_MS` (defaults: 12000)
 - `MONSTER_PERSIST_POS_MS` (defaults: 1000)
-- `MONSTER_STEP_MS` (defaults: 250)
+- `MONSTER_STACK_RESOLVE_DEPTH` (defaults: 6)
+- `MONSTER_STEP_BACKTRACK_PENALTY` (defaults: 2)
+- `MONSTER_STEP_MS` (defaults: 150)
+- `MONSTER_STEP_SEARCH_DEPTH` (defaults: 4)
 - `NODE_ENV` (defaults: development)
 - `PG_DUMP_PATH`
 - `PGSSLMODE`
 - `PORT` (defaults: 3000)
 - `REDIS_URL` (defaults: null)
 - `RESPAWN_DEBUG` (defaults: )
+- `RESPAWN_RETRY_DELAY_MS` (defaults: 1000)
 - `RESPAWN_TICK_MS` (defaults: 5000)
+- `RESPAWN_TILE_SEARCH_RADIUS` (defaults: 6)
 - `SESSION_COOKIE_NAME` (defaults: process.env.COOKIE_NAME)
-- `SKILL_TRY_PER_HIT` (defaults: 1)
 - `SKIP_MIGRATIONS_ON_BOOT`
+- `STEP_LAG_TOLERANCE_MS` (defaults: 90)
+- `STEP_MIN_RATIO`
 - `SYNC_SPAWNS_INTERVAL_MS` (defaults: 300000)
 
 ## Endpoints
 
 ### GET /
 
-Arquivo: `server\index.js:635`
+Arquivo: `server\index.js:719`
 
 _Sem payload inferido_
 
@@ -129,7 +148,7 @@ Arquivo: `server\routes\backpack.js:8`
 
 ### GET /_ping
 
-Arquivo: `server\combat\routes.js:38`
+Arquivo: `server\combat\routes.js:131`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -155,12 +174,10 @@ Arquivo: `server\combat\routes.js:38`
 - `HTTP 500` → {ok:false,error:'stop-failed' }
 - `HTTP 400` → {ok:false,error:'missing-id' }
 - `HTTP 400` → {ok:false,error:'missing-hero-id' }
-- `HTTP 400` → {ok:false,error:'mob-pos-missing' }
-- `HTTP 400` → {ok:false,error:'hero-pos-missing' }
 
 ### GET /_routes
 
-Arquivo: `server\combat\routes.js:39`
+Arquivo: `server\combat\routes.js:132`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -186,12 +203,10 @@ Arquivo: `server\combat\routes.js:39`
 - `HTTP 500` → {ok:false,error:'stop-failed' }
 - `HTTP 400` → {ok:false,error:'missing-id' }
 - `HTTP 400` → {ok:false,error:'missing-hero-id' }
-- `HTTP 400` → {ok:false,error:'mob-pos-missing' }
-- `HTTP 400` → {ok:false,error:'hero-pos-missing' }
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:590`
+Arquivo: `server\index.js:674`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -219,7 +234,7 @@ Arquivo: `server\index.js:590`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:565`
+Arquivo: `server\index.js:649`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -249,7 +264,7 @@ Arquivo: `server\index.js:565`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:577`
+Arquivo: `server\index.js:661`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -278,7 +293,7 @@ Arquivo: `server\index.js:577`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:554`
+Arquivo: `server\index.js:638`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -303,7 +318,7 @@ Arquivo: `server\index.js:554`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:498`
+Arquivo: `server\index.js:530`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -311,11 +326,6 @@ Arquivo: `server\index.js:498`
 {
   "map": "value"
 }
-```
-
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,reloaded:mapKey }
 ```
 
 **Erros conhecidos:**
@@ -327,11 +337,10 @@ Arquivo: `server\index.js:498`
 - `HTTP 500` → {error:err.message }
 - `HTTP 404` → {error:'map not found' }
 - `HTTP 500` → {error:err.message }
-- `HTTP 500` → {error:e.message }
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:509`
+Arquivo: `server\index.js:541`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -339,11 +348,6 @@ Arquivo: `server\index.js:509`
 {
   "map": "value"
 }
-```
-
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,reloaded:mapKey }
 ```
 
 **Erros conhecidos:**
@@ -354,11 +358,10 @@ Arquivo: `server\index.js:509`
 - `HTTP 500` → {error:err.message }
 - `HTTP 404` → {error:'map not found' }
 - `HTTP 500` → {error:err.message }
-- `HTTP 500` → {error:e.message }
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:531`
+Arquivo: `server\index.js:563`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -384,7 +387,7 @@ Arquivo: `server\index.js:531`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1309`
+Arquivo: `server\index.js:1425`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -415,6 +418,7 @@ Arquivo: `server\routes\combat_nearest.js:30`
 ```json
 {
   "map": "value",
+  "mapKey": "value",
   "x": "value",
   "y": "value",
   "px": "value",
@@ -431,7 +435,7 @@ Arquivo: `server\routes\combat_nearest.js:30`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:170`
+Arquivo: `server\index.js:202`
 
 _Sem payload inferido_
 
@@ -862,7 +866,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:600`
+Arquivo: `server\index.js:684`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -882,7 +886,7 @@ Arquivo: `server\index.js:600`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1332`
+Arquivo: `server\index.js:1448`
 
 _Sem payload inferido_
 
@@ -926,7 +930,7 @@ Arquivo: `server\routes\afk.js:65`
 
 ### POST /attack/start
 
-Arquivo: `server\combat\routes.js:87`
+Arquivo: `server\combat\routes.js:175`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -955,11 +959,10 @@ Arquivo: `server\combat\routes.js:87`
 - `HTTP 400` → {ok:false,error:'mob-pos-missing' }
 - `HTTP 400` → {ok:false,error:'hero-pos-missing' }
 - `HTTP 400` → {ok:false,error:result.message }
-- `HTTP 500` → {ok:false,error:'hit-failed' }
 
 ### POST /attack/stop
 
-Arquivo: `server\combat\routes.js:132`
+Arquivo: `server\combat\routes.js:255`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1138,7 +1141,7 @@ Arquivo: `server\routes\farm.js:181`
 
 ### POST /hit
 
-Arquivo: `server\combat\routes.js:163`
+Arquivo: `server\combat\routes.js:274`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1470,8 +1473,6 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 500: {ok:false,error:'stop-failed' }
   - HTTP 400: {ok:false,error:'missing-id' }
   - HTTP 400: {ok:false,error:'missing-hero-id' }
-  - HTTP 400: {ok:false,error:'mob-pos-missing' }
-  - HTTP 400: {ok:false,error:'hero-pos-missing' }
 - **GET /_routes**
   - HTTP 400: {ok:false,error:'missing-params' }
   - HTTP 400: {ok:false,error:'mob-pos-missing' }
@@ -1481,8 +1482,6 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 500: {ok:false,error:'stop-failed' }
   - HTTP 400: {ok:false,error:'missing-id' }
   - HTTP 400: {ok:false,error:'missing-hero-id' }
-  - HTTP 400: {ok:false,error:'mob-pos-missing' }
-  - HTTP 400: {ok:false,error:'hero-pos-missing' }
 - **GET /api/admin/content/map/:key/data**
   - HTTP 404: {error:'map not found' }
   - HTTP 500: {error:err.message }
@@ -1514,7 +1513,6 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 500: {error:err.message }
   - HTTP 404: {error:'map not found' }
   - HTTP 500: {error:err.message }
-  - HTTP 500: {error:e.message }
 - **GET /api/assets/items**
   - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
@@ -1523,7 +1521,6 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 500: {error:err.message }
   - HTTP 404: {error:'map not found' }
   - HTTP 500: {error:err.message }
-  - HTTP 500: {error:e.message }
 - **GET /api/assets/sprites**
   - HTTP 500: {error:err.message }
   - HTTP 500: {error:err.message }
@@ -1679,7 +1676,6 @@ Arquivo: `server\starter\routes.js:104`
   - HTTP 400: {ok:false,error:'mob-pos-missing' }
   - HTTP 400: {ok:false,error:'hero-pos-missing' }
   - HTTP 400: {ok:false,error:result.message }
-  - HTTP 500: {ok:false,error:'hit-failed' }
 - **POST /attack/stop**
   - HTTP 404: {ok:false,error:'hero-not-found' }
   - HTTP 500: {ok:false,error:'stop-failed' }

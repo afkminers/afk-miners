@@ -96,6 +96,10 @@
     "to": "../state/hero-state.js"
   },
   {
+    "from": "client\\js\\combat\\attack-controls.js",
+    "to": "../ui/combat-message.js"
+  },
+  {
     "from": "client\\js\\combat\\actions.js",
     "to": "../api.js"
   },
