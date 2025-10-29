@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="50" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="28">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="50" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="33">
  <editorsettings>
   <export target="data/maps/house.json" format="json"/>
  </editorsettings>
@@ -178,10 +178,50 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="27" type="spawn" x="1048" y="924" width="64" height="64">
+  <object id="27" type="spawn" x="1048" y="924" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="teste"/>
+    <property name="monsterKey" value="skeleton"/>
+    <property name="respawnSec" type="int" value="30"/>
+    <property name="type" value="spawn"/>
+   </properties>
+  </object>
+  <object id="28" type="spawn" x="744" y="456" width="32" height="32">
+   <properties>
+    <property name="count" type="int" value="1"/>
+    <property name="monsterKey" value="spider"/>
+    <property name="respawnSec" type="int" value="30"/>
+    <property name="type" value="spawn"/>
+   </properties>
+  </object>
+  <object id="29" type="spawn" x="842" y="530" width="32" height="32">
+   <properties>
+    <property name="count" type="int" value="1"/>
+    <property name="monsterKey" value="poison-spider"/>
+    <property name="respawnSec" type="int" value="30"/>
+    <property name="type" value="spawn"/>
+   </properties>
+  </object>
+  <object id="30" type="spawn" x="942" y="436" width="32" height="32">
+   <properties>
+    <property name="count" type="int" value="1"/>
+    <property name="monsterKey" value="goblin"/>
+    <property name="respawnSec" type="int" value="30"/>
+    <property name="type" value="spawn"/>
+   </properties>
+  </object>
+  <object id="31" type="spawn" x="940" y="548" width="32" height="32">
+   <properties>
+    <property name="count" type="int" value="1"/>
+    <property name="monsterKey" value="ghost"/>
+    <property name="respawnSec" type="int" value="30"/>
+    <property name="type" value="spawn"/>
+   </properties>
+  </object>
+  <object id="32" type="spawn" x="1002" y="574" width="32" height="32">
+   <properties>
+    <property name="count" type="int" value="1"/>
+    <property name="monsterKey" value="fire-devil"/>
     <property name="respawnSec" type="int" value="30"/>
     <property name="type" value="spawn"/>
    </properties>
