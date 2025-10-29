@@ -51,6 +51,11 @@ async function getHeroPos(heroId, preferMapKey = null) {
       fresh: !Boolean(live.stale),
 
       updatedAt: Number(live.ts || Date.now()),
+
+      unit: 'px',
+      inPixels: true,
+      assumeTiles: false,
+      assumePx: true,
     };
 
     if (Number.isFinite(live.age)) {
@@ -70,19 +75,24 @@ async function getHeroPos(heroId, preferMapKey = null) {
       const ageMs = Number.isFinite(updatedAtMs) ? Date.now() - updatedAtMs : null;
 
 
-      return {
-        x: Math.round(Number(row.x || 0)),
-        y: Math.round(Number(row.y || 0)),
-        map_key: row.mapKey,
-        class: classKey,
-        source: 'db',
+    return {
+      x: Math.round(Number(row.x || 0)),
+      y: Math.round(Number(row.y || 0)),
+      map_key: row.mapKey,
+      class: classKey,
+      source: 'db',
 
-        stale: true,
-        fresh: false,
-        updatedAt: updatedAtMs,
-        ageMs: Number.isFinite(ageMs) ? ageMs : null,
+      stale: true,
+      fresh: false,
+      updatedAt: updatedAtMs,
+      ageMs: Number.isFinite(ageMs) ? ageMs : null,
 
-      };
+      unit: 'px',
+      inPixels: true,
+      assumeTiles: false,
+      assumePx: true,
+
+    };
     }
   }
 
@@ -113,6 +123,11 @@ async function getHeroPos(heroId, preferMapKey = null) {
       fresh: false,
       updatedAt: updatedAtMs,
       ageMs: Number.isFinite(ageMs) ? ageMs : null,
+
+      unit: 'px',
+      inPixels: true,
+      assumeTiles: false,
+      assumePx: true,
 
     };
   }
