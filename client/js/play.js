@@ -456,29 +456,15 @@ function heroFootboxTiles(px, py) {
   const spriteTop = py - frameH * anchorY;
   const spriteBottom = spriteTop + frameH;
 
-  const footHeight = Math.max(TILE / 2, Math.min(TILE, frameH));
-  const tolerance = 2;
-  const rectHeight = footHeight + tolerance * 2;
-  const rectTop = spriteBottom - footHeight - tolerance;
-  const rectWidth = frameW + tolerance * 2;
-  const rectLeft = spriteLeft - tolerance;
+  const footCenterX = spriteLeft + frameW * anchorX;
+  const footBottomY = spriteBottom;
 
-  const minCx = Math.floor(rectLeft / TILE);
-  const maxCx = Math.floor((rectLeft + rectWidth - 1) / TILE);
-  const minCy = Math.floor(rectTop / TILE);
-  const maxCy = Math.floor((rectTop + rectHeight - 1) / TILE);
+  const cx = Math.round((footCenterX - TILE / 2) / TILE);
+  const cy = Math.round((footBottomY - TILE / 2) / TILE);
 
-  if (!Number.isFinite(minCx) || !Number.isFinite(maxCx) || !Number.isFinite(minCy) || !Number.isFinite(maxCy)) {
-    return [];
-  }
+  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return [];
 
-  const keys = [];
-  for (let cy = minCy; cy <= maxCy; cy++) {
-    for (let cx = minCx; cx <= maxCx; cx++) {
-      keys.push(monsterTileKey(cx, cy));
-    }
-  }
-  return keys;
+  return [monsterTileKey(cx, cy)];
 }
 
 function updateHeroBlocking(px, py) {
@@ -575,32 +561,22 @@ function updateMonsterBlocking(state, worldX, worldY) {
   const spriteTop = py - frameH * anchorY;
   const spriteBottom = spriteTop + frameH;
 
-  const footHeight = Math.max(TILE / 2, Math.min(TILE, frameH));
-  const tolerance = 2;
-  const rectHeight = footHeight + tolerance * 2;
-  const rectTop = spriteBottom - footHeight - tolerance;
-  const rectWidth = frameW + tolerance * 2;
-  const rectLeft = spriteLeft - tolerance;
+  const footCenterX = spriteLeft + frameW * anchorX;
+  const footBottomY = spriteBottom;
 
-  const minCx = Math.floor(rectLeft / TILE);
-  const maxCx = Math.floor((rectLeft + rectWidth - 1) / TILE);
-  const minCy = Math.floor(rectTop / TILE);
-  const maxCy = Math.floor((rectTop + rectHeight - 1) / TILE);
+  const cx = Math.round((footCenterX - TILE / 2) / TILE);
+  const cy = Math.round((footBottomY - TILE / 2) / TILE);
 
-  if (!Number.isFinite(minCx) || !Number.isFinite(maxCx) || !Number.isFinite(minCy) || !Number.isFinite(maxCy)) return;
+  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return;
 
-  for (let cy = minCy; cy <= maxCy; cy++) {
-    for (let cx = minCx; cx <= maxCx; cx++) {
-      const key = monsterTileKey(cx, cy);
-      let set = MONSTER_BLOCKED_TILES.get(key);
-      if (!set) {
-        set = new Set();
-        MONSTER_BLOCKED_TILES.set(key, set);
-      }
-      set.add(state.id);
-      state.blockedTiles.add(key);
-    }
+  const key = monsterTileKey(cx, cy);
+  let set = MONSTER_BLOCKED_TILES.get(key);
+  if (!set) {
+    set = new Set();
+    MONSTER_BLOCKED_TILES.set(key, set);
   }
+  set.add(state.id);
+  state.blockedTiles.add(key);
 }
 
 function clearMonsterBlocking(id) {
