@@ -161,6 +161,22 @@
 </head>
 
 <body>
+  <div id="loadingScreen" class="loading-screen" role="status" aria-live="polite">
+    <div class="loading-overlay"></div>
+    <div class="loading-frame">
+      <div class="loading-header">
+        <span class="loading-badge">AFK MINERS</span>
+        <span class="loading-title">Preparando o mundo…</span>
+      </div>
+      <div class="loading-bar" data-loading-bar role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="loading-bar-fill"></div>
+      </div>
+      <div class="loading-percent"><span data-loading-percent>0</span>%</div>
+      <div class="loading-tip-label">Dica dos mineradores</div>
+      <p id="loadingTip" class="loading-tip-text">Carregando…</p>
+    </div>
+  </div>
+
   <header class="topbar">
     <div class="brand">AFK MINERS</div>
     <nav class="actions">
