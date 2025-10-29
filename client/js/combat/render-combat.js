@@ -3,7 +3,11 @@
 //client/js/combat/render-combat.js
 
 
+import { apiPost } from '../api.js';
 import { getSocket, onMessage } from '../ws/singleton.js';
+
+const TILE = 32;
+const HALF_TILE = TILE / 2;
 
 const state = {
   monsters: new Map(), // id -> { id, key, hp, maxHp, spawnId? }
@@ -29,6 +33,110 @@ function ensureSpriteBind(id, key, spawnId) {
   if (spawnId != null) s = bindBySpawn(id, spawnId);
   if (!s && key) s = bindByKey(id, key);
   return s || null;
+}
+
+function tileOf(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 0;
+  return Math.floor(num / TILE);
+}
+
+function resolveMonsterTile(instanceId) {
+  const id = String(instanceId);
+  const sprite = window.GameScene?.getMobByInstanceId?.(id);
+
+  const takeNumber = (v) => {
+    const num = Number(v);
+    return Number.isFinite(num) ? num : null;
+  };
+
+  let px = takeNumber(sprite?.x);
+  let py = takeNumber(sprite?.y);
+
+  if (!Number.isFinite(px) || !Number.isFinite(py)) {
+    const serverState = window.GameScene?.serverMonsters;
+    const entry = serverState && typeof serverState.get === 'function' ? serverState.get(id) : null;
+    if (entry) {
+      const rx = takeNumber(entry.renderX);
+      const ry = takeNumber(entry.renderY);
+      const sx = takeNumber(entry.x);
+      const sy = takeNumber(entry.y);
+      if (!Number.isFinite(px)) px = Number.isFinite(rx) ? rx : sx;
+      if (!Number.isFinite(py)) py = Number.isFinite(ry) ? ry : sy;
+    }
+  }
+
+  if (!Number.isFinite(px) || !Number.isFinite(py)) return null;
+  return { tx: tileOf(px), ty: tileOf(py), x: px, y: py };
+}
+
+function getActiveHeroIdMaybe() {
+  if (window.ActiveHeroId) return String(window.ActiveHeroId);
+  try {
+    const fromTeam = window.Team?.getActiveHeroId?.();
+    if (fromTeam) return String(fromTeam);
+  } catch {}
+  try {
+    if (window.HeroState?.id) return String(window.HeroState.id);
+  } catch {}
+  return null;
+}
+
+async function attemptMonsterPush({ monsterId, startTile }, dropTileX, dropTileY) {
+  if (!monsterId || !startTile) return false;
+
+  const heroId = getActiveHeroIdMaybe();
+  if (!heroId) return false;
+
+  const ctrl = window.GameScene?.controller;
+  const heroPos = ctrl && typeof ctrl.getPosition === 'function' ? ctrl.getPosition() : null;
+  if (!heroPos || !Number.isFinite(heroPos.x) || !Number.isFinite(heroPos.y)) return false;
+
+  const heroTileX = tileOf(heroPos.x);
+  const heroTileY = tileOf(heroPos.y);
+
+  const dx = dropTileX - startTile.tx;
+  const dy = dropTileY - startTile.ty;
+  const manhattan = Math.abs(dx) + Math.abs(dy);
+  if (manhattan !== 1) return false;
+
+  const heroCheby = Math.max(Math.abs(heroTileX - startTile.tx), Math.abs(heroTileY - startTile.ty));
+  if (heroCheby > 1) {
+    if (window.Chat?.pushLog) window.Chat.pushLog('[Empurrar] Você está longe demais do monstro.');
+    return false;
+  }
+
+  if (dropTileX === heroTileX && dropTileY === heroTileY) {
+    if (window.Chat?.pushLog) window.Chat.pushLog('[Empurrar] Você está bloqueando esse local.');
+    return false;
+  }
+
+  const payload = {
+    heroId: String(heroId),
+    targetInstanceId: String(monsterId),
+    fromTileX: startTile.tx,
+    fromTileY: startTile.ty,
+    toTileX: dropTileX,
+    toTileY: dropTileY,
+    fromX: Math.round(startTile.x),
+    fromY: Math.round(startTile.y),
+    toX: Math.round(dropTileX * TILE + HALF_TILE),
+    toY: Math.round(dropTileY * TILE + HALF_TILE),
+  };
+
+  try {
+    const resp = await apiPost('/api/combat/push', payload);
+    if (resp?.ok) return true;
+    if (resp?.message) {
+      if (window.Chat?.pushLog) window.Chat.pushLog(`[Empurrar] ${resp.message}`);
+      else console.warn('[push] ' + resp.message);
+    }
+  } catch (err) {
+    const msg = err?.payload?.message || err?.message || err;
+    if (msg && window.Chat?.pushLog) window.Chat.pushLog(`[Empurrar] ${msg}`);
+    console.warn('[push] request failed', msg);
+  }
+  return false;
 }
 
 /* ---------------- Floater (dano/xp) ---------------- */
@@ -289,10 +397,90 @@ export default function installCombatOverlay() {
 
   const canvas = window.GameScene?.canvas;
   if (canvas) {
-    canvas.addEventListener('mouseup', (e) => {
-      if (e.button !== 0) return;
+    const DRAG_THRESHOLD_PX = 6;
+    const dragState = {
+      active: false,
+      dragging: false,
+      monsterId: null,
+      startScreen: null,
+      startTile: null,
+    };
+
+    const resetDragState = () => {
+      dragState.active = false;
+      dragState.dragging = false;
+      dragState.monsterId = null;
+      dragState.startScreen = null;
+      dragState.startTile = null;
+    };
+
+    canvas.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) {
+        resetDragState();
+        return;
+      }
+
       const rect = canvas.getBoundingClientRect();
-      const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+      const world = window.GameScene?.camera?.screenToWorld?.(sx, sy) || { x: sx, y: sy };
+      const id = pickMobAtWorld(world);
+
+      if (!id) {
+        resetDragState();
+        return;
+      }
+
+      const tileInfo = resolveMonsterTile(id);
+      if (!tileInfo) {
+        resetDragState();
+        return;
+      }
+
+      dragState.active = true;
+      dragState.dragging = false;
+      dragState.monsterId = String(id);
+      dragState.startScreen = { x: e.clientX, y: e.clientY };
+      dragState.startTile = tileInfo;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!dragState.active) return;
+      if (e.buttons != null && (e.buttons & 1) === 0) return;
+      const start = dragState.startScreen;
+      if (!start) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      if (!dragState.dragging && Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) {
+        dragState.dragging = true;
+      }
+    });
+
+    canvas.addEventListener('mouseup', async (e) => {
+      if (e.button !== 0) {
+        resetDragState();
+        return;
+      }
+
+      let handled = false;
+      if (dragState.active && dragState.startTile && dragState.monsterId) {
+        const rect = canvas.getBoundingClientRect();
+        const sx = e.clientX - rect.left;
+        const sy = e.clientY - rect.top;
+        const world = window.GameScene?.camera?.screenToWorld?.(sx, sy) || { x: sx, y: sy };
+        const dropTileX = tileOf(world.x);
+        const dropTileY = tileOf(world.y);
+        if (dropTileX !== dragState.startTile.tx || dropTileY !== dragState.startTile.ty) {
+          handled = await attemptMonsterPush(dragState, dropTileX, dropTileY);
+        }
+      }
+
+      resetDragState();
+      if (handled) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
       const world = window.GameScene?.camera?.screenToWorld?.(sx, sy) || { x: sx, y: sy };
       const id = pickMobAtWorld(world);
       if (id) {

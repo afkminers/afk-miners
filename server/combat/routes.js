@@ -8,7 +8,7 @@ const router = express.Router();
 const K = require('../balance/config');
 // const autoloop = require('./autoloop'); // ← desativado por enquanto
 
-const { get } = require('../models/db');
+const { get, run } = require('../models/db');
 
 const { getHeroPos, getMonsterPos } = require('./pos');
 
@@ -16,6 +16,12 @@ const { inReachPx, resolveRangeTiles, distanceToTargetPx, TILE } = require('./ge
 const { hasLineOfSight } = require('./los');
 const { getGrid } = require('../maps/grid');
 const { applyHit, respawnHero } = require('./service');
+const { listFreshHeroesByMap } = require('../player/live_positions');
+
+let simpleAi = null;
+let legacyAi = null;
+try { simpleAi = require('./monster_atk_simple'); } catch {}
+try { legacyAi = require('./ai-mobs'); } catch {}
 
 // >>> loot service (em memória) — ok manter import mesmo sem uso agora
 const { createLootFromKill } = require('../services/loot');
@@ -249,6 +255,208 @@ router.post('/attack/start', express.json(), async (req, res) => {
     console.error('[combat] /attack/start error:', e);
     return res.status(500).json({ ok:false, error:'start-failed' });
   }
+});
+
+function normalizeBool(value, fallback = true) {
+  if (value === undefined || value === null) return fallback;
+  if (typeof value === 'boolean') return value;
+  const str = String(value).trim().toLowerCase();
+  if (str === 'true' || str === '1' || str === 'yes') return true;
+  if (str === 'false' || str === '0' || str === 'no') return false;
+  return fallback;
+}
+
+router.post('/push', express.json(), async (req, res) => {
+  const { heroId, targetInstanceId } = req.body || {};
+  const monsterId = targetInstanceId != null ? String(targetInstanceId) : null;
+  const heroIdStr = heroId != null ? String(heroId) : null;
+
+  if (!heroIdStr || !monsterId) {
+    return res.status(400).json({ ok: false, error: 'missing-params', message: 'Herói e monstro são obrigatórios.' });
+  }
+
+  const guard = await assertHeroAliveOwned(req.user.id, heroIdStr);
+  if (!guard.ok) return res.status(guard.code).json({ ok: false, error: guard.error });
+
+  const monsterPos = await getMonsterPos(monsterId).catch(() => null);
+  if (!monsterPos || !Number.isFinite(monsterPos.x) || !Number.isFinite(monsterPos.y)) {
+    return res.status(404).json({ ok: false, error: 'monster-not-found', message: 'Monstro não encontrado.' });
+  }
+
+  let monsterMeta = null;
+  try {
+    monsterMeta = await get(`
+      SELECT
+        COALESCE(mi.map_key, s."mapKey") AS map_key,
+        mi.state,
+        mi.alive,
+        (m."flagsJSON"->>'pushable') AS pushable_raw
+      FROM monster_instances mi
+      LEFT JOIN spawns s ON s.id = mi.spawn_id
+      LEFT JOIN monsters_master m ON m.id = mi.monster_id
+      WHERE mi.id = $1
+    `, [monsterId]);
+  } catch {}
+
+  const mapKey = String(monsterMeta?.map_key ?? monsterPos.map_key ?? 'house');
+  const pushable = normalizeBool(monsterMeta?.pushable_raw, true);
+  if (!pushable) {
+    return res.json({ ok: false, error: 'monster-not-pushable', message: 'Este monstro não pode ser empurrado.' });
+  }
+
+  const stateRaw = monsterMeta?.state ? String(monsterMeta.state).toUpperCase() : null;
+  const aliveColumn = monsterMeta?.alive;
+  const alive = stateRaw
+    ? stateRaw === 'ALIVE'
+    : (aliveColumn === undefined || aliveColumn === null ? true : aliveColumn !== false);
+  if (!alive) {
+    return res.status(409).json({ ok: false, error: 'monster-dead', message: 'O monstro não está ativo.' });
+  }
+
+  const heroPos = await getHeroPos(heroIdStr, mapKey);
+  if (!heroPos || !Number.isFinite(heroPos.x) || !Number.isFinite(heroPos.y)) {
+    return res.status(400).json({ ok: false, error: 'hero-pos-missing', message: 'Posição do herói indisponível.' });
+  }
+
+  if (heroPos.map_key && heroPos.map_key !== mapKey) {
+    return res.status(400).json({ ok: false, error: 'map-diff', message: 'Você está em outro mapa.' });
+  }
+
+  const monsterTileX = Math.floor(Number(monsterPos.x) / TILE);
+  const monsterTileY = Math.floor(Number(monsterPos.y) / TILE);
+  const heroTileX = Math.floor(Number(heroPos.x) / TILE);
+  const heroTileY = Math.floor(Number(heroPos.y) / TILE);
+
+  const heroCheby = Math.max(Math.abs(heroTileX - monsterTileX), Math.abs(heroTileY - monsterTileY));
+  if (heroCheby > 1) {
+    return res.status(409).json({ ok: false, error: 'hero-too-far', message: 'Você está longe demais do monstro.' });
+  }
+
+  let destTileX = Number.isFinite(Number(req.body?.toTileX)) ? Number(req.body.toTileX) | 0 : null;
+  let destTileY = Number.isFinite(Number(req.body?.toTileY)) ? Number(req.body.toTileY) | 0 : null;
+
+  if (!Number.isInteger(destTileX) || !Number.isInteger(destTileY)) {
+    const toX = Number(req.body?.toX);
+    const toY = Number(req.body?.toY);
+    if (!Number.isFinite(toX) || !Number.isFinite(toY)) {
+      return res.status(400).json({ ok: false, error: 'invalid-target', message: 'Destino inválido para o empurrão.' });
+    }
+    destTileX = Math.floor(toX / TILE);
+    destTileY = Math.floor(toY / TILE);
+  }
+
+  const dx = destTileX - monsterTileX;
+  const dy = destTileY - monsterTileY;
+  const manhattan = Math.abs(dx) + Math.abs(dy);
+  if (manhattan !== 1) {
+    return res.status(400).json({ ok: false, error: 'invalid-target', message: 'Escolha um SQM adjacente.' });
+  }
+
+  if (destTileX === monsterTileX && destTileY === monsterTileY) {
+    return res.status(409).json({ ok: false, error: 'same-tile', message: 'O monstro já está nesse local.' });
+  }
+
+  if (destTileX === heroTileX && destTileY === heroTileY) {
+    return res.status(409).json({ ok: false, error: 'tile-occupied-hero', message: 'Você está bloqueando esse SQM.' });
+  }
+
+  let gridInfo = null;
+  try { gridInfo = await getGrid(mapKey); } catch {}
+
+  if (gridInfo) {
+    const { cols, rows, grid } = gridInfo;
+    if (destTileX < 0 || destTileY < 0 || destTileX >= cols || destTileY >= rows) {
+      return res.status(409).json({ ok: false, error: 'tile-out-of-bounds', message: 'Destino fora do mapa.' });
+    }
+    if (grid) {
+      const idx = destTileY * cols + destTileX;
+      if (grid[idx] === 1) {
+        return res.status(409).json({ ok: false, error: 'tile-solid', message: 'Esse SQM está bloqueado.' });
+      }
+    }
+  }
+
+  const minX = destTileX * TILE;
+  const maxX = minX + TILE;
+  const minY = destTileY * TILE;
+  const maxY = minY + TILE;
+
+  let otherMonster = null;
+  try {
+    otherMonster = await get(`
+      SELECT mi.id
+      FROM monster_instances mi
+      LEFT JOIN spawns s ON s.id = mi.spawn_id
+      WHERE mi.id <> $1
+        AND COALESCE(mi.map_key, s."mapKey") = $2
+        AND (mi.state = 'ALIVE' OR mi.state IS NULL OR mi.alive IS TRUE)
+        AND mi.x >= $3 AND mi.x < $4
+        AND mi.y >= $5 AND mi.y < $6
+      LIMIT 1
+    `, [monsterId, mapKey, minX, maxX, minY, maxY]);
+  } catch (err) {
+    otherMonster = await get(`
+      SELECT id
+      FROM monster_instances
+      WHERE id <> $1
+        AND (alive IS NULL OR alive = TRUE)
+        AND x >= $2 AND x < $3
+        AND y >= $4 AND y < $5
+      LIMIT 1
+    `, [monsterId, minX, maxX, minY, maxY]).catch(() => null);
+  }
+
+  if (otherMonster) {
+    return res.status(409).json({ ok: false, error: 'tile-occupied-monster', message: 'Outro monstro bloqueia esse SQM.' });
+  }
+
+  let heroesBlocking = false;
+  try {
+    const freshHeroes = listFreshHeroesByMap(mapKey, 2500) || [];
+    for (const hero of freshHeroes) {
+      if (!Number.isFinite(hero?.x) || !Number.isFinite(hero?.y)) continue;
+      const hx = Math.floor(Number(hero.x) / TILE);
+      const hy = Math.floor(Number(hero.y) / TILE);
+      if (hx === destTileX && hy === destTileY) {
+        if (!hero.heroId || String(hero.heroId) !== heroIdStr) {
+          heroesBlocking = true;
+          break;
+        }
+      }
+    }
+  } catch {}
+
+  if (heroesBlocking) {
+    return res.status(409).json({ ok: false, error: 'tile-occupied-hero', message: 'Outro herói está nesse SQM.' });
+  }
+
+  const destPx = Math.round(destTileX * TILE + TILE / 2);
+  const destPy = Math.round(destTileY * TILE + TILE / 2);
+
+  try {
+    await run(`UPDATE monster_instances SET x=$2, y=$3, updated_at=now() WHERE id=$1`, [monsterId, destPx, destPy]);
+  } catch (err) {
+    try {
+      await run(`UPDATE monster_instances SET x=$2, y=$3 WHERE id=$1`, [monsterId, destPx, destPy]);
+    } catch (err2) {
+      console.warn('[combat:push] persist error:', err2?.message || err2);
+      return res.status(500).json({ ok: false, error: 'persist-failed', message: 'Falha ao atualizar a posição do monstro.' });
+    }
+  }
+
+  try { simpleAi?.resetInstanceState?.(monsterId); } catch {}
+  try { legacyAi?.seedPosition?.({ id: monsterId, x: destPx, y: destPy, mapKey }); } catch {}
+
+  if (typeof global._sendToMap === 'function') {
+    const payload = { type: 'monster_move', id: monsterId, x: destPx, y: destPy };
+    if (dx === 1) payload.face = 'east';
+    else if (dx === -1) payload.face = 'west';
+    else if (dy === 1) payload.face = 'south';
+    else if (dy === -1) payload.face = 'north';
+    try { global._sendToMap(mapKey, payload); } catch {}
+  }
+
+  return res.json({ ok: true, id: monsterId, x: destPx, y: destPy });
 });
 
 // ====== STOP ===============================================================
