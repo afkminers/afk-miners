@@ -1,0 +1,30 @@
+# data/monsters/poison_spider.yml
+key: poison_spider
+name: Poison Spider
+xp: 26
+health:
+  max: 26
+speed: 220
+look:
+  spriteKey: poison_spider
+flags:
+  hostile: true
+  pushable: false
+elements:
+  physical: 0
+  earth: 60
+  fire: -5
+attacks:
+- type: melee
+  intervalMs: 1800
+  chancePercent: 100
+  min: 4
+  max: 12
+defenses:
+  armor: 6
+  defense: 10
+loot:
+- item: gold_coin
+  min: 1
+  max: 8
+  chance: 40000

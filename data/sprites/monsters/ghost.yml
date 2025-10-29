@@ -1,0 +1,44 @@
+# data/sprites/monsters/ghost.yml
+key: ghost
+kind: monster
+image: "sprites/monsters/ghost.png"
+
+frame:
+  width: 23
+  height: 32
+  margin: 0
+  spacing: 0
+
+grid:
+  cols: 5
+  rows: 6
+
+anchor:
+  x: 0.5
+  y: 0.55
+
+anims:
+  idle:
+    fps: 6
+    frames: 5
+    row: 0
+    startCol: 0
+    loop: true
+
+  walk:
+    fps: 8
+    frames: 5
+    rowByDir:
+      south: 1
+      west: 2
+      east: 3
+      north: 4
+    startCol: 0
+    loop: true
+
+  dead:
+    fps: 8
+    frames: 5
+    row: 5
+    startCol: 0
+    loop: false
