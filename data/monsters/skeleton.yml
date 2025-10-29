@@ -14,6 +14,7 @@ elements:
   physical: 0
   holy: -10
   death: 20
+attack_ms: 2000
 attacks:
 - type: melee
   intervalMs: 2000

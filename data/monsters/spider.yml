@@ -13,6 +13,7 @@ flags:
 elements:
   physical: 0
   earth: 20
+attack_ms: 1800
 attacks:
 - type: melee
   intervalMs: 1800

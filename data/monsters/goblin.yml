@@ -9,6 +9,7 @@ look:
 flags:
   hostile: true
   pushable: false
+attack_ms: 1800
 attacks:
 - type: melee
   intervalMs: 1800
