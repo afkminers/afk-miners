@@ -230,10 +230,16 @@ async function resolveMonsterAttackProfile(monster) {
 function toCenterPxCoord(raw) {
   const n = Number(raw);
   if (!Number.isFinite(n)) return null;
-  if (Math.abs(n) < 1000) {
-    return (Math.round(n) * TILE) + TILE / 2;
+
+  const snapped = Math.round(n);
+  const remainder = ((snapped % TILE) + TILE) % TILE;
+  const nearTileCenter = Math.abs(remainder - (TILE / 2)) <= 1;
+
+  if (nearTileCenter || Math.abs(snapped) >= TILE * 4) {
+    return snapped;
   }
-  return Math.round(n);
+
+  return (snapped * TILE) + (TILE / 2);
 }
 
 function pickFaceFromDelta(dx, dy, fallback = 'south') {
