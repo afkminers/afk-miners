@@ -197,7 +197,7 @@
   <object id="29" type="spawn" x="842" y="530" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="poison-spider"/>
+    <property name="monsterKey" value="poison_spider"/>
     <property name="respawnSec" type="int" value="30"/>
     <property name="type" value="spawn"/>
    </properties>
@@ -221,7 +221,7 @@
   <object id="32" type="spawn" x="1002" y="574" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="fire-devil"/>
+    <property name="monsterKey" value="fire_devil"/>
     <property name="respawnSec" type="int" value="30"/>
     <property name="type" value="spawn"/>
    </properties>

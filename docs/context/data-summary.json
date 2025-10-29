@@ -1,5 +1,9 @@
 [
   {
+    "file": "docs\\releases\\2025-10-29_001318-auto\\ctx.yml",
+    "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
+  },
+  {
     "file": "docs\\releases\\2025-09-22_015704-auto\\ctx.yml",
     "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
   },
@@ -124,6 +128,34 @@
     ]
   },
   {
+    "file": "data\\sprites\\monsters\\spider.yml",
+    "kind": "object",
+    "size": 7,
+    "topKeys": [
+      "key",
+      "kind",
+      "image",
+      "frame",
+      "grid",
+      "anchor",
+      "anims"
+    ]
+  },
+  {
+    "file": "data\\sprites\\monsters\\skeleton.yml",
+    "kind": "object",
+    "size": 7,
+    "topKeys": [
+      "key",
+      "kind",
+      "image",
+      "frame",
+      "grid",
+      "anchor",
+      "anims"
+    ]
+  },
+  {
     "file": "data\\sprites\\monsters\\rotworm.yml",
     "kind": "object",
     "size": 7,
@@ -166,6 +198,20 @@
     ]
   },
   {
+    "file": "data\\sprites\\monsters\\poison_spider.yml",
+    "kind": "object",
+    "size": 7,
+    "topKeys": [
+      "key",
+      "kind",
+      "image",
+      "frame",
+      "grid",
+      "anchor",
+      "anims"
+    ]
+  },
+  {
     "file": "data\\sprites\\monsters\\goblin.yml",
     "kind": "object",
     "size": 7,
@@ -177,6 +223,34 @@
       "grid",
       "anims",
       "anchor"
+    ]
+  },
+  {
+    "file": "data\\sprites\\monsters\\ghost.yml",
+    "kind": "object",
+    "size": 7,
+    "topKeys": [
+      "key",
+      "kind",
+      "image",
+      "frame",
+      "grid",
+      "anchor",
+      "anims"
+    ]
+  },
+  {
+    "file": "data\\sprites\\monsters\\fire_devil.yml",
+    "kind": "object",
+    "size": 7,
+    "topKeys": [
+      "key",
+      "kind",
+      "image",
+      "frame",
+      "grid",
+      "anchor",
+      "anims"
     ]
   },
   {
@@ -310,6 +384,42 @@
     ]
   },
   {
+    "file": "data\\monsters\\spider.yml",
+    "kind": "object",
+    "size": 11,
+    "topKeys": [
+      "key",
+      "name",
+      "xp",
+      "health",
+      "speed",
+      "look",
+      "flags",
+      "elements",
+      "attacks",
+      "defenses",
+      "loot"
+    ]
+  },
+  {
+    "file": "data\\monsters\\skeleton.yml",
+    "kind": "object",
+    "size": 11,
+    "topKeys": [
+      "key",
+      "name",
+      "xp",
+      "health",
+      "speed",
+      "look",
+      "flags",
+      "elements",
+      "attacks",
+      "defenses",
+      "loot"
+    ]
+  },
+  {
     "file": "data\\monsters\\rotworm.yml",
     "kind": "object",
     "size": 11,
@@ -367,6 +477,24 @@
     ]
   },
   {
+    "file": "data\\monsters\\poison_spider.yml",
+    "kind": "object",
+    "size": 11,
+    "topKeys": [
+      "key",
+      "name",
+      "xp",
+      "health",
+      "speed",
+      "look",
+      "flags",
+      "elements",
+      "attacks",
+      "defenses",
+      "loot"
+    ]
+  },
+  {
     "file": "data\\monsters\\index.yml",
     "kind": "object",
     "size": 1,
@@ -387,6 +515,42 @@
       "look",
       "flags",
       "attacks",
+      "loot"
+    ]
+  },
+  {
+    "file": "data\\monsters\\ghost.yml",
+    "kind": "object",
+    "size": 11,
+    "topKeys": [
+      "key",
+      "name",
+      "xp",
+      "health",
+      "speed",
+      "look",
+      "flags",
+      "elements",
+      "attacks",
+      "defenses",
+      "loot"
+    ]
+  },
+  {
+    "file": "data\\monsters\\fire_devil.yml",
+    "kind": "object",
+    "size": 11,
+    "topKeys": [
+      "key",
+      "name",
+      "xp",
+      "health",
+      "speed",
+      "look",
+      "flags",
+      "elements",
+      "attacks",
+      "defenses",
       "loot"
     ]
   },

@@ -459,7 +459,7 @@
                         {
                          "name":"monsterKey",
                          "type":"string",
-                         "value":"poison-spider"
+                         "value":"poison_spider"
                         }, 
                         {
                          "name":"respawnSec",
@@ -555,7 +555,7 @@
                         {
                          "name":"monsterKey",
                          "type":"string",
-                         "value":"fire-devil"
+                         "value":"fire_devil"
                         }, 
                         {
                          "name":"respawnSec",
