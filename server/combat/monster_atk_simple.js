@@ -150,12 +150,16 @@ function buildAttackProfile(entry, fallbackIntervalMs) {
   );
   if (!Number.isFinite(intervalMs) || intervalMs <= 0) intervalMs = DEFAULT_ATTACK_PROFILE.intervalMs;
 
-  let chancePercent = clamp(
-    entry.chancePercent ?? entry.chance,
-    0,
-    100,
-  );
-  if (!Number.isFinite(chancePercent)) chancePercent = DEFAULT_ATTACK_PROFILE.chancePercent;
+  const chanceRaw = entry.chancePercent ?? entry.chance;
+  let chancePercent;
+  if (chanceRaw == null || chanceRaw === '') {
+    chancePercent = DEFAULT_ATTACK_PROFILE.chancePercent;
+  } else {
+    chancePercent = clamp(chanceRaw, 0, 100);
+    if (!Number.isFinite(chancePercent)) {
+      chancePercent = DEFAULT_ATTACK_PROFILE.chancePercent;
+    }
+  }
 
   return {
     min,
