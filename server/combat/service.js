@@ -111,7 +111,7 @@ LEFT JOIN LATERAL (
        SELECT COALESCE(SUM(im.def), 0) AS total_def
          FROM hero_equipment he
          JOIN items_master im ON im.key = he.item_key
-        WHERE he.hero_id = ph.id::text
+        WHERE he.hero_id = ph.id::uuid
      ) gear ON TRUE
     WHERE ph.id = $1`,
     [heroId]
