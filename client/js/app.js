@@ -45,6 +45,92 @@ const splitL  = document.getElementById('splitLeft');
 const splitR  = document.getElementById('splitRight');
 const chatDock= document.getElementById('chatDock');
 
+/* ---------- Tela de loading retro ---------- */
+const loadingScreenEl   = document.getElementById('loadingScreen');
+const loadingBarEl      = loadingScreenEl?.querySelector('[data-loading-bar]');
+const loadingBarFillEl  = loadingScreenEl?.querySelector('.loading-bar-fill');
+const loadingPercentEl  = loadingScreenEl?.querySelector('[data-loading-percent]');
+const loadingTipEl      = document.getElementById('loadingTip');
+
+const LOADING_TIPS = [
+  'Melhore a picareta no ferreiro para desbloquear minérios lendários.',
+  'Heróis com afinidades diferentes liberam combos poderosos no AFK.',
+  'Use o chat global para recrutar aliados antes de enfrentar chefes.',
+  'Não esqueça de equipar relíquias na House: elas rendem bônus passivos.',
+  'Visite a fazenda para colher ingredientes e reforçar seus buffs.',
+  'Complete missões diárias para garantir fragmentos extras de herói.',
+  'Ajuste o zoom no menu de opções para enxergar melhor o campo de batalha.'
+];
+
+let loadingTipIndex = -1;
+let loadingTipTimer = null;
+let loadingBarTimer = null;
+let loadingProgress = 0;
+let loadingActive = false;
+
+function setLoadingProgress(value, immediate = false) {
+  if (!loadingBarFillEl) return;
+  const target = Math.max(0, Math.min(100, value));
+  loadingProgress = immediate ? target : Math.max(loadingProgress, target);
+  loadingBarFillEl.style.width = `${loadingProgress}%`;
+  if (loadingPercentEl) loadingPercentEl.textContent = String(Math.round(loadingProgress));
+  if (loadingBarEl) loadingBarEl.setAttribute('aria-valuenow', String(Math.round(loadingProgress)));
+}
+
+function pickNextTipIndex() {
+  if (!LOADING_TIPS.length) return 0;
+  if (LOADING_TIPS.length === 1) return 0;
+  let next = loadingTipIndex;
+  while (next === loadingTipIndex) {
+    next = Math.floor(Math.random() * LOADING_TIPS.length);
+  }
+  return next;
+}
+
+function swapLoadingTip(immediate = false) {
+  if (!loadingTipEl || !LOADING_TIPS.length) return;
+  loadingTipIndex = pickNextTipIndex();
+  const tip = LOADING_TIPS[loadingTipIndex];
+  const apply = () => {
+    loadingTipEl.textContent = tip;
+    loadingTipEl.classList.remove('is-swapping');
+  };
+  if (immediate) {
+    apply();
+    return;
+  }
+  loadingTipEl.classList.add('is-swapping');
+  setTimeout(apply, 160);
+}
+
+function beginRetroLoading() {
+  if (!loadingScreenEl || loadingActive) return;
+  loadingActive = true;
+  loadingScreenEl.classList.remove('loading-hidden');
+  loadingScreenEl.setAttribute('aria-hidden', 'false');
+  setLoadingProgress(0, true);
+  swapLoadingTip(true);
+  loadingTipTimer = window.setInterval(() => swapLoadingTip(false), 6200);
+  loadingBarTimer = window.setInterval(() => {
+    const step = loadingProgress + (4 + Math.random() * 9);
+    setLoadingProgress(Math.min(step, 96));
+  }, 900);
+}
+
+function finishRetroLoading() {
+  if (!loadingScreenEl || !loadingActive) return;
+  loadingActive = false;
+  if (loadingTipTimer) { window.clearInterval(loadingTipTimer); loadingTipTimer = null; }
+  if (loadingBarTimer) { window.clearInterval(loadingBarTimer); loadingBarTimer = null; }
+  loadingTipEl?.classList.remove('is-swapping');
+  setLoadingProgress(100, true);
+  loadingScreenEl.classList.add('loading-hidden');
+  loadingScreenEl.setAttribute('aria-hidden', 'true');
+  window.setTimeout(() => {
+    try { loadingScreenEl.remove(); } catch {}
+  }, 700);
+}
+
 const btnSkills    = document.getElementById('btnSkills');
 const btnHeroes    = document.getElementById('btnHeroes');
 const btnInventory = document.getElementById('btnInventory');
@@ -364,21 +450,44 @@ const FALLBACK_LOAD_CONTENT = async () => {
 
 /* ---------- Boot ---------- */
 (async function boot(){
+  beginRetroLoading();
+
   updateTopbarHeight();
+  setLoadingProgress(10);
+
   await getCsrf().catch(()=>null);
+  setLoadingProgress(18);
+
   try{
     const st = await jget('/api/starter/status');
-    if (st?.canSelect){ location.href='/starter.html'; return; }
+    if (st?.canSelect){
+      finishRetroLoading();
+      location.href='/starter.html';
+      return;
+    }
   }catch{}
 
   document.addEventListener('GameSettings:changed', applyUiFromSettings);
   applyUiFromSettings();
+  setLoadingProgress(30);
 
-  await mountSceneHouse();        // a cena já publica pos pelo WS via pos-publisher.js
-  await initGlobalChatUI();
-  applyViewport();
+  try {
+    await mountSceneHouse();        // a cena já publica pos pelo WS via pos-publisher.js
+    setLoadingProgress(62);
 
-  if (!currentScene) {            // fallback de conteúdo passivo, sem movimento/pos
-    await FALLBACK_LOAD_CONTENT();
+    await initGlobalChatUI();
+    setLoadingProgress(82);
+
+    applyViewport();
+    setLoadingProgress(90);
+
+    if (!currentScene) {            // fallback de conteúdo passivo, sem movimento/pos
+      await FALLBACK_LOAD_CONTENT();
+    }
+    setLoadingProgress(96);
+  } catch (err) {
+    console.error('Falha ao iniciar o cliente do jogo', err);
+  } finally {
+    finishRetroLoading();
   }
 })();
