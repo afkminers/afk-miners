@@ -1,5 +1,5 @@
 // server/combat/monster_atk_simple.js
-const { all, run } = require('../models/db'); // helpers do projeto
+const { all, get, run } = require('../models/db'); // helpers do projeto
 const { applyMobHit } = require('./service');
 const { getGrid } = require('../maps/grid');
 const { getMonster } = require('../services/catalogCache');
@@ -82,7 +82,12 @@ function resetInstanceState(monsterId) {
   _wasQuantized.delete(id);
 }
 
-const tileOf = (v) => Math.floor(Number(v || 0) / TILE);
+const tileOf = (v) => {
+  if (v === null || v === undefined) return NaN;
+  const n = Number(v);
+  if (!Number.isFinite(n)) return NaN;
+  return Math.floor(n / TILE);
+};
 const centerOfTile = (t) => (t * TILE) + TILE / 2;
 const tileKey = (tx, ty) => `${tx},${ty}`;
 
@@ -1021,15 +1026,38 @@ async function fetchAliveMonsters() {
 
 async function fetchAliveHeroesWithPos() {
   const sql = `
-    SELECT ph.id AS hero_id, ph."playerId" AS player_id,
+    SELECT DISTINCT ON (ph.id)
+           ph.id AS hero_id, ph."playerId" AS player_id,
            ph.hp, ph.max_hp, ph.alive,
-           pl.map_key, pl.x, pl.y
+           pl.map_key, pl.x, pl.y,
+           pl.updated_at
       FROM player_heroes ph
-      JOIN player_last_pos pl
+ LEFT JOIN player_last_pos pl
         ON pl.player_id::text = ph."playerId"::text
      WHERE ph.alive = TRUE AND ph.hp > 0
+  ORDER BY ph.id, pl.updated_at DESC NULLS LAST
   `;
   return await all(sql);
+}
+
+async function fetchHeroSnapshot(heroId, preferMapKey = null) {
+  if (!heroId) return null;
+  const params = [heroId, preferMapKey != null ? String(preferMapKey) : null];
+  const row = await get(`
+    SELECT DISTINCT ON (ph.id)
+           ph.id AS hero_id, ph."playerId" AS player_id,
+           ph.hp, ph.max_hp, ph.alive,
+           pl.map_key, pl.x, pl.y,
+           pl.updated_at
+      FROM player_heroes ph
+ LEFT JOIN player_last_pos pl
+        ON pl.player_id::text = ph."playerId"::text
+     WHERE ph.id = $1
+  ORDER BY ph.id,
+           CASE WHEN $2::text IS NOT NULL AND pl.map_key = $2::text THEN 0 ELSE 1 END,
+           pl.updated_at DESC NULLS LAST
+  `, params);
+  return row || null;
 }
 
 async function markLastHit(monsterId, heroId) {
@@ -1193,13 +1221,70 @@ async function tick() {
         const heroIdForChase = targetInfo.heroId;
         const predicted = targetInfo.predicted;
         const heroHeading = targetInfo.heroHeading;
-        const isGhost = !!targetInfo.ghost;
+        let isGhost = !!targetInfo.ghost;
 
-        const heroPx = Number.isFinite(targetInfo.hero?.x)
-          ? toCenterPxCoord(targetInfo.hero.x)
+        let targetHero = targetInfo.hero;
+        if ((!targetHero || isGhost) && targetInfo.heroId) {
+          try {
+            const snapshot = await fetchHeroSnapshot(targetInfo.heroId, m.map_key);
+            if (snapshot && snapshot.alive !== false && Number(snapshot.hp ?? 1) > 0) {
+              targetHero = {
+                ...snapshot,
+                hero_id: snapshot.hero_id || targetInfo.heroId,
+              };
+              if (!Number.isFinite(targetHero.x) && Number.isFinite(targetInfo.hx)) {
+                targetHero.x = centerOfTile(targetInfo.hx);
+              }
+              if (!Number.isFinite(targetHero.y) && Number.isFinite(targetInfo.hy)) {
+                targetHero.y = centerOfTile(targetInfo.hy);
+              }
+              if (targetHero.map_key == null && m.map_key != null) {
+                targetHero.map_key = m.map_key;
+              }
+              targetInfo.hero = targetHero;
+              isGhost = false;
+            }
+          } catch {}
+        }
+
+        if (!targetHero) {
+          if (!targetInfo.heroId) continue;
+          targetHero = {
+            hero_id: targetInfo.heroId,
+            map_key: targetInfo.hero?.map_key ?? m.map_key,
+          };
+          if (Number.isFinite(targetInfo.hx)) targetHero.x = centerOfTile(targetInfo.hx);
+          if (Number.isFinite(targetInfo.hy)) targetHero.y = centerOfTile(targetInfo.hy);
+        }
+
+        if (targetHero.map_key != null && m.map_key != null) {
+          if (String(targetHero.map_key) !== String(m.map_key)) {
+            _aggroTarget.delete(m.id);
+            _aggroUntil.delete(m.id);
+            continue;
+          }
+        }
+
+        if (!Number.isFinite(targetHero.x) || !Number.isFinite(targetHero.y)) {
+          if (Number.isFinite(targetInfo.hx) && Number.isFinite(targetInfo.hy)) {
+            targetHero.x = centerOfTile(targetInfo.hx);
+            targetHero.y = centerOfTile(targetInfo.hy);
+          }
+        }
+
+        if (!targetHero || isGhost) continue;
+
+        const heroTileX = tileOf(targetHero.x);
+        const heroTileY = tileOf(targetHero.y);
+        if (Number.isFinite(heroTileX) && Number.isFinite(heroTileY)) {
+          heroTilesForMap.add(tileKey(heroTileX, heroTileY));
+        }
+
+        const heroPx = Number.isFinite(targetHero?.x)
+          ? toCenterPxCoord(targetHero.x)
           : toCenterPxCoord(hx);
-        const heroPy = Number.isFinite(targetInfo.hero?.y)
-          ? toCenterPxCoord(targetInfo.hero.y)
+        const heroPy = Number.isFinite(targetHero?.y)
+          ? toCenterPxCoord(targetHero.y)
           : toCenterPxCoord(hy);
 
         const currentFace = typeof m.face === 'string' ? m.face : 'south';
@@ -1305,9 +1390,7 @@ async function tick() {
           emitMonsterMove(m);
         }
 
-        if (isGhost || !targetInfo.hero) continue;
-
-        const targetHero = targetInfo.hero;
+        if (!targetHero) continue;
         const attackProfile = await resolveMonsterAttackProfile(m);
         const cooldownMs = Math.max(50, Number(attackProfile?.intervalMs || ATK_COOLDOWN_MS));
         const chancePercent = clamp(attackProfile?.chancePercent ?? 100, 0, 100);
