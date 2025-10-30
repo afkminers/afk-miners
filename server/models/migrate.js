@@ -45,6 +45,16 @@ async function migrate() {
     )
   `);
 
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_player_heroes_player_level
+      ON player_heroes ("playerId", level DESC, "createdAt")
+  `);
+
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_player_heroes_level
+      ON player_heroes (level DESC, "createdAt")
+  `);
+
   // posições por mapa (usada em /api/player/pos)
   await run(`
     CREATE TABLE IF NOT EXISTS player_positions (
@@ -67,6 +77,11 @@ async function migrate() {
       tries_progress REAL NOT NULL DEFAULT 0,
       PRIMARY KEY (hero_id, skill_type)
     )
+  `);
+
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_player_hero_skills_type_level
+      ON player_hero_skills (skill_type, level DESC)
   `);
 
   await run(`
@@ -109,6 +124,26 @@ async function migrate() {
       daily_reset_at TIMESTAMP WITH TIME ZONE,
       notes TEXT
     )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS support_tickets (
+      id UUID PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open'
+    )
+  `);
+
+  await run(`ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now()`);
+  await run(`ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'open'`);
+
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_support_tickets_status
+      ON support_tickets (status, created_at DESC)
   `);
 
   // ---------- Conteúdo (pipeline) ----------

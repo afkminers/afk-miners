@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AFK Miners — Leaderboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/colors.css" />
+  <link rel="stylesheet" href="/css/retro-overrides.css" />
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/pages/pixel-theme.css" />
+  <link rel="stylesheet" href="/css/pages/leaderboard.css" />
+</head>
+<body class="pixel-page page-leaderboard">
+  <header class="retro-header">
+    <div class="nav-wrap">
+      <nav class="nav-left" aria-label="Primary">
+        <a class="nav-link" href="/overview">Overview</a>
+        <a class="nav-link" href="/roadmap">Roadmap</a>
+      </nav>
+      <a id="btnPlay" class="btn-play" href="/">PLAY</a>
+      <nav class="nav-right" aria-label="Secondary">
+        <a class="nav-link" href="/leaderboard">Leaderboard</a>
+        <a class="nav-link" href="/support">Support</a>
+      </nav>
+      <button id="btnHamb" class="btn-hamb" type="button" aria-label="Open navigation" aria-controls="mobileMenu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
+      <a href="/overview">Overview</a>
+      <a href="/roadmap">Roadmap</a>
+      <a href="/leaderboard">Leaderboard</a>
+      <a href="/support">Support</a>
+      <a class="mobile-play" href="/">Play now</a>
+    </div>
+  </header>
+
+  <main id="content" class="page-content" tabindex="-1" role="main">
+    <section class="hero-banner">
+      <div class="hero-copy">
+        <h1>Hall of Idle Legends</h1>
+        <p>Track the bravest miners, their strongest heroes, and the sharpest skills in the realm. Filter by tabs to explore players, individual heroes, or skill specialists.</p>
+      </div>
+      <div class="hero-art" role="presentation" aria-hidden="true"></div>
+    </section>
+
+    <section class="leaderboard-panel" aria-labelledby="board-title">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <h2 id="board-title">Leaderboard</h2>
+          <p>Switch tabs to view Players, Heroes, or Skills. Choose your view and stay ahead of the competition.</p>
+        </div>
+        <div class="period-toggle" role="group" aria-label="Ranking period">
+          <button class="period-btn is-active" type="button" data-period="all">All-time</button>
+          <button class="period-btn" type="button" data-period="weekly" disabled title="Weekly rankings coming soon">Weekly</button>
+        </div>
+      </div>
+
+      <div class="tab-row" role="tablist" aria-label="Leaderboard categories">
+        <button class="tab-btn is-active" type="button" role="tab" data-tab="players" aria-selected="true">Players</button>
+        <button class="tab-btn" type="button" role="tab" data-tab="heroes" aria-selected="false">Heroes</button>
+        <button class="tab-btn" type="button" role="tab" data-tab="skills" aria-selected="false">Skills</button>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-field">
+          <label for="lbSearch">Search</label>
+          <input id="lbSearch" type="search" placeholder="Player or hero name" autocomplete="off" />
+        </div>
+        <div class="skill-field" data-skill-filter>
+          <label for="lbSkill">Skill</label>
+          <select id="lbSkill"></select>
+        </div>
+        <div class="limit-field">
+          <label for="lbLimit">Rows</label>
+          <select id="lbLimit">
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="leaderboardTable" aria-live="polite">
+          <caption>AFK Miners leaderboard</caption>
+          <thead>
+            <tr>
+              <th scope="col">Rank</th>
+              <th scope="col">Player</th>
+              <th scope="col">Hero</th>
+              <th scope="col">Class</th>
+              <th scope="col">Rarity</th>
+              <th scope="col">Level</th>
+              <th scope="col" class="col-skill">Skill</th>
+              <th scope="col">Updated</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody">
+            <tr class="loading">
+              <td colspan="8">Loading leaderboard…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel-footer">
+        <div id="lbStatus" class="status" role="status" aria-live="polite"></div>
+        <div class="pager">
+          <button id="lbPrev" class="pager-btn" type="button" disabled>Prev</button>
+          <span id="lbRange" class="pager-range">—</span>
+          <button id="lbNext" class="pager-btn" type="button" disabled>Next</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="retro-footer">
+    <small>&copy; <span data-year></span> AFK Miners. All rights reserved.</small>
+  </footer>
+
+  <script type="module" src="/js/pages/leaderboard.js"></script>
+</body>
+</html>

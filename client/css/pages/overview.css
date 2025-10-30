@@ -1,0 +1,42 @@
+.page-overview .hero-art {
+  min-height: 220px;
+  background: url('/img/heroes/seraph.png') bottom right / contain no-repeat,
+              radial-gradient(circle at top left, rgba(255, 188, 80, 0.2), rgba(0, 0, 0, 0.6));
+  image-rendering: pixelated;
+}
+
+.page-overview .hero-copy p {
+  margin: 0 0 24px;
+  line-height: 1.6;
+  font-size: 12px;
+}
+
+.page-overview .card-grid.compact {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.page-overview .cta-section {
+  text-align: center;
+  background: rgba(26, 18, 16, 0.95);
+  border: 6px solid #2b1512;
+  border-radius: 18px;
+  padding: 36px 28px;
+  box-shadow: 0 10px 0 #000;
+}
+
+.page-overview .cta-section p {
+  font-size: 12px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+  .page-overview .grid-section,
+  .page-overview .cta-section {
+    padding: 24px 18px;
+  }
+
+  .page-overview .hero-copy h1 {
+    font-size: 18px;
+  }
+}
