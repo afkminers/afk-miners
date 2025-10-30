@@ -32,6 +32,8 @@ const SKILL_MAP = {
 const INDEX_QUERIES = [
   'CREATE INDEX IF NOT EXISTS idx_ph_level ON player_heroes(level DESC, COALESCE(updated_at, "updatedAt") DESC)',
   'CREATE INDEX IF NOT EXISTS idx_ph_player ON player_heroes("playerId")',
+  'CREATE INDEX IF NOT EXISTS idx_ph_key ON player_heroes((COALESCE("heroKey", herokey)))',
+  'CREATE INDEX IF NOT EXISTS idx_hm_key ON heroes_master((COALESCE("heroKey", herokey)))',
   'CREATE INDEX IF NOT EXISTS idx_phs_skill ON player_hero_skills(skill_type, level DESC)',
   'CREATE INDEX IF NOT EXISTS idx_phs_hero ON player_hero_skills(hero_id)',
 ];
@@ -142,18 +144,25 @@ router.get('/players', async (req, res) => {
           ph."playerId",
           ph.id  AS hero_id,
           ph.name AS hero_name,
-          ph.class, ph.rarity, ph.level,
+          ph.rarity,
+          ph.level,
           COALESCE(ph.updated_at, ph."updatedAt") AS up_at,
+          COALESCE(ph."heroKey", ph.herokey) AS hero_key,
           ROW_NUMBER() OVER (PARTITION BY ph."playerId" ORDER BY ph.level DESC, COALESCE(ph.updated_at, ph."updatedAt") DESC) AS rn
         FROM player_heroes ph
       )
       SELECT
         p.id   AS player_id,
         p.name AS player_name,
-        r.hero_id, r.hero_name, r.class, r.rarity, r.level,
+        r.hero_id,
+        r.hero_name,
+        COALESCE(hm.class, 'Unknown') AS class,
+        COALESCE(r.rarity, hm.rarity) AS rarity,
+        r.level,
         r.up_at AS updated_at
       FROM ranked r
       JOIN players p ON p.id = r."playerId"
+      LEFT JOIN heroes_master hm ON COALESCE(hm."heroKey", hm.herokey) = r.hero_key
       WHERE r.rn = 1
         AND (COALESCE($3,'') = '' OR p.name ILIKE '%'||$3||'%' OR r.hero_name ILIKE '%'||$3||'%')
       ORDER BY r.level DESC, r.up_at DESC
@@ -181,12 +190,15 @@ router.get('/heroes', async (req, res) => {
       SELECT
         ph.id   AS hero_id,
         ph.name AS hero_name,
-        ph.class, ph.rarity, ph.level,
+        COALESCE(hm.class, 'Unknown') AS class,
+        COALESCE(ph.rarity, hm.rarity) AS rarity,
+        ph.level,
         COALESCE(ph.updated_at, ph."updatedAt") AS updated_at,
         p.id    AS player_id,
         p.name  AS player_name
       FROM player_heroes ph
       JOIN players p ON p.id = ph."playerId"
+      LEFT JOIN heroes_master hm ON COALESCE(hm."heroKey", hm.herokey) = COALESCE(ph."heroKey", ph.herokey)
       WHERE (COALESCE($3,'') = '' OR p.name ILIKE '%'||$3||'%' OR ph.name ILIKE '%'||$3||'%')
       ORDER BY ph.level DESC, COALESCE(ph.updated_at, ph."updatedAt") DESC
       LIMIT $1 OFFSET $2;
@@ -224,7 +236,7 @@ router.get('/skills', async (req, res) => {
       SELECT
         ph.id   AS hero_id,
         ph.name AS hero_name,
-        ph.class,
+        COALESCE(hm.class, 'Unknown') AS class,
         p.id    AS player_id,
         p.name  AS player_name,
         s.value,
@@ -233,6 +245,7 @@ router.get('/skills', async (req, res) => {
         s.skill_type
       FROM s
       JOIN player_heroes ph ON ph.id = s.hero_id
+      LEFT JOIN heroes_master hm ON COALESCE(hm."heroKey", hm.herokey) = COALESCE(ph."heroKey", ph.herokey)
       JOIN players p       ON p.id  = ph."playerId"
       WHERE (COALESCE($4,'') = '' OR p.name ILIKE '%'||$4||'%' OR ph.name ILIKE '%'||$4||'%')
       ORDER BY s.value DESC, updated_at DESC
