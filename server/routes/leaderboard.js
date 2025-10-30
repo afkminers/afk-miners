@@ -123,7 +123,7 @@ router.get('/players', async (req, res) => {
     const offset = parseOffset(req.query.offset);
     const search = sanitizeQuery(req.query.query);
 
-    const rows = await all(
+    const rows = await queryWithFallback(
       `
       WITH ranked AS (
         SELECT
@@ -164,7 +164,7 @@ router.get('/heroes', async (req, res) => {
     const offset = parseOffset(req.query.offset);
     const search = sanitizeQuery(req.query.query);
 
-    const rows = await all(
+    const rows = await queryWithFallback(
       `
       SELECT
         ph.id   AS hero_id,
@@ -202,7 +202,7 @@ router.get('/skills', async (req, res) => {
       return res.status(400).json({ error: 'skill not available' });
     }
 
-    const rows = await all(
+    const rows = await queryWithFallback(
       `
       WITH s AS (
         SELECT hero_id, level AS value, tries_progress, skill_type, COALESCE(updated_at, NOW()) AS up_at
