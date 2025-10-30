@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AFK Miners — Roadmap</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/colors.css" />
+  <link rel="stylesheet" href="/css/retro-overrides.css" />
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/pages/pixel-theme.css" />
+  <link rel="stylesheet" href="/css/pages/roadmap.css" />
+</head>
+<body class="pixel-page page-roadmap">
+  <header class="retro-header">
+    <div class="nav-wrap">
+      <nav class="nav-left" aria-label="Primary">
+        <a class="nav-link" href="/overview">Overview</a>
+        <a class="nav-link" href="/roadmap">Roadmap</a>
+      </nav>
+      <a id="btnPlay" class="btn-play" href="/">PLAY</a>
+      <nav class="nav-right" aria-label="Secondary">
+        <a class="nav-link" href="/leaderboard">Leaderboard</a>
+        <a class="nav-link" href="/support">Support</a>
+      </nav>
+      <button id="btnHamb" class="btn-hamb" type="button" aria-label="Open navigation" aria-controls="mobileMenu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
+      <a href="/overview">Overview</a>
+      <a href="/roadmap">Roadmap</a>
+      <a href="/leaderboard">Leaderboard</a>
+      <a href="/support">Support</a>
+      <a class="mobile-play" href="/">Play now</a>
+    </div>
+  </header>
+
+  <main id="content" class="page-content" tabindex="-1" role="main">
+    <section class="hero-banner">
+      <div class="hero-copy">
+        <h1>Roadmap &amp; World Expansion</h1>
+        <p>Follow the journey of AFK Miners as we forge new systems, raids, and quality-of-life improvements for our guild.</p>
+      </div>
+    </section>
+
+    <section class="timeline" aria-labelledby="milestones">
+      <div class="section-header">
+        <h2 id="milestones">Milestones</h2>
+      </div>
+      <ol class="timeline-list">
+        <li class="timeline-card done">
+          <div class="timeline-meta">
+            <span class="badge">DONE</span>
+            <span class="phase">Phase 1 — Launch Forge</span>
+          </div>
+          <p>Core AFK loop, hero roster, mining expeditions, and the first dungeon released to all founders.</p>
+        </li>
+        <li class="timeline-card wip">
+          <div class="timeline-meta">
+            <span class="badge">WIP</span>
+            <span class="phase">Phase 2 — Guild Frontier</span>
+          </div>
+          <p>Guild halls, co-op expeditions, improved training automation, and a refreshed UI for roster management.</p>
+        </li>
+        <li class="timeline-card next">
+          <div class="timeline-meta">
+            <span class="badge">NEXT</span>
+            <span class="phase">Phase 3 — Crystal Wars</span>
+          </div>
+          <p>Async PvP leagues, seasonal relics, cross-server leaderboards, and cinematic boss events.</p>
+        </li>
+        <li class="timeline-card next">
+          <div class="timeline-meta">
+            <span class="badge">NEXT</span>
+            <span class="phase">Phase 4 — Endless Depths</span>
+          </div>
+          <p>Procedural dungeon tiers, relic crafting, housing, and advanced automation APIs for veteran miners.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="newsletter" aria-labelledby="newsletter-title">
+      <div class="section-header">
+        <h2 id="newsletter-title">Stay Ahead of the Patch Notes</h2>
+      </div>
+      <p>Subscribe to receive roadmap updates, sneak peeks, and invites to closed beta features.</p>
+      <form id="roadmapForm" class="subscribe-form" novalidate>
+        <label class="sr-only" for="newsletterEmail">Email</label>
+        <input id="newsletterEmail" type="email" name="email" placeholder="you@kingdom.com" required autocomplete="email" />
+        <button type="submit">Notify Me</button>
+      </form>
+      <p class="form-feedback" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <footer class="retro-footer">
+    <small>&copy; <span data-year></span> AFK Miners. All rights reserved.</small>
+  </footer>
+
+  <script type="module" src="/js/pages/roadmap.js"></script>
+</body>
+</html>

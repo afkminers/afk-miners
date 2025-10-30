@@ -39,6 +39,8 @@ const playerRoutes = require('./player/routes'); // mantém seu caminho atual
 const gachaRoutes = require('./gacha/routes');
 const catalogRoutes = require('./routes/catalog');
 const skillsRoutes = require('./skills/routes');
+const supportRoutes = require('./routes/support');
+const leaderboardRoutes = require('./routes/leaderboard');
 
 const { loadSpriteMetaFromDisk } = require('./utils/loadSpriteMetaFromDisk');
 
@@ -713,9 +715,27 @@ function safeParse(s) { try { return typeof s === 'object' ? s : JSON.parse(s ||
 app.use('/api/starter', requireAuth, buildStarterRouter({ all, get, run }));
 
 // <<<<<<<<<<<<< SOMENTE AGORA o catálago genérico /api >>>>>>>>>>>>>>
+app.use('/api/support', supportRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api', catalogRoutes);
 
 // ---- Raiz pública
+app.get('/overview', (_req, res) => {
+  res.sendFile(path.join(CLIENT_ROOT_DIR, 'overview.html'));
+});
+
+app.get('/roadmap', (_req, res) => {
+  res.sendFile(path.join(CLIENT_ROOT_DIR, 'roadmap.html'));
+});
+
+app.get('/support', (_req, res) => {
+  res.sendFile(path.join(CLIENT_ROOT_DIR, 'support.html'));
+});
+
+app.get('/leaderboard', (_req, res) => {
+  res.sendFile(path.join(CLIENT_ROOT_DIR, 'leaderboard.html'));
+});
+
 app.get('/', (_req, res) => {
   res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
 });
