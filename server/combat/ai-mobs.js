@@ -572,6 +572,35 @@
     { dx: -1, dy: 1 },
     { dx: -1, dy: -1 },
   ];
+  const HERO_RING_PRIORITY = [
+    { dx: 0, dy: -1, cardinal: true }, // norte
+    { dx: 0, dy: 1, cardinal: true },  // sul
+    { dx: -1, dy: 0, cardinal: true }, // oeste
+    { dx: 1, dy: 0, cardinal: true },  // leste
+    { dx: -1, dy: -1, cardinal: false },
+    { dx: 1, dy: -1, cardinal: false },
+    { dx: -1, dy: 1, cardinal: false },
+    { dx: 1, dy: 1, cardinal: false },
+  ];
+  const HERO_RING2_OFFSETS = [
+    { dx: 0, dy: -2 },
+    { dx: -1, dy: -2 },
+    { dx: 1, dy: -2 },
+    { dx: -2, dy: -2 },
+    { dx: -2, dy: -1 },
+    { dx: -2, dy: 0 },
+    { dx: -2, dy: 1 },
+    { dx: -2, dy: 2 },
+    { dx: -1, dy: 2 },
+    { dx: 0, dy: 2 },
+    { dx: 1, dy: 2 },
+    { dx: 2, dy: 2 },
+    { dx: 2, dy: 1 },
+    { dx: 2, dy: 0 },
+    { dx: 2, dy: -1 },
+    { dx: 2, dy: -2 },
+  ];
+  const ORBIT_SHIFT_MS = 1400;
 
   function tileKey(cx, cy) {
     return `${cx}|${cy}`;
@@ -605,6 +634,19 @@
     if (!set || set.size === 0) return false;
     if (set.size === 1 && set.has(ignoreId)) return false;
     return true;
+  }
+
+  /**
+   * Retorna true quando o mob já está colado (Chebyshev <= 1) ao herói-alvo.
+   * Usado para pausar o deslocamento e focar em atacar.
+   */
+  function estaAoLadoDoJogador({ mob, heroCx, heroCy }) {
+    if (!mob) return false;
+    if (!Number.isFinite(heroCx) || !Number.isFinite(heroCy)) return false;
+    const mobCx = Math.floor(Number(mob.x) / STEP_PX);
+    const mobCy = Math.floor(Number(mob.y) / STEP_PX);
+    if (!Number.isFinite(mobCx) || !Number.isFinite(mobCy)) return false;
+    return Math.max(Math.abs(mobCx - heroCx), Math.abs(mobCy - heroCy)) <= 1;
   }
 
   function buildHeroTileSet(mapKey, heroes, now = Date.now()) {
@@ -650,6 +692,44 @@
       set.add(mob.instanceId);
     }
     return occ;
+  }
+
+  function buildRingOptions({ baseCx, baseCy, offsets, heroTilesSet, heroKey, losGrid, occupancy, mob }) {
+    const list = [];
+    if (!Number.isFinite(baseCx) || !Number.isFinite(baseCy)) return list;
+
+    const mobCx = mob ? Math.floor(Number(mob.x) / STEP_PX) : null;
+    const mobCy = mob ? Math.floor(Number(mob.y) / STEP_PX) : null;
+
+    offsets.forEach((dir, idx) => {
+      const cx = baseCx + dir.dx;
+      const cy = baseCy + dir.dy;
+      if (!Number.isFinite(cx) || !Number.isFinite(cy)) return;
+      const key = tileKey(cx, cy);
+      const solid = isSolidTile(losGrid, cx, cy);
+      const heroReserved = heroTilesSet.has(key) && key !== heroKey;
+      const blockedByMob = isTileBlockedByMobs(occupancy, cx, cy, mob?.instanceId);
+      const occSet = occupancy ? occupancy.get(key) : null;
+      const occCount = occSet ? (occSet.has(mob?.instanceId) ? Math.max(0, occSet.size - 1) : occSet.size) : 0;
+      const dist = Number.isFinite(mobCx) && Number.isFinite(mobCy)
+        ? Math.abs(cx - mobCx) + Math.abs(cy - mobCy)
+        : Infinity;
+      list.push({
+        cx,
+        cy,
+        key,
+        solid,
+        heroReserved,
+        blockedByMob,
+        occCount,
+        dist,
+        blocked: solid || heroReserved || blockedByMob,
+        prefIndex: idx,
+        cardinal: Boolean(dir.cardinal),
+      });
+    });
+
+    return list;
   }
 
   async function maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles }) {
@@ -953,6 +1033,15 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   const shouldForceAlternate = agroActive && stuckFor >= STUCK_RECHECK_MS;
   const altPathMode = shouldForceAlternate || (mob.forcedAltUntil || 0) > now;
 
+  if (shouldForceAlternate) {
+    const rotateCooldown = Math.max(400, STUCK_RECHECK_MS / 2);
+    if (!mob.lastGoalRotateAt || now - mob.lastGoalRotateAt >= rotateCooldown) {
+      mob.goalRotateIndex = ((mob.goalRotateIndex ?? 0) + 1) % HERO_RING_PRIORITY.length;
+      mob.lastGoalRotateAt = now;
+      mob.requestOrbitShift = true;
+    }
+  }
+
   // Chebyshev distance: <= 1 significa mesmo tile ou qualquer adjacente (8-dir)
   const dxC = Math.abs(mobCx - heroCx);
   const dyC = Math.abs(mobCy - heroCy);
@@ -1082,6 +1171,12 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   mob.mode = 'chase';
   mob.combatStep = null;
 
+  if (estaAoLadoDoJogador({ mob, heroCx, heroCy })) {
+    mob.pendingStep = null;
+    mob.repathAt = now;
+    return;
+  }
+
   const hasValidStep = mob.pendingStep && Number.isFinite(mob.pendingStep.x) && Number.isFinite(mob.pendingStep.y);
   let stepTarget = null;
   if (hasValidStep && !altPathMode) {
@@ -1091,20 +1186,21 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   }
 
   if (!stepTarget && now >= mob.repathAt) {
-    let usedAlternate = false;
-    let step = pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem);
-
-    if (!step && altPathMode) {
-      step = pickStepAlternate(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem, {
-        maxDepth: ALT_PATH_MAX_DEPTH,
-      });
-      if (step) {
-        usedAlternate = true;
-        mob.forcedAltUntil = Math.max(mob.forcedAltUntil || 0, now + ALT_PATH_WINDOW_MS);
-      }
-    }
+    const { step, usedAlternate } = planMobChaseStep({
+      mob,
+      tgtPos,
+      losGrid,
+      occupancy,
+      heroTiles,
+      heroMem,
+      altPathMode,
+      now,
+    });
 
     if (step) {
+      if (usedAlternate) {
+        mob.forcedAltUntil = Math.max(mob.forcedAltUntil || 0, now + ALT_PATH_WINDOW_MS);
+      }
       mob.pendingStep = { x: step.x | 0, y: step.y | 0 };
       stepTarget = mob.pendingStep;
       const cooldown = computeRepathCooldownMs(mob);
@@ -1196,6 +1292,11 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       mob.lastProgressAt = mob.posUpdatedAt || now;
       mob.pendingStep = null;
       mob.combatStep = null;
+      mob.lastChaseGoalKey = null;
+      mob.lastWaitGoalKey = null;
+      mob.waitOrbitIndex = 0;
+      mob.goalRotateIndex = 0;
+      mob.requestOrbitShift = false;
       return;
     }
     if (!mob.targetHeroId) {
@@ -1207,6 +1308,11 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       mob.forcedAltUntil = 0;
       mob.pendingStep = null;
       mob.combatStep = null;
+      mob.lastChaseGoalKey = null;
+      mob.lastWaitGoalKey = null;
+      mob.waitOrbitIndex = 0;
+      mob.goalRotateIndex = 0;
+      mob.requestOrbitShift = false;
       if (DEBUG_AI) console.log(`[ai-mobs] target set mob=${mob.instanceId} -> ${bestId} (threat=${bestV.toFixed(2)})`);
       return;
     }
@@ -1223,6 +1329,11 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
         mob.forcedAltUntil = 0;
         mob.pendingStep = null;
         mob.combatStep = null;
+        mob.lastChaseGoalKey = null;
+        mob.lastWaitGoalKey = null;
+        mob.waitOrbitIndex = 0;
+        mob.goalRotateIndex = 0;
+        mob.requestOrbitShift = false;
       }
     }
 
@@ -1241,78 +1352,160 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     return losGrid.data[cy * losGrid.cols + cx] === 1;
   }
 
-  function selectMobChaseGoal({ mob, heroCx, heroCy, heroMem, losGrid, occupancy, heroTiles }) {
+  function selectMobChaseGoal({ mob, heroCx, heroCy, heroMem, losGrid, occupancy, heroTiles, now = Date.now() }) {
     if (!mob) {
       return { cx: heroCx, cy: heroCy, predicted: null, heading: null };
     }
 
-    const mobCx = Math.floor(Number(mob.x) / STEP_PX);
-    const mobCy = Math.floor(Number(mob.y) / STEP_PX);
     const predicted = predictHeroTileCx(heroMem, heroCx, heroCy);
     const fallbackCx = Number.isFinite(predicted?.cx) ? predicted.cx : heroCx;
     const fallbackCy = Number.isFinite(predicted?.cy) ? predicted.cy : heroCy;
-
     const heroTilesSet = coerceTileSet(heroTiles);
     const heroKey = Number.isFinite(heroCx) && Number.isFinite(heroCy) ? tileKey(heroCx, heroCy) : null;
+    const heading = predicted?.heading || heroMem?.heading || null;
 
-    let best = null;
-    let bestScore = Infinity;
+    if (!Number.isFinite(heroCx) || !Number.isFinite(heroCy)) {
+      return {
+        cx: Number.isFinite(fallbackCx) ? fallbackCx : heroCx,
+        cy: Number.isFinite(fallbackCy) ? fallbackCy : heroCy,
+        predicted,
+        heading,
+      };
+    }
 
-    if (Number.isFinite(heroCx) && Number.isFinite(heroCy)) {
-      for (const dir of CARDINAL_DIRS) {
-        const cx = heroCx + dir.dx;
-        const cy = heroCy + dir.dy;
-        if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
-        if (isSolidTile(losGrid, cx, cy)) continue;
-        const key = tileKey(cx, cy);
-        if (heroKey && key !== heroKey && heroTilesSet.has(key)) continue;
+    const ring1 = buildRingOptions({
+      baseCx: heroCx,
+      baseCy: heroCy,
+      offsets: HERO_RING_PRIORITY,
+      heroTilesSet,
+      heroKey,
+      losGrid,
+      occupancy,
+      mob,
+    });
 
-        const occSet = occupancy ? occupancy.get(key) : null;
-        const occCount = occSet ? (occSet.has(mob.instanceId) ? Math.max(0, occSet.size - 1) : occSet.size) : 0;
-        const blocked = isTileBlockedByMobs(occupancy, cx, cy, mob.instanceId);
-        const dist = Math.abs(cx - mobCx) + Math.abs(cy - mobCy);
+    let target = null;
+    if (mob.lastChaseGoalKey) {
+      const pinned = ring1.find(opt => opt.key === mob.lastChaseGoalKey && !opt.blocked);
+      if (pinned) target = pinned;
+    }
 
-        const relX = mobCx - heroCx;
-        const relY = mobCy - heroCy;
-
-        let score = dist;
-        if (occCount > 0) score += occCount * 3.25;
-        if (blocked) score += 2.75;
-        if (dir.dx && Math.sign(relX) === dir.dx && Math.abs(relX) > 0) score += 1.7;
-        if (dir.dy && Math.sign(relY) === dir.dy && Math.abs(relY) > 0) score += 1.7;
-        if (dir.dx && relX && Math.sign(relX) === -dir.dx) score -= 0.9;
-        if (dir.dy && relY && Math.sign(relY) === -dir.dy) score -= 0.9;
-        if (!blocked && occCount === 0) score -= 1.2;
-
-        if (score < bestScore) {
-          bestScore = score;
-          best = { cx, cy, score, blocked, occCount };
-        }
+    if (!target) {
+      const rotateIndex = Math.max(0, (mob.goalRotateIndex ?? 0) % Math.max(1, ring1.length));
+      for (let i = 0; i < ring1.length; i++) {
+        const idx = (rotateIndex + i) % ring1.length;
+        const candidate = ring1[idx];
+        if (!candidate || candidate.blocked) continue;
+        target = candidate;
+        break;
       }
     }
 
-    const fallbackScore = (Number.isFinite(fallbackCx) && Number.isFinite(fallbackCy))
-      ? Math.abs((fallbackCx | 0) - mobCx) + Math.abs((fallbackCy | 0) - mobCy)
-      : Infinity;
+    if (target) {
+      mob.lastChaseGoalKey = target.key;
+      mob.lastWaitGoalKey = null;
+      mob.requestOrbitShift = false;
+      return {
+        cx: target.cx,
+        cy: target.cy,
+        predicted,
+        heading,
+      };
+    }
 
-    if (best && Number.isFinite(best.cx) && Number.isFinite(best.cy)) {
-      const preferRing = !best.blocked && best.occCount === 0;
-      if (preferRing || bestScore + 0.75 < fallbackScore) {
+    let ring2 = buildRingOptions({
+      baseCx: heroCx,
+      baseCy: heroCy,
+      offsets: HERO_RING2_OFFSETS,
+      heroTilesSet,
+      heroKey,
+      losGrid,
+      occupancy,
+      mob,
+    }).filter(opt => !opt.blocked);
+
+    if (ring2.length) {
+      ring2.sort((a, b) => {
+        if (a.occCount !== b.occCount) return a.occCount - b.occCount;
+        if (a.dist !== b.dist) return a.dist - b.dist;
+        return a.prefIndex - b.prefIndex;
+      });
+
+      const lastOrbitAt = Number.isFinite(mob.lastOrbitShiftAt) ? mob.lastOrbitShiftAt : now;
+      if (mob.requestOrbitShift || (Number.isFinite(now) && now - lastOrbitAt >= ORBIT_SHIFT_MS)) {
+        mob.waitOrbitIndex = ((mob.waitOrbitIndex ?? 0) + 1) % ring2.length;
+        mob.lastOrbitShiftAt = now;
+        mob.requestOrbitShift = false;
+      } else if (!Number.isFinite(mob.lastOrbitShiftAt) && Number.isFinite(now)) {
+        mob.lastOrbitShiftAt = now;
+      }
+
+      let waitChoice = null;
+      if (mob.lastWaitGoalKey) {
+        waitChoice = ring2.find(opt => opt.key === mob.lastWaitGoalKey) || null;
+      }
+
+      if (!waitChoice) {
+        const start = Math.max(0, Math.min(ring2.length - 1, mob.waitOrbitIndex ?? 0));
+        for (let i = 0; i < ring2.length; i++) {
+          const idx = (start + i) % ring2.length;
+          const candidate = ring2[idx];
+          if (!candidate) continue;
+          waitChoice = candidate;
+          mob.waitOrbitIndex = idx;
+          break;
+        }
+      }
+
+      if (waitChoice) {
+        mob.lastWaitGoalKey = waitChoice.key;
+        mob.lastChaseGoalKey = null;
+        mob.requestOrbitShift = false;
         return {
-          cx: best.cx,
-          cy: best.cy,
+          cx: waitChoice.cx,
+          cy: waitChoice.cy,
           predicted,
-          heading: predicted?.heading || heroMem?.heading || null,
+          heading,
         };
       }
     }
 
+    mob.requestOrbitShift = false;
+    mob.lastWaitGoalKey = null;
+    mob.waitOrbitIndex = 0;
+    if (!Number.isFinite(fallbackCx) || !Number.isFinite(fallbackCy)) {
+      return { cx: heroCx, cy: heroCy, predicted, heading };
+    }
+
     return {
-      cx: Number.isFinite(fallbackCx) ? fallbackCx : heroCx,
-      cy: Number.isFinite(fallbackCy) ? fallbackCy : heroCy,
+      cx: fallbackCx,
+      cy: fallbackCy,
       predicted,
-      heading: predicted?.heading || heroMem?.heading || null,
+      heading,
     };
+  }
+
+  function planMobChaseStep({ mob, tgtPos, losGrid, occupancy, heroTiles, heroMem, altPathMode, now }) {
+    if (!mob || !tgtPos) return { step: null, usedAlternate: false };
+
+    let step = pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem, now);
+    let usedAlternate = false;
+
+    if (!step && altPathMode) {
+      step = pickStepAlternate(
+        mob,
+        tgtPos,
+        losGrid,
+        occupancy,
+        heroTiles,
+        heroMem,
+        { maxDepth: ALT_PATH_MAX_DEPTH },
+        now,
+      );
+      usedAlternate = Boolean(step);
+    }
+
+    return { step, usedAlternate };
   }
 
   function pickCombatDanceStep({ mob, heroCx, heroCy, losGrid, occupancy, heroTiles }) {
@@ -1441,7 +1634,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     return true;
   }
 
-  function pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem) {
+  function pickStepGreedy(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem, now = Date.now()) {
     const c0x = Math.floor(mob.x / STEP_PX), c0y = Math.floor(mob.y / STEP_PX);
     const heroCx = Math.floor(tgtPos.x / STEP_PX), heroCy = Math.floor(tgtPos.y / STEP_PX);
     const heroTilesSet = coerceTileSet(heroTiles);
@@ -1453,6 +1646,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       losGrid,
       occupancy,
       heroTiles: heroTilesSet,
+      now,
     });
     const goalCx = Number.isFinite(chaseGoal?.cx) ? chaseGoal.cx : heroCx;
     const goalCy = Number.isFinite(chaseGoal?.cy) ? chaseGoal.cy : heroCy;
@@ -1509,7 +1703,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     return best;
   }
 
-  function pickStepAlternate(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem, opts = {}) {
+  function pickStepAlternate(mob, tgtPos, losGrid, occupancy, heroTiles, heroMem, opts = {}, now = Date.now()) {
     if (!mob || !tgtPos) return null;
 
     const maxDepth = Number.isFinite(opts.maxDepth) ? Math.max(1, opts.maxDepth | 0) : ALT_PATH_MAX_DEPTH;
@@ -1527,6 +1721,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       losGrid,
       occupancy,
       heroTiles: heroTilesSet,
+      now,
     });
     const goalCx = Number.isFinite(chaseGoal?.cx) ? chaseGoal.cx : heroCx;
     const goalCy = Number.isFinite(chaseGoal?.cy) ? chaseGoal.cy : heroCy;
