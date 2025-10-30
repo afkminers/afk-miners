@@ -447,6 +447,18 @@ function normalizeCombatPosition(rawPos, fallback = {}) {
   return { x, y, mapKey, face };
 }
 
+function isGridTileBlocked(grid, cols, rows, tx, ty) {
+  if (!grid || !Number.isFinite(cols) || cols <= 0) return false;
+  const totalRows = Number.isFinite(rows) && rows > 0 ? rows : Math.floor(grid.length / cols);
+  const ix = Number(tx);
+  const iy = Number(ty);
+  if (!Number.isFinite(ix) || !Number.isFinite(iy)) return false;
+  if (ix < 0 || iy < 0 || ix >= cols || iy >= totalRows) return true;
+  const idx = (iy * cols) + ix;
+  if (idx < 0 || idx >= grid.length) return true;
+  return grid[idx] === 1;
+}
+
 async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attackerPos = null, heroPos = null }) {
   const DEBUG_COMBAT = String(process.env.COMBAT_DEBUG || '').trim() === '1';
 
@@ -572,13 +584,19 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
 
   // Linha de visão
   let hasLOS = true;
+  let collisionGrid = null;
+  let collisionCols = null;
+  let collisionRows = null;
   const mapKeyForLos = effectiveMapKey ?? inst.map_key;
   if (mapKeyForLos != null) {
     try {
       const { getGrid } = require('../maps/grid');
       const { hasLineOfSight } = require('./los');
-      const { grid, cols } = await getGrid(mapKeyForLos);
-      hasLOS = hasLineOfSight({ data: grid, cols }, mx, my, hx, hy);
+      const data = await getGrid(mapKeyForLos);
+      collisionGrid = data?.grid || null;
+      collisionCols = Number.isFinite(data?.cols) ? Number(data.cols) : null;
+      collisionRows = Number.isFinite(data?.rows) ? Number(data.rows) : null;
+      hasLOS = hasLineOfSight({ data: collisionGrid, cols: collisionCols }, mx, my, hx, hy);
     } catch {}
   }
 
@@ -603,12 +621,22 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
   const attackerTileY = Math.floor(my / TILE);
   const heroTileX = Math.floor(hx / TILE);
   const heroTileY = Math.floor(hy / TILE);
-  const manhattanTiles = Math.abs(attackerTileX - heroTileX) + Math.abs(attackerTileY - heroTileY);
-  const sameTile = attackerTileX === heroTileX && attackerTileY === heroTileY;
-  const adjacentTile = manhattanTiles === 1 || sameTile;
+  const tileDx = Math.abs(attackerTileX - heroTileX);
+  const tileDy = Math.abs(attackerTileY - heroTileY);
+  const chebyshevTiles = Math.max(tileDx, tileDy);
+  const adjacentTile = chebyshevTiles <= 1;
   const meleeTolerancePx = Math.max(6, TILE / 4);
-  const effectiveInRange = inRangePx || (adjacentTile && distPx <= (atkPx + meleeTolerancePx));
-  const effectiveHasLOS = hasLOS || adjacentTile;
+  let adjacentAndClear = adjacentTile;
+  if (adjacentTile && tileDx === 1 && tileDy === 1 && collisionGrid && Number.isFinite(collisionCols)) {
+    const stepX = attackerTileX + Math.sign(heroTileX - attackerTileX);
+    const stepY = attackerTileY + Math.sign(heroTileY - attackerTileY);
+    const blockedX = isGridTileBlocked(collisionGrid, collisionCols, collisionRows, stepX, attackerTileY);
+    const blockedY = isGridTileBlocked(collisionGrid, collisionCols, collisionRows, attackerTileX, stepY);
+    adjacentAndClear = !(blockedX && blockedY);
+  }
+  if (adjacentTile && chebyshevTiles === 0) adjacentAndClear = true;
+  const effectiveInRange = inRangePx || (adjacentAndClear && distPx <= (atkPx + meleeTolerancePx));
+  const effectiveHasLOS = hasLOS || adjacentAndClear;
 
   // HARD-GUARD: só permite hit se estiver no alcance E com LoS
   if (!(effectiveInRange && effectiveHasLOS)) {

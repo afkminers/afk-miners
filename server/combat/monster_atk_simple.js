@@ -641,10 +641,27 @@ function selectHeroTarget({ monster, heroes, now }) {
   return null;
 }
 
-function isAdjacent4Tiles(mx, my, hx, hy) {
+function isAdjacentTile(mx, my, hx, hy) {
+  if (!Number.isFinite(mx) || !Number.isFinite(my) || !Number.isFinite(hx) || !Number.isFinite(hy)) {
+    return false;
+  }
   const dx = Math.abs(mx - hx);
   const dy = Math.abs(my - hy);
-  return (dx + dy) === 1; // ortogonal
+  if (dx === 0 && dy === 0) return true;
+  return Math.max(dx, dy) === 1; // inclui diagonais
+}
+
+function hasClearAdjacentPath(mx, my, hx, hy, mapCollision) {
+  if (!isAdjacentTile(mx, my, hx, hy)) return false;
+  if (!mapCollision) return true;
+  if (mx === hx && my === hy) return true;
+  if (mx === hx || my === hy) return true; // ortogonal
+
+  const stepX = mx + Math.sign(hx - mx);
+  const stepY = my + Math.sign(hy - my);
+  const blockedX = isTileBlockedByCollision(mapCollision, stepX, my);
+  const blockedY = isTileBlockedByCollision(mapCollision, mx, stepY);
+  return !(blockedX && blockedY);
 }
 
 function isInsideSpawnRect(hx, hy, m, pad = 0) {
@@ -1309,7 +1326,9 @@ async function tick() {
           ? { tx: chaseGoal.tx, ty: chaseGoal.ty, heading: predicted?.heading || null }
           : predicted;
 
-        const adjacent = (Number.isFinite(hx) && Number.isFinite(hy)) ? isAdjacent4Tiles(mx, my, hx, hy) : false;
+        const adjacent = (Number.isFinite(hx) && Number.isFinite(hy))
+          ? hasClearAdjacentPath(mx, my, hx, hy, mapCollision)
+          : false;
 
         if (!adjacent && !alreadyMoved) {
           const lastMove = _lastMoveAt.get(m.id) || 0;
@@ -1493,6 +1512,7 @@ async function tick() {
 
       _aggroTarget.delete(m.id);
       _aggroUntil.delete(m.id);
+      _lastAtkAt.delete(m.id);
 
       if (alreadyMoved || movesUsed >= MONSTER_MAX_PER_TICK) continue;
 

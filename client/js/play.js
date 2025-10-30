@@ -153,6 +153,7 @@ setMapKey(MAP_KEY);
 // ----------------- namespace público p/ outros módulos -----------------
 window.GameScene = window.GameScene || {};
 window.GameScene.mapKey = MAP_KEY;
+window.GameScene.playerVis = playerVis;
 
 // ======= Time/Hero ativo (base para coleta e combate) =======
 /** Define o herói ativo globalmente e emite evento. */
