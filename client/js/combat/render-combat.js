@@ -17,6 +17,29 @@ const state = {
 
 const unbound = new Set(); // ids sem sprite vinculada
 
+const heroOverlay = {
+  id: null,
+  name: '',
+  hp: 0,
+  maxHp: 1,
+  mana: 0,
+  maxMana: 1,
+  alive: true,
+  lastStateTs: 0,
+  lastSampleAt: 0,
+  pos: { x: null, y: null },
+  meta: { width: 32, height: 32, anchorX: 0.5, anchorY: 0.9 },
+};
+
+const HERO_SAMPLE_INTERVAL_MS = 140;
+
+function normalizeHeroId(raw) {
+  if (raw == null) return null;
+  const id = String(raw);
+  if (!id || id === 'undefined' || id === 'null') return null;
+  return id;
+}
+
 function getSpriteFor(id) {
   return window.GameScene?.getMobByInstanceId?.(String(id)) || null;
 }
@@ -259,6 +282,182 @@ function startRebindLoop() {
   }, 300);
 }
 
+function resetHeroOverlayState() {
+  heroOverlay.id = null;
+  heroOverlay.name = '';
+  heroOverlay.hp = 0;
+  heroOverlay.maxHp = 1;
+  heroOverlay.mana = 0;
+  heroOverlay.maxMana = 1;
+  heroOverlay.alive = true;
+  heroOverlay.lastStateTs = 0;
+  heroOverlay.lastSampleAt = 0;
+  heroOverlay.pos = { x: null, y: null };
+}
+
+function fallbackHeroName() {
+  const candidates = [
+    heroOverlay.name,
+    window.ActiveHeroSummary?.name,
+    window.HeroState?.name,
+    window._chat_me?.name,
+    window.Player?.name,
+    window.Player?.username,
+    window.Player?.displayName,
+  ];
+  for (const candidate of candidates) {
+    if (candidate && String(candidate).trim()) return String(candidate).trim();
+  }
+  return 'Você';
+}
+
+function updateHeroOverlayFrom(payload, ts = (typeof performance !== 'undefined' ? performance.now() : Date.now())) {
+  if (!payload) return;
+  const heroIdRaw = payload.heroId ?? payload.hero_id ?? payload.id ?? payload.targetHeroId ?? payload.playerHeroId;
+  const heroId = normalizeHeroId(heroIdRaw);
+  const activeId = normalizeHeroId(getActiveHeroIdMaybe());
+  if (heroId && activeId && heroId !== activeId) return;
+  if (heroId) heroOverlay.id = heroId;
+  if (!heroOverlay.id) return;
+
+  heroOverlay.lastStateTs = ts;
+
+  const hp = payload.hp ?? payload.hpAfter ?? payload.currentHp ?? payload.curHp;
+  if (hp != null) {
+    const num = Number(hp);
+    if (Number.isFinite(num)) heroOverlay.hp = num;
+  }
+
+  const maxHp = payload.maxHp ?? payload.hpMax ?? payload.max_hp ?? payload.maxhp;
+  if (maxHp != null) {
+    const num = Number(maxHp);
+    if (Number.isFinite(num) && num > 0) heroOverlay.maxHp = num;
+  }
+
+  const mana = payload.mana ?? payload.currentMana ?? payload.mp;
+  if (mana != null) {
+    const num = Number(mana);
+    if (Number.isFinite(num)) heroOverlay.mana = num;
+  }
+
+  const maxMana = payload.maxMana ?? payload.max_mana ?? payload.manaMax ?? payload.max_mp;
+  if (maxMana != null) {
+    const num = Number(maxMana);
+    if (Number.isFinite(num) && num >= 0) heroOverlay.maxMana = num;
+  }
+
+  if (typeof payload.alive === 'boolean') heroOverlay.alive = payload.alive;
+
+  const name = payload.name ?? payload.heroName ?? payload.displayName ?? payload.nickname;
+  if (name != null && String(name).trim()) heroOverlay.name = String(name).trim();
+}
+
+function refreshHeroOverlayFromGlobals(ts) {
+  const activeId = normalizeHeroId(getActiveHeroIdMaybe());
+  if (!activeId) {
+    heroOverlay.id = null;
+    return;
+  }
+
+  heroOverlay.id = heroOverlay.id || activeId;
+  if (heroOverlay.id !== activeId) heroOverlay.id = activeId;
+
+  const hs = window.HeroState;
+  if (hs && (hs.id == null || normalizeHeroId(hs.id) === heroOverlay.id)) {
+    updateHeroOverlayFrom({
+      heroId: hs.id ?? heroOverlay.id,
+      hp: hs.hp,
+      maxHp: hs.max_hp,
+      mana: hs.mana,
+      maxMana: hs.max_mana,
+      alive: hs.alive,
+      name: hs.name,
+    }, ts);
+  }
+
+  const summary = window.ActiveHeroSummary;
+  if (summary && normalizeHeroId(summary.id ?? summary.heroId) === heroOverlay.id) {
+    updateHeroOverlayFrom(summary, ts);
+  }
+
+  if (!heroOverlay.name) {
+    heroOverlay.name = fallbackHeroName();
+  }
+}
+
+function sampleHeroPosition(now) {
+  const ctrl = window.GameScene?.controller;
+  if (ctrl && typeof ctrl.getPosition === 'function' && (now - heroOverlay.lastSampleAt >= HERO_SAMPLE_INTERVAL_MS)) {
+    const pos = ctrl.getPosition();
+    if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
+      heroOverlay.pos = { x: pos.x, y: pos.y };
+      heroOverlay.lastSampleAt = now;
+    }
+  }
+
+  const vis = window.GameScene?.playerVis;
+  if (vis) {
+    const w = Number(vis.w);
+    const h = Number(vis.h);
+    const ax = Number(vis.anchorX);
+    const ay = Number(vis.anchorY);
+    if (Number.isFinite(w) && w > 0) heroOverlay.meta.width = w;
+    if (Number.isFinite(h) && h > 0) heroOverlay.meta.height = h;
+    if (Number.isFinite(ax)) heroOverlay.meta.anchorX = ax;
+    if (Number.isFinite(ay)) heroOverlay.meta.anchorY = ay;
+  }
+}
+
+function ensureHeroOverlay(now) {
+  refreshHeroOverlayFromGlobals(now);
+  if (!heroOverlay.id) return false;
+  sampleHeroPosition(now);
+  if (!heroOverlay.pos || !Number.isFinite(heroOverlay.pos.x) || !Number.isFinite(heroOverlay.pos.y)) return false;
+  if (!Number.isFinite(heroOverlay.maxHp) || heroOverlay.maxHp <= 0) {
+    heroOverlay.maxHp = Math.max(1, Number.isFinite(heroOverlay.hp) ? Math.max(1, heroOverlay.hp) : 1);
+  }
+  if (!Number.isFinite(heroOverlay.maxMana) || heroOverlay.maxMana < 0) {
+    const mana = Number.isFinite(heroOverlay.mana) ? heroOverlay.mana : 0;
+    heroOverlay.maxMana = Math.max(1, mana);
+  }
+  if (!Number.isFinite(heroOverlay.hp)) heroOverlay.hp = 0;
+  if (!Number.isFinite(heroOverlay.mana)) heroOverlay.mana = 0;
+  return true;
+}
+
+function buildHeroSprite() {
+  if (!heroOverlay.pos) return null;
+  return {
+    x: heroOverlay.pos.x,
+    y: heroOverlay.pos.y,
+    meta: {
+      frame: { width: heroOverlay.meta.width, height: heroOverlay.meta.height },
+      anchor: { x: heroOverlay.meta.anchorX, y: heroOverlay.meta.anchorY },
+    },
+  };
+}
+
+function drawHeroOverlayBars(ctx, now) {
+  if (!ensureHeroOverlay(now)) return;
+  const sprite = buildHeroSprite();
+  if (!sprite) return;
+
+  const hp = Math.max(0, heroOverlay.hp);
+  const hpMax = Math.max(1, heroOverlay.maxHp);
+  const mana = Math.max(0, heroOverlay.mana);
+  const manaMax = Math.max(1, heroOverlay.maxMana);
+  const displayName = heroOverlay.name && heroOverlay.name.trim() ? heroOverlay.name : fallbackHeroName();
+
+  drawMonsterNameAtSprite(ctx, sprite, displayName, hp, hpMax, { rawName: true, offsetY: -6 });
+  drawHpBarAtSprite(ctx, sprite, hp, hpMax, { offsetY: -2 });
+  drawHpBarAtSprite(ctx, sprite, mana, manaMax, {
+    offsetY: 4,
+    barColor: '#60a5fa',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    outlineColor: 'rgba(0,0,0,0.7)',
+  });
+}
+
 /* --------------- Draw helpers --------------- */
 
 // Barra de HP colorida estilo Tibia
@@ -287,7 +486,7 @@ function getMonsterNameByKey(key) {
   }
 }
 
-function drawHpBarAtSprite(ctx, sprite, hp, maxHp) {
+function drawHpBarAtSprite(ctx, sprite, hp, maxHp, options = {}) {
   if (!sprite) return;
   const meta = sprite.meta || {};
   const frameW = meta.frame?.width ?? 32;
@@ -295,37 +494,42 @@ function drawHpBarAtSprite(ctx, sprite, hp, maxHp) {
   const ax = meta.anchor?.x ?? 0.5;
   const ay = meta.anchor?.y ?? 0.9;
 
-  const w = frameW - 4;
-  const h = 4;
-  const x = Math.round(sprite.x - frameW * ax + 2);
-  const y = Math.round(sprite.y - frameH * ay - 8);
+  const width = Number.isFinite(options.width) && options.width > 0 ? Number(options.width) : frameW - 4;
+  const height = Number.isFinite(options.height) && options.height > 0 ? Number(options.height) : 4;
+  const offsetY = Number.isFinite(options.offsetY) ? Number(options.offsetY) : 0;
+  const backgroundColor = options.backgroundColor || 'rgba(0,0,0,0.38)';
+  const outlineColor = options.outlineColor || 'rgba(0,0,0,0.7)';
+  const colorOverride = options.barColor || null;
+
+  const x = Math.round(sprite.x - frameW * ax + (frameW - width) / 2);
+  const y = Math.round(sprite.y - frameH * ay - 8 + offsetY);
 
   // Barra de fundo
   ctx.save();
   ctx.globalAlpha = 0.82;
-  ctx.fillStyle = 'rgba(0,0,0,0.38)';
-  ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+  ctx.fillStyle = backgroundColor;
+  ctx.fillRect(x - 1, y - 1, width + 2, height + 2);
   ctx.restore();
 
   const pct = Math.max(0, Math.min(1, (maxHp > 0 ? hp / maxHp : 0)));
-  const wHp = Math.round(w * pct);
+  const wHp = Math.round(width * pct);
   ctx.save();
-  ctx.fillStyle = getHpBarColor(pct);
+  ctx.fillStyle = colorOverride || getHpBarColor(pct);
   ctx.shadowColor = "transparent"; // sem blur!
   ctx.shadowBlur = 0;
-  ctx.fillRect(x, y, wHp, h);
+  ctx.fillRect(x, y, wHp, height);
   ctx.restore();
 
   ctx.save();
-  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.strokeStyle = outlineColor;
   ctx.lineWidth = 1.2;
-  ctx.strokeRect(x - 1, y - 1, w + 2, h + 2);
+  ctx.strokeRect(x - 1, y - 1, width + 2, height + 2);
   ctx.restore();
 }
 
 // Nome do monstro acima da barra de HP, cor acompanha barra, minimalista
-function drawMonsterNameAtSprite(ctx, sprite, key, hp, maxHp) {
-  const name = getMonsterNameByKey(key);
+function drawMonsterNameAtSprite(ctx, sprite, key, hp, maxHp, options = {}) {
+  const name = options.rawName ? String(key ?? '') : getMonsterNameByKey(key);
   if (!sprite || !name) return;
   const meta = sprite.meta || {};
   const frameW = meta.frame?.width ?? 32;
@@ -333,14 +537,15 @@ function drawMonsterNameAtSprite(ctx, sprite, key, hp, maxHp) {
   const ax = meta.anchor?.x ?? 0.5;
   const ay = meta.anchor?.y ?? 0.9;
   const x = Math.round(sprite.x - frameW * ax + frameW * 0.5);
-  const y = Math.round(sprite.y - frameH * ay - 20);
+  const offsetY = Number.isFinite(options.offsetY) ? Number(options.offsetY) : 0;
+  const y = Math.round(sprite.y - frameH * ay - 20 + offsetY);
 
   // Cor dinâmica igual a da barra de vida
   const pct = Math.max(0, Math.min(1, (maxHp > 0 ? hp / maxHp : 0)));
-  const barColor = getHpBarColor(pct);
+  const barColor = options.colorOverride || getHpBarColor(pct);
 
   ctx.save();
-  ctx.font = 'bold 11.5px "Trebuchet MS", Arial, sans-serif';
+  ctx.font = options.font || 'bold 11.5px "Trebuchet MS", Arial, sans-serif';
   ctx.textAlign = 'center';
   ctx.lineWidth = 1.5;
   ctx.strokeStyle = '#000';
@@ -378,6 +583,13 @@ function drawTargetBox(ctx) {
 
 /* --------------- Install API --------------- */
 export default function installCombatOverlay() {
+  onMessage('hero_hp', (msg) => { updateHeroOverlayFrom(msg); });
+  onMessage('hero_hit', (msg) => { updateHeroOverlayFrom(msg); });
+  onMessage('hero_dmg', (msg) => { updateHeroOverlayFrom(msg); });
+  window.addEventListener('hero:state', (ev) => { updateHeroOverlayFrom(ev.detail); });
+  window.addEventListener('tick:hero', (ev) => { updateHeroOverlayFrom(ev.detail); });
+  window.addEventListener('hero:active-changed', () => { resetHeroOverlayState(); });
+
   installWsHandlers();
   startRebindLoop();
 
@@ -518,6 +730,7 @@ export default function installCombatOverlay() {
   window.CombatUI = {
     render(ctx, camera, dt) {
       const needRebind = new Set();
+      const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
       const drawAll = () => {
         for (const m of state.monsters.values()) {
@@ -527,6 +740,7 @@ export default function installCombatOverlay() {
           drawHpBarAtSprite(ctx, s, m.hp, m.maxHp);
           drawMonsterNameAtSprite(ctx, s, m.key, m.hp, m.maxHp); // Nome acompanha cor da barra
         }
+        drawHeroOverlayBars(ctx, now);
         drawTargetBox(ctx);
         updateAndDrawFloaters(ctx, dt * 1000);
       };
