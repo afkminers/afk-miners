@@ -1,15 +1,33 @@
 // client/js/pages/leaderboard.js
 import { initPageChrome } from './common-nav.js';
 import { apiGet } from '../api.js';
+import { i18n } from '../i18n/core.js';
 
 const SKILL_ORDER = ['distance', 'magic', 'shielding', 'sword', 'axe', 'club'];
-const SKILL_LABELS = {
-  distance: 'Distance Fighting',
-  magic: 'Magic Level',
-  shielding: 'Shielding',
-  sword: 'Sword Fighting',
-  axe: 'Axe Fighting',
-  club: 'Club Fighting',
+const SKILL_LABEL_KEYS = {
+  distance: 'skills.distance',
+  magic: 'skills.magic',
+  shielding: 'skills.shield',
+  sword: 'skills.sword',
+  axe: 'skills.axe',
+  club: 'skills.club',
+};
+
+const CLASS_LABEL_KEYS = {
+  knight: 'class.Knight',
+  sorcerer: 'class.Sorcerer',
+  druid: 'class.Druid',
+  archer: 'class.Archer',
+  ranger: 'class.Ranger',
+};
+
+const RARITY_LABEL_KEYS = {
+  COMMON: 'rarity.COMMON',
+  RARE: 'rarity.RARE',
+  SUPER_RARE: 'rarity.SUPER_RARE',
+  LEGENDARY: 'rarity.LEGENDARY',
+  MYTHIC: 'rarity.MYTHIC',
+  ULTIMATE: 'rarity.ULTIMATE',
 };
 
 const state = {
@@ -23,6 +41,7 @@ const state = {
   loading: false,
   error: false,
   errorMessage: '',
+  errorKey: '',
   lastFetchCount: 0,
   requestToken: 0,
   nextOffset: null,
@@ -44,6 +63,15 @@ const elements = {
 };
 
 let searchTimer = null;
+let relativeFormatter = new Intl.RelativeTimeFormat(i18n.getLang(), { numeric: 'auto' });
+
+function updateRelativeFormatter() {
+  try {
+    relativeFormatter = new Intl.RelativeTimeFormat(i18n.getLang(), { numeric: 'auto' });
+  } catch {
+    relativeFormatter = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  }
+}
 
 function toTitle(str) {
   return String(str || '')
@@ -55,44 +83,52 @@ function toTitle(str) {
 }
 
 function formatClass(value) {
-  const label = toTitle(value);
-  return label || 'Unknown';
+  const normalized = String(value || '').toLowerCase();
+  const key = CLASS_LABEL_KEYS[normalized];
+  if (key) return i18n.t(key);
+  return normalized ? toTitle(normalized) : '—';
 }
 
 function formatRarity(value) {
-  const label = toTitle(value);
-  return label || '—';
+  const normalized = String(value || '').toUpperCase();
+  const key = RARITY_LABEL_KEYS[normalized];
+  if (key) return i18n.t(key);
+  return normalized || '—';
 }
 
 function formatSkillLabel(type) {
-  const key = String(type || '').toLowerCase();
-  return SKILL_LABELS[key] || toTitle(type);
+  const normalized = String(type || '').toLowerCase();
+  const key = SKILL_LABEL_KEYS[normalized];
+  if (key) return i18n.t(key);
+  return toTitle(type);
 }
 
 function formatUpdated(iso) {
   if (!iso) return '—';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '—';
-  const diff = Date.now() - date.getTime();
+  const now = Date.now();
+  const diff = date.getTime() - now;
   const minute = 60 * 1000;
   const hour = 60 * minute;
   const day = 24 * hour;
-  if (diff < minute) return 'just now';
-  if (diff < hour) {
+
+  if (Math.abs(diff) < minute) {
+    return relativeFormatter.format(0, 'minute');
+  }
+  if (Math.abs(diff) < hour) {
     const mins = Math.round(diff / minute);
-    return `${mins}m ago`;
+    return relativeFormatter.format(mins, 'minute');
   }
-  if (diff < day) {
+  if (Math.abs(diff) < day) {
     const hours = Math.round(diff / hour);
-    return `${hours}h ago`;
+    return relativeFormatter.format(hours, 'hour');
   }
-  const days = Math.round(diff / day);
-  if (days <= 7) return `${days}d ago`;
-  return date.toLocaleDateString('en-GB', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  if (Math.abs(diff) < day * 7) {
+    const days = Math.round(diff / day);
+    return relativeFormatter.format(days, 'day');
+  }
+  return i18n.format.date(date, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function populateSkillOptions() {
@@ -109,14 +145,15 @@ function populateSkillOptions() {
 
   elements.skillSelect.innerHTML = '';
   for (const key of SKILL_ORDER) {
+    if (!SKILL_LABEL_KEYS[key]) continue;
     const opt = document.createElement('option');
     opt.value = key;
-    opt.textContent = SKILL_LABELS[key] || toTitle(key);
+    opt.textContent = i18n.t(SKILL_LABEL_KEYS[key]);
     elements.skillSelect.appendChild(opt);
   }
 
   if (!allowed.has(state.skill)) {
-    state.skill = SKILL_ORDER[0];
+    state.skill = SKILL_ORDER.find((key) => allowed.has(key)) || SKILL_ORDER[0];
   }
 }
 
@@ -221,22 +258,29 @@ function setLoadingRow(message) {
   elements.tbody.appendChild(tr);
 }
 
+function getErrorMessage() {
+  if (state.errorKey) {
+    return i18n.t(state.errorKey);
+  }
+  return state.errorMessage || i18n.t('lb.error');
+}
+
 function renderTable() {
   if (!elements.tbody) return;
 
   if (state.loading) {
-    setLoadingRow('Loading leaderboard…');
+    setLoadingRow(i18n.t('lb.loading'));
     return;
   }
 
   if (state.error) {
-    setLoadingRow(state.errorMessage || 'Leaderboard data is unavailable right now.');
+    setLoadingRow(getErrorMessage());
     return;
   }
 
   const rows = state.rows;
   if (!rows.length) {
-    setLoadingRow('No results found.');
+    setLoadingRow(i18n.t('lb.empty'));
     return;
   }
 
@@ -246,7 +290,7 @@ function renderTable() {
 
     const rankTd = document.createElement('td');
     const rank = row.rank != null ? row.rank : state.offset + index + 1;
-    rankTd.textContent = Number.isFinite(rank) ? String(rank) : '—';
+    rankTd.textContent = Number.isFinite(rank) ? i18n.format.number(rank) : '—';
     rankTd.classList.add('col-rank');
     if (Number.isFinite(rank) && rank <= 3) {
       rankTd.classList.add('rank-medal', `rank-${rank}`);
@@ -257,12 +301,12 @@ function renderTable() {
     playerTd.classList.add('col-player');
     const playerPrimary = document.createElement('span');
     playerPrimary.classList.add('primary');
-    playerPrimary.textContent = row.playerName || 'Unknown';
+    playerPrimary.textContent = row.playerName || i18n.t('lb.unknown');
     playerTd.appendChild(playerPrimary);
     if (row.guildName) {
       const secondary = document.createElement('span');
       secondary.classList.add('secondary');
-      secondary.textContent = `Guild: ${row.guildName}`;
+      secondary.textContent = i18n.t('lb.guild', { guild: row.guildName });
       playerTd.appendChild(secondary);
     }
     tr.appendChild(playerTd);
@@ -301,16 +345,19 @@ function renderTable() {
 
     const levelTd = document.createElement('td');
     levelTd.classList.add('col-level');
-    levelTd.textContent = row.level != null ? String(row.level) : '—';
+    levelTd.textContent = row.level != null ? i18n.format.number(row.level) : '—';
     tr.appendChild(levelTd);
 
     const skillTd = document.createElement('td');
     skillTd.classList.add('col-skill');
     if (state.tab === 'skills' && row.skillValue != null) {
       const label = formatSkillLabel(row.skillType);
-      const parts = [`${label}: ${row.skillValue}`];
+      const parts = [i18n.t('lb.skillValue', {
+        label,
+        value: i18n.format.number(row.skillValue),
+      })];
       if (row.triesProgress != null && row.triesProgress !== '') {
-        parts.push(`Progress ${row.triesProgress}`);
+        parts.push(i18n.t('lb.skillProgress', { progress: row.triesProgress }));
       }
       skillTd.textContent = parts.join(' • ');
     } else {
@@ -334,25 +381,28 @@ function renderStatus() {
   elements.status.classList.remove('error', 'success');
 
   if (state.loading) {
-    elements.status.textContent = 'Fetching latest rankings…';
+    elements.status.textContent = i18n.t('lb.loading');
     return;
   }
 
   if (state.error) {
-    elements.status.textContent = state.errorMessage || 'Leaderboard data is unavailable right now.';
+    elements.status.textContent = getErrorMessage();
     elements.status.classList.add('error');
     return;
   }
 
   const rows = state.rows;
   if (!rows.length) {
-    elements.status.textContent = 'No results for the current filters.';
+    elements.status.textContent = i18n.t('lb.empty');
     return;
   }
 
   const firstRank = state.offset + 1;
   const lastRank = state.offset + rows.length;
-  elements.status.textContent = `Showing ranks ${firstRank} – ${lastRank}`;
+  elements.status.textContent = i18n.t('lb.range', {
+    from: i18n.format.number(firstRank),
+    to: i18n.format.number(lastRank),
+  });
 }
 
 function renderRange() {
@@ -364,7 +414,10 @@ function renderRange() {
   }
   const first = state.offset + 1;
   const last = state.offset + rows.length;
-  elements.range.textContent = `Rank ${first} – ${last}`;
+  elements.range.textContent = i18n.t('lb.range', {
+    from: i18n.format.number(first),
+    to: i18n.format.number(last),
+  });
 }
 
 function renderPager() {
@@ -435,6 +488,7 @@ async function fetchLeaderboard() {
   state.loading = true;
   state.error = false;
   state.errorMessage = '';
+  state.errorKey = '';
   render();
 
   try {
@@ -487,6 +541,7 @@ async function fetchLeaderboard() {
     state.loading = false;
     state.error = false;
     state.errorMessage = '';
+    state.errorKey = '';
     render();
   } catch (err) {
     if (token !== state.requestToken) return;
@@ -499,7 +554,8 @@ async function fetchLeaderboard() {
       state.lastFetchCount = 0;
       state.loading = false;
       state.error = true;
-      state.errorMessage = 'This skill leaderboard is not available yet.';
+      state.errorMessage = '';
+      state.errorKey = 'lb.skillUnavailable';
       render();
 
       disableSkillOption(state.skill);
@@ -520,10 +576,13 @@ async function fetchLeaderboard() {
     state.loading = false;
     state.error = true;
     const payloadError = err?.payload?.error;
-    state.errorMessage =
-      payloadError === 'skill not available'
-        ? 'This skill leaderboard is not available yet.'
-        : payloadError || err?.message || 'Leaderboard data is unavailable right now.';
+    if (payloadError === 'skill not available') {
+      state.errorKey = 'lb.skillUnavailable';
+      state.errorMessage = '';
+    } else {
+      state.errorKey = 'lb.error';
+      state.errorMessage = payloadError || err?.message || '';
+    }
     render();
   }
 }
@@ -538,7 +597,11 @@ function focusMain() {
   }
 }
 
+let initialized = false;
+
 function init() {
+  if (initialized) return;
+  initialized = true;
   initPageChrome('/leaderboard');
   populateSkillOptions();
   updateToolbar();
@@ -549,4 +612,17 @@ function init() {
   fetchLeaderboard();
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  i18n.onReady(() => {
+    updateRelativeFormatter();
+    init();
+  });
+});
+
+i18n.onChange(() => {
+  updateRelativeFormatter();
+  if (!initialized) return;
+  populateSkillOptions();
+  updateToolbar();
+  render();
+});

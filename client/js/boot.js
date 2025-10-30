@@ -3,6 +3,7 @@ import { API, getCsrf, apiGet } from './api.js';
 import { doLogin, doRegister, doLogout } from './auth.js';
 import { bindGachaUI } from './gacha.js';
 import { initLoginFx, stopLoginFx, celebrate } from './login_fx.js';
+import { i18n } from './i18n/core.js';
 // (removido) import { bindProfileModal, setupInventoryOpen } from './player_profile.js';
 
 // UI base
@@ -55,6 +56,7 @@ const ctx = {
   resultPane: document.getElementById('resultPane'),
   multiPane:  document.getElementById('multiPane'),
   multiGrid:  document.getElementById('multiGrid'),
+  multiHead:  document.getElementById('multiHead'),
   okbar:      document.getElementById('okbar'),
 
   btnOk:      document.getElementById('btnOk'),
@@ -88,6 +90,46 @@ const ctx = {
 // ===== Estado de sessão =====
 let __profile = null;
 window.__isAuth = false;
+let lastCoinsValue = 0;
+let lastNameValue = '';
+
+function clearMessage(el) {
+  if (!el) return;
+  delete el.dataset.i18nKey;
+  delete el.dataset.i18nVars;
+  el.textContent = '';
+}
+
+function setI18nMessage(el, key, vars) {
+  if (!el || !key) return;
+  el.dataset.i18nKey = key;
+  if (vars) {
+    el.dataset.i18nVars = JSON.stringify(vars);
+  } else {
+    delete el.dataset.i18nVars;
+  }
+  el.textContent = i18n.t(key, vars);
+}
+
+function setRawMessage(el, text) {
+  if (!el) return;
+  delete el.dataset.i18nKey;
+  delete el.dataset.i18nVars;
+  el.textContent = String(text ?? '');
+}
+
+function refreshMessages() {
+  [loginMsg, regMsg].forEach((el) => {
+    if (!el) return;
+    const key = el.dataset.i18nKey;
+    if (!key) return;
+    let vars = {};
+    if (el.dataset.i18nVars) {
+      try { vars = JSON.parse(el.dataset.i18nVars); } catch { vars = {}; }
+    }
+    el.textContent = i18n.t(key, vars);
+  });
+}
 
 // HUD centralizado
 function updateHud(profileOrCoins) {
@@ -95,17 +137,33 @@ function updateHud(profileOrCoins) {
     ? profileOrCoins
     : Number(profileOrCoins?.coins ?? 0);
 
-  const name = (window.__playerName || profileOrCoins?.name || '').toString();
-  if (name) window.__playerName = name;
+  lastCoinsValue = coins;
 
-  if (userInfo) {
-    userInfo.textContent = name
-      ? `${name} • Coins ${coins}`
-      : `Coins ${coins}`;
+  if (profileOrCoins && typeof profileOrCoins === 'object' && 'name' in profileOrCoins) {
+    const candidate = String(profileOrCoins.name ?? '').trim();
+    if (candidate) {
+      window.__playerName = candidate;
+      lastNameValue = candidate;
+    }
   }
 
-  if (ctx.coinCount) ctx.coinCount.textContent = coins;
-  if (ctx.elBalance) ctx.elBalance.textContent = `Moedas: ${coins}`;
+  const storedName = (window.__playerName || lastNameValue || '').toString();
+  if (storedName) {
+    lastNameValue = storedName;
+  }
+
+  const coinsFormatted = i18n.format.number(coins);
+  const coinsLabel = i18n.t('app.coinsLabel', { value: coinsFormatted });
+  const userInfoText = storedName
+    ? i18n.t('app.userInfoNamed', { name: storedName, coins: coinsLabel })
+    : coinsLabel;
+
+  if (userInfo) {
+    userInfo.textContent = userInfoText;
+  }
+
+  if (ctx.coinCount) ctx.coinCount.textContent = coinsFormatted;
+  if (ctx.elBalance) ctx.elBalance.textContent = coinsLabel;
 
   try {
     document.dispatchEvent(new CustomEvent('coins-updated', { detail: { coins } }));
@@ -182,7 +240,16 @@ async function trySession() {
     showLanding();
   }
 }
-trySession();
+i18n.onReady(() => {
+  refreshMessages();
+  updateHud({ coins: lastCoinsValue, name: lastNameValue });
+  trySession();
+});
+
+i18n.onChange(() => {
+  refreshMessages();
+  updateHud({ coins: lastCoinsValue, name: lastNameValue });
+});
 
 /* ========= PLAY ========= */
 if (btnPlay) {
@@ -201,23 +268,23 @@ authClose?.addEventListener('click', () => authScreen?.classList.add('hidden'));
 /* ========= Auth handlers ========= */
 btnLogin?.addEventListener('click', async (ev) => {
   ev.preventDefault();
-  loginMsg.textContent = '';
+  clearMessage(loginMsg);
 
   if (window._loginBusy) return;
   window._loginBusy = true;
 
   try {
     const data = await doLogin(loginName.value.trim(), loginPass.value);
-    if (data?.error) { loginMsg.textContent = data.error; return; }
+    if (data?.error) { setRawMessage(loginMsg, data.error); return; }
 
     // Confirma sessão
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json());
-    if (!me?.profile) { loginMsg.textContent = 'Sessão não criada. Tente novamente.'; return; }
+    if (!me?.profile) { setI18nMessage(loginMsg, 'auth.sessionMissing'); return; }
 
     celebrate();
     await goToGameAccordingToStarter();
   } catch {
-    loginMsg.textContent = 'Falha ao autenticar.';
+    setI18nMessage(loginMsg, 'auth.loginFailed');
   } finally {
     window._loginBusy = false;
   }
@@ -225,28 +292,28 @@ btnLogin?.addEventListener('click', async (ev) => {
 
 btnRegister?.addEventListener('click', async (ev) => {
   ev.preventDefault();
-  regMsg.textContent = '';
+  clearMessage(regMsg);
 
   if (window._regBusy) return;
   window._regBusy = true;
 
   try {
     const res = await doRegister(regName.value.trim(), regPass.value);
-    if (res?.error) { regMsg.textContent = res.error; return; }
+    if (res?.error) { setRawMessage(regMsg, res.error); return; }
 
     celebrate();
 
     // Confere sessão
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json());
-    if (!me?.profile) { regMsg.textContent = 'Sessão não criada. Tente novamente.'; return; }
+    if (!me?.profile) { setI18nMessage(regMsg, 'auth.sessionMissing'); return; }
 
     await goToGameAccordingToStarter();
   } catch (e) {
     const msg = (e?.message || '').toLowerCase();
     if (msg.includes('já está em uso') || msg.includes('duplicate')) {
-      regMsg.textContent = 'Nome já está em uso.';
+      setI18nMessage(regMsg, 'auth.nameTaken');
     } else {
-      regMsg.textContent = 'Falha ao registrar.';
+      setI18nMessage(regMsg, 'auth.registerFailed');
     }
   } finally {
     window._regBusy = false;
