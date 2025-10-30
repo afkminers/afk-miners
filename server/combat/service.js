@@ -4,7 +4,11 @@ const { get, run } = require('../models/db');
 const K = require('../balance/config');
 const { applyTries, getClassRate } = require('../skills/engine');
 const { broadcast } = require('../ws/bus');
-const { resolveHitboxDimension, TILE } = require('./geom');
+const { TILE } = require('./geom');
+const { toTileCoords, chebyshevTiles, isValidTile } = require('../utils/tile-coords');
+const { resolveMonsterAttackProfile } = require('./monster_attack_profile');
+const { hasLineOfSightTiles } = require('./los');
+const { getGrid } = require('../maps/grid');
 // Se você usa este serviço central de XP:
 const { giveXp } = require('../services/heroProgress');
 
@@ -128,6 +132,7 @@ async function getInstanceWithMonster(instanceId) {
             COALESCE(m.xp,25)                      AS xp_reward,
             COALESCE(m."lootJSON",'[]'::jsonb)     AS loot_json,
             COALESCE(m."defensesJSON",'{}'::jsonb) AS defenses_json,
+            COALESCE(m."attacksJSON",'[]'::jsonb)  AS attacks_json,
 
             /* alcance em tiles: aiJSON.reach -> attack_range -> 1 */
             COALESCE(
@@ -447,18 +452,6 @@ function normalizeCombatPosition(rawPos, fallback = {}) {
   return { x, y, mapKey, face };
 }
 
-function isGridTileBlocked(grid, cols, rows, tx, ty) {
-  if (!grid || !Number.isFinite(cols) || cols <= 0) return false;
-  const totalRows = Number.isFinite(rows) && rows > 0 ? rows : Math.floor(grid.length / cols);
-  const ix = Number(tx);
-  const iy = Number(ty);
-  if (!Number.isFinite(ix) || !Number.isFinite(iy)) return false;
-  if (ix < 0 || iy < 0 || ix >= cols || iy >= totalRows) return true;
-  const idx = (iy * cols) + ix;
-  if (idx < 0 || idx >= grid.length) return true;
-  return grid[idx] === 1;
-}
-
 async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attackerPos = null, heroPos = null }) {
   const DEBUG_COMBAT = String(process.env.COMBAT_DEBUG || '').trim() === '1';
 
@@ -554,92 +547,57 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
     }
   }
 
-  // --- HITBOX DO MONSTRO (considera tamanho da sprite) ---
   if (mx < 1000 && my < 1000) {
     mx = (mx * TILE) + (TILE / 2);
     my = (my * TILE) + (TILE / 2);
   }
 
-  const frameW = resolveHitboxDimension(inst, 'w');
-  const frameH = resolveHitboxDimension(inst, 'h');
-  
-  // Hitbox retangular centralizada no monstro
-  const mobLeft = mx - (frameW / 2);
-  const mobRight = mx + (frameW / 2);
-  const mobTop = my - (frameH / 2);
-  const mobBottom = my + (frameH / 2);
-
-  // Ponto mais próximo do herói dentro da hitbox
-  const closestX = Math.max(mobLeft, Math.min(hx, mobRight));
-  const closestY = Math.max(mobTop, Math.min(hy, mobBottom));
-  
-  // Distância Chebyshev do herói ao ponto mais próximo
-  const dx = Math.abs(hx - closestX);
-  const dy = Math.abs(hy - closestY);
-  const distPx = Math.max(dx, dy);
-
-  // Alcance do monstro em pixels
-  const atkPx = Math.max(Number(inst.reach_px || TILE), TILE);
-  const inRangePx = distPx <= atkPx;
-
-  // Linha de visão
-  let hasLOS = true;
-  let collisionGrid = null;
-  let collisionCols = null;
-  let collisionRows = null;
-  const mapKeyForLos = effectiveMapKey ?? inst.map_key;
-  if (mapKeyForLos != null) {
-    try {
-      const { getGrid } = require('../maps/grid');
-      const { hasLineOfSight } = require('./los');
-      const data = await getGrid(mapKeyForLos);
-      collisionGrid = data?.grid || null;
-      collisionCols = Number.isFinite(data?.cols) ? Number(data.cols) : null;
-      collisionRows = Number.isFinite(data?.rows) ? Number(data.rows) : null;
-      hasLOS = hasLineOfSight({ data: collisionGrid, cols: collisionCols }, mx, my, hx, hy);
-    } catch {}
+  const attackerTile = toTileCoords({ x: mx, y: my });
+  const heroTile = toTileCoords({ x: hx, y: hy });
+  if (!isValidTile(attackerTile) || !isValidTile(heroTile)) {
+    return { ok: false, message: 'invalid-coords' };
   }
 
-  // DEBUG
+  const attackProfile = resolveMonsterAttackProfile(inst, attackInfo || {});
+  const distTiles = chebyshevTiles(attackerTile, heroTile);
+  const rangeTiles = Number.isFinite(attackProfile.rangeTiles) ? attackProfile.rangeTiles : 1;
+  const inRangeTiles = Number.isFinite(distTiles) && distTiles <= rangeTiles;
+
+  const mapKeyForLos = effectiveMapKey ?? inst.map_key;
+  let hasLOS = true;
+  let losGrid = null;
+  if (attackProfile.requiresLos && mapKeyForLos != null) {
+    try {
+      const data = await getGrid(mapKeyForLos);
+      losGrid = data ? { data: data.grid, cols: data.cols } : null;
+      if (losGrid) {
+        hasLOS = hasLineOfSightTiles(losGrid, attackerTile.tx, attackerTile.ty, heroTile.tx, heroTile.ty);
+      }
+    } catch {
+      hasLOS = true;
+    }
+  }
+
   if (DEBUG_COMBAT) {
     console.log('[MOB-HIT-DEBUG]', {
       inst: inst.id,
       hero: targetHeroId,
       heroPos: { x: hx, y: hy, source: hpos.source, mapKey: hpos.map_key },
       mobPos: { x: mx, y: my, mapKey: mapKeyForLos, face: attackerFace },
-      mobHitbox: { left: mobLeft, right: mobRight, top: mobTop, bottom: mobBottom },
-      closest: { x: closestX, y: closestY },
-      distPx,
-      atkPx,
-      inRange: inRangePx,
+      tiles: {
+        mob: attackerTile,
+        hero: heroTile,
+        dist: distTiles,
+        range: rangeTiles,
+      },
+      inRangeTiles,
       hasLOS,
-      heroPosFresh
+      heroPosFresh,
+      requiresLos: attackProfile.requiresLos,
     });
   }
 
-  const attackerTileX = Math.floor(mx / TILE);
-  const attackerTileY = Math.floor(my / TILE);
-  const heroTileX = Math.floor(hx / TILE);
-  const heroTileY = Math.floor(hy / TILE);
-  const tileDx = Math.abs(attackerTileX - heroTileX);
-  const tileDy = Math.abs(attackerTileY - heroTileY);
-  const chebyshevTiles = Math.max(tileDx, tileDy);
-  const adjacentTile = chebyshevTiles <= 1;
-  const meleeTolerancePx = Math.max(6, TILE / 4);
-  let adjacentAndClear = adjacentTile;
-  if (adjacentTile && tileDx === 1 && tileDy === 1 && collisionGrid && Number.isFinite(collisionCols)) {
-    const stepX = attackerTileX + Math.sign(heroTileX - attackerTileX);
-    const stepY = attackerTileY + Math.sign(heroTileY - attackerTileY);
-    const blockedX = isGridTileBlocked(collisionGrid, collisionCols, collisionRows, stepX, attackerTileY);
-    const blockedY = isGridTileBlocked(collisionGrid, collisionCols, collisionRows, attackerTileX, stepY);
-    adjacentAndClear = !(blockedX && blockedY);
-  }
-  if (adjacentTile && chebyshevTiles === 0) adjacentAndClear = true;
-  const effectiveInRange = inRangePx || (adjacentAndClear && distPx <= (atkPx + meleeTolerancePx));
-  const effectiveHasLOS = hasLOS || adjacentAndClear;
-
-  // HARD-GUARD: só permite hit se estiver no alcance E com LoS
-  if (!(effectiveInRange && effectiveHasLOS)) {
+  if (!inRangeTiles || !hasLOS) {
     if (DEBUG_COMBAT) {
       console.log(`[HARD-GUARD] BLOCK inst=${inst.id} hero=${targetHeroId}`);
     }
@@ -647,10 +605,10 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
   }
 
   // --- DANO (resto do código mantido) ---
-  const minRaw = Number(attackInfo?.min ?? 1);
-  const maxRaw = Number(attackInfo?.max ?? minRaw);
-  const min = Number.isFinite(minRaw) && minRaw >= 0 ? minRaw : 0;
-  const max = Number.isFinite(maxRaw) && maxRaw >= min ? maxRaw : min;
+  const profileMin = Number.isFinite(attackProfile.min) ? Math.max(0, Math.floor(attackProfile.min)) : 0;
+  const profileMaxRaw = Number.isFinite(attackProfile.max) ? Math.floor(attackProfile.max) : profileMin;
+  const max = Math.max(profileMin, profileMaxRaw);
+  const min = Math.min(profileMin, max);
 
   let dmg = min + Math.floor(Math.random() * (max - min + 1));
 
@@ -737,6 +695,10 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
       respawnHero(targetHeroId).catch(() => {});
     }, 10000);
   }
+
+  const nextInterval = Number.isFinite(attackProfile.intervalMs) ? attackProfile.intervalMs : Number(inst.attack_ms) || 0;
+  const mobLabel = inst.monster_key || inst.monster_id || 'unknown';
+  console.log(`[MOB_HIT] {mob: ${mobLabel}, id: ${inst.id}} -> {heroId: ${targetHeroId}} dmg=${dmg} dist=${distTiles} tiles=(${attackerTile.tx},${attackerTile.ty})→(${heroTile.tx},${heroTile.ty}) next=+${nextInterval}`);
 
   return {
     ok: true,
