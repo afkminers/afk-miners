@@ -296,7 +296,6 @@ router.get('/skills', async (req, res) => {
           s.level AS skill_value,
           s.tries_progress,
           s.skill_type,
-          NOW() AS up_at,
           ph.name AS hero_name,
           ph.level AS hero_level,
           ph.rarity AS hero_rarity,
@@ -317,14 +316,17 @@ router.get('/skills', async (req, res) => {
         p.name  AS player_name,
         b.skill_value,
         b.tries_progress,
-        GREATEST(COALESCE(b.hero_updated_at, NOW()), b.up_at) AS updated_at,
+        b.hero_updated_at AS updated_at,
         b.skill_type,
         b.hero_key
       FROM base b
       JOIN players p ON p.id = b.player_id
       LEFT JOIN heroes_master hm ON COALESCE(hm."heroKey", hm.herokey) = b.hero_key
       WHERE (COALESCE($4,'') = '' OR p.name ILIKE '%'||$4||'%' OR b.hero_name ILIKE '%'||$4||'%')
-      ORDER BY b.skill_value DESC, GREATEST(COALESCE(b.hero_updated_at, NOW()), b.up_at) DESC
+      ORDER BY b.skill_value DESC,
+               updated_at DESC NULLS LAST,
+               b.hero_name ASC NULLS LAST,
+               b.hero_id ASC
       LIMIT $2 OFFSET $3;
       `,
       [skillType, limit, offset, search],
@@ -335,7 +337,6 @@ router.get('/skills', async (req, res) => {
           s.level AS skill_value,
           s.tries_progress,
           s.skill_type,
-          NOW() AS up_at,
           ph.name AS hero_name,
           ph.level AS hero_level,
           ph.rarity AS hero_rarity,
@@ -356,13 +357,16 @@ router.get('/skills', async (req, res) => {
         p.name  AS player_name,
         b.skill_value,
         b.tries_progress,
-        GREATEST(COALESCE(b.hero_updated_at, NOW()), b.up_at) AS updated_at,
+        b.hero_updated_at AS updated_at,
         b.skill_type,
         b.hero_key
       FROM base b
       JOIN players p ON p.id = b.player_id
       WHERE (COALESCE($4,'') = '' OR p.name ILIKE '%'||$4||'%' OR b.hero_name ILIKE '%'||$4||'%')
-      ORDER BY b.skill_value DESC, GREATEST(COALESCE(b.hero_updated_at, NOW()), b.up_at) DESC
+      ORDER BY b.skill_value DESC,
+               updated_at DESC NULLS LAST,
+               b.hero_name ASC NULLS LAST,
+               b.hero_id ASC
       LIMIT $2 OFFSET $3;
       `
     );
