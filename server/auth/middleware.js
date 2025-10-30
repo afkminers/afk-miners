@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const { get } = require('../models/db');
 const { randomBytes } = require('crypto');
+const { isOriginAllowed: isCorsOriginAllowed } = require('../middleware/cors-allowlist');
 
 /* =================== ENV =================== */
 const NODE_ENV   = process.env.NODE_ENV || 'development';
@@ -15,31 +16,43 @@ const COOKIE_NAME =
   process.env.COOKIE_NAME ||
   'sid';
 
-// CSRF + cookies
-const COOKIE_SAME_SITE = process.env.COOKIE_SAME_SITE || 'Lax';
-const COOKIE_DOMAIN    = process.env.COOKIE_DOMAIN || undefined;
-const CSRF_COOKIE      = process.env.CSRF_COOKIE || 'csrf';
+const RAW_COOKIE_DOMAIN = process.env.COOKIE_DOMAIN;
+const COOKIE_DOMAIN =
+  RAW_COOKIE_DOMAIN != null
+    ? RAW_COOKIE_DOMAIN
+    : (NODE_ENV === 'production' ? '.afkminers.com' : undefined);
 
-// 🔴 Agora aceitamos **múltiplas** origens (separadas por vírgula)
-// Ex.: APP_ORIGINS=https://afkminers.com,http://localhost:3000
-const APP_ORIGINS = (process.env.APP_ORIGINS ||
-                     process.env.APP_ORIGIN ||       // retrocompatibilidade
-                     'http://localhost:3000,https://afkminers.com')
-                    .split(',')
-                    .map(s => String(s || '').trim().replace(/\/+$/, ''))
-                    .filter(Boolean);
+function normalizeSameSite(value) {
+  if (!value) return null;
+  const clean = String(value).trim().toLowerCase();
+  if (clean === 'none') return 'None';
+  if (clean === 'lax') return 'Lax';
+  if (clean === 'strict') return 'Strict';
+  return null;
+}
 
-// Em DEV (http://localhost), não usar Secure
-const COOKIE_SECURE_ENV =
-  String(process.env.COOKIE_SECURE || 'false').toLowerCase() === 'true';
-const EFFECTIVE_SECURE = NODE_ENV === 'production' ? COOKIE_SECURE_ENV : false;
+const COOKIE_SAME_SITE =
+  normalizeSameSite(process.env.COOKIE_SAME_SITE) || 'Lax';
+
+const CSRF_COOKIE = process.env.CSRF_COOKIE || 'csrf';
+
+const COOKIE_SECURE_ENV = process.env.COOKIE_SECURE;
+let EFFECTIVE_SECURE;
+if (COOKIE_SECURE_ENV != null) {
+  EFFECTIVE_SECURE = String(COOKIE_SECURE_ENV).toLowerCase() === 'true';
+} else {
+  EFFECTIVE_SECURE = NODE_ENV === 'production';
+}
+if (COOKIE_SAME_SITE === 'None' && !EFFECTIVE_SECURE) {
+  EFFECTIVE_SECURE = true;
+}
 
 /* =================== Cookies =================== */
 function cookieOpts() {
   const base = {
     httpOnly: true,
-    sameSite: COOKIE_SAME_SITE,  // 'Lax' por padrão
-    secure: EFFECTIVE_SECURE,    // true no https se COOKIE_SECURE=true
+    sameSite: COOKIE_SAME_SITE,
+    secure: EFFECTIVE_SECURE,
     path: '/',
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 dias
   };
@@ -54,30 +67,56 @@ function setAuthCookie(res, payload) {
 
 function clearAuthCookie(res) {
   const base = cookieOpts();
-  res.clearCookie(COOKIE_NAME, {
+  const opts = {
     path: '/',
     sameSite: base.sameSite,
     secure: base.secure,
-    domain: base.domain,
-  });
+  };
+  if (base.domain) opts.domain = base.domain;
+  res.clearCookie(COOKIE_NAME, opts);
+}
+
+function isLeaderboardRequest(req) {
+  const url = String(req?.originalUrl || req?.baseUrl || req?.url || '');
+  return url.startsWith('/api/leaderboard');
+}
+
+function logLeaderboardBlock(req, reason) {
+  if (!isLeaderboardRequest(req)) return;
+  const url = req.originalUrl || req.url || req.baseUrl || '';
+  console.warn('[leaderboard][guard-block]', req.method || 'GET', url, '-', reason);
 }
 
 /* =================== Auth guard =================== */
 async function requireAuth(req, res, next) {
-  try {
-    const raw = req.cookies[COOKIE_NAME];
-    if (!raw) return res.status(401).json({ error: 'Não autenticado' });
+  const raw = req.cookies[COOKIE_NAME];
+  if (!raw) {
+    logLeaderboardBlock(req, 'missing-session-cookie');
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
 
-    const decoded = jwt.verify(raw, JWT_SECRET);
+  let decoded;
+  try {
+    decoded = jwt.verify(raw, JWT_SECRET);
+  } catch (err) {
+    logLeaderboardBlock(req, 'invalid-session-token');
+    return res.status(401).json({ error: 'Sessão inválida' });
+  }
+
+  try {
     const user = await get(
       `SELECT id, name, coins, gems FROM players WHERE id = $1`,
       [decoded.id]
     );
 
-    if (!user) return res.status(401).json({ error: 'Sessão inválida' });
+    if (!user) {
+      logLeaderboardBlock(req, 'session-player-missing');
+      return res.status(401).json({ error: 'Sessão inválida' });
+    }
     req.user = user;
-    next();
-  } catch {
+    return next();
+  } catch (err) {
+    logLeaderboardBlock(req, 'session-lookup-error');
     return res.status(401).json({ error: 'Sessão inválida' });
   }
 }
@@ -98,22 +137,17 @@ function csrfRoute(_req, res) {
   res.json({ csrfToken: t });
 }
 
-// Checa se a origem é aceitável. Se não houver Origin/Referer, NÃO bloqueia.
-function isAllowedOrigin(req) {
-  const origin  = (req.headers.origin  || '').replace(/\/+$/, '');
-  const referer = (req.headers.referer || '').replace(/\/+$/, '');
-  if (!origin && !referer) return true; // alguns browsers ocultam
-
-  const ok = (val) => APP_ORIGINS.some(base => val.startsWith(base));
-  return (!origin || ok(origin)) && (!referer || ok(referer));
-}
-
 function requireCsrf(req, res, next) {
   const m = (req.method || 'GET').toUpperCase();
   if (m === 'GET' || m === 'HEAD' || m === 'OPTIONS') return next();
 
   // 1) valida origem amigavelmente (múltiplas origens)
-  if (!isAllowedOrigin(req)) {
+  const origin = (req.headers.origin || '').trim();
+  const referer = (req.headers.referer || '').trim();
+  const originOk = !origin || isCorsOriginAllowed(origin);
+  const refererOk = !referer || isCorsOriginAllowed(referer);
+  if (!originOk || !refererOk) {
+    logLeaderboardBlock(req, 'csrf-bad-origin');
     return res.status(403).json({ error: 'Bad origin' });
   }
 
@@ -121,6 +155,7 @@ function requireCsrf(req, res, next) {
   const hdr = req.get('x-csrf-token') || req.get('X-CSRF-Token') || '';
   const ck  = req.cookies[CSRF_COOKIE] || '';
   if (!hdr || !ck || hdr !== ck) {
+    logLeaderboardBlock(req, 'csrf-token-mismatch');
     return res.status(403).json({ error: 'CSRF inválido' });
   }
   next();
