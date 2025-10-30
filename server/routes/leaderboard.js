@@ -125,7 +125,7 @@ function mapSkillRow(row, offset, index) {
     playerId: row.player_id,
     playerName: row.player_name,
     skillType: row.skill_type,
-    skillValue: row.value,
+    skillValue: row.skill_value,
     triesProgress: row.tries_progress,
     updatedAt: toIso(row.updated_at),
   };
@@ -171,6 +171,8 @@ router.get('/players', async (req, res) => {
       [limit, offset, search]
     );
 
+    console.info(`[lb] players ok rows=${rows.length}`);
+
     const payload = rows.map((row, index) => mapPlayerRow(row, offset, index));
     res.json(buildResponse(payload, limit, offset));
   } catch (err) {
@@ -206,6 +208,8 @@ router.get('/heroes', async (req, res) => {
       [limit, offset, search]
     );
 
+    console.info(`[lb] heroes ok rows=${rows.length}`);
+
     const payload = rows.map((row, index) => mapHeroRow(row, offset, index));
     res.json(buildResponse(payload, limit, offset));
   } catch (err) {
@@ -226,10 +230,14 @@ router.get('/skills', async (req, res) => {
       return res.status(400).json({ error: 'skill not available' });
     }
 
+    if (skillKey === 'spear') {
+      console.warn('[lb] skills alias: spear→DISTANCE');
+    }
+
     const rows = await queryWithFallback(
       `
       WITH s AS (
-        SELECT hero_id, level AS value, tries_progress, skill_type, COALESCE(updated_at, NOW()) AS up_at
+        SELECT hero_id, level AS skill_value, tries_progress, skill_type, NOW() AS up_at
         FROM player_hero_skills
         WHERE skill_type = $1
       )
@@ -239,20 +247,22 @@ router.get('/skills', async (req, res) => {
         COALESCE(hm.class, 'Unknown') AS class,
         p.id    AS player_id,
         p.name  AS player_name,
-        s.value,
+        s.skill_value,
         s.tries_progress,
-        GREATEST(COALESCE(ph.updated_at, ph."updatedAt"), s.up_at) AS updated_at,
+        GREATEST(COALESCE(ph.updated_at, ph."updatedAt", NOW()), s.up_at) AS updated_at,
         s.skill_type
       FROM s
       JOIN player_heroes ph ON ph.id = s.hero_id
       LEFT JOIN heroes_master hm ON COALESCE(hm."heroKey", hm.herokey) = COALESCE(ph."heroKey", ph.herokey)
       JOIN players p       ON p.id  = ph."playerId"
       WHERE (COALESCE($4,'') = '' OR p.name ILIKE '%'||$4||'%' OR ph.name ILIKE '%'||$4||'%')
-      ORDER BY s.value DESC, updated_at DESC
+      ORDER BY s.skill_value DESC, updated_at DESC
       LIMIT $2 OFFSET $3;
       `,
       [skillType, limit, offset, search]
     );
+
+    console.info(`[lb] skills ok rows=${rows.length} skill=${skillType}`);
 
     const payload = rows.map((row, index) => mapSkillRow(row, offset, index));
     res.json(buildResponse(payload, limit, offset));

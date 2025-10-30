@@ -2,7 +2,7 @@
 import { initPageChrome } from './common-nav.js';
 import { apiGet } from '../api.js';
 
-const SKILL_ORDER = ['distance', 'magic', 'shielding', 'sword', 'axe', 'club', 'spear'];
+const SKILL_ORDER = ['distance', 'magic', 'shielding', 'sword', 'axe', 'club'];
 const SKILL_LABELS = {
   distance: 'Distance Fighting',
   magic: 'Magic Level',
@@ -10,7 +10,6 @@ const SKILL_LABELS = {
   sword: 'Sword Fighting',
   axe: 'Axe Fighting',
   club: 'Club Fighting',
-  spear: 'Spear Throwing',
 };
 
 const state = {
@@ -98,6 +97,16 @@ function formatUpdated(iso) {
 
 function populateSkillOptions() {
   if (!elements.skillSelect) return;
+  const allowed = new Set(SKILL_ORDER);
+  const existing = Array.from(elements.skillSelect.querySelectorAll('option'));
+  if (existing.length) {
+    existing.forEach((opt) => {
+      if (!allowed.has(opt.value)) {
+        opt.disabled = true;
+      }
+    });
+  }
+
   elements.skillSelect.innerHTML = '';
   for (const key of SKILL_ORDER) {
     const opt = document.createElement('option');
@@ -105,6 +114,25 @@ function populateSkillOptions() {
     opt.textContent = SKILL_LABELS[key] || toTitle(key);
     elements.skillSelect.appendChild(opt);
   }
+
+  if (!allowed.has(state.skill)) {
+    state.skill = SKILL_ORDER[0];
+  }
+}
+
+function disableSkillOption(skill) {
+  if (!elements.skillSelect) return;
+  const option = Array.from(elements.skillSelect.options).find((opt) => opt.value === skill);
+  if (option) {
+    option.disabled = true;
+    option.selected = false;
+  }
+}
+
+function pickFirstEnabledSkill() {
+  if (!elements.skillSelect) return null;
+  const option = Array.from(elements.skillSelect.options).find((opt) => !opt.disabled);
+  return option ? option.value : null;
 }
 
 function disableSkillOption(skill) {
@@ -456,11 +484,17 @@ async function fetchLeaderboard() {
       skillValue:
         row.skillValue != null
           ? Number(row.skillValue)
+          : row.skill_value != null
+          ? Number(row.skill_value)
           : row.value != null
           ? Number(row.value)
           : null,
       triesProgress:
-        row.triesProgress != null ? row.triesProgress : row.tries_progress ?? null,
+        row.triesProgress != null
+          ? row.triesProgress
+          : row.tries_progress != null
+          ? row.tries_progress
+          : null,
       updatedAt: row.updatedAt || row.updated_at || null,
     }));
     state.lastFetchCount = state.rows.length;
@@ -475,13 +509,21 @@ async function fetchLeaderboard() {
       state.tab === 'skills' && err?.status === 400 && err?.payload?.error === 'skill not available';
 
     if (isSkillUnavailable) {
+      state.rows = [];
+      state.lastFetchCount = 0;
+      state.loading = false;
+      state.error = true;
+      state.errorMessage = 'This skill leaderboard is not available yet.';
+      render();
+
       disableSkillOption(state.skill);
       const next = pickFirstEnabledSkill();
       if (next) {
         state.skill = next;
         state.offset = 0;
         updateToolbar();
-        state.loading = false;
+        state.error = false;
+        state.errorMessage = '';
         fetchLeaderboard();
         return;
       }
