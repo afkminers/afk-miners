@@ -4,6 +4,18 @@ const router = express.Router();
 
 const { all, run } = require('../models/db');
 
+async function queryWithFallback(sql, params = [], fallbackSql = null) {
+  try {
+    return await all(sql, params);
+  } catch (err) {
+    if (err?.code === '42P01' && fallbackSql) {
+      console.warn('[leaderboard] missing relation, executing fallback query');
+      return all(fallbackSql, params);
+    }
+    throw err;
+  }
+}
+
 const VALID_LIMITS = new Set([25, 50, 100]);
 const DEFAULT_LIMIT = 25;
 
