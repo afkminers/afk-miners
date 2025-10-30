@@ -1584,7 +1584,9 @@ function drawPlayer(controller) {
   } else {
     ctx.save();
     ctx.fillStyle = "#f59e0b";
-    ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI * 2); ctx.fill();
+    const size = 32;
+    const half = size / 2;
+    ctx.fillRect(p.x - half, p.y - half, size, size);
     ctx.restore();
   }
 }
