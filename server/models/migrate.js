@@ -15,14 +15,17 @@ async function migrate() {
     )
   `);
 
+  // garante colunas base (PG suporta IF NOT EXISTS)
+  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS name TEXT`);
+  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS createdAt BIGINT`);
+  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS password_hash TEXT DEFAULT ''`);
+
   // índice único case-insensitive (equivalente ao COLLATE NOCASE do SQLite)
   await run(`
     CREATE UNIQUE INDEX IF NOT EXISTS players_name_uq
       ON players (LOWER(name))
+      WHERE name IS NOT NULL
   `);
-
-  // garante coluna (PG suporta IF NOT EXISTS)
-  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS password_hash TEXT DEFAULT ''`);
 
   // catálogo de heróis (tabela mestre)
   await ensureHeroesSchema();
@@ -43,6 +46,65 @@ async function migrate() {
       isStarter BOOLEAN NOT NULL DEFAULT FALSE,
       FOREIGN KEY (playerId) REFERENCES players(id)
     )
+  `);
+
+  await run(`
+    ALTER TABLE player_heroes
+      ADD COLUMN IF NOT EXISTS heroKey TEXT,
+      ADD COLUMN IF NOT EXISTS name TEXT,
+      ADD COLUMN IF NOT EXISTS rarity TEXT DEFAULT 'COMMON',
+      ADD COLUMN IF NOT EXISTS attack INTEGER DEFAULT 1,
+      ADD COLUMN IF NOT EXISTS defense INTEGER DEFAULT 1,
+      ADD COLUMN IF NOT EXISTS speed INTEGER DEFAULT 1,
+      ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1,
+      ADD COLUMN IF NOT EXISTS createdAt BIGINT,
+      ADD COLUMN IF NOT EXISTS isStarter BOOLEAN DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS xp BIGINT DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS hp INTEGER DEFAULT 100,
+      ADD COLUMN IF NOT EXISTS max_hp INTEGER DEFAULT 100,
+      ADD COLUMN IF NOT EXISTS mana INTEGER DEFAULT 50,
+      ADD COLUMN IF NOT EXISTS max_mana INTEGER DEFAULT 50,
+      ADD COLUMN IF NOT EXISTS alive BOOLEAN DEFAULT TRUE,
+      ADD COLUMN IF NOT EXISTS last_respawn_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS death_count INTEGER DEFAULT 0;
+  `);
+
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_player_heroes_player_level
+      ON player_heroes ("playerId", level DESC, "createdAt")
+  `);
+
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_player_heroes_level
+      ON player_heroes (level DESC, "createdAt")
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS hero_progress (
+      hero_id TEXT PRIMARY KEY,
+      level INTEGER NOT NULL DEFAULT 1,
+      xp BIGINT NOT NULL DEFAULT 0,
+      hp_max INTEGER NOT NULL DEFAULT 100,
+      mana_max INTEGER NOT NULL DEFAULT 50,
+      hp INTEGER NOT NULL DEFAULT 100,
+      mana INTEGER NOT NULL DEFAULT 50,
+      class TEXT DEFAULT '',
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )
+  `);
+
+  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS level INTEGER NOT NULL DEFAULT 1`);
+  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS xp BIGINT NOT NULL DEFAULT 0`);
+  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS hp_max INTEGER NOT NULL DEFAULT 100`);
+  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS mana_max INTEGER NOT NULL DEFAULT 50`);
+  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS hp INTEGER NOT NULL DEFAULT 100`);
+  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS mana INTEGER NOT NULL DEFAULT 50`);
+  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS class TEXT DEFAULT ''`);
+  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now()`);
+
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_hero_progress_level
+      ON hero_progress (level DESC, updated_at DESC)
   `);
 
   // posições por mapa (usada em /api/player/pos)
@@ -67,6 +129,11 @@ async function migrate() {
       tries_progress REAL NOT NULL DEFAULT 0,
       PRIMARY KEY (hero_id, skill_type)
     )
+  `);
+
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_player_hero_skills_type_level
+      ON player_hero_skills (skill_type, level DESC)
   `);
 
   await run(`
@@ -109,6 +176,26 @@ async function migrate() {
       daily_reset_at TIMESTAMP WITH TIME ZONE,
       notes TEXT
     )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS support_tickets (
+      id UUID PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open'
+    )
+  `);
+
+  await run(`ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now()`);
+  await run(`ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'open'`);
+
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_support_tickets_status
+      ON support_tickets (status, created_at DESC)
   `);
 
   // ---------- Conteúdo (pipeline) ----------

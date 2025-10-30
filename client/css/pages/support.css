@@ -1,0 +1,158 @@
+.page-support .hero-banner {
+  text-align: center;
+}
+
+.page-support .hero-banner p {
+  margin: 0;
+  line-height: 1.6;
+  font-size: 12px;
+}
+
+.page-support .faq {
+  background: rgba(20, 13, 10, 0.92);
+  border: 4px solid #2b1512;
+  border-radius: 18px;
+  box-shadow: 0 8px 0 #000;
+  padding: 28px;
+  display: grid;
+  gap: 24px;
+}
+
+.page-support .faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.page-support .faq-item {
+  background: rgba(32, 22, 18, 0.92);
+  border: 4px solid #2b1512;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.page-support .faq-item h3 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #ffcd73;
+}
+
+.page-support .faq-item p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.page-support .support-form {
+  background: rgba(20, 13, 10, 0.92);
+  border: 4px solid #2b1512;
+  border-radius: 18px;
+  box-shadow: 0 8px 0 #000;
+  padding: 28px;
+  display: grid;
+  gap: 24px;
+}
+
+.page-support #supportForm {
+  display: grid;
+  gap: 18px;
+}
+
+.page-support .field {
+  display: grid;
+  gap: 10px;
+}
+
+.page-support .field label {
+  font-size: 12px;
+  color: #ffe6a8;
+}
+
+.page-support .field input,
+.page-support .field textarea {
+  padding: 12px 14px;
+  border: 3px solid #2b1512;
+  border-radius: 12px;
+  background: rgba(32, 22, 18, 0.9);
+  color: #f7e7c6;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.page-support .field textarea {
+  resize: vertical;
+}
+
+.page-support .submit-button {
+  justify-self: start;
+  padding: 12px 20px;
+  border: 4px solid #2b1512;
+  border-radius: 12px;
+  background: linear-gradient(#ffb23e, #f39b2d);
+  color: #2b1512;
+  font-size: 12px;
+  font-family: inherit;
+  box-shadow: 0 4px 0 #2b1512;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.page-support .submit-button:hover,
+.page-support .submit-button:focus {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.page-support .submit-button[aria-busy="true"],
+.page-support .submit-button:disabled {
+  filter: saturate(0.6);
+  cursor: wait;
+}
+
+.page-support .form-feedback {
+  min-height: 20px;
+  font-size: 11px;
+  color: #ffdd99;
+}
+
+.page-support .form-feedback.success {
+  color: #b1ffcf;
+}
+
+.page-support .form-feedback.error {
+  color: #ff9ca3;
+}
+
+.page-support .community-links h3 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #ffcd73;
+}
+
+.page-support .community-links ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.page-support .community-links a {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .page-support .page-content {
+    padding: 28px 14px 60px;
+  }
+
+  .page-support .hero-banner,
+  .page-support .faq,
+  .page-support .support-form {
+    padding: 24px 18px;
+  }
+
+  .page-support .hero-banner h1 {
+    font-size: 18px;
+  }
+}
