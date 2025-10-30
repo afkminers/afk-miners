@@ -2,28 +2,30 @@
 import { initPageChrome } from './common-nav.js';
 import { apiGet } from '../api.js';
 
-const SKILL_OPTIONS = [
-  { value: 'SWORD', label: 'Sword Fighting' },
-  { value: 'AXE', label: 'Axe Fighting' },
-  { value: 'CLUB', label: 'Club Fighting' },
-  { value: 'DISTANCE', label: 'Distance Fighting' },
-  { value: 'MAGIC', label: 'Magic Level' },
-  { value: 'SHIELD', label: 'Shielding' },
-  { value: 'SPEAR', label: 'Spear Throwing' },
-];
+const SKILL_ORDER = ['distance', 'magic', 'shielding', 'sword', 'axe', 'club'];
+const SKILL_LABELS = {
+  distance: 'Distance Fighting',
+  magic: 'Magic Level',
+  shielding: 'Shielding',
+  sword: 'Sword Fighting',
+  axe: 'Axe Fighting',
+  club: 'Club Fighting',
+};
 
 const state = {
   tab: 'players',
   limit: 25,
   offset: 0,
   period: 'all',
-  skill: SKILL_OPTIONS[0].value,
+  skill: SKILL_ORDER[0],
   search: '',
   rows: [],
   loading: false,
-  error: null,
+  error: false,
+  errorMessage: '',
   lastFetchCount: 0,
   requestToken: 0,
+  nextOffset: null,
 };
 
 const elements = {
@@ -63,8 +65,8 @@ function formatRarity(value) {
 }
 
 function formatSkillLabel(type) {
-  const option = SKILL_OPTIONS.find((opt) => opt.value === type);
-  return option ? option.label : toTitle(type);
+  const key = String(type || '').toLowerCase();
+  return SKILL_LABELS[key] || toTitle(type);
 }
 
 function formatUpdated(iso) {
@@ -95,13 +97,42 @@ function formatUpdated(iso) {
 
 function populateSkillOptions() {
   if (!elements.skillSelect) return;
+  const allowed = new Set(SKILL_ORDER);
+  const existing = Array.from(elements.skillSelect.querySelectorAll('option'));
+  if (existing.length) {
+    existing.forEach((opt) => {
+      if (!allowed.has(opt.value)) {
+        opt.disabled = true;
+      }
+    });
+  }
+
   elements.skillSelect.innerHTML = '';
-  for (const option of SKILL_OPTIONS) {
+  for (const key of SKILL_ORDER) {
     const opt = document.createElement('option');
-    opt.value = option.value;
-    opt.textContent = option.label;
+    opt.value = key;
+    opt.textContent = SKILL_LABELS[key] || toTitle(key);
     elements.skillSelect.appendChild(opt);
   }
+
+  if (!allowed.has(state.skill)) {
+    state.skill = SKILL_ORDER[0];
+  }
+}
+
+function disableSkillOption(skill) {
+  if (!elements.skillSelect) return;
+  const option = Array.from(elements.skillSelect.options).find((opt) => opt.value === skill);
+  if (option) {
+    option.disabled = true;
+    option.selected = false;
+  }
+}
+
+function pickFirstEnabledSkill() {
+  if (!elements.skillSelect) return null;
+  const option = Array.from(elements.skillSelect.options).find((opt) => !opt.disabled);
+  return option ? option.value : null;
 }
 
 function bindEvents() {
@@ -111,7 +142,8 @@ function bindEvents() {
       if (!nextTab || nextTab === state.tab) return;
       state.tab = nextTab;
       state.offset = 0;
-      state.error = null;
+      state.error = false;
+      state.errorMessage = '';
       updateToolbar();
       renderTabs();
       fetchLeaderboard();
@@ -132,7 +164,8 @@ function bindEvents() {
 
   if (elements.limitSelect) {
     elements.limitSelect.addEventListener('change', () => {
-      state.limit = Number(elements.limitSelect.value) || 25;
+      const next = Number(elements.limitSelect.value) || 25;
+      state.limit = next;
       state.offset = 0;
       fetchLeaderboard();
     });
@@ -140,7 +173,8 @@ function bindEvents() {
 
   if (elements.skillSelect) {
     elements.skillSelect.addEventListener('change', () => {
-      state.skill = elements.skillSelect.value || SKILL_OPTIONS[0].value;
+      const value = elements.skillSelect.value || SKILL_ORDER[0];
+      state.skill = value;
       state.offset = 0;
       fetchLeaderboard();
     });
@@ -148,11 +182,12 @@ function bindEvents() {
 
   if (elements.searchInput) {
     elements.searchInput.addEventListener('input', () => {
-      const value = elements.searchInput.value.trim().toLowerCase();
+      const value = elements.searchInput.value.trim();
       clearTimeout(searchTimer);
       searchTimer = setTimeout(() => {
         state.search = value;
-        render();
+        state.offset = 0;
+        fetchLeaderboard();
       }, 180);
     });
   }
@@ -167,39 +202,10 @@ function bindEvents() {
 
   if (elements.next) {
     elements.next.addEventListener('click', () => {
-      if (state.lastFetchCount < state.limit) return;
-      state.offset += state.limit;
+      if (state.nextOffset == null) return;
+      state.offset = state.nextOffset;
       fetchLeaderboard();
     });
-  }
-}
-
-function renderTabs() {
-  elements.tabButtons.forEach((btn) => {
-    const tab = btn.getAttribute('data-tab');
-    const isActive = tab === state.tab;
-    btn.classList.toggle('is-active', isActive);
-    btn.setAttribute('aria-selected', String(isActive));
-  });
-  elements.panel?.classList.toggle('show-skill', state.tab === 'skills');
-}
-
-function renderPeriods() {
-  elements.periodButtons.forEach((btn) => {
-    const period = btn.getAttribute('data-period') || 'all';
-    btn.classList.toggle('is-active', period === state.period);
-  });
-}
-
-function updateToolbar() {
-  if (elements.limitSelect) {
-    elements.limitSelect.value = String(state.limit);
-  }
-  if (elements.skillSelect) {
-    elements.skillSelect.value = state.skill;
-  }
-  if (elements.searchInput && elements.searchInput.value !== state.search) {
-    elements.searchInput.value = state.search;
   }
 }
 
@@ -215,16 +221,6 @@ function setLoadingRow(message) {
   elements.tbody.appendChild(tr);
 }
 
-function getFilteredRows() {
-  const query = state.search;
-  if (!query) return state.rows.slice();
-  return state.rows.filter((row) => {
-    const player = String(row.playerName || '').toLowerCase();
-    const hero = String(row.heroName || '').toLowerCase();
-    return player.includes(query) || hero.includes(query);
-  });
-}
-
 function renderTable() {
   if (!elements.tbody) return;
 
@@ -234,25 +230,26 @@ function renderTable() {
   }
 
   if (state.error) {
-    setLoadingRow('Failed to load leaderboard.');
+    setLoadingRow(state.errorMessage || 'Leaderboard data is unavailable right now.');
     return;
   }
 
-  const rows = getFilteredRows();
+  const rows = state.rows;
   if (!rows.length) {
     setLoadingRow('No results found.');
     return;
   }
 
   const fragment = document.createDocumentFragment();
-  rows.forEach((row) => {
+  rows.forEach((row, index) => {
     const tr = document.createElement('tr');
 
     const rankTd = document.createElement('td');
-    rankTd.textContent = row.rank ? String(row.rank) : '—';
+    const rank = row.rank != null ? row.rank : state.offset + index + 1;
+    rankTd.textContent = Number.isFinite(rank) ? String(rank) : '—';
     rankTd.classList.add('col-rank');
-    if (row.rank && row.rank <= 3) {
-      rankTd.classList.add('rank-medal', `rank-${row.rank}`);
+    if (Number.isFinite(rank) && rank <= 3) {
+      rankTd.classList.add('rank-medal', `rank-${rank}`);
     }
     tr.appendChild(rankTd);
 
@@ -311,7 +308,11 @@ function renderTable() {
     skillTd.classList.add('col-skill');
     if (state.tab === 'skills' && row.skillValue != null) {
       const label = formatSkillLabel(row.skillType);
-      skillTd.textContent = `${label}: ${row.skillValue}`;
+      const parts = [`${label}: ${row.skillValue}`];
+      if (row.triesProgress != null && row.triesProgress !== '') {
+        parts.push(`Progress ${row.triesProgress}`);
+      }
+      skillTd.textContent = parts.join(' • ');
     } else {
       skillTd.textContent = '—';
     }
@@ -338,33 +339,31 @@ function renderStatus() {
   }
 
   if (state.error) {
-    elements.status.textContent = 'Unable to load leaderboard data.';
+    elements.status.textContent = state.errorMessage || 'Leaderboard data is unavailable right now.';
     elements.status.classList.add('error');
     return;
   }
 
-  const rows = getFilteredRows();
+  const rows = state.rows;
   if (!rows.length) {
     elements.status.textContent = 'No results for the current filters.';
     return;
   }
 
-  elements.status.textContent = `Showing ${rows.length} entries`;
+  const firstRank = state.offset + 1;
+  const lastRank = state.offset + rows.length;
+  elements.status.textContent = `Showing ranks ${firstRank} – ${lastRank}`;
 }
 
 function renderRange() {
   if (!elements.range) return;
-  const rows = getFilteredRows();
+  const rows = state.rows;
   if (!rows.length) {
     elements.range.textContent = '—';
     return;
   }
-  const first = rows[0]?.rank;
-  const last = rows[rows.length - 1]?.rank;
-  if (!first || !last) {
-    elements.range.textContent = '—';
-    return;
-  }
+  const first = state.offset + 1;
+  const last = state.offset + rows.length;
   elements.range.textContent = `Rank ${first} – ${last}`;
 }
 
@@ -373,7 +372,7 @@ function renderPager() {
     elements.prev.disabled = state.loading || state.offset === 0;
   }
   if (elements.next) {
-    const noMore = state.lastFetchCount < state.limit;
+    const noMore = state.nextOffset == null;
     elements.next.disabled = state.loading || noMore;
   }
 }
@@ -388,19 +387,65 @@ function render() {
   renderPager();
 }
 
+function renderTabs() {
+  elements.tabButtons.forEach((btn) => {
+    const tab = btn.getAttribute('data-tab');
+    const isActive = tab === state.tab;
+    btn.classList.toggle('is-active', isActive);
+    btn.setAttribute('aria-selected', String(isActive));
+  });
+  elements.panel?.classList.toggle('show-skill', state.tab === 'skills');
+
+  if (state.tab === 'skills' && elements.skillSelect) {
+    const current = Array.from(elements.skillSelect.options).find(
+      (opt) => opt.value === state.skill && !opt.disabled
+    );
+    if (!current) {
+      const fallback = pickFirstEnabledSkill();
+      if (fallback) {
+        state.skill = fallback;
+        updateToolbar();
+      }
+    }
+  }
+}
+
+function renderPeriods() {
+  elements.periodButtons.forEach((btn) => {
+    const period = btn.getAttribute('data-period') || 'all';
+    btn.classList.toggle('is-active', period === state.period);
+  });
+}
+
+function updateToolbar() {
+  if (elements.limitSelect) {
+    elements.limitSelect.value = String(state.limit);
+  }
+  if (elements.skillSelect) {
+    elements.skillSelect.value = state.skill;
+  }
+  if (elements.searchInput && elements.searchInput.value !== state.search) {
+    elements.searchInput.value = state.search;
+  }
+}
+
 async function fetchLeaderboard() {
   state.requestToken += 1;
   const token = state.requestToken;
   state.loading = true;
-  state.error = null;
+  state.error = false;
+  state.errorMessage = '';
   render();
 
   try {
     const params = new URLSearchParams();
+    const limit = Number(state.limit);
+    state.limit = [25, 50, 100].includes(limit) ? limit : 25;
     params.set('limit', String(state.limit));
     params.set('offset', String(state.offset));
-    params.set('metric', 'level');
-    params.set('period', state.period);
+    if (state.search) {
+      params.set('query', state.search);
+    }
     if (state.tab === 'skills') {
       params.set('skill', state.skill);
     }
@@ -409,23 +454,76 @@ async function fetchLeaderboard() {
     const data = await apiGet(url);
     if (token !== state.requestToken) return; // stale response
 
-    state.rows = Array.isArray(data) ? data.map((row) => ({
+    const rows = Array.isArray(data?.rows) ? data.rows : [];
+    const responseLimit = Number(data?.limit);
+    const responseOffset = Number(data?.offset);
+    const nextOffset = data?.nextOffset;
+
+    state.limit = [25, 50, 100].includes(responseLimit) ? responseLimit : state.limit;
+    state.offset = Number.isFinite(responseOffset) && responseOffset >= 0 ? responseOffset : state.offset;
+    state.nextOffset = typeof nextOffset === 'number' && Number.isFinite(nextOffset) ? nextOffset : null;
+    state.rows = rows.map((row, index) => ({
       ...row,
-      rank: Number(row.rank || 0),
-      level: Number(row.level || 0),
-      skillValue: row.skillValue != null ? Number(row.skillValue) : null,
-    })) : [];
+      rank: state.offset + index + 1,
+      heroKey: row.heroKey || row.hero_key || null,
+      level: row.level != null ? Number(row.level) : null,
+      skillValue:
+        row.skillValue != null
+          ? Number(row.skillValue)
+          : row.skill_value != null
+          ? Number(row.skill_value)
+          : row.value != null
+          ? Number(row.value)
+          : null,
+      triesProgress:
+        row.triesProgress != null
+          ? row.triesProgress
+          : row.tries_progress != null
+          ? row.tries_progress
+          : null,
+      updatedAt: row.updatedAt || row.updated_at || null,
+    }));
     state.lastFetchCount = state.rows.length;
     state.loading = false;
-    state.error = null;
+    state.error = false;
+    state.errorMessage = '';
     render();
   } catch (err) {
     if (token !== state.requestToken) return;
     console.error('[leaderboard] fetch failed:', err);
+    const isSkillUnavailable =
+      state.tab === 'skills' && err?.status === 400 && err?.payload?.error === 'skill not available';
+
+    if (isSkillUnavailable) {
+      state.rows = [];
+      state.lastFetchCount = 0;
+      state.loading = false;
+      state.error = true;
+      state.errorMessage = 'This skill leaderboard is not available yet.';
+      render();
+
+      disableSkillOption(state.skill);
+      const next = pickFirstEnabledSkill();
+      if (next) {
+        state.skill = next;
+        state.offset = 0;
+        updateToolbar();
+        state.error = false;
+        state.errorMessage = '';
+        fetchLeaderboard();
+        return;
+      }
+    }
+
     state.rows = [];
     state.lastFetchCount = 0;
     state.loading = false;
-    state.error = 'fetch-failed';
+    state.error = true;
+    const payloadError = err?.payload?.error;
+    state.errorMessage =
+      payloadError === 'skill not available'
+        ? 'This skill leaderboard is not available yet.'
+        : payloadError || err?.message || 'Leaderboard data is unavailable right now.';
     render();
   }
 }
