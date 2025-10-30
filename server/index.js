@@ -193,6 +193,10 @@ app.use(cookieParser());
 // Middlewares de segurança e performance
 app.use(helmetMiddleware);
 app.use(buildCors());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
+  next();
+});
 app.use(bodyParserLimited());
 app.use(compression());
 
@@ -376,7 +380,15 @@ app.use('/api/inventory', requireAuth, require('./routes/inventory'));
 app.use('/api/equipment', requireAuth, require('./routes/equipment'));
 
 // Loot (pickup + listar loots)
-app.use('/api', requireAuth, lootRoutes); // <<-- novo (expõe: POST /api/loot/pickup e GET /api/map/:mapKey/loot)
+app.use('/api', (req, res, next) => {
+  if (req.path.startsWith('/leaderboard')) {
+    return next();
+  }
+  if (req.path.startsWith('/loot') || req.path.startsWith('/map/')) {
+    return lootRoutes(req, res, next);
+  }
+  return next();
+});
 app.use('/api', require('./routes/csrf_alias'));  // compat: /api/auth/csrf
 
 // backpack (modelo Tibia-like)

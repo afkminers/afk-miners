@@ -38,6 +38,10 @@ ensureIndexes().catch((err) => {
   console.warn('[leaderboard] index bootstrap error:', err?.message || err);
 });
 
+router.get('/health', (_req, res) => {
+  res.json({ ok: true });
+});
+
 function parseLimit(raw) {
   const value = Number.parseInt(raw, 10);
   if (VALID_LIMITS.has(value)) return value;
