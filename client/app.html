@@ -153,6 +153,103 @@
       pointer-events: none;
     }
 
+    .lang-switcher {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .lang-switcher__button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      background: rgba(30, 41, 59, 0.7);
+      color: #e2e8f0;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .lang-switcher__button:hover,
+    .lang-switcher__button:focus {
+      outline: none;
+      filter: brightness(1.1);
+    }
+
+    .lang-switcher__flag svg {
+      width: 18px;
+      height: 12px;
+      display: block;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.4);
+    }
+
+    .lang-switcher__code {
+      font-size: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .lang-switcher__menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 160px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 8px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.45);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .lang-switcher__option {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #e2e8f0;
+      cursor: pointer;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+    }
+
+    .lang-switcher__option:hover,
+    .lang-switcher__option:focus {
+      outline: none;
+      border-color: rgba(148, 163, 184, 0.4);
+      background: rgba(30, 41, 59, 0.8);
+    }
+
+    .lang-switcher__option.is-active {
+      border-color: rgba(96, 165, 250, 0.6);
+      background: rgba(37, 99, 235, 0.25);
+    }
+
+    .lang-switcher__option-flag svg {
+      width: 18px;
+      height: 12px;
+      display: block;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.4);
+    }
+
+    .lang-switcher__sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
     /* BACKPACK-ONLY: desativa Inventário da Conta na interface */
     #btnInventory { display: none !important; }        /* some o botão do topo */
     .equip-card[data-inv-container] { display: none !important; } /* some o card */
@@ -165,39 +262,56 @@
     <div class="loading-overlay"></div>
     <div class="loading-frame">
       <div class="loading-header">
-        <span class="loading-badge">AFK MINERS</span>
-        <span class="loading-title">Preparando o mundo…</span>
+        <span class="loading-badge" data-i18n="loading.badge">AFK MINERS</span>
+        <span class="loading-title" data-i18n="loading.preparing">Preparando o mundo…</span>
       </div>
       <div class="loading-bar" data-loading-bar role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="loading-bar-fill"></div>
       </div>
       <div class="loading-percent"><span data-loading-percent>0</span>%</div>
-      <div class="loading-tip-label">Dica dos mineradores</div>
-      <p id="loadingTip" class="loading-tip-text">Carregando…</p>
+      <div class="loading-tip-label" data-i18n="loading.tipLabel">Dica dos mineradores</div>
+      <p id="loadingTip" class="loading-tip-text" data-i18n="loading.loading">Carregando…</p>
     </div>
   </div>
 
   <header class="topbar">
     <div class="brand">AFK MINERS</div>
     <nav class="actions">
-      <button id="btnSkills">Skills</button>
-      <button id="btnAFK" class="dock-btn">AFK</button>
-      <button id="btnFarm" class="dock-btn">Farm</button>
-      <button id="btnHeroes">Heroes</button>
-      <button id="btnInventory">Inventory</button>
-      <button id="btnSummon" class="dock-btn">Summon</button>
-      <button id="btnSettings">Settings</button>
-      <button id="btnLogout" class="danger">Logout</button>
+      <button id="btnSkills" data-i18n="app.nav.skills">Skills</button>
+      <button id="btnAFK" class="dock-btn" data-i18n="app.nav.afk">AFK</button>
+      <button id="btnFarm" class="dock-btn" data-i18n="app.nav.farm">Farm</button>
+      <button id="btnHeroes" data-i18n="app.nav.heroes">Heroes</button>
+      <button id="btnInventory" data-i18n="app.nav.inventory">Inventory</button>
+      <button id="btnSummon" class="dock-btn" data-i18n="app.nav.summon">Summon</button>
+      <button id="btnSettings" data-i18n="app.nav.settings">Settings</button>
+      <button id="btnLogout" class="danger" data-i18n="common.logout">Logout</button>
     </nav>
+    <div class="lang-switcher" data-lang-root>
+      <button type="button" class="lang-switcher__button" data-lang-button data-i18n="lang.menu" data-i18n-attr="aria-label,title">
+        <span class="lang-switcher__flag" data-lang-flag aria-hidden="true"></span>
+        <span class="lang-switcher__code" data-lang-code>EN</span>
+        <span class="lang-switcher__sr" data-lang-current></span>
+      </button>
+      <div class="lang-switcher__menu" data-lang-menu role="menu" aria-hidden="true" hidden>
+        <button type="button" class="lang-switcher__option" data-lang-option="en" role="menuitemradio" aria-checked="false">
+          <span class="lang-switcher__option-flag" data-option-flag aria-hidden="true"></span>
+          <span class="lang-switcher__option-label" data-lang-name data-i18n="lang.en">English</span>
+        </button>
+        <button type="button" class="lang-switcher__option" data-lang-option="pt-BR" role="menuitemradio" aria-checked="false">
+          <span class="lang-switcher__option-flag" data-option-flag aria-hidden="true"></span>
+          <span class="lang-switcher__option-label" data-lang-name data-i18n="lang.pt-BR">Português (Brasil)</span>
+        </button>
+      </div>
+    </div>
   </header>
 
   <!-- Layout estilo Tibia -->
   <main id="tibiaLayout">
     <!-- LEFT STACK -->
     <aside id="leftStack" class="stack" aria-label="Left stack">
-      <div class="panel" aria-label="Team" style="margin-bottom:10px;">
+      <div class="panel" aria-label="Team" data-i18n="app.panel.team" data-i18n-attr="aria-label" style="margin-bottom:10px;">
         <header>
-          <h3 style="color:#e6eef6;margin:0;font-size:14px;">Team</h3>
+          <h3 style="color:#e6eef6;margin:0;font-size:14px;" data-i18n="app.panel.team">Team</h3>
         </header>
         <div class="body">
           <div id="team-root"></div>
@@ -231,9 +345,9 @@
 
     <!-- RIGHT STACK -->
     <aside id="rightStack" class="stack" aria-label="Right stack">
-      <div class="panel mini-map" data-fixed="1" aria-label="Mini map">
+      <div class="panel mini-map" data-fixed="1" aria-label="Mini map" data-i18n="app.panel.minimap" data-i18n-attr="aria-label">
         <header>
-          <h3>Mini-Map</h3>
+          <h3 data-i18n="app.panel.minimap">Mini-Map</h3>
         </header>
         <div class="body"><canvas id="miniMap" width="140" height="140"></canvas></div>
       </div>
@@ -243,23 +357,23 @@
     <footer id="chatDock">
       <div class="chat-controls" style="padding:12px;">
         <div class="chat-tabs" style="display:flex; gap:8px; margin-bottom:8px;">
-          <button id="btnDefault" class="chat-tab active" type="button" style="padding:4px 8px">Default</button>
-          <button id="btnGlobal" class="chat-tab" type="button" style="padding:4px 8px">Global</button>
-          <button id="btnLog" class="chat-tab" type="button" style="padding:4px 8px">Log</button>
+          <button id="btnDefault" class="chat-tab active" type="button" style="padding:4px 8px" data-i18n="chat.default">Default</button>
+          <button id="btnGlobal" class="chat-tab" type="button" style="padding:4px 8px" data-i18n="chat.global">Global</button>
+          <button id="btnLog" class="chat-tab" type="button" style="padding:4px 8px" data-i18n="chat.log">Log</button>
         </div>
         <div class="chat-panels" style="display:flex; flex-direction:column; gap:0;">
           <div id="chatBox" class="chat-box"
             style="height:180px; overflow:auto; background:#07101a; padding:8px; color:#e6eef6; border-radius:4px; border:1px solid rgba(255,255,255,0.03);">
           </div>
-          <div id="chatLogBox" class="chat-box log" aria-live="polite" aria-label="Log do jogo"
+          <div id="chatLogBox" class="chat-box log" aria-live="polite" aria-label="Game log" data-i18n-attr="aria-label" data-i18n-aria-label="chat.logAria"
             style="height:180px; overflow:auto; background:#07101a; padding:8px; color:#e6eef6; border-radius:4px; border:1px solid rgba(255,255,255,0.03); display:none;">
           </div>
         </div>
         <form id="chatForm" autocomplete="off" style="display:flex; gap:8px; margin-top:8px;">
-          <input id="chatInput" name="chat" placeholder="Digite uma mensagem…"
+          <input id="chatInput" name="chat" placeholder="Digite uma mensagem…" data-i18n="chat.placeholder" data-i18n-attr="placeholder"
             style="flex:1; padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.04); background:#07121a; color:#fff;" />
           <button id="chatSend" type="button"
-            style="padding:8px 12px; border-radius:4px; background:#2563eb; color:#fff; border:0;">Enviar</button>
+            style="padding:8px 12px; border-radius:4px; background:#2563eb; color:#fff; border:0;" data-i18n="chat.send">Enviar</button>
         </form>
       </div>
     </footer>
@@ -269,14 +383,16 @@
   <div id="summonModal" class="modal" hidden>
     <div class="window">
       <header>
-        <h3>Summon</h3>
-        <button class="close" aria-label="Close">Close</button>
+        <h3 data-i18n="app.nav.summon">Summon</h3>
+        <button class="close" aria-label="Close" data-i18n="common.close" data-i18n-attr="aria-label">Close</button>
       </header>
       <iframe id="summonFrame" src="/index.html#summon?embed=1" allow="fullscreen"></iframe>
     </div>
   </div>
 
   <!-- ========= SCRIPTS DO JOGO ========= -->
+  <script type="module" src="js/i18n/core.js"></script>
+  <script type="module" src="js/i18n/lang-menu.js"></script>
   <script src="/js/afk_panel.js"></script>
   <script src="/js/farm_panel.js"></script>
 
@@ -339,7 +455,136 @@
   <script type="text/babel" data-presets="react,env">
     // @ts-nocheck
 
-    const { useState, useEffect, useMemo, useRef } = React;
+    const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+    function interpolateFallback(template, vars) {
+      if (typeof template !== 'string') return template;
+      if (!vars || typeof vars !== 'object') return template;
+      return template.replace(/\{(\w+)\}/g, (_, token) => {
+        if (Object.prototype.hasOwnProperty.call(vars, token)) {
+          const value = vars[token];
+          return value == null ? '' : String(value);
+        }
+        return `{${token}}`;
+      });
+    }
+
+    function useI18n() {
+      const [lang, setLang] = useState(() => {
+        if (window.i18n && typeof window.i18n.getLang === 'function') {
+          return window.i18n.getLang();
+        }
+        return 'en';
+      });
+
+      useEffect(() => {
+        if (!window.i18n) return;
+        const update = () => {
+          try {
+            setLang(window.i18n.getLang());
+          } catch (_) {
+            setLang((prev) => prev);
+          }
+        };
+        window.i18n.onReady(update);
+        window.i18n.onChange(update);
+      }, []);
+
+      const t = useCallback((key, vars) => {
+        if (window.i18n && typeof window.i18n.t === 'function') {
+          return window.i18n.t(key, vars);
+        }
+        return interpolateFallback(key, vars);
+      }, [lang]);
+
+      return { lang, t };
+    }
+
+    const CLASS_LABEL_KEYS = {
+      knight: 'class.Knight',
+      sorcerer: 'class.Sorcerer',
+      druid: 'class.Druid',
+      archer: 'class.Archer',
+      ranger: 'class.Ranger',
+    };
+
+    const SLOT_LABEL_KEYS = {
+      AMULET: 'app.slots.AMULET',
+      HELMET: 'app.slots.HELMET',
+      BACK: 'app.slots.BACK',
+      WEAPON: 'app.slots.WEAPON',
+      ARMOR: 'app.slots.ARMOR',
+      SHIELD: 'app.slots.SHIELD',
+      RING: 'app.slots.RING',
+      LEGS: 'app.slots.LEGS',
+      BOOTS: 'app.slots.BOOTS',
+    };
+
+    const SKILL_LABEL_KEYS = {
+      distance: 'skills.distance',
+      'distance_fighting': 'skills.distance',
+      'distance fighting': 'skills.distance',
+      magic: 'skills.magic',
+      'magic_level': 'skills.magic',
+      'magic level': 'skills.magic',
+      shielding: 'skills.shield',
+      shield: 'skills.shield',
+      sword: 'skills.sword',
+      'sword_fighting': 'skills.sword',
+      'sword fighting': 'skills.sword',
+      axe: 'skills.axe',
+      'axe_fighting': 'skills.axe',
+      'axe fighting': 'skills.axe',
+      club: 'skills.club',
+      'club_fighting': 'skills.club',
+      'club fighting': 'skills.club',
+    };
+
+    function titleCase(value) {
+      return String(value || '')
+        .toLowerCase()
+        .split(/[_\s]+/)
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+
+    function translateClassName(value, t) {
+      const normalized = String(value || '').trim();
+      if (!normalized) return t('lb.unknown');
+      const key = CLASS_LABEL_KEYS[normalized.toLowerCase()];
+      if (key) return t(key);
+      return titleCase(normalized);
+    }
+
+    function translateSlot(slot, t) {
+      const normalized = String(slot || '').toUpperCase();
+      const key = SLOT_LABEL_KEYS[normalized];
+      if (key) return t(key);
+      return titleCase(normalized);
+    }
+
+    function translateSkillName(name, t) {
+      const normalized = String(name || '').trim().toLowerCase();
+      if (!normalized) return t('lb.unknown');
+      const key = SKILL_LABEL_KEYS[normalized] || SKILL_LABEL_KEYS[normalized.replace(/[-\s]+/g, '_')];
+      if (key) return t(key);
+      return titleCase(normalized);
+    }
+
+    function formatNumber(value) {
+      if (window.i18n && window.i18n.format && typeof window.i18n.format.number === 'function') {
+        return window.i18n.format.number(value);
+      }
+      if (value == null) return '';
+      return String(value);
+    }
+
+    function heroMeta(hero, t) {
+      const className = translateClassName(hero?.class, t);
+      const levelValue = hero?.level ?? 1;
+      return t('app.hero.meta', { className, level: formatNumber(levelValue) });
+    }
 
     /* ============== utils ============== */
     function getCookie(name) {
@@ -396,7 +641,6 @@
 
     /* ============== domínio ============== */
     const ORDERED_SLOTS = ["AMULET", "HELMET", "BACK", "WEAPON", "ARMOR", "SHIELD", "RING", "LEGS", "BOOTS"];
-    const prettySlot = (s) => s === "BACK" ? "backpack" : s.toLowerCase();
 
 
     /* ============== Team (botões Skills/Equips) ============== */
@@ -406,6 +650,7 @@
       const [equipHero, setEquipHero] = useState(null);
       const [skillsHero, setSkillsHero] = useState(null);
       const [error, setError] = useState("");
+      const { t } = useI18n();
 
       useEffect(() => {
         let live = true;
@@ -423,9 +668,9 @@
         return () => { live = false; };
       }, []);
 
-      if (loading) return <div style={{ color: "#9aa4b2", fontSize: 12 }}>carregando team…</div>;
+      if (loading) return <div style={{ color: "#9aa4b2", fontSize: 12 }}>{t('app.panel.teamLoading')}</div>;
       if (error) return <div style={{ color: "#ef4444", fontSize: 12 }}>{error}</div>;
-      if (!heroes.length) return <div style={{ color: "#9aa4b2", fontSize: 12 }}>sem heróis</div>;
+      if (!heroes.length) return <div style={{ color: "#9aa4b2", fontSize: 12 }}>{t('app.panel.noHeroes')}</div>;
 
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -447,16 +692,16 @@
                   fontSize: 13, fontWeight: 700, lineHeight: "16px", overflow: "hidden",
                   textOverflow: "ellipsis", whiteSpace: "nowrap"
                 }}>{h.name}</div>
-                <div style={{ fontSize: 11, opacity: .8 }}>{(h.class || "-").toLowerCase()} • lv {h.level}</div>
+                <div style={{ fontSize: 11, opacity: .8 }}>{heroMeta(h, t)}</div>
               </div>
               <div style={{ display: "flex", gap: 6 }}>
-                <button onClick={() => setSkillsHero(h)} title="Skills"
+                <button onClick={() => setSkillsHero(h)} title={t('app.nav.skills')}
                   style={{ fontSize: 11, padding: "4px 8px", borderRadius: 8, background: "#0ea5e9", color: "#002", border: "0", fontWeight: 700 }}>
-                  Skills
+                  {t('app.nav.skills')}
                 </button>
-                <button onClick={() => setEquipHero(h)} title="Equipamentos"
+                <button onClick={() => setEquipHero(h)} title={t('app.panel.equip')}
                   style={{ fontSize: 11, padding: "4px 8px", borderRadius: 8, background: "#4f46e5", color: "#fff", border: "0", fontWeight: 700 }}>
-                  Equips
+                  {t('app.panel.equip')}
                 </button>
               </div>
             </div>
@@ -472,6 +717,7 @@
 
     /* ============== Drawer de Equipamentos (lado esquerdo) ============== */
     function EquipmentDrawer({ open, hero, onClose }) {
+      const { t } = useI18n();
       const [equip, setEquip] = useState([]);
       const [inventory, setInventory] = useState([]);
       const [busy, setBusy] = useState(false);
@@ -622,17 +868,15 @@
         <div ref={rootRef} className={"equip-drawer " + (open ? "open" : "")} aria-hidden={!open}>
           <header>
             <div>
-              <div style={{ fontWeight: 700 }}>{hero?.name || "Hero"}</div>
-              <div style={{ fontSize: 12, opacity: .75 }}>
-                class: {(hero?.class || "-").toLowerCase()} • lv {hero?.level ?? 1}
-              </div>
+              <div style={{ fontWeight: 700 }}>{hero?.name || t('app.hero.unknown')}</div>
+              <div style={{ fontSize: 12, opacity: .75 }}>{heroMeta(hero, t)}</div>
             </div>
             <button
               onClick={onClose}
               style={{ padding: "6px 10px", borderRadius: 8, background: "#111827", color: "#e6eef6", border: "1px solid rgba(255,255,255,.08)" }}
               disabled={!open || busy}
             >
-              Fechar
+              {t('common.close')}
             </button>
           </header>
 
@@ -641,21 +885,19 @@
           <div className="content">
             {/* Equipamentos */}
             <div className="equip-card">
-              <div style={{ marginBottom: 8, fontSize: 14, opacity: .85 }}>Equipamentos</div>
+              <div style={{ marginBottom: 8, fontSize: 14, opacity: .85 }}>{t('app.panel.equip')}</div>
               <div className="equip-grid">
                 {ORDERED_SLOTS.map(slot => {
                   const row = equipBySlot.get(slot);
                   return (
                     <div key={slot} data-eq-slot={slot} className="slot">
-                      <div style={{ fontSize: 11, color: "#9aa4b2", marginBottom: 6 }}>
-                        {prettySlot(slot)}
-                      </div>
+                      <div style={{ fontSize: 11, color: "#9aa4b2", marginBottom: 6 }}>{translateSlot(slot, t)}</div>
                       <div className="box eq-pic">
                         {row?.sprite
                           ? <img src={row.sprite} alt={row.name || row.item_key} style={{ maxHeight: 64, objectFit: "contain" }} />
                           : row?.item_key
                             ? <span style={{ fontSize: 10, color: "#cbd5e1" }}>{row.name || row.item_key}</span>
-                            : <span style={{ fontSize: 10, color: "#64748b" }}>vazio</span>}
+                            : <span style={{ fontSize: 10, color: "#64748b" }}>{t('app.equipment.emptySlot')}</span>}
                       </div>
                       <div style={{ marginTop: 8 }}>
                         {row?.item_key
@@ -664,7 +906,7 @@
                             disabled={busy}
                             style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, background: "#374151", color: "#e6eef6", border: "1px solid rgba(255,255,255,.06)", opacity: busy ? .6 : 1 }}
                           >
-                            Unequip
+                            {t('app.equipment.unequip')}
                           </button>
                           : <span style={{ fontSize: 11, color: "#6b7280" }}>—</span>}
                       </div>
@@ -676,7 +918,7 @@
 
             {/* Backpack (renderizada pela BackpackUI) */}
             <div className="equip-card">
-              <div style={{ marginBottom: 8, fontSize: 14, opacity: .85 }}>Backpack</div>
+              <div style={{ marginBottom: 8, fontSize: 14, opacity: .85 }}>{t('app.equipment.backpack')}</div>
               <div
                 id="app-inventory"
                 style={{
@@ -690,7 +932,7 @@
 
             {/* Inventário da conta */}
             <div className="equip-card" data-inv-container>
-              <div style={{ marginBottom: 8, fontSize: 14, opacity: .85 }}>Inventário da Conta</div>
+              <div style={{ marginBottom: 8, fontSize: 14, opacity: .85 }}>{t('app.equipment.account')}</div>
               <div className="equip-grid">
                 {(inventory || []).map(it => {
                   const slot = String(it.slot || "").toUpperCase();
@@ -706,17 +948,17 @@
                       <div className="box inv-pic">
                         {it.sprite
                           ? <img src={it.sprite} alt={it.name || it.item_key} style={{ maxHeight: 64, objectFit: "contain" }} />
-                          : <span style={{ fontSize: 10, color: "#64748b" }}>no sprite</span>}
+                          : <span style={{ fontSize: 10, color: "#64748b" }}>{t('app.equipment.noSprite')}</span>}
                       </div>
                       <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                        <span style={{ fontSize: 10, color: "#94a3b8" }}>qty {it.qty}</span>
+                        <span style={{ fontSize: 10, color: "#94a3b8" }}>{t('app.equipment.qty', { qty: formatNumber(it.qty) })}</span>
                         {canEquip
                           ? <button
                             onClick={() => onEquip(slot, it.item_key)}
                             disabled={busy || Number(it.qty) <= 0}
                             style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, background: "#4f46e5", color: "#fff", border: 0, opacity: busy ? .6 : 1 }}
                           >
-                            Equipar
+                            {t('app.equipment.equip')}
                           </button>
                           : <span style={{ fontSize: 10, color: "#6b7280" }}>—</span>}
                       </div>
@@ -733,6 +975,7 @@
 
     /* ============== Skills Drawer (polling + botão fixo) ============== */
     function SkillsDrawer({ hero, onClose }) {
+      const { t } = useI18n();
       const [rows, setRows] = useState([]);
       const [err, setErr] = useState("");
       const ref = useRef(null);
@@ -832,8 +1075,8 @@
               borderBottom: "1px solid rgba(255,255,255,.08)"
             }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>Skills — {hero?.name}</div>
-                <div style={{ fontSize: 11, opacity: .75 }}>{(hero?.class || "-").toLowerCase()} • lv {hero?.level}</div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{t('app.skillsDrawer.title', { name: hero?.name || t('app.hero.unknown') })}</div>
+                <div style={{ fontSize: 11, opacity: .75 }}>{heroMeta(hero, t)}</div>
               </div>
               <button onClick={onClose}
                 style={{
@@ -841,7 +1084,7 @@
                   fontSize: 12, padding: "4px 8px", borderRadius: 8, background: "#111827",
                   color: "#e6eef6", border: "1px solid rgba(255,255,255,.06)"
                 }}>
-                Fechar
+                {t('common.close')}
               </button>
             </div>
 
@@ -849,21 +1092,25 @@
 
             <div style={{ padding: 12, display: "grid", gap: 8 }}>
               {(rows || []).map((r, i) => {
-                const name = String(r.skill_type || r.type || r.name || "unknown").toUpperCase();
+                const rawName = String(r.skill_type || r.type || r.name || "unknown");
+                const normalizedName = rawName.trim();
+                const label = translateSkillName(normalizedName, t);
                 const lvl = Number(r.level ?? r.lvl ?? 1);
+                const levelLabel = t('app.hero.levelShort', { level: formatNumber(lvl) });
                 const cur = Number(r.tries_progress ?? r.progress ?? 0);
                 const need = Number(r.tries_needed ?? r.needed ?? (r.max || 0));
                 const pct = need > 0 ? Math.max(0, Math.min(100, Math.floor((cur / need) * 100))) : 0;
+                const keyName = (normalizedName || 'unknown').toLowerCase();
 
                 return (
-                  <div key={name + "-" + i}
+                  <div key={keyName + "-" + i}
                     style={{
                       padding: 10, borderRadius: 10, background: "rgba(2,6,23,.6)",
                       border: "1px solid rgba(255,255,255,.05)"
                     }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>{name}</div>
-                      <div style={{ fontSize: 12, opacity: .8 }}>lv {lvl}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>{label}</div>
+                      <div style={{ fontSize: 12, opacity: .8 }}>{levelLabel}</div>
                     </div>
 
                     {/* Barra com label de porcentagem e hover animado */}
@@ -875,7 +1122,7 @@
                 );
               })}
               {!rows?.length && !err && (
-                <div style={{ fontSize: 12, color: "#9aa4b2" }}>sem skills para exibir</div>
+                <div style={{ fontSize: 12, color: "#9aa4b2" }}>{t('app.skillsDrawer.empty')}</div>
               )}
             </div>
           </div>

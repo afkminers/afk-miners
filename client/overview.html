@@ -17,24 +17,41 @@
   <header class="retro-header">
     <div class="nav-wrap">
       <nav class="nav-left" aria-label="Primary">
-        <a class="nav-link" href="/overview">Overview</a>
-        <a class="nav-link" href="/roadmap">Roadmap</a>
+        <a class="nav-link" href="/overview" data-i18n="nav.overview">Overview</a>
+        <a class="nav-link" href="/roadmap" data-i18n="nav.roadmap">Roadmap</a>
       </nav>
-      <a id="btnPlay" class="btn-play" href="/">PLAY</a>
+      <a id="btnPlay" class="btn-play" href="/" data-i18n="nav.play">PLAY</a>
       <nav class="nav-right" aria-label="Secondary">
-        <a class="nav-link" href="/leaderboard">Leaderboard</a>
-        <a class="nav-link" href="/support">Support</a>
+        <a class="nav-link" href="/leaderboard" data-i18n="nav.leaderboard">Leaderboard</a>
+        <a class="nav-link" href="/support" data-i18n="nav.support">Support</a>
       </nav>
+      <div class="lang-switcher" data-lang-root>
+        <button type="button" class="lang-switcher__button" data-lang-button data-i18n="lang.menu" data-i18n-attr="aria-label,title">
+          <span class="lang-switcher__flag" data-lang-flag aria-hidden="true"></span>
+          <span class="lang-switcher__code" data-lang-code>EN</span>
+          <span class="lang-switcher__sr" data-lang-current></span>
+        </button>
+        <div class="lang-switcher__menu" data-lang-menu role="menu" aria-hidden="true" hidden>
+          <button type="button" class="lang-switcher__option" data-lang-option="en" role="menuitemradio" aria-checked="false">
+            <span class="lang-switcher__option-flag" data-option-flag aria-hidden="true"></span>
+            <span class="lang-switcher__option-label" data-lang-name data-i18n="lang.en">English</span>
+          </button>
+          <button type="button" class="lang-switcher__option" data-lang-option="pt-BR" role="menuitemradio" aria-checked="false">
+            <span class="lang-switcher__option-flag" data-option-flag aria-hidden="true"></span>
+            <span class="lang-switcher__option-label" data-lang-name data-i18n="lang.pt-BR">Português (Brasil)</span>
+          </button>
+        </div>
+      </div>
       <button id="btnHamb" class="btn-hamb" type="button" aria-label="Open navigation" aria-controls="mobileMenu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </div>
     <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
-      <a href="/overview">Overview</a>
-      <a href="/roadmap">Roadmap</a>
-      <a href="/leaderboard">Leaderboard</a>
-      <a href="/support">Support</a>
-      <a class="mobile-play" href="/">Play now</a>
+      <a href="/overview" data-i18n="nav.overview">Overview</a>
+      <a href="/roadmap" data-i18n="nav.roadmap">Roadmap</a>
+      <a href="/leaderboard" data-i18n="nav.leaderboard">Leaderboard</a>
+      <a href="/support" data-i18n="nav.support">Support</a>
+      <a class="mobile-play" href="/" data-i18n="nav.play">Play now</a>
     </div>
   </header>
 
@@ -42,22 +59,22 @@
     <section class="hero-banner">
       <div class="hero-art" role="presentation" aria-hidden="true"></div>
       <div class="hero-copy">
-        <h1>Forge Your Idle Legacy</h1>
-        <p>AFK Miners is a retro MMORPG where your heroes dig, train, and conquer even while you are offline. Plan your squad, claim treasures, and return to a richer kingdom every session.</p>
-        <a class="cta-button" href="/app.html">Enter the Realm</a>
+        <h1 data-i18n="overview.heroTitle">Forge Your Idle Legacy</h1>
+        <p data-i18n="overview.heroCopy">AFK Miners is a retro MMORPG where your heroes dig, train, and conquer even while you are offline. Plan your squad, claim treasures, and return to a richer kingdom every session.</p>
+        <a class="cta-button" href="/app.html" data-i18n="overview.cta">Enter the Realm</a>
       </div>
     </section>
 
     <section class="grid-section" aria-labelledby="what-is">
       <div class="section-header">
-        <h2 id="what-is">What is AFK Miners</h2>
+        <h2 id="what-is" data-i18n="overview.whatIs">What is AFK Miners</h2>
       </div>
       <p>AFK Miners blends idle progression with tactical combat. Assemble a team of pixel-perfect heroes, send them to mine forbidden caverns, and return to distribute loot, upgrade skills, and unlock new regions.</p>
     </section>
 
     <section class="grid-section" aria-labelledby="how-to-play">
       <div class="section-header">
-        <h2 id="how-to-play">How to Play</h2>
+        <h2 id="how-to-play" data-i18n="overview.howTo">How to Play</h2>
       </div>
       <ul class="feature-list">
         <li><strong>Summon &amp; Recruit:</strong> Unlock heroes with distinct roles and combat stats.</li>
@@ -69,7 +86,7 @@
 
     <section class="grid-section" aria-labelledby="heroes">
       <div class="section-header">
-        <h2 id="heroes">Heroes &amp; Rarities</h2>
+        <h2 id="heroes" data-i18n="overview.heroes">Heroes &amp; Rarities</h2>
       </div>
       <div class="card-grid">
         <article class="info-card">
@@ -89,14 +106,14 @@
 
     <section class="grid-section" aria-labelledby="economy">
       <div class="section-header">
-        <h2 id="economy">Economy: Gold &amp; Diamonds</h2>
+        <h2 id="economy" data-i18n="overview.economy">Economy: Gold &amp; Diamonds</h2>
       </div>
       <p>Gold fuels training, upgrades, and dungeon entries. Diamonds unlock premium summons, instant finishes, and prestigious cosmetics. Balance both currencies to speed up your progression without missing daily opportunities.</p>
     </section>
 
     <section class="grid-section" aria-labelledby="modes">
       <div class="section-header">
-        <h2 id="modes">Game Modes</h2>
+        <h2 id="modes" data-i18n="overview.modes">Game Modes</h2>
       </div>
       <div class="card-grid compact">
         <article class="info-card">
@@ -120,24 +137,26 @@
 
     <section class="grid-section" aria-labelledby="art">
       <div class="section-header">
-        <h2 id="art">8-bit Art Direction</h2>
+        <h2 id="art" data-i18n="overview.art">8-bit Art Direction</h2>
       </div>
       <p>AFK Miners pays homage to classic Tibia-like adventures with hand-crafted pixel art, vibrant spells, and a warm medieval palette. Every screen is optimized for clarity on desktop and mobile while preserving nostalgic charm.</p>
     </section>
 
     <section class="cta-section" aria-labelledby="join">
       <div class="section-header">
-        <h2 id="join">Join the Expedition</h2>
+        <h2 id="join" data-i18n="overview.join">Join the Expedition</h2>
       </div>
-      <p>Ready to deploy your mining guild? Start playing now and build a legend that thrives while you relax.</p>
-      <a class="cta-button" href="/">Play Now</a>
+      <p data-i18n="overview.joinCopy">Ready to deploy your mining guild? Start playing now and build a legend that thrives while you relax.</p>
+      <a class="cta-button" href="/" data-i18n="overview.joinCta">Play Now</a>
     </section>
   </main>
 
   <footer class="retro-footer">
-    <small>&copy; <span data-year></span> AFK Miners. All rights reserved.</small>
+    <small>&copy; <span data-year></span> <span data-i18n="common.copyright">AFK Miners. All rights reserved.</span></small>
   </footer>
 
+  <script type="module" src="/js/i18n/core.js"></script>
+  <script type="module" src="/js/i18n/lang-menu.js"></script>
   <script type="module" src="/js/pages/overview.js"></script>
 </body>
 </html>
