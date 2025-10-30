@@ -135,6 +135,21 @@ function pickFirstEnabledSkill() {
   return option ? option.value : null;
 }
 
+function disableSkillOption(skill) {
+  if (!elements.skillSelect) return;
+  const option = Array.from(elements.skillSelect.options).find((opt) => opt.value === skill);
+  if (option) {
+    option.disabled = true;
+    option.selected = false;
+  }
+}
+
+function pickFirstEnabledSkill() {
+  if (!elements.skillSelect) return null;
+  const option = Array.from(elements.skillSelect.options).find((opt) => !opt.disabled);
+  return option ? option.value : null;
+}
+
 function bindEvents() {
   elements.tabButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
