@@ -384,11 +384,13 @@ window.addEventListener('tick:hero', (ev)=>{
 async function initGlobalChatUI() {
   const btnDefault = document.getElementById('btnDefault');
   const btnGlobal  = document.getElementById('btnGlobal');
+  const btnLog     = document.getElementById('btnLog');
   const chatBox    = document.getElementById('chatBox');
+  const chatLogBox = document.getElementById('chatLogBox');
   const chatInput  = document.getElementById('chatInput');
   const chatSend   = document.getElementById('chatSend');
   const chatForm   = document.getElementById('chatForm');
-  if (!chatBox || !chatInput || !chatSend || !btnDefault || !btnGlobal || !chatForm) return;
+  if (!chatBox || !chatLogBox || !chatInput || !chatSend || !btnDefault || !btnGlobal || !btnLog || !chatForm) return;
 
   getSocket(); // garante conexão
 
@@ -420,11 +422,33 @@ async function initGlobalChatUI() {
   });
 
   let chatScope = 'default';
-  btnDefault.addEventListener('click', ()=>{ chatScope='default'; btnDefault.classList.add('active'); btnGlobal.classList.remove('active'); });
-  btnGlobal.addEventListener('click',  ()=>{ chatScope='global';  btnGlobal.classList.add('active');  btnDefault.classList.remove('active'); });
+  function setScope(scope) {
+    chatScope = scope;
+    btnDefault.classList.toggle('active', scope === 'default');
+    btnGlobal.classList.toggle('active', scope === 'global');
+    btnLog.classList.toggle('active', scope === 'log');
+
+    const showChat = scope !== 'log';
+    chatBox.style.display = showChat ? 'block' : 'none';
+    chatLogBox.style.display = showChat ? 'none' : 'block';
+    chatForm.style.display = showChat ? 'flex' : 'none';
+
+    if (scope === 'log' && window.Chat?.clearLogHighlight) {
+      try { window.Chat.clearLogHighlight(); } catch {}
+    }
+  }
+
+  btnDefault.addEventListener('click', ()=> setScope('default'));
+  btnGlobal.addEventListener('click',  ()=> setScope('global'));
+  btnLog.addEventListener('click',     ()=> setScope('log'));
+
+  setScope('default');
 
   function sendChat() {
     const text = (chatInput.value || '').trim(); if (!text) return;
+    if (chatScope === 'log') {
+      return;
+    }
     if (chatScope === 'global') {
       wsSend({ type: 'chat', scope: 'global', text });
       chatInput.value = '';

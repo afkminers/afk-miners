@@ -245,9 +245,15 @@
         <div class="chat-tabs" style="display:flex; gap:8px; margin-bottom:8px;">
           <button id="btnDefault" class="chat-tab active" type="button" style="padding:4px 8px">Default</button>
           <button id="btnGlobal" class="chat-tab" type="button" style="padding:4px 8px">Global</button>
+          <button id="btnLog" class="chat-tab" type="button" style="padding:4px 8px">Log</button>
         </div>
-        <div id="chatBox" class="chat-box"
-          style="height:180px; overflow:auto; background:#07101a; padding:8px; color:#e6eef6; border-radius:4px; border:1px solid rgba(255,255,255,0.03);">
+        <div class="chat-panels" style="display:flex; flex-direction:column; gap:0;">
+          <div id="chatBox" class="chat-box"
+            style="height:180px; overflow:auto; background:#07101a; padding:8px; color:#e6eef6; border-radius:4px; border:1px solid rgba(255,255,255,0.03);">
+          </div>
+          <div id="chatLogBox" class="chat-box log" aria-live="polite" aria-label="Log do jogo"
+            style="height:180px; overflow:auto; background:#07101a; padding:8px; color:#e6eef6; border-radius:4px; border:1px solid rgba(255,255,255,0.03); display:none;">
+          </div>
         </div>
         <form id="chatForm" autocomplete="off" style="display:flex; gap:8px; margin-top:8px;">
           <input id="chatInput" name="chat" placeholder="Digite uma mensagem…"
