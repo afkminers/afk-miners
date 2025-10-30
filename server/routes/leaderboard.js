@@ -69,7 +69,7 @@ function mapRow(row) {
     skillType: row.skill_type || null,
     skillValue: row.skill_level != null ? Number(row.skill_level) : null,
     guildName: row.guild_name || null,
-    updatedAt: toIso(row.created_at || row.updated_at || null),
+    updatedAt: toIso(row.updated_at || row.created_at || null),
   };
 }
 
@@ -86,23 +86,54 @@ router.get('/players', async (req, res) => {
           ph.id               AS hero_id,
           ph.name             AS hero_name,
           ph.rarity           AS rarity,
-          ph.level            AS level,
+          COALESCE(hp.level, ph.level, 1) AS level,
           ph."createdAt"      AS created_at,
+          COALESCE(
+            hp.updated_at,
+            to_timestamp(
+              CASE
+                WHEN ph."createdAt" > 1000000000000 THEN ph."createdAt" / 1000.0
+                WHEN ph."createdAt" > 1000000000 THEN ph."createdAt"
+                ELSE ph."createdAt"
+              END
+            )
+          )                AS updated_at,
           ph."heroKey"        AS hero_key
         FROM player_heroes ph
-        ORDER BY ph."playerId", ph.level DESC, ph."createdAt" ASC
+        LEFT JOIN hero_progress hp ON hp.hero_id = ph.id
+        ORDER BY
+          ph."playerId",
+          COALESCE(hp.level, ph.level, 1) DESC,
+          COALESCE(
+            hp.updated_at,
+            to_timestamp(
+              CASE
+                WHEN ph."createdAt" > 1000000000000 THEN ph."createdAt" / 1000.0
+                WHEN ph."createdAt" > 1000000000 THEN ph."createdAt"
+                ELSE ph."createdAt"
+              END
+            )
+          ) DESC,
+          ph."createdAt" ASC
       ), ordered AS (
         SELECT
-          p.id                 AS player_id,
-          COALESCE(p.name, '') AS player_name,
+          p.id                                  AS player_id,
+          COALESCE(NULLIF(p.name, ''), 'Unknown') AS player_name,
           b.hero_id,
           b.hero_name,
           b.rarity,
           b.level,
           b.created_at,
+          b.updated_at,
           b.hero_key,
           COALESCE(hm.class, '') AS class,
-          ROW_NUMBER() OVER (ORDER BY b.level DESC, b.created_at ASC, COALESCE(p.name, '')) AS rank
+          ROW_NUMBER() OVER (
+            ORDER BY
+              b.level DESC,
+              b.updated_at DESC,
+              b.created_at ASC,
+              p.id
+          ) AS rank
         FROM best b
         JOIN players p ON p.id = b.player_id
         LEFT JOIN heroes_master hm ON hm."heroKey" = b.hero_key
@@ -137,14 +168,40 @@ router.get('/heroes', async (req, res) => {
           ph.id               AS hero_id,
           ph.name             AS hero_name,
           ph.rarity           AS rarity,
-          ph.level            AS level,
+          COALESCE(hp.level, ph.level, 1) AS level,
           ph."createdAt"      AS created_at,
+          COALESCE(
+            hp.updated_at,
+            to_timestamp(
+              CASE
+                WHEN ph."createdAt" > 1000000000000 THEN ph."createdAt" / 1000.0
+                WHEN ph."createdAt" > 1000000000 THEN ph."createdAt"
+                ELSE ph."createdAt"
+              END
+            )
+          )                AS updated_at,
           ph."heroKey"        AS hero_key,
           ph."playerId"       AS player_id,
-          COALESCE(p.name, '') AS player_name,
+          COALESCE(NULLIF(p.name, ''), 'Unknown') AS player_name,
           COALESCE(hm.class, '') AS class,
-          ROW_NUMBER() OVER (ORDER BY ph.level DESC, ph."createdAt" ASC, ph.name ASC) AS rank
+          ROW_NUMBER() OVER (
+            ORDER BY
+              COALESCE(hp.level, ph.level, 1) DESC,
+              COALESCE(
+                hp.updated_at,
+                to_timestamp(
+                  CASE
+                    WHEN ph."createdAt" > 1000000000000 THEN ph."createdAt" / 1000.0
+                    WHEN ph."createdAt" > 1000000000 THEN ph."createdAt"
+                    ELSE ph."createdAt"
+                  END
+                )
+              ) DESC,
+              ph."createdAt" ASC,
+              ph.name ASC
+          ) AS rank
         FROM player_heroes ph
+        LEFT JOIN hero_progress hp ON hp.hero_id = ph.id
         JOIN players p ON p.id = ph."playerId"
         LEFT JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
       )
@@ -179,22 +236,38 @@ router.get('/skills', async (req, res) => {
           phs.skill_type,
           phs.level          AS skill_level,
           ph."playerId"     AS player_id,
-          COALESCE(p.name, '') AS player_name,
+          COALESCE(NULLIF(p.name, ''), 'Unknown') AS player_name,
           ph.name            AS hero_name,
           ph.rarity          AS rarity,
-          ph.level           AS level,
+          COALESCE(hp.level, ph.level, 1) AS level,
           ph."createdAt"     AS created_at,
+          COALESCE(
+            hp.updated_at,
+            to_timestamp(
+              CASE
+                WHEN ph."createdAt" > 1000000000000 THEN ph."createdAt" / 1000.0
+                WHEN ph."createdAt" > 1000000000 THEN ph."createdAt"
+                ELSE ph."createdAt"
+              END
+            )
+          )                AS updated_at,
           ph."heroKey"       AS hero_key,
           COALESCE(hm.class, '') AS class
         FROM player_hero_skills phs
         JOIN player_heroes ph ON ph.id = phs.hero_id
+        LEFT JOIN hero_progress hp ON hp.hero_id = ph.id
         JOIN players p ON p.id = ph."playerId"
         LEFT JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
         WHERE UPPER(phs.skill_type) = $1
       ), ordered AS (
         SELECT *,
           ROW_NUMBER() OVER (
-            ORDER BY skill_level DESC, level DESC, created_at ASC, hero_name ASC
+            ORDER BY
+              skill_level DESC,
+              level DESC,
+              updated_at DESC,
+              created_at ASC,
+              hero_name ASC
           ) AS rank
         FROM filtered
       )
