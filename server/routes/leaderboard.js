@@ -8,7 +8,7 @@ async function queryWithFallback(sql, params = [], fallbackSql = null) {
   try {
     return await all(sql, params);
   } catch (err) {
-    if (err?.code === '42P01' && fallbackSql) {
+    if ((err?.code === '42P01' || err?.code === '42703') && fallbackSql) {
       console.warn('[leaderboard] missing relation, executing fallback query');
       return all(fallbackSql, params);
     }
@@ -95,6 +95,7 @@ function mapPlayerRow(row, offset, index) {
     playerName: row.player_name,
     heroId: row.hero_id,
     heroName: row.hero_name,
+    heroKey: row.hero_key,
     class: row.class,
     rarity: row.rarity,
     level: row.level,
@@ -107,6 +108,7 @@ function mapHeroRow(row, offset, index) {
     rank: offset + index + 1,
     heroId: row.hero_id,
     heroName: row.hero_name,
+    heroKey: row.hero_key,
     class: row.class,
     rarity: row.rarity,
     level: row.level,
@@ -121,6 +123,7 @@ function mapSkillRow(row, offset, index) {
     rank: offset + index + 1,
     heroId: row.hero_id,
     heroName: row.hero_name,
+    heroKey: row.hero_key,
     class: row.class,
     playerId: row.player_id,
     playerName: row.player_name,
@@ -159,7 +162,8 @@ router.get('/players', async (req, res) => {
         COALESCE(hm.class, 'Unknown') AS class,
         COALESCE(r.rarity, hm.rarity) AS rarity,
         r.level,
-        r.up_at AS updated_at
+        r.up_at AS updated_at,
+        r.hero_key
       FROM ranked r
       JOIN players p ON p.id = r."playerId"
       LEFT JOIN heroes_master hm ON COALESCE(hm."heroKey", hm.herokey) = r.hero_key
@@ -168,7 +172,37 @@ router.get('/players', async (req, res) => {
       ORDER BY r.level DESC, r.up_at DESC
       LIMIT $1 OFFSET $2;
       `,
-      [limit, offset, search]
+      [limit, offset, search],
+      `
+      WITH ranked AS (
+        SELECT
+          ph."playerId",
+          ph.id  AS hero_id,
+          ph.name AS hero_name,
+          ph.rarity,
+          ph.level,
+          COALESCE(ph.updated_at, ph."updatedAt") AS up_at,
+          COALESCE(ph."heroKey", ph.herokey) AS hero_key,
+          ROW_NUMBER() OVER (PARTITION BY ph."playerId" ORDER BY ph.level DESC, COALESCE(ph.updated_at, ph."updatedAt") DESC) AS rn
+        FROM player_heroes ph
+      )
+      SELECT
+        p.id   AS player_id,
+        p.name AS player_name,
+        r.hero_id,
+        r.hero_name,
+        'Unknown' AS class,
+        r.rarity,
+        r.level,
+        r.up_at AS updated_at,
+        r.hero_key
+      FROM ranked r
+      JOIN players p ON p.id = r."playerId"
+      WHERE r.rn = 1
+        AND (COALESCE($3,'') = '' OR p.name ILIKE '%'||$3||'%' OR r.hero_name ILIKE '%'||$3||'%')
+      ORDER BY r.level DESC, r.up_at DESC
+      LIMIT $1 OFFSET $2;
+      `
     );
 
     console.info(`[lb] players ok rows=${rows.length}`);
@@ -197,7 +231,8 @@ router.get('/heroes', async (req, res) => {
         ph.level,
         COALESCE(ph.updated_at, ph."updatedAt") AS updated_at,
         p.id    AS player_id,
-        p.name  AS player_name
+        p.name  AS player_name,
+        COALESCE(ph."heroKey", ph.herokey) AS hero_key
       FROM player_heroes ph
       JOIN players p ON p.id = ph."playerId"
       LEFT JOIN heroes_master hm ON COALESCE(hm."heroKey", hm.herokey) = COALESCE(ph."heroKey", ph.herokey)
@@ -205,7 +240,24 @@ router.get('/heroes', async (req, res) => {
       ORDER BY ph.level DESC, COALESCE(ph.updated_at, ph."updatedAt") DESC
       LIMIT $1 OFFSET $2;
       `,
-      [limit, offset, search]
+      [limit, offset, search],
+      `
+      SELECT
+        ph.id   AS hero_id,
+        ph.name AS hero_name,
+        'Unknown' AS class,
+        ph.rarity,
+        ph.level,
+        COALESCE(ph.updated_at, ph."updatedAt") AS updated_at,
+        p.id    AS player_id,
+        p.name  AS player_name,
+        COALESCE(ph."heroKey", ph.herokey) AS hero_key
+      FROM player_heroes ph
+      JOIN players p ON p.id = ph."playerId"
+      WHERE (COALESCE($3,'') = '' OR p.name ILIKE '%'||$3||'%' OR ph.name ILIKE '%'||$3||'%')
+      ORDER BY ph.level DESC, COALESCE(ph.updated_at, ph."updatedAt") DESC
+      LIMIT $1 OFFSET $2;
+      `
     );
 
     console.info(`[lb] heroes ok rows=${rows.length}`);
@@ -236,30 +288,73 @@ router.get('/skills', async (req, res) => {
 
     const rows = await queryWithFallback(
       `
-      WITH s AS (
-        SELECT hero_id, level AS skill_value, tries_progress, skill_type, NOW() AS up_at
-        FROM player_hero_skills
-        WHERE skill_type = $1
+      WITH base AS (
+        SELECT
+          s.hero_id,
+          s.level AS skill_value,
+          s.tries_progress,
+          s.skill_type,
+          NOW() AS up_at,
+          ph.name AS hero_name,
+          COALESCE(ph.updated_at, ph."updatedAt") AS hero_updated_at,
+          COALESCE(ph."heroKey", ph.herokey) AS hero_key,
+          ph."playerId" AS player_id
+        FROM player_hero_skills s
+        JOIN player_heroes ph ON ph.id = s.hero_id
+        WHERE s.skill_type = $1
       )
       SELECT
-        ph.id   AS hero_id,
-        ph.name AS hero_name,
+        b.hero_id,
+        b.hero_name,
         COALESCE(hm.class, 'Unknown') AS class,
         p.id    AS player_id,
         p.name  AS player_name,
-        s.skill_value,
-        s.tries_progress,
-        GREATEST(COALESCE(ph.updated_at, ph."updatedAt", NOW()), s.up_at) AS updated_at,
-        s.skill_type
-      FROM s
-      JOIN player_heroes ph ON ph.id = s.hero_id
-      LEFT JOIN heroes_master hm ON COALESCE(hm."heroKey", hm.herokey) = COALESCE(ph."heroKey", ph.herokey)
-      JOIN players p       ON p.id  = ph."playerId"
-      WHERE (COALESCE($4,'') = '' OR p.name ILIKE '%'||$4||'%' OR ph.name ILIKE '%'||$4||'%')
-      ORDER BY s.skill_value DESC, updated_at DESC
+        b.skill_value,
+        b.tries_progress,
+        GREATEST(COALESCE(b.hero_updated_at, NOW()), b.up_at) AS updated_at,
+        b.skill_type,
+        b.hero_key
+      FROM base b
+      JOIN players p ON p.id = b.player_id
+      LEFT JOIN heroes_master hm ON COALESCE(hm."heroKey", hm.herokey) = b.hero_key
+      WHERE (COALESCE($4,'') = '' OR p.name ILIKE '%'||$4||'%' OR b.hero_name ILIKE '%'||$4||'%')
+      ORDER BY b.skill_value DESC, GREATEST(COALESCE(b.hero_updated_at, NOW()), b.up_at) DESC
       LIMIT $2 OFFSET $3;
       `,
-      [skillType, limit, offset, search]
+      [skillType, limit, offset, search],
+      `
+      WITH base AS (
+        SELECT
+          s.hero_id,
+          s.level AS skill_value,
+          s.tries_progress,
+          s.skill_type,
+          NOW() AS up_at,
+          ph.name AS hero_name,
+          COALESCE(ph.updated_at, ph."updatedAt") AS hero_updated_at,
+          COALESCE(ph."heroKey", ph.herokey) AS hero_key,
+          ph."playerId" AS player_id
+        FROM player_hero_skills s
+        JOIN player_heroes ph ON ph.id = s.hero_id
+        WHERE s.skill_type = $1
+      )
+      SELECT
+        b.hero_id,
+        b.hero_name,
+        'Unknown' AS class,
+        p.id    AS player_id,
+        p.name  AS player_name,
+        b.skill_value,
+        b.tries_progress,
+        GREATEST(COALESCE(b.hero_updated_at, NOW()), b.up_at) AS updated_at,
+        b.skill_type,
+        b.hero_key
+      FROM base b
+      JOIN players p ON p.id = b.player_id
+      WHERE (COALESCE($4,'') = '' OR p.name ILIKE '%'||$4||'%' OR b.hero_name ILIKE '%'||$4||'%')
+      ORDER BY b.skill_value DESC, GREATEST(COALESCE(b.hero_updated_at, NOW()), b.up_at) DESC
+      LIMIT $2 OFFSET $3;
+      `
     );
 
     console.info(`[lb] skills ok rows=${rows.length} skill=${skillType}`);
