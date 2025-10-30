@@ -9,9 +9,11 @@
   const K = require('../balance/config');
   const { all, run } = require('../models/db');
   const { getGrid } = require('../maps/grid');
-  const { hasLineOfSight } = require('./los');
+  const { hasLineOfSightTiles } = require('./los');
   // const { inReachPx } = require('./geom');
   const { applyMobHit } = require('./service');
+  const { toTileCoords, chebyshevTiles, isValidTile } = require('../utils/tile-coords');
+  const { resolveMonsterAttackProfile } = require('./monster_attack_profile');
   const {
     listFreshHeroesByMap,
     TTL_MS: LIVE_POS_TTL_MS = 1500,
@@ -73,15 +75,10 @@
   // --------- Helpers ----------
   /** Converte coordenadas em pixels para tiles antes de checar LOS. */
   function hasLoSpx(losGrid, ax, ay, bx, by) {
-    const aCx = Math.floor(ax / STEP_PX);
-    const aCy = Math.floor(ay / STEP_PX);
-    const bCx = Math.floor(bx / STEP_PX);
-    const bCy = Math.floor(by / STEP_PX);
-    return hasLineOfSight(losGrid, aCx, aCy, bCx, bCy);
-  }
-
-  function chebyPx(ax, ay, bx, by) {
-    return Math.max(Math.abs(ax - bx), Math.abs(ay - by));
+    const aTile = toTileCoords({ x: ax, y: ay });
+    const bTile = toTileCoords({ x: bx, y: by });
+    if (!isValidTile(aTile) || !isValidTile(bTile)) return false;
+    return hasLineOfSightTiles(losGrid, aTile.tx, aTile.ty, bTile.tx, bTile.ty);
   }
 
   function normalizeMonsterPos({ x, y, spawnRect }) {
@@ -141,31 +138,40 @@
   }
 
   function canMobHitNow({ now, mob, tgtPos, losGrid }) {
-    // posições
     const mx = mob.x, my = mob.y;
     const hx = tgtPos?.x, hy = tgtPos?.y;
 
     if (hx == null || hy == null || mx == null || my == null) {
-      return { ok:false, reason:'no_pos' };
+      return { ok: false, reason: 'no_pos' };
     }
 
-    // frescor das posições
     const heroAge = now - (tgtPos.updatedMs ?? 0);
-    const mobAge  = now - (mob.posUpdatedAt ?? 0);
+    const mobAge = now - (mob.posUpdatedAt ?? 0);
 
-    if (heroAge > STALE_HERO_MS) return { ok:false, reason:`stale_hero_${heroAge}ms` };
-    if (mobAge  > STALE_MOB_MS)  return { ok:false, reason:`stale_mob_${mobAge}ms`  };
+    if (heroAge > STALE_HERO_MS) return { ok: false, reason: `stale_hero_${heroAge}ms` };
+    if (mobAge > STALE_MOB_MS) return { ok: false, reason: `stale_mob_${mobAge}ms` };
 
-    // alcance em px (usa o mesmo que já calculamos no ensureMob)
-    const atkPx   = Math.max(mob.attackRangePx || STEP_PX, STEP_PX);
-    const distPxC = chebyPx(mx, my, hx, hy); // chebyshev (robusto p/ grid)
-    if (distPxC > atkPx) return { ok:false, reason:`out_of_range_${distPxC}gt${atkPx}` };
+    const mobTile = toTileCoords({ x: mx, y: my });
+    const heroTile = toTileCoords({ x: hx, y: hy });
+    if (!isValidTile(mobTile) || !isValidTile(heroTile)) {
+      return { ok: false, reason: 'invalid_tile' };
+    }
 
-    // LOS real
-    const canSee  = IGNORE_LOS ? true : hasLoSpx(losGrid, mx, my, hx, hy);
-    if (!canSee)  return { ok:false, reason:'no_los' };
+    const rangeTiles = Number.isFinite(mob.attackRangeTiles) ? mob.attackRangeTiles : 1;
+    const distTiles = chebyshevTiles(mobTile, heroTile);
+    if (!Number.isFinite(distTiles) || distTiles > rangeTiles) {
+      return { ok: false, reason: `out_of_range_${distTiles}gt${rangeTiles}`, mobTile, heroTile, distTiles };
+    }
 
-    return { ok:true, distPxC: distPxC, atkPx };
+    const requiresLos = mob.attackRequiresLos !== false;
+    const canSee = IGNORE_LOS || !requiresLos
+      ? true
+      : hasLineOfSightTiles(losGrid, mobTile.tx, mobTile.ty, heroTile.tx, heroTile.ty);
+    if (!canSee) {
+      return { ok: false, reason: 'no_los', mobTile, heroTile, distTiles };
+    }
+
+    return { ok: true, distTiles, mobTile, heroTile };
   }
 
   function recordHeroObservation({ heroId, mapKey, x, y, now }) {
@@ -294,7 +300,7 @@
 
   // --------- DB helpers ----------
   async function fetchAliveMonsters() {
-    return (await all(`
+    const rows = (await all(`
       SELECT mi.id,
             COALESCE(mi.map_key, s."mapKey") AS map_key,
             mi.x, mi.y,
@@ -303,6 +309,7 @@
             mm.attack_ms,         -- ms
             mm.speed              AS speed,
             mm.key                AS monster_key,
+            COALESCE(mm."attacksJSON", '[]'::jsonb) AS attacks_json,
             s.x  AS spawn_x,
             s.y  AS spawn_y,
             COALESCE(s.w, 0) AS spawn_w,
@@ -312,6 +319,20 @@
         LEFT JOIN spawns s ON s.id = mi.spawn_id
       WHERE mi.state = 'ALIVE' AND mi.hp > 0
     `)) || [];
+    return rows.map(row => {
+      const profile = resolveMonsterAttackProfile({
+        attack_ms: row.attack_ms,
+        attack_range: row.attack_range,
+        attacks_json: row.attacks_json,
+      });
+      return {
+        ...row,
+        attack_profile: profile,
+        attack_range: profile.rangeTiles,
+        attack_ms: profile.intervalMs,
+        attack_type: profile.type,
+      };
+    });
   }
 
   // 💡 Usa player_online (presença real) + última posição daquele player no mesmo mapa.
@@ -412,9 +433,35 @@
     }
 
     // tiles recebidos do SELECT (fallback para valores anteriores/constantes)
-    const attackRangeTiles = Number(patch.attack_range ?? cur.attack_range ?? 1);
+    const profilePatch = patch.attack_profile || cur.attack_profile || null;
+    const rawRangeTiles = patch.attack_range_tiles ?? patch.attack_range;
+    const attackRangeTiles = Number.isFinite(rawRangeTiles)
+      ? Number(rawRangeTiles)
+      : Number.isFinite(profilePatch?.rangeTiles)
+        ? profilePatch.rangeTiles
+        : Number(cur.attack_range ?? 1);
     const aggroRangeTiles  = Math.max(1, Number(patch.aggro_range ?? cur.aggro_range ?? 8));
-    const attackMs         = Number(patch.attack_ms    ?? cur.attack_ms    ?? 1200);
+    const attackMs = Number.isFinite(profilePatch?.intervalMs)
+      ? profilePatch.intervalMs
+      : Number(patch.attack_ms ?? cur.attack_ms ?? 1200);
+
+    const attackTypeRaw = patch.attack_type || cur.attack_type || profilePatch?.type || 'melee';
+    const attackType = typeof attackTypeRaw === 'string'
+      ? attackTypeRaw.toLowerCase()
+      : 'melee';
+    const attackRequiresLos = patch.attack_requires_los ?? cur.attack_requires_los ?? profilePatch?.requiresLos ?? (attackType !== 'melee');
+
+    const dmgMinSrc = (patch.attack_damage && patch.attack_damage.min)
+      ?? profilePatch?.min
+      ?? cur.attackDamage?.min
+      ?? 0;
+    const dmgMaxSrc = (patch.attack_damage && patch.attack_damage.max)
+      ?? profilePatch?.max
+      ?? cur.attackDamage?.max
+      ?? dmgMinSrc;
+    const dmgMin = Math.max(0, Math.floor(Number(dmgMinSrc) || 0));
+    const dmgMax = Math.max(dmgMin, Math.floor(Number(dmgMaxSrc) || dmgMin));
+    const attackDamage = { min: dmgMin, max: dmgMax };
 
     let speedStat = null;
     if (Number.isFinite(Number(patch.speed)) && Number(patch.speed) > 0) {
@@ -458,15 +505,20 @@
 
 
       // === Ranges em PX e cooldown em ms, todos no mesmo relógio (ms) ===
-      attackRangePx: (attackRangeTiles * PX_PER_TILE) | 0,
+      attackRangeTiles: Math.max(1, attackRangeTiles | 0),
       aggroRangePx:  (aggroRangeTiles  * PX_PER_TILE) | 0,
       attackMs,
-      lastAttackAt: Number(cur.lastAttackAt || 0),
+      nextAttackAt: Number(patch.nextAttackAt ?? cur.nextAttackAt ?? 0),
+      attackDamage,
+      attackType,
+      attackRequiresLos: attackRequiresLos ? true : false,
+      attack_profile: profilePatch || null,
 
       // mantém os originais para debug (opcional)
-      attack_range: attackRangeTiles,
+      attack_range: Math.max(1, attackRangeTiles | 0),
       aggro_range:  aggroRangeTiles,
       attack_ms:    attackMs,
+      attack_type:  attackType,
 
       // debug
       spawnRect,
@@ -535,9 +587,11 @@
         x: (r.x | 0),
         y: (r.y | 0),
         mode: 'idle',
-        attack_range: r.attack_range,  // ainda em tiles (ok)
-        aggro_range:  r.aggro_range,   // ainda em tiles (ok)
+        attack_range: r.attack_range,  // tiles
+        aggro_range:  r.aggro_range,
         attack_ms:    r.attack_ms,
+        attack_profile: r.attack_profile,
+        attack_type:  r.attack_type,
         spawnRect,
         speed: r.speed,
         monsterKey: r.monster_key,
@@ -646,7 +700,8 @@
     const mobCx = Math.floor(Number(mob.x) / STEP_PX);
     const mobCy = Math.floor(Number(mob.y) / STEP_PX);
     if (!Number.isFinite(mobCx) || !Number.isFinite(mobCy)) return false;
-    return Math.max(Math.abs(mobCx - heroCx), Math.abs(mobCy - heroCy)) <= 1;
+    const rangeTiles = Number.isFinite(mob.attackRangeTiles) ? mob.attackRangeTiles : 1;
+    return Math.max(Math.abs(mobCx - heroCx), Math.abs(mobCy - heroCy)) <= rangeTiles;
   }
 
   function buildHeroTileSet(mapKey, heroes, now = Date.now()) {
@@ -1015,8 +1070,6 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   // 2) Melee estilo Tibia: aceita adjacência em 8-direções (inclui diagonal)
   //    e também checa alcance real do monstro em pixels com tolerância.
   const TILE = PX_PER_TILE;
-  const dx = tgtPos.x - mob.x;
-  const dy = tgtPos.y - mob.y;
 
   const mobCx  = Math.floor(mob.x / TILE);
   const mobCy  = Math.floor(mob.y / TILE);
@@ -1042,40 +1095,33 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     }
   }
 
-  // Chebyshev distance: <= 1 significa mesmo tile ou qualquer adjacente (8-dir)
-  const dxC = Math.abs(mobCx - heroCx);
-  const dyC = Math.abs(mobCy - heroCy);
-  const isAdj8Cell = Math.max(dxC, dyC) <= 1;
+  const mobTile = toTileCoords({ x: mob.x, y: mob.y });
+  const heroTile = toTileCoords({ x: tgtPos.x, y: tgtPos.y });
+  const rangeTiles = Number.isFinite(mob.attackRangeTiles) ? mob.attackRangeTiles : 1;
+  const distTiles = chebyshevTiles(mobTile, heroTile);
+  const inRangeTiles = Number.isFinite(distTiles) && distTiles <= rangeTiles;
 
-  // Use o alcance em pixels do mob (+ tolerância) como fallback
-  const PX_TOL = 0; // sem tolerância: evita “hit de longe”
-  const atkPx = Math.max(mob.attackRangePx || TILE, TILE);
-  const inRangePx = (dx * dx + dy * dy) <= (atkPx + PX_TOL) * (atkPx + PX_TOL);
-
-  // Precisa ter linha de visão...
-  const canSeeNow = IGNORE_LOS ? true : hasLoSpx(losGrid, mob.x, mob.y, tgtPos.x, tgtPos.y);
+  const canSeeNow = IGNORE_LOS || !mob.attackRequiresLos
+    ? true
+    : hasLineOfSightTiles(losGrid, mobTile.tx, mobTile.ty, heroTile.tx, heroTile.ty);
 
   if (DEBUG_AI) {
-    const cheby = Math.max(Math.abs(dx), Math.abs(dy)) | 0;
     console.log(
-      `[ai-mobs] tgt mob=${mob.instanceId} -> hero=${mob.targetHeroId} cheby=${cheby}px ` +
-      `cells mob=(${mobCx},${mobCy}) hero=(${heroCx},${heroCy}) inRangePx=${inRangePx} los=${canSeeNow}`
+      `[ai-mobs] tgt mob=${mob.instanceId} -> hero=${mob.targetHeroId} distTiles=${distTiles} ` +
+      `range=${rangeTiles} los=${canSeeNow}`
     );
   }
 
 
-  // >>> DESARME quando sair do alcance/LoS (evita "rajada" ao reentrar)
-  if (!(inRangePx && canSeeNow)) {
+  if (!(inRangeTiles && canSeeNow)) {
     if (mob.mode === 'attack') mob.mode = 'chase';
-    mob.lastAttackAt = 0; // força cooldown completo ao reentrar
     if (shouldForceAlternate) {
       mob.forcedAltUntil = Math.max(mob.forcedAltUntil || 0, now + ALT_PATH_WINDOW_MS);
     }
     mob.combatStep = null;
   }
 
-  // ATAQUE: SOMENTE se alcance/LOS ok E posições "frescas" (anti-stale hard-guard)
-  if ((inRangePx || isAdj8Cell) && canSeeNow) {
+  if (inRangeTiles && canSeeNow) {
     // compõe alvo com timestamp (se veio do DB, virá velho)
     let tgt = heroes.find(h => h.heroId === mob.targetHeroId);
     if (!tgt) {
@@ -1109,9 +1155,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
           'heroPos=', tgt ? {x:tgt.x,y:tgt.y, age: now-(tgt.updatedMs||0)} : null
         );
       }
-      // desarma ataque e volta a perseguir
       if (mob.mode === 'attack') mob.mode = 'chase';
-      mob.lastAttackAt = 0;
       if (shouldForceAlternate) {
         mob.forcedAltUntil = Math.max(mob.forcedAltUntil || 0, now + ALT_PATH_WINDOW_MS);
       }
@@ -1126,17 +1170,24 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     mob.forcedAltUntil = 0;
 
     const cd = Number(mob.attackMs || (K.MONSTER_SPEED_MS && K.MONSTER_SPEED_MS.DEFAULT) || 1200);
-    if ((now - (mob.lastAttackAt || 0)) >= cd) {
-      mob.lastAttackAt = now;
+    if (now >= (mob.nextAttackAt || 0)) {
+      mob.nextAttackAt = now + cd;
       if (DEBUG_AI) {
-        console.log('[ai-mobs] atk (melee px-range)', mob.instanceId, '->', mob.targetHeroId,
-          'cells mob=', mobCx, mobCy, 'hero=', heroCx, heroCy, 'dx,dy=', dx|0, dy|0);
+        console.log('[ai-mobs] atk (tile-range)', mob.instanceId, '->', mob.targetHeroId,
+          'mobTile=', mobTile, 'heroTile=', heroTile, 'dist=', distTiles);
       }
       try {
         await applyMobHit({
           attackerInstanceId: String(mob.instanceId),
           targetHeroId: String(mob.targetHeroId),
-          attackInfo: { min: 1, max: 3 },
+          attackInfo: {
+            min: mob.attackDamage?.min,
+            max: mob.attackDamage?.max,
+            type: mob.attackType,
+            rangeTiles,
+            intervalMs: cd,
+            requiresLos: mob.attackRequiresLos,
+          },
           attackerPos: {
             x: Number.isFinite(mob.x) ? mob.x : undefined,
             y: Number.isFinite(mob.y) ? mob.y : undefined,
@@ -1323,7 +1374,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
         if (DEBUG_AI) console.log(`[ai-mobs] switch target ...`);
         mob.targetHeroId = bestId;
         mob.lastSwitchAt = now;
-        mob.lastAttackAt = 0; // <<< evita hit “de graça” ao trocar de alvo
+        mob.nextAttackAt = now + Math.max(0, Number(mob.attackMs) || 0);
         mob.agroSince = now;
         mob.lastProgressAt = now;
         mob.forcedAltUntil = 0;
@@ -1903,7 +1954,7 @@ async function moveMobAndPersist(mob, step, dt, losGrid, occupancy) {
       if (mob.targetHeroId === hid) {
         mob.targetHeroId = null;
         mob.mode = 'idle';
-        mob.lastAttackAt = 0;
+        mob.nextAttackAt = Date.now() + Math.max(0, Number(mob.attackMs) || 0);
         mob.pendingStep = null;
         mob.combatStep = null;
         mob.agroSince = 0;
