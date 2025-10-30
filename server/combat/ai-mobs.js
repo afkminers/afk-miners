@@ -1171,7 +1171,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   mob.mode = 'chase';
   mob.combatStep = null;
 
-  if (estaAoLadoDoJogador({ mob, heroCx, heroCy })) {
+  if (canSeeNow && estaAoLadoDoJogador({ mob, heroCx, heroCy })) {
     mob.pendingStep = null;
     mob.repathAt = now;
     return;
