@@ -7,6 +7,20 @@ const { all } = require('../models/db');
 const MAX_LIMIT = 100;
 const DEFAULT_LIMIT = 25;
 
+const PG_UNDEFINED_TABLE = '42P01';
+
+async function queryWithFallback(primarySql, params, fallbackSql) {
+  try {
+    return await all(primarySql, params);
+  } catch (err) {
+    if (err?.code === PG_UNDEFINED_TABLE && fallbackSql) {
+      console.warn('[leaderboard] missing table, using fallback query:', err?.message);
+      return all(fallbackSql, params);
+    }
+    throw err;
+  }
+}
+
 function parsePagination(query = {}) {
   let limit = Number.parseInt(query.limit, 10);
   if (!Number.isFinite(limit) || limit <= 0) limit = DEFAULT_LIMIT;
@@ -78,7 +92,7 @@ router.get('/players', async (req, res) => {
     normalizeMetric(req.query.metric, ['level']);
     const { limit, offset } = parsePagination(req.query);
 
-    const rows = await all(
+    const rows = await queryWithFallback(
       `
       WITH best AS (
         SELECT DISTINCT ON (ph."playerId")
@@ -143,7 +157,58 @@ router.get('/players', async (req, res) => {
       ORDER BY rank
       LIMIT $1 OFFSET $2
       `,
-      [limit, offset]
+      [limit, offset],
+      `
+      WITH best AS (
+        SELECT DISTINCT ON (ph."playerId")
+          ph."playerId"      AS player_id,
+          ph.id               AS hero_id,
+          ph.name             AS hero_name,
+          ph.rarity           AS rarity,
+          COALESCE(ph.level, 1) AS level,
+          ph."createdAt"      AS created_at,
+          to_timestamp(
+            CASE
+              WHEN ph."createdAt" > 1000000000000 THEN ph."createdAt" / 1000.0
+              WHEN ph."createdAt" > 1000000000 THEN ph."createdAt"
+              ELSE ph."createdAt"
+            END
+          )                AS updated_at,
+          ph."heroKey"        AS hero_key
+        FROM player_heroes ph
+        ORDER BY
+          ph."playerId",
+          COALESCE(ph.level, 1) DESC,
+          ph."createdAt" ASC,
+          ph.id
+      ), ordered AS (
+        SELECT
+          p.id                                  AS player_id,
+          COALESCE(NULLIF(p.name, ''), 'Unknown') AS player_name,
+          b.hero_id,
+          b.hero_name,
+          b.rarity,
+          b.level,
+          b.created_at,
+          b.updated_at,
+          b.hero_key,
+          COALESCE(hm.class, '') AS class,
+          ROW_NUMBER() OVER (
+            ORDER BY
+              b.level DESC,
+              b.updated_at DESC,
+              b.created_at ASC,
+              p.id
+          ) AS rank
+        FROM best b
+        JOIN players p ON p.id = b.player_id
+        LEFT JOIN heroes_master hm ON hm."heroKey" = b.hero_key
+      )
+      SELECT *
+      FROM ordered
+      ORDER BY rank
+      LIMIT $1 OFFSET $2
+      `
     );
 
     res.json(rows.map(mapRow));
@@ -161,7 +226,7 @@ router.get('/heroes', async (req, res) => {
     normalizeMetric(req.query.metric, ['level']);
     const { limit, offset } = parsePagination(req.query);
 
-    const rows = await all(
+    const rows = await queryWithFallback(
       `
       WITH ordered AS (
         SELECT
@@ -210,7 +275,41 @@ router.get('/heroes', async (req, res) => {
       ORDER BY rank
       LIMIT $1 OFFSET $2
       `,
-      [limit, offset]
+      [limit, offset],
+      `
+      WITH ordered AS (
+        SELECT
+          ph.id               AS hero_id,
+          ph.name             AS hero_name,
+          ph.rarity           AS rarity,
+          COALESCE(ph.level, 1) AS level,
+          ph."createdAt"      AS created_at,
+          to_timestamp(
+            CASE
+              WHEN ph."createdAt" > 1000000000000 THEN ph."createdAt" / 1000.0
+              WHEN ph."createdAt" > 1000000000 THEN ph."createdAt"
+              ELSE ph."createdAt"
+            END
+          )                AS updated_at,
+          ph."heroKey"        AS hero_key,
+          ph."playerId"       AS player_id,
+          COALESCE(NULLIF(p.name, ''), 'Unknown') AS player_name,
+          COALESCE(hm.class, '') AS class,
+          ROW_NUMBER() OVER (
+            ORDER BY
+              COALESCE(ph.level, 1) DESC,
+              ph."createdAt" ASC,
+              ph.name ASC
+          ) AS rank
+        FROM player_heroes ph
+        JOIN players p ON p.id = ph."playerId"
+        LEFT JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
+      )
+      SELECT *
+      FROM ordered
+      ORDER BY rank
+      LIMIT $1 OFFSET $2
+      `
     );
 
     res.json(rows.map(mapRow));
@@ -228,7 +327,7 @@ router.get('/skills', async (req, res) => {
     const skill = sanitizeSkill(req.query.skill);
     const { limit, offset } = parsePagination(req.query);
 
-    const rows = await all(
+    const rows = await queryWithFallback(
       `
       WITH filtered AS (
         SELECT
@@ -276,7 +375,50 @@ router.get('/skills', async (req, res) => {
       ORDER BY rank
       LIMIT $2 OFFSET $3
       `,
-      [skill, limit, offset]
+      [skill, limit, offset],
+      `
+      WITH filtered AS (
+        SELECT
+          phs.hero_id,
+          phs.skill_type,
+          phs.level          AS skill_level,
+          ph."playerId"     AS player_id,
+          COALESCE(NULLIF(p.name, ''), 'Unknown') AS player_name,
+          ph.name            AS hero_name,
+          ph.rarity          AS rarity,
+          COALESCE(ph.level, 1) AS level,
+          ph."createdAt"     AS created_at,
+          to_timestamp(
+            CASE
+              WHEN ph."createdAt" > 1000000000000 THEN ph."createdAt" / 1000.0
+              WHEN ph."createdAt" > 1000000000 THEN ph."createdAt"
+              ELSE ph."createdAt"
+            END
+          )                AS updated_at,
+          ph."heroKey"       AS hero_key,
+          COALESCE(hm.class, '') AS class
+        FROM player_hero_skills phs
+        JOIN player_heroes ph ON ph.id = phs.hero_id
+        JOIN players p ON p.id = ph."playerId"
+        LEFT JOIN heroes_master hm ON hm."heroKey" = ph."heroKey"
+        WHERE UPPER(phs.skill_type) = $1
+      ), ordered AS (
+        SELECT *,
+          ROW_NUMBER() OVER (
+            ORDER BY
+              skill_level DESC,
+              level DESC,
+              updated_at DESC,
+              created_at ASC,
+              hero_name ASC
+          ) AS rank
+        FROM filtered
+      )
+      SELECT *
+      FROM ordered
+      ORDER BY rank
+      LIMIT $2 OFFSET $3
+      `
     );
 
     res.json(rows.map(mapRow));
