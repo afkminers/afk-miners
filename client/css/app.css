@@ -324,15 +324,16 @@ html,body{
   overflow: hidden;
 }
 #chatDock .tabs{ display:flex; gap:8px; margin-bottom:6px; }
-#chatDock .tabs button{ padding:6px 10px; border:1px solid var(--border); border-radius:8px; background:#18233a; color:#dfe6f6; }
+#chatDock .tabs button{ padding:6px 10px; border:1px solid var(--border); border-radius:8px; background:#18233a; color:#dfe6f6; transition:box-shadow .2s ease; }
 #chatDock .tabs .active{ background:#203053; }
+#chatDock .tabs .log-alert{ box-shadow:0 0 0 2px rgba(56,189,248,.45), 0 0 12px rgba(56,189,248,.35); }
 #chatDock .log{ background:#0a1120; border:1px solid var(--border); border-radius:8px; overflow:auto; }
 #chatDock form{ margin-top:6px; }
 #chatDock input{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:#0a1326; color:#e6ebf4; }
 
 /* caixa rolável ocupa o espaço restante do grid do chat */
 #chatBox{ height: 100%; }
-#chatDock .chat-box{ height: calc(100% - 82px); } /* caso use a classe 'chat-box' existente */
+#chatDock .chat-box{ height: calc(100% - 82px); }
 
 /* Chat styling */
 #chatBox .chat-row { padding:6px 8px; border-radius:4px; margin-bottom:6px; background:transparent; transition:background .12s; }
