@@ -44,7 +44,9 @@
       "appendChatRow",
       "applyUiFromSettings",
       "applyViewport",
+      "beginRetroLoading",
       "findPendingRowFor",
+      "finishRetroLoading",
       "getCsrf",
       "getRootVar",
       "getTs",
@@ -59,8 +61,11 @@
       "onDown",
       "onMove",
       "onUp",
+      "pickNextTipIndex",
       "sendChat",
+      "setLoadingProgress",
       "setRootVar",
+      "swapLoadingTip",
       "updateTopbarHeight"
     ]
   },
