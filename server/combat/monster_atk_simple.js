@@ -4,6 +4,10 @@ const { applyMobHit } = require('./service');
 const { getGrid } = require('../maps/grid');
 const { getMonster } = require('../services/catalogCache');
 const { normalizeType } = require('./monster_attack_profile');
+const {
+  getLivePlayerPosition,
+  listPlayerIds,
+} = require('../player/live_positions');
 
 // ======= Tuning via .env =======
 const TILE = 32;
@@ -108,6 +112,59 @@ const tileOf = (v) => {
 };
 const centerOfTile = (t) => (t * TILE) + TILE / 2;
 const tileKey = (tx, ty) => `${tx},${ty}`;
+
+function getLivePosForPlayer(playerId) {
+  if (!playerId && playerId !== 0) return null;
+  try {
+    return getLivePlayerPosition(String(playerId), { allowStale: true });
+  } catch {
+    return null;
+  }
+}
+
+function applyLivePositionToHero(hero, live) {
+  if (!hero || !live) return;
+  if (live.heroAlive === false) return;
+
+  if (live.heroId != null && hero.hero_id != null) {
+    const liveHeroId = String(live.heroId);
+    const currentHeroId = String(hero.hero_id);
+    if (liveHeroId !== currentHeroId) return;
+  }
+
+  if (live.mapKey !== undefined && live.mapKey !== null) {
+    hero.map_key = live.mapKey;
+  }
+
+  const lx = Number(live.x);
+  if (Number.isFinite(lx)) {
+    hero.x = Math.round(lx);
+  }
+
+  const ly = Number(live.y);
+  if (Number.isFinite(ly)) {
+    hero.y = Math.round(ly);
+  }
+
+  if (live.ts != null) {
+    hero.live_ts = Number(live.ts) || Date.now();
+  } else {
+    hero.live_ts = Date.now();
+  }
+
+  if (live.heroId != null && hero.hero_id == null) {
+    hero.hero_id = live.heroId;
+  }
+
+  if (live.playerId && hero.player_id == null) {
+    hero.player_id = live.playerId;
+  }
+
+  hero.live_source = live.stale ? 'live_stale' : 'live';
+  if (live.age != null) {
+    hero.live_age_ms = Number(live.age);
+  }
+}
 
 const chebyshevTiles = (ax, ay, bx, by) => {
   if (!Number.isFinite(ax) || !Number.isFinite(ay) || !Number.isFinite(bx) || !Number.isFinite(by)) {
@@ -436,14 +493,30 @@ function buildMonsterTileMap(list = []) {
 
 function buildHeroTileSet(list = []) {
   const byMap = new Map();
+  const add = (mapKey, tx, ty) => {
+    if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;
+    const key = mapKey == null ? '__null__' : String(mapKey);
+    let set = byMap.get(key);
+    if (!set) { set = new Set(); byMap.set(key, set); }
+    set.add(tileKey(tx, ty));
+  };
+
   for (const h of list) {
-    const mapKey = h?.map_key == null ? '__null__' : String(h.map_key);
     const tx = tileOf(h?.x);
     const ty = tileOf(h?.y);
     if (!Number.isFinite(tx) || !Number.isFinite(ty)) continue;
-    if (!byMap.has(mapKey)) byMap.set(mapKey, new Set());
-    byMap.get(mapKey).add(tileKey(tx, ty));
+    add(h?.map_key, tx, ty);
   }
+
+  const now = Date.now();
+  for (const mem of _heroMemory.values()) {
+    if (!mem) continue;
+    const age = now - (mem.updatedAt || 0);
+    if (age > AGGRO_LOSS_MS * 2) continue;
+    if (!Number.isFinite(mem.tx) || !Number.isFinite(mem.ty)) continue;
+    add(mem.mapKey, mem.tx, mem.ty);
+  }
+
   return byMap;
 }
 
@@ -1321,6 +1394,93 @@ async function fetchHeroSnapshot(heroId, preferMapKey = null) {
   return row || null;
 }
 
+async function augmentHeroesWithLivePositions(heroes = []) {
+  const arr = Array.isArray(heroes) ? heroes : [];
+  const heroById = new Map();
+
+  for (const hero of arr) {
+    if (!hero) continue;
+    if (hero.player_id != null) {
+      hero.player_id = String(hero.player_id);
+    }
+    const heroId = hero.hero_id != null ? String(hero.hero_id) : null;
+    if (heroId) heroById.set(heroId, hero);
+  }
+
+  for (const hero of arr) {
+    if (!hero) continue;
+    const playerId = hero.player_id != null ? String(hero.player_id) : null;
+    if (!playerId) continue;
+    const live = getLivePosForPlayer(playerId);
+    if (!live) continue;
+    live.playerId = playerId;
+    const liveHeroId = live.heroId != null ? String(live.heroId) : null;
+    if (liveHeroId && hero.hero_id != null && String(hero.hero_id) !== liveHeroId) {
+      const actual = heroById.get(liveHeroId);
+      if (actual) {
+        applyLivePositionToHero(actual, { ...live });
+      }
+      continue;
+    }
+    applyLivePositionToHero(hero, { ...live });
+  }
+
+  const missing = [];
+  if (typeof listPlayerIds === 'function') {
+    for (const playerId of listPlayerIds()) {
+      const live = getLivePosForPlayer(playerId);
+      if (!live) continue;
+      live.playerId = playerId;
+      if (live.heroAlive === false) continue;
+      const heroId = live.heroId != null ? String(live.heroId) : null;
+      if (!heroId) continue;
+      if (heroById.has(heroId)) {
+        applyLivePositionToHero(heroById.get(heroId), { ...live });
+        continue;
+      }
+      missing.push({ playerId, heroId, live });
+    }
+  }
+
+  if (!missing.length) return arr;
+
+  const snapshots = await Promise.all(missing.map(({ heroId, live }) =>
+    fetchHeroSnapshot(heroId, live?.mapKey).catch(() => null)
+  ));
+
+  for (let i = 0; i < missing.length; i++) {
+    const snap = snapshots[i];
+    const base = missing[i];
+    const heroId = snap && snap.hero_id != null ? String(snap.hero_id) : base.heroId;
+    if (!heroId) continue;
+
+    const snapX = snap && snap.x != null ? Number(snap.x) : NaN;
+    const snapY = snap && snap.y != null ? Number(snap.y) : NaN;
+
+    const hero = {
+      hero_id: snap && snap.hero_id != null ? snap.hero_id : base.heroId,
+      player_id: snap && snap.player_id != null ? snap.player_id : base.playerId,
+      hp: snap && snap.hp != null ? snap.hp : null,
+      max_hp: snap && snap.max_hp != null ? snap.max_hp : null,
+      alive: snap ? snap.alive !== false : true,
+      map_key: snap && snap.map_key != null ? snap.map_key : (base.live?.mapKey ?? null),
+      x: Number.isFinite(snapX) ? snapX : base.live?.x,
+      y: Number.isFinite(snapY) ? snapY : base.live?.y,
+      updated_at: snap ? (snap.updated_at || snap.updatedAt || null) : null,
+    };
+
+    if (hero.player_id != null) {
+      hero.player_id = String(hero.player_id);
+    }
+
+    arr.push(hero);
+    heroById.set(heroId, hero);
+    applyLivePositionToHero(hero, { ...base.live });
+  }
+
+  return arr;
+}
+
 async function markLastHit(monsterId, heroId) {
   try {
     await run(
@@ -1352,6 +1512,8 @@ async function tick() {
       fetchAliveMonsters(),
       fetchAliveHeroesWithPos(),
     ]);
+
+    await augmentHeroesWithLivePositions(heroes);
 
     const aliveIdSet = new Set(monsters.map(m => Number(m.id)));
 
@@ -1423,7 +1585,11 @@ async function tick() {
 
     for (const [mapKeyStr, tilesForMap] of monsterTilesByMap.entries()) {
       if (movesUsed >= MONSTER_MAX_PER_TICK) break;
-      const heroTilesForMap = heroTilesByMap.get(mapKeyStr) || new Set();
+      let heroTilesForMap = heroTilesByMap.get(mapKeyStr);
+      if (!heroTilesForMap) {
+        heroTilesForMap = new Set();
+        heroTilesByMap.set(mapKeyStr, heroTilesForMap);
+      }
       const realKey = mapKeyStr === '__null__' ? null : mapKeyStr;
       const mapCollision = realKey ? await ensureCollisionFor(realKey) : null;
       movesUsed += await resolveTileStacks({
@@ -1447,7 +1613,11 @@ async function tick() {
         tilesForMap = new Map();
         monsterTilesByMap.set(mapKeyStr, tilesForMap);
       }
-      const heroTilesForMap = heroTilesByMap.get(mapKeyStr) || new Set();
+      let heroTilesForMap = heroTilesByMap.get(mapKeyStr);
+      if (!heroTilesForMap) {
+        heroTilesForMap = new Set();
+        heroTilesByMap.set(mapKeyStr, heroTilesForMap);
+      }
       const mapCollision = await ensureCollisionFor(m.map_key);
       const targetInfo = selectHeroTarget({ monster: m, heroes: hs, now });
 
