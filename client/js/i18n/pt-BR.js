@@ -130,6 +130,14 @@ export default {
     subscribeCopy: 'Assine para receber atualizações do roadmap, prévias e convites para recursos em beta fechado.',
     subscribeInvalid: 'Informe um e-mail válido para assinar.',
     subscribeSuccess: 'Valeu! Você receberá a próxima atualização do roadmap.',
+    phase1Title: 'Fase 1 — Forja do Lançamento',
+    phase1Copy: 'Loop AFK central, elenco de heróis, expedições de mineração e a primeira masmorra liberada para todos os fundadores.',
+    phase2Title: 'Fase 2 — Fronteira das Guildas',
+    phase2Copy: 'Salões de guilda, expedições cooperativas, automação de treinamento aprimorada e uma interface renovada para gestão da equipe.',
+    phase3Title: 'Fase 3 — Guerras de Cristal',
+    phase3Copy: 'Ligas PvP assíncronas, relíquias sazonais, rankings entre servidores e eventos de chefes cinematográficos.',
+    phase4Title: 'Fase 4 — Profundezas Infinitas',
+    phase4Copy: 'Andares procedurais, forja de relíquias, moradias e APIs avançadas de automação para mineradores veteranos.',
   },
   support: {
     title: 'Suporte',
@@ -275,6 +283,8 @@ export default {
     logAria: 'Log do jogo',
     placeholder: 'Digite uma mensagem…',
     send: 'Enviar',
+    logMobHitYou: '[Dano] {mob} atingiu você por {amount} (HP: {current}/{max})',
+    logYouHitTarget: '[Você] causou {amount} em {target} (HP alvo: {hp})',
   },
   loading: {
     badge: 'AFK Miners',

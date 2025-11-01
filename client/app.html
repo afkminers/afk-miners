@@ -162,8 +162,10 @@
     .lang-switcher__button {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      padding: 4px;
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 8px;
       background: rgba(30, 41, 59, 0.7);
@@ -174,7 +176,8 @@
     }
 
     .lang-switcher__button:hover,
-    .lang-switcher__button:focus {
+    .lang-switcher__button:focus,
+    .lang-switcher__button.is-open {
       outline: none;
       filter: brightness(1.1);
     }
@@ -187,8 +190,7 @@
     }
 
     .lang-switcher__code {
-      font-size: 10px;
-      letter-spacing: 0.5px;
+      display: none;
     }
 
     .lang-switcher__menu {
@@ -287,9 +289,8 @@
       <button id="btnLogout" class="danger" data-i18n="common.logout">Logout</button>
     </nav>
     <div class="lang-switcher" data-lang-root>
-      <button type="button" class="lang-switcher__button" data-lang-button data-i18n="lang.menu" data-i18n-attr="aria-label,title">
+      <button type="button" class="lang-switcher__button" data-lang-button data-i18n-attr="aria-label,title">
         <span class="lang-switcher__flag" data-lang-flag aria-hidden="true"></span>
-        <span class="lang-switcher__code" data-lang-code>EN</span>
         <span class="lang-switcher__sr" data-lang-current></span>
       </button>
       <div class="lang-switcher__menu" data-lang-menu role="menu" aria-hidden="true" hidden>

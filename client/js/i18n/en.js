@@ -130,6 +130,14 @@ export default {
     subscribeCopy: 'Subscribe to receive roadmap updates, sneak peeks, and invites to closed beta features.',
     subscribeInvalid: 'Please enter a valid email address to subscribe.',
     subscribeSuccess: 'Thanks! We will keep you posted with the next roadmap update.',
+    phase1Title: 'Phase 1 — Launch Forge',
+    phase1Copy: 'Core AFK loop, hero roster, mining expeditions, and the first dungeon released to all founders.',
+    phase2Title: 'Phase 2 — Guild Frontier',
+    phase2Copy: 'Guild halls, co-op expeditions, improved training automation, and a refreshed UI for roster management.',
+    phase3Title: 'Phase 3 — Crystal Wars',
+    phase3Copy: 'Async PvP leagues, seasonal relics, cross-server leaderboards, and cinematic boss events.',
+    phase4Title: 'Phase 4 — Endless Depths',
+    phase4Copy: 'Procedural dungeon tiers, relic crafting, housing, and advanced automation APIs for veteran miners.',
   },
   support: {
     title: 'Support',
@@ -275,6 +283,8 @@ export default {
     logAria: 'Game log',
     placeholder: 'Type a message…',
     send: 'Send',
+    logMobHitYou: '[Damage] {mob} hit you for {amount} (HP: {current}/{max})',
+    logYouHitTarget: '[You] dealt {amount} to {target} (target HP: {hp})',
   },
   loading: {
     badge: 'AFK Miners',
