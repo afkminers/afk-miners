@@ -703,6 +703,18 @@ export default function installCombatOverlay() {
   installWsHandlers();
   startRebindLoop();
 
+  window.addEventListener('combat:attack:target', (ev) => {
+    const id = ev?.detail?.id;
+    if (id != null) {
+      const str = String(id);
+      state.selectedTargetId = str;
+      if (!window.combatState) window.combatState = {};
+      window.combatState.targetId = str;
+    } else {
+      state.selectedTargetId = null;
+    }
+  });
+
   window.addEventListener('gamescene:ready', () => {
     for (const m of state.monsters.values()) {
       const s = ensureSpriteBind(m.id, m.key, m.spawnId);

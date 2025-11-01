@@ -10,6 +10,8 @@ import { publishPos, setMapKey } from './pos-publisher.js';
 import { onMessage, authenticate } from './ws/singleton.js';
 import { i18n } from './i18n/core.js';
 import { HeroState } from './state/hero-state.js';
+import { IS_MOBILE as RUNTIME_IS_MOBILE } from './engine/runtime-flags.js';
+import { attachDefaultHudActions } from './ui/mobile-hud.js';
 
 
 
@@ -19,6 +21,25 @@ const TILE = 32;
 const playerVis = { w: 32, h: 32, img: null, heroKey: null, anchorX: 0.5, anchorY: 0.9 };
 // Desliga a IA local de mobs; posição deve vir do servidor
 const ENABLE_LOCAL_MOB_AI = false;
+
+const IS_MOBILE = !!RUNTIME_IS_MOBILE;
+const MobileStats = (() => {
+  if (typeof window === 'undefined') return { events: {} };
+  window.MobileInputStats = window.MobileInputStats || { events: {} };
+  if (!window.MobileInputStats.events) window.MobileInputStats.events = {};
+  return window.MobileInputStats;
+})();
+
+function logMobileEvent(kind, extra = {}) {
+  if (!IS_MOBILE || typeof window === 'undefined') return;
+  try {
+    const bucket = MobileStats.events || (MobileStats.events = {});
+    bucket[kind] = (bucket[kind] || 0) + 1;
+  } catch {}
+  try {
+    window.dispatchEvent(new CustomEvent('mobile:event', { detail: { kind, extra } }));
+  } catch {}
+}
 
 
 // === buffer de pos_snap recebido cedo (antes do controller existir)
@@ -1313,6 +1334,7 @@ const preferHudId = QS.get('hud');    // ex: ?hud=hud
 
 const canvas = pickElByIds([preferCanvasId, 'view', 'scene'], ['canvas#view', 'canvas#scene', 'canvas']);
 const hud = pickElByIds([preferHudId, 'hud', 'app-hud'], ['#hud', '#app-hud']);
+const mobileMenuSheet = document.getElementById('mobileMenuSheet');
 
 if (!canvas) {
   console.error('play.js: canvas não encontrado (#view ou #scene).');
@@ -1324,17 +1346,89 @@ const ctx = canvas.getContext('2d');
 // expõe cedo para módulos externos
 window.GameScene.canvas = canvas;
 window.GameScene.ctx = ctx;
+window.GameScene.isMobile = IS_MOBILE;
+window.IS_MOBILE = IS_MOBILE;
+
+const BASE_CANVAS_WIDTH = canvas.width || Number(canvas.getAttribute('width')) || 960;
+const BASE_CANVAS_HEIGHT = canvas.height || Number(canvas.getAttribute('height')) || 540;
+const BASE_CANVAS_ASPECT = BASE_CANVAS_WIDTH / BASE_CANVAS_HEIGHT;
 
 // garante foco p/ WASD e click-to-move
 try { canvas.setAttribute('tabindex', '0'); } catch { }
 canvas.addEventListener('mousedown', () => { try { canvas.focus(); } catch { } });
 canvas.addEventListener('touchstart', () => { try { canvas.focus(); } catch { } });
 
+if (IS_MOBILE) {
+  try { canvas.style.touchAction = 'none'; } catch {}
+  const preventGesture = (ev) => { try { ev.preventDefault(); } catch {} };
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach((name) => {
+    document.addEventListener(name, preventGesture, { passive: false });
+  });
+  canvas.addEventListener('touchstart', (ev) => { ev.preventDefault(); }, { passive: false });
+  canvas.addEventListener('touchmove', (ev) => { ev.preventDefault(); }, { passive: false });
+  window.addEventListener('orientationchange', () => {
+    const orientation = (window.screen && window.screen.orientation && window.screen.orientation.type)
+      || (window.innerWidth > window.innerHeight ? 'landscape' : 'portrait');
+    logMobileEvent('orientation_change', { orientation });
+    if (mobileMenuOpen) closeMobileMenu();
+    setTimeout(() => resize(), 100);
+  });
+}
+
+let mobileMenuOpen = false;
+
+function openMobileMenu() {
+  if (!mobileMenuSheet) return;
+  mobileMenuSheet.hidden = false;
+  mobileMenuSheet.classList.add('is-open');
+  mobileMenuOpen = true;
+  logMobileEvent('menu_open');
+}
+
+function closeMobileMenu() {
+  if (!mobileMenuSheet) return;
+  mobileMenuSheet.classList.remove('is-open');
+  mobileMenuSheet.hidden = true;
+  mobileMenuOpen = false;
+  logMobileEvent('menu_close');
+}
+
+function toggleMobileMenu() {
+  if (!mobileMenuSheet) return;
+  if (mobileMenuOpen) closeMobileMenu(); else openMobileMenu();
+}
+
+if (mobileMenuSheet) {
+  mobileMenuSheet.addEventListener('click', (ev) => {
+    if (ev.target === mobileMenuSheet) closeMobileMenu();
+  });
+  const handleAction = (ev) => {
+    const action = ev.currentTarget?.getAttribute('data-sheet-action');
+    if (!action) return;
+    if (action === 'inventory') {
+      try { window.BackpackUI?.toggle?.(); } catch {}
+      closeMobileMenu();
+    } else if (action === 'settings') {
+      const stack = document.getElementById('rightStack');
+      try { window.openSettingsPanel?.(stack); } catch {}
+      closeMobileMenu();
+    } else if (action === 'close') {
+      closeMobileMenu();
+    }
+  };
+  mobileMenuSheet.querySelectorAll('[data-sheet-action]').forEach((btn) => {
+    btn.addEventListener('click', handleAction);
+  });
+}
+
 // helper DOM
 const $ = (s) => document.querySelector(s);
 
 // camera hoisted
 let camera;
+let mobileHudApi = null;
+let mobileInputControl = null;
+let frameTick = 0;
 
 /* ===================== Assets: normalização de paths ===================== */
 function assetUrl(p, { asTileset = false } = {}) {
@@ -1396,11 +1490,28 @@ document.addEventListener('settings:changed', () => { applySmoothing(); resize()
 function resize() {
   const shell = document.querySelector('#clientShell') || canvas.parentElement;
   const rect = shell ? shell.getBoundingClientRect() : { width: window.innerWidth * 0.9, height: window.innerHeight * 0.9 };
-  const wCSS = Math.max(320, Math.floor(rect.width || window.innerWidth * 0.9));
-  const hCSS = Math.max(200, Math.floor(rect.height || window.innerHeight * 0.9));
+  const availW = Math.max(240, Math.floor(rect.width || window.innerWidth * 0.9));
+  const availH = Math.max(160, Math.floor(rect.height || window.innerHeight * 0.9));
+  let wCSS = Math.max(320, availW);
+  let hCSS = Math.max(200, availH);
   const st = (window.GameSettings?.get?.() || window.GameSettings?.getState?.()) || {};
   const dprBase = window.devicePixelRatio || 1;
-  const dpr = Math.min(dprBase, Number(st.dprCap || dprBase));
+  let dpr = Math.min(dprBase, Number(st.dprCap || dprBase));
+
+  if (IS_MOBILE) {
+    const aspect = BASE_CANVAS_ASPECT || (wCSS / hCSS);
+    let targetW = Math.min(availW, Math.round(availH * aspect));
+    let targetH = Math.round(targetW / aspect);
+    if (targetH > availH) {
+      targetH = availH;
+      targetW = Math.round(targetH * aspect);
+    }
+    const roundedW = Math.max(160, Math.floor(targetW / 16) * 16);
+    const roundedH = Math.max(120, Math.floor(targetH / 16) * 16);
+    wCSS = Math.min(availW, Math.max(240, roundedW));
+    hCSS = Math.min(availH, Math.max(160, roundedH));
+    dpr = Math.max(1, Math.round(dpr));
+  }
 
   canvas.style.width = wCSS + 'px';
   canvas.style.height = hCSS + 'px';
@@ -1410,8 +1521,142 @@ function resize() {
   if (camera?.resize) camera.resize(canvas.width, canvas.height);
 
   applyCameraZoom();
+  if (mobileHudApi?.updateOrientation) mobileHudApi.updateOrientation();
 }
 window.addEventListener('resize', resize);
+
+function installMobileInputHandlers({ canvas: cv, camera: cam, clickMove }) {
+  if (!IS_MOBILE || !cv || !cam || !clickMove) return null;
+  const state = {
+    pointerId: null,
+    holdTimer: null,
+    holdActive: false,
+    targetId: null,
+    downAt: 0,
+    moved: false,
+    downScreen: null,
+    lastMoveSentAt: 0,
+  };
+  const HOLD_MS = 360;
+  const MOVE_THRESHOLD = 14;
+  const MOVE_COOLDOWN_MS = 120;
+
+  const pointerInfo = (ev) => {
+    const rect = cv.getBoundingClientRect();
+    const sx = ev.clientX - rect.left;
+    const sy = ev.clientY - rect.top;
+    const world = cam.screenToWorld ? cam.screenToWorld(sx, sy) : { x: sx, y: sy };
+    return { screenX: sx, screenY: sy, world };
+  };
+
+  const clearHoldTimer = () => {
+    if (state.holdTimer) {
+      clearTimeout(state.holdTimer);
+      state.holdTimer = null;
+    }
+  };
+
+  const stopHoldAttack = () => {
+    if (!state.holdActive) return;
+    state.holdActive = false;
+    CombatActions.stopAttack().catch(() => {});
+  };
+
+  const startHoldAttack = (targetId) => {
+    if (!targetId || state.holdActive) return;
+    state.holdActive = true;
+    logMobileEvent('hold_attack', { id: targetId });
+    CombatActions.startAttack({ targetInstanceId: String(targetId) }).catch(() => {});
+  };
+
+  const handlePointerDown = (ev) => {
+    if (ev.pointerType === 'mouse') return;
+    ev.preventDefault();
+    state.pointerId = ev.pointerId;
+    const info = pointerInfo(ev);
+    state.downScreen = info;
+    state.downAt = performance.now();
+    state.moved = false;
+    state.holdActive = false;
+    state.targetId = null;
+
+    const pick = pickMobAtWorldPoint(info.world.x, info.world.y);
+    if (pick && pick.id) {
+      state.targetId = pick.id;
+      setCombatTargetById(pick.id, { reason: 'tap' });
+      logMobileEvent('tap_target', { id: pick.id });
+    }
+
+    clearHoldTimer();
+    if (state.targetId) {
+      state.holdTimer = setTimeout(() => {
+        if (state.pointerId !== ev.pointerId) return;
+        startHoldAttack(state.targetId);
+      }, HOLD_MS);
+    }
+
+    try { cv.setPointerCapture(ev.pointerId); } catch {}
+  };
+
+  const handlePointerMove = (ev) => {
+    if (state.pointerId == null || ev.pointerId !== state.pointerId) return;
+    if (ev.pointerType === 'mouse') return;
+    const info = pointerInfo(ev);
+    const dx = info.screenX - (state.downScreen?.screenX ?? info.screenX);
+    const dy = info.screenY - (state.downScreen?.screenY ?? info.screenY);
+    if (!state.moved && Math.hypot(dx, dy) >= MOVE_THRESHOLD) {
+      state.moved = true;
+      clearHoldTimer();
+    }
+  };
+
+  const handlePointerEnd = (ev) => {
+    if (state.pointerId == null || ev.pointerId !== state.pointerId) return;
+    if (ev.pointerType === 'mouse') return;
+    ev.preventDefault();
+    const info = pointerInfo(ev);
+    clearHoldTimer();
+    if (state.holdActive) {
+      stopHoldAttack();
+    } else if (!state.targetId || state.moved) {
+      const now = performance.now();
+      if (now - state.lastMoveSentAt >= MOVE_COOLDOWN_MS) {
+        clickMove.handleClick(info.screenX, info.screenY);
+        state.lastMoveSentAt = now;
+        logMobileEvent('tap_move', { x: Math.round(info.world.x), y: Math.round(info.world.y) });
+      }
+    }
+    state.pointerId = null;
+    state.targetId = null;
+    state.holdActive = false;
+    state.downScreen = null;
+    try { cv.releasePointerCapture(ev.pointerId); } catch {}
+  };
+
+  const handlePointerCancel = (ev) => {
+    if (state.pointerId == null || ev.pointerId !== state.pointerId) return;
+    clearHoldTimer();
+    stopHoldAttack();
+    state.pointerId = null;
+    state.targetId = null;
+    state.downScreen = null;
+    try { cv.releasePointerCapture(ev.pointerId); } catch {}
+  };
+
+  cv.addEventListener('pointerdown', handlePointerDown, { passive: false });
+  cv.addEventListener('pointermove', handlePointerMove, { passive: false });
+  cv.addEventListener('pointerup', handlePointerEnd, { passive: false });
+  cv.addEventListener('pointercancel', handlePointerCancel, { passive: false });
+
+  return {
+    detach() {
+      cv.removeEventListener('pointerdown', handlePointerDown);
+      cv.removeEventListener('pointermove', handlePointerMove);
+      cv.removeEventListener('pointerup', handlePointerEnd);
+      cv.removeEventListener('pointercancel', handlePointerCancel);
+    }
+  };
+}
 
 /* ============================ Imagens ============================ */
 const IMG_CACHE = new Map();
@@ -1606,6 +1851,138 @@ function lootAtWorld(x, y) {
   for (const l of loots.values()) if (Math.abs(x - l.x) <= 16 && Math.abs(y - l.y) <= 16) return l;
   return null;
 }
+
+function mobBounds(mob) {
+  if (!mob) return null;
+  const meta = mob.meta || {};
+  const frameW = Number(meta?.frame?.width) || 32;
+  const frameH = Number(meta?.frame?.height) || 32;
+  const ax = Number.isFinite(meta?.anchor?.x) ? meta.anchor.x : 0.5;
+  const ay = Number.isFinite(meta?.anchor?.y) ? meta.anchor.y : 0.9;
+  const ox = Math.round((mob.x || 0) - frameW * ax);
+  const oy = Math.round((mob.y || 0) - frameH * ay);
+  return { x0: ox, y0: oy, x1: ox + frameW, y1: oy + frameH };
+}
+
+function pickMobAtWorldPoint(wx, wy) {
+  const list = Array.isArray(window.GameScene?.mobs) ? window.GameScene.mobs : [];
+  for (let i = list.length - 1; i >= 0; i--) {
+    const mob = list[i];
+    if (!mob || mob.hidden || mob.dead) continue;
+    const bounds = mobBounds(mob);
+    if (!bounds) continue;
+    if (wx >= bounds.x0 && wx <= bounds.x1 && wy >= bounds.y0 && wy <= bounds.y1) {
+      const id = mob.instanceId != null ? String(mob.instanceId) : (mob.id != null ? String(mob.id) : null);
+      if (id) return { id, mob };
+    }
+  }
+  return null;
+}
+
+function heroWorldPosition() {
+  try {
+    const ctrl = window.GameScene?.controller;
+    if (ctrl && typeof ctrl.getPosition === 'function') {
+      const pos = ctrl.getPosition();
+      if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) return pos;
+    }
+  } catch {}
+  return null;
+}
+
+let targetCycleIndex = 0;
+
+function computeTargetCandidates() {
+  const out = [];
+  const heroPos = heroWorldPosition();
+  const zoom = camera?.getZoom ? Number(camera.getZoom()) || 1 : 1;
+  const view = camera
+    ? {
+        x0: camera.x,
+        y0: camera.y,
+        x1: camera.x + (camera.w / zoom),
+        y1: camera.y + (camera.h / zoom),
+      }
+    : null;
+
+  const margin = 24;
+  const server = window.GameScene?.serverMonsters;
+  if (server && typeof server.values === 'function') {
+    for (const st of server.values()) {
+      if (!st || st.dead) continue;
+      if (st.mapKey && st.mapKey !== MAP_KEY) continue;
+      const sprite = st.sprite || window.GameScene?.getMobByInstanceId?.(st.id) || null;
+      const wx = Number.isFinite(st.renderX) ? st.renderX : Number.isFinite(st.x) ? st.x : (sprite?.x ?? NaN);
+      const wy = Number.isFinite(st.renderY) ? st.renderY : Number.isFinite(st.y) ? st.y : (sprite?.y ?? NaN);
+      if (!Number.isFinite(wx) || !Number.isFinite(wy)) continue;
+      const bounds = sprite ? mobBounds(sprite) : { x0: wx - 16, y0: wy - 16, x1: wx + 16, y1: wy + 16 };
+      if (view) {
+        if (bounds.x1 < view.x0 - margin || bounds.x0 > view.x1 + margin || bounds.y1 < view.y0 - margin || bounds.y0 > view.y1 + margin) {
+          continue;
+        }
+      }
+      const dx = heroPos ? wx - heroPos.x : 0;
+      const dy = heroPos ? wy - heroPos.y : 0;
+      out.push({ id: String(st.id), dist: Math.hypot(dx, dy), wx, wy });
+    }
+  }
+
+  if (!out.length) {
+    const list = Array.isArray(window.GameScene?.mobs) ? window.GameScene.mobs : [];
+    for (const mob of list) {
+      if (!mob || mob.hidden || mob.dead) continue;
+      const id = mob.instanceId != null ? String(mob.instanceId) : (mob.id != null ? String(mob.id) : null);
+      if (!id) continue;
+      const bounds = mobBounds(mob);
+      if (!bounds) continue;
+      if (view) {
+        if (bounds.x1 < view.x0 - margin || bounds.x0 > view.x1 + margin || bounds.y1 < view.y0 - margin || bounds.y0 > view.y1 + margin) {
+          continue;
+        }
+      }
+      const dx = heroPos ? (mob.x || 0) - heroPos.x : 0;
+      const dy = heroPos ? (mob.y || 0) - heroPos.y : 0;
+      out.push({ id, dist: Math.hypot(dx, dy), wx: mob.x || 0, wy: mob.y || 0 });
+    }
+  }
+
+  out.sort((a, b) => {
+    const diff = (a.dist - b.dist);
+    if (Math.abs(diff) > 1e-3) return diff;
+    return a.id.localeCompare(b.id);
+  });
+  return out;
+}
+
+function setCombatTargetById(id, { reason = 'manual' } = {}) {
+  if (!id) return null;
+  const str = String(id);
+  if (!window.combatState) window.combatState = {};
+  if (window.combatState.targetId === str) return str;
+  window.combatState.targetId = str;
+  try { window.dispatchEvent(new CustomEvent('combat:attack:target', { detail: { id: str, reason } })); } catch {}
+  if (IS_MOBILE) logMobileEvent('target_select', { id: str, reason });
+  return str;
+}
+
+function cycleCombatTarget() {
+  const candidates = computeTargetCandidates();
+  if (!candidates.length) return null;
+  const current = window.combatState?.targetId || null;
+  let idx = candidates.findIndex((c) => c.id === current);
+  if (idx === -1) idx = targetCycleIndex % candidates.length;
+  idx = (idx + 1) % candidates.length;
+  targetCycleIndex = idx;
+  const pick = candidates[idx];
+  if (!pick) return null;
+  setCombatTargetById(pick.id, { reason: 'cycle' });
+  return pick.id;
+}
+
+window.GameScene.pickMobAtWorld = pickMobAtWorldPoint;
+window.GameScene.getTargetCandidates = computeTargetCandidates;
+window.GameScene.selectTarget = setCombatTargetById;
+window.GameScene.cycleTarget = cycleCombatTarget;
 
 function drawLoot(l) {
   ctx.save();
@@ -2190,6 +2567,49 @@ function updateRespawns(now) {
   }
   const clickMove = new ClickToMove({ canvas, camera, controller, grid });
   clickMove.setAStar(astar);
+  window.GameScene.clickMove = clickMove;
+
+  if (IS_MOBILE) {
+    if (mobileInputControl && typeof mobileInputControl.detach === 'function') {
+      try { mobileInputControl.detach(); } catch {}
+    }
+    mobileInputControl = installMobileInputHandlers({ canvas, camera, clickMove });
+
+    if (!mobileHudApi) {
+      mobileHudApi = attachDefaultHudActions({
+        onTarget: () => {
+          const pick = cycleCombatTarget();
+          if (!pick && mobileHudApi?.setTargetEnabled) mobileHudApi.setTargetEnabled(false);
+        },
+        onBag: () => {
+          try { window.BackpackUI?.toggle?.(); } catch {}
+        },
+        onMenu: () => {
+          toggleMobileMenu();
+        },
+        onAttackStart: (targetId) => {
+          if (!targetId) return;
+          CombatActions.startAttack({ targetInstanceId: String(targetId) });
+        },
+        onAttackStop: () => {
+          CombatActions.stopAttack();
+        },
+      });
+      if (mobileHudApi?.updateOrientation) mobileHudApi.updateOrientation();
+
+      const updateHudState = () => {
+        const hasTarget = !!(window.combatState?.targetId);
+        mobileHudApi?.setAttackEnabled?.(hasTarget);
+        if (mobileHudApi?.setTargetEnabled) {
+          const available = computeTargetCandidates().length > 0;
+          mobileHudApi.setTargetEnabled(available);
+        }
+      };
+      window.addEventListener('combat:attack:target', updateHudState);
+      window.addEventListener('combat:attack:stop', updateHudState);
+      updateHudState();
+    }
+  }
 
   // Input
   Input.attach(window, canvas);
@@ -2318,6 +2738,14 @@ function updateRespawns(now) {
     if (hud) {
       const hudGameInfo = document.getElementById('hud-gameinfo');
       if (hudGameInfo) hudGameInfo.remove();
+    }
+
+    if (IS_MOBILE && mobileHudApi?.setTargetEnabled) {
+      frameTick = (frameTick + 1) % 60;
+      if (frameTick % 15 === 0) {
+        const hasCandidates = computeTargetCandidates().length > 0;
+        mobileHudApi.setTargetEnabled(hasCandidates);
+      }
     }
 
     requestAnimationFrame(frame);

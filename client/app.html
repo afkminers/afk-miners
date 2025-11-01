@@ -8,7 +8,9 @@
 <head>
   <meta charset="utf-8" />
   <title>AFK Miners — Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#0b1220" />
+  <link rel="manifest" href="/manifest.json" />
   <link rel="stylesheet" href="/css/app.css" />
   <!-- Fonte usada pelo HUD -->
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
@@ -329,6 +331,25 @@
 
         <!-- HUD raiz -->
         <div id="hud" class="hud"></div>
+
+        <!-- HUD mobile -->
+        <div id="mobileHud" class="mobile-hud" hidden>
+          <div class="mobile-hud__safe">
+            <button type="button" class="mobile-hud__btn" data-action="attack">ATTACK</button>
+            <button type="button" class="mobile-hud__btn" data-action="target">TARGET</button>
+            <button type="button" class="mobile-hud__btn" data-action="bag">BAG</button>
+            <button type="button" class="mobile-hud__btn" data-action="menu">MENU</button>
+          </div>
+        </div>
+
+        <div id="mobileMenuSheet" class="mobile-menu-sheet" hidden>
+          <div class="mobile-menu-sheet__inner">
+            <header>Menu</header>
+            <button type="button" data-sheet-action="inventory">Inventory</button>
+            <button type="button" data-sheet-action="settings">Settings</button>
+            <button type="button" data-sheet-action="close">Close</button>
+          </div>
+        </div>
 
         <!-- HUD do alvo -->
         <div id="targetHud"
@@ -1180,6 +1201,14 @@
         }
       }, { capture: true });
     })();
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('[sw]', err));
+      });
+    }
   </script>
 
 </body>

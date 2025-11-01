@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AFK Miners — Offline</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #0b1220;
+      color: #f7eac3;
+      font-family: 'Press Start 2P', monospace;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px;
+    }
+    .card {
+      background: #111a2f;
+      border: 6px solid #000;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 12px 0 #000;
+      max-width: 420px;
+    }
+    h1 { font-size: 18px; margin: 0 0 16px; }
+    p { font-size: 12px; line-height: 1.6; margin: 0 0 12px; }
+    .retry {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 4px solid #2b1512;
+      background: linear-gradient(#ffb23e, #f39b2d);
+      color: #2b1512;
+      text-decoration: none;
+      box-shadow: 0 6px 0 #2b1512;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Connection Lost</h1>
+    <p>You are offline. Reconnect to keep mining and fighting.</p>
+    <a class="retry" href="/app.html">Try Again</a>
+  </div>
+</body>
+</html>

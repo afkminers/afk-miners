@@ -18,6 +18,11 @@
 
   /* Escala global de UI (não afeta o canvas) */
   --ui-scale: 1;
+
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
 }
 
 *{ box-sizing:border-box }
@@ -407,6 +412,155 @@ html,body{
 .hud{
   position:absolute; left:10px; top:10px;
   background:#0e1628; border:1px solid var(--border); padding:6px 10px; border-radius:8px; font-size:12px;
+}
+
+/* ===================== Mobile Layout ===================== */
+body.is-mobile{
+  touch-action: manipulation;
+}
+
+body.is-mobile #tibiaLayout{
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  height: 100vh;
+}
+
+body.is-mobile #leftStack,
+body.is-mobile #rightStack,
+body.is-mobile #splitLeft,
+body.is-mobile #splitRight,
+body.is-mobile #chatDock{
+  display:none !important;
+}
+
+body.is-mobile #clientShell{
+  padding: 0 12px;
+  padding-bottom: calc(120px + var(--safe-area-bottom));
+  align-items: center;
+  justify-content: center;
+  background:#060c18;
+}
+
+body.is-mobile #scene{
+  max-width: 100%;
+  border-width: 4px;
+}
+
+body.is-mobile .hud{
+  top: calc(12px + var(--safe-area-top));
+  left: calc(12px + var(--safe-area-left));
+}
+
+.mobile-hud{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  display:flex;
+  justify-content:center;
+  pointer-events:none;
+  padding:0 12px;
+  padding-bottom: calc(12px + var(--safe-area-bottom));
+  opacity:0;
+  transition: opacity .18s ease;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.mobile-hud[data-active="1"]{
+  opacity:1;
+}
+
+.mobile-hud__safe{
+  display:flex;
+  gap:12px;
+  background:rgba(11,18,32,0.92);
+  border:4px solid #000;
+  border-radius:18px;
+  padding:12px;
+  box-shadow:0 8px 0 #000;
+  pointer-events:auto;
+}
+
+.mobile-hud[data-orientation="portrait"] .mobile-hud__safe{
+  flex-direction:row;
+}
+
+.mobile-hud[data-orientation="landscape"] .mobile-hud__safe{
+  flex-direction:column;
+}
+
+.mobile-hud__btn{
+  min-width:72px;
+  min-height:56px;
+  padding:10px 12px;
+  border:4px solid #2b1512;
+  border-radius:14px;
+  background:linear-gradient(#ffb23e,#f39b2d);
+  color:#2b1512;
+  font-family:'Press Start 2P', monospace;
+  font-size:12px;
+  box-shadow:0 6px 0 #2b1512, inset 0 -2px 0 rgba(0,0,0,.35);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  transition:transform .1s ease, filter .1s ease;
+  touch-action:manipulation;
+  cursor:pointer;
+}
+
+.mobile-hud__btn:disabled{
+  opacity:.5;
+  filter:grayscale(0.6);
+}
+
+.mobile-hud__btn.is-pressed{
+  transform:translateY(3px);
+  box-shadow:0 3px 0 #2b1512, inset 0 -2px 0 rgba(0,0,0,.5);
+}
+
+.mobile-menu-sheet{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(4,8,18,0.82);
+  backdrop-filter:blur(3px);
+  z-index:150;
+  padding:24px;
+  font-family:'Press Start 2P', monospace;
+}
+
+.mobile-menu-sheet.is-open{
+  display:flex;
+}
+
+.mobile-menu-sheet__inner{
+  background:#0e1628;
+  border:4px solid #000;
+  border-radius:18px;
+  width:min(320px, 90vw);
+  padding:20px;
+  box-shadow:0 12px 0 #000;
+  display:grid;
+  gap:12px;
+}
+
+.mobile-menu-sheet__inner header{
+  font-size:16px;
+  color:#f7eac3;
+  text-align:center;
+}
+
+.mobile-menu-sheet__inner button{
+  padding:12px 16px;
+  border:4px solid #2b1512;
+  border-radius:14px;
+  background:linear-gradient(#ffb23e,#f39b2d);
+  color:#2b1512;
+  font-family:'Press Start 2P', monospace;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  cursor:pointer;
 }
 
 /* ===================== Painéis Dockados ===================== */
