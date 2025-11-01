@@ -76,7 +76,6 @@ const _aggroUntil     = new Map(); // monsterId -> ms timestamp
 const _patrolTargets  = new Map(); // monsterId -> { tx, ty, expiresAt }
 const _lastPatrolMove = new Map(); // monsterId -> ms
 const _heroMemory     = new Map(); // heroId -> { tx, ty, lastTx, lastTy, heading, updatedAt, mapKey }
-const _lastSafeTile   = new Map(); // monsterId -> { tx, ty }
 const _attackProfileCache = new Map(); // monsterKey -> { profile, signature }
 const _attackWarnedKeys = new Set();
 
@@ -105,7 +104,6 @@ function resetInstanceState(monsterId) {
   _patrolTargets.delete(id);
   _lastPatrolMove.delete(id);
   _wasQuantized.delete(id);
-  _lastSafeTile.delete(id);
 }
 
 const tileOf = (v) => {
@@ -168,21 +166,6 @@ function applyLivePositionToHero(hero, live) {
   if (live.age != null) {
     hero.live_age_ms = Number(live.age);
   }
-}
-
-function rememberSafeTile(monster, heroTileX = null, heroTileY = null, approxTileX = null, approxTileY = null) {
-  if (!monster || monster.id == null) return;
-  const tx = tileOf(monster.x);
-  const ty = tileOf(monster.y);
-  if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;
-
-  const overlapsExact = Number.isFinite(heroTileX) && Number.isFinite(heroTileY)
-    && tx === heroTileX && ty === heroTileY;
-  const overlapsApprox = Number.isFinite(approxTileX) && Number.isFinite(approxTileY)
-    && tx === approxTileX && ty === approxTileY;
-  if (overlapsExact || overlapsApprox) return;
-
-  _lastSafeTile.set(monster.id, { tx, ty });
 }
 
 const chebyshevTiles = (ax, ay, bx, by) => {
@@ -1263,7 +1246,6 @@ async function resolveTileStacks({
       try { await updateMonsterPos(monsterId, px, py, now); } catch {}
 
       emitMonsterMove(monster);
-      rememberSafeTile(monster);
 
       used++;
       if (used >= budget) break;
@@ -1321,52 +1303,6 @@ async function resolveMonsterHeroOverlap({
   });
 
   if (!escape) {
-    const fallback = _lastSafeTile.get(monster.id);
-    if (fallback && (fallback.tx !== mx || fallback.ty !== my)) {
-      const fallbackKey = tileKey(fallback.tx, fallback.ty);
-      const blockedByHero = heroTileSet.has(fallbackKey);
-      const blockedByCollision = isTileBlockedByCollision(mapCollision, fallback.tx, fallback.ty);
-      const occ = tilesForMap.get(fallbackKey);
-      const blockedByMonster = tilesOccupiedByOthers(occ, monster.id) > 0;
-      if (!blockedByHero && !blockedByCollision && !blockedByMonster) {
-        const fromSet = tilesForMap.get(tileKey(mx, my));
-        if (fromSet) {
-          fromSet.delete(monster.id);
-          if (!fromSet.size) tilesForMap.delete(tileKey(mx, my));
-        }
-
-        if (!tilesForMap.has(fallbackKey)) tilesForMap.set(fallbackKey, new Set());
-        tilesForMap.get(fallbackKey).add(monster.id);
-
-        const prevPx = Number(monster.x);
-        const prevPy = Number(monster.y);
-        const px = centerOfTile(fallback.tx);
-        const py = centerOfTile(fallback.ty);
-        monster.x = px;
-        monster.y = py;
-
-        const moveFace = directionFromStep(prevPx, prevPy, px, py, monster.face || 'south');
-        if (moveFace) monster.face = moveFace;
-
-        updateLivePos(monster);
-        _lastMoveAt.set(monster.id, now);
-        if (movedSet && typeof movedSet.add === 'function') movedSet.add(monster.id);
-
-        try { await updateMonsterPos(monster.id, px, py, now); } catch {}
-
-        emitMonsterMove(monster, { resolvedOverlap: true, fallback: true });
-        rememberSafeTile(monster, heroTileX, heroTileY, approxTileX, approxTileY);
-        debugCombatLog({
-          mobId: monster.id,
-          targetId: targetId != null ? targetId : null,
-          dist: 0,
-          decided: 'SEPARATE_FALLBACK',
-          now,
-        });
-        return true;
-      }
-    }
-
     debugCombatLog({
       mobId: monster.id,
       targetId: targetId != null ? targetId : null,
@@ -1405,7 +1341,6 @@ async function resolveMonsterHeroOverlap({
   try { await updateMonsterPos(monster.id, px, py, now); } catch {}
 
   emitMonsterMove(monster, { resolvedOverlap: true });
-  rememberSafeTile(monster, heroTileX, heroTileY, approxTileX, approxTileY);
   debugCombatLog({
     mobId: monster.id,
     targetId: targetId != null ? targetId : null,
@@ -1715,7 +1650,6 @@ async function tick() {
         _wasQuantized.add(m.id);
         if (!m.face) m.face = 'south';
         updateLivePos(m);
-        rememberSafeTile(m);
       }
 
       const mx = tileOf(m.x), my = tileOf(m.y);
@@ -1806,37 +1740,12 @@ async function tick() {
           }
         }
 
-        const heroMemKey = targetHero.hero_id != null
-          ? String(targetHero.hero_id)
-          : (targetInfo.heroId != null ? String(targetInfo.heroId) : null);
-        const heroMem = heroMemKey ? _heroMemory.get(heroMemKey) : null;
-
-        if (!Number.isFinite(heroTileX) && Number.isFinite(heroMem?.tx)) {
-          heroTileX = heroMem.tx;
-          if (!Number.isFinite(targetHero.x)) {
-            targetHero.x = centerOfTile(heroMem.tx);
-          }
-        }
-        if (!Number.isFinite(heroTileY) && Number.isFinite(heroMem?.ty)) {
-          heroTileY = heroMem.ty;
-          if (!Number.isFinite(targetHero.y)) {
-            targetHero.y = centerOfTile(heroMem.ty);
-          }
-        }
-
-        const heroPxRaw = Number.isFinite(targetHero?.x)
+        const heroPx = Number.isFinite(targetHero?.x)
           ? toCenterPxCoord(targetHero.x)
           : toCenterPxCoord(hx);
-        const heroPyRaw = Number.isFinite(targetHero?.y)
+        const heroPy = Number.isFinite(targetHero?.y)
           ? toCenterPxCoord(targetHero.y)
           : toCenterPxCoord(hy);
-
-        const heroPx = Number.isFinite(heroPxRaw)
-          ? heroPxRaw
-          : (Number.isFinite(heroMem?.tx) ? centerOfTile(heroMem.tx) : heroPxRaw);
-        const heroPy = Number.isFinite(heroPyRaw)
-          ? heroPyRaw
-          : (Number.isFinite(heroMem?.ty) ? centerOfTile(heroMem.ty) : heroPyRaw);
 
         const approxHeroTileX = Number.isFinite(heroPx) ? Math.round(heroPx / TILE) : null;
         const approxHeroTileY = Number.isFinite(heroPy) ? Math.round(heroPy / TILE) : null;
@@ -1959,10 +1868,6 @@ async function tick() {
           : false;
         const pixelOverlap = Number.isFinite(pxCheby) && pxCheby <= OVERLAP_PX_EPS;
 
-        if (!tileOverlap && !approxTileOverlap && !pixelOverlap) {
-          rememberSafeTile(m, heroTileForBlockX, heroTileForBlockY, approxHeroTileX, approxHeroTileY);
-        }
-
         if (tileOverlap || approxTileOverlap || pixelOverlap) {
           const separated = await resolveMonsterHeroOverlap({
             monster: m,
@@ -2033,7 +1938,6 @@ async function tick() {
               await updateMonsterPos(m.id, px, py, now);
 
               emitMonsterMove(m);
-              rememberSafeTile(m, heroTileForBlockX, heroTileForBlockY, approxHeroTileX, approxHeroTileY);
               logDecision('MOVE_RETREAT');
               continue;
             }
@@ -2150,7 +2054,6 @@ async function tick() {
                 await updateMonsterPos(m.id, px, py, now);
 
                 emitMonsterMove(m);
-                rememberSafeTile(m, heroTileForBlockX, heroTileForBlockY, approxHeroTileX, approxHeroTileY);
                 logDecision('MOVE_CHASE');
                 continue;
               }
@@ -2256,7 +2159,6 @@ async function tick() {
           }
 
           updateLivePos(m);
-          rememberSafeTile(m, heroTileForBlockX, heroTileForBlockY, approxHeroTileX, approxHeroTileY);
 
           if (global._sendToMap) {
             const attackIntervalMs = cooldownMs;

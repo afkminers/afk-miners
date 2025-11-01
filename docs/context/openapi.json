@@ -56,13 +56,13 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "heroId": {
-                    "type": "number"
-                  },
                   "try {\n    const { heroId": {
                     "type": "number"
                   },
                   "targetInstanceId": {
+                    "type": "number"
+                  },
+                  "const { heroId": {
                     "type": "number"
                   }
                 }
@@ -123,13 +123,13 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "heroId": {
-                    "type": "number"
-                  },
                   "try {\n    const { heroId": {
                     "type": "number"
                   },
                   "targetInstanceId": {
+                    "type": "number"
+                  },
+                  "const { heroId": {
                     "type": "number"
                   }
                 }
@@ -1012,6 +1012,16 @@
               }
             }
           },
+          "409": {
+            "description": "Error 409 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Error 500 (inferred)",
             "content": {
@@ -1030,13 +1040,19 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "heroId": {
-                    "type": "number"
+                  "toTileX": {
+                    "type": "string"
+                  },
+                  "toTileY": {
+                    "type": "string"
                   },
                   "try {\n    const { heroId": {
                     "type": "number"
                   },
                   "targetInstanceId": {
+                    "type": "number"
+                  },
+                  "const { heroId": {
                     "type": "number"
                   }
                 }
@@ -1746,6 +1762,53 @@
         }
       }
     },
+    "/health": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/hero/:id": {
       "get": {
         "responses": {
@@ -1841,6 +1904,69 @@
         }
       }
     },
+    "/heroes": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skill",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/hit": {
       "post": {
         "responses": {
@@ -1911,6 +2037,15 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/leaderboard": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -2378,6 +2513,15 @@
         }
       }
     },
+    "/overview": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/ping": {
       "get": {
         "responses": {
@@ -2535,6 +2679,69 @@
             }
           }
         }
+      }
+    },
+    "/players": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skill",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/plot/create": {
@@ -2780,6 +2987,76 @@
         }
       }
     },
+    "/push": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "toTileX": {
+                    "type": "string"
+                  },
+                  "toTileY": {
+                    "type": "string"
+                  },
+                  "const { heroId": {
+                    "type": "number"
+                  },
+                  "targetInstanceId": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/register": {
       "post": {
         "responses": {
@@ -2922,6 +3199,15 @@
         }
       }
     },
+    "/roadmap": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/select": {
       "post": {
         "responses": {
@@ -2954,6 +3240,69 @@
             }
           }
         }
+      }
+    },
+    "/skills": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skill",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/state": {
@@ -3079,6 +3428,61 @@
                   "const playerId = req.user.id;\n\n    try {\n      const { heroKey": {
                     "type": "number"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ticket": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error 500 (inferred)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             }

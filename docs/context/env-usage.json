@@ -4,7 +4,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 2556
+        "index": 2671
       }
     ],
     "defaults": []
@@ -14,7 +14,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 2739
+        "index": 2848
       }
     ],
     "defaults": []
@@ -24,7 +24,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 2672
+        "index": 2783
       }
     ],
     "defaults": []
@@ -33,8 +33,8 @@
     "key": "APP_ORIGIN",
     "occurrences": [
       {
-        "file": "server\\auth\\middleware.js",
-        "index": 960
+        "file": "server\\middleware\\cors-allowlist.js",
+        "index": 437
       }
     ],
     "defaults": []
@@ -44,15 +44,10 @@
     "occurrences": [
       {
         "file": "server\\middleware\\cors-allowlist.js",
-        "index": 74
-      },
-      {
-        "file": "server\\auth\\middleware.js",
-        "index": 911
+        "index": 410
       }
     ],
     "defaults": [
-      "http://localhost:3000",
       "process.env.APP_ORIGIN"
     ]
   },
@@ -61,7 +56,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 5820
+        "index": 5930
       }
     ],
     "defaults": [
@@ -127,11 +122,11 @@
       },
       {
         "file": "server\\combat\\service.js",
-        "index": 13925
+        "index": 14228
       },
       {
         "file": "server\\combat\\routes.js",
-        "index": 843
+        "index": 1072
       },
       {
         "file": "server\\combat\\autoloop.js",
@@ -161,7 +156,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2414
+        "index": 2524
       }
     ],
     "defaults": [
@@ -173,23 +168,21 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 652
+        "index": 642
       }
     ],
-    "defaults": [
-      "undefined"
-    ]
+    "defaults": []
   },
   {
     "key": "COOKIE_NAME",
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 24830
+        "index": 25855
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 503
+        "index": 579
       }
     ],
     "defaults": []
@@ -199,31 +192,27 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 587
+        "index": 1107
       }
     ],
-    "defaults": [
-      "Lax"
-    ]
+    "defaults": []
   },
   {
     "key": "COOKIE_SECURE",
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 1318
+        "index": 1230
       }
     ],
-    "defaults": [
-      "false"
-    ]
+    "defaults": []
   },
   {
     "key": "CSRF_COOKIE",
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 718
+        "index": 1168
       }
     ],
     "defaults": [
@@ -323,6 +312,20 @@
     "defaults": []
   },
   {
+    "key": "DEBUG_COMBAT",
+    "occurrences": [
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 3525
+      },
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 3561
+      }
+    ],
+    "defaults": []
+  },
+  {
     "key": "DEBUG_HTTP_CACHE",
     "occurrences": [
       {
@@ -381,7 +384,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 3660
+        "index": 3770
       }
     ],
     "defaults": [
@@ -393,7 +396,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 32537
+        "index": 33562
       }
     ],
     "defaults": []
@@ -403,7 +406,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 5685
+        "index": 5795
       }
     ],
     "defaults": [
@@ -427,11 +430,11 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 24737
+        "index": 25762
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 362
+        "index": 443
       }
     ],
     "defaults": [
@@ -526,7 +529,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1802
+        "index": 2074
       }
     ],
     "defaults": [
@@ -538,7 +541,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1951
+        "index": 2223
       }
     ],
     "defaults": [
@@ -550,7 +553,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1875
+        "index": 2147
       }
     ],
     "defaults": [
@@ -562,7 +565,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 662
+        "index": 821
       }
     ],
     "defaults": [
@@ -586,7 +589,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 338
+        "index": 497
       }
     ],
     "defaults": [
@@ -598,7 +601,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 785
+        "index": 944
       }
     ],
     "defaults": [
@@ -610,7 +613,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 726
+        "index": 885
       }
     ],
     "defaults": [
@@ -622,7 +625,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1042
+        "index": 1314
       }
     ],
     "defaults": [
@@ -634,7 +637,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1268
+        "index": 1540
       }
     ],
     "defaults": [
@@ -646,7 +649,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1728
+        "index": 2000
       }
     ],
     "defaults": [
@@ -658,7 +661,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2036
+        "index": 2308
       }
     ],
     "defaults": [
@@ -670,7 +673,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1401
+        "index": 1673
       }
     ],
     "defaults": [
@@ -682,7 +685,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2119
+        "index": 2391
       }
     ],
     "defaults": [
@@ -694,7 +697,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2267
+        "index": 2539
       }
     ],
     "defaults": [
@@ -706,7 +709,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2193
+        "index": 2465
       }
     ],
     "defaults": [
@@ -718,7 +721,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2345
+        "index": 2617
       }
     ],
     "defaults": [
@@ -730,7 +733,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 531
+        "index": 690
       }
     ],
     "defaults": [
@@ -742,7 +745,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1647
+        "index": 1919
       }
     ],
     "defaults": [
@@ -754,7 +757,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1559
+        "index": 1831
       }
     ],
     "defaults": [
@@ -766,7 +769,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 426
+        "index": 585
       }
     ],
     "defaults": [
@@ -778,7 +781,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1473
+        "index": 1745
       }
     ],
     "defaults": [
@@ -790,7 +793,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 5334
+        "index": 5444
       },
       {
         "file": "server\\skills\\routes.js",
@@ -806,7 +809,7 @@
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 303
+        "index": 385
       }
     ],
     "defaults": [
@@ -849,7 +852,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 5393
+        "index": 5503
       }
     ],
     "defaults": [
@@ -861,7 +864,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 24687
+        "index": 25712
       }
     ],
     "defaults": [
@@ -921,11 +924,11 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 24795
+        "index": 25820
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 465
+        "index": 542
       }
     ],
     "defaults": [
@@ -938,7 +941,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 5959
+        "index": 6069
       }
     ],
     "defaults": []
@@ -948,7 +951,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2648
+        "index": 2758
       }
     ],
     "defaults": [
@@ -960,7 +963,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2743
+        "index": 2853
       }
     ],
     "defaults": []
@@ -970,7 +973,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 5577
+        "index": 5687
       }
     ],
     "defaults": [
