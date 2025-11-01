@@ -15,6 +15,8 @@ const state = {
   selectedTargetId: null,
 };
 
+const lastHeroFloaterAt = new Map(); // heroId -> ts
+
 const unbound = new Set(); // ids sem sprite vinculada
 
 const heroOverlay = {
@@ -173,6 +175,91 @@ function pushFloaterAtSprite(sprite, text, ttl = 900, color = "rgba(255,0,0,0.92
   state.floaters.push({ x, y, text, ttl, vy: -0.038, color, outline });
 }
 
+function pushHeroDamageFloater(heroId, amount) {
+  const dmg = Math.round(Math.abs(Number(amount)));
+  if (!Number.isFinite(dmg) || dmg <= 0) return;
+
+  const heroUi = window.HeroDamageUI;
+  const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const lastTs = lastHeroFloaterAt.get(heroId);
+  if (lastTs != null && now - lastTs < 75) return; // evita duplicar o mesmo hit em múltiplos eventos
+
+  let spawnedViaUi = false;
+  if (heroUi && typeof heroUi.spawnAtHero === 'function') {
+    try {
+      spawnedViaUi = heroUi.spawnAtHero(dmg, 'from_mob', heroId) === true;
+    } catch {}
+  }
+
+  let pos = null;
+  if (!spawnedViaUi) {
+    if (heroOverlay?.pos && Number.isFinite(heroOverlay.pos.x) && Number.isFinite(heroOverlay.pos.y)) {
+      pos = heroOverlay.pos;
+    }
+    if (!pos) {
+      const ctrl = window.GameScene?.controller;
+      const current = ctrl?.getPosition?.();
+      if (current && Number.isFinite(current.x) && Number.isFinite(current.y)) {
+        pos = current;
+      }
+    }
+
+    if (!spawnedViaUi && heroUi && typeof heroUi.spawn === 'function' && pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
+      try {
+        heroUi.spawn({ x: pos.x, y: pos.y, amount: dmg, kind: 'from_mob' });
+        spawnedViaUi = true;
+      } catch {}
+    }
+  }
+
+  if (!spawnedViaUi) {
+    if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return;
+
+    state.floaters.push({
+      x: Math.round(pos.x),
+      y: Math.round(pos.y - 26),
+      text: `-${dmg}`,
+      ttl: 900,
+      vy: -0.045,
+      color: '#ff4444',
+      outline: '#000',
+    });
+  }
+
+  lastHeroFloaterAt.set(heroId, now);
+}
+
+function spawnHeroDamageFloater(payload) {
+  if (!payload) return;
+  const heroId = normalizeHeroId(payload.heroId ?? payload.targetHeroId ?? payload.id);
+  if (!heroId) return;
+
+  const candidates = [payload.damage, payload.dmg, payload.amount];
+  let dmg = null;
+  for (const candidate of candidates) {
+    const num = Number(candidate);
+    if (Number.isFinite(num) && num > 0) {
+      dmg = num;
+      break;
+    }
+  }
+
+  if (dmg == null && payload.delta != null) {
+    const delta = Number(payload.delta);
+    if (Number.isFinite(delta) && delta < 0) {
+      dmg = Math.abs(delta);
+    }
+  }
+
+  if (dmg == null && Number.isFinite(payload.hpBefore) && Number.isFinite(payload.hpAfter)) {
+    const deltaHp = payload.hpBefore - payload.hpAfter;
+    if (deltaHp > 0) dmg = deltaHp;
+  }
+
+  if (dmg == null) return;
+  pushHeroDamageFloater(heroId, dmg);
+}
+
 function updateAndDrawFloaters(ctx, dtMs) {
   const list = state.floaters;
   for (let i = list.length - 1; i >= 0; i--) {
@@ -239,6 +326,31 @@ function installWsHandlers() {
       const isCrit = dmg >= (m.maxHp / 2);
       pushFloaterAtSprite(s, `-${dmg}`, 950, isCrit ? "#fff176" : "#ff4444", isCrit ? "#000" : "#fff");
     }
+  });
+
+  onMessage('monster:attack', (msg) => {
+    if (!msg) return;
+    const heroId = normalizeHeroId(msg.targetHeroId ?? msg.heroId ?? msg.id);
+    if (!heroId) return;
+    spawnHeroDamageFloater({ ...msg, heroId });
+    updateHeroOverlayFrom({
+      heroId,
+      hp: msg.hpAfter ?? msg.hp,
+      maxHp: msg.hpMax ?? msg.maxHp,
+    });
+  });
+
+  onMessage('hp:update', (msg) => {
+    if (!msg) return;
+    const entity = typeof msg.entity === 'string' ? msg.entity.toLowerCase() : null;
+    if (entity && entity !== 'hero') return;
+    const heroId = normalizeHeroId(msg.heroId ?? msg.id ?? msg.targetHeroId);
+    if (!heroId) return;
+    updateHeroOverlayFrom({
+      heroId,
+      hp: msg.hp ?? msg.hpAfter ?? msg.currentHp,
+      maxHp: msg.hpMax ?? msg.maxHp,
+    });
   });
 
   onMessage('monster_dead', (msg) => {
@@ -584,8 +696,8 @@ function drawTargetBox(ctx) {
 /* --------------- Install API --------------- */
 export default function installCombatOverlay() {
   onMessage('hero_hp', (msg) => { updateHeroOverlayFrom(msg); });
-  onMessage('hero_hit', (msg) => { updateHeroOverlayFrom(msg); });
-  onMessage('hero_dmg', (msg) => { updateHeroOverlayFrom(msg); });
+  onMessage('hero_hit', (msg) => { updateHeroOverlayFrom(msg); spawnHeroDamageFloater(msg); });
+  onMessage('hero_dmg', (msg) => { updateHeroOverlayFrom(msg); spawnHeroDamageFloater(msg); });
   window.addEventListener('hero:state', (ev) => { updateHeroOverlayFrom(ev.detail); });
   window.addEventListener('tick:hero', (ev) => { updateHeroOverlayFrom(ev.detail); });
   window.addEventListener('hero:active-changed', () => { resetHeroOverlayState(); });
