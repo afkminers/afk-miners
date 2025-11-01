@@ -505,6 +505,34 @@ function ensureMob(instanceId, patch = {}) {
     ? Math.max(PX_PER_TILE, Math.round(rawLeash))
     : null;
 
+  const resetThreat = patch.resetThreat === true;
+  const modeValue = patch.mode ?? cur.mode ?? 'idle';
+
+  let targetHeroId = null;
+  if (patch.targetHeroId !== undefined) {
+    targetHeroId = patch.targetHeroId == null ? null : String(patch.targetHeroId);
+  } else if (cur.targetHeroId != null) {
+    targetHeroId = String(cur.targetHeroId);
+  }
+
+  let threatMap;
+  if (patch.threat instanceof Map) threatMap = patch.threat;
+  else threatMap = resetThreat ? new Map() : (cur.threat || new Map());
+
+  const posUpdatedAt = Number(patch.posUpdatedAt ?? cur.posUpdatedAt ?? Date.now());
+  const lastSeenAt = Number(patch.lastSeenAt ?? cur.lastSeenAt ?? 0);
+  const repathAt = Number(patch.repathAt ?? cur.repathAt ?? 0);
+  const lastSwitchAt = Number(patch.lastSwitchAt ?? cur.lastSwitchAt ?? 0);
+  const agroSince = Number(patch.agroSince ?? cur.agroSince ?? 0);
+  const lastProgressAt = Number(patch.lastProgressAt ?? cur.lastProgressAt ?? Date.now());
+  const forcedAltUntil = Number(patch.forcedAltUntil ?? cur.forcedAltUntil ?? 0);
+  const combatStep = patch.combatStep === undefined ? (cur.combatStep || null) : patch.combatStep;
+  const lastCombatStepAt = Number(patch.lastCombatStepAt ?? cur.lastCombatStepAt ?? 0);
+  const nextAttackAt = Number(patch.nextAttackAt ?? cur.nextAttackAt ?? 0);
+  const returningHome = patch._returningHome !== undefined
+    ? Boolean(patch._returningHome)
+    : (resetThreat ? false : Boolean(cur._returningHome));
+
   const next = {
     instanceId: id,
     mapKey: patch.mapKey ?? cur.mapKey ?? null,
@@ -515,28 +543,27 @@ function ensureMob(instanceId, patch = {}) {
     monsterKey: patch.monsterKey ?? cur.monsterKey ?? null,
 
     // runtime
-    posUpdatedAt: Number(patch.posUpdatedAt ?? cur.posUpdatedAt ?? Date.now()),
-    mode: cur.mode || 'idle',
-    targetHeroId: cur.targetHeroId || null,
-    lastSeenAt: cur.lastSeenAt || 0,
-    repathAt: cur.repathAt || 0,
-    lastSwitchAt: cur.lastSwitchAt || 0,
-    threat: cur.threat || new Map(),
+    posUpdatedAt,
+    mode: modeValue,
+    targetHeroId,
+    lastSeenAt,
+    repathAt,
+    lastSwitchAt,
+    threat: threatMap,
     pendingStep,
 
-    agroSince: Number(patch.agroSince ?? cur.agroSince ?? 0),
-    lastProgressAt: Number(patch.lastProgressAt ?? cur.lastProgressAt ?? Date.now()),
-    forcedAltUntil: Number(patch.forcedAltUntil ?? cur.forcedAltUntil ?? 0),
-    combatStep: patch.combatStep === undefined ? (cur.combatStep || null) : patch.combatStep,
-    lastCombatStepAt: Number(patch.lastCombatStepAt ?? cur.lastCombatStepAt ?? 0),
-    lastKnownHeroPos: cur.lastKnownHeroPos ? { ...cur.lastKnownHeroPos } : null,
+    agroSince,
+    lastProgressAt,
+    forcedAltUntil,
+    combatStep,
+    lastCombatStepAt,
 
 
     // === Ranges em PX e cooldown em ms, todos no mesmo relógio (ms) ===
     attackRangeTiles: Math.max(1, attackRangeTiles | 0),
     aggroRangePx:  (aggroRangeTiles  * PX_PER_TILE) | 0,
     attackMs,
-    nextAttackAt: Number(patch.nextAttackAt ?? cur.nextAttackAt ?? 0),
+    nextAttackAt,
     attackDamage,
     attackType,
     attackRequiresLos: attackRequiresLos ? true : false,
@@ -553,7 +580,7 @@ function ensureMob(instanceId, patch = {}) {
     home,
     leashRangePx,
     leashPx: leashRangePx,
-    _returningHome: cur._returningHome || false,
+    _returningHome: returningHome,
   };
 
   mobs.set(id, next);
@@ -567,20 +594,37 @@ function computeRepathCooldownMs(mob) {
 }
 
 // Exposta para seed inicial a partir do index.js
-function seedPosition({ id, x, y, mapKey, spawnRect, speed = null, monsterKey = null, leashPx = null }) {
-  ensureMob(id, {
-    x: (x | 0),
-    y: (y | 0),
-    mapKey: String(mapKey),
-    mode: 'idle',
-    targetHeroId: null,
-    posUpdatedAt: Date.now(),
+function seedPosition({ id, x, y, mapKey, spawnRect, speed = null, monsterKey = null, leashPx = null, resetThreat = false }) {
+  const now = Date.now();
+  const patch = {
+    x: Number.isFinite(x) ? (x | 0) : undefined,
+    y: Number.isFinite(y) ? (y | 0) : undefined,
+    mapKey: mapKey == null ? undefined : String(mapKey),
+    posUpdatedAt: now,
     spawnRect,
     speed,
     monsterKey,
     leashPx,
-    pendingStep: null,
-  });
+  };
+
+  if (resetThreat) {
+    patch.resetThreat = true;
+    patch.mode = 'idle';
+    patch.targetHeroId = null;
+    patch.agroSince = 0;
+    patch.lastSeenAt = 0;
+    patch.repathAt = 0;
+    patch.lastSwitchAt = 0;
+    patch.pendingStep = null;
+    patch.forcedAltUntil = 0;
+    patch.combatStep = null;
+    patch.lastCombatStepAt = now;
+    patch.lastProgressAt = now;
+    patch.nextAttackAt = now;
+    patch._returningHome = false;
+  }
+
+  ensureMob(id, patch);
 }
 
 

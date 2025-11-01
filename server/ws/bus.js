@@ -6,6 +6,34 @@ let wss = null;
 // rooms[mapKey] = Set<WebSocket>
 const rooms = new Map();
 
+function resolveSocketPlayerId(ws) {
+  if (!ws) return null;
+  const candidate =
+    ws._player?.id ??
+    ws._playerId ??
+    ws.playerId ??
+    ws.userId ??
+    ws.user?.id ??
+    null;
+  if (candidate == null) return null;
+  try { return String(candidate); }
+  catch { return null; }
+}
+
+function forEachPlayerSocket(playerId, fn) {
+  const pid = String(playerId || '').trim();
+  if (!pid || typeof fn !== 'function' || !wss) return 0;
+  let count = 0;
+  wss.clients.forEach((sock) => {
+    if (!isOpen(sock)) return;
+    const sid = resolveSocketPlayerId(sock);
+    if (!sid || sid !== pid) return;
+    count += 1;
+    try { fn(sock); } catch {}
+  });
+  return count;
+}
+
 function isOpen(sock) {
   // 1 === WebSocket.OPEN (evita require de 'ws' aqui)
   return sock && sock.readyState === 1;
@@ -71,6 +99,29 @@ function moveSocketToMap(a, b) {
   joinMapSocket(toMapKey, ws);
 }
 
+function movePlayerToMap(playerId, mapKey, opts = {}) {
+  const mk = String(mapKey || 'house');
+  const ts = Number(opts?.ts) > 0 ? Number(opts.ts) : Date.now();
+  const hasCoords = Number.isFinite(opts?.x) && Number.isFinite(opts?.y);
+
+  return forEachPlayerSocket(playerId, (sock) => {
+    try { moveSocketToMap(sock, mk); }
+    catch {}
+    sock._mapKey = mk;
+    if (hasCoords) {
+      sock._pos = { x: opts.x | 0, y: opts.y | 0, mapKey: mk, ts };
+    }
+  });
+}
+
+function sendToPlayer(playerId, obj) {
+  if (!obj || typeof obj !== 'object' || !wss) return 0;
+  const payload = JSON.stringify(obj);
+  return forEachPlayerSocket(playerId, (sock) => {
+    try { sock.send(payload); } catch {}
+  });
+}
+
 /** Envia mensagem apenas para quem está em um dado mapa */
 function broadcastToMap(mapKey, obj) {
   const set = rooms.get(String(mapKey || 'house'));
@@ -89,4 +140,6 @@ module.exports = {
   joinMapSocket,
   moveSocketToMap,
   broadcastToMap,
+  sendToPlayer,
+  movePlayerToMap,
 };

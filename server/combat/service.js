@@ -3,7 +3,8 @@
 const { get, run } = require('../models/db');
 const K = require('../balance/config');
 const { applyTries, getClassRate } = require('../skills/engine');
-const { broadcast } = require('../ws/bus');
+const wsBus = require('../ws/bus');
+const { broadcast } = wsBus;
 const { TILE } = require('./geom');
 const { toTileCoords, chebyshevTiles, isValidTile } = require('../utils/tile-coords');
 const { resolveMonsterAttackProfile } = require('./monster_attack_profile');
@@ -17,6 +18,7 @@ const {
 } = require('../services/spawnPoint');
 // Se você usa este serviço central de XP:
 const { giveXp } = require('../services/heroProgress');
+const { setLivePlayerPosition, markHeroAlive } = require('../player/live_positions');
 
 const HERO_LAST_HIT_AT = new Map();
 const DEFAULT_RANGED_MIN = 2;
@@ -234,6 +236,7 @@ async function respawnHero(targetHeroId) {
   const y = Number.isFinite(spawn.y) ? spawn.y | 0 : RESPAWN_FALLBACK.y | 0;
 
   const hpOnRevive = Math.max(1, Math.floor(maxHp * RESPAWN_HP_FRACTION));
+  const nowTs = Date.now();
 
   // revive: hp + alive=true
   await run(`
@@ -246,7 +249,28 @@ async function respawnHero(targetHeroId) {
 
   await setHeroRespawnPoint(targetHeroId, mapKey, x, y);
   if (playerId) {
+    try { markHeroAlive(playerId, true, targetHeroId); } catch {}
+    try {
+      setLivePlayerPosition(playerId, {
+        x,
+        y,
+        mapKey,
+        heroId: targetHeroId,
+        heroAlive: true,
+        ts: nowTs,
+      });
+    } catch {}
     await upsertPlayerLastPos(playerId, mapKey, x, y);
+    try { wsBus.movePlayerToMap?.(playerId, mapKey, { x, y, ts: nowTs }); } catch {}
+    try {
+      wsBus.sendToPlayer?.(playerId, {
+        type: 'pos_snap',
+        heroId: targetHeroId,
+        mapKey,
+        x,
+        y,
+      });
+    } catch {}
   }
 
   // notifica cliente (snap + respawn)

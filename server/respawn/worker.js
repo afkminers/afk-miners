@@ -260,7 +260,8 @@ async function respawnTick({ all, run }) {
           spawnRect: { x: r.x, y: r.y, w: r.w, h: r.h },
           monsterKey: r.monsterKey,
           speed: r.speed,
-          leashPx: r.leash_px
+          leashPx: r.leash_px,
+          resetThreat: true,
         });
       }
     } catch {}
