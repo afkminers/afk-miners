@@ -443,11 +443,13 @@ async function loadMap(db, root, mapKey) {
     } else {
       for (const o of layer.objects) {
         const props = Object.fromEntries((o.properties || []).map(p => [p.name, p.value]));
+        const objectTypeRaw = ((o.class || o.type || '') + '').trim();
+        const type = objectTypeRaw ? objectTypeRaw.toLowerCase() : lname;
         await run(`
           INSERT INTO map_objects("mapKey", type, x, y, w, h, "propsJSON")
           VALUES ($1,$2,$3,$4,$5,$6,$7)
         `, [
-          mapKey, lname,
+          mapKey, type,
           Math.round(o.x || 0), Math.round(o.y || 0),
           Math.round(o.width || 0), Math.round(o.height || 0),
           JSON.stringify(props)

@@ -331,6 +331,21 @@ async function bootstrapContentTables() {
         PRIMARY KEY (player_id, map_key)
       )
     `);
+    await run(
+      `CREATE UNIQUE INDEX IF NOT EXISTS player_last_pos_player_map_uq ON player_last_pos(player_id, map_key)`
+    );
+
+    await run(`
+      CREATE TABLE IF NOT EXISTS hero_last_pos (
+        hero_id TEXT PRIMARY KEY,
+        map_key TEXT NOT NULL,
+        x INTEGER NOT NULL,
+        y INTEGER NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+    await run(`CREATE UNIQUE INDEX IF NOT EXISTS hero_last_pos_hero_id_uq ON hero_last_pos(hero_id)`);
+    await run('CREATE INDEX IF NOT EXISTS idx_hero_last_pos_map ON hero_last_pos(map_key)');
 
     await run(`
       CREATE TABLE IF NOT EXISTS hero_last_pos (
