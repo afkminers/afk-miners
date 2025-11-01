@@ -25,6 +25,10 @@
   },
   {
     "from": "client\\js\\play.js",
+    "to": "./i18n/core.js"
+  },
+  {
+    "from": "client\\js\\play.js",
     "to": "./state/hero-state.js"
   },
   {

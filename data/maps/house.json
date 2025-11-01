@@ -160,38 +160,6 @@
          "objects":[
                 {
                  "height":32,
-                 "id":7,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"count",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"monsterKey",
-                         "type":"string",
-                         "value":"cave_rat"
-                        }, 
-                        {
-                         "name":"respawnSec",
-                         "type":"int",
-                         "value":30
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"spawn"
-                        }],
-                 "rotation":0,
-                 "type":"spawn",
-                 "visible":true,
-                 "width":32,
-                 "x":456.061,
-                 "y":807.576
-                }, 
-                {
-                 "height":32,
                  "id":13,
                  "name":"",
                  "properties":[
@@ -219,8 +187,8 @@
                  "type":"spawn",
                  "visible":true,
                  "width":32,
-                 "x":77.2121,
-                 "y":101.758
+                 "x":237.818160606061,
+                 "y":274.485272727273
                 }, 
                 {
                  "height":32,
@@ -285,38 +253,6 @@
                  "width":32,
                  "x":1078.55,
                  "y":1094.36
-                }, 
-                {
-                 "height":32,
-                 "id":23,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"count",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"monsterKey",
-                         "type":"string",
-                         "value":"deer"
-                        }, 
-                        {
-                         "name":"respawnSec",
-                         "type":"int",
-                         "value":30
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"spawn"
-                        }],
-                 "rotation":0,
-                 "type":"spawn",
-                 "visible":true,
-                 "width":32,
-                 "x":1405.21,
-                 "y":534.667
                 }, 
                 {
                  "height":32,
@@ -443,8 +379,8 @@
                  "type":"spawn",
                  "visible":true,
                  "width":32,
-                 "x":1125.82,
-                 "y":707.515
+                 "x":1162.18363636364,
+                 "y":659.030151515151
                 }, 
                 {
                  "height":32,
@@ -475,8 +411,8 @@
                  "type":"spawn",
                  "visible":true,
                  "width":32,
-                 "x":1184.42,
-                 "y":799.697
+                 "x":1399.57151515152,
+                 "y":814.848515151515
                 }, 
                 {
                  "height":32,
@@ -544,70 +480,6 @@
                 }, 
                 {
                  "height":32,
-                 "id":32,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"count",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"monsterKey",
-                         "type":"string",
-                         "value":"fire_devil"
-                        }, 
-                        {
-                         "name":"respawnSec",
-                         "type":"int",
-                         "value":30
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"spawn"
-                        }],
-                 "rotation":0,
-                 "type":"spawn",
-                 "visible":true,
-                 "width":32,
-                 "x":1374.73,
-                 "y":149.758
-                }, 
-                {
-                 "height":32,
-                 "id":33,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"count",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"monsterKey",
-                         "type":"string",
-                         "value":"cave_rat"
-                        }, 
-                        {
-                         "name":"respawnSec",
-                         "type":"int",
-                         "value":30
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"spawn"
-                        }],
-                 "rotation":0,
-                 "type":"spawn",
-                 "visible":true,
-                 "width":32,
-                 "x":517.333,
-                 "y":777.939
-                }, 
-                {
-                 "height":32,
                  "id":34,
                  "name":"",
                  "properties":[
@@ -635,40 +507,8 @@
                  "type":"spawn",
                  "visible":true,
                  "width":32,
-                 "x":368.848,
-                 "y":871.879
-                }, 
-                {
-                 "height":32,
-                 "id":35,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"count",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"monsterKey",
-                         "type":"string",
-                         "value":"rotmaw"
-                        }, 
-                        {
-                         "name":"respawnSec",
-                         "type":"int",
-                         "value":30
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"spawn"
-                        }],
-                 "rotation":0,
-                 "type":"spawn",
-                 "visible":true,
-                 "width":32,
-                 "x":238.545,
-                 "y":202.182
+                 "x":353.696484848485,
+                 "y":723.394151515152
                 }, 
                 {
                  "height":32,
@@ -704,166 +544,6 @@
                 }, 
                 {
                  "height":32,
-                 "id":37,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"count",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"monsterKey",
-                         "type":"string",
-                         "value":"goblin"
-                        }, 
-                        {
-                         "name":"respawnSec",
-                         "type":"int",
-                         "value":30
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"spawn"
-                        }],
-                 "rotation":0,
-                 "type":"spawn",
-                 "visible":true,
-                 "width":32,
-                 "x":829.455,
-                 "y":393.091
-                }, 
-                {
-                 "height":32,
-                 "id":38,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"count",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"monsterKey",
-                         "type":"string",
-                         "value":"ghost"
-                        }, 
-                        {
-                         "name":"respawnSec",
-                         "type":"int",
-                         "value":30
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"spawn"
-                        }],
-                 "rotation":0,
-                 "type":"spawn",
-                 "visible":true,
-                 "width":32,
-                 "x":174.909,
-                 "y":1380.97
-                }, 
-                {
-                 "height":32,
-                 "id":39,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"count",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"monsterKey",
-                         "type":"string",
-                         "value":"bear"
-                        }, 
-                        {
-                         "name":"respawnSec",
-                         "type":"int",
-                         "value":30
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"spawn"
-                        }],
-                 "rotation":0,
-                 "type":"spawn",
-                 "visible":true,
-                 "width":32,
-                 "x":1132.48,
-                 "y":1165.82
-                }, 
-                {
-                 "height":32,
-                 "id":40,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"count",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"monsterKey",
-                         "type":"string",
-                         "value":"rat"
-                        }, 
-                        {
-                         "name":"respawnSec",
-                         "type":"int",
-                         "value":30
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"spawn"
-                        }],
-                 "rotation":0,
-                 "type":"spawn",
-                 "visible":true,
-                 "width":32,
-                 "x":793.091,
-                 "y":1065.82
-                }, 
-                {
-                 "height":32,
-                 "id":41,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"count",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"monsterKey",
-                         "type":"string",
-                         "value":"rat"
-                        }, 
-                        {
-                         "name":"respawnSec",
-                         "type":"int",
-                         "value":30
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"spawn"
-                        }],
-                 "rotation":0,
-                 "type":"spawn",
-                 "visible":true,
-                 "width":32,
-                 "x":726.424,
-                 "y":1196.12
-                }, 
-                {
-                 "height":32,
                  "id":42,
                  "name":"",
                  "properties":[
@@ -893,38 +573,6 @@
                  "width":32,
                  "x":1487.03,
                  "y":462.788
-                }, 
-                {
-                 "height":32,
-                 "id":43,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"count",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"monsterKey",
-                         "type":"string",
-                         "value":"demon_bonefiend"
-                        }, 
-                        {
-                         "name":"respawnSec",
-                         "type":"int",
-                         "value":30
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"spawn"
-                        }],
-                 "rotation":0,
-                 "type":"spawn",
-                 "visible":true,
-                 "width":32,
-                 "x":1447.64,
-                 "y":1432.48
                 }],
          "opacity":1,
          "type":"objectgroup",

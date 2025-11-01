@@ -12,6 +12,12 @@
     "text": "\">Durante a morte, movimento/ataque e interações ficam bloqueados.</div>"
   },
   {
+    "file": "client\\js\\i18n\\pt-BR.js",
+    "line": 194,
+    "tag": "TODO",
+    "text": "o seu elenco.',"
+  },
+  {
     "file": "docs\\COMBAT_FLAGS.md",
     "line": 72,
     "tag": "NOTE",

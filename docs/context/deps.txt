@@ -4,6 +4,7 @@ client\js\play.js -> ./api.js
 client\js\play.js -> ./combat/actions.js
 client\js\play.js -> ./pos-publisher.js
 client\js\play.js -> ./ws/singleton.js
+client\js\play.js -> ./i18n/core.js
 client\js\play.js -> ./state/hero-state.js
 client\js\gacha.js -> ./api.js
 client\js\gacha.js -> ./i18n/core.js

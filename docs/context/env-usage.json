@@ -122,7 +122,7 @@
       },
       {
         "file": "server\\combat\\service.js",
-        "index": 14228
+        "index": 14258
       },
       {
         "file": "server\\combat\\routes.js",
@@ -316,11 +316,11 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 3525
+        "index": 3711
       },
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 3561
+        "index": 3747
       }
     ],
     "defaults": []
@@ -529,7 +529,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2074
+        "index": 2260
       }
     ],
     "defaults": [
@@ -541,7 +541,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2223
+        "index": 2409
       }
     ],
     "defaults": [
@@ -553,7 +553,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2147
+        "index": 2333
       }
     ],
     "defaults": [
@@ -625,7 +625,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1314
+        "index": 1500
       }
     ],
     "defaults": [
@@ -637,7 +637,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1540
+        "index": 1726
       }
     ],
     "defaults": [
@@ -649,7 +649,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2000
+        "index": 2186
       }
     ],
     "defaults": [
@@ -661,7 +661,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2308
+        "index": 2494
       }
     ],
     "defaults": [
@@ -673,7 +673,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1673
+        "index": 1859
       }
     ],
     "defaults": [
@@ -681,11 +681,23 @@
     ]
   },
   {
+    "key": "MONSTER_OVERLAP_PX_EPS",
+    "occurrences": [
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 1259
+      }
+    ],
+    "defaults": [
+      "Math.round(TILE"
+    ]
+  },
+  {
     "key": "MONSTER_PATROL_INTERVAL_MS",
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2391
+        "index": 2577
       }
     ],
     "defaults": [
@@ -697,7 +709,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2539
+        "index": 2725
       }
     ],
     "defaults": [
@@ -709,7 +721,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2465
+        "index": 2651
       }
     ],
     "defaults": [
@@ -721,7 +733,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 2617
+        "index": 2803
       }
     ],
     "defaults": [
@@ -741,11 +753,23 @@
     ]
   },
   {
+    "key": "MONSTER_RANGE_PX_TOLERANCE",
+    "occurrences": [
+      {
+        "file": "server\\combat\\monster_atk_simple.js",
+        "index": 1352
+      }
+    ],
+    "defaults": [
+      "Math.round(TILE"
+    ]
+  },
+  {
     "key": "MONSTER_STACK_RESOLVE_DEPTH",
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1919
+        "index": 2105
       }
     ],
     "defaults": [
@@ -757,7 +781,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1831
+        "index": 2017
       }
     ],
     "defaults": [
@@ -781,7 +805,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\monster_atk_simple.js",
-        "index": 1745
+        "index": 1931
       }
     ],
     "defaults": [
