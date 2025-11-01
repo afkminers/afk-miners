@@ -1,14 +1,58 @@
 // client/js/gacha.js
 import { API, getCsrf, apiGet, apiPost } from './api.js';
+import { i18n } from './i18n/core.js';
 
 export function bindGachaUI(ctx, opts = {}) {
   const onHudUpdate = opts.onHudUpdate || (() => {});
   let player = null;
   let summonCost = 1;
+  let againEnabled = true;
+  let againHintVisible = false;
+
+  const RARITY_LABEL_KEYS = {
+    COMMON: 'rarity.COMMON',
+    RARE: 'rarity.RARE',
+    SUPER_RARE: 'rarity.SUPER_RARE',
+    LEGENDARY: 'rarity.LEGENDARY',
+    MYTHIC: 'rarity.MYTHIC',
+    ULTIMATE: 'rarity.ULTIMATE',
+  };
+
+  const ODDS_LABEL_KEYS = {
+    COMMON: 'gacha.oddsCommon',
+    RARE: 'gacha.oddsRare',
+    SUPER_RARE: 'gacha.oddsSuperRare',
+    LEGENDARY: 'gacha.oddsLegendary',
+  };
+
+  function translateRarity(code) {
+    const key = RARITY_LABEL_KEYS[String(code || '').toUpperCase()];
+    if (key) return i18n.t(key);
+    return cap(code);
+  }
+
+  function updateRarityLabels(scope) {
+    scope?.querySelectorAll?.('[data-rarity-label]')?.forEach((el) => {
+      const value = el.getAttribute('data-rarity-label');
+      el.textContent = translateRarity(value);
+    });
+  }
+
+  function updateOddsLabels(scope) {
+    scope?.querySelectorAll?.('[data-odds]')?.forEach((el) => {
+      const type = String(el.getAttribute('data-odds') || '').toUpperCase();
+      const key = ODDS_LABEL_KEYS[type];
+      if (!key) return;
+      const rate = el.getAttribute('data-rate') || '';
+      el.textContent = i18n.t(key, { rate });
+    });
+  }
 
   // ===== HEROES =====
   let __heroes = [];
   const heroesEl = document.getElementById('heroesGrid') || document.getElementById('inventory');
+
+  let lastMultiCount = 10;
 
   // ---------- helpers visuais ----------
   function playSfx(id){ const el=document.getElementById('sfx-'+id); if(!el) return; el.currentTime=0; el.play().catch(()=>{}); }
@@ -45,7 +89,9 @@ export function bindGachaUI(ctx, opts = {}) {
     if (ctx.elResult) ctx.elResult.textContent = ''; // não sujar o menu
     ctx.okbar.classList.remove('hidden');
     lockButtons(false);
-    toast(String(msg||'ERROR'), 'error');
+    const fallback = i18n.t('gacha.genericError');
+    const resolved = !msg || msg === 'ERROR' ? fallback : msg;
+    toast(String(resolved), 'error');
   }
 
   // ---------- FX simples ----------
@@ -104,7 +150,11 @@ export function bindGachaUI(ctx, opts = {}) {
     const imgUrl = hero.imageUrl || `img/heroes/${hero.heroKey || 'unknown'}.png`;
     if (ctx.sumImg) { ctx.sumImg.src=imgUrl; ctx.sumImg.alt=hero.name||'hero'; }
     if (ctx.sumName) ctx.sumName.textContent=hero.name||'—';
-    if (ctx.rarTag) { ctx.rarTag.textContent=rarity.replace('_',' '); ctx.rarTag.className='rar-tag rar-'+rarity; }
+    if (ctx.rarTag) {
+      ctx.rarTag.textContent = translateRarity(rarity);
+      ctx.rarTag.className = 'rar-tag rar-' + rarity;
+      ctx.rarTag.setAttribute('data-rarity-label', rarity);
+    }
     if (ctx.stAtk) ctx.stAtk.textContent=hero.attack ?? 0;
     if (ctx.stDef) ctx.stDef.textContent=hero.defense ?? 0;
     if (ctx.stSpd) ctx.stSpd.textContent=hero.speed ?? 0;
@@ -118,13 +168,23 @@ export function bindGachaUI(ctx, opts = {}) {
   }
 
   function setAgainState(enabled,hint=false){
-    if (ctx.btnAgain)   ctx.btnAgain.disabled   = !enabled;
-    if (ctx.btnAgain10) ctx.btnAgain10.disabled = !enabled;
-    if (ctx.againHint)  ctx.againHint.style.display = hint ? 'block':'none';
-    if (ctx.btnAgain)   ctx.btnAgain.textContent = `SUMMON AGAIN (${summonCost})`;
-    // atualiza preço no menu se existir
+    againEnabled = !!enabled;
+    againHintVisible = !!hint;
+    const costLabel = i18n.format.number(summonCost);
+    if (ctx.btnAgain) {
+      ctx.btnAgain.disabled = !enabled;
+      ctx.btnAgain.textContent = `${i18n.t('gacha.summonAgain')} (${costLabel})`;
+    }
+    if (ctx.btnAgain10) {
+      ctx.btnAgain10.disabled = !enabled;
+      ctx.btnAgain10.textContent = i18n.t('gacha.summonX10');
+    }
+    if (ctx.againHint) {
+      ctx.againHint.textContent = i18n.t('gacha.notEnough');
+      ctx.againHint.style.display = againHintVisible ? 'block' : 'none';
+    }
     const priceEl = document.getElementById('pullPrice');
-    if (priceEl) priceEl.textContent = `${summonCost} / pull`;
+    if (priceEl) priceEl.textContent = i18n.t('gacha.pullPrice', { value: costLabel });
   }
 
   // ---------- UI dos cards ----------
@@ -133,9 +193,10 @@ export function bindGachaUI(ctx, opts = {}) {
     const key = h.heroKey || 'unknown';
     const img=h.imageUrl||`img/heroes/${key}.png`;
     const metaLine=[h.class,h.role,h.attack_type,h.element].filter(Boolean).map(x=>x.replace(/_/g,' ')).join(' • ');
+    const rarityLabel = translateRarity(rarity);
     return `
-      <div class="card ${rarity} ${animate?'drop':''}" data-id="${h.id||''}" data-key="${key}" tabindex="0" role="button" aria-label="${h.name||'Hero'} (${rarity.replace('_',' ')})">
-        <div class="badge">${rarity.replace('_',' ')}</div>
+      <div class="card ${rarity} ${animate?'drop':''}" data-id="${h.id||''}" data-key="${key}" tabindex="0" role="button" aria-label="${h.name||'Hero'} (${rarityLabel})">
+        <div class="badge" data-rarity-label="${rarity}">${rarityLabel}</div>
         <div class="portrait"><img src="${img}" alt="${h.name||'Hero'}" style="image-rendering:pixelated"></div>
         <div class="meta">
           <div class="name">${h.name||'—'}</div>
@@ -149,8 +210,12 @@ export function bindGachaUI(ctx, opts = {}) {
   function renderHeroes(){
     if(!heroesEl) return;
     heroesEl.innerHTML=(__heroes||[]).map(h=>heroCardMarkup(h)).join('');
+    updateRarityLabels(heroesEl);
     const invMirror=document.getElementById('inventory');
-    if(invMirror && invMirror!==heroesEl) invMirror.innerHTML=heroesEl.innerHTML;
+    if(invMirror && invMirror!==heroesEl) {
+      invMirror.innerHTML=heroesEl.innerHTML;
+      updateRarityLabels(invMirror);
+    }
     document.dispatchEvent(new Event('heroes:rendered'));
     document.dispatchEvent(new CustomEvent('inventory:rendered',{detail:{inventory:__heroes}}));
   }
@@ -209,6 +274,11 @@ export function bindGachaUI(ctx, opts = {}) {
     ctx.multiPane.classList.remove('hidden');
     ctx.multiGrid.innerHTML='';
 
+    lastMultiCount = count;
+    if (ctx.multiHead) {
+      ctx.multiHead.textContent = i18n.t('gacha.multiResults', { count });
+    }
+
     let results = [];
     try{
       await getCsrf();
@@ -240,8 +310,9 @@ export function bindGachaUI(ctx, opts = {}) {
       const card=document.createElement('div');
       card.className=`mini ${rarity} pop`;
       const img = h.imageUrl || `img/heroes/${h.heroKey||'unknown'}.png`;
+      const rarityLabel = translateRarity(rarity);
       card.innerHTML = `
-        <span class="mini-tag">${rarity.replace('_',' ')}</span>
+        <span class="mini-tag" data-rarity-label="${rarity}">${rarityLabel}</span>
         <img class="mini-img" src="${img}" alt="${h.name||'Hero'}"
              style="image-rendering:pixelated;width:96px;height:96px;object-fit:contain;border-radius:8px">
         <div class="mini-name" style="font-weight:800">${h.name||'—'}</div>
@@ -253,6 +324,7 @@ export function bindGachaUI(ctx, opts = {}) {
     }
 
     renderHeroes();
+    updateRarityLabels(ctx.multiGrid);
 
     const last = results.at(-1);
     const coinsLeft = last?.newBalance?.coins ?? player?.coins ?? 0;
@@ -270,12 +342,13 @@ export function bindGachaUI(ctx, opts = {}) {
     if (coins < need){
       if (!ctx.overlay.classList.contains('show')){
         // feedback leve (toast local) e opcionalmente dica inline no menu
-        toast('Not enough coins','error');
-        inlineHint('Not enough coins');
+        const notEnough = i18n.t('gacha.notEnough');
+        toast(notEnough,'error');
+        inlineHint(notEnough);
         return;
       }
       // Se por algum motivo já estiver com overlay aberto, usa o fallback visual
-      showErrorInOverlay('Not enough coins');
+      showErrorInOverlay(i18n.t('gacha.notEnough'));
       return;
     }
 
@@ -300,7 +373,7 @@ export function bindGachaUI(ctx, opts = {}) {
         await playOneSummonAndReveal(data);
       }
     }catch(e){
-      showErrorInOverlay(e?.message || 'Failed to summon');
+      showErrorInOverlay(e?.message || i18n.t('gacha.genericError'));
     }finally{
       lockButtons(false);
     }
@@ -335,6 +408,35 @@ export function bindGachaUI(ctx, opts = {}) {
     // limpa qualquer resíduo no box do menu
     inlineHint('');
   }
+
+  function applyLanguage(){
+    if (ctx.elGacha) ctx.elGacha.textContent = i18n.t('gacha.summonX1');
+    if (ctx.elGacha10) ctx.elGacha10.textContent = i18n.t('gacha.summonX10');
+    if (ctx.btnOk) ctx.btnOk.textContent = i18n.t('gacha.okay');
+    if (ctx.chestHint) ctx.chestHint.textContent = i18n.t('gacha.pressAnyKeySkip');
+    const skipLabel = ctx.overlay?.querySelector('.press-any');
+    if (skipLabel) skipLabel.textContent = i18n.t('gacha.pressAnyKeyClick');
+    const skipCheckbox = ctx.overlay?.querySelector('.skipbox');
+    if (skipCheckbox) {
+      const text = skipCheckbox.querySelector('span');
+      if (text) text.textContent = i18n.t('gacha.skipChest');
+    }
+    updateRarityLabels(ctx.overlay);
+    updateOddsLabels(ctx.overlay);
+    updateOddsLabels(document.getElementById('view-summon'));
+    setAgainState(againEnabled, againHintVisible);
+    if (ctx.multiHead) {
+      ctx.multiHead.textContent = i18n.t('gacha.multiResults', { count: lastMultiCount });
+    }
+  }
+
+  i18n.onReady(() => {
+    applyLanguage();
+  });
+
+  i18n.onChange(() => {
+    applyLanguage();
+  });
 
   function getHeroes(){ return __heroes; }
   function getInventory(){ return __heroes; }
