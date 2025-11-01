@@ -17,12 +17,20 @@
       "body": "{ok:false,error:'start-failed' }"
     },
     {
-      "status": 400,
-      "body": "{ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }"
+      "status": 404,
+      "body": "{ok:false,error:'hero-not-found' }"
     },
     {
-      "status": 404,
-      "body": "{ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }"
+      "status": 500,
+      "body": "{ok:false,error:'stop-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-id' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero-id' }"
     }
   ],
   "GET /_routes": [
@@ -43,12 +51,20 @@
       "body": "{ok:false,error:'start-failed' }"
     },
     {
-      "status": 400,
-      "body": "{ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }"
+      "status": 404,
+      "body": "{ok:false,error:'hero-not-found' }"
     },
     {
-      "status": 404,
-      "body": "{ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }"
+      "status": 500,
+      "body": "{ok:false,error:'stop-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-id' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero-id' }"
     }
   ],
   "POST /:heroId/deposit": [
@@ -392,28 +408,32 @@
       "body": "{ok:false,error:'start-failed' }"
     },
     {
-      "status": 400,
-      "body": "{ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }"
-    },
-    {
       "status": 404,
-      "body": "{ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }"
+      "body": "{ok:false,error:'hero-not-found' }"
     },
     {
-      "status": 409,
-      "body": "{ok:false,error:'monster-dead',message:'O monstro não está ativo.' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'hero-pos-missing',message:'Posição do herói indisponível.' }"
+      "status": 500,
+      "body": "{ok:false,error:'stop-failed' }"
     },
     {
       "status": 400,
-      "body": "{ok:false,error:'map-diff',message:'Você está em outro mapa.' }"
+      "body": "{ok:false,error:'missing-id' }"
     },
     {
-      "status": 409,
-      "body": "{ok:false,error:'hero-too-far',message:'Você está longe demais do monstro.' }"
+      "status": 400,
+      "body": "{ok:false,error:'missing-hero-id' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'mob-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'hero-pos-missing' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:result.message }"
     }
   ],
   "POST /attack/stop": [
@@ -682,7 +702,6 @@
       "body": "{error:'debug_grant_failed' }"
     }
   ],
-  "GET /health": [],
   "GET /hero/:id": [
     {
       "status": 400,
@@ -709,20 +728,6 @@
     {
       "status": 500,
       "body": "{error:'Falha ao listar heróis' }"
-    }
-  ],
-  "GET /heroes": [
-    {
-      "status": 500,
-      "body": "{error:'unable to load heroes leaderboard' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'skill not available' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'unable to load skills leaderboard' }"
     }
   ],
   "POST /hit": [
@@ -767,7 +772,6 @@
       "body": "{ok:false,error:'revive-failed' }"
     }
   ],
-  "GET /leaderboard": [],
   "GET /list": [
     {
       "status": 500,
@@ -976,7 +980,6 @@
       "body": "{error:'too-fast' }"
     }
   ],
-  "GET /overview": [],
   "GET /ping": [
     {
       "status": 500,
@@ -1067,20 +1070,6 @@
     {
       "status": 500,
       "body": "{error:'debug_grant_failed' }"
-    }
-  ],
-  "GET /players": [
-    {
-      "status": 500,
-      "body": "{error:'unable to load players leaderboard' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'unable to load heroes leaderboard' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'skill not available' }"
     }
   ],
   "POST /plot/create": [
@@ -1183,60 +1172,6 @@
       "body": "{error:'Falha ao girar gacha' }"
     }
   ],
-  "POST /push": [
-    {
-      "status": 400,
-      "body": "{ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }"
-    },
-    {
-      "status": 404,
-      "body": "{ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }"
-    },
-    {
-      "status": 409,
-      "body": "{ok:false,error:'monster-dead',message:'O monstro não está ativo.' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'hero-pos-missing',message:'Posição do herói indisponível.' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'map-diff',message:'Você está em outro mapa.' }"
-    },
-    {
-      "status": 409,
-      "body": "{ok:false,error:'hero-too-far',message:'Você está longe demais do monstro.' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'invalid-target',message:'Destino inválido para o empurrão.' }"
-    },
-    {
-      "status": 400,
-      "body": "{ok:false,error:'invalid-target',message:'Escolha um SQM adjacente.' }"
-    },
-    {
-      "status": 409,
-      "body": "{ok:false,error:'same-tile',message:'O monstro já está nesse local.' }"
-    },
-    {
-      "status": 409,
-      "body": "{ok:false,error:'tile-occupied-hero',message:'Você está bloqueando esse SQM.' }"
-    },
-    {
-      "status": 409,
-      "body": "{ok:false,error:'tile-out-of-bounds',message:'Destino fora do mapa.' }"
-    },
-    {
-      "status": 409,
-      "body": "{ok:false,error:'tile-solid',message:'Esse SQM está bloqueado.' }"
-    },
-    {
-      "status": 409,
-      "body": "{ok:false,error:'tile-occupied-monster',message:'Outro monstro bloqueia esse SQM.' }"
-    }
-  ],
   "POST /register": [
     {
       "status": 400,
@@ -1309,7 +1244,6 @@
       "body": "{ok:false,error:'revive-failed' }"
     }
   ],
-  "GET /roadmap": [],
   "POST /select": [
     {
       "status": 400,
@@ -1322,16 +1256,6 @@
     {
       "status": 400,
       "body": "{error:'heroKey inválido' }"
-    }
-  ],
-  "GET /skills": [
-    {
-      "status": 400,
-      "body": "{error:'skill not available' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'unable to load skills leaderboard' }"
     }
   ],
   "GET /state": [
@@ -1436,21 +1360,6 @@
     {
       "status": 400,
       "body": "{error:'heroKey inválido' }"
-    }
-  ],
-  "GET /support": [],
-  "POST /ticket": [
-    {
-      "status": 400,
-      "body": "{error:'missing-fields' }"
-    },
-    {
-      "status": 422,
-      "body": "{error:'invalid-email' }"
-    },
-    {
-      "status": 500,
-      "body": "{error:'ticket-create-failed' }"
     }
   ],
   "GET /tick": []

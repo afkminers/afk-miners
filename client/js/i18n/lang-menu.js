@@ -40,6 +40,7 @@ function setupMenu(root) {
   const menu = root.querySelector('[data-lang-menu]');
   const options = Array.from(root.querySelectorAll('[data-lang-option]'));
   const flagTarget = root.querySelector('[data-lang-flag]');
+  const codeTarget = root.querySelector('[data-lang-code]');
 
   if (!button || !menu || options.length === 0) return;
 
@@ -50,7 +51,6 @@ function setupMenu(root) {
     menu.hidden = !open;
     button.setAttribute('aria-expanded', open ? 'true' : 'false');
     menu.setAttribute('aria-hidden', open ? 'false' : 'true');
-    button.classList.toggle('is-open', open);
     if (open) {
       const currentLang = i18n.getLang();
       const currentOption = options.find((opt) => opt.getAttribute('data-lang-option') === currentLang) || options[0];
@@ -111,6 +111,9 @@ function setupMenu(root) {
 
   function refresh(lang) {
     updateFlag(flagTarget, lang);
+    if (codeTarget) {
+      codeTarget.textContent = lang === 'pt-BR' ? 'PT' : 'EN';
+    }
     button.setAttribute('aria-label', i18n.t('lang.menu'));
     button.setAttribute('title', i18n.t('lang.menu'));
     const srCurrent = root.querySelector('[data-lang-current]');

@@ -8,7 +8,6 @@ import { getCsrf, apiGet } from './api.js';
 import { CombatActions } from './combat/actions.js';
 import { publishPos, setMapKey } from './pos-publisher.js';
 import { onMessage, authenticate } from './ws/singleton.js';
-import { i18n } from './i18n/core.js';
 import { HeroState } from './state/hero-state.js';
 
 
@@ -65,66 +64,13 @@ async function bootAuth() {
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // HP em tempo real -> HUD
-const LOG_FALLBACKS = {
-  'chat.logMobHitYou': '[Damage] {mob} hit you for {amount} (HP: {current}/{max})',
-  'chat.logYouHitTarget': '[You] dealt {amount} to {target} (target HP: {hp})',
-};
-
-function interpolate(template, vars = {}) {
-  if (typeof template !== 'string') return template;
-  return template.replace(/\{(\w+)\}/g, (_, token) => {
-    if (Object.prototype.hasOwnProperty.call(vars, token)) {
-      const value = vars[token];
-      return value == null ? '' : String(value);
-    }
-    return `{${token}}`;
-  });
-}
-
-function formatNumberLocale(value) {
-  if (value == null || value === '—') return '—';
-  if (typeof i18n?.format?.number === 'function') {
-    try {
-      return i18n.format.number(Number(value));
-    } catch {
-      return String(value);
-    }
-  }
-  if (Number.isFinite(Number(value))) return String(Number(value));
-  return String(value);
-}
-
-function translateLog(key, vars) {
-  if (i18n && typeof i18n.t === 'function') {
-    try {
-      const result = i18n.t(key, vars);
-      if (result && result !== key) return result;
-    } catch {}
-  }
-  const fallback = LOG_FALLBACKS[key];
-  if (fallback) return interpolate(fallback, vars);
-  return key;
-}
-
-function resolveMobName(raw) {
-  if (!raw && raw !== 0) return 'Mob ?';
-  const value = String(raw).trim();
-  if (!value) return 'Mob ?';
-  if (/mob\s+/i.test(value)) return value;
-  return `Mob ${value}`;
-}
-
 onMessage('hero_hp', (msg) => {
   if (window.HUD_ApplyHeroHpUpdate) {
     const hid = String(msg.heroId);
     window.HUD_ApplyHeroHpUpdate(hid, Number(msg.hp), Number(msg.maxHp));
   }
   // Log básico (se o chat ainda não tiver aba "Log")
-  const mobName = resolveMobName(msg.byMob ?? msg.instanceId);
-  const amount = formatNumberLocale(msg.dmg);
-  const current = formatNumberLocale(msg.hp);
-  const max = formatNumberLocale(msg.maxHp);
-  const line = translateLog('chat.logMobHitYou', { mob: mobName, amount, current, max });
+  const line = `[Dano] Mob ${msg.byMob ?? msg.instanceId} acertou você por ${msg.dmg} (HP: ${msg.hp}/${msg.maxHp})`;
   if (window.Chat?.pushLog) window.Chat.pushLog(line); else console.log('[LOG]', line);
 });
 
@@ -140,21 +86,9 @@ onMessage('hero_respawn', (msg) => {
 onMessage('combat_log', (m) => {
   let line = '';
   if (m.to) {
-    const amount = formatNumberLocale(m.amount);
-    const hpAfter = m.hpAfter != null ? formatNumberLocale(m.hpAfter) : '—';
-    const max = m.maxHp != null ? formatNumberLocale(m.maxHp) : null;
-    const hp = max ? `${hpAfter}/${max}` : hpAfter;
-    line = translateLog('chat.logYouHitTarget', {
-      amount,
-      target: m.to,
-      hp,
-    });
+    line = `[Você] causou ${m.amount} em ${m.to} (hp alvo: ${m.hpAfter ?? '—'})`;
   } else {
-    const mobName = resolveMobName(m.byMob ?? m.instanceId);
-    const amount = formatNumberLocale(m.amount);
-    const current = formatNumberLocale(m.hpAfter);
-    const max = formatNumberLocale(m.maxHp);
-    line = translateLog('chat.logMobHitYou', { mob: mobName, amount, current, max });
+    line = `[Dano] Mob ${m.byMob ?? m.instanceId} acertou você por ${m.amount} (HP: ${m.hpAfter ?? '—'}/${m.maxHp ?? '—'})`;
   }
   if (window.Chat?.pushLog) window.Chat.pushLog(line); else console.log('[LOG]', line);
 });
@@ -176,17 +110,10 @@ onMessage('hero_hit', (msg) => {
     `Mob ${msg?.monster?.id ?? msg?.instanceId ?? '?'}`;
 
   const amount = Number(msg.dmg ?? msg.amount ?? 0);
-  const currentHp = msg.hp != null ? formatNumberLocale(msg.hp) : '—';
-  const maxHp = msg.hpMax ?? msg.maxHp ?? msg.hp_max ?? msg.maxhp;
-  const maxHpFormatted = maxHp != null ? formatNumberLocale(maxHp) : '—';
+  const hpStr  = `${msg.hp}/${msg.hpMax ?? msg.maxHp ?? '—'}`;
 
   // Log de combate
-  const line = translateLog('chat.logMobHitYou', {
-    mob: mobName,
-    amount: formatNumberLocale(amount),
-    current: currentHp,
-    max: maxHpFormatted,
-  });
+  const line = `[Dano] ${mobName} te acertou por ${amount} (HP: ${hpStr})`;
   if (window.Chat?.pushLog) window.Chat.pushLog(line); else console.log('[LOG]', line);
 
   // Dano flutuante acima do herói atingido

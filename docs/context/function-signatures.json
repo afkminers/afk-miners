@@ -144,7 +144,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 78,
+    "line": 76,
     "kind": "arrow",
     "name": "STEP_MIN_RATIO",
     "params": [
@@ -153,7 +153,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 85,
+    "line": 83,
     "kind": "function",
     "name": "isStepWithinSpeedCap",
     "params": [
@@ -166,7 +166,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 111,
+    "line": 109,
     "kind": "function",
     "name": "flushOnePlayerPos",
     "params": [
@@ -175,42 +175,42 @@
   },
   {
     "file": "server\\index.js",
-    "line": 134,
+    "line": 132,
     "kind": "function",
     "name": "flushAllPlayerPos",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 141,
+    "line": 139,
     "kind": "function",
     "name": "startPosFlusher",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 150,
+    "line": 148,
     "kind": "function",
     "name": "stopPosFlusher",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 159,
+    "line": 157,
     "kind": "arrow",
     "name": "syncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 222,
+    "line": 211,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 407,
+    "line": 388,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -219,7 +219,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 729,
+    "line": 710,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -228,7 +228,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 809,
+    "line": 772,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -237,14 +237,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 824,
+    "line": 787,
     "kind": "function",
     "name": "ensurePlayerOnlineTable",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 837,
+    "line": 800,
     "kind": "function",
     "name": "resolveActiveHeroId",
     "params": [
@@ -253,7 +253,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 862,
+    "line": 825,
     "kind": "function",
     "name": "upsertOnlineByPlayer",
     "params": [
@@ -263,7 +263,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 875,
+    "line": 838,
     "kind": "function",
     "name": "markOfflineByPlayer",
     "params": [
@@ -272,7 +272,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 881,
+    "line": 844,
     "kind": "function",
     "name": "setupHeartbeat",
     "params": [
@@ -281,14 +281,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 883,
+    "line": 846,
     "kind": "function",
     "name": "noop",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 901,
+    "line": 864,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -297,35 +297,35 @@
   },
   {
     "file": "server\\index.js",
-    "line": 934,
+    "line": 897,
     "kind": "function",
     "name": "checkIdleAndManageLoops",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 965,
+    "line": 928,
     "kind": "function",
     "name": "idleAwareSyncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 984,
+    "line": 947,
     "kind": "function",
     "name": "startIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1000,
+    "line": 963,
     "kind": "function",
     "name": "stopIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1021,
+    "line": 984,
     "kind": "function",
     "name": "seedAIMobsFromDB",
     "params": [
@@ -334,7 +334,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 1346,
+    "line": 1309,
     "kind": "arrow",
     "name": "sameTile",
     "params": [
@@ -504,61 +504,6 @@
     "params": [
       "mapKey",
       "obj"
-    ]
-  },
-  {
-    "file": "server\\utils\\tile-coords.js",
-    "line": 3,
-    "kind": "function",
-    "name": "coerceNumber",
-    "params": [
-      "value"
-    ]
-  },
-  {
-    "file": "server\\utils\\tile-coords.js",
-    "line": 8,
-    "kind": "function",
-    "name": "resolveFeetPosition",
-    "params": [
-      "source"
-    ]
-  },
-  {
-    "file": "server\\utils\\tile-coords.js",
-    "line": 47,
-    "kind": "function",
-    "name": "toTileCoords",
-    "params": [
-      "source"
-    ]
-  },
-  {
-    "file": "server\\utils\\tile-coords.js",
-    "line": 61,
-    "kind": "function",
-    "name": "chebyshevTiles",
-    "params": [
-      "a",
-      "b"
-    ]
-  },
-  {
-    "file": "server\\utils\\tile-coords.js",
-    "line": 73,
-    "kind": "function",
-    "name": "isValidTile",
-    "params": [
-      "tile"
-    ]
-  },
-  {
-    "file": "server\\utils\\tile-coords.js",
-    "line": 77,
-    "kind": "function",
-    "name": "tileToCenter",
-    "params": [
-      "tile"
     ]
   },
   {
@@ -1588,25 +1533,6 @@
     "params": []
   },
   {
-    "file": "server\\routes\\support.js",
-    "line": 16,
-    "kind": "function",
-    "name": "sanitizeText",
-    "params": [
-      "value",
-      "max"
-    ]
-  },
-  {
-    "file": "server\\routes\\support.js",
-    "line": 21,
-    "kind": "function",
-    "name": "isValidEmail",
-    "params": [
-      "email"
-    ]
-  },
-  {
     "file": "server\\routes\\player.old.js",
     "line": 8,
     "kind": "function",
@@ -1653,105 +1579,6 @@
       "heroId",
       "itemKey",
       "qty"
-    ]
-  },
-  {
-    "file": "server\\routes\\leaderboard.js",
-    "line": 7,
-    "kind": "function",
-    "name": "queryWithFallback",
-    "params": [
-      "sql",
-      "params = []",
-      "fallbackSql = null"
-    ]
-  },
-  {
-    "file": "server\\routes\\leaderboard.js",
-    "line": 41,
-    "kind": "function",
-    "name": "ensureIndexes",
-    "params": []
-  },
-  {
-    "file": "server\\routes\\leaderboard.js",
-    "line": 59,
-    "kind": "function",
-    "name": "parseLimit",
-    "params": [
-      "raw"
-    ]
-  },
-  {
-    "file": "server\\routes\\leaderboard.js",
-    "line": 65,
-    "kind": "function",
-    "name": "parseOffset",
-    "params": [
-      "raw"
-    ]
-  },
-  {
-    "file": "server\\routes\\leaderboard.js",
-    "line": 71,
-    "kind": "function",
-    "name": "sanitizeQuery",
-    "params": [
-      "raw"
-    ]
-  },
-  {
-    "file": "server\\routes\\leaderboard.js",
-    "line": 77,
-    "kind": "function",
-    "name": "toIso",
-    "params": [
-      "value"
-    ]
-  },
-  {
-    "file": "server\\routes\\leaderboard.js",
-    "line": 86,
-    "kind": "function",
-    "name": "buildResponse",
-    "params": [
-      "rows",
-      "limit",
-      "offset",
-      "total = null"
-    ]
-  },
-  {
-    "file": "server\\routes\\leaderboard.js",
-    "line": 91,
-    "kind": "function",
-    "name": "mapPlayerRow",
-    "params": [
-      "row",
-      "offset",
-      "index"
-    ]
-  },
-  {
-    "file": "server\\routes\\leaderboard.js",
-    "line": 106,
-    "kind": "function",
-    "name": "mapHeroRow",
-    "params": [
-      "row",
-      "offset",
-      "index"
-    ]
-  },
-  {
-    "file": "server\\routes\\leaderboard.js",
-    "line": 121,
-    "kind": "function",
-    "name": "mapSkillRow",
-    "params": [
-      "row",
-      "offset",
-      "index"
     ]
   },
   {
@@ -2258,50 +2085,24 @@
   },
   {
     "file": "server\\middleware\\cors-allowlist.js",
-    "line": 9,
-    "kind": "function",
-    "name": "normalizeOrigin",
-    "params": [
-      "raw"
-    ]
-  },
-  {
-    "file": "server\\middleware\\cors-allowlist.js",
-    "line": 20,
+    "line": 3,
     "kind": "function",
     "name": "parseOrigins",
     "params": []
   },
   {
     "file": "server\\middleware\\cors-allowlist.js",
-    "line": 30,
+    "line": 8,
     "kind": "function",
-    "name": "isAfkminersHost",
+    "name": "sameOrigin",
     "params": [
-      "hostname"
+      "a",
+      "b"
     ]
   },
   {
     "file": "server\\middleware\\cors-allowlist.js",
-    "line": 34,
-    "kind": "function",
-    "name": "isLocalhostAllowed",
-    "params": [
-      "url"
-    ]
-  },
-  {
-    "file": "server\\middleware\\cors-allowlist.js",
-    "line": 39,
-    "kind": "function",
-    "name": "isOriginAllowed",
-    "params": [
-      "origin"
-    ]
-  },
-  {
-    "file": "server\\middleware\\cors-allowlist.js",
-    "line": 62,
+    "line": 12,
     "kind": "function",
     "name": "buildCors",
     "params": []
@@ -2621,21 +2422,21 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 19,
+    "line": 15,
     "kind": "function",
     "name": "posMod",
     "params": []
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 28,
+    "line": 24,
     "kind": "function",
     "name": "ai",
     "params": []
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 43,
+    "line": 39,
     "kind": "function",
     "name": "computeDamageTibiaLike",
     "params": [
@@ -2647,7 +2448,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 52,
+    "line": 48,
     "kind": "function",
     "name": "resolveWeaponSpeedMs",
     "params": [
@@ -2656,7 +2457,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 79,
+    "line": 75,
     "kind": "function",
     "name": "resolveSkillFromWeapon",
     "params": [
@@ -2665,7 +2466,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 89,
+    "line": 85,
     "kind": "function",
     "name": "getHeroSkillLevel",
     "params": [
@@ -2675,7 +2476,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 99,
+    "line": 95,
     "kind": "function",
     "name": "getHeroStats",
     "params": [
@@ -2684,7 +2485,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 126,
+    "line": 122,
     "kind": "function",
     "name": "getInstanceWithMonster",
     "params": [
@@ -2693,14 +2494,14 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 160,
+    "line": 155,
     "kind": "function",
     "name": "getDefaultReachPx",
     "params": []
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 162,
+    "line": 157,
     "kind": "function",
     "name": "getRespawnSeconds",
     "params": [
@@ -2709,7 +2510,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 172,
+    "line": 167,
     "kind": "function",
     "name": "rollLoot",
     "params": [
@@ -2718,7 +2519,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 191,
+    "line": 186,
     "kind": "function",
     "name": "persistDrops",
     "params": [
@@ -2729,7 +2530,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 211,
+    "line": 206,
     "kind": "function",
     "name": "respawnHero",
     "params": [
@@ -2738,7 +2539,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 259,
+    "line": 254,
     "kind": "function",
     "name": "applyHit",
     "params": [
@@ -2749,7 +2550,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 401,
+    "line": 396,
     "kind": "function",
     "name": "normalizeCombatPosition",
     "params": [
@@ -2759,7 +2560,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 455,
+    "line": 450,
     "kind": "function",
     "name": "applyMobHit",
     "params": [
@@ -2788,7 +2589,7 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 43,
+    "line": 37,
     "kind": "function",
     "name": "buildRangeTelemetry",
     "params": [
@@ -2799,7 +2600,7 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 80,
+    "line": 74,
     "kind": "function",
     "name": "formatRangeMessage",
     "params": [
@@ -2808,7 +2609,7 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 95,
+    "line": 89,
     "kind": "function",
     "name": "buildOutOfRangePayload",
     "params": [
@@ -2817,7 +2618,7 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 112,
+    "line": 106,
     "kind": "function",
     "name": "buildNoLoSPayload",
     "params": [
@@ -2826,7 +2627,7 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 148,
+    "line": 142,
     "kind": "function",
     "name": "getHeroOwnedBy",
     "params": [
@@ -2836,7 +2637,7 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 157,
+    "line": 151,
     "kind": "function",
     "name": "assertHeroAliveOwned",
     "params": [
@@ -2846,21 +2647,11 @@
   },
   {
     "file": "server\\combat\\routes.js",
-    "line": 165,
+    "line": 159,
     "kind": "function",
     "name": "getEquippedWeaponType",
     "params": [
       "heroId"
-    ]
-  },
-  {
-    "file": "server\\combat\\routes.js",
-    "line": 260,
-    "kind": "function",
-    "name": "normalizeBool",
-    "params": [
-      "value",
-      "fallback = true"
     ]
   },
   {
@@ -2954,94 +2745,8 @@
     ]
   },
   {
-    "file": "server\\combat\\monster_attack_profile.js",
-    "line": 9,
-    "kind": "function",
-    "name": "parseJSON",
-    "params": [
-      "raw"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_attack_profile.js",
-    "line": 34,
-    "kind": "function",
-    "name": "parseAttacksPayload",
-    "params": [
-      "raw"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_attack_profile.js",
-    "line": 39,
-    "kind": "function",
-    "name": "normalizeType",
-    "params": [
-      "rawType",
-      "fallbackRange = DEFAULT_MELEE_RANGE"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_attack_profile.js",
-    "line": 51,
-    "kind": "function",
-    "name": "coerceNumber",
-    "params": [
-      "value",
-      "fallback = null"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_attack_profile.js",
-    "line": 57,
-    "kind": "function",
-    "name": "clampRange",
-    "params": [
-      "min",
-      "max"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_attack_profile.js",
-    "line": 64,
-    "kind": "function",
-    "name": "pickPrimaryAttack",
-    "params": [
-      "attacks"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_attack_profile.js",
-    "line": 77,
-    "kind": "function",
-    "name": "resolveAttackRange",
-    "params": [
-      "type",
-      "overrideRange"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_attack_profile.js",
-    "line": 84,
-    "kind": "function",
-    "name": "resolveMonsterAttackProfile",
-    "params": [
-      "monster = {}",
-      "override = {}"
-    ]
-  },
-  {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 82,
-    "kind": "function",
-    "name": "debugCombatLog",
-    "params": [
-      "payload"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_atk_simple.js",
-    "line": 92,
+    "line": 70,
     "kind": "function",
     "name": "resetInstanceState",
     "params": [
@@ -3050,7 +2755,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 107,
+    "line": 85,
     "kind": "arrow",
     "name": "tileOf",
     "params": [
@@ -3059,7 +2764,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 113,
+    "line": 86,
     "kind": "arrow",
     "name": "centerOfTile",
     "params": [
@@ -3068,7 +2773,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 114,
+    "line": 87,
     "kind": "arrow",
     "name": "tileKey",
     "params": [
@@ -3078,38 +2783,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 116,
-    "kind": "function",
-    "name": "getLivePosForPlayer",
-    "params": [
-      "playerId"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_atk_simple.js",
-    "line": 125,
-    "kind": "function",
-    "name": "applyLivePositionToHero",
-    "params": [
-      "hero",
-      "live"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_atk_simple.js",
-    "line": 169,
-    "kind": "arrow",
-    "name": "chebyshevTiles",
-    "params": [
-      "ax",
-      "ay",
-      "bx",
-      "by"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_atk_simple.js",
-    "line": 176,
+    "line": 89,
     "kind": "function",
     "name": "toFiniteNumber",
     "params": [
@@ -3119,7 +2793,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 181,
+    "line": 94,
     "kind": "function",
     "name": "clamp",
     "params": [
@@ -3130,7 +2804,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 189,
+    "line": 102,
     "kind": "function",
     "name": "parseAttacksPayload",
     "params": [
@@ -3139,17 +2813,17 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 219,
+    "line": 132,
     "kind": "function",
     "name": "buildAttackProfile",
     "params": [
       "entry",
-      "monster"
+      "fallbackIntervalMs"
     ]
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 336,
+    "line": 172,
     "kind": "function",
     "name": "computeAttackSignature",
     "params": [
@@ -3158,7 +2832,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 349,
+    "line": 185,
     "kind": "function",
     "name": "resolveMonsterAttackProfile",
     "params": [
@@ -3167,7 +2841,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 394,
+    "line": 230,
     "kind": "function",
     "name": "toCenterPxCoord",
     "params": [
@@ -3176,7 +2850,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 409,
+    "line": 245,
     "kind": "function",
     "name": "pickFaceFromDelta",
     "params": [
@@ -3187,7 +2861,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 424,
+    "line": 260,
     "kind": "function",
     "name": "computeFaceToward",
     "params": [
@@ -3200,7 +2874,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 433,
+    "line": 269,
     "kind": "function",
     "name": "directionFromStep",
     "params": [
@@ -3213,7 +2887,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 440,
+    "line": 276,
     "kind": "function",
     "name": "isTileBlockedByCollision",
     "params": [
@@ -3224,7 +2898,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 449,
+    "line": 285,
     "kind": "function",
     "name": "updateLivePos",
     "params": [
@@ -3233,7 +2907,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 460,
+    "line": 296,
     "kind": "function",
     "name": "emitMonsterMove",
     "params": [
@@ -3243,7 +2917,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 477,
+    "line": 313,
     "kind": "function",
     "name": "buildMonsterTileMap",
     "params": [
@@ -3252,7 +2926,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 494,
+    "line": 330,
     "kind": "function",
     "name": "buildHeroTileSet",
     "params": [
@@ -3261,18 +2935,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 496,
-    "kind": "arrow",
-    "name": "add",
-    "params": [
-      "mapKey",
-      "tx",
-      "ty"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_atk_simple.js",
-    "line": 523,
+    "line": 343,
     "kind": "function",
     "name": "updateHeroMemory",
     "params": [
@@ -3282,7 +2945,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 565,
+    "line": 385,
     "kind": "function",
     "name": "predictHeroTile",
     "params": [
@@ -3293,7 +2956,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 594,
+    "line": 414,
     "kind": "function",
     "name": "computeDensityPenalty",
     "params": [
@@ -3308,7 +2971,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 632,
+    "line": 452,
     "kind": "function",
     "name": "computeFlankBonus",
     "params": [
@@ -3321,7 +2984,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 652,
+    "line": 472,
     "kind": "function",
     "name": "ensurePatrolTarget",
     "params": [
@@ -3334,7 +2997,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 688,
+    "line": 508,
     "kind": "function",
     "name": "selectHeroTarget",
     "params": [
@@ -3345,7 +3008,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 727,
+    "line": 547,
     "kind": "arrow",
     "name": "evaluateCandidate",
     "params": [
@@ -3354,7 +3017,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 735,
+    "line": 555,
     "kind": "arrow",
     "name": "pickFrom",
     "params": [
@@ -3363,9 +3026,9 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 819,
+    "line": 639,
     "kind": "function",
-    "name": "isAdjacentTile",
+    "name": "isAdjacent4Tiles",
     "params": [
       "mx",
       "my",
@@ -3375,20 +3038,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 829,
-    "kind": "function",
-    "name": "hasClearAdjacentPath",
-    "params": [
-      "mx",
-      "my",
-      "hx",
-      "hy",
-      "mapCollision"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_atk_simple.js",
-    "line": 842,
+    "line": 645,
     "kind": "function",
     "name": "isInsideSpawnRect",
     "params": [
@@ -3400,7 +3050,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 851,
+    "line": 654,
     "kind": "function",
     "name": "isTileInsideSpawn",
     "params": [
@@ -3411,7 +3061,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 923,
+    "line": 726,
     "kind": "function",
     "name": "tilesOccupiedByOthers",
     "params": [
@@ -3421,7 +3071,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 931,
+    "line": 734,
     "kind": "function",
     "name": "pickChaseGoalTile",
     "params": [
@@ -3435,25 +3085,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1005,
-    "kind": "arrow",
-    "name": "scoreCandidate",
-    "params": [
-      "candidate"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1013,
-    "kind": "arrow",
-    "name": "cardinalBias",
-    "params": [
-      "candidate"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1059,
+    "line": 799,
     "kind": "arrow",
     "name": "pushNode",
     "params": [
@@ -3465,7 +3097,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1093,
+    "line": 833,
     "kind": "arrow",
     "name": "scoreNode",
     "params": [
@@ -3475,40 +3107,21 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1336,
+    "line": 997,
     "kind": "function",
     "name": "fetchAliveMonsters",
     "params": []
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1361,
+    "line": 1022,
     "kind": "function",
     "name": "fetchAliveHeroesWithPos",
     "params": []
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1377,
-    "kind": "function",
-    "name": "fetchHeroSnapshot",
-    "params": [
-      "heroId",
-      "preferMapKey = null"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1397,
-    "kind": "function",
-    "name": "augmentHeroesWithLivePositions",
-    "params": [
-      "heroes = []"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1484,
+    "line": 1035,
     "kind": "function",
     "name": "markLastHit",
     "params": [
@@ -3518,7 +3131,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1496,
+    "line": 1047,
     "kind": "function",
     "name": "updateMonsterPos",
     "params": [
@@ -3530,14 +3143,14 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1506,
+    "line": 1057,
     "kind": "function",
     "name": "tick",
     "params": []
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1535,
+    "line": 1084,
     "kind": "arrow",
     "name": "cleanupStore",
     "params": [
@@ -3546,7 +3159,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1571,
+    "line": 1120,
     "kind": "arrow",
     "name": "ensureCollisionFor",
     "params": [
@@ -3555,30 +3168,14 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1767,
-    "kind": "arrow",
-    "name": "logDecision",
-    "params": [
-      "decided"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1782,
-    "kind": "arrow",
-    "name": "ensureFacingHero",
-    "params": []
-  },
-  {
-    "file": "server\\combat\\monster_atk_simple.js",
-    "line": 2155,
+    "line": 1484,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 2160,
+    "line": 1489,
     "kind": "function",
     "name": "stop",
     "params": []
@@ -3587,29 +3184,6 @@
     "file": "server\\combat\\los.js",
     "line": 10,
     "kind": "function",
-    "name": "hasLineOfSightTiles",
-    "params": [
-      "gridLike",
-      "aTx",
-      "aTy",
-      "bTx",
-      "bTy"
-    ]
-  },
-  {
-    "file": "server\\combat\\los.js",
-    "line": 29,
-    "kind": "arrow",
-    "name": "blocked",
-    "params": [
-      "cx",
-      "cy"
-    ]
-  },
-  {
-    "file": "server\\combat\\los.js",
-    "line": 49,
-    "kind": "function",
     "name": "hasLineOfSight",
     "params": [
       "gridLike",
@@ -3617,6 +3191,16 @@
       "ay",
       "bx",
       "by"
+    ]
+  },
+  {
+    "file": "server\\combat\\los.js",
+    "line": 27,
+    "kind": "arrow",
+    "name": "blocked",
+    "params": [
+      "cx",
+      "cy"
     ]
   },
   {
@@ -3800,14 +3384,14 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 25,
+    "line": 23,
     "kind": "arrow",
     "name": "broadcast",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 76,
+    "line": 75,
     "kind": "function",
     "name": "hasLoSpx",
     "params": [
@@ -3822,6 +3406,18 @@
     "file": "server\\combat\\ai-mobs.js",
     "line": 83,
     "kind": "function",
+    "name": "chebyPx",
+    "params": [
+      "ax",
+      "ay",
+      "bx",
+      "by"
+    ]
+  },
+  {
+    "file": "server\\combat\\ai-mobs.js",
+    "line": 87,
+    "kind": "function",
     "name": "normalizeMonsterPos",
     "params": [
       "{ x",
@@ -3831,7 +3427,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 118,
+    "line": 122,
     "kind": "function",
     "name": "computeSpawnCenterPx",
     "params": [
@@ -3841,7 +3437,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 139,
+    "line": 143,
     "kind": "function",
     "name": "canMobHitNow",
     "params": [
@@ -3853,7 +3449,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 175,
+    "line": 171,
     "kind": "function",
     "name": "recordHeroObservation",
     "params": [
@@ -3866,7 +3462,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 205,
+    "line": 201,
     "kind": "function",
     "name": "updateHeroMemoryForMap",
     "params": [
@@ -3877,7 +3473,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 224,
+    "line": 220,
     "kind": "function",
     "name": "predictHeroTileCx",
     "params": [
@@ -3888,7 +3484,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 246,
+    "line": 242,
     "kind": "function",
     "name": "computeMobDensityPenalty",
     "params": [
@@ -3902,7 +3498,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 281,
+    "line": 277,
     "kind": "function",
     "name": "computeMobFlankBonus",
     "params": [
@@ -3915,14 +3511,14 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 300,
+    "line": 296,
     "kind": "function",
     "name": "fetchAliveMonsters",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 338,
+    "line": 319,
     "kind": "function",
     "name": "fetchOnlineHeroesInMap",
     "params": [
@@ -3931,7 +3527,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 387,
+    "line": 368,
     "kind": "function",
     "name": "getHeroLastPosPx",
     "params": [
@@ -3941,7 +3537,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 406,
+    "line": 387,
     "kind": "function",
     "name": "resolveMobSpeedPx",
     "params": [
@@ -3950,7 +3546,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 414,
+    "line": 395,
     "kind": "function",
     "name": "ensureMob",
     "params": [
@@ -3960,7 +3556,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 531,
+    "line": 481,
     "kind": "function",
     "name": "computeRepathCooldownMs",
     "params": [
@@ -3969,7 +3565,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 538,
+    "line": 488,
     "kind": "function",
     "name": "seedPosition",
     "params": [
@@ -3984,7 +3580,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 556,
+    "line": 506,
     "kind": "function",
     "name": "addThreatFromHeroHit",
     "params": [
@@ -3995,21 +3591,21 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 566,
+    "line": 516,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 606,
+    "line": 554,
     "kind": "function",
     "name": "stop",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 657,
+    "line": 576,
     "kind": "function",
     "name": "tileKey",
     "params": [
@@ -4019,7 +3615,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 661,
+    "line": 580,
     "kind": "function",
     "name": "coerceTileSet",
     "params": [
@@ -4028,7 +3624,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 667,
+    "line": 586,
     "kind": "function",
     "name": "losGridRows",
     "params": [
@@ -4037,7 +3633,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 672,
+    "line": 591,
     "kind": "function",
     "name": "isSolidTile",
     "params": [
@@ -4048,7 +3644,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 682,
+    "line": 601,
     "kind": "function",
     "name": "isTileBlockedByMobs",
     "params": [
@@ -4060,18 +3656,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 695,
-    "kind": "function",
-    "name": "estaAoLadoDoJogador",
-    "params": [
-      "{ mob",
-      "heroCx",
-      "heroCy }"
-    ]
-  },
-  {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 705,
+    "line": 610,
     "kind": "function",
     "name": "buildHeroTileSet",
     "params": [
@@ -4082,7 +3667,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 730,
+    "line": 635,
     "kind": "function",
     "name": "buildMobOccupancy",
     "params": [
@@ -4091,23 +3676,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 750,
-    "kind": "function",
-    "name": "buildRingOptions",
-    "params": [
-      "{ baseCx",
-      "baseCy",
-      "offsets",
-      "heroTilesSet",
-      "heroKey",
-      "losGrid",
-      "occupancy",
-      "mob }"
-    ]
-  },
-  {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 788,
+    "line": 655,
     "kind": "function",
     "name": "maybeReturnMobHome",
     "params": [
@@ -4120,7 +3689,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 895,
+    "line": 762,
     "kind": "function",
     "name": "teleportMobToTile",
     "params": [
@@ -4132,7 +3701,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 940,
+    "line": 807,
     "kind": "function",
     "name": "resolveMobStacks",
     "params": [
@@ -4144,14 +3713,14 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 980,
+    "line": 847,
     "kind": "function",
     "name": "tickLoop",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1023,
+    "line": 890,
     "kind": "function",
     "name": "stepMob",
     "params": [
@@ -4166,7 +3735,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1286,
+    "line": 1137,
     "kind": "function",
     "name": "decayThreat",
     "params": [
@@ -4176,7 +3745,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1296,
+    "line": 1147,
     "kind": "function",
     "name": "selectTargetByThreat",
     "params": [
@@ -4188,7 +3757,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1397,
+    "line": 1235,
     "kind": "function",
     "name": "isBlockedPx",
     "params": [
@@ -4199,7 +3768,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1406,
+    "line": 1244,
     "kind": "function",
     "name": "selectMobChaseGoal",
     "params": [
@@ -4209,29 +3778,12 @@
       "heroMem",
       "losGrid",
       "occupancy",
-      "heroTiles",
-      "now = Date.now("
+      "heroTiles }"
     ]
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1539,
-    "kind": "function",
-    "name": "planMobChaseStep",
-    "params": [
-      "{ mob",
-      "tgtPos",
-      "losGrid",
-      "occupancy",
-      "heroTiles",
-      "heroMem",
-      "altPathMode",
-      "now }"
-    ]
-  },
-  {
-    "file": "server\\combat\\ai-mobs.js",
-    "line": 1562,
+    "line": 1318,
     "kind": "function",
     "name": "pickCombatDanceStep",
     "params": [
@@ -4245,7 +3797,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1608,
+    "line": 1364,
     "kind": "function",
     "name": "maybeHandleCombatDance",
     "params": [
@@ -4261,7 +3813,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1688,
+    "line": 1444,
     "kind": "function",
     "name": "pickStepGreedy",
     "params": [
@@ -4270,13 +3822,12 @@
       "losGrid",
       "occupancy",
       "heroTiles",
-      "heroMem",
-      "now = Date.now("
+      "heroMem"
     ]
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1757,
+    "line": 1512,
     "kind": "function",
     "name": "pickStepAlternate",
     "params": [
@@ -4286,13 +3837,12 @@
       "occupancy",
       "heroTiles",
       "heroMem",
-      "opts = {}",
-      "now = Date.now("
+      "opts = {}"
     ]
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1857,
+    "line": 1611,
     "kind": "function",
     "name": "clampToMapPx",
     "params": [
@@ -4302,7 +3852,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1868,
+    "line": 1622,
     "kind": "function",
     "name": "moveMobAndPersist",
     "params": [
@@ -4315,7 +3865,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1949,
+    "line": 1704,
     "kind": "function",
     "name": "removeHeroThreat",
     "params": [
@@ -4371,23 +3921,14 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 25,
-    "kind": "function",
-    "name": "normalizeSameSite",
-    "params": [
-      "value"
-    ]
-  },
-  {
-    "file": "server\\auth\\middleware.js",
-    "line": 51,
+    "line": 38,
     "kind": "function",
     "name": "cookieOpts",
     "params": []
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 63,
+    "line": 50,
     "kind": "function",
     "name": "setAuthCookie",
     "params": [
@@ -4397,7 +3938,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 68,
+    "line": 55,
     "kind": "function",
     "name": "clearAuthCookie",
     "params": [
@@ -4406,26 +3947,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 79,
-    "kind": "function",
-    "name": "isLeaderboardRequest",
-    "params": [
-      "req"
-    ]
-  },
-  {
-    "file": "server\\auth\\middleware.js",
-    "line": 84,
-    "kind": "function",
-    "name": "logLeaderboardBlock",
-    "params": [
-      "req",
-      "reason"
-    ]
-  },
-  {
-    "file": "server\\auth\\middleware.js",
-    "line": 91,
+    "line": 66,
     "kind": "function",
     "name": "requireAuth",
     "params": [
@@ -4436,7 +3958,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 126,
+    "line": 87,
     "kind": "function",
     "name": "csrfRoute",
     "params": [
@@ -4446,7 +3968,25 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 140,
+    "line": 102,
+    "kind": "function",
+    "name": "isAllowedOrigin",
+    "params": [
+      "req"
+    ]
+  },
+  {
+    "file": "server\\auth\\middleware.js",
+    "line": 107,
+    "kind": "arrow",
+    "name": "ok",
+    "params": [
+      "val"
+    ]
+  },
+  {
+    "file": "server\\auth\\middleware.js",
+    "line": 111,
     "kind": "function",
     "name": "requireCsrf",
     "params": [
@@ -4913,7 +4453,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 173,
+    "line": 172,
     "kind": "function",
     "name": "uniq",
     "params": [
@@ -4922,7 +4462,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 255,
+    "line": 254,
     "kind": "function",
     "name": "pickFreeSpriteForSpawn",
     "params": [
@@ -4931,7 +4471,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 307,
+    "line": 306,
     "kind": "function",
     "name": "getOrCreateServerMonsterState",
     "params": [
@@ -4940,7 +4480,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 336,
+    "line": 335,
     "kind": "function",
     "name": "resolveServerMoveSnapshot",
     "params": [
@@ -4950,7 +4490,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 402,
+    "line": 401,
     "kind": "function",
     "name": "currentSpriteRenderPos",
     "params": [
@@ -4960,7 +4500,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 422,
+    "line": 421,
     "kind": "function",
     "name": "computeTweenDuration",
     "params": [
@@ -4970,7 +4510,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 430,
+    "line": 429,
     "kind": "function",
     "name": "monsterTileKey",
     "params": [
@@ -4980,21 +4520,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 434,
+    "line": 433,
     "kind": "function",
     "name": "clearHeroBlocking",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 442,
+    "line": 441,
     "kind": "function",
     "name": "heroSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 452,
+    "line": 451,
     "kind": "function",
     "name": "heroFootboxTiles",
     "params": [
@@ -5004,7 +4544,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 460,
+    "line": 484,
     "kind": "function",
     "name": "updateHeroBlocking",
     "params": [
@@ -5014,7 +4554,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 500,
+    "line": 524,
     "kind": "function",
     "name": "removeMonsterFromTile",
     "params": [
@@ -5023,7 +4563,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 513,
+    "line": 537,
     "kind": "function",
     "name": "updateMonsterBlocking",
     "params": [
@@ -5034,7 +4574,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 550,
+    "line": 606,
     "kind": "function",
     "name": "clearMonsterBlocking",
     "params": [
@@ -5043,7 +4583,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 556,
+    "line": 612,
     "kind": "function",
     "name": "isTileBlockedByMonster",
     "params": [
@@ -5054,7 +4594,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 574,
+    "line": 630,
     "kind": "function",
     "name": "msgMatchesCurrentMap",
     "params": [
@@ -5063,7 +4603,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 583,
+    "line": 639,
     "kind": "function",
     "name": "ensureServerMonsterSprite",
     "params": [
@@ -5072,7 +4612,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 634,
+    "line": 690,
     "kind": "function",
     "name": "pickFaceFromDelta",
     "params": [
@@ -5083,7 +4623,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 650,
+    "line": 706,
     "kind": "function",
     "name": "updateSpriteFacingFromDelta",
     "params": [
@@ -5095,7 +4635,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 656,
+    "line": 712,
     "kind": "function",
     "name": "setMonsterAction",
     "params": [
@@ -5108,7 +4648,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 680,
+    "line": 736,
     "kind": "function",
     "name": "applyServerPosition",
     "params": [
@@ -5121,7 +4661,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 884,
+    "line": 940,
     "kind": "function",
     "name": "updateServerDrivenMonsters",
     "params": [
@@ -5130,21 +4670,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 959,
+    "line": 1015,
     "kind": "function",
     "name": "retryBindPendingServerMonsters",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 995,
+    "line": 1051,
     "kind": "function",
     "name": "scheduleServerMonsterRetry",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1004,
+    "line": 1060,
     "kind": "function",
     "name": "handleServerMonsterRespawn",
     "params": [
@@ -5153,7 +4693,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1026,
+    "line": 1082,
     "kind": "function",
     "name": "handleServerMonsterMove",
     "params": [
@@ -5162,7 +4702,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1062,
+    "line": 1118,
     "kind": "function",
     "name": "handleServerMonsterDead",
     "params": [
@@ -5171,7 +4711,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1129,
+    "line": 1185,
     "kind": "function",
     "name": "getHeroWorldPosition",
     "params": [
@@ -5180,7 +4720,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1142,
+    "line": 1198,
     "kind": "function",
     "name": "triggerMonsterAttackAnimation",
     "params": [
@@ -5189,7 +4729,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1200,
+    "line": 1256,
     "kind": "function",
     "name": "normalizeLegacyMobPos",
     "params": [
@@ -5198,7 +4738,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1215,
+    "line": 1271,
     "kind": "function",
     "name": "handleLegacyMobPos",
     "params": [
@@ -5207,7 +4747,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1233,
+    "line": 1289,
     "kind": "function",
     "name": "pickElByIds",
     "params": [
@@ -5217,7 +4757,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1261,
+    "line": 1317,
     "kind": "arrow",
     "name": "$",
     "params": [
@@ -5226,7 +4766,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1267,
+    "line": 1323,
     "kind": "function",
     "name": "assetUrl",
     "params": [
@@ -5236,7 +4776,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1279,
+    "line": 1335,
     "kind": "function",
     "name": "normalizeTilesetPath",
     "params": [
@@ -5245,7 +4785,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1287,
+    "line": 1343,
     "kind": "function",
     "name": "loadTilesetImage",
     "params": [
@@ -5254,21 +4794,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1308,
+    "line": 1364,
     "kind": "function",
     "name": "applySmoothing",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1323,
+    "line": 1379,
     "kind": "function",
     "name": "resize",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1345,
+    "line": 1401,
     "kind": "function",
     "name": "loadImg",
     "params": [
@@ -5277,7 +4817,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1353,
+    "line": 1409,
     "kind": "function",
     "name": "imgReady",
     "params": [
@@ -5286,7 +4826,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1354,
+    "line": 1410,
     "kind": "function",
     "name": "ensureImgLoaded",
     "params": [
@@ -5295,7 +4835,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1363,
+    "line": 1419,
     "kind": "function",
     "name": "normKey",
     "params": [
@@ -5304,7 +4844,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1373,
+    "line": 1429,
     "kind": "function",
     "name": "indexSpriteMeta",
     "params": [
@@ -5313,7 +4853,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1385,
+    "line": 1441,
     "kind": "function",
     "name": "asObj",
     "params": [
@@ -5322,14 +4862,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1391,
+    "line": 1447,
     "kind": "function",
     "name": "loadSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1397,
+    "line": 1453,
     "kind": "function",
     "name": "findMetaFor",
     "params": [
@@ -5338,7 +4878,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1410,
+    "line": 1466,
     "kind": "function",
     "name": "buildMonsterCandidates",
     "params": [
@@ -5349,7 +4889,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1433,
+    "line": 1489,
     "kind": "function",
     "name": "loadMonsterImg",
     "params": [
@@ -5360,7 +4900,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1445,
+    "line": 1501,
     "kind": "function",
     "name": "inferMetaFromImage",
     "params": [
@@ -5370,7 +4910,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1532,
+    "line": 1588,
     "kind": "function",
     "name": "lootAtWorld",
     "params": [
@@ -5380,7 +4920,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1537,
+    "line": 1593,
     "kind": "function",
     "name": "drawLoot",
     "params": [
@@ -5389,14 +4929,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1548,
+    "line": 1604,
     "kind": "function",
     "name": "clear",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1550,
+    "line": 1606,
     "kind": "function",
     "name": "drawGround",
     "params": [
@@ -5405,7 +4945,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1576,
+    "line": 1632,
     "kind": "function",
     "name": "drawPlayer",
     "params": [
@@ -5414,7 +4954,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1594,
+    "line": 1648,
     "kind": "function",
     "name": "drawMob",
     "params": [
@@ -5423,7 +4963,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1783,
+    "line": 1837,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -5434,7 +4974,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1801,
+    "line": 1855,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -5443,7 +4983,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1811,
+    "line": 1865,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -5452,14 +4992,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1834,
+    "line": 1888,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1872,
+    "line": 1926,
     "kind": "function",
     "name": "addMobFromSpawn",
     "params": [
@@ -5468,7 +5008,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1918,
+    "line": 1972,
     "kind": "function",
     "name": "buildSpawnersFromDefs",
     "params": [
@@ -5477,7 +5017,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1932,
+    "line": 1986,
     "kind": "function",
     "name": "updateRespawns",
     "params": [
@@ -5486,7 +5026,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1956,
+    "line": 2010,
     "kind": "function",
     "name": "normalizeApiJson",
     "params": [
@@ -5495,7 +5035,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1987,
+    "line": 2041,
     "kind": "function",
     "name": "hasSolidProp",
     "params": [
@@ -5504,14 +5044,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2026,
+    "line": 2080,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2046,
+    "line": 2100,
     "kind": "arrow",
     "name": "monsterBlockChecker",
     "params": [
@@ -5521,7 +5061,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2163,
+    "line": 2217,
     "kind": "function",
     "name": "frame",
     "params": [
@@ -5530,7 +5070,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2199,
+    "line": 2253,
     "kind": "arrow",
     "name": "cellOf",
     "params": [
@@ -5540,7 +5080,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2200,
+    "line": 2254,
     "kind": "arrow",
     "name": "centerOf",
     "params": [
@@ -5550,7 +5090,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2201,
+    "line": 2255,
     "kind": "arrow",
     "name": "isBlocked",
     "params": [
@@ -5560,7 +5100,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2206,
+    "line": 2260,
     "kind": "arrow",
     "name": "inBound",
     "params": [
@@ -5571,7 +5111,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2214,
+    "line": 2268,
     "kind": "arrow",
     "name": "faceFrom",
     "params": [
@@ -5581,7 +5121,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2261,
+    "line": 2315,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
@@ -5880,7 +5420,7 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 5,
+    "line": 4,
     "kind": "function",
     "name": "bindGachaUI",
     "params": [
@@ -5890,34 +5430,7 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 28,
-    "kind": "function",
-    "name": "translateRarity",
-    "params": [
-      "code"
-    ]
-  },
-  {
-    "file": "client\\js\\gacha.js",
-    "line": 34,
-    "kind": "function",
-    "name": "updateRarityLabels",
-    "params": [
-      "scope"
-    ]
-  },
-  {
-    "file": "client\\js\\gacha.js",
-    "line": 41,
-    "kind": "function",
-    "name": "updateOddsLabels",
-    "params": [
-      "scope"
-    ]
-  },
-  {
-    "file": "client\\js\\gacha.js",
-    "line": 58,
+    "line": 14,
     "kind": "function",
     "name": "playSfx",
     "params": [
@@ -5926,21 +5439,21 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 59,
+    "line": 15,
     "kind": "function",
     "name": "playClick",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 60,
+    "line": 16,
     "kind": "function",
     "name": "flash",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 61,
+    "line": 17,
     "kind": "function",
     "name": "setRarityBg",
     "params": [
@@ -5949,21 +5462,21 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 62,
+    "line": 18,
     "kind": "function",
     "name": "openOverlay",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 63,
+    "line": 19,
     "kind": "function",
     "name": "closeOverlay",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 64,
+    "line": 20,
     "kind": "function",
     "name": "cap",
     "params": [
@@ -5972,7 +5485,7 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 65,
+    "line": 21,
     "kind": "function",
     "name": "lockButtons",
     "params": [
@@ -5981,7 +5494,7 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 68,
+    "line": 24,
     "kind": "function",
     "name": "toast",
     "params": [
@@ -5991,7 +5504,7 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 73,
+    "line": 29,
     "kind": "function",
     "name": "inlineHint",
     "params": [
@@ -6000,7 +5513,7 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 80,
+    "line": 36,
     "kind": "function",
     "name": "showErrorInOverlay",
     "params": [
@@ -6009,49 +5522,49 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 101,
+    "line": 55,
     "kind": "function",
     "name": "startPix",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 102,
+    "line": 56,
     "kind": "function",
     "name": "stopPix",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 103,
+    "line": 57,
     "kind": "function",
     "name": "resizePix",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 104,
+    "line": 58,
     "kind": "function",
     "name": "spawnPix",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 105,
+    "line": 59,
     "kind": "function",
     "name": "loopPix",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 107,
+    "line": 61,
     "kind": "function",
     "name": "spawnSparks",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 121,
+    "line": 75,
     "kind": "function",
     "name": "wait",
     "params": [
@@ -6061,14 +5574,14 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 125,
+    "line": 79,
     "kind": "function",
     "name": "done",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 126,
+    "line": 80,
     "kind": "function",
     "name": "skipOnce",
     "params": [
@@ -6077,14 +5590,14 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 127,
+    "line": 81,
     "kind": "function",
     "name": "keySkip",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 133,
+    "line": 87,
     "kind": "function",
     "name": "playChestSequence",
     "params": [
@@ -6093,7 +5606,7 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 148,
+    "line": 102,
     "kind": "function",
     "name": "fillPanel",
     "params": [
@@ -6102,7 +5615,7 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 170,
+    "line": 120,
     "kind": "function",
     "name": "setAgainState",
     "params": [
@@ -6112,7 +5625,7 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 191,
+    "line": 131,
     "kind": "function",
     "name": "heroCardMarkup",
     "params": [
@@ -6122,28 +5635,28 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 210,
+    "line": 149,
     "kind": "function",
     "name": "renderHeroes",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 224,
+    "line": 159,
     "kind": "function",
     "name": "refreshFromServer",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 236,
+    "line": 171,
     "kind": "function",
     "name": "doSummonAPI",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 246,
+    "line": 181,
     "kind": "function",
     "name": "playOneSummonAndReveal",
     "params": [
@@ -6152,7 +5665,7 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 270,
+    "line": 205,
     "kind": "function",
     "name": "playMultiSummon",
     "params": [
@@ -6161,7 +5674,7 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 336,
+    "line": 264,
     "kind": "function",
     "name": "startSummon",
     "params": [
@@ -6171,14 +5684,14 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 383,
+    "line": 310,
     "kind": "function",
     "name": "hardCloseOverlay",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 401,
+    "line": 328,
     "kind": "function",
     "name": "init",
     "params": [
@@ -6187,21 +5700,14 @@
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 412,
-    "kind": "function",
-    "name": "applyLanguage",
-    "params": []
-  },
-  {
-    "file": "client\\js\\gacha.js",
-    "line": 441,
+    "line": 339,
     "kind": "function",
     "name": "getHeroes",
     "params": []
   },
   {
     "file": "client\\js\\gacha.js",
-    "line": 442,
+    "line": 340,
     "kind": "function",
     "name": "getInventory",
     "params": []
@@ -6570,44 +6076,7 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 96,
-    "kind": "function",
-    "name": "clearMessage",
-    "params": [
-      "el"
-    ]
-  },
-  {
-    "file": "client\\js\\boot.js",
-    "line": 103,
-    "kind": "function",
-    "name": "setI18nMessage",
-    "params": [
-      "el",
-      "key",
-      "vars"
-    ]
-  },
-  {
-    "file": "client\\js\\boot.js",
-    "line": 114,
-    "kind": "function",
-    "name": "setRawMessage",
-    "params": [
-      "el",
-      "text"
-    ]
-  },
-  {
-    "file": "client\\js\\boot.js",
-    "line": 121,
-    "kind": "function",
-    "name": "refreshMessages",
-    "params": []
-  },
-  {
-    "file": "client\\js\\boot.js",
-    "line": 135,
+    "line": 93,
     "kind": "function",
     "name": "updateHud",
     "params": [
@@ -6616,7 +6085,7 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 177,
+    "line": 119,
     "kind": "function",
     "name": "setLogoutVisibility",
     "params": [
@@ -6625,7 +6094,7 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 182,
+    "line": 124,
     "kind": "function",
     "name": "setLoggedOutGlow",
     "params": [
@@ -6634,28 +6103,28 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 185,
+    "line": 127,
     "kind": "function",
     "name": "closeMobileMenu",
     "params": []
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 191,
+    "line": 133,
     "kind": "function",
     "name": "showLanding",
     "params": []
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 206,
+    "line": 148,
     "kind": "function",
     "name": "goToGameAccordingToStarter",
     "params": []
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 220,
+    "line": 162,
     "kind": "function",
     "name": "showApp",
     "params": [
@@ -6664,14 +6133,14 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 230,
+    "line": 172,
     "kind": "function",
     "name": "trySession",
     "params": []
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 324,
+    "line": 257,
     "kind": "function",
     "name": "handleLogout",
     "params": []
@@ -7038,23 +6507,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 425,
-    "kind": "function",
-    "name": "setScope",
-    "params": [
-      "scope"
-    ]
-  },
-  {
-    "file": "client\\js\\app.js",
-    "line": 447,
+    "line": 426,
     "kind": "function",
     "name": "sendChat",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 467,
+    "line": 443,
     "kind": "arrow",
     "name": "FALLBACK_LOAD_CONTENT",
     "params": []
@@ -7992,19 +7452,31 @@
     "file": "client\\js\\ui\\chat-log.js",
     "line": 7,
     "kind": "function",
-    "name": "ensureRefs",
+    "name": "ensureContainer",
     "params": []
   },
   {
     "file": "client\\js\\ui\\chat-log.js",
-    "line": 24,
+    "line": 33,
+    "kind": "arrow",
+    "name": "makeBtn",
+    "params": [
+      "label",
+      "id"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-log.js",
+    "line": 66,
     "kind": "function",
-    "name": "clearHighlight",
-    "params": []
+    "name": "showTab",
+    "params": [
+      "id"
+    ]
   },
   {
     "file": "client\\js\\ui\\chat-log.js",
-    "line": 29,
+    "line": 76,
     "kind": "function",
     "name": "push",
     "params": [
@@ -8021,299 +7493,6 @@
       "{ canvas",
       "hud",
       "params } = {}"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\support.js",
-    "line": 6,
-    "kind": "function",
-    "name": "collectFormPayload",
-    "params": [
-      "form"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\support.js",
-    "line": 16,
-    "kind": "function",
-    "name": "isValidEmail",
-    "params": [
-      "email"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\support.js",
-    "line": 20,
-    "kind": "function",
-    "name": "setupSupportForm",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\support.js",
-    "line": 68,
-    "kind": "function",
-    "name": "focusMain",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\roadmap.js",
-    "line": 5,
-    "kind": "function",
-    "name": "validateEmail",
-    "params": [
-      "email"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\roadmap.js",
-    "line": 9,
-    "kind": "function",
-    "name": "setupForm",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\roadmap.js",
-    "line": 14,
-    "kind": "function",
-    "name": "setFeedback",
-    "params": [
-      "key",
-      "type"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\roadmap.js",
-    "line": 27,
-    "kind": "function",
-    "name": "refreshFeedback",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\roadmap.js",
-    "line": 49,
-    "kind": "function",
-    "name": "focusMain",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\overview.js",
-    "line": 5,
-    "kind": "function",
-    "name": "setupHeroCta",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\overview.js",
-    "line": 13,
-    "kind": "function",
-    "name": "focusMain",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 68,
-    "kind": "function",
-    "name": "updateRelativeFormatter",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 76,
-    "kind": "function",
-    "name": "toTitle",
-    "params": [
-      "str"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 85,
-    "kind": "function",
-    "name": "formatClass",
-    "params": [
-      "value"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 92,
-    "kind": "function",
-    "name": "formatRarity",
-    "params": [
-      "value"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 99,
-    "kind": "function",
-    "name": "formatSkillLabel",
-    "params": [
-      "type"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 106,
-    "kind": "function",
-    "name": "formatUpdated",
-    "params": [
-      "iso"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 134,
-    "kind": "function",
-    "name": "populateSkillOptions",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 160,
-    "kind": "function",
-    "name": "disableSkillOption",
-    "params": [
-      "skill"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 169,
-    "kind": "function",
-    "name": "pickFirstEnabledSkill",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 175,
-    "kind": "function",
-    "name": "bindEvents",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 249,
-    "kind": "function",
-    "name": "setLoadingRow",
-    "params": [
-      "message"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 261,
-    "kind": "function",
-    "name": "getErrorMessage",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 268,
-    "kind": "function",
-    "name": "renderTable",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 379,
-    "kind": "function",
-    "name": "renderStatus",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 408,
-    "kind": "function",
-    "name": "renderRange",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 423,
-    "kind": "function",
-    "name": "renderPager",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 433,
-    "kind": "function",
-    "name": "render",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 443,
-    "kind": "function",
-    "name": "renderTabs",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 466,
-    "kind": "function",
-    "name": "renderPeriods",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 473,
-    "kind": "function",
-    "name": "updateToolbar",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 485,
-    "kind": "function",
-    "name": "fetchLeaderboard",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 590,
-    "kind": "function",
-    "name": "focusMain",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "line": 602,
-    "kind": "function",
-    "name": "init",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\common-nav.js",
-    "line": 3,
-    "kind": "function",
-    "name": "markActiveLinks",
-    "params": [
-      "currentPath"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\common-nav.js",
-    "line": 30,
-    "kind": "function",
-    "name": "setupMobileMenu",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\common-nav.js",
-    "line": 54,
-    "kind": "function",
-    "name": "updateFooterYear",
-    "params": []
-  },
-  {
-    "file": "client\\js\\pages\\common-nav.js",
-    "line": 61,
-    "kind": "function",
-    "name": "initPageChrome",
-    "params": [
-      "currentPath"
     ]
   },
   {
@@ -8478,193 +7657,6 @@
     "line": 250,
     "kind": "function",
     "name": "refresh",
-    "params": []
-  },
-  {
-    "file": "client\\js\\i18n\\lang-menu.js",
-    "line": 13,
-    "kind": "function",
-    "name": "updateFlag",
-    "params": [
-      "target",
-      "lang"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\lang-menu.js",
-    "line": 18,
-    "kind": "function",
-    "name": "updateOption",
-    "params": [
-      "option",
-      "lang"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\lang-menu.js",
-    "line": 38,
-    "kind": "function",
-    "name": "setupMenu",
-    "params": [
-      "root"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\lang-menu.js",
-    "line": 49,
-    "kind": "function",
-    "name": "setOpen",
-    "params": [
-      "next"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\lang-menu.js",
-    "line": 61,
-    "kind": "function",
-    "name": "closeMenu",
-    "params": []
-  },
-  {
-    "file": "client\\js\\i18n\\lang-menu.js",
-    "line": 67,
-    "kind": "function",
-    "name": "handleOutsideClick",
-    "params": [
-      "ev"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\lang-menu.js",
-    "line": 112,
-    "kind": "function",
-    "name": "refresh",
-    "params": [
-      "lang"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 17,
-    "kind": "function",
-    "name": "normalizeLang",
-    "params": [
-      "input"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 27,
-    "kind": "function",
-    "name": "readCookieLang",
-    "params": []
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 43,
-    "kind": "function",
-    "name": "detectInitialLang",
-    "params": []
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 57,
-    "kind": "function",
-    "name": "persistLang",
-    "params": [
-      "lang"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 66,
-    "kind": "function",
-    "name": "setDocumentLanguage",
-    "params": [
-      "lang"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 75,
-    "kind": "function",
-    "name": "importBundle",
-    "params": [
-      "lang"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 94,
-    "kind": "function",
-    "name": "deepMerge",
-    "params": [
-      "target",
-      "source"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 109,
-    "kind": "function",
-    "name": "resolveKey",
-    "params": [
-      "messages",
-      "key"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 123,
-    "kind": "function",
-    "name": "interpolate",
-    "params": [
-      "template",
-      "vars = {}"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 134,
-    "kind": "function",
-    "name": "applyTranslations",
-    "params": [
-      "root = document"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 172,
-    "kind": "function",
-    "name": "updateFormatters",
-    "params": [
-      "lang"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 185,
-    "kind": "function",
-    "name": "dispatchEvent",
-    "params": [
-      "type",
-      "detail"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 192,
-    "kind": "function",
-    "name": "changeLanguage",
-    "params": [
-      "nextLang"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "line": 236,
-    "kind": "function",
-    "name": "schedulePrefetch",
     "params": []
   },
   {
@@ -9358,16 +8350,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 36,
-    "kind": "function",
-    "name": "normalizeHeroId",
-    "params": [
-      "raw"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 43,
+    "line": 16,
     "kind": "function",
     "name": "getSpriteFor",
     "params": [
@@ -9376,7 +8359,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 46,
+    "line": 19,
     "kind": "function",
     "name": "bindBySpawn",
     "params": [
@@ -9386,7 +8369,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 49,
+    "line": 22,
     "kind": "function",
     "name": "bindByKey",
     "params": [
@@ -9396,7 +8379,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 53,
+    "line": 26,
     "kind": "function",
     "name": "ensureSpriteBind",
     "params": [
@@ -9407,53 +8390,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 61,
-    "kind": "function",
-    "name": "tileOf",
-    "params": [
-      "value"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 67,
-    "kind": "function",
-    "name": "resolveMonsterTile",
-    "params": [
-      "instanceId"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 71,
-    "kind": "arrow",
-    "name": "takeNumber",
-    "params": [
-      "v"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 96,
-    "kind": "function",
-    "name": "getActiveHeroIdMaybe",
-    "params": []
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 108,
-    "kind": "function",
-    "name": "attemptMonsterPush",
-    "params": [
-      "{ monsterId",
-      "startTile }",
-      "dropTileX",
-      "dropTileY"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 164,
+    "line": 35,
     "kind": "function",
     "name": "pushFloaterAtSprite",
     "params": [
@@ -9468,7 +8405,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 176,
+    "line": 47,
     "kind": "function",
     "name": "updateAndDrawFloaters",
     "params": [
@@ -9478,89 +8415,21 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 196,
+    "line": 67,
     "kind": "function",
     "name": "installWsHandlers",
     "params": []
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 290,
+    "line": 137,
     "kind": "function",
     "name": "startRebindLoop",
     "params": []
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 309,
-    "kind": "function",
-    "name": "resetHeroOverlayState",
-    "params": []
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 322,
-    "kind": "function",
-    "name": "fallbackHeroName",
-    "params": []
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 338,
-    "kind": "function",
-    "name": "updateHeroOverlayFrom",
-    "params": [
-      "payload",
-      "ts = (typeof performance !== 'undefined' ? performance.now("
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 379,
-    "kind": "function",
-    "name": "refreshHeroOverlayFromGlobals",
-    "params": [
-      "ts"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 412,
-    "kind": "function",
-    "name": "sampleHeroPosition",
-    "params": [
-      "now"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 435,
-    "kind": "function",
-    "name": "ensureHeroOverlay",
-    "params": [
-      "now"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 452,
-    "kind": "function",
-    "name": "buildHeroSprite",
-    "params": []
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 464,
-    "kind": "function",
-    "name": "drawHeroOverlayBars",
-    "params": [
-      "ctx",
-      "now"
-    ]
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 488,
+    "line": 159,
     "kind": "function",
     "name": "getHpBarColor",
     "params": [
@@ -9569,7 +8438,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 497,
+    "line": 168,
     "kind": "function",
     "name": "getMonsterNameByKey",
     "params": [
@@ -9578,20 +8447,19 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 513,
+    "line": 184,
     "kind": "function",
     "name": "drawHpBarAtSprite",
     "params": [
       "ctx",
       "sprite",
       "hp",
-      "maxHp",
-      "options = {}"
+      "maxHp"
     ]
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 555,
+    "line": 221,
     "kind": "function",
     "name": "drawMonsterNameAtSprite",
     "params": [
@@ -9599,13 +8467,12 @@
       "sprite",
       "key",
       "hp",
-      "maxHp",
-      "options = {}"
+      "maxHp"
     ]
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 584,
+    "line": 249,
     "kind": "function",
     "name": "drawTargetBox",
     "params": [
@@ -9614,14 +8481,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 643,
-    "kind": "arrow",
-    "name": "resetDragState",
-    "params": []
-  },
-  {
-    "file": "client\\js\\combat\\render-combat.js",
-    "line": 737,
+    "line": 315,
     "kind": "function",
     "name": "pickMobAtWorld",
     "params": [
@@ -9630,7 +8490,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 759,
+    "line": 336,
     "kind": "arrow",
     "name": "drawAll",
     "params": []

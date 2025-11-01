@@ -65,7 +65,6 @@
       "sendChat",
       "setLoadingProgress",
       "setRootVar",
-      "setScope",
       "swapLoadingTip",
       "updateTopbarHeight"
     ]
@@ -99,15 +98,11 @@
   {
     "file": "client\\js\\boot.js",
     "symbols": [
-      "clearMessage",
       "closeMobileMenu",
       "goToGameAccordingToStarter",
       "handleLogout",
-      "refreshMessages",
-      "setI18nMessage",
       "setLoggedOutGlow",
       "setLogoutVisibility",
-      "setRawMessage",
       "showApp",
       "showLanding",
       "trySession",
@@ -162,34 +157,21 @@
   {
     "file": "client\\js\\combat\\render-combat.js",
     "symbols": [
-      "attemptMonsterPush",
       "bindByKey",
       "bindBySpawn",
-      "buildHeroSprite",
-      "drawHeroOverlayBars",
       "drawHpBarAtSprite",
       "drawMonsterNameAtSprite",
       "drawTargetBox",
-      "ensureHeroOverlay",
       "ensureSpriteBind",
-      "fallbackHeroName",
-      "getActiveHeroIdMaybe",
       "getHpBarColor",
       "getMonsterNameByKey",
       "getSpriteFor",
       "installCombatOverlay",
       "installWsHandlers",
-      "normalizeHeroId",
       "pickMobAtWorld",
       "pushFloaterAtSprite",
-      "refreshHeroOverlayFromGlobals",
-      "resetHeroOverlayState",
-      "resolveMonsterTile",
-      "sampleHeroPosition",
       "startRebindLoop",
-      "tileOf",
-      "updateAndDrawFloaters",
-      "updateHeroOverlayFrom"
+      "updateAndDrawFloaters"
     ]
   },
   {
@@ -301,7 +283,6 @@
   {
     "file": "client\\js\\gacha.js",
     "symbols": [
-      "applyLanguage",
       "bindGachaUI",
       "cap",
       "closeOverlay",
@@ -337,9 +318,6 @@
       "startSummon",
       "stopPix",
       "toast",
-      "translateRarity",
-      "updateOddsLabels",
-      "updateRarityLabels",
       "wait"
     ]
   },
@@ -353,38 +331,6 @@
       "startTimer",
       "stopTimer",
       "updateCountdown"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\core.js",
-    "symbols": [
-      "applyTranslations",
-      "changeLanguage",
-      "deepMerge",
-      "detectInitialLang",
-      "dispatchEvent",
-      "i18n",
-      "importBundle",
-      "interpolate",
-      "normalizeLang",
-      "persistLang",
-      "readCookieLang",
-      "resolveKey",
-      "schedulePrefetch",
-      "setDocumentLanguage",
-      "updateFormatters"
-    ]
-  },
-  {
-    "file": "client\\js\\i18n\\lang-menu.js",
-    "symbols": [
-      "closeMenu",
-      "handleOutsideClick",
-      "refresh",
-      "setOpen",
-      "setupMenu",
-      "updateFlag",
-      "updateOption"
     ]
   },
   {
@@ -442,69 +388,6 @@
       "removeLoot",
       "tileToCanvasPx",
       "tileToCss"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\common-nav.js",
-    "symbols": [
-      "initPageChrome",
-      "markActiveLinks",
-      "setupMobileMenu",
-      "updateFooterYear"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\leaderboard.js",
-    "symbols": [
-      "bindEvents",
-      "disableSkillOption",
-      "fetchLeaderboard",
-      "focusMain",
-      "formatClass",
-      "formatRarity",
-      "formatSkillLabel",
-      "formatUpdated",
-      "getErrorMessage",
-      "init",
-      "pickFirstEnabledSkill",
-      "populateSkillOptions",
-      "render",
-      "renderPager",
-      "renderPeriods",
-      "renderRange",
-      "renderStatus",
-      "renderTable",
-      "renderTabs",
-      "setLoadingRow",
-      "toTitle",
-      "updateRelativeFormatter",
-      "updateToolbar"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\overview.js",
-    "symbols": [
-      "focusMain",
-      "setupHeroCta"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\roadmap.js",
-    "symbols": [
-      "focusMain",
-      "refreshFeedback",
-      "setFeedback",
-      "setupForm",
-      "validateEmail"
-    ]
-  },
-  {
-    "file": "client\\js\\pages\\support.js",
-    "symbols": [
-      "collectFormPayload",
-      "focusMain",
-      "isValidEmail",
-      "setupSupportForm"
     ]
   },
   {
@@ -672,9 +555,9 @@
   {
     "file": "client\\js\\ui\\chat-log.js",
     "symbols": [
-      "clearHighlight",
-      "ensureRefs",
-      "push"
+      "ensureContainer",
+      "push",
+      "showTab"
     ]
   },
   {
@@ -817,9 +700,7 @@
       "clearAuthCookie",
       "cookieOpts",
       "csrfRoute",
-      "isLeaderboardRequest",
-      "logLeaderboardBlock",
-      "normalizeSameSite",
+      "isAllowedOrigin",
       "requireAuth",
       "requireCsrf",
       "setAuthCookie"
@@ -839,8 +720,8 @@
       "addThreatFromHeroHit",
       "buildHeroTileSet",
       "buildMobOccupancy",
-      "buildRingOptions",
       "canMobHitNow",
+      "chebyPx",
       "clampToMapPx",
       "coerceTileSet",
       "computeMobDensityPenalty",
@@ -849,7 +730,6 @@
       "computeSpawnCenterPx",
       "decayThreat",
       "ensureMob",
-      "estaAoLadoDoJogador",
       "fetchAliveMonsters",
       "fetchOnlineHeroesInMap",
       "findNearestFreeTile",
@@ -866,7 +746,6 @@
       "pickCombatDanceStep",
       "pickStepAlternate",
       "pickStepGreedy",
-      "planMobChaseStep",
       "predictHeroTileCx",
       "recordHeroObservation",
       "removeHeroThreat",
@@ -913,15 +792,12 @@
   {
     "file": "server\\combat\\los.js",
     "symbols": [
-      "hasLineOfSight",
-      "hasLineOfSightTiles"
+      "hasLineOfSight"
     ]
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
     "symbols": [
-      "applyLivePositionToHero",
-      "augmentHeroesWithLivePositions",
       "buildAttackProfile",
       "buildHeroTileSet",
       "buildMonsterTileMap",
@@ -930,18 +806,14 @@
       "computeDensityPenalty",
       "computeFaceToward",
       "computeFlankBonus",
-      "debugCombatLog",
       "directionFromStep",
       "emitMonsterMove",
       "ensurePatrolTarget",
       "fetchAliveHeroesWithPos",
       "fetchAliveMonsters",
-      "fetchHeroSnapshot",
       "findBestStepToward",
       "findNearestFreeTile",
-      "getLivePosForPlayer",
-      "hasClearAdjacentPath",
-      "isAdjacentTile",
+      "isAdjacent4Tiles",
       "isInsideSpawnRect",
       "isTileBlockedByCollision",
       "isTileInsideSpawn",
@@ -949,11 +821,9 @@
       "parseAttacksPayload",
       "pickChaseGoalTile",
       "pickFaceFromDelta",
-      "pickRetreatStep",
       "predictHeroTile",
       "resetInstanceState",
       "resolveMonsterAttackProfile",
-      "resolveMonsterHeroOverlap",
       "resolveTileStacks",
       "selectHeroTarget",
       "start",
@@ -965,19 +835,6 @@
       "updateHeroMemory",
       "updateLivePos",
       "updateMonsterPos"
-    ]
-  },
-  {
-    "file": "server\\combat\\monster_attack_profile.js",
-    "symbols": [
-      "clampRange",
-      "coerceNumber",
-      "normalizeType",
-      "parseAttacksPayload",
-      "parseJSON",
-      "pickPrimaryAttack",
-      "resolveAttackRange",
-      "resolveMonsterAttackProfile"
     ]
   },
   {
@@ -1002,8 +859,7 @@
       "buildRangeTelemetry",
       "formatRangeMessage",
       "getEquippedWeaponType",
-      "getHeroOwnedBy",
-      "normalizeBool"
+      "getHeroOwnedBy"
     ]
   },
   {
@@ -1131,11 +987,8 @@
     "file": "server\\middleware\\cors-allowlist.js",
     "symbols": [
       "buildCors",
-      "isAfkminersHost",
-      "isLocalhostAllowed",
-      "isOriginAllowed",
-      "normalizeOrigin",
-      "parseOrigins"
+      "parseOrigins",
+      "sameOrigin"
     ]
   },
   {
@@ -1242,21 +1095,6 @@
     ]
   },
   {
-    "file": "server\\routes\\leaderboard.js",
-    "symbols": [
-      "buildResponse",
-      "ensureIndexes",
-      "mapHeroRow",
-      "mapPlayerRow",
-      "mapSkillRow",
-      "parseLimit",
-      "parseOffset",
-      "queryWithFallback",
-      "sanitizeQuery",
-      "toIso"
-    ]
-  },
-  {
     "file": "server\\routes\\loot.js",
     "symbols": [
       "assertHeroAliveOwned",
@@ -1268,13 +1106,6 @@
     "symbols": [
       "clamp",
       "dist"
-    ]
-  },
-  {
-    "file": "server\\routes\\support.js",
-    "symbols": [
-      "isValidEmail",
-      "sanitizeText"
     ]
   },
   {
@@ -1463,17 +1294,6 @@
       "loadSpriteMetaFromDisk",
       "normalizeKey",
       "uniqueByKey"
-    ]
-  },
-  {
-    "file": "server\\utils\\tile-coords.js",
-    "symbols": [
-      "chebyshevTiles",
-      "coerceNumber",
-      "isValidTile",
-      "resolveFeetPosition",
-      "tileToCenter",
-      "toTileCoords"
     ]
   },
   {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="50" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="44">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="50" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="33">
  <editorsettings>
   <export target="data/maps/house.json" format="json"/>
  </editorsettings>
@@ -115,14 +115,14 @@
 </data>
  </layer>
  <objectgroup id="3" name="start">
-  <object id="1" type="start" x="995.303" y="794.394" width="32" height="32">
+  <object id="1" type="start" x="965" y="855" width="32" height="32">
    <properties>
     <property name="type" value="start"/>
    </properties>
   </object>
  </objectgroup>
  <objectgroup color="#000000" id="4" name="spawn">
-  <object id="7" type="spawn" x="456.061" y="807.576" width="32" height="32">
+  <object id="7" type="spawn" x="850" y="650" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="cave_rat"/>
@@ -130,7 +130,7 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="13" type="spawn" x="77.2121" y="101.758" width="32" height="32">
+  <object id="13" type="spawn" x="556" y="726" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="rotmaw"/>
@@ -138,7 +138,7 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="20" type="spawn" x="677.455" y="1024.24" width="32" height="32">
+  <object id="20" type="spawn" x="732" y="900" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="rat"/>
@@ -146,7 +146,7 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="22" type="spawn" x="1078.55" y="1094.36" width="32" height="32">
+  <object id="22" type="spawn" x="724" y="758" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="bear"/>
@@ -154,7 +154,7 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="23" type="spawn" x="1405.21" y="534.667" width="32" height="32">
+  <object id="23" type="spawn" x="884" y="768" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="deer"/>
@@ -162,7 +162,7 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="25" type="spawn" x="1497.03" y="1494.12" width="32" height="32">
+  <object id="25" type="spawn" x="994" y="682" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="demon_bonefiend"/>
@@ -170,7 +170,7 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="26" type="spawn" x="810" y="21.5758" width="32" height="32">
+  <object id="26" type="spawn" x="910" y="964" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="balor"/>
@@ -178,7 +178,7 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="27" type="spawn" x="741.939" y="1454.3" width="32" height="32">
+  <object id="27" type="spawn" x="1048" y="924" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="skeleton"/>
@@ -186,7 +186,7 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="28" type="spawn" x="1125.82" y="707.515" width="32" height="32">
+  <object id="28" type="spawn" x="744" y="456" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="spider"/>
@@ -194,7 +194,7 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="29" type="spawn" x="1184.42" y="799.697" width="32" height="32">
+  <object id="29" type="spawn" x="842" y="530" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="poison_spider"/>
@@ -202,7 +202,7 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="30" type="spawn" x="705.636" y="402.667" width="32" height="32">
+  <object id="30" type="spawn" x="942" y="436" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="goblin"/>
@@ -210,7 +210,7 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="31" type="spawn" x="70.303" y="1435.88" width="32" height="32">
+  <object id="31" type="spawn" x="940" y="548" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="ghost"/>
@@ -218,98 +218,10 @@
     <property name="type" value="spawn"/>
    </properties>
   </object>
-  <object id="32" type="spawn" x="1374.73" y="149.758" width="32" height="32">
+  <object id="32" type="spawn" x="1002" y="574" width="32" height="32">
    <properties>
     <property name="count" type="int" value="1"/>
     <property name="monsterKey" value="fire_devil"/>
-    <property name="respawnSec" type="int" value="30"/>
-    <property name="type" value="spawn"/>
-   </properties>
-  </object>
-  <object id="33" type="spawn" x="517.333" y="777.939" width="32" height="32">
-   <properties>
-    <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="cave_rat"/>
-    <property name="respawnSec" type="int" value="30"/>
-    <property name="type" value="spawn"/>
-   </properties>
-  </object>
-  <object id="34" type="spawn" x="368.848" y="871.879" width="32" height="32">
-   <properties>
-    <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="cave_rat"/>
-    <property name="respawnSec" type="int" value="30"/>
-    <property name="type" value="spawn"/>
-   </properties>
-  </object>
-  <object id="35" type="spawn" x="238.545" y="202.182" width="32" height="32">
-   <properties>
-    <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="rotmaw"/>
-    <property name="respawnSec" type="int" value="30"/>
-    <property name="type" value="spawn"/>
-   </properties>
-  </object>
-  <object id="36" type="spawn" x="1468.85" y="102.182" width="32" height="32">
-   <properties>
-    <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="fire_devil"/>
-    <property name="respawnSec" type="int" value="30"/>
-    <property name="type" value="spawn"/>
-   </properties>
-  </object>
-  <object id="37" type="spawn" x="829.455" y="393.091" width="32" height="32">
-   <properties>
-    <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="goblin"/>
-    <property name="respawnSec" type="int" value="30"/>
-    <property name="type" value="spawn"/>
-   </properties>
-  </object>
-  <object id="38" type="spawn" x="174.909" y="1380.97" width="32" height="32">
-   <properties>
-    <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="ghost"/>
-    <property name="respawnSec" type="int" value="30"/>
-    <property name="type" value="spawn"/>
-   </properties>
-  </object>
-  <object id="39" type="spawn" x="1132.48" y="1165.82" width="32" height="32">
-   <properties>
-    <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="bear"/>
-    <property name="respawnSec" type="int" value="30"/>
-    <property name="type" value="spawn"/>
-   </properties>
-  </object>
-  <object id="40" type="spawn" x="793.091" y="1065.82" width="32" height="32">
-   <properties>
-    <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="rat"/>
-    <property name="respawnSec" type="int" value="30"/>
-    <property name="type" value="spawn"/>
-   </properties>
-  </object>
-  <object id="41" type="spawn" x="726.424" y="1196.12" width="32" height="32">
-   <properties>
-    <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="rat"/>
-    <property name="respawnSec" type="int" value="30"/>
-    <property name="type" value="spawn"/>
-   </properties>
-  </object>
-  <object id="42" type="spawn" x="1487.03" y="462.788" width="32" height="32">
-   <properties>
-    <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="deer"/>
-    <property name="respawnSec" type="int" value="30"/>
-    <property name="type" value="spawn"/>
-   </properties>
-  </object>
-  <object id="43" type="spawn" x="1447.64" y="1432.48" width="32" height="32">
-   <properties>
-    <property name="count" type="int" value="1"/>
-    <property name="monsterKey" value="demon_bonefiend"/>
     <property name="respawnSec" type="int" value="30"/>
     <property name="type" value="spawn"/>
    </properties>

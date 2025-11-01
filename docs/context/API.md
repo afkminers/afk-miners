@@ -6,7 +6,7 @@
 - `AI_MOBS_IGNORE_COLLISION`
 - `AI_MOBS_IGNORE_LOS`
 - `APP_ORIGIN`
-- `APP_ORIGINS` (defaults: process.env.APP_ORIGIN)
+- `APP_ORIGINS` (defaults: http://localhost:3000, process.env.APP_ORIGIN)
 - `ASSETS_CACHE_TTL_MS` (defaults: 300000)
 - `CATALOG_CACHE_ENABLED`
 - `CATALOG_CACHE_REFRESH_SEC` (defaults: 120)
@@ -15,10 +15,10 @@
 - `COMBAT_DEBUG` (defaults: )
 - `COMBAT_HERO_POS_MAX_AGE_MS`
 - `CONTENT_PIPELINE` (defaults: off)
-- `COOKIE_DOMAIN`
+- `COOKIE_DOMAIN` (defaults: undefined)
 - `COOKIE_NAME`
-- `COOKIE_SAME_SITE`
-- `COOKIE_SECURE`
+- `COOKIE_SAME_SITE` (defaults: Lax)
+- `COOKIE_SECURE` (defaults: false)
 - `CSRF_COOKIE` (defaults: csrf)
 - `CTX_DEPTH` (defaults: 4)
 - `CTX_IMPORTS`
@@ -26,7 +26,6 @@
 - `DATABASE_URL`
 - `DB_IDLE_CLOSE_MINUTES` (defaults: 0)
 - `DEBUG_CATALOG_CACHE`
-- `DEBUG_COMBAT`
 - `DEBUG_HTTP_CACHE`
 - `DEBUG_LOOT_CACHE`
 - `ENDPOINT_METRICS_INTERVAL_MS` (defaults: 60000)
@@ -85,7 +84,7 @@
 
 ### GET /
 
-Arquivo: `server\index.js:756`
+Arquivo: `server\index.js:719`
 
 _Sem payload inferido_
 
@@ -149,15 +148,15 @@ Arquivo: `server\routes\backpack.js:8`
 
 ### GET /_ping
 
-Arquivo: `server\combat\routes.js:137`
+Arquivo: `server\combat\routes.js:131`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
+  "heroId": 1,
   "try {\n    const { heroId": 1,
-  "targetInstanceId": 1,
-  "const { heroId": 1
+  "targetInstanceId": 1
 }
 ```
 
@@ -171,20 +170,22 @@ Arquivo: `server\combat\routes.js:137`
 - `HTTP 400` → {ok:false,error:'mob-pos-missing' }
 - `HTTP 400` → {ok:false,error:'hero-pos-missing' }
 - `HTTP 500` → {ok:false,error:'start-failed' }
-- `HTTP 400` → {ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }
-- `HTTP 404` → {ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }
+- `HTTP 404` → {ok:false,error:'hero-not-found' }
+- `HTTP 500` → {ok:false,error:'stop-failed' }
+- `HTTP 400` → {ok:false,error:'missing-id' }
+- `HTTP 400` → {ok:false,error:'missing-hero-id' }
 
 ### GET /_routes
 
-Arquivo: `server\combat\routes.js:138`
+Arquivo: `server\combat\routes.js:132`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
+  "heroId": 1,
   "try {\n    const { heroId": 1,
-  "targetInstanceId": 1,
-  "const { heroId": 1
+  "targetInstanceId": 1
 }
 ```
 
@@ -198,12 +199,14 @@ Arquivo: `server\combat\routes.js:138`
 - `HTTP 400` → {ok:false,error:'mob-pos-missing' }
 - `HTTP 400` → {ok:false,error:'hero-pos-missing' }
 - `HTTP 500` → {ok:false,error:'start-failed' }
-- `HTTP 400` → {ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }
-- `HTTP 404` → {ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }
+- `HTTP 404` → {ok:false,error:'hero-not-found' }
+- `HTTP 500` → {ok:false,error:'stop-failed' }
+- `HTTP 400` → {ok:false,error:'missing-id' }
+- `HTTP 400` → {ok:false,error:'missing-hero-id' }
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:693`
+Arquivo: `server\index.js:674`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -231,7 +234,7 @@ Arquivo: `server\index.js:693`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:668`
+Arquivo: `server\index.js:649`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -261,7 +264,7 @@ Arquivo: `server\index.js:668`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:680`
+Arquivo: `server\index.js:661`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -290,7 +293,7 @@ Arquivo: `server\index.js:680`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:657`
+Arquivo: `server\index.js:638`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -315,7 +318,7 @@ Arquivo: `server\index.js:657`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:549`
+Arquivo: `server\index.js:530`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -337,7 +340,7 @@ Arquivo: `server\index.js:549`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:560`
+Arquivo: `server\index.js:541`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -358,7 +361,7 @@ Arquivo: `server\index.js:560`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:582`
+Arquivo: `server\index.js:563`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -384,7 +387,7 @@ Arquivo: `server\index.js:582`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1462`
+Arquivo: `server\index.js:1425`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -432,7 +435,7 @@ Arquivo: `server\routes\combat_nearest.js:30`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:213`
+Arquivo: `server\index.js:202`
 
 _Sem payload inferido_
 
@@ -543,27 +546,6 @@ Arquivo: `server\skills\routes.js:14`
 - `HTTP 400` → {error:'heroId e skillType são obrigatórios' }
 - `HTTP 500` → {error:'Falha ao aplicar ganho' }
 
-### GET /health
-
-Arquivo: `server\routes\leaderboard.js:55`
-
-**Payloads (exemplos inferidos):**
-- query:
-```json
-{
-  "limit": 1,
-  "offset": 1,
-  "query": "value"
-}
-```
-
-**Resposta de sucesso (amostra):**
-```json
-{
-  "ok": true
-}
-```
-
 ### GET /hero/:id
 
 Arquivo: `server\skills\routes.js:121`
@@ -593,26 +575,6 @@ Arquivo: `server\skills\routes.js:121`
 - `HTTP 400` → {error:'heroId e skillType são obrigatórios' }
 - `HTTP 500` → {error:'Falha ao aplicar ganho' }
 
-### GET /heroes
-
-Arquivo: `server\routes\leaderboard.js:220`
-
-**Payloads (exemplos inferidos):**
-- query:
-```json
-{
-  "limit": 1,
-  "offset": 1,
-  "query": "value",
-  "skill": "value"
-}
-```
-
-**Erros conhecidos:**
-- `HTTP 500` → {error:'unable to load heroes leaderboard' }
-- `HTTP 400` → {error:'skill not available' }
-- `HTTP 500` → {error:'unable to load skills leaderboard' }
-
 ### GET /heroes/master
 
 Arquivo: `server\routes\catalog.js:10`
@@ -621,12 +583,6 @@ _Sem payload inferido_
 
 **Erros conhecidos:**
 - `HTTP 500` → {error:'Falha ao listar heróis' }
-
-### GET /leaderboard
-
-Arquivo: `server\index.js:752`
-
-_Sem payload inferido_
 
 ### GET /list
 
@@ -725,12 +681,6 @@ Arquivo: `server\skills\routes.js:94`
 - `HTTP 400` → {error:'heroId e skillType são obrigatórios' }
 - `HTTP 500` → {error:'Falha ao aplicar ganho' }
 
-### GET /overview
-
-Arquivo: `server\index.js:740`
-
-_Sem payload inferido_
-
 ### GET /ping
 
 Arquivo: `server\routes\afk.js:7`
@@ -763,26 +713,6 @@ Arquivo: `server\routes\afk.js:7`
 - `HTTP 404` → {error:'box_not_found' }
 - `HTTP 500` → {error:'assign_failed' }
 - `HTTP 500` → {error:'collect_failed' }
-
-### GET /players
-
-Arquivo: `server\routes\leaderboard.js:139`
-
-**Payloads (exemplos inferidos):**
-- query:
-```json
-{
-  "limit": 1,
-  "offset": 1,
-  "query": "value",
-  "skill": "value"
-}
-```
-
-**Erros conhecidos:**
-- `HTTP 500` → {error:'unable to load players leaderboard' }
-- `HTTP 500` → {error:'unable to load heroes leaderboard' }
-- `HTTP 400` → {error:'skill not available' }
 
 ### GET /pos
 
@@ -818,31 +748,6 @@ Arquivo: `server\routes\player.old.js:12`
 - `HTTP 400` → {error:'coords inválidas' }
 - `HTTP 409` → {error:'old-seq' }
 - `HTTP 400` → {error:'too-fast' }
-
-### GET /roadmap
-
-Arquivo: `server\index.js:744`
-
-_Sem payload inferido_
-
-### GET /skills
-
-Arquivo: `server\routes\leaderboard.js:275`
-
-**Payloads (exemplos inferidos):**
-- query:
-```json
-{
-  "limit": 1,
-  "offset": 1,
-  "query": "value",
-  "skill": "value"
-}
-```
-
-**Erros conhecidos:**
-- `HTTP 400` → {error:'skill not available' }
-- `HTTP 500` → {error:'unable to load skills leaderboard' }
 
 ### GET /state
 
@@ -901,12 +806,6 @@ Arquivo: `server\starter\routes.js:86`
 - `HTTP 400` → {error:'heroKey é obrigatório' }
 - `HTTP 400` → {error:'starter já escolhido' }
 - `HTTP 400` → {error:'heroKey inválido' }
-
-### GET /support
-
-Arquivo: `server\index.js:748`
-
-_Sem payload inferido_
 
 ### GET /tick
 
@@ -967,7 +866,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:703`
+Arquivo: `server\index.js:684`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -987,7 +886,7 @@ Arquivo: `server\index.js:703`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1485`
+Arquivo: `server\index.js:1448`
 
 _Sem payload inferido_
 
@@ -1031,17 +930,15 @@ Arquivo: `server\routes\afk.js:65`
 
 ### POST /attack/start
 
-Arquivo: `server\combat\routes.js:181`
+Arquivo: `server\combat\routes.js:175`
 
 **Payloads (exemplos inferidos):**
 - body:
 ```json
 {
-  "toTileX": "value",
-  "toTileY": "value",
+  "heroId": 1,
   "try {\n    const { heroId": 1,
-  "targetInstanceId": 1,
-  "const { heroId": 1
+  "targetInstanceId": 1
 }
 ```
 
@@ -1055,16 +952,17 @@ Arquivo: `server\combat\routes.js:181`
 - `HTTP 400` → {ok:false,error:'mob-pos-missing' }
 - `HTTP 400` → {ok:false,error:'hero-pos-missing' }
 - `HTTP 500` → {ok:false,error:'start-failed' }
-- `HTTP 400` → {ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }
-- `HTTP 404` → {ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }
-- `HTTP 409` → {ok:false,error:'monster-dead',message:'O monstro não está ativo.' }
-- `HTTP 400` → {ok:false,error:'hero-pos-missing',message:'Posição do herói indisponível.' }
-- `HTTP 400` → {ok:false,error:'map-diff',message:'Você está em outro mapa.' }
-- `HTTP 409` → {ok:false,error:'hero-too-far',message:'Você está longe demais do monstro.' }
+- `HTTP 404` → {ok:false,error:'hero-not-found' }
+- `HTTP 500` → {ok:false,error:'stop-failed' }
+- `HTTP 400` → {ok:false,error:'missing-id' }
+- `HTTP 400` → {ok:false,error:'missing-hero-id' }
+- `HTTP 400` → {ok:false,error:'mob-pos-missing' }
+- `HTTP 400` → {ok:false,error:'hero-pos-missing' }
+- `HTTP 400` → {ok:false,error:result.message }
 
 ### POST /attack/stop
 
-Arquivo: `server\combat\routes.js:463`
+Arquivo: `server\combat\routes.js:255`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1243,7 +1141,7 @@ Arquivo: `server\routes\farm.js:181`
 
 ### POST /hit
 
-Arquivo: `server\combat\routes.js:482`
+Arquivo: `server\combat\routes.js:274`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1484,41 +1382,6 @@ Arquivo: `server\routes\player.old.js:23`
 - `HTTP 409` → {error:'old-seq' }
 - `HTTP 400` → {error:'too-fast' }
 
-### POST /push
-
-Arquivo: `server\combat\routes.js:269`
-
-**Payloads (exemplos inferidos):**
-- body:
-```json
-{
-  "toTileX": "value",
-  "toTileY": "value",
-  "const { heroId": 1,
-  "targetInstanceId": 1
-}
-```
-
-**Resposta de sucesso (amostra):**
-```json
-{ok:false,error:'monster-not-pushable',message:'Este monstro não pode ser empurrado.' }
-```
-
-**Erros conhecidos:**
-- `HTTP 400` → {ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }
-- `HTTP 404` → {ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }
-- `HTTP 409` → {ok:false,error:'monster-dead',message:'O monstro não está ativo.' }
-- `HTTP 400` → {ok:false,error:'hero-pos-missing',message:'Posição do herói indisponível.' }
-- `HTTP 400` → {ok:false,error:'map-diff',message:'Você está em outro mapa.' }
-- `HTTP 409` → {ok:false,error:'hero-too-far',message:'Você está longe demais do monstro.' }
-- `HTTP 400` → {ok:false,error:'invalid-target',message:'Destino inválido para o empurrão.' }
-- `HTTP 400` → {ok:false,error:'invalid-target',message:'Escolha um SQM adjacente.' }
-- `HTTP 409` → {ok:false,error:'same-tile',message:'O monstro já está nesse local.' }
-- `HTTP 409` → {ok:false,error:'tile-occupied-hero',message:'Você está bloqueando esse SQM.' }
-- `HTTP 409` → {ok:false,error:'tile-out-of-bounds',message:'Destino fora do mapa.' }
-- `HTTP 409` → {ok:false,error:'tile-solid',message:'Esse SQM está bloqueado.' }
-- `HTTP 409` → {ok:false,error:'tile-occupied-monster',message:'Outro monstro bloqueia esse SQM.' }
-
 ### POST /register
 
 Arquivo: `server\auth\routes.js:34`
@@ -1583,22 +1446,6 @@ Arquivo: `server\starter\routes.js:104`
 - `HTTP 400` → {error:'starter já escolhido' }
 - `HTTP 400` → {error:'heroKey inválido' }
 
-### POST /ticket
-
-Arquivo: `server\routes\support.js:25`
-
-_Sem payload inferido_
-
-**Resposta de sucesso (amostra):**
-```json
-{ok:true,ticketId:id }
-```
-
-**Erros conhecidos:**
-- `HTTP 400` → {error:'missing-fields' }
-- `HTTP 422` → {error:'invalid-email' }
-- `HTTP 500` → {error:'ticket-create-failed' }
-
 ## Tabela sintética de erros por rota
 
 - **GET /**
@@ -1622,15 +1469,19 @@ _Sem payload inferido_
   - HTTP 400: {ok:false,error:'mob-pos-missing' }
   - HTTP 400: {ok:false,error:'hero-pos-missing' }
   - HTTP 500: {ok:false,error:'start-failed' }
-  - HTTP 400: {ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }
-  - HTTP 404: {ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }
+  - HTTP 404: {ok:false,error:'hero-not-found' }
+  - HTTP 500: {ok:false,error:'stop-failed' }
+  - HTTP 400: {ok:false,error:'missing-id' }
+  - HTTP 400: {ok:false,error:'missing-hero-id' }
 - **GET /_routes**
   - HTTP 400: {ok:false,error:'missing-params' }
   - HTTP 400: {ok:false,error:'mob-pos-missing' }
   - HTTP 400: {ok:false,error:'hero-pos-missing' }
   - HTTP 500: {ok:false,error:'start-failed' }
-  - HTTP 400: {ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }
-  - HTTP 404: {ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }
+  - HTTP 404: {ok:false,error:'hero-not-found' }
+  - HTTP 500: {ok:false,error:'stop-failed' }
+  - HTTP 400: {ok:false,error:'missing-id' }
+  - HTTP 400: {ok:false,error:'missing-hero-id' }
 - **GET /api/admin/content/map/:key/data**
   - HTTP 404: {error:'map not found' }
   - HTTP 500: {error:err.message }
@@ -1717,20 +1568,14 @@ _Sem payload inferido_
   - HTTP 500: {error:'Falha ao listar skills do herói' }
   - HTTP 400: {error:'heroId e skillType são obrigatórios' }
   - HTTP 500: {error:'Falha ao aplicar ganho' }
-- **GET /health**
 - **GET /hero/:id**
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
   - HTTP 500: {error:'Falha ao listar skills do herói' }
   - HTTP 400: {error:'heroId e skillType são obrigatórios' }
   - HTTP 500: {error:'Falha ao aplicar ganho' }
-- **GET /heroes**
-  - HTTP 500: {error:'unable to load heroes leaderboard' }
-  - HTTP 400: {error:'skill not available' }
-  - HTTP 500: {error:'unable to load skills leaderboard' }
 - **GET /heroes/master**
   - HTTP 500: {error:'Falha ao listar heróis' }
-- **GET /leaderboard**
 - **GET /list**
   - HTTP 500: {error:'erro ao listar starters' }
   - HTTP 500: {error:'erro ao checar status do starter' }
@@ -1760,7 +1605,6 @@ _Sem payload inferido_
   - HTTP 500: {error:'me-failed' }
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
-- **GET /overview**
 - **GET /ping**
   - HTTP 500: {error:'afk_state_failed' }
   - HTTP 400: {error:'produce_type required' }
@@ -1770,18 +1614,10 @@ _Sem payload inferido_
   - HTTP 404: {error:'box_not_found' }
   - HTTP 500: {error:'assign_failed' }
   - HTTP 500: {error:'collect_failed' }
-- **GET /players**
-  - HTTP 500: {error:'unable to load players leaderboard' }
-  - HTTP 500: {error:'unable to load heroes leaderboard' }
-  - HTTP 400: {error:'skill not available' }
 - **GET /pos**
   - HTTP 400: {error:'coords inválidas' }
   - HTTP 409: {error:'old-seq' }
   - HTTP 400: {error:'too-fast' }
-- **GET /roadmap**
-- **GET /skills**
-  - HTTP 400: {error:'skill not available' }
-  - HTTP 500: {error:'unable to load skills leaderboard' }
 - **GET /state**
   - HTTP 500: {error:'farm_state_failed' }
   - HTTP 500: {error:'plot_create_failed' }
@@ -1809,7 +1645,6 @@ _Sem payload inferido_
   - HTTP 400: {error:'heroKey é obrigatório' }
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 400: {error:'heroKey inválido' }
-- **GET /support**
 - **GET /tick**
 - **POST /**
   - HTTP 400: {error:result.error,cost:SUMMON_COST_COINS }
@@ -1834,12 +1669,13 @@ _Sem payload inferido_
   - HTTP 400: {ok:false,error:'mob-pos-missing' }
   - HTTP 400: {ok:false,error:'hero-pos-missing' }
   - HTTP 500: {ok:false,error:'start-failed' }
-  - HTTP 400: {ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }
-  - HTTP 404: {ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }
-  - HTTP 409: {ok:false,error:'monster-dead',message:'O monstro não está ativo.' }
-  - HTTP 400: {ok:false,error:'hero-pos-missing',message:'Posição do herói indisponível.' }
-  - HTTP 400: {ok:false,error:'map-diff',message:'Você está em outro mapa.' }
-  - HTTP 409: {ok:false,error:'hero-too-far',message:'Você está longe demais do monstro.' }
+  - HTTP 404: {ok:false,error:'hero-not-found' }
+  - HTTP 500: {ok:false,error:'stop-failed' }
+  - HTTP 400: {ok:false,error:'missing-id' }
+  - HTTP 400: {ok:false,error:'missing-hero-id' }
+  - HTTP 400: {ok:false,error:'mob-pos-missing' }
+  - HTTP 400: {ok:false,error:'hero-pos-missing' }
+  - HTTP 400: {ok:false,error:result.message }
 - **POST /attack/stop**
   - HTTP 404: {ok:false,error:'hero-not-found' }
   - HTTP 500: {ok:false,error:'stop-failed' }
@@ -1958,20 +1794,6 @@ _Sem payload inferido_
   - HTTP 400: {error:'coords inválidas' }
   - HTTP 409: {error:'old-seq' }
   - HTTP 400: {error:'too-fast' }
-- **POST /push**
-  - HTTP 400: {ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }
-  - HTTP 404: {ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }
-  - HTTP 409: {ok:false,error:'monster-dead',message:'O monstro não está ativo.' }
-  - HTTP 400: {ok:false,error:'hero-pos-missing',message:'Posição do herói indisponível.' }
-  - HTTP 400: {ok:false,error:'map-diff',message:'Você está em outro mapa.' }
-  - HTTP 409: {ok:false,error:'hero-too-far',message:'Você está longe demais do monstro.' }
-  - HTTP 400: {ok:false,error:'invalid-target',message:'Destino inválido para o empurrão.' }
-  - HTTP 400: {ok:false,error:'invalid-target',message:'Escolha um SQM adjacente.' }
-  - HTTP 409: {ok:false,error:'same-tile',message:'O monstro já está nesse local.' }
-  - HTTP 409: {ok:false,error:'tile-occupied-hero',message:'Você está bloqueando esse SQM.' }
-  - HTTP 409: {ok:false,error:'tile-out-of-bounds',message:'Destino fora do mapa.' }
-  - HTTP 409: {ok:false,error:'tile-solid',message:'Esse SQM está bloqueado.' }
-  - HTTP 409: {ok:false,error:'tile-occupied-monster',message:'Outro monstro bloqueia esse SQM.' }
 - **POST /register**
   - HTTP 400: {error:v.msg }
   - HTTP 400: {error:vp.msg }
@@ -1995,7 +1817,3 @@ _Sem payload inferido_
   - HTTP 400: {error:'heroKey é obrigatório' }
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 400: {error:'heroKey inválido' }
-- **POST /ticket**
-  - HTTP 400: {error:'missing-fields' }
-  - HTTP 422: {error:'invalid-email' }
-  - HTTP 500: {error:'ticket-create-failed' }
