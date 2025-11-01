@@ -13,6 +13,7 @@ const { getGrid } = require('../maps/grid');
 const { giveXp } = require('../services/heroProgress');
 
 const HERO_LAST_HIT_AT = new Map();
+const DEFAULT_RANGED_MIN = 2;
 
 // posição do herói (para validar mapa/alvo)
 let _pos = null;
@@ -556,7 +557,14 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
   const attackProfile = resolveMonsterAttackProfile(inst, attackInfo || {});
   const distTiles = chebyshevTiles(attackerTile, heroTile);
   const rangeTiles = Number.isFinite(attackProfile.rangeTiles) ? attackProfile.rangeTiles : 1;
-  const inRangeTiles = Number.isFinite(distTiles) && distTiles <= rangeTiles;
+  const minRangeTilesRaw = Number(attackProfile.minRangeTiles);
+  const minRangeTiles = Math.max(
+    1,
+    Number.isFinite(minRangeTilesRaw)
+      ? Math.min(rangeTiles, minRangeTilesRaw)
+      : (attackProfile.type === 'ranged' ? Math.min(rangeTiles, DEFAULT_RANGED_MIN) : 1)
+  );
+  const inRangeTiles = Number.isFinite(distTiles) && distTiles >= minRangeTiles && distTiles <= rangeTiles;
 
   const mapKeyForLos = effectiveMapKey ?? inst.map_key;
   let hasLOS = true;
@@ -583,7 +591,7 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
         mob: attackerTile,
         hero: heroTile,
         dist: distTiles,
-        range: rangeTiles,
+        range: { min: minRangeTiles, max: rangeTiles },
       },
       inRangeTiles,
       hasLOS,

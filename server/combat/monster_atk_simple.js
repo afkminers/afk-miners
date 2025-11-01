@@ -1983,21 +1983,44 @@ async function tick() {
 
         let attackRes = null;
         try {
+          const heroMapKey = targetHero.map_key != null ? targetHero.map_key : m.map_key;
+          const heroHitX = Number.isFinite(targetHero?.x)
+            ? targetHero.x
+            : (Number.isFinite(heroPx) ? heroPx : (Number.isFinite(hx) ? centerOfTile(hx) : undefined));
+          const heroHitY = Number.isFinite(targetHero?.y)
+            ? targetHero.y
+            : (Number.isFinite(heroPy) ? heroPy : (Number.isFinite(hy) ? centerOfTile(hy) : undefined));
+
           attackRes = await applyMobHit({
             attackerInstanceId: m.id,
             targetHeroId: targetHero.hero_id,
             attackInfo: {
               min: attackProfile?.min ?? DMG_MIN,
               max: attackProfile?.max ?? DMG_MAX,
+              minRangeTiles,
+              rangeTiles: maxRangeTiles,
+              type: attackType,
+              requiresLos,
+              chancePercent,
             },
             attackerPos: {
               x: Number.isFinite(m.x) ? m.x : undefined,
               y: Number.isFinite(m.y) ? m.y : undefined,
-              mapKey: targetHero.map_key ?? m.map_key,
+              mapKey: heroMapKey,
               face: m.face,
               unit: 'px',
               assumeTiles: false,
               assumePx: true,
+            },
+            heroPos: {
+              x: Number.isFinite(heroHitX) ? heroHitX : undefined,
+              y: Number.isFinite(heroHitY) ? heroHitY : undefined,
+              mapKey: heroMapKey,
+              unit: 'px',
+              assumeTiles: false,
+              assumePx: true,
+              source: targetHero.live_source || targetHero.source || 'ai',
+              fresh: true,
             },
           });
         } catch (err) {

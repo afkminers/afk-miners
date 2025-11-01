@@ -4,6 +4,7 @@ const MAGIC_KEYWORDS = new Set(['magic', 'spell', 'wand', 'rod', 'energy', 'fire
 
 const DEFAULT_MELEE_RANGE = 1;
 const DEFAULT_RANGED_RANGE = 3;
+const DEFAULT_MIN_RANGED = 2;
 const DEFAULT_ATTACK_MS = 1200;
 
 function parseJSON(raw) {
@@ -89,24 +90,57 @@ function resolveMonsterAttackProfile(monster = {}, override = {}) {
   const chosen = override.primaryAttack || pickPrimaryAttack(attacks) || null;
 
   const resolvedType = normalizeType(override.type ?? chosen?.type, fallbackRange);
-  const rangeTiles = resolveAttackRange(resolvedType, override.rangeTiles ?? chosen?.rangeTiles ?? chosen?.range);
+  const rangeTilesRaw = override.rangeTiles ?? chosen?.rangeTiles ?? chosen?.range;
+  const rangeTiles = Math.max(1, resolveAttackRange(resolvedType, rangeTilesRaw) | 0);
 
-  const intervalMsRaw = override.intervalMs ?? override.interval_ms ?? chosen?.intervalMs ?? chosen?.interval_ms ?? chosen?.cooldownMs;
-  const intervalMs = coerceNumber(intervalMsRaw, fallbackMs) || fallbackMs;
+  const minRangeRaw = override.minRangeTiles
+    ?? override.minRange
+    ?? chosen?.minRangeTiles
+    ?? chosen?.minRange
+    ?? chosen?.rangeMin
+    ?? chosen?.min_range
+    ?? chosen?.min_distance;
+
+  let minRangeTiles = coerceNumber(minRangeRaw, NaN);
+  if (!Number.isFinite(minRangeTiles) || minRangeTiles <= 0) {
+    if (resolvedType === 'ranged') {
+      const fallback = Math.min(rangeTiles, DEFAULT_MIN_RANGED);
+      minRangeTiles = Math.max(1, fallback);
+    } else {
+      minRangeTiles = 1;
+    }
+  }
+  minRangeTiles = Math.max(1, Math.min(rangeTiles, Math.round(minRangeTiles)));
+
+  const intervalMsRaw = override.intervalMs
+    ?? override.interval_ms
+    ?? chosen?.intervalMs
+    ?? chosen?.interval_ms
+    ?? chosen?.cooldownMs
+    ?? chosen?.cooldown;
+  const intervalMs = Math.max(50, (coerceNumber(intervalMsRaw, fallbackMs) || fallbackMs) | 0);
 
   const rawMin = override.min ?? override.minDamage ?? chosen?.min ?? chosen?.minDamage ?? chosen?.min_dmg ?? chosen?.damageMin;
   const rawMax = override.max ?? override.maxDamage ?? chosen?.max ?? chosen?.maxDamage ?? chosen?.max_dmg ?? chosen?.damageMax;
   const { min, max } = clampRange(coerceNumber(rawMin, 0), coerceNumber(rawMax, rawMin));
 
-  const requiresLos = override.requiresLos ?? (resolvedType !== 'melee');
+  const chanceRaw = override.chancePercent ?? override.chance ?? chosen?.chancePercent ?? chosen?.chance;
+  let chancePercent = coerceNumber(chanceRaw, 100);
+  if (!Number.isFinite(chancePercent)) chancePercent = 100;
+  chancePercent = Math.max(0, Math.min(100, Math.round(chancePercent)));
+
+  const requiresLosRaw = override.requiresLos ?? override.requires_los ?? chosen?.requiresLos ?? chosen?.requires_los ?? chosen?.needsLos;
+  const requiresLos = requiresLosRaw != null ? !!requiresLosRaw : resolvedType !== 'melee';
 
   return {
     type: resolvedType,
-    rangeTiles: Math.max(1, rangeTiles | 0),
-    intervalMs: Math.max(50, intervalMs | 0),
+    rangeTiles,
+    minRangeTiles,
+    intervalMs,
     min,
     max,
-    requiresLos: requiresLos !== false,
+    chancePercent,
+    requiresLos,
   };
 }
 
