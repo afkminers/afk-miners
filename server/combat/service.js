@@ -547,11 +547,6 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
     }
   }
 
-  if (mx < 1000 && my < 1000) {
-    mx = (mx * TILE) + (TILE / 2);
-    my = (my * TILE) + (TILE / 2);
-  }
-
   const attackerTile = toTileCoords({ x: mx, y: my });
   const heroTile = toTileCoords({ x: hx, y: hy });
   if (!isValidTile(attackerTile) || !isValidTile(heroTile)) {
