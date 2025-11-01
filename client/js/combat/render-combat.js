@@ -15,6 +15,8 @@ const state = {
   selectedTargetId: null,
 };
 
+const lastHeroFloaterAt = new Map(); // heroId -> ts
+
 const unbound = new Set(); // ids sem sprite vinculada
 
 const heroOverlay = {
@@ -176,34 +178,53 @@ function pushHeroDamageFloater(heroId, amount) {
   if (!Number.isFinite(dmg) || dmg <= 0) return;
 
   const heroUi = window.HeroDamageUI;
-  if (heroUi && (typeof heroUi.spawnAtHero === 'function' || typeof heroUi.spawn === 'function')) {
-    // UI dedicada já vai mostrar o dano – evita duplicar popups.
-    return;
+  const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const lastTs = lastHeroFloaterAt.get(heroId);
+  if (lastTs != null && now - lastTs < 75) return; // evita duplicar o mesmo hit em múltiplos eventos
+
+  let spawnedViaUi = false;
+  if (heroUi && typeof heroUi.spawnAtHero === 'function') {
+    try {
+      spawnedViaUi = heroUi.spawnAtHero(dmg, 'from_mob', heroId) === true;
+    } catch {}
   }
 
   let pos = null;
-  if (heroOverlay?.pos && Number.isFinite(heroOverlay.pos.x) && Number.isFinite(heroOverlay.pos.y)) {
-    pos = heroOverlay.pos;
-  }
-  if (!pos) {
-    const ctrl = window.GameScene?.controller;
-    const current = ctrl?.getPosition?.();
-    if (current && Number.isFinite(current.x) && Number.isFinite(current.y)) {
-      pos = current;
+  if (!spawnedViaUi) {
+    if (heroOverlay?.pos && Number.isFinite(heroOverlay.pos.x) && Number.isFinite(heroOverlay.pos.y)) {
+      pos = heroOverlay.pos;
+    }
+    if (!pos) {
+      const ctrl = window.GameScene?.controller;
+      const current = ctrl?.getPosition?.();
+      if (current && Number.isFinite(current.x) && Number.isFinite(current.y)) {
+        pos = current;
+      }
+    }
+
+    if (!spawnedViaUi && heroUi && typeof heroUi.spawn === 'function' && pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
+      try {
+        heroUi.spawn({ x: pos.x, y: pos.y, amount: dmg, kind: 'from_mob' });
+        spawnedViaUi = true;
+      } catch {}
     }
   }
 
-  if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return;
+  if (!spawnedViaUi) {
+    if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return;
 
-  state.floaters.push({
-    x: Math.round(pos.x),
-    y: Math.round(pos.y - 26),
-    text: `-${dmg}`,
-    ttl: 900,
-    vy: -0.045,
-    color: '#ff4444',
-    outline: '#000',
-  });
+    state.floaters.push({
+      x: Math.round(pos.x),
+      y: Math.round(pos.y - 26),
+      text: `-${dmg}`,
+      ttl: 900,
+      vy: -0.045,
+      color: '#ff4444',
+      outline: '#000',
+    });
+  }
+
+  lastHeroFloaterAt.set(heroId, now);
 }
 
 function spawnHeroDamageFloater(payload) {
@@ -673,8 +694,8 @@ function drawTargetBox(ctx) {
 /* --------------- Install API --------------- */
 export default function installCombatOverlay() {
   onMessage('hero_hp', (msg) => { updateHeroOverlayFrom(msg); });
-  onMessage('hero_hit', (msg) => { updateHeroOverlayFrom(msg); });
-  onMessage('hero_dmg', (msg) => { updateHeroOverlayFrom(msg); });
+  onMessage('hero_hit', (msg) => { updateHeroOverlayFrom(msg); spawnHeroDamageFloater(msg); });
+  onMessage('hero_dmg', (msg) => { updateHeroOverlayFrom(msg); spawnHeroDamageFloater(msg); });
   window.addEventListener('hero:state', (ev) => { updateHeroOverlayFrom(ev.detail); });
   window.addEventListener('tick:hero', (ev) => { updateHeroOverlayFrom(ev.detail); });
   window.addEventListener('hero:active-changed', () => { resetHeroOverlayState(); });
