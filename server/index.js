@@ -189,6 +189,11 @@ const SKIP_MIGRATIONS_ON_BOOT = process.env.SKIP_MIGRATIONS_ON_BOOT === '1';
 // ========= APP =========
 const app = express();
 app.use(cookieParser());
+app.use((req, res, next) => {
+  const lang = typeof req.cookies?.lang === 'string' && req.cookies.lang ? req.cookies.lang : 'en';
+  res.set('Content-Language', lang);
+  next();
+});
 
 // Middlewares de segurança e performance
 app.use(helmetMiddleware);

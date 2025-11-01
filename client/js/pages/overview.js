@@ -1,5 +1,6 @@
 // client/js/pages/overview.js
 import { initPageChrome } from './common-nav.js';
+import { i18n } from '../i18n/core.js';
 
 function setupHeroCta() {
   const heroButton = document.querySelector('.hero-banner .cta-button');
@@ -20,7 +21,9 @@ function focusMain() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  initPageChrome('/overview');
-  setupHeroCta();
-  focusMain();
+  i18n.onReady(() => {
+    initPageChrome('/overview');
+    setupHeroCta();
+    focusMain();
+  });
 });

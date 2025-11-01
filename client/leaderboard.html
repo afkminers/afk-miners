@@ -17,32 +17,48 @@
   <header class="retro-header">
     <div class="nav-wrap">
       <nav class="nav-left" aria-label="Primary">
-        <a class="nav-link" href="/overview">Overview</a>
-        <a class="nav-link" href="/roadmap">Roadmap</a>
+        <a class="nav-link" href="/overview" data-i18n="nav.overview">Overview</a>
+        <a class="nav-link" href="/roadmap" data-i18n="nav.roadmap">Roadmap</a>
       </nav>
-      <a id="btnPlay" class="btn-play" href="/">PLAY</a>
+      <a id="btnPlay" class="btn-play" href="/" data-i18n="nav.play">PLAY</a>
       <nav class="nav-right" aria-label="Secondary">
-        <a class="nav-link" href="/leaderboard">Leaderboard</a>
-        <a class="nav-link" href="/support">Support</a>
+        <a class="nav-link" href="/leaderboard" data-i18n="nav.leaderboard">Leaderboard</a>
+        <a class="nav-link" href="/support" data-i18n="nav.support">Support</a>
       </nav>
+      <div class="lang-switcher" data-lang-root>
+        <button type="button" class="lang-switcher__button" data-lang-button data-i18n-attr="aria-label,title">
+          <span class="lang-switcher__flag" data-lang-flag aria-hidden="true"></span>
+          <span class="lang-switcher__sr" data-lang-current></span>
+        </button>
+        <div class="lang-switcher__menu" data-lang-menu role="menu" aria-hidden="true" hidden>
+          <button type="button" class="lang-switcher__option" data-lang-option="en" role="menuitemradio" aria-checked="false">
+            <span class="lang-switcher__option-flag" data-option-flag aria-hidden="true"></span>
+            <span class="lang-switcher__option-label" data-lang-name data-i18n="lang.en">English</span>
+          </button>
+          <button type="button" class="lang-switcher__option" data-lang-option="pt-BR" role="menuitemradio" aria-checked="false">
+            <span class="lang-switcher__option-flag" data-option-flag aria-hidden="true"></span>
+            <span class="lang-switcher__option-label" data-lang-name data-i18n="lang.pt-BR">Português (Brasil)</span>
+          </button>
+        </div>
+      </div>
       <button id="btnHamb" class="btn-hamb" type="button" aria-label="Open navigation" aria-controls="mobileMenu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </div>
     <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
-      <a href="/overview">Overview</a>
-      <a href="/roadmap">Roadmap</a>
-      <a href="/leaderboard">Leaderboard</a>
-      <a href="/support">Support</a>
-      <a class="mobile-play" href="/">Play now</a>
+      <a href="/overview" data-i18n="nav.overview">Overview</a>
+      <a href="/roadmap" data-i18n="nav.roadmap">Roadmap</a>
+      <a href="/leaderboard" data-i18n="nav.leaderboard">Leaderboard</a>
+      <a href="/support" data-i18n="nav.support">Support</a>
+      <a class="mobile-play" href="/" data-i18n="nav.play">Play now</a>
     </div>
   </header>
 
   <main id="content" class="page-content" tabindex="-1" role="main">
     <section class="hero-banner">
       <div class="hero-copy">
-        <h1>Hall of Idle Legends</h1>
-        <p>Track the bravest miners, their strongest heroes, and the sharpest skills in the realm. Filter by tabs to explore players, individual heroes, or skill specialists.</p>
+        <h1 data-i18n="lb.heroHeadline">Hall of Idle Legends</h1>
+        <p data-i18n="lb.heroCopy">Track the bravest miners, their strongest heroes, and the sharpest skills in the realm. Filter by tabs to explore players, individual heroes, or skill specialists.</p>
       </div>
       <div class="hero-art" role="presentation" aria-hidden="true"></div>
     </section>
@@ -50,32 +66,32 @@
     <section class="leaderboard-panel" aria-labelledby="board-title">
       <div class="panel-heading">
         <div class="panel-title">
-          <h2 id="board-title">Leaderboard</h2>
-          <p>Switch tabs to view Players, Heroes, or Skills. Choose your view and stay ahead of the competition.</p>
+          <h2 id="board-title" data-i18n="lb.title">Leaderboard</h2>
+          <p data-i18n="lb.panelIntro">Switch tabs to view Players, Heroes, or Skills. Choose your view and stay ahead of the competition.</p>
         </div>
-        <div class="period-toggle" role="group" aria-label="Ranking period">
-          <button class="period-btn is-active" type="button" data-period="all">All-time</button>
-          <button class="period-btn" type="button" data-period="weekly" disabled title="Weekly rankings coming soon">Weekly</button>
+        <div class="period-toggle" role="group" aria-label="Ranking period" data-i18n-attr="aria-label" data-i18n-aria-label="lb.periodLabel">
+          <button class="period-btn is-active" type="button" data-period="all" data-i18n="common.allTime">All-time</button>
+          <button class="period-btn" type="button" data-period="weekly" disabled data-i18n="common.weekly" data-i18n-attr="title" data-i18n-title="lb.weeklySoon">Weekly</button>
         </div>
       </div>
 
-      <div class="tab-row" role="tablist" aria-label="Leaderboard categories">
-        <button class="tab-btn is-active" type="button" role="tab" data-tab="players" aria-selected="true">Players</button>
-        <button class="tab-btn" type="button" role="tab" data-tab="heroes" aria-selected="false">Heroes</button>
-        <button class="tab-btn" type="button" role="tab" data-tab="skills" aria-selected="false">Skills</button>
+      <div class="tab-row" role="tablist" aria-label="Leaderboard categories" data-i18n-attr="aria-label" data-i18n-aria-label="lb.categories">
+        <button class="tab-btn is-active" type="button" role="tab" data-tab="players" aria-selected="true" data-i18n="lb.players">Players</button>
+        <button class="tab-btn" type="button" role="tab" data-tab="heroes" aria-selected="false" data-i18n="lb.heroes">Heroes</button>
+        <button class="tab-btn" type="button" role="tab" data-tab="skills" aria-selected="false" data-i18n="lb.skills">Skills</button>
       </div>
 
       <div class="toolbar">
         <div class="search-field">
-          <label for="lbSearch">Search</label>
-          <input id="lbSearch" type="search" placeholder="Player or hero name" autocomplete="off" />
+          <label for="lbSearch" data-i18n="common.search">Search</label>
+          <input id="lbSearch" type="search" autocomplete="off" data-i18n-attr="placeholder" data-i18n-placeholder="lb.searchPlaceholder" placeholder="Player or hero name" />
         </div>
         <div class="skill-field" data-skill-filter>
-          <label for="lbSkill">Skill</label>
+          <label for="lbSkill" data-i18n="lb.skill">Skill</label>
           <select id="lbSkill"></select>
         </div>
         <div class="limit-field">
-          <label for="lbLimit">Rows</label>
+          <label for="lbLimit" data-i18n="common.rows">Rows</label>
           <select id="lbLimit">
             <option value="25">25</option>
             <option value="50">50</option>
@@ -86,22 +102,22 @@
 
       <div class="table-wrap">
         <table id="leaderboardTable" aria-live="polite">
-          <caption>AFK Miners leaderboard</caption>
+          <caption data-i18n="lb.caption">AFK Miners leaderboard</caption>
           <thead>
             <tr>
-              <th scope="col">Rank</th>
-              <th scope="col">Player</th>
-              <th scope="col">Hero</th>
-              <th scope="col">Class</th>
-              <th scope="col">Rarity</th>
-              <th scope="col">Level</th>
-              <th scope="col" class="col-skill">Skill</th>
-              <th scope="col">Updated</th>
+              <th scope="col" data-i18n="lb.rank">Rank</th>
+              <th scope="col" data-i18n="lb.player">Player</th>
+              <th scope="col" data-i18n="lb.hero">Hero</th>
+              <th scope="col" data-i18n="lb.class">Class</th>
+              <th scope="col" data-i18n="lb.rarity">Rarity</th>
+              <th scope="col" data-i18n="lb.level">Level</th>
+              <th scope="col" class="col-skill" data-i18n="lb.skill">Skill</th>
+              <th scope="col" data-i18n="lb.updated">Updated</th>
             </tr>
           </thead>
           <tbody id="leaderboardBody">
             <tr class="loading">
-              <td colspan="8">Loading leaderboard…</td>
+              <td colspan="8" data-i18n="lb.loading">Loading leaderboard…</td>
             </tr>
           </tbody>
         </table>
@@ -110,18 +126,20 @@
       <div class="panel-footer">
         <div id="lbStatus" class="status" role="status" aria-live="polite"></div>
         <div class="pager">
-          <button id="lbPrev" class="pager-btn" type="button" disabled>Prev</button>
+          <button id="lbPrev" class="pager-btn" type="button" disabled data-i18n="common.prev">Prev</button>
           <span id="lbRange" class="pager-range">—</span>
-          <button id="lbNext" class="pager-btn" type="button" disabled>Next</button>
+          <button id="lbNext" class="pager-btn" type="button" disabled data-i18n="common.next">Next</button>
         </div>
       </div>
     </section>
   </main>
 
   <footer class="retro-footer">
-    <small>&copy; <span data-year></span> AFK Miners. All rights reserved.</small>
+    <small>&copy; <span data-year></span> <span data-i18n="common.copyright">AFK Miners. All rights reserved.</span></small>
   </footer>
 
+  <script type="module" src="/js/i18n/core.js"></script>
+  <script type="module" src="/js/i18n/lang-menu.js"></script>
   <script type="module" src="/js/pages/leaderboard.js"></script>
 </body>
 </html>
