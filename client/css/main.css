@@ -65,3 +65,123 @@
     justify-self: center;
   }
 }
+
+/* ====== Language Switcher ====== */
+
+.lang-switcher{
+  position: relative;
+  display: inline-flex;
+}
+
+.lang-switcher__button{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 4px;
+  background: linear-gradient(#5f3a2c, #3c2118);
+  border: 4px solid #2b1512;
+  border-radius: 10px;
+  box-shadow: 0 4px 0 #120a08, inset 0 -2px 0 rgba(0,0,0,.45);
+  color: #ffe8c0;
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  cursor: pointer;
+  transition: filter .15s ease, transform .08s ease;
+}
+
+.lang-switcher__button:hover,
+.lang-switcher__button:focus{
+  filter: brightness(1.08);
+  outline: none;
+}
+
+.lang-switcher__button.is-open{
+  filter: brightness(1.1);
+}
+
+.lang-switcher__code{
+  display: none;
+}
+
+.lang-switcher__flag svg{
+  width: 18px;
+  height: 12px;
+  border: 2px solid #000;
+  box-shadow: 0 0 0 2px rgba(0,0,0,.4);
+  image-rendering: pixelated;
+}
+
+.lang-switcher__menu{
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: linear-gradient(#2c1d18, #1a110d);
+  border: 4px solid #2b1512;
+  border-radius: 12px;
+  box-shadow: 0 8px 0 #0c0706, 0 12px 18px rgba(0,0,0,.45);
+  z-index: 80;
+}
+
+.lang-switcher__option{
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 160px;
+  padding: 6px 8px;
+  background: linear-gradient(#4d2c24, #2e1813);
+  border: 3px solid #120a08;
+  border-radius: 10px;
+  color: #ffe8c0;
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: filter .15s ease, transform .08s ease;
+}
+
+.lang-switcher__option:hover,
+.lang-switcher__option:focus{
+  filter: brightness(1.1);
+  outline: none;
+}
+
+.lang-switcher__option.is-active{
+  border-color: #ffb23e;
+  box-shadow: 0 0 0 2px rgba(255, 178, 62, 0.35);
+}
+
+.lang-switcher__option-flag svg{
+  width: 18px;
+  height: 12px;
+  border: 2px solid #000;
+  box-shadow: 0 0 0 2px rgba(0,0,0,.4);
+}
+
+.lang-switcher__sr{
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 680px){
+  .lang-switcher__button{
+    font-size: 9px;
+    padding: 6px 8px;
+  }
+  .lang-switcher__option{
+    width: 140px;
+  }
+}

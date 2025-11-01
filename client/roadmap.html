@@ -17,89 +17,107 @@
   <header class="retro-header">
     <div class="nav-wrap">
       <nav class="nav-left" aria-label="Primary">
-        <a class="nav-link" href="/overview">Overview</a>
-        <a class="nav-link" href="/roadmap">Roadmap</a>
+        <a class="nav-link" href="/overview" data-i18n="nav.overview">Overview</a>
+        <a class="nav-link" href="/roadmap" data-i18n="nav.roadmap">Roadmap</a>
       </nav>
-      <a id="btnPlay" class="btn-play" href="/">PLAY</a>
+      <a id="btnPlay" class="btn-play" href="/" data-i18n="nav.play">PLAY</a>
       <nav class="nav-right" aria-label="Secondary">
-        <a class="nav-link" href="/leaderboard">Leaderboard</a>
-        <a class="nav-link" href="/support">Support</a>
+        <a class="nav-link" href="/leaderboard" data-i18n="nav.leaderboard">Leaderboard</a>
+        <a class="nav-link" href="/support" data-i18n="nav.support">Support</a>
       </nav>
+      <div class="lang-switcher" data-lang-root>
+        <button type="button" class="lang-switcher__button" data-lang-button data-i18n-attr="aria-label,title">
+          <span class="lang-switcher__flag" data-lang-flag aria-hidden="true"></span>
+          <span class="lang-switcher__sr" data-lang-current></span>
+        </button>
+        <div class="lang-switcher__menu" data-lang-menu role="menu" aria-hidden="true" hidden>
+          <button type="button" class="lang-switcher__option" data-lang-option="en" role="menuitemradio" aria-checked="false">
+            <span class="lang-switcher__option-flag" data-option-flag aria-hidden="true"></span>
+            <span class="lang-switcher__option-label" data-lang-name data-i18n="lang.en">English</span>
+          </button>
+          <button type="button" class="lang-switcher__option" data-lang-option="pt-BR" role="menuitemradio" aria-checked="false">
+            <span class="lang-switcher__option-flag" data-option-flag aria-hidden="true"></span>
+            <span class="lang-switcher__option-label" data-lang-name data-i18n="lang.pt-BR">Português (Brasil)</span>
+          </button>
+        </div>
+      </div>
       <button id="btnHamb" class="btn-hamb" type="button" aria-label="Open navigation" aria-controls="mobileMenu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </div>
     <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
-      <a href="/overview">Overview</a>
-      <a href="/roadmap">Roadmap</a>
-      <a href="/leaderboard">Leaderboard</a>
-      <a href="/support">Support</a>
-      <a class="mobile-play" href="/">Play now</a>
+      <a href="/overview" data-i18n="nav.overview">Overview</a>
+      <a href="/roadmap" data-i18n="nav.roadmap">Roadmap</a>
+      <a href="/leaderboard" data-i18n="nav.leaderboard">Leaderboard</a>
+      <a href="/support" data-i18n="nav.support">Support</a>
+      <a class="mobile-play" href="/" data-i18n="nav.play">Play now</a>
     </div>
   </header>
 
   <main id="content" class="page-content" tabindex="-1" role="main">
     <section class="hero-banner">
       <div class="hero-copy">
-        <h1>Roadmap &amp; World Expansion</h1>
-        <p>Follow the journey of AFK Miners as we forge new systems, raids, and quality-of-life improvements for our guild.</p>
+        <h1 data-i18n="roadmap.heroTitle">Roadmap &amp; World Expansion</h1>
+        <p data-i18n="roadmap.heroCopy">Follow the journey of AFK Miners as we forge new systems, raids, and quality-of-life improvements for our guild.</p>
       </div>
     </section>
 
     <section class="timeline" aria-labelledby="milestones">
       <div class="section-header">
-        <h2 id="milestones">Milestones</h2>
+        <h2 id="milestones" data-i18n="roadmap.milestones">Milestones</h2>
       </div>
       <ol class="timeline-list">
         <li class="timeline-card done">
           <div class="timeline-meta">
-            <span class="badge">DONE</span>
-            <span class="phase">Phase 1 — Launch Forge</span>
+            <span class="badge" data-i18n="roadmap.done">DONE</span>
+            <span class="phase" data-i18n="roadmap.phase1Title">Phase 1 — Launch Forge</span>
           </div>
-          <p>Core AFK loop, hero roster, mining expeditions, and the first dungeon released to all founders.</p>
+          <p data-i18n="roadmap.phase1Copy">Core AFK loop, hero roster, mining expeditions, and the first dungeon released to all founders.</p>
         </li>
         <li class="timeline-card wip">
           <div class="timeline-meta">
-            <span class="badge">WIP</span>
-            <span class="phase">Phase 2 — Guild Frontier</span>
+            <span class="badge" data-i18n="roadmap.wip">WIP</span>
+            <span class="phase" data-i18n="roadmap.phase2Title">Phase 2 — Guild Frontier</span>
           </div>
-          <p>Guild halls, co-op expeditions, improved training automation, and a refreshed UI for roster management.</p>
+          <p data-i18n="roadmap.phase2Copy">Guild halls, co-op expeditions, improved training automation, and a refreshed UI for roster management.</p>
         </li>
         <li class="timeline-card next">
           <div class="timeline-meta">
-            <span class="badge">NEXT</span>
-            <span class="phase">Phase 3 — Crystal Wars</span>
+            <span class="badge" data-i18n="roadmap.next">NEXT</span>
+            <span class="phase" data-i18n="roadmap.phase3Title">Phase 3 — Crystal Wars</span>
           </div>
-          <p>Async PvP leagues, seasonal relics, cross-server leaderboards, and cinematic boss events.</p>
+          <p data-i18n="roadmap.phase3Copy">Async PvP leagues, seasonal relics, cross-server leaderboards, and cinematic boss events.</p>
         </li>
         <li class="timeline-card next">
           <div class="timeline-meta">
-            <span class="badge">NEXT</span>
-            <span class="phase">Phase 4 — Endless Depths</span>
+            <span class="badge" data-i18n="roadmap.next">NEXT</span>
+            <span class="phase" data-i18n="roadmap.phase4Title">Phase 4 — Endless Depths</span>
           </div>
-          <p>Procedural dungeon tiers, relic crafting, housing, and advanced automation APIs for veteran miners.</p>
+          <p data-i18n="roadmap.phase4Copy">Procedural dungeon tiers, relic crafting, housing, and advanced automation APIs for veteran miners.</p>
         </li>
       </ol>
     </section>
 
     <section class="newsletter" aria-labelledby="newsletter-title">
       <div class="section-header">
-        <h2 id="newsletter-title">Stay Ahead of the Patch Notes</h2>
+        <h2 id="newsletter-title" data-i18n="roadmap.subscribeTitle">Stay Ahead of the Patch Notes</h2>
       </div>
-      <p>Subscribe to receive roadmap updates, sneak peeks, and invites to closed beta features.</p>
+      <p data-i18n="roadmap.subscribeCopy">Subscribe to receive roadmap updates, sneak peeks, and invites to closed beta features.</p>
       <form id="roadmapForm" class="subscribe-form" novalidate>
         <label class="sr-only" for="newsletterEmail">Email</label>
-        <input id="newsletterEmail" type="email" name="email" placeholder="you@kingdom.com" required autocomplete="email" />
-        <button type="submit">Notify Me</button>
+        <input id="newsletterEmail" type="email" name="email" placeholder="you@kingdom.com" required autocomplete="email" data-i18n-attr="placeholder" data-i18n-placeholder="support.email" />
+        <button type="submit" data-i18n="roadmap.subscribe">Notify Me</button>
       </form>
       <p class="form-feedback" role="status" aria-live="polite"></p>
     </section>
   </main>
 
   <footer class="retro-footer">
-    <small>&copy; <span data-year></span> AFK Miners. All rights reserved.</small>
+    <small>&copy; <span data-year></span> <span data-i18n="common.copyright">AFK Miners. All rights reserved.</span></small>
   </footer>
 
+  <script type="module" src="/js/i18n/core.js"></script>
+  <script type="module" src="/js/i18n/lang-menu.js"></script>
   <script type="module" src="/js/pages/roadmap.js"></script>
 </body>
 </html>

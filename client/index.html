@@ -373,27 +373,57 @@
   <header class="site-header">
     <div class="nav-wrap">
       <nav class="nav-left">
-        <a class="nav-link" href="/overview">Overview</a>
-        <a class="nav-link" href="/roadmap">Roadmap</a>
+        <a class="nav-link" href="/overview" data-i18n="nav.overview">Overview</a>
+        <a class="nav-link" href="/roadmap" data-i18n="nav.roadmap">Roadmap</a>
       </nav>
 
-      <button id="btnPlay" class="btn-play">PLAY</button>
+      <button id="btnPlay" class="btn-play" data-i18n="nav.play">PLAY</button>
 
       <nav class="nav-right">
-        <a class="nav-link" href="/leaderboard">Leaderboard</a>
-        <a class="nav-link" href="/support">Support</a>
+        <a class="nav-link" href="/leaderboard" data-i18n="nav.leaderboard">Leaderboard</a>
+        <a class="nav-link" href="/support" data-i18n="nav.support">Support</a>
       </nav>
 
       <div class="header-actions">
-        <button id="btnHamb" class="btn-hamb" aria-label="Menu" aria-controls="mobileMenu" aria-expanded="false" title="Menu">
+        <div class="lang-switcher" data-lang-root>
+          <button type="button" class="lang-switcher__button" data-lang-button data-i18n-attr="aria-label,title">
+            <span class="lang-switcher__flag" data-lang-flag aria-hidden="true"></span>
+            <span class="lang-switcher__sr" data-lang-current></span>
+          </button>
+          <div class="lang-switcher__menu" data-lang-menu role="menu" aria-hidden="true" hidden>
+            <button type="button" class="lang-switcher__option" data-lang-option="en" role="menuitemradio" aria-checked="false">
+              <span class="lang-switcher__option-flag" data-option-flag aria-hidden="true"></span>
+              <span class="lang-switcher__option-label" data-lang-name data-i18n="lang.en">English</span>
+            </button>
+            <button type="button" class="lang-switcher__option" data-lang-option="pt-BR" role="menuitemradio" aria-checked="false">
+              <span class="lang-switcher__option-flag" data-option-flag aria-hidden="true"></span>
+              <span class="lang-switcher__option-label" data-lang-name data-i18n="lang.pt-BR">Português (Brasil)</span>
+            </button>
+          </div>
+        </div>
+        <button
+          id="btnHamb"
+          class="btn-hamb"
+          data-i18n="common.menu"
+          data-i18n-attr="aria-label,title"
+          aria-controls="mobileMenu"
+          aria-expanded="false"
+        >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges">
             <path d="M3 6h18M3 12h18M3 18h18"/>
           </svg>
         </button>
 
-        <button id="btnLogoutTop" class="btn-logout hidden" title="Logout">Logout</button>
+        <button id="btnLogoutTop" class="btn-logout hidden" title="Logout" data-i18n="common.logout" data-i18n-attr="title">Logout</button>
         <div style="position:relative">
-          <button id="btnGear" class="btn-gear" title="Configurações" aria-haspopup="true" aria-expanded="false">
+        <button
+          id="btnGear"
+          class="btn-gear"
+          data-i18n="settings.open"
+          data-i18n-attr="title"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges">
               <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
               <path d="M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12M12 2v3M12 19v3"/>
@@ -401,19 +431,19 @@
           </button>
           <div id="cfgMenu" class="cfg-menu" role="menu" aria-hidden="true">
             <div class="cfg-item">
-              <span>Mute SFX</span>
+              <span data-i18n="settings.mute">Mute SFX</span>
               <input id="optMute" type="checkbox">
             </div>
             <div class="cfg-item">
-              <span>Reduced motion</span>
+              <span data-i18n="settings.motion">Reduced motion</span>
               <input id="optReduce" type="checkbox">
             </div>
             <div class="cfg-item">
-              <span>Fullscreen</span>
-              <button id="optFull" class="cfg-btn">Toggle</button>
+              <span data-i18n="settings.fullscreen">Fullscreen</span>
+              <button id="optFull" class="cfg-btn" data-i18n="settings.toggle">Toggle</button>
             </div>
             <div class="cfg-footer">
-              <button id="optClose" class="cfg-btn">Close</button>
+              <button id="optClose" class="cfg-btn" data-i18n="common.close">Close</button>
             </div>
           </div>
         </div>
@@ -421,11 +451,11 @@
     </div>
 
     <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
-      <a href="/overview">Overview</a>
-      <a href="/roadmap">Roadmap</a>
-      <a href="/leaderboard">Leaderboard</a>
-      <a href="/support">Support</a>
-      <button id="mobileLogout" class="hidden">Logout</button>
+      <a href="/overview" data-i18n="nav.overview">Overview</a>
+      <a href="/roadmap" data-i18n="nav.roadmap">Roadmap</a>
+      <a href="/leaderboard" data-i18n="nav.leaderboard">Leaderboard</a>
+      <a href="/support" data-i18n="nav.support">Support</a>
+      <button id="mobileLogout" class="hidden" data-i18n="common.logout">Logout</button>
     </div>
   </header>
 
@@ -471,32 +501,72 @@
     </div>
 
     <div class="auth-card">
-      <button class="auth-close" id="authClose" type="button">X</button>
-      <div class="auth-head">AFK MINERS — LOGIN / SIGN UP</div>
+      <button
+        class="auth-close"
+        id="authClose"
+        type="button"
+        aria-label="Close"
+        data-i18n="common.close"
+        data-i18n-attr="aria-label"
+      >X</button>
+      <div class="auth-head" data-i18n="auth.title">AFK MINERS — LOGIN / SIGN UP</div>
 
       <!-- SIGN IN -->
       <form id="loginForm" class="auth-pane" autocomplete="on">
-        <h3>Sign In</h3>
+        <h3 data-i18n="auth.signIn">Sign In</h3>
         <div class="auth-field">
-          <input id="loginName" name="username" placeholder="Name" autocomplete="username" />
+          <input
+            id="loginName"
+            name="username"
+            placeholder="Name"
+            autocomplete="username"
+            data-i18n="auth.loginName"
+            data-i18n-attr="placeholder"
+          />
         </div>
         <div class="auth-field">
-          <input id="loginPass" name="current-password" type="password" placeholder="Password" autocomplete="current-password" />
+          <input
+            id="loginPass"
+            name="current-password"
+            type="password"
+            placeholder="Password"
+            autocomplete="current-password"
+            data-i18n="auth.loginPassword"
+            data-i18n-attr="placeholder"
+          />
         </div>
-        <button class="btn8" id="btnLogin" type="button">Login</button>
+        <button class="btn8" id="btnLogin" type="button" data-i18n="auth.login">Login</button>
         <div id="loginMsg" class="auth-msg" aria-live="polite"></div>
       </form>
 
       <!-- SIGN UP -->
       <form id="registerForm" class="auth-pane" autocomplete="on">
-        <h3>Sign Up</h3>
+        <h3 data-i18n="auth.signUp">Sign Up</h3>
         <div class="auth-field">
-          <input id="regName" name="new-username" placeholder="Name (3–20)" minlength="3" maxlength="20" autocomplete="username" />
+          <input
+            id="regName"
+            name="new-username"
+            placeholder="Name (3–20)"
+            minlength="3"
+            maxlength="20"
+            autocomplete="username"
+            data-i18n="auth.registerName"
+            data-i18n-attr="placeholder"
+          />
         </div>
         <div class="auth-field">
-          <input id="regPass" name="new-password" type="password" placeholder="Password (≥6)" minlength="6" autocomplete="new-password" />
+          <input
+            id="regPass"
+            name="new-password"
+            type="password"
+            placeholder="Password (≥6)"
+            minlength="6"
+            autocomplete="new-password"
+            data-i18n="auth.registerPassword"
+            data-i18n-attr="placeholder"
+          />
         </div>
-        <button class="btn8" id="btnRegister" type="button">Create Account</button>
+        <button class="btn8" id="btnRegister" type="button" data-i18n="auth.createAccount">Create Account</button>
         <div id="regMsg" class="auth-msg" aria-live="polite"></div>
       </form>
     </div>
@@ -508,8 +578,8 @@
   <!-- OVERLAY GACHA -->
   <div id="summon" class="overlay" aria-hidden="true">
     <div class="rar-bg COMMON" id="rarBg"></div>
-    <div class="stage ui-frame bg-dither">
-      <div class="titlebar ui-title">
+      <div class="stage ui-frame bg-dither">
+      <div class="titlebar ui-title" data-i18n="gacha.newHero">
         NEW HERO
         <span class="coins" id="coinBox" style="position:absolute;right:56px;top:12px;display:flex;align-items:center;gap:6px;">
           <svg class="coin-svg" viewBox="0 0 16 16" shape-rendering="crispEdges" style="width:16px;height:16px">
@@ -551,31 +621,31 @@
           <span id="rarTag" class="rar-tag rar-COMMON">COMMON</span>
         </div>
         <div class="stats-pane">
-          <div class="stat-row"><div>⚔️ Power</div><div id="stAtk">0</div></div>
-          <div class="stat-row"><div>🛡️ Defense</div><div id="stDef">0</div></div>
-          <div class="stat-row"><div>⚡ Speed</div><div id="stSpd">0</div></div>
+          <div class="stat-row"><div data-i18n="gacha.statPower">⚔️ Power</div><div id="stAtk">0</div></div>
+          <div class="stat-row"><div data-i18n="gacha.statDefense">🛡️ Defense</div><div id="stDef">0</div></div>
+          <div class="stat-row"><div data-i18n="gacha.statSpeed">⚡ Speed</div><div id="stSpd">0</div></div>
           <hr>
-          <div class="stat-row"><div>Class</div><div id="stClass">—</div></div>
-          <div class="stat-row"><div>Role</div><div id="stRole">—</div></div>
-          <div class="stat-row"><div>Attack Type</div><div id="stType">—</div></div>
-          <div class="stat-row"><div>Element</div><div id="stElem">—</div></div>
-          <div class="stat-row"><div>Weapon</div><div id="stWeap">—</div></div>
+          <div class="stat-row"><div data-i18n="gacha.statClass">Class</div><div id="stClass">—</div></div>
+          <div class="stat-row"><div data-i18n="gacha.statRole">Role</div><div id="stRole">—</div></div>
+          <div class="stat-row"><div data-i18n="gacha.statType">Attack Type</div><div id="stType">—</div></div>
+          <div class="stat-row"><div data-i18n="gacha.statElement">Element</div><div id="stElem">—</div></div>
+          <div class="stat-row"><div data-i18n="gacha.statWeapon">Weapon</div><div id="stWeap">—</div></div>
         </div>
       </div>
       <div class="multi-pane hidden" id="multiPane">
-        <div class="multi-head ui-title">x10 RESULTS</div>
+        <div class="multi-head ui-title" id="multiHead">x10 RESULTS</div>
         <div class="multi-grid" id="multiGrid"></div>
       </div>
       <div class="okbar" id="okbar">
-        <button class="btn btn-ok" id="btnOk">OKAY</button>
+        <button class="btn btn-ok" id="btnOk" data-i18n="gacha.okay">OKAY</button>
         <button class="btn btn-again" id="btnAgain">SUMMON AGAIN (100)</button>
         <button class="btn btn-again" id="btnAgain10">SUMMON x10</button>
-        <div class="press-any">PRESS ANY KEY OR CLICK TO SKIP</div>
-        <label class="skipbox"><input type="checkbox" id="chkSkip"> Skip chest animation</label>
-        <div id="againHint" style="position:absolute;width:100%;bottom:34px;text-align:center;font-family:'Press Start 2P',monospace;font-size:10px;color:#7a4c20;display:none;">Not enough coins</div>
+        <div class="press-any" data-i18n="gacha.pressAnyKeyClick">PRESS ANY KEY OR CLICK TO SKIP</div>
+        <label class="skipbox"><input type="checkbox" id="chkSkip"><span data-i18n="gacha.skipChest">Skip chest animation</span></label>
+        <div id="againHint" style="position:absolute;width:100%;bottom:34px;text-align:center;font-family:'Press Start 2P',monospace;font-size:10px;color:#7a4c20;display:none;" data-i18n="gacha.notEnough">Not enough coins</div>
       </div>
       <div class="chest-hint" id="chestHint" style="display:none;position:absolute;left:0;right:0;bottom:22px;text-align:center;color:#ffffffcc;text-shadow:0 2px 0 rgba(0,0,0,.45);">
-        PRESS ANY KEY OR CLICK TO SKIP
+        <span data-i18n="gacha.pressAnyKeySkip">PRESS ANY KEY OR CLICK TO SKIP</span>
       </div>
     </div>
   </div>
@@ -584,7 +654,7 @@
   <main id="appMain" class="hidden">
     <div class="topbar">
       <div class="pill" id="userInfo">—</div>
-      <button class="btn8" id="btnLogout">Logout</button>
+      <button class="btn8" id="btnLogout" data-i18n="common.logout">Logout</button>
     </div>
 <!--
     <section id="view-hub" class="main-stage">
@@ -610,47 +680,47 @@
         </div>
       </div>
 
-      <h2 class="menu-title">MAIN MENU</h2>
+      <h2 class="menu-title" data-i18n="app.mainMenu">MAIN MENU</h2>
 
       <div class="menu-grid">
         <div class="menu-card" data-go="treasure">
           <div class="menu-thumb"><img src="img/menu/treasure-hunt.png" alt="Treasure Hunt"></div>
-          <div class="menu-cap"><span>TREASURE<br>HUNT</span></div>
+          <div class="menu-cap"><span data-i18n="app.menu.treasure" data-i18n-html>Treasure<br>Hunt</span></div>
         </div>
 
         <div class="menu-card" data-go="training">
           <div class="menu-thumb"><img src="img/menu/training.png" alt="Training"></div>
-          <div class="menu-cap"><span>TRAINING</span></div>
+          <div class="menu-cap"><span data-i18n="app.menu.training">Training</span></div>
         </div>
 
         <div class="menu-card" data-go="summon">
           <div class="menu-thumb"><img src="img/menu/summon.png" alt="Summon"></div>
-          <div class="menu-cap"><span>SUMMON</span></div>
+          <div class="menu-cap"><span data-i18n="app.menu.summon">Summon</span></div>
         </div>
 
         <div class="menu-card" data-go="inventory">
           <div class="menu-thumb"><img src="img/menu/inventory.png" alt="Inventory"></div>
-          <div class="menu-cap"><span>INVENTORY</span></div>
+          <div class="menu-cap"><span data-i18n="app.menu.inventory">Inventory</span></div>
         </div>
 
         <div class="menu-card" data-go="heroes">
           <div class="menu-thumb"><img src="img/menu/heroes.png" alt="Heroes"></div>
-          <div class="menu-cap"><span>HEROES</span></div>
+          <div class="menu-cap"><span data-i18n="app.menu.heroes">Heroes</span></div>
         </div>
 
         <div class="menu-card" data-go="dungeon">
           <div class="menu-thumb"><img src="img/menu/dungeon.png" alt="Dungeon"></div>
-          <div class="menu-cap"><span>DUNGEON</span></div>
+          <div class="menu-cap"><span data-i18n="app.menu.dungeon">Dungeon</span></div>
         </div>
 
         <div class="menu-card" data-go="pvp">
           <div class="menu-thumb"><img src="img/menu/pvp.png" alt="PvP"></div>
-          <div class="menu-cap"><span>PVP</span></div>
+          <div class="menu-cap"><span data-i18n="app.menu.pvp">PvP</span></div>
         </div>
 
         <div class="menu-card" data-go="house">
           <div class="menu-thumb"><img src="img/menu/house.png" alt="House"></div>
-          <div class="menu-cap"><span>HOUSE</span></div>
+          <div class="menu-cap"><span data-i18n="app.menu.house">House</span></div>
         </div>
       </div>
     </section>
@@ -658,24 +728,24 @@
     
     <!-- VIEWS -->
     <section id="view-treasure"  class="view ui-frame bg-dither">
-      <button class="btn-back" data-back>← BACK</button>
-      <div class="ui-title">TREASURE HUNT</div>
-      <div style="padding:16px">🧭 Em breve: mapa PvE/Farm com auto-run e drops.</div>
+      <button class="btn-back" data-back data-i18n="app.back">← BACK</button>
+      <div class="ui-title" data-i18n="app.view.treasureTitle">TREASURE HUNT</div>
+      <div style="padding:16px" data-i18n="app.view.treasureHint">🧭 Em breve: mapa PvE/Farm com auto-run e drops.</div>
     </section>
 
     <section id="view-training"  class="view ui-frame bg-dither">
-      <button class="btn-back" data-back>← BACK</button>
-      <div class="ui-title">TRAINING</div>
-      <div style="padding:16px">🏹 Em breve: dummies, testes de DPS e upgrades.</div>
+      <button class="btn-back" data-back data-i18n="app.back">← BACK</button>
+      <div class="ui-title" data-i18n="app.view.trainingTitle">TRAINING</div>
+      <div style="padding:16px" data-i18n="app.view.trainingHint">🏹 Em breve: dummies, testes de DPS e upgrades.</div>
     </section>
 
     <section id="view-summon" class="view">
-      <button class="btn-back" data-back>← BACK</button>
-      <h1>AFK Miners — Sistema de Gacha</h1>
+      <button class="btn-back" data-back data-i18n="app.back">← BACK</button>
+      <h1 data-i18n="gacha.menuHeading">AFK Miners — Sistema de Gacha</h1>
 
       <!-- BLOCO INTERNO DO GACHA -->
       <section class="ui-frame bg-dither">
-        <div class="ui-title">GACHA</div>
+        <div class="ui-title" data-i18n="gacha.menuTitle">GACHA</div>
 
         <div class="g-menu">
           <div class="g-banner">
@@ -687,30 +757,30 @@
                   <circle cx="8" cy="8" r="5" fill="#ffd96a"/>
                   <rect x="7" y="4" width="2" height="8" fill="#a06a16"/>
                 </svg>
-                <span>100 / pull</span>
+                <span id="pullPrice">100 / pull</span>
               </div>
-              <small>Featured pool • rotating</small>
+              <small data-i18n="gacha.bannerNote">Featured pool • rotating</small>
             </div>
           </div>
 
           <div class="g-actions">
-            <button id="btnGacha"   class="btn btn-ok btn-xl">SUMMON ×1</button>
-            <button id="btnGacha10" class="btn btn-again btn-xl">SUMMON ×10</button>
+            <button id="btnGacha"   class="btn btn-ok btn-xl" data-i18n="gacha.summonX1">SUMMON ×1</button>
+            <button id="btnGacha10" class="btn btn-again btn-xl" data-i18n="gacha.summonX10">SUMMON ×10</button>
           </div>
 
           <div class="g-lower">
             <div class="g-odds">
-              <div class="g-odds-title">RATES</div>
+              <div class="g-odds-title" data-i18n="gacha.oddsTitle">RATES</div>
               <ul>
-                <li>COMMON … 71%</li>
-                <li>RARE … 20%</li>
-                <li>SUPER RARE … 7%</li>
-                <li>LEGENDARY … 2%</li>
+                <li data-odds="COMMON" data-rate="71">COMMON … 71%</li>
+                <li data-odds="RARE" data-rate="20">RARE … 20%</li>
+                <li data-odds="SUPER_RARE" data-rate="7">SUPER RARE … 7%</li>
+                <li data-odds="LEGENDARY" data-rate="2">LEGENDARY … 2%</li>
               </ul>
             </div>
             <div class="g-hero-tease">
               <img src="img/ui/chest.png" alt="Chest" onerror="this.style.display='none'">
-              <small>Tap to open the chest and reveal your hero!</small>
+              <small data-i18n="gacha.tapToOpen">Tap to open the chest and reveal your hero!</small>
             </div>
           </div>
 
@@ -723,7 +793,7 @@
 
       <!-- Toast ONLY for Summon view -->
       <div id="summonToast" class="retro-toast" role="status" aria-live="polite" aria-atomic="true" style="display:none">
-        <div class="box">Not enough coins</div>
+        <div class="box" data-i18n="gacha.notEnough">Not enough coins</div>
       </div>
       <script>
         (function(){
@@ -763,39 +833,39 @@
 
     <!-- INVENTORY agora para ITENS -->
     <section id="view-inventory" class="view ui-frame bg-dither">
-      <button class="btn-back" data-back>← BACK</button>
-      <div class="ui-title">INVENTORY (ITEMS)</div>
+      <button class="btn-back" data-back data-i18n="app.back">← BACK</button>
+      <div class="ui-title" data-i18n="app.view.inventoryTitle">INVENTORY (ITEMS)</div>
       <div style="padding:16px">
         <div id="itemsGrid"></div>
-        <p style="margin-top:12px;color:#c9c3b8">Em breve: itens, materiais e craft ficarão aqui.</p>
+        <p style="margin-top:12px;color:#c9c3b8" data-i18n="app.view.inventoryHint">Em breve: itens, materiais e craft ficarão aqui.</p>
       </div>
     </section>
 
     <!-- HEROES mostra as cartas de heróis do jogador -->
     <section id="view-heroes" class="view ui-frame bg-dither">
-      <button class="btn-back" data-back>← BACK</button>
-      <div class="ui-title">HEROES</div>
+      <button class="btn-back" data-back data-i18n="app.back">← BACK</button>
+      <div class="ui-title" data-i18n="app.view.heroesTitle">HEROES</div>
       <div style="padding:16px">
         <div id="inventory"></div>
       </div>
     </section>
 
     <section id="view-dungeon" class="view ui-frame bg-dither">
-      <button class="btn-back" data-back>← BACK</button>
-      <div class="ui-title">DUNGEON</div>
-      <div style="padding:16px">🕳️ Portais, chaves e bosses.</div>
+      <button class="btn-back" data-back data-i18n="app.back">← BACK</button>
+      <div class="ui-title" data-i18n="app.view.dungeonTitle">DUNGEON</div>
+      <div style="padding:16px" data-i18n="app.view.dungeonHint">🕳️ Portais, chaves e bosses.</div>
     </section>
 
     <section id="view-pvp" class="view ui-frame bg-dither">
-      <button class="btn-back" data-back>← BACK</button>
-      <div class="ui-title">PVP</div>
-      <div style="padding:16px">⚔️ Arena async (defesas salvas, ataques por tickets).</div>
+      <button class="btn-back" data-back data-i18n="app.back">← BACK</button>
+      <div class="ui-title" data-i18n="app.view.pvpTitle">PVP</div>
+      <div style="padding:16px" data-i18n="app.view.pvpHint">⚔️ Arena async (defesas salvas, ataques por tickets).</div>
     </section>
 
     <section id="view-house" class="view ui-frame bg-dither">
-      <button class="btn-back" data-back>← BACK</button>
-      <div class="ui-title">HOUSE</div>
-      <div style="padding:16px">🏠 Recuperação e buffs por mobília.</div>
+      <button class="btn-back" data-back data-i18n="app.back">← BACK</button>
+      <div class="ui-title" data-i18n="app.view.houseTitle">HOUSE</div>
+      <div style="padding:16px" data-i18n="app.view.houseHint">🏠 Recuperação e buffs por mobília.</div>
     </section>
   </main>
 
@@ -985,6 +1055,8 @@
   <audio id="sfx-click"      src="sfx/click.mp3"      preload="auto"></audio>
 
   <!-- App principal -->
+  <script type="module" src="js/i18n/core.js"></script>
+  <script type="module" src="js/i18n/lang-menu.js"></script>
   <script type="module" src="js/boot.js"></script>
   <!-- FX da LANDING -->
   <script type="module" src="js/landing_fx.js"></script>
