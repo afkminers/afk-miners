@@ -298,9 +298,11 @@ async function bootstrapContentTables() {
         "monsterKey" TEXT,
         x INTEGER, y INTEGER, w INTEGER, h INTEGER,
         count INTEGER, "respawnSec" INTEGER,
-        "levelMin" INTEGER, "levelMax" INTEGER
+        "levelMin" INTEGER, "levelMax" INTEGER,
+        "leashPx" INTEGER
       )
     `);
+    try { await run('ALTER TABLE spawns ADD COLUMN IF NOT EXISTS "leashPx" INTEGER'); } catch(_) {}
 
     // chat_messages — nomes MINÚSCULOS
     await run(`
@@ -329,6 +331,17 @@ async function bootstrapContentTables() {
         PRIMARY KEY (player_id, map_key)
       )
     `);
+
+    await run(`
+      CREATE TABLE IF NOT EXISTS hero_last_pos (
+        hero_id TEXT PRIMARY KEY,
+        map_key TEXT NOT NULL,
+        x INTEGER NOT NULL,
+        y INTEGER NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+    await run('CREATE INDEX IF NOT EXISTS idx_hero_last_pos_map ON hero_last_pos(map_key)');
 
     // hero_backpack_slots — conteúdo da mochila por herói (modelo Tibia-like)
     await run(`
@@ -1026,7 +1039,8 @@ async function seedAIMobsFromDB(aiMobs) {
              COALESCE(mi.map_key, s."mapKey") AS map_key,
              s.x  AS sx, s.y  AS sy, s.w AS sw, s.h AS sh,
              s."monsterKey" AS monster_key,
-             mm.speed        AS speed
+             mm.speed        AS speed,
+             COALESCE(s."leashPx", 0) AS leash_px
         FROM monster_instances mi
         JOIN spawns s ON s.id = mi.spawn_id
         LEFT JOIN monsters_master mm ON mm.key = s."monsterKey"
@@ -1040,7 +1054,8 @@ async function seedAIMobsFromDB(aiMobs) {
         mapKey: r.map_key,
         spawnRect: { x: r.sx, y: r.sy, w: r.sw, h: r.sh },
         monsterKey: r.monster_key,
-        speed: r.speed
+        speed: r.speed,
+        leashPx: r.leash_px
       });
     }
     console.log(`[ai-mobs] seeded ${rows.length} alive instances from DB`);

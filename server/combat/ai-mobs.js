@@ -311,7 +311,8 @@ async function fetchAliveMonsters() {
           s.x  AS spawn_x,
           s.y  AS spawn_y,
           COALESCE(s.w, 0) AS spawn_w,
-          COALESCE(s.h, 0) AS spawn_h
+          COALESCE(s.h, 0) AS spawn_h,
+          COALESCE(s."leashPx", 0) AS leash_px
       FROM monster_instances mi
       JOIN monsters_master mm ON mm.id = mi.monster_id
       LEFT JOIN spawns s ON s.id = mi.spawn_id
@@ -329,6 +330,7 @@ async function fetchAliveMonsters() {
       attack_range: profile.rangeTiles,
       attack_ms: profile.intervalMs,
       attack_type: profile.type,
+      leash_px: Number(row.leash_px || 0),
     };
   });
 }
@@ -476,6 +478,11 @@ function ensureMob(instanceId, patch = {}) {
         ? { x: pendingStepPatch.x | 0, y: pendingStepPatch.y | 0 }
         : null);
 
+  const rawLeash = patch.leashPx ?? patch.leash_px ?? cur.leashRangePx ?? cur.leashPx ?? null;
+  const leashRangePx = Number.isFinite(rawLeash) && rawLeash > 0
+    ? Math.max(PX_PER_TILE, Math.round(rawLeash))
+    : null;
+
   const next = {
     instanceId: id,
     mapKey: patch.mapKey ?? cur.mapKey ?? null,
@@ -521,6 +528,8 @@ function ensureMob(instanceId, patch = {}) {
     // debug
     spawnRect,
     home,
+    leashRangePx,
+    leashPx: leashRangePx,
     _returningHome: cur._returningHome || false,
   };
 
@@ -535,7 +544,7 @@ function computeRepathCooldownMs(mob) {
 }
 
 // Exposta para seed inicial a partir do index.js
-function seedPosition({ id, x, y, mapKey, spawnRect, speed = null, monsterKey = null }) {
+function seedPosition({ id, x, y, mapKey, spawnRect, speed = null, monsterKey = null, leashPx = null }) {
   ensureMob(id, {
     x: (x | 0),
     y: (y | 0),
@@ -546,6 +555,7 @@ function seedPosition({ id, x, y, mapKey, spawnRect, speed = null, monsterKey = 
     spawnRect,
     speed,
     monsterKey,
+    leashPx,
     pendingStep: null,
   });
 }
@@ -593,6 +603,7 @@ async function start() {
       spawnRect,
       speed: r.speed,
       monsterKey: r.monster_key,
+      leashPx: r.leash_px,
       pendingStep: null,
     });
 
@@ -1024,6 +1035,24 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   decayThreat(mob, dt);
   selectTargetByThreat(now, mob, heroes, losGrid);
 
+  const leashRangePx = Number.isFinite(mob?.leashRangePx) ? mob.leashRangePx : null;
+  if (
+    leashRangePx != null && leashRangePx > 0 &&
+    mob?.home && Number.isFinite(mob.home.x) && Number.isFinite(mob.home.y)
+  ) {
+    const distFromHome = Math.hypot((mob.x ?? mob.home.x) - mob.home.x, (mob.y ?? mob.home.y) - mob.home.y);
+    if (distFromHome > leashRangePx + HOME_TOLERANCE_PX) {
+      if (mob.targetHeroId) mob.threat.delete(String(mob.targetHeroId));
+      mob.targetHeroId = null;
+      mob.mode = 'idle';
+      mob.pendingStep = null;
+      mob.combatStep = null;
+      mob.agroSince = 0;
+      await maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles });
+      return;
+    }
+  }
+
   if (!mob.targetHeroId) {
     mob.mode = 'idle';
     mob.agroSince = 0;
@@ -1271,6 +1300,23 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   }
 
   if (stepTarget) {
+    if (
+      leashRangePx != null && leashRangePx > 0 &&
+      mob?.home && Number.isFinite(mob.home.x) && Number.isFinite(mob.home.y)
+    ) {
+      const stepDist = Math.hypot(stepTarget.x - mob.home.x, stepTarget.y - mob.home.y);
+      if (stepDist > leashRangePx + HOME_TOLERANCE_PX) {
+        if (mob.targetHeroId) mob.threat.delete(String(mob.targetHeroId));
+        mob.targetHeroId = null;
+        mob.mode = 'idle';
+        mob.pendingStep = null;
+        mob.combatStep = null;
+        mob.agroSince = 0;
+        await maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles });
+        return;
+      }
+    }
+
     const reached = await moveMobAndPersist(mob, stepTarget, dt, losGrid, occupancy);
     if (reached) {
       mob.pendingStep = null;
