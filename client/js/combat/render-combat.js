@@ -171,6 +171,72 @@ function pushFloaterAtSprite(sprite, text, ttl = 900, color = "rgba(255,0,0,0.92
   state.floaters.push({ x, y, text, ttl, vy: -0.038, color, outline });
 }
 
+function pushHeroDamageFloater(heroId, amount) {
+  const dmg = Math.round(Math.abs(Number(amount)));
+  if (!Number.isFinite(dmg) || dmg <= 0) return;
+
+  const heroUi = window.HeroDamageUI;
+  if (heroUi && (typeof heroUi.spawnAtHero === 'function' || typeof heroUi.spawn === 'function')) {
+    // UI dedicada já vai mostrar o dano – evita duplicar popups.
+    return;
+  }
+
+  let pos = null;
+  if (heroOverlay?.pos && Number.isFinite(heroOverlay.pos.x) && Number.isFinite(heroOverlay.pos.y)) {
+    pos = heroOverlay.pos;
+  }
+  if (!pos) {
+    const ctrl = window.GameScene?.controller;
+    const current = ctrl?.getPosition?.();
+    if (current && Number.isFinite(current.x) && Number.isFinite(current.y)) {
+      pos = current;
+    }
+  }
+
+  if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return;
+
+  state.floaters.push({
+    x: Math.round(pos.x),
+    y: Math.round(pos.y - 26),
+    text: `-${dmg}`,
+    ttl: 900,
+    vy: -0.045,
+    color: '#ff4444',
+    outline: '#000',
+  });
+}
+
+function spawnHeroDamageFloater(payload) {
+  if (!payload) return;
+  const heroId = normalizeHeroId(payload.heroId ?? payload.targetHeroId ?? payload.id);
+  if (!heroId) return;
+
+  const candidates = [payload.damage, payload.dmg, payload.amount];
+  let dmg = null;
+  for (const candidate of candidates) {
+    const num = Number(candidate);
+    if (Number.isFinite(num) && num > 0) {
+      dmg = num;
+      break;
+    }
+  }
+
+  if (dmg == null && payload.delta != null) {
+    const delta = Number(payload.delta);
+    if (Number.isFinite(delta) && delta < 0) {
+      dmg = Math.abs(delta);
+    }
+  }
+
+  if (dmg == null && Number.isFinite(payload.hpBefore) && Number.isFinite(payload.hpAfter)) {
+    const deltaHp = payload.hpBefore - payload.hpAfter;
+    if (deltaHp > 0) dmg = deltaHp;
+  }
+
+  if (dmg == null) return;
+  pushHeroDamageFloater(heroId, dmg);
+}
+
 function updateAndDrawFloaters(ctx, dtMs) {
   const list = state.floaters;
   for (let i = list.length - 1; i >= 0; i--) {
@@ -243,6 +309,7 @@ function installWsHandlers() {
     if (!msg) return;
     const heroId = normalizeHeroId(msg.targetHeroId ?? msg.heroId ?? msg.id);
     if (!heroId) return;
+    spawnHeroDamageFloater({ ...msg, heroId });
     updateHeroOverlayFrom({
       heroId,
       hp: msg.hpAfter ?? msg.hp,

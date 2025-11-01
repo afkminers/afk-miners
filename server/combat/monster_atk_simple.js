@@ -1705,10 +1705,26 @@ async function tick() {
 
         if (!targetHero || isGhost) continue;
 
-        const heroTileX = tileOf(targetHero.x);
-        const heroTileY = tileOf(targetHero.y);
+        let heroTileX = tileOf(targetHero.x);
+        let heroTileY = tileOf(targetHero.y);
+
+        if (!Number.isFinite(heroTileX) && Number.isFinite(hx)) {
+          heroTileX = hx;
+          if (!Number.isFinite(targetHero.x)) {
+            targetHero.x = centerOfTile(hx);
+          }
+        }
+        if (!Number.isFinite(heroTileY) && Number.isFinite(hy)) {
+          heroTileY = hy;
+          if (!Number.isFinite(targetHero.y)) {
+            targetHero.y = centerOfTile(hy);
+          }
+        }
+
         if (Number.isFinite(heroTileX) && Number.isFinite(heroTileY)) {
           heroTilesForMap.add(tileKey(heroTileX, heroTileY));
+        } else if (Number.isFinite(hx) && Number.isFinite(hy)) {
+          heroTilesForMap.add(tileKey(hx, hy));
         }
 
         const heroPx = Number.isFinite(targetHero?.x)
@@ -1787,11 +1803,14 @@ async function tick() {
           }
         };
 
-        if (Number.isFinite(distTiles) && distTiles === 0) {
+        const overlapTileX = Number.isFinite(heroTileX) ? heroTileX : (Number.isFinite(hx) ? hx : null);
+        const overlapTileY = Number.isFinite(heroTileY) ? heroTileY : (Number.isFinite(hy) ? hy : null);
+
+        if (Number.isFinite(distTiles) && distTiles === 0 && Number.isFinite(overlapTileX) && Number.isFinite(overlapTileY)) {
           const separated = await resolveMonsterHeroOverlap({
             monster: m,
-            heroTileX,
-            heroTileY,
+            heroTileX: overlapTileX,
+            heroTileY: overlapTileY,
             tilesForMap,
             heroTiles: heroTilesForMap,
             mapCollision,
