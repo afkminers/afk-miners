@@ -241,6 +241,30 @@ function installWsHandlers() {
     }
   });
 
+  onMessage('monster:attack', (msg) => {
+    if (!msg) return;
+    const heroId = normalizeHeroId(msg.targetHeroId ?? msg.heroId ?? msg.id);
+    if (!heroId) return;
+    updateHeroOverlayFrom({
+      heroId,
+      hp: msg.hpAfter ?? msg.hp,
+      maxHp: msg.hpMax ?? msg.maxHp,
+    });
+  });
+
+  onMessage('hp:update', (msg) => {
+    if (!msg) return;
+    const entity = typeof msg.entity === 'string' ? msg.entity.toLowerCase() : null;
+    if (entity && entity !== 'hero') return;
+    const heroId = normalizeHeroId(msg.heroId ?? msg.id ?? msg.targetHeroId);
+    if (!heroId) return;
+    updateHeroOverlayFrom({
+      heroId,
+      hp: msg.hp ?? msg.hpAfter ?? msg.currentHp,
+      maxHp: msg.hpMax ?? msg.maxHp,
+    });
+  });
+
   onMessage('monster_dead', (msg) => {
     const id = String(msg.id);
     const xp = Number(msg.xp || 0);
