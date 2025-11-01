@@ -331,9 +331,24 @@ async function migrate() {
       x INTEGER, y INTEGER, w INTEGER, h INTEGER,
       count INTEGER, respawnSec INTEGER,
       levelMin INTEGER, levelMax INTEGER,
+      "leashPx" INTEGER,
       FOREIGN KEY (mapKey) REFERENCES maps(key)
     )
   `);
+
+  await run(`ALTER TABLE spawns ADD COLUMN IF NOT EXISTS "leashPx" INTEGER`);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS hero_last_pos (
+      hero_id TEXT PRIMARY KEY,
+      map_key TEXT NOT NULL,
+      x INTEGER NOT NULL,
+      y INTEGER NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )
+  `);
+
+  await run(`CREATE INDEX IF NOT EXISTS idx_hero_last_pos_map ON hero_last_pos(map_key)`);
 
     // ---------- Loot (map_loot) ----------
   await run(`

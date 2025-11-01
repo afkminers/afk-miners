@@ -3,14 +3,22 @@
 const { get, run } = require('../models/db');
 const K = require('../balance/config');
 const { applyTries, getClassRate } = require('../skills/engine');
-const { broadcast } = require('../ws/bus');
+const wsBus = require('../ws/bus');
+const { broadcast } = wsBus;
 const { TILE } = require('./geom');
 const { toTileCoords, chebyshevTiles, isValidTile } = require('../utils/tile-coords');
 const { resolveMonsterAttackProfile } = require('./monster_attack_profile');
 const { hasLineOfSightTiles } = require('./los');
 const { getGrid } = require('../maps/grid');
+const {
+  getHeroRespawnPoint,
+  setHeroRespawnPoint,
+  upsertPlayerLastPos,
+  DEFAULT_START,
+} = require('../services/spawnPoint');
 // Se você usa este serviço central de XP:
 const { giveXp } = require('../services/heroProgress');
+const { setLivePlayerPosition, markHeroAlive } = require('../player/live_positions');
 
 const HERO_LAST_HIT_AT = new Map();
 const DEFAULT_RANGED_MIN = 2;
@@ -37,7 +45,7 @@ function ai() {
  *  Config de Respawn
  *  ======================= */
 const RESPAWN_MS = 10000; // 5s de espera na tela de morte
-const RESPAWN_FALLBACK = { mapKey: 'house', x: 912, y: 880 }; // ajuste conforme seu mapa
+const RESPAWN_FALLBACK = { ...DEFAULT_START };
 const RESPAWN_HP_FRACTION = 1.0; // 100% da vida ao reviver (mín. 1)
 
 /** Dano estilo Tibia (sem dano mínimo garantido) */
@@ -218,11 +226,17 @@ async function respawnHero(targetHeroId) {
   const maxHp = Number(row?.max_hp || 100);
   const playerId = row?.player_id;
 
-  const mapKey = RESPAWN_FALLBACK.mapKey;
-  const x = RESPAWN_FALLBACK.x | 0;
-  const y = RESPAWN_FALLBACK.y | 0;
+  const spawn = await getHeroRespawnPoint(targetHeroId, {
+    mapKey: RESPAWN_FALLBACK.mapKey,
+    forceStart: true,
+  });
+
+  const mapKey = spawn.mapKey || RESPAWN_FALLBACK.mapKey;
+  const x = Number.isFinite(spawn.x) ? spawn.x | 0 : RESPAWN_FALLBACK.x | 0;
+  const y = Number.isFinite(spawn.y) ? spawn.y | 0 : RESPAWN_FALLBACK.y | 0;
 
   const hpOnRevive = Math.max(1, Math.floor(maxHp * RESPAWN_HP_FRACTION));
+  const nowTs = Date.now();
 
   // revive: hp + alive=true
   await run(`
@@ -233,14 +247,30 @@ async function respawnHero(targetHeroId) {
      WHERE id = $1
   `, [targetHeroId, hpOnRevive]);
 
-  // persiste posição de respawn
+  await setHeroRespawnPoint(targetHeroId, mapKey, x, y);
   if (playerId) {
-    await run(`
-      INSERT INTO player_last_pos (player_id, map_key, x, y, last_seq, updated_at)
-      VALUES ($1, $2, $3, $4, 0, now())
-      ON CONFLICT (player_id, map_key)
-        DO UPDATE SET x = EXCLUDED.x, y = EXCLUDED.y, updated_at = now()
-    `, [playerId, mapKey, x, y]);
+    try { markHeroAlive(playerId, true, targetHeroId); } catch {}
+    try {
+      setLivePlayerPosition(playerId, {
+        x,
+        y,
+        mapKey,
+        heroId: targetHeroId,
+        heroAlive: true,
+        ts: nowTs,
+      });
+    } catch {}
+    await upsertPlayerLastPos(playerId, mapKey, x, y);
+    try { wsBus.movePlayerToMap?.(playerId, mapKey, { x, y, ts: nowTs }); } catch {}
+    try {
+      wsBus.sendToPlayer?.(playerId, {
+        type: 'pos_snap',
+        heroId: targetHeroId,
+        mapKey,
+        x,
+        y,
+      });
+    } catch {}
   }
 
   // notifica cliente (snap + respawn)
