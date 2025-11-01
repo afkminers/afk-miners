@@ -67,15 +67,19 @@
 }
 
 /* ====== Language Switcher ====== */
+
 .lang-switcher{
   position: relative;
+  display: inline-flex;
 }
 
 .lang-switcher__button{
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 4px;
   background: linear-gradient(#5f3a2c, #3c2118);
   border: 4px solid #2b1512;
   border-radius: 10px;
@@ -93,10 +97,12 @@
   outline: none;
 }
 
+.lang-switcher__button.is-open{
+  filter: brightness(1.1);
+}
+
 .lang-switcher__code{
-  min-width: 26px;
-  text-align: center;
-  letter-spacing: 1px;
+  display: none;
 }
 
 .lang-switcher__flag svg{
@@ -120,6 +126,10 @@
   border-radius: 12px;
   box-shadow: 0 8px 0 #0c0706, 0 12px 18px rgba(0,0,0,.45);
   z-index: 80;
+}
+
+.lang-switcher__menu[hidden]{
+  display: none !important;
 }
 
 .lang-switcher__option{

@@ -127,7 +127,7 @@
       },
       {
         "file": "server\\combat\\service.js",
-        "index": 13656
+        "index": 13925
       },
       {
         "file": "server\\combat\\routes.js",
@@ -151,7 +151,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\pos.js",
-        "index": 7121
+        "index": 7366
       }
     ],
     "defaults": []
