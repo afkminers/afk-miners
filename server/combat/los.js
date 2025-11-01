@@ -1,5 +1,5 @@
 // server/combat/los.js
-const { toTile } = require('./geom');
+const { toTileCoords, isValidTile } = require('../utils/tile-coords');
 
 /**
  * Suporta:
@@ -7,9 +7,11 @@ const { toTile } = require('./geom');
  *  - linear: { data: Uint8Array, cols, rows }
  *  - ou diretamente Uint8Array + você passa um wrapper (ver autoloop)
  */
-function hasLineOfSight(gridLike, ax, ay, bx, by) {
-  let x0 = toTile(ax), y0 = toTile(ay);
-  let x1 = toTile(bx), y1 = toTile(by);
+function hasLineOfSightTiles(gridLike, aTx, aTy, bTx, bTy) {
+  let x0 = aTx | 0;
+  let y0 = aTy | 0;
+  let x1 = bTx | 0;
+  let y1 = bTy | 0;
 
   let cols = null, data = null, grid2D = null;
 
@@ -44,4 +46,11 @@ function hasLineOfSight(gridLike, ax, ay, bx, by) {
   return true;
 }
 
-module.exports = { hasLineOfSight };
+function hasLineOfSight(gridLike, ax, ay, bx, by) {
+  const aTile = toTileCoords({ x: ax, y: ay });
+  const bTile = toTileCoords({ x: bx, y: by });
+  if (!isValidTile(aTile) || !isValidTile(bTile)) return false;
+  return hasLineOfSightTiles(gridLike, aTile.tx, aTile.ty, bTile.tx, bTile.ty);
+}
+
+module.exports = { hasLineOfSight, hasLineOfSightTiles };

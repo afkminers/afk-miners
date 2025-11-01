@@ -3,6 +3,11 @@ const { all, get, run } = require('../models/db'); // helpers do projeto
 const { applyMobHit } = require('./service');
 const { getGrid } = require('../maps/grid');
 const { getMonster } = require('../services/catalogCache');
+const { normalizeType } = require('./monster_attack_profile');
+const {
+  getLivePlayerPosition,
+  listPlayerIds,
+} = require('../player/live_positions');
 
 // ======= Tuning via .env =======
 const TILE = 32;
@@ -23,7 +28,15 @@ const DEFAULT_ATTACK_PROFILE = Object.freeze({
   max: DMG_MAX,
   intervalMs: ATK_COOLDOWN_MS,
   chancePercent: 100,
+  rangeTiles: 1,
+  minRangeTiles: 1,
+  type: 'melee',
+  requiresLos: false,
 });
+
+const DEFAULT_RANGED_MIN_RANGE = 2;
+const OVERLAP_PX_EPS = +(process.env.MONSTER_OVERLAP_PX_EPS || Math.round(TILE * 0.45));
+const RANGE_PX_TOLERANCE = +(process.env.MONSTER_RANGE_PX_TOLERANCE || Math.round(TILE * 0.35));
 
 // Gate do spawn (agora DESLIGADO por padrão)
 const CHASE_INSIDE_SPAWN_ONLY = (process.env.MONSTER_CHASE_INSIDE_SPAWN_ONLY ?? '0') === '1';
@@ -66,6 +79,17 @@ const _heroMemory     = new Map(); // heroId -> { tx, ty, lastTx, lastTy, headin
 const _attackProfileCache = new Map(); // monsterKey -> { profile, signature }
 const _attackWarnedKeys = new Set();
 
+const DEBUG_COMBAT = process.env.DEBUG_COMBAT === '1' || process.env.DEBUG_COMBAT === 'true';
+
+function debugCombatLog(payload) {
+  if (!DEBUG_COMBAT) return;
+  try {
+    console.log('[monster_atk_simple][combat]', JSON.stringify(payload));
+  } catch (err) {
+    console.log('[monster_atk_simple][combat]', payload);
+  }
+}
+
 // ======= Utils =======
 function resetInstanceState(monsterId) {
   if (monsterId == null) return;
@@ -90,6 +114,66 @@ const tileOf = (v) => {
 };
 const centerOfTile = (t) => (t * TILE) + TILE / 2;
 const tileKey = (tx, ty) => `${tx},${ty}`;
+
+function getLivePosForPlayer(playerId) {
+  if (!playerId && playerId !== 0) return null;
+  try {
+    return getLivePlayerPosition(String(playerId), { allowStale: true });
+  } catch {
+    return null;
+  }
+}
+
+function applyLivePositionToHero(hero, live) {
+  if (!hero || !live) return;
+  if (live.heroAlive === false) return;
+
+  if (live.heroId != null && hero.hero_id != null) {
+    const liveHeroId = String(live.heroId);
+    const currentHeroId = String(hero.hero_id);
+    if (liveHeroId !== currentHeroId) return;
+  }
+
+  if (live.mapKey !== undefined && live.mapKey !== null) {
+    hero.map_key = live.mapKey;
+  }
+
+  const lx = Number(live.x);
+  if (Number.isFinite(lx)) {
+    hero.x = Math.round(lx);
+  }
+
+  const ly = Number(live.y);
+  if (Number.isFinite(ly)) {
+    hero.y = Math.round(ly);
+  }
+
+  if (live.ts != null) {
+    hero.live_ts = Number(live.ts) || Date.now();
+  } else {
+    hero.live_ts = Date.now();
+  }
+
+  if (live.heroId != null && hero.hero_id == null) {
+    hero.hero_id = live.heroId;
+  }
+
+  if (live.playerId && hero.player_id == null) {
+    hero.player_id = live.playerId;
+  }
+
+  hero.live_source = live.stale ? 'live_stale' : 'live';
+  if (live.age != null) {
+    hero.live_age_ms = Number(live.age);
+  }
+}
+
+const chebyshevTiles = (ax, ay, bx, by) => {
+  if (!Number.isFinite(ax) || !Number.isFinite(ay) || !Number.isFinite(bx) || !Number.isFinite(by)) {
+    return Infinity;
+  }
+  return Math.max(Math.abs(ax - bx), Math.abs(ay - by));
+};
 
 function toFiniteNumber(value, fallback) {
   const n = Number(value);
@@ -134,28 +218,88 @@ function parseAttacksPayload(raw) {
   return [];
 }
 
-function buildAttackProfile(entry, fallbackIntervalMs) {
-  if (!entry || typeof entry !== 'object') {
-    return { ...DEFAULT_ATTACK_PROFILE };
+function buildAttackProfile(entry, monster) {
+  const fallbackIntervalMs = toFiniteNumber(
+    monster?.attack_ms,
+    DEFAULT_ATTACK_PROFILE.intervalMs,
+  );
+
+  const fallbackRange = toFiniteNumber(
+    monster?.attack_range ?? monster?.attack_range_tiles,
+    DEFAULT_ATTACK_PROFILE.rangeTiles,
+  );
+
+  const fallbackType = normalizeType(
+    entry?.type ?? monster?.attack_type,
+    Number.isFinite(fallbackRange) && fallbackRange > 0 ? fallbackRange : DEFAULT_ATTACK_PROFILE.rangeTiles,
+  );
+
+  let fallbackMinRange = toFiniteNumber(
+    monster?.attack_min_range ?? monster?.attack_min_range_tiles,
+    fallbackType === 'ranged'
+      ? Math.min(DEFAULT_RANGED_MIN_RANGE, Math.max(1, fallbackRange || DEFAULT_ATTACK_PROFILE.rangeTiles))
+      : 1,
+  );
+  if (!Number.isFinite(fallbackMinRange) || fallbackMinRange <= 0) {
+    fallbackMinRange = fallbackType === 'ranged'
+      ? Math.min(DEFAULT_RANGED_MIN_RANGE, Math.max(1, fallbackRange || DEFAULT_ATTACK_PROFILE.rangeTiles))
+      : 1;
   }
 
-  const min = toFiniteNumber(
-    entry.min ?? entry.minDamage ?? entry.min_dmg ?? entry.damageMin,
-    DEFAULT_ATTACK_PROFILE.min,
-  );
-  let max = toFiniteNumber(
-    entry.max ?? entry.maxDamage ?? entry.max_dmg ?? entry.damageMax,
-    Math.max(min, DEFAULT_ATTACK_PROFILE.max),
-  );
-  if (!Number.isFinite(max) || max < min) max = Math.max(min, DEFAULT_ATTACK_PROFILE.max);
+  const rangeRawCandidates = [
+    entry?.rangeTiles,
+    entry?.range,
+    entry?.maxRange,
+    entry?.maxRangeTiles,
+    entry?.distance,
+  ];
+  let rangeTiles = DEFAULT_ATTACK_PROFILE.rangeTiles;
+  for (const candidate of rangeRawCandidates) {
+    const n = toFiniteNumber(candidate, NaN);
+    if (Number.isFinite(n) && n > 0) { rangeTiles = n; break; }
+  }
+  if (!Number.isFinite(rangeTiles) || rangeTiles <= 0) {
+    rangeTiles = Number.isFinite(fallbackRange) && fallbackRange > 0 ? fallbackRange : DEFAULT_ATTACK_PROFILE.rangeTiles;
+  }
+
+  const minRangeCandidates = [
+    entry?.minRangeTiles,
+    entry?.minRange,
+    entry?.rangeMin,
+    entry?.min_range,
+    entry?.min_distance,
+  ];
+  let minRangeTiles = DEFAULT_ATTACK_PROFILE.minRangeTiles;
+  for (const candidate of minRangeCandidates) {
+    const n = toFiniteNumber(candidate, NaN);
+    if (Number.isFinite(n) && n > 0) { minRangeTiles = n; break; }
+  }
+  if (!Number.isFinite(minRangeTiles) || minRangeTiles <= 0) {
+    minRangeTiles = fallbackMinRange;
+  }
+
+  const resolvedType = normalizeType(entry?.type ?? monster?.attack_type, rangeTiles);
+
+  if (resolvedType === 'melee') {
+    rangeTiles = 1;
+    minRangeTiles = 1;
+  } else {
+    rangeTiles = Math.max(1, Math.round(rangeTiles));
+    if (!Number.isFinite(minRangeTiles) || minRangeTiles <= 0) {
+      minRangeTiles = Math.min(rangeTiles, DEFAULT_RANGED_MIN_RANGE);
+    }
+    minRangeTiles = Math.max(1, Math.round(Math.min(minRangeTiles, rangeTiles)));
+  }
 
   let intervalMs = toFiniteNumber(
-    entry.intervalMs ?? entry.interval_ms ?? entry.cooldownMs ?? entry.cooldown,
-    Number.isFinite(fallbackIntervalMs) && fallbackIntervalMs > 0 ? fallbackIntervalMs : DEFAULT_ATTACK_PROFILE.intervalMs,
+    entry?.intervalMs ?? entry?.interval_ms ?? entry?.cooldownMs ?? entry?.cooldown,
+    Number.isFinite(fallbackIntervalMs) && fallbackIntervalMs > 0
+      ? fallbackIntervalMs
+      : DEFAULT_ATTACK_PROFILE.intervalMs,
   );
   if (!Number.isFinite(intervalMs) || intervalMs <= 0) intervalMs = DEFAULT_ATTACK_PROFILE.intervalMs;
 
-  const chanceRaw = entry.chancePercent ?? entry.chance;
+  const chanceRaw = entry?.chancePercent ?? entry?.chance;
   let chancePercent;
   if (chanceRaw == null || chanceRaw === '') {
     chancePercent = DEFAULT_ATTACK_PROFILE.chancePercent;
@@ -166,11 +310,28 @@ function buildAttackProfile(entry, fallbackIntervalMs) {
     }
   }
 
+  const min = toFiniteNumber(
+    entry?.min ?? entry?.minDamage ?? entry?.min_dmg ?? entry?.damageMin,
+    DEFAULT_ATTACK_PROFILE.min,
+  );
+  let max = toFiniteNumber(
+    entry?.max ?? entry?.maxDamage ?? entry?.max_dmg ?? entry?.damageMax,
+    Math.max(min, DEFAULT_ATTACK_PROFILE.max),
+  );
+  if (!Number.isFinite(max) || max < min) max = Math.max(min, DEFAULT_ATTACK_PROFILE.max);
+
+  const requiresLosRaw = entry?.requiresLos ?? entry?.requires_los ?? entry?.needsLos;
+  const requiresLos = requiresLosRaw != null ? !!requiresLosRaw : resolvedType !== 'melee';
+
   return {
     min,
     max,
     intervalMs,
     chancePercent,
+    rangeTiles,
+    minRangeTiles,
+    type: resolvedType,
+    requiresLos,
   };
 }
 
@@ -227,7 +388,7 @@ async function resolveMonsterAttackProfile(monster) {
     _attackWarnedKeys.add(key);
   }
 
-  const profile = Object.freeze(buildAttackProfile(chosen, monster.attack_ms));
+  const profile = Object.freeze(buildAttackProfile(chosen, monster));
   _attackProfileCache.set(key, { profile, signature });
   return profile;
 }
@@ -334,14 +495,30 @@ function buildMonsterTileMap(list = []) {
 
 function buildHeroTileSet(list = []) {
   const byMap = new Map();
+  const add = (mapKey, tx, ty) => {
+    if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;
+    const key = mapKey == null ? '__null__' : String(mapKey);
+    let set = byMap.get(key);
+    if (!set) { set = new Set(); byMap.set(key, set); }
+    set.add(tileKey(tx, ty));
+  };
+
   for (const h of list) {
-    const mapKey = h?.map_key == null ? '__null__' : String(h.map_key);
     const tx = tileOf(h?.x);
     const ty = tileOf(h?.y);
     if (!Number.isFinite(tx) || !Number.isFinite(ty)) continue;
-    if (!byMap.has(mapKey)) byMap.set(mapKey, new Set());
-    byMap.get(mapKey).add(tileKey(tx, ty));
+    add(h?.map_key, tx, ty);
   }
+
+  const now = Date.now();
+  for (const mem of _heroMemory.values()) {
+    if (!mem) continue;
+    const age = now - (mem.updatedAt || 0);
+    if (age > AGGRO_LOSS_MS * 2) continue;
+    if (!Number.isFinite(mem.tx) || !Number.isFinite(mem.ty)) continue;
+    add(mem.mapKey, mem.tx, mem.ty);
+  }
+
   return byMap;
 }
 
@@ -647,7 +824,7 @@ function isAdjacentTile(mx, my, hx, hy) {
   }
   const dx = Math.abs(mx - hx);
   const dy = Math.abs(my - hy);
-  if (dx === 0 && dy === 0) return true;
+  if (dx === 0 && dy === 0) return false;
   return Math.max(dx, dy) === 1; // inclui diagonais
 }
 
@@ -788,6 +965,69 @@ function pickChaseGoalTile({ monster, heroTx, heroTy, tilesForMap, mapCollision,
 
   const best = candidates.find(c => c.others === 0) || candidates[0];
   return best ? { tx: best.tx, ty: best.ty } : null;
+}
+
+function pickRetreatStep({
+  monster,
+  heroTx,
+  heroTy,
+  tilesForMap,
+  heroTiles,
+  mapCollision,
+  minRangeTiles,
+  maxRangeTiles,
+}) {
+  if (!monster) return null;
+  if (!Number.isFinite(heroTx) || !Number.isFinite(heroTy)) return null;
+
+  const mx = tileOf(monster.x);
+  const my = tileOf(monster.y);
+  if (!Number.isFinite(mx) || !Number.isFinite(my)) return null;
+
+  const heroTileSet = heroTiles instanceof Set ? heroTiles : new Set();
+  const desiredMin = Math.max(1, Number.isFinite(minRangeTiles) ? minRangeTiles : DEFAULT_RANGED_MIN_RANGE);
+  const desiredMax = Math.max(desiredMin, Number.isFinite(maxRangeTiles) ? maxRangeTiles : desiredMin);
+
+  const candidates = [];
+  for (const step of ADJACENT_STEPS) {
+    const nx = mx + step.dx;
+    const ny = my + step.dy;
+    if (!isTileInsideSpawn(nx, ny, monster)) continue;
+    if (isTileBlockedByCollision(mapCollision, nx, ny)) continue;
+    const key = tileKey(nx, ny);
+    if (heroTileSet.has(key)) continue;
+    const occ = tilesForMap.get(key);
+    if (tilesOccupiedByOthers(occ, monster.id) > 0) continue;
+    const dist = chebyshevTiles(nx, ny, heroTx, heroTy);
+    candidates.push({ nx, ny, key, dist });
+  }
+
+  if (!candidates.length) return null;
+
+  const scoreCandidate = (candidate) => {
+    const dist = candidate.dist;
+    if (!Number.isFinite(dist)) return Number.POSITIVE_INFINITY;
+    if (dist < desiredMin) return (desiredMin - dist) * 10;
+    if (dist > desiredMax) return (dist - desiredMax) * 6;
+    return -dist; // dentro da janela preferida: favorece distâncias maiores
+  };
+
+  const cardinalBias = (candidate) => ((candidate.nx === mx || candidate.ny === my) ? 0 : 1);
+
+  candidates.sort((a, b) => {
+    const sa = scoreCandidate(a);
+    const sb = scoreCandidate(b);
+    if (sa !== sb) return sa - sb;
+    const ca = cardinalBias(a);
+    const cb = cardinalBias(b);
+    if (ca !== cb) return ca - cb;
+    if (a.dist !== b.dist) return b.dist - a.dist;
+    if (a.nx !== b.nx) return a.nx - b.nx;
+    return a.ny - b.ny;
+  });
+
+  const best = candidates[0];
+  return best ? { nx: best.nx, ny: best.ny } : null;
 }
 
 function findBestStepToward({
@@ -1015,6 +1255,102 @@ async function resolveTileStacks({
   return used;
 }
 
+async function resolveMonsterHeroOverlap({
+  monster,
+  heroTileX,
+  heroTileY,
+  heroPx = null,
+  heroPy = null,
+  approxTileX = null,
+  approxTileY = null,
+  tilesForMap,
+  heroTiles,
+  mapCollision,
+  now,
+  movedSet,
+  targetId = null,
+}) {
+  if (!monster) return false;
+  const mx = tileOf(monster.x);
+  const my = tileOf(monster.y);
+
+  const tileMatches = Number.isFinite(heroTileX) && Number.isFinite(heroTileY) && mx === heroTileX && my === heroTileY;
+  const approxMatches = Number.isFinite(approxTileX) && Number.isFinite(approxTileY) && mx === approxTileX && my === approxTileY;
+
+  let pixelOverlap = false;
+  if (Number.isFinite(heroPx) && Number.isFinite(heroPy) && Number.isFinite(monster.x) && Number.isFinite(monster.y)) {
+    const chebyPx = Math.max(Math.abs(monster.x - heroPx), Math.abs(monster.y - heroPy));
+    pixelOverlap = Number.isFinite(chebyPx) && chebyPx <= OVERLAP_PX_EPS;
+  }
+
+  if (!tileMatches && !approxMatches && !pixelOverlap) return false;
+
+  const heroTileSet = heroTiles instanceof Set ? heroTiles : new Set();
+  if (Number.isFinite(heroTileX) && Number.isFinite(heroTileY)) {
+    heroTileSet.add(tileKey(heroTileX, heroTileY));
+  }
+  if (Number.isFinite(approxTileX) && Number.isFinite(approxTileY)) {
+    heroTileSet.add(tileKey(approxTileX, approxTileY));
+  }
+
+  const escape = findNearestFreeTile({
+    startTx: mx,
+    startTy: my,
+    monster,
+    tilesForMap,
+    heroTiles: heroTileSet,
+    mapCollision,
+  });
+
+  if (!escape) {
+    debugCombatLog({
+      mobId: monster.id,
+      targetId: targetId != null ? targetId : null,
+      dist: 0,
+      decided: 'WAIT_OVERLAP',
+      now,
+    });
+    return false;
+  }
+
+  const currentKey = tileKey(mx, my);
+  const fromSet = tilesForMap.get(currentKey);
+  if (fromSet) {
+    fromSet.delete(monster.id);
+    if (!fromSet.size) tilesForMap.delete(currentKey);
+  }
+
+  const destKey = tileKey(escape.tx, escape.ty);
+  if (!tilesForMap.has(destKey)) tilesForMap.set(destKey, new Set());
+  tilesForMap.get(destKey).add(monster.id);
+
+  const prevPx = Number(monster.x);
+  const prevPy = Number(monster.y);
+  const px = centerOfTile(escape.tx);
+  const py = centerOfTile(escape.ty);
+  monster.x = px;
+  monster.y = py;
+
+  const moveFace = directionFromStep(prevPx, prevPy, px, py, monster.face || 'south');
+  if (moveFace) monster.face = moveFace;
+
+  updateLivePos(monster);
+  _lastMoveAt.set(monster.id, now);
+  if (movedSet && typeof movedSet.add === 'function') movedSet.add(monster.id);
+
+  try { await updateMonsterPos(monster.id, px, py, now); } catch {}
+
+  emitMonsterMove(monster, { resolvedOverlap: true });
+  debugCombatLog({
+    mobId: monster.id,
+    targetId: targetId != null ? targetId : null,
+    dist: 0,
+    decided: 'SEPARATE',
+    now,
+  });
+  return true;
+}
+
 // ======= DB =======
 async function fetchAliveMonsters() {
   const sql = `
@@ -1077,6 +1413,93 @@ async function fetchHeroSnapshot(heroId, preferMapKey = null) {
   return row || null;
 }
 
+async function augmentHeroesWithLivePositions(heroes = []) {
+  const arr = Array.isArray(heroes) ? heroes : [];
+  const heroById = new Map();
+
+  for (const hero of arr) {
+    if (!hero) continue;
+    if (hero.player_id != null) {
+      hero.player_id = String(hero.player_id);
+    }
+    const heroId = hero.hero_id != null ? String(hero.hero_id) : null;
+    if (heroId) heroById.set(heroId, hero);
+  }
+
+  for (const hero of arr) {
+    if (!hero) continue;
+    const playerId = hero.player_id != null ? String(hero.player_id) : null;
+    if (!playerId) continue;
+    const live = getLivePosForPlayer(playerId);
+    if (!live) continue;
+    live.playerId = playerId;
+    const liveHeroId = live.heroId != null ? String(live.heroId) : null;
+    if (liveHeroId && hero.hero_id != null && String(hero.hero_id) !== liveHeroId) {
+      const actual = heroById.get(liveHeroId);
+      if (actual) {
+        applyLivePositionToHero(actual, { ...live });
+      }
+      continue;
+    }
+    applyLivePositionToHero(hero, { ...live });
+  }
+
+  const missing = [];
+  if (typeof listPlayerIds === 'function') {
+    for (const playerId of listPlayerIds()) {
+      const live = getLivePosForPlayer(playerId);
+      if (!live) continue;
+      live.playerId = playerId;
+      if (live.heroAlive === false) continue;
+      const heroId = live.heroId != null ? String(live.heroId) : null;
+      if (!heroId) continue;
+      if (heroById.has(heroId)) {
+        applyLivePositionToHero(heroById.get(heroId), { ...live });
+        continue;
+      }
+      missing.push({ playerId, heroId, live });
+    }
+  }
+
+  if (!missing.length) return arr;
+
+  const snapshots = await Promise.all(missing.map(({ heroId, live }) =>
+    fetchHeroSnapshot(heroId, live?.mapKey).catch(() => null)
+  ));
+
+  for (let i = 0; i < missing.length; i++) {
+    const snap = snapshots[i];
+    const base = missing[i];
+    const heroId = snap && snap.hero_id != null ? String(snap.hero_id) : base.heroId;
+    if (!heroId) continue;
+
+    const snapX = snap && snap.x != null ? Number(snap.x) : NaN;
+    const snapY = snap && snap.y != null ? Number(snap.y) : NaN;
+
+    const hero = {
+      hero_id: snap && snap.hero_id != null ? snap.hero_id : base.heroId,
+      player_id: snap && snap.player_id != null ? snap.player_id : base.playerId,
+      hp: snap && snap.hp != null ? snap.hp : null,
+      max_hp: snap && snap.max_hp != null ? snap.max_hp : null,
+      alive: snap ? snap.alive !== false : true,
+      map_key: snap && snap.map_key != null ? snap.map_key : (base.live?.mapKey ?? null),
+      x: Number.isFinite(snapX) ? snapX : base.live?.x,
+      y: Number.isFinite(snapY) ? snapY : base.live?.y,
+      updated_at: snap ? (snap.updated_at || snap.updatedAt || null) : null,
+    };
+
+    if (hero.player_id != null) {
+      hero.player_id = String(hero.player_id);
+    }
+
+    arr.push(hero);
+    heroById.set(heroId, hero);
+    applyLivePositionToHero(hero, { ...base.live });
+  }
+
+  return arr;
+}
+
 async function markLastHit(monsterId, heroId) {
   try {
     await run(
@@ -1108,6 +1531,8 @@ async function tick() {
       fetchAliveMonsters(),
       fetchAliveHeroesWithPos(),
     ]);
+
+    await augmentHeroesWithLivePositions(heroes);
 
     const aliveIdSet = new Set(monsters.map(m => Number(m.id)));
 
@@ -1179,7 +1604,11 @@ async function tick() {
 
     for (const [mapKeyStr, tilesForMap] of monsterTilesByMap.entries()) {
       if (movesUsed >= MONSTER_MAX_PER_TICK) break;
-      const heroTilesForMap = heroTilesByMap.get(mapKeyStr) || new Set();
+      let heroTilesForMap = heroTilesByMap.get(mapKeyStr);
+      if (!heroTilesForMap) {
+        heroTilesForMap = new Set();
+        heroTilesByMap.set(mapKeyStr, heroTilesForMap);
+      }
       const realKey = mapKeyStr === '__null__' ? null : mapKeyStr;
       const mapCollision = realKey ? await ensureCollisionFor(realKey) : null;
       movesUsed += await resolveTileStacks({
@@ -1203,7 +1632,11 @@ async function tick() {
         tilesForMap = new Map();
         monsterTilesByMap.set(mapKeyStr, tilesForMap);
       }
-      const heroTilesForMap = heroTilesByMap.get(mapKeyStr) || new Set();
+      let heroTilesForMap = heroTilesByMap.get(mapKeyStr);
+      if (!heroTilesForMap) {
+        heroTilesForMap = new Set();
+        heroTilesByMap.set(mapKeyStr, heroTilesForMap);
+      }
       const mapCollision = await ensureCollisionFor(m.map_key);
       const targetInfo = selectHeroTarget({ monster: m, heroes: hs, now });
 
@@ -1291,10 +1724,20 @@ async function tick() {
 
         if (!targetHero || isGhost) continue;
 
-        const heroTileX = tileOf(targetHero.x);
-        const heroTileY = tileOf(targetHero.y);
-        if (Number.isFinite(heroTileX) && Number.isFinite(heroTileY)) {
-          heroTilesForMap.add(tileKey(heroTileX, heroTileY));
+        let heroTileX = tileOf(targetHero.x);
+        let heroTileY = tileOf(targetHero.y);
+
+        if (!Number.isFinite(heroTileX) && Number.isFinite(hx)) {
+          heroTileX = hx;
+          if (!Number.isFinite(targetHero.x)) {
+            targetHero.x = centerOfTile(hx);
+          }
+        }
+        if (!Number.isFinite(heroTileY) && Number.isFinite(hy)) {
+          heroTileY = hy;
+          if (!Number.isFinite(targetHero.y)) {
+            targetHero.y = centerOfTile(hy);
+          }
         }
 
         const heroPx = Number.isFinite(targetHero?.x)
@@ -1304,54 +1747,170 @@ async function tick() {
           ? toCenterPxCoord(targetHero.y)
           : toCenterPxCoord(hy);
 
+        const approxHeroTileX = Number.isFinite(heroPx) ? Math.round(heroPx / TILE) : null;
+        const approxHeroTileY = Number.isFinite(heroPy) ? Math.round(heroPy / TILE) : null;
+
+        if (!Number.isFinite(heroTileX) && Number.isFinite(approxHeroTileX)) {
+          heroTileX = approxHeroTileX;
+        }
+        if (!Number.isFinite(heroTileY) && Number.isFinite(approxHeroTileY)) {
+          heroTileY = approxHeroTileY;
+        }
+
+        const heroTileForBlockX = Number.isFinite(heroTileX) ? heroTileX : (Number.isFinite(hx) ? hx : null);
+        const heroTileForBlockY = Number.isFinite(heroTileY) ? heroTileY : (Number.isFinite(hy) ? hy : null);
+
+        if (Number.isFinite(heroTileForBlockX) && Number.isFinite(heroTileForBlockY)) {
+          heroTilesForMap.add(tileKey(heroTileForBlockX, heroTileForBlockY));
+        }
+        if (Number.isFinite(approxHeroTileX) && Number.isFinite(approxHeroTileY)) {
+          heroTilesForMap.add(tileKey(approxHeroTileX, approxHeroTileY));
+        }
+
         const currentFace = typeof m.face === 'string' ? m.face : 'south';
         const faceTowardHero = (Number.isFinite(heroPx) && Number.isFinite(heroPy))
           ? computeFaceToward(m.x, m.y, heroPx, heroPy, currentFace)
           : currentFace;
 
-        const chaseGoal = (Number.isFinite(hx) && Number.isFinite(hy))
-          ? pickChaseGoalTile({
-              monster: m,
-              heroTx: hx,
-              heroTy: hy,
-              tilesForMap,
-              mapCollision,
-              heroTiles: heroTilesForMap,
-            })
+        const lastMove = _lastMoveAt.get(m.id) || 0;
+        const canMoveNow = !alreadyMoved && movesUsed < MONSTER_MAX_PER_TICK && (now - lastMove >= MONSTER_STEP_MS);
+
+        const distToHeroTile = (Number.isFinite(heroTileX) && Number.isFinite(heroTileY))
+          ? chebyshevTiles(mx, my, heroTileX, heroTileY)
+          : Infinity;
+        const distTiles = Number.isFinite(distToHeroTile) && distToHeroTile !== Infinity
+          ? distToHeroTile
+          : (Number.isFinite(hx) && Number.isFinite(hy) ? chebyshevTiles(mx, my, hx, hy) : distToHeroTile);
+
+        const pxCheby = Number.isFinite(heroPx) && Number.isFinite(heroPy) && Number.isFinite(m.x) && Number.isFinite(m.y)
+          ? Math.max(Math.abs(m.x - heroPx), Math.abs(m.y - heroPy))
           : null;
+        const distTilesFromPx = Number.isFinite(pxCheby) ? pxCheby / TILE : null;
 
-        const pathTargetTx = chaseGoal?.tx ?? hx;
-        const pathTargetTy = chaseGoal?.ty ?? hy;
-        const pathPrediction = chaseGoal
-          ? { tx: chaseGoal.tx, ty: chaseGoal.ty, heading: predicted?.heading || null }
-          : predicted;
+        const attackProfile = await resolveMonsterAttackProfile(m);
+        const cooldownMs = Math.max(50, Number(attackProfile?.intervalMs || ATK_COOLDOWN_MS));
+        const chancePercent = clamp(attackProfile?.chancePercent ?? 100, 0, 100);
+        const attackTypeRaw = typeof attackProfile?.type === 'string' ? attackProfile.type.toLowerCase() : 'melee';
+        const attackType = attackTypeRaw === 'ranged' ? 'ranged' : 'melee';
+        const maxRangeTiles = Math.max(1, Number(attackProfile?.rangeTiles) || (attackType === 'ranged' ? 3 : 1));
+        let minRangeTiles = Number(attackProfile?.minRangeTiles);
+        if (!Number.isFinite(minRangeTiles) || minRangeTiles <= 0) {
+          minRangeTiles = attackType === 'ranged'
+            ? Math.min(maxRangeTiles, DEFAULT_RANGED_MIN_RANGE)
+            : 1;
+        }
+        if (minRangeTiles > maxRangeTiles) {
+          minRangeTiles = Math.max(1, Math.min(minRangeTiles, maxRangeTiles));
+        }
+        const requiresLos = attackProfile?.requiresLos !== false;
+        const lastAtk = _lastAtkAt.get(m.id) || 0;
+        const pxToleranceTiles = RANGE_PX_TOLERANCE / TILE;
+        const distForRange = Number.isFinite(distTiles)
+          ? distTiles
+          : (Number.isFinite(distTilesFromPx) ? distTilesFromPx : Infinity);
+        const distIsTile = Number.isFinite(distTiles);
+        const distForLog = distIsTile
+          ? distTiles
+          : (Number.isFinite(distTilesFromPx) ? distTilesFromPx : null);
 
-        const adjacent = (Number.isFinite(hx) && Number.isFinite(hy))
-          ? hasClearAdjacentPath(mx, my, hx, hy, mapCollision)
+        const inRange = (() => {
+          if (Number.isFinite(distTiles)) {
+            if (attackType === 'melee' && distTiles === 1) return true;
+            if (attackType === 'ranged' && distTiles >= minRangeTiles && distTiles <= maxRangeTiles) return true;
+          }
+          if (!Number.isFinite(distTilesFromPx)) return false;
+          if (attackType === 'melee') {
+            return distTilesFromPx >= 0.75 && distTilesFromPx <= 1.35;
+          }
+          const minPxTiles = Math.max(0, minRangeTiles - pxToleranceTiles);
+          const maxPxTiles = maxRangeTiles + pxToleranceTiles;
+          return distTilesFromPx >= minPxTiles && distTilesFromPx <= maxPxTiles;
+        })();
+
+        const shouldRetreat = attackType === 'ranged'
+          ? Number.isFinite(distForRange) && distForRange < (minRangeTiles - 0.1)
           : false;
+        const shouldChase = Number.isFinite(distForRange)
+          ? distForRange > (attackType === 'melee' ? 1 : (maxRangeTiles + 0.05))
+          : Number.isFinite(hx) && Number.isFinite(hy);
 
-        if (!adjacent && !alreadyMoved) {
-          const lastMove = _lastMoveAt.get(m.id) || 0;
-          const canMove = now - lastMove >= MONSTER_STEP_MS && movesUsed < MONSTER_MAX_PER_TICK;
-          if (canMove && Number.isFinite(pathTargetTx) && Number.isFinite(pathTargetTy)) {
-            const fromKey = tileKey(mx, my);
-            const bestStep = findBestStepToward({
-              mx,
-              my,
-              targetTx: pathTargetTx,
-              targetTy: pathTargetTy,
+        const logDecision = (decided, extra = {}) => {
+          debugCombatLog({
+            mobId: m.id,
+            targetId: targetHero.hero_id,
+            dist: distForLog,
+            dist_unit: distIsTile ? 'tiles' : (Number.isFinite(distTilesFromPx) ? 'tiles_px' : null),
+            dist_px: Number.isFinite(pxCheby) ? pxCheby : null,
+            lastAttackAt: lastAtk,
+            now,
+            attack_ms: cooldownMs,
+            decided,
+            range: { min: minRangeTiles, max: maxRangeTiles },
+            type: attackType,
+            requiresLos,
+            ...extra,
+          });
+        };
+
+        const ensureFacingHero = () => {
+          if (faceTowardHero && faceTowardHero !== m.face) {
+            m.face = faceTowardHero;
+            updateLivePos(m);
+            emitMonsterMove(m);
+          }
+        };
+
+        const overlapTileX = Number.isFinite(heroTileForBlockX) ? heroTileForBlockX : null;
+        const overlapTileY = Number.isFinite(heroTileForBlockY) ? heroTileForBlockY : null;
+        const tileOverlap = distIsTile && distTiles === 0 && Number.isFinite(overlapTileX) && Number.isFinite(overlapTileY);
+        const approxTileOverlap = Number.isFinite(approxHeroTileX) && Number.isFinite(approxHeroTileY)
+          ? (mx === approxHeroTileX && my === approxHeroTileY)
+          : false;
+        const pixelOverlap = Number.isFinite(pxCheby) && pxCheby <= OVERLAP_PX_EPS;
+
+        if (tileOverlap || approxTileOverlap || pixelOverlap) {
+          const separated = await resolveMonsterHeroOverlap({
+            monster: m,
+            heroTileX: Number.isFinite(overlapTileX) ? overlapTileX : approxHeroTileX,
+            heroTileY: Number.isFinite(overlapTileY) ? overlapTileY : approxHeroTileY,
+            heroPx: Number.isFinite(heroPx) ? heroPx : null,
+            heroPy: Number.isFinite(heroPy) ? heroPy : null,
+            approxTileX: approxHeroTileX,
+            approxTileY: approxHeroTileY,
+            tilesForMap,
+            heroTiles: heroTilesForMap,
+            mapCollision,
+            now,
+            movedSet: movedThisTick,
+            targetId: targetHero.hero_id,
+          });
+          if (separated) {
+            movesUsed++;
+            continue;
+          }
+          ensureFacingHero();
+          logDecision('WAIT_OVERLAP', {
+            overlap: tileOverlap ? 'tile' : (pixelOverlap ? 'px' : 'approx'),
+          });
+          continue;
+        }
+
+        if (shouldRetreat) {
+          if (canMoveNow) {
+            const retreatStep = pickRetreatStep({
               monster: m,
+              heroTx: Number.isFinite(heroTileForBlockX) ? heroTileForBlockX : hx,
+              heroTy: Number.isFinite(heroTileForBlockY) ? heroTileForBlockY : hy,
               tilesForMap,
               heroTiles: heroTilesForMap,
-              mode: 'chase',
-              heroId: heroIdForChase,
-              predictedTile: pathPrediction,
-              heroHeading,
               mapCollision,
+              minRangeTiles,
+              maxRangeTiles,
             });
 
-            if (bestStep) {
-              const destKey = tileKey(bestStep.nx, bestStep.ny);
+            if (retreatStep) {
+              const fromKey = tileKey(mx, my);
+              const destKey = tileKey(retreatStep.nx, retreatStep.ny);
 
               let fromSet = tilesForMap.get(fromKey);
               if (fromSet) {
@@ -1364,17 +1923,12 @@ async function tick() {
 
               const prevPx = Number(m.x);
               const prevPy = Number(m.y);
-              const px = centerOfTile(bestStep.nx);
-              const py = centerOfTile(bestStep.ny);
-              m.x = px; m.y = py;
+              const px = centerOfTile(retreatStep.nx);
+              const py = centerOfTile(retreatStep.ny);
+              m.x = px;
+              m.y = py;
 
-              let faceAfterMove = faceTowardHero;
-              if (Number.isFinite(heroPx) && Number.isFinite(heroPy)) {
-                faceAfterMove = computeFaceToward(px, py, heroPx, heroPy,
-                  directionFromStep(prevPx, prevPy, px, py, faceTowardHero));
-              } else {
-                faceAfterMove = directionFromStep(prevPx, prevPy, px, py, faceTowardHero);
-              }
+              const faceAfterMove = directionFromStep(prevPx, prevPy, px, py, faceTowardHero || m.face || 'south');
               if (faceAfterMove) m.face = faceAfterMove;
 
               updateLivePos(m);
@@ -1384,63 +1938,191 @@ async function tick() {
               await updateMonsterPos(m.id, px, py, now);
 
               emitMonsterMove(m);
-            } else {
-              _lastMoveAt.set(m.id, now);
-              if (faceTowardHero && faceTowardHero !== m.face) {
-                m.face = faceTowardHero;
-                updateLivePos(m);
-                emitMonsterMove(m);
+              logDecision('MOVE_RETREAT');
+              continue;
+            }
+
+            _lastMoveAt.set(m.id, now);
+          }
+
+          ensureFacingHero();
+          logDecision('WAIT');
+          continue;
+        }
+
+        if (!inRange) {
+          if (shouldChase && canMoveNow) {
+            const chaseGoal = (Number.isFinite(hx) && Number.isFinite(hy))
+              ? pickChaseGoalTile({
+                  monster: m,
+                  heroTx: hx,
+                  heroTy: hy,
+                  tilesForMap,
+                  mapCollision,
+                  heroTiles: heroTilesForMap,
+                })
+              : null;
+
+            const pathTargetTx = chaseGoal?.tx ?? (Number.isFinite(hx) ? hx : heroTileX);
+            const pathTargetTy = chaseGoal?.ty ?? (Number.isFinite(hy) ? hy : heroTileY);
+            const pathPrediction = chaseGoal
+              ? { tx: chaseGoal.tx, ty: chaseGoal.ty, heading: predicted?.heading || null }
+              : predicted;
+
+            if (Number.isFinite(pathTargetTx) && Number.isFinite(pathTargetTy)) {
+              const fromKey = tileKey(mx, my);
+              let bestStep = findBestStepToward({
+                mx,
+                my,
+                targetTx: pathTargetTx,
+                targetTy: pathTargetTy,
+                monster: m,
+                tilesForMap,
+                heroTiles: heroTilesForMap,
+                mode: 'chase',
+                heroId: heroIdForChase,
+                predictedTile: pathPrediction,
+                heroHeading,
+                mapCollision,
+              });
+
+              if (bestStep) {
+                const heroBlockKey = (Number.isFinite(heroTileForBlockX) && Number.isFinite(heroTileForBlockY))
+                  ? tileKey(heroTileForBlockX, heroTileForBlockY)
+                  : null;
+                const approxBlockKey = (Number.isFinite(approxHeroTileX) && Number.isFinite(approxHeroTileY))
+                  ? tileKey(approxHeroTileX, approxHeroTileY)
+                  : null;
+
+                const initialDestKey = tileKey(bestStep.nx, bestStep.ny);
+                if ((heroBlockKey && initialDestKey === heroBlockKey) || (approxBlockKey && initialDestKey === approxBlockKey)) {
+                  heroTilesForMap.add(initialDestKey);
+                  const retryStep = findBestStepToward({
+                    mx,
+                    my,
+                    targetTx: pathTargetTx,
+                    targetTy: pathTargetTy,
+                    monster: m,
+                    tilesForMap,
+                    heroTiles: heroTilesForMap,
+                    mode: 'chase',
+                    heroId: heroIdForChase,
+                    predictedTile: pathPrediction,
+                    heroHeading,
+                    mapCollision,
+                  });
+                  const retryKey = retryStep ? tileKey(retryStep.nx, retryStep.ny) : null;
+                  if (retryStep && (!heroBlockKey || retryKey !== heroBlockKey) && (!approxBlockKey || retryKey !== approxBlockKey)) {
+                    bestStep = retryStep;
+                  } else {
+                    bestStep = null;
+                  }
+                }
               }
+
+              if (bestStep) {
+                const destKey = tileKey(bestStep.nx, bestStep.ny);
+
+                let fromSet = tilesForMap.get(fromKey);
+                if (fromSet) {
+                  fromSet.delete(m.id);
+                  if (!fromSet.size) tilesForMap.delete(fromKey);
+                }
+
+                if (!tilesForMap.has(destKey)) tilesForMap.set(destKey, new Set());
+                tilesForMap.get(destKey).add(m.id);
+
+                const prevPx = Number(m.x);
+                const prevPy = Number(m.y);
+                const px = centerOfTile(bestStep.nx);
+                const py = centerOfTile(bestStep.ny);
+                m.x = px; m.y = py;
+
+                let faceAfterMove = faceTowardHero;
+                if (Number.isFinite(heroPx) && Number.isFinite(heroPy)) {
+                  faceAfterMove = computeFaceToward(px, py, heroPx, heroPy,
+                    directionFromStep(prevPx, prevPy, px, py, faceTowardHero));
+                } else {
+                  faceAfterMove = directionFromStep(prevPx, prevPy, px, py, faceTowardHero);
+                }
+                if (faceAfterMove) m.face = faceAfterMove;
+
+                updateLivePos(m);
+                _lastMoveAt.set(m.id, now);
+                movedThisTick.add(m.id);
+                movesUsed++;
+                await updateMonsterPos(m.id, px, py, now);
+
+                emitMonsterMove(m);
+                logDecision('MOVE_CHASE');
+                continue;
+              }
+
+              _lastMoveAt.set(m.id, now);
             }
           }
-          continue;
-        } else if (!adjacent) {
-          if (faceTowardHero && faceTowardHero !== m.face) {
-            m.face = faceTowardHero;
-            updateLivePos(m);
-            emitMonsterMove(m);
-          }
+
+          ensureFacingHero();
+          logDecision('WAIT');
           continue;
         }
 
-        if (faceTowardHero && faceTowardHero !== m.face) {
-          m.face = faceTowardHero;
-          updateLivePos(m);
-          emitMonsterMove(m);
-        }
+        ensureFacingHero();
 
-        if (!targetHero) continue;
-        const attackProfile = await resolveMonsterAttackProfile(m);
-        const cooldownMs = Math.max(50, Number(attackProfile?.intervalMs || ATK_COOLDOWN_MS));
-        const chancePercent = clamp(attackProfile?.chancePercent ?? 100, 0, 100);
-        const lastAtk = _lastAtkAt.get(m.id) || 0;
-        if (now - lastAtk < cooldownMs) continue;
+        if (now - lastAtk < cooldownMs) {
+          logDecision('WAIT');
+          continue;
+        }
 
         if (chancePercent < 100) {
           const roll = Math.random() * 100;
           if (roll >= chancePercent) {
             _lastAtkAt.set(m.id, now);
+            logDecision('WAIT');
             continue;
           }
         }
 
         let attackRes = null;
         try {
+          const heroMapKey = targetHero.map_key != null ? targetHero.map_key : m.map_key;
+          const heroHitX = Number.isFinite(targetHero?.x)
+            ? targetHero.x
+            : (Number.isFinite(heroPx) ? heroPx : (Number.isFinite(hx) ? centerOfTile(hx) : undefined));
+          const heroHitY = Number.isFinite(targetHero?.y)
+            ? targetHero.y
+            : (Number.isFinite(heroPy) ? heroPy : (Number.isFinite(hy) ? centerOfTile(hy) : undefined));
+
           attackRes = await applyMobHit({
             attackerInstanceId: m.id,
             targetHeroId: targetHero.hero_id,
             attackInfo: {
               min: attackProfile?.min ?? DMG_MIN,
               max: attackProfile?.max ?? DMG_MAX,
+              minRangeTiles,
+              rangeTiles: maxRangeTiles,
+              type: attackType,
+              requiresLos,
+              chancePercent,
             },
             attackerPos: {
               x: Number.isFinite(m.x) ? m.x : undefined,
               y: Number.isFinite(m.y) ? m.y : undefined,
-              mapKey: targetHero.map_key ?? m.map_key,
+              mapKey: heroMapKey,
               face: m.face,
               unit: 'px',
               assumeTiles: false,
               assumePx: true,
+            },
+            heroPos: {
+              x: Number.isFinite(heroHitX) ? heroHitX : undefined,
+              y: Number.isFinite(heroHitY) ? heroHitY : undefined,
+              mapKey: heroMapKey,
+              unit: 'px',
+              assumeTiles: false,
+              assumePx: true,
+              source: targetHero.live_source || targetHero.source || 'ai',
+              fresh: true,
             },
           });
         } catch (err) {
@@ -1504,7 +2186,35 @@ async function tick() {
                 attackIntervalMs,
               },
             });
+
+            global._sendToMap(hitMapKey, {
+              type: 'monster:attack',
+              monsterId: m.id,
+              monsterKey: m.monster_key || 'unknown',
+              targetHeroId: targetHero.hero_id,
+              damage: attackRes.damage,
+              hpAfter: attackRes.hpAfter,
+              hpMax: attackRes.maxHp ?? targetHero.max_hp,
+              attackIntervalMs,
+              attackType,
+              range: { min: minRangeTiles, max: maxRangeTiles },
+              requiresLos,
+            });
+
+            global._sendToMap(hitMapKey, {
+              type: 'hp:update',
+              entity: 'hero',
+              id: targetHero.hero_id,
+              heroId: targetHero.hero_id,
+              hp: attackRes.hpAfter,
+              hpMax: attackRes.maxHp ?? targetHero.max_hp,
+              delta: attackRes.damage != null ? -Math.abs(Number(attackRes.damage)) : null,
+            });
           }
+
+          logDecision('HIT');
+        } else {
+          logDecision('WAIT');
         }
 
         continue;
