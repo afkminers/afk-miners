@@ -4,15 +4,13 @@
     "{routes:list }",
     "{ok:false,error:'no-weapon-equipped' }",
     "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }",
-    "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}",
-    "{ok:true }"
+    "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}"
   ],
   "GET /_routes": [
     "{routes:list }",
     "{ok:false,error:'no-weapon-equipped' }",
     "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }",
-    "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}",
-    "{ok:true }"
+    "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}"
   ],
   "POST /:heroId/deposit": [
     "{ok:true,placed }"
@@ -65,9 +63,7 @@
     "{ok:false,error:'no-weapon-equipped' }",
     "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }",
     "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}",
-    "{ok:true }",
-    "{ok:false,error:'no-weapon-equipped' }",
-    "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }"
+    "{ok:false,error:'monster-not-pushable',message:'Este monstro não pode ser empurrado.' }"
   ],
   "POST /attack/stop": [
     "{ok:true }",
@@ -107,13 +103,18 @@
     "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }",
     "{ok:true,item_type,amount:Number(amount) || 0 }"
   ],
+  "GET /health": [
+    "{ok:true }"
+  ],
   "GET /hero/:id": [],
   "GET /heroes/master": [],
+  "GET /heroes": [],
   "POST /hit": [
     "{ok:false,error:'no-weapon-equipped' }",
     "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }",
     "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y,}"
   ],
+  "GET /leaderboard": [],
   "GET /list": [
     "{canSelect:!row }"
   ],
@@ -143,6 +144,7 @@
   "POST /move": [
     "{ok:true,x,y,seq }"
   ],
+  "GET /overview": [],
   "GET /ping": [
     "{ok:true,ts:Date.now() }",
     "{workers,boxes,inventory:inv }",
@@ -155,6 +157,7 @@
     "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }",
     "{ok:true,item_type,amount:Number(amount) || 0 }"
   ],
+  "GET /players": [],
   "POST /plot/create": [
     "{ok:true,id }",
     "{ok:true,plot_id,crop_key,stage:1,planted_at:new Date(plantedAtSec * 1000).toISOString(),next_at:new Date(nextAtSec * 1000).toISOString() }",
@@ -173,6 +176,9 @@
   "POST /": [
     "{cost:SUMMON_COST_COINS,pulls,newBalance:updated }"
   ],
+  "POST /push": [
+    "{ok:false,error:'monster-not-pushable',message:'Este monstro não pode ser empurrado.' }"
+  ],
   "POST /register": [
     "{ok:true }",
     "{ok:true }",
@@ -181,7 +187,9 @@
   "POST /revive": [
     "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y,}"
   ],
+  "GET /roadmap": [],
   "POST /select": [],
+  "GET /skills": [],
   "GET /state": [
     "{workers,boxes,inventory:inv }",
     "{ok:true,id }",
@@ -190,6 +198,10 @@
   ],
   "GET /status": [
     "{canSelect:!row }"
+  ],
+  "GET /support": [],
+  "POST /ticket": [
+    "{ok:true,ticketId:id }"
   ],
   "GET /tick": []
 }

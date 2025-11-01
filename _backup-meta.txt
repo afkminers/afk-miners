@@ -1,8 +1,22 @@
-label: post
-timestamp: 2025-10-31_004040
+label: pre
+timestamp: 2025-11-01_174248
 branch: main
-hash: 1499a31
+hash: fe42348
 remote: https://github.com/afkminers/afk-miners.git
 
 status:
-## main...origin/main
+## main...origin/main [behind 5]
+ M data/maps/house.json
+ M docs/context/API.md
+ M docs/context/context-pack.txt
+ M docs/context/data-summary.json
+ M docs/context/deps-graph.json
+ M docs/context/deps.txt
+ M docs/context/endpoints-contracts.json
+ M docs/context/env-usage.json
+ M docs/context/error-map.json
+ M docs/context/function-signatures.json
+ M docs/context/openapi.json
+ M docs/context/responses-sample.json
+ M docs/context/symbol-index.json
+ M map.tmx

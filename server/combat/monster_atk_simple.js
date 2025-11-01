@@ -35,6 +35,8 @@ const DEFAULT_ATTACK_PROFILE = Object.freeze({
 });
 
 const DEFAULT_RANGED_MIN_RANGE = 2;
+const OVERLAP_PX_EPS = +(process.env.MONSTER_OVERLAP_PX_EPS || Math.round(TILE * 0.45));
+const RANGE_PX_TOLERANCE = +(process.env.MONSTER_RANGE_PX_TOLERANCE || Math.round(TILE * 0.35));
 
 // Gate do spawn (agora DESLIGADO por padrão)
 const CHASE_INSIDE_SPAWN_ONLY = (process.env.MONSTER_CHASE_INSIDE_SPAWN_ONLY ?? '0') === '1';
@@ -1257,6 +1259,10 @@ async function resolveMonsterHeroOverlap({
   monster,
   heroTileX,
   heroTileY,
+  heroPx = null,
+  heroPy = null,
+  approxTileX = null,
+  approxTileY = null,
   tilesForMap,
   heroTiles,
   mapCollision,
@@ -1265,14 +1271,27 @@ async function resolveMonsterHeroOverlap({
   targetId = null,
 }) {
   if (!monster) return false;
-  if (!Number.isFinite(heroTileX) || !Number.isFinite(heroTileY)) return false;
-
   const mx = tileOf(monster.x);
   const my = tileOf(monster.y);
-  if (mx !== heroTileX || my !== heroTileY) return false;
+
+  const tileMatches = Number.isFinite(heroTileX) && Number.isFinite(heroTileY) && mx === heroTileX && my === heroTileY;
+  const approxMatches = Number.isFinite(approxTileX) && Number.isFinite(approxTileY) && mx === approxTileX && my === approxTileY;
+
+  let pixelOverlap = false;
+  if (Number.isFinite(heroPx) && Number.isFinite(heroPy) && Number.isFinite(monster.x) && Number.isFinite(monster.y)) {
+    const chebyPx = Math.max(Math.abs(monster.x - heroPx), Math.abs(monster.y - heroPy));
+    pixelOverlap = Number.isFinite(chebyPx) && chebyPx <= OVERLAP_PX_EPS;
+  }
+
+  if (!tileMatches && !approxMatches && !pixelOverlap) return false;
 
   const heroTileSet = heroTiles instanceof Set ? heroTiles : new Set();
-  heroTileSet.add(tileKey(heroTileX, heroTileY));
+  if (Number.isFinite(heroTileX) && Number.isFinite(heroTileY)) {
+    heroTileSet.add(tileKey(heroTileX, heroTileY));
+  }
+  if (Number.isFinite(approxTileX) && Number.isFinite(approxTileY)) {
+    heroTileSet.add(tileKey(approxTileX, approxTileY));
+  }
 
   const escape = findNearestFreeTile({
     startTx: mx,
@@ -1705,10 +1724,20 @@ async function tick() {
 
         if (!targetHero || isGhost) continue;
 
-        const heroTileX = tileOf(targetHero.x);
-        const heroTileY = tileOf(targetHero.y);
-        if (Number.isFinite(heroTileX) && Number.isFinite(heroTileY)) {
-          heroTilesForMap.add(tileKey(heroTileX, heroTileY));
+        let heroTileX = tileOf(targetHero.x);
+        let heroTileY = tileOf(targetHero.y);
+
+        if (!Number.isFinite(heroTileX) && Number.isFinite(hx)) {
+          heroTileX = hx;
+          if (!Number.isFinite(targetHero.x)) {
+            targetHero.x = centerOfTile(hx);
+          }
+        }
+        if (!Number.isFinite(heroTileY) && Number.isFinite(hy)) {
+          heroTileY = hy;
+          if (!Number.isFinite(targetHero.y)) {
+            targetHero.y = centerOfTile(hy);
+          }
         }
 
         const heroPx = Number.isFinite(targetHero?.x)
@@ -1717,6 +1746,26 @@ async function tick() {
         const heroPy = Number.isFinite(targetHero?.y)
           ? toCenterPxCoord(targetHero.y)
           : toCenterPxCoord(hy);
+
+        const approxHeroTileX = Number.isFinite(heroPx) ? Math.round(heroPx / TILE) : null;
+        const approxHeroTileY = Number.isFinite(heroPy) ? Math.round(heroPy / TILE) : null;
+
+        if (!Number.isFinite(heroTileX) && Number.isFinite(approxHeroTileX)) {
+          heroTileX = approxHeroTileX;
+        }
+        if (!Number.isFinite(heroTileY) && Number.isFinite(approxHeroTileY)) {
+          heroTileY = approxHeroTileY;
+        }
+
+        const heroTileForBlockX = Number.isFinite(heroTileX) ? heroTileX : (Number.isFinite(hx) ? hx : null);
+        const heroTileForBlockY = Number.isFinite(heroTileY) ? heroTileY : (Number.isFinite(hy) ? hy : null);
+
+        if (Number.isFinite(heroTileForBlockX) && Number.isFinite(heroTileForBlockY)) {
+          heroTilesForMap.add(tileKey(heroTileForBlockX, heroTileForBlockY));
+        }
+        if (Number.isFinite(approxHeroTileX) && Number.isFinite(approxHeroTileY)) {
+          heroTilesForMap.add(tileKey(approxHeroTileX, approxHeroTileY));
+        }
 
         const currentFace = typeof m.face === 'string' ? m.face : 'south';
         const faceTowardHero = (Number.isFinite(heroPx) && Number.isFinite(heroPy))
@@ -1732,6 +1781,11 @@ async function tick() {
         const distTiles = Number.isFinite(distToHeroTile) && distToHeroTile !== Infinity
           ? distToHeroTile
           : (Number.isFinite(hx) && Number.isFinite(hy) ? chebyshevTiles(mx, my, hx, hy) : distToHeroTile);
+
+        const pxCheby = Number.isFinite(heroPx) && Number.isFinite(heroPy) && Number.isFinite(m.x) && Number.isFinite(m.y)
+          ? Math.max(Math.abs(m.x - heroPx), Math.abs(m.y - heroPy))
+          : null;
+        const distTilesFromPx = Number.isFinite(pxCheby) ? pxCheby / TILE : null;
 
         const attackProfile = await resolveMonsterAttackProfile(m);
         const cooldownMs = Math.max(50, Number(attackProfile?.intervalMs || ATK_COOLDOWN_MS));
@@ -1750,25 +1804,43 @@ async function tick() {
         }
         const requiresLos = attackProfile?.requiresLos !== false;
         const lastAtk = _lastAtkAt.get(m.id) || 0;
-        const distForLog = Number.isFinite(distTiles) ? distTiles : null;
+        const pxToleranceTiles = RANGE_PX_TOLERANCE / TILE;
+        const distForRange = Number.isFinite(distTiles)
+          ? distTiles
+          : (Number.isFinite(distTilesFromPx) ? distTilesFromPx : Infinity);
+        const distIsTile = Number.isFinite(distTiles);
+        const distForLog = distIsTile
+          ? distTiles
+          : (Number.isFinite(distTilesFromPx) ? distTilesFromPx : null);
 
-        const inRange = Number.isFinite(distTiles) && (
-          attackType === 'melee'
-            ? distTiles === 1
-            : distTiles >= minRangeTiles && distTiles <= maxRangeTiles
-        );
+        const inRange = (() => {
+          if (Number.isFinite(distTiles)) {
+            if (attackType === 'melee' && distTiles === 1) return true;
+            if (attackType === 'ranged' && distTiles >= minRangeTiles && distTiles <= maxRangeTiles) return true;
+          }
+          if (!Number.isFinite(distTilesFromPx)) return false;
+          if (attackType === 'melee') {
+            return distTilesFromPx >= 0.75 && distTilesFromPx <= 1.35;
+          }
+          const minPxTiles = Math.max(0, minRangeTiles - pxToleranceTiles);
+          const maxPxTiles = maxRangeTiles + pxToleranceTiles;
+          return distTilesFromPx >= minPxTiles && distTilesFromPx <= maxPxTiles;
+        })();
+
         const shouldRetreat = attackType === 'ranged'
-          ? Number.isFinite(distTiles) && distTiles < minRangeTiles
+          ? Number.isFinite(distForRange) && distForRange < (minRangeTiles - 0.1)
           : false;
-        const shouldChase = Number.isFinite(distTiles)
-          ? distTiles > (attackType === 'melee' ? 1 : maxRangeTiles)
+        const shouldChase = Number.isFinite(distForRange)
+          ? distForRange > (attackType === 'melee' ? 1 : (maxRangeTiles + 0.05))
           : Number.isFinite(hx) && Number.isFinite(hy);
 
-        const logDecision = (decided) => {
+        const logDecision = (decided, extra = {}) => {
           debugCombatLog({
             mobId: m.id,
             targetId: targetHero.hero_id,
             dist: distForLog,
+            dist_unit: distIsTile ? 'tiles' : (Number.isFinite(distTilesFromPx) ? 'tiles_px' : null),
+            dist_px: Number.isFinite(pxCheby) ? pxCheby : null,
             lastAttackAt: lastAtk,
             now,
             attack_ms: cooldownMs,
@@ -1776,6 +1848,7 @@ async function tick() {
             range: { min: minRangeTiles, max: maxRangeTiles },
             type: attackType,
             requiresLos,
+            ...extra,
           });
         };
 
@@ -1787,26 +1860,38 @@ async function tick() {
           }
         };
 
-        if (Number.isFinite(distTiles) && distTiles === 0) {
-          if (canMoveNow) {
-            const separated = await resolveMonsterHeroOverlap({
-              monster: m,
-              heroTileX,
-              heroTileY,
-              tilesForMap,
-              heroTiles: heroTilesForMap,
-              mapCollision,
-              now,
-              movedSet: movedThisTick,
-              targetId: targetHero.hero_id,
-            });
-            if (separated) {
-              movesUsed++;
-              continue;
-            }
+        const overlapTileX = Number.isFinite(heroTileForBlockX) ? heroTileForBlockX : null;
+        const overlapTileY = Number.isFinite(heroTileForBlockY) ? heroTileForBlockY : null;
+        const tileOverlap = distIsTile && distTiles === 0 && Number.isFinite(overlapTileX) && Number.isFinite(overlapTileY);
+        const approxTileOverlap = Number.isFinite(approxHeroTileX) && Number.isFinite(approxHeroTileY)
+          ? (mx === approxHeroTileX && my === approxHeroTileY)
+          : false;
+        const pixelOverlap = Number.isFinite(pxCheby) && pxCheby <= OVERLAP_PX_EPS;
+
+        if (tileOverlap || approxTileOverlap || pixelOverlap) {
+          const separated = await resolveMonsterHeroOverlap({
+            monster: m,
+            heroTileX: Number.isFinite(overlapTileX) ? overlapTileX : approxHeroTileX,
+            heroTileY: Number.isFinite(overlapTileY) ? overlapTileY : approxHeroTileY,
+            heroPx: Number.isFinite(heroPx) ? heroPx : null,
+            heroPy: Number.isFinite(heroPy) ? heroPy : null,
+            approxTileX: approxHeroTileX,
+            approxTileY: approxHeroTileY,
+            tilesForMap,
+            heroTiles: heroTilesForMap,
+            mapCollision,
+            now,
+            movedSet: movedThisTick,
+            targetId: targetHero.hero_id,
+          });
+          if (separated) {
+            movesUsed++;
+            continue;
           }
           ensureFacingHero();
-          logDecision('WAIT');
+          logDecision('WAIT_OVERLAP', {
+            overlap: tileOverlap ? 'tile' : (pixelOverlap ? 'px' : 'approx'),
+          });
           continue;
         }
 
@@ -1814,8 +1899,8 @@ async function tick() {
           if (canMoveNow) {
             const retreatStep = pickRetreatStep({
               monster: m,
-              heroTx: Number.isFinite(heroTileX) ? heroTileX : hx,
-              heroTy: Number.isFinite(heroTileY) ? heroTileY : hy,
+              heroTx: Number.isFinite(heroTileForBlockX) ? heroTileForBlockX : hx,
+              heroTy: Number.isFinite(heroTileForBlockY) ? heroTileForBlockY : hy,
               tilesForMap,
               heroTiles: heroTilesForMap,
               mapCollision,
@@ -1886,7 +1971,7 @@ async function tick() {
 
             if (Number.isFinite(pathTargetTx) && Number.isFinite(pathTargetTy)) {
               const fromKey = tileKey(mx, my);
-              const bestStep = findBestStepToward({
+              let bestStep = findBestStepToward({
                 mx,
                 my,
                 targetTx: pathTargetTx,
@@ -1900,6 +1985,40 @@ async function tick() {
                 heroHeading,
                 mapCollision,
               });
+
+              if (bestStep) {
+                const heroBlockKey = (Number.isFinite(heroTileForBlockX) && Number.isFinite(heroTileForBlockY))
+                  ? tileKey(heroTileForBlockX, heroTileForBlockY)
+                  : null;
+                const approxBlockKey = (Number.isFinite(approxHeroTileX) && Number.isFinite(approxHeroTileY))
+                  ? tileKey(approxHeroTileX, approxHeroTileY)
+                  : null;
+
+                const initialDestKey = tileKey(bestStep.nx, bestStep.ny);
+                if ((heroBlockKey && initialDestKey === heroBlockKey) || (approxBlockKey && initialDestKey === approxBlockKey)) {
+                  heroTilesForMap.add(initialDestKey);
+                  const retryStep = findBestStepToward({
+                    mx,
+                    my,
+                    targetTx: pathTargetTx,
+                    targetTy: pathTargetTy,
+                    monster: m,
+                    tilesForMap,
+                    heroTiles: heroTilesForMap,
+                    mode: 'chase',
+                    heroId: heroIdForChase,
+                    predictedTile: pathPrediction,
+                    heroHeading,
+                    mapCollision,
+                  });
+                  const retryKey = retryStep ? tileKey(retryStep.nx, retryStep.ny) : null;
+                  if (retryStep && (!heroBlockKey || retryKey !== heroBlockKey) && (!approxBlockKey || retryKey !== approxBlockKey)) {
+                    bestStep = retryStep;
+                  } else {
+                    bestStep = null;
+                  }
+                }
+              }
 
               if (bestStep) {
                 const destKey = tileKey(bestStep.nx, bestStep.ny);
@@ -1966,21 +2085,44 @@ async function tick() {
 
         let attackRes = null;
         try {
+          const heroMapKey = targetHero.map_key != null ? targetHero.map_key : m.map_key;
+          const heroHitX = Number.isFinite(targetHero?.x)
+            ? targetHero.x
+            : (Number.isFinite(heroPx) ? heroPx : (Number.isFinite(hx) ? centerOfTile(hx) : undefined));
+          const heroHitY = Number.isFinite(targetHero?.y)
+            ? targetHero.y
+            : (Number.isFinite(heroPy) ? heroPy : (Number.isFinite(hy) ? centerOfTile(hy) : undefined));
+
           attackRes = await applyMobHit({
             attackerInstanceId: m.id,
             targetHeroId: targetHero.hero_id,
             attackInfo: {
               min: attackProfile?.min ?? DMG_MIN,
               max: attackProfile?.max ?? DMG_MAX,
+              minRangeTiles,
+              rangeTiles: maxRangeTiles,
+              type: attackType,
+              requiresLos,
+              chancePercent,
             },
             attackerPos: {
               x: Number.isFinite(m.x) ? m.x : undefined,
               y: Number.isFinite(m.y) ? m.y : undefined,
-              mapKey: targetHero.map_key ?? m.map_key,
+              mapKey: heroMapKey,
               face: m.face,
               unit: 'px',
               assumeTiles: false,
               assumePx: true,
+            },
+            heroPos: {
+              x: Number.isFinite(heroHitX) ? heroHitX : undefined,
+              y: Number.isFinite(heroHitY) ? heroHitY : undefined,
+              mapKey: heroMapKey,
+              unit: 'px',
+              assumeTiles: false,
+              assumePx: true,
+              source: targetHero.live_source || targetHero.source || 'ai',
+              fresh: true,
             },
           });
         } catch (err) {

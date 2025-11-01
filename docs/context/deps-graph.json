@@ -32,6 +32,10 @@
     "to": "./api.js"
   },
   {
+    "from": "client\\js\\gacha.js",
+    "to": "./i18n/core.js"
+  },
+  {
     "from": "client\\js\\boot.js",
     "to": "./api.js"
   },
@@ -46,6 +50,10 @@
   {
     "from": "client\\js\\boot.js",
     "to": "./login_fx.js"
+  },
+  {
+    "from": "client\\js\\boot.js",
+    "to": "./i18n/core.js"
   },
   {
     "from": "client\\js\\auth.js",
@@ -76,11 +84,59 @@
     "to": "../ws/singleton.js"
   },
   {
+    "from": "client\\js\\pages\\support.js",
+    "to": "./common-nav.js"
+  },
+  {
+    "from": "client\\js\\pages\\support.js",
+    "to": "../api.js"
+  },
+  {
+    "from": "client\\js\\pages\\support.js",
+    "to": "../i18n/core.js"
+  },
+  {
+    "from": "client\\js\\pages\\roadmap.js",
+    "to": "./common-nav.js"
+  },
+  {
+    "from": "client\\js\\pages\\roadmap.js",
+    "to": "../i18n/core.js"
+  },
+  {
+    "from": "client\\js\\pages\\overview.js",
+    "to": "./common-nav.js"
+  },
+  {
+    "from": "client\\js\\pages\\overview.js",
+    "to": "../i18n/core.js"
+  },
+  {
+    "from": "client\\js\\pages\\leaderboard.js",
+    "to": "./common-nav.js"
+  },
+  {
+    "from": "client\\js\\pages\\leaderboard.js",
+    "to": "../api.js"
+  },
+  {
+    "from": "client\\js\\pages\\leaderboard.js",
+    "to": "../i18n/core.js"
+  },
+  {
+    "from": "client\\js\\i18n\\lang-menu.js",
+    "to": "./core.js"
+  },
+  {
     "from": "client\\js\\hud\\death-overlay.js",
     "to": "../ws/singleton.js"
   },
   {
     "from": "client\\js\\hud\\death-overlay.js",
+    "to": "../api.js"
+  },
+  {
+    "from": "client\\js\\combat\\render-combat.js",
     "to": "../api.js"
   },
   {

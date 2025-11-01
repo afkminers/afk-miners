@@ -3,12 +3,12 @@
     "method": "GET",
     "path": "/_ping",
     "file": "server\\combat\\routes.js",
-    "line": 131,
+    "line": 137,
     "sample": {
       "body": {
-        "heroId": 1,
         "try {\n    const { heroId": 1,
-        "targetInstanceId": 1
+        "targetInstanceId": 1,
+        "const { heroId": 1
       }
     },
     "errors": [
@@ -29,20 +29,12 @@
         "body": "{ok:false,error:'start-failed' }"
       },
       {
+        "status": 400,
+        "body": "{ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }"
+      },
+      {
         "status": 404,
-        "body": "{ok:false,error:'hero-not-found' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'stop-failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'missing-id' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'missing-hero-id' }"
+        "body": "{ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }"
       }
     ],
     "ok": [
@@ -65,10 +57,6 @@
       {
         "status": 200,
         "body": "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
       }
     ]
   },
@@ -76,12 +64,12 @@
     "method": "GET",
     "path": "/_routes",
     "file": "server\\combat\\routes.js",
-    "line": 132,
+    "line": 138,
     "sample": {
       "body": {
-        "heroId": 1,
         "try {\n    const { heroId": 1,
-        "targetInstanceId": 1
+        "targetInstanceId": 1,
+        "const { heroId": 1
       }
     },
     "errors": [
@@ -102,20 +90,12 @@
         "body": "{ok:false,error:'start-failed' }"
       },
       {
+        "status": 400,
+        "body": "{ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }"
+      },
+      {
         "status": 404,
-        "body": "{ok:false,error:'hero-not-found' }"
-      },
-      {
-        "status": 500,
-        "body": "{ok:false,error:'stop-failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'missing-id' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'missing-hero-id' }"
+        "body": "{ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }"
       }
     ],
     "ok": [
@@ -134,10 +114,6 @@
       {
         "status": 200,
         "body": "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true }"
       }
     ]
   },
@@ -279,7 +255,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 674,
+    "line": 693,
     "sample": {
       "params": {
         "key": "value"
@@ -313,7 +289,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 649,
+    "line": 668,
     "sample": {
       "params": {
         "key": "value"
@@ -355,7 +331,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 661,
+    "line": 680,
     "sample": {
       "params": {
         "key": "value"
@@ -393,7 +369,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 638,
+    "line": 657,
     "sample": {
       "query": {
         "map": "value"
@@ -436,7 +412,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 530,
+    "line": 549,
     "sample": {
       "query": {
         "map": "value"
@@ -481,7 +457,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 684,
+    "line": 703,
     "sample": {
       "query": {
         "map": "value"
@@ -504,7 +480,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 541,
+    "line": 560,
     "sample": {
       "query": {
         "map": "value"
@@ -545,7 +521,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 563,
+    "line": 582,
     "sample": {
       "query": {
         "map": "value"
@@ -592,7 +568,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1425,
+    "line": 1462,
     "sample": {
       "query": {
         "limit": 1
@@ -623,7 +599,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1448,
+    "line": 1485,
     "sample": {},
     "errors": [
       {
@@ -681,7 +657,7 @@
     "method": "GET",
     "path": "/api/csrf",
     "file": "server\\index.js",
-    "line": 202,
+    "line": 213,
     "sample": {},
     "errors": []
   },
@@ -763,12 +739,14 @@
     "method": "POST",
     "path": "/attack/start",
     "file": "server\\combat\\routes.js",
-    "line": 175,
+    "line": 181,
     "sample": {
       "body": {
-        "heroId": 1,
+        "toTileX": "value",
+        "toTileY": "value",
         "try {\n    const { heroId": 1,
-        "targetInstanceId": 1
+        "targetInstanceId": 1,
+        "const { heroId": 1
       }
     },
     "errors": [
@@ -789,32 +767,28 @@
         "body": "{ok:false,error:'start-failed' }"
       },
       {
+        "status": 400,
+        "body": "{ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }"
+      },
+      {
         "status": 404,
-        "body": "{ok:false,error:'hero-not-found' }"
+        "body": "{ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }"
       },
       {
-        "status": 500,
-        "body": "{ok:false,error:'stop-failed' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:'missing-id' }"
+        "status": 409,
+        "body": "{ok:false,error:'monster-dead',message:'O monstro não está ativo.' }"
       },
       {
         "status": 400,
-        "body": "{ok:false,error:'missing-hero-id' }"
+        "body": "{ok:false,error:'hero-pos-missing',message:'Posição do herói indisponível.' }"
       },
       {
         "status": 400,
-        "body": "{ok:false,error:'mob-pos-missing' }"
+        "body": "{ok:false,error:'map-diff',message:'Você está em outro mapa.' }"
       },
       {
-        "status": 400,
-        "body": "{ok:false,error:'hero-pos-missing' }"
-      },
-      {
-        "status": 400,
-        "body": "{ok:false,error:result.message }"
+        "status": 409,
+        "body": "{ok:false,error:'hero-too-far',message:'Você está longe demais do monstro.' }"
       }
     ],
     "ok": [
@@ -832,15 +806,7 @@
       },
       {
         "status": 200,
-        "body": "{ok:true }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'no-weapon-equipped' }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }"
+        "body": "{ok:false,error:'monster-not-pushable',message:'Este monstro não pode ser empurrado.' }"
       }
     ]
   },
@@ -848,7 +814,7 @@
     "method": "POST",
     "path": "/attack/stop",
     "file": "server\\combat\\routes.js",
-    "line": 255,
+    "line": 463,
     "sample": {
       "body": {
         "heroId": 1,
@@ -1266,7 +1232,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 719,
+    "line": 756,
     "sample": {},
     "errors": []
   },
@@ -1348,6 +1314,26 @@
   },
   {
     "method": "GET",
+    "path": "/health",
+    "file": "server\\routes\\leaderboard.js",
+    "line": 55,
+    "sample": {
+      "query": {
+        "limit": 1,
+        "offset": 1,
+        "query": "value"
+      }
+    },
+    "errors": [],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
     "path": "/hero/:id",
     "file": "server\\skills\\routes.js",
     "line": 121,
@@ -1400,10 +1386,38 @@
     ]
   },
   {
+    "method": "GET",
+    "path": "/heroes",
+    "file": "server\\routes\\leaderboard.js",
+    "line": 220,
+    "sample": {
+      "query": {
+        "limit": 1,
+        "offset": 1,
+        "query": "value",
+        "skill": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'unable to load heroes leaderboard' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'skill not available' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'unable to load skills leaderboard' }"
+      }
+    ]
+  },
+  {
     "method": "POST",
     "path": "/hit",
     "file": "server\\combat\\routes.js",
-    "line": 274,
+    "line": 482,
     "sample": {
       "body": {
         "heroId": 1,
@@ -1466,6 +1480,14 @@
         "body": "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y,}"
       }
     ]
+  },
+  {
+    "method": "GET",
+    "path": "/leaderboard",
+    "file": "server\\index.js",
+    "line": 752,
+    "sample": {},
+    "errors": []
   },
   {
     "method": "GET",
@@ -1861,6 +1883,14 @@
   },
   {
     "method": "GET",
+    "path": "/overview",
+    "file": "server\\index.js",
+    "line": 740,
+    "sample": {},
+    "errors": []
+  },
+  {
+    "method": "GET",
     "path": "/ping",
     "file": "server\\routes\\afk.js",
     "line": 7,
@@ -2015,6 +2045,34 @@
       {
         "status": 200,
         "body": "{ok:true,item_type,amount:Number(amount) || 0 }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/players",
+    "file": "server\\routes\\leaderboard.js",
+    "line": 139,
+    "sample": {
+      "query": {
+        "limit": 1,
+        "offset": 1,
+        "query": "value",
+        "skill": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'unable to load players leaderboard' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'unable to load heroes leaderboard' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'skill not available' }"
       }
     ]
   },
@@ -2234,6 +2292,80 @@
   },
   {
     "method": "POST",
+    "path": "/push",
+    "file": "server\\combat\\routes.js",
+    "line": 269,
+    "sample": {
+      "body": {
+        "toTileX": "value",
+        "toTileY": "value",
+        "const { heroId": 1,
+        "targetInstanceId": 1
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }"
+      },
+      {
+        "status": 404,
+        "body": "{ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }"
+      },
+      {
+        "status": 409,
+        "body": "{ok:false,error:'monster-dead',message:'O monstro não está ativo.' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'hero-pos-missing',message:'Posição do herói indisponível.' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'map-diff',message:'Você está em outro mapa.' }"
+      },
+      {
+        "status": 409,
+        "body": "{ok:false,error:'hero-too-far',message:'Você está longe demais do monstro.' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'invalid-target',message:'Destino inválido para o empurrão.' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'invalid-target',message:'Escolha um SQM adjacente.' }"
+      },
+      {
+        "status": 409,
+        "body": "{ok:false,error:'same-tile',message:'O monstro já está nesse local.' }"
+      },
+      {
+        "status": 409,
+        "body": "{ok:false,error:'tile-occupied-hero',message:'Você está bloqueando esse SQM.' }"
+      },
+      {
+        "status": 409,
+        "body": "{ok:false,error:'tile-out-of-bounds',message:'Destino fora do mapa.' }"
+      },
+      {
+        "status": 409,
+        "body": "{ok:false,error:'tile-solid',message:'Esse SQM está bloqueado.' }"
+      },
+      {
+        "status": 409,
+        "body": "{ok:false,error:'tile-occupied-monster',message:'Outro monstro bloqueia esse SQM.' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:false,error:'monster-not-pushable',message:'Este monstro não pode ser empurrado.' }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
     "path": "/register",
     "file": "server\\auth\\routes.js",
     "line": 34,
@@ -2330,7 +2462,7 @@
     "method": "POST",
     "path": "/revive",
     "file": "server\\combat\\routes.js",
-    "line": 373,
+    "line": 581,
     "sample": {
       "body": {
         "try {\n    const { heroId": 1
@@ -2362,6 +2494,14 @@
     ]
   },
   {
+    "method": "GET",
+    "path": "/roadmap",
+    "file": "server\\index.js",
+    "line": 744,
+    "sample": {},
+    "errors": []
+  },
+  {
     "method": "POST",
     "path": "/select",
     "file": "server\\starter\\routes.js",
@@ -2383,6 +2523,30 @@
       {
         "status": 400,
         "body": "{error:'heroKey inválido' }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/skills",
+    "file": "server\\routes\\leaderboard.js",
+    "line": 275,
+    "sample": {
+      "query": {
+        "limit": 1,
+        "offset": 1,
+        "query": "value",
+        "skill": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:'skill not available' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'unable to load skills leaderboard' }"
       }
     ]
   },
@@ -2573,6 +2737,41 @@
       {
         "status": 200,
         "body": "{canSelect:!row }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/support",
+    "file": "server\\index.js",
+    "line": 748,
+    "sample": {},
+    "errors": []
+  },
+  {
+    "method": "POST",
+    "path": "/ticket",
+    "file": "server\\routes\\support.js",
+    "line": 25,
+    "sample": {},
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:'missing-fields' }"
+      },
+      {
+        "status": 422,
+        "body": "{error:'invalid-email' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'ticket-create-failed' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,ticketId:id }"
       }
     ]
   },
