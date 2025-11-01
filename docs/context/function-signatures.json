@@ -2485,7 +2485,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 115,
+    "line": 122,
     "kind": "function",
     "name": "getInstanceWithMonster",
     "params": [
@@ -2494,14 +2494,14 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 148,
+    "line": 155,
     "kind": "function",
     "name": "getDefaultReachPx",
     "params": []
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 150,
+    "line": 157,
     "kind": "function",
     "name": "getRespawnSeconds",
     "params": [
@@ -2510,7 +2510,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 160,
+    "line": 167,
     "kind": "function",
     "name": "rollLoot",
     "params": [
@@ -2519,7 +2519,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 179,
+    "line": 186,
     "kind": "function",
     "name": "persistDrops",
     "params": [
@@ -2530,7 +2530,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 199,
+    "line": 206,
     "kind": "function",
     "name": "respawnHero",
     "params": [
@@ -2539,7 +2539,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 247,
+    "line": 254,
     "kind": "function",
     "name": "applyHit",
     "params": [
@@ -2550,7 +2550,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 389,
+    "line": 396,
     "kind": "function",
     "name": "normalizeCombatPosition",
     "params": [
@@ -2560,7 +2560,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 443,
+    "line": 450,
     "kind": "function",
     "name": "applyMobHit",
     "params": [
@@ -2685,7 +2685,7 @@
   },
   {
     "file": "server\\combat\\pos.js",
-    "line": 124,
+    "line": 139,
     "kind": "function",
     "name": "adjustOrigin",
     "params": [
@@ -2695,7 +2695,7 @@
   },
   {
     "file": "server\\combat\\pos.js",
-    "line": 132,
+    "line": 147,
     "kind": "arrow",
     "name": "near",
     "params": [
@@ -2706,7 +2706,7 @@
   },
   {
     "file": "server\\combat\\pos.js",
-    "line": 149,
+    "line": 164,
     "kind": "function",
     "name": "buildTileCandidate",
     "params": [
@@ -2716,7 +2716,7 @@
   },
   {
     "file": "server\\combat\\pos.js",
-    "line": 157,
+    "line": 172,
     "kind": "function",
     "name": "resolveCoord",
     "params": [
@@ -2728,7 +2728,7 @@
   },
   {
     "file": "server\\combat\\pos.js",
-    "line": 188,
+    "line": 203,
     "kind": "function",
     "name": "getMonsterPos",
     "params": [
@@ -2737,7 +2737,7 @@
   },
   {
     "file": "server\\combat\\pos.js",
-    "line": 240,
+    "line": 255,
     "kind": "function",
     "name": "isHeroPosFresh",
     "params": [
@@ -2823,7 +2823,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 168,
+    "line": 172,
     "kind": "function",
     "name": "computeAttackSignature",
     "params": [
@@ -2832,7 +2832,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 181,
+    "line": 185,
     "kind": "function",
     "name": "resolveMonsterAttackProfile",
     "params": [
@@ -2841,7 +2841,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 226,
+    "line": 230,
     "kind": "function",
     "name": "toCenterPxCoord",
     "params": [
@@ -2850,7 +2850,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 235,
+    "line": 245,
     "kind": "function",
     "name": "pickFaceFromDelta",
     "params": [
@@ -2861,7 +2861,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 250,
+    "line": 260,
     "kind": "function",
     "name": "computeFaceToward",
     "params": [
@@ -2874,7 +2874,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 259,
+    "line": 269,
     "kind": "function",
     "name": "directionFromStep",
     "params": [
@@ -2887,7 +2887,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 266,
+    "line": 276,
     "kind": "function",
     "name": "isTileBlockedByCollision",
     "params": [
@@ -2898,7 +2898,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 275,
+    "line": 285,
     "kind": "function",
     "name": "updateLivePos",
     "params": [
@@ -2907,7 +2907,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 286,
+    "line": 296,
     "kind": "function",
     "name": "emitMonsterMove",
     "params": [
@@ -2917,7 +2917,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 303,
+    "line": 313,
     "kind": "function",
     "name": "buildMonsterTileMap",
     "params": [
@@ -2926,7 +2926,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 320,
+    "line": 330,
     "kind": "function",
     "name": "buildHeroTileSet",
     "params": [
@@ -2935,7 +2935,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 333,
+    "line": 343,
     "kind": "function",
     "name": "updateHeroMemory",
     "params": [
@@ -2945,7 +2945,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 375,
+    "line": 385,
     "kind": "function",
     "name": "predictHeroTile",
     "params": [
@@ -2956,7 +2956,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 404,
+    "line": 414,
     "kind": "function",
     "name": "computeDensityPenalty",
     "params": [
@@ -2971,7 +2971,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 442,
+    "line": 452,
     "kind": "function",
     "name": "computeFlankBonus",
     "params": [
@@ -2984,7 +2984,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 462,
+    "line": 472,
     "kind": "function",
     "name": "ensurePatrolTarget",
     "params": [
@@ -2997,7 +2997,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 498,
+    "line": 508,
     "kind": "function",
     "name": "selectHeroTarget",
     "params": [
@@ -3008,7 +3008,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 537,
+    "line": 547,
     "kind": "arrow",
     "name": "evaluateCandidate",
     "params": [
@@ -3017,7 +3017,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 545,
+    "line": 555,
     "kind": "arrow",
     "name": "pickFrom",
     "params": [
@@ -3026,7 +3026,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 629,
+    "line": 639,
     "kind": "function",
     "name": "isAdjacent4Tiles",
     "params": [
@@ -3038,7 +3038,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 635,
+    "line": 645,
     "kind": "function",
     "name": "isInsideSpawnRect",
     "params": [
@@ -3050,7 +3050,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 644,
+    "line": 654,
     "kind": "function",
     "name": "isTileInsideSpawn",
     "params": [
@@ -3061,7 +3061,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 716,
+    "line": 726,
     "kind": "function",
     "name": "tilesOccupiedByOthers",
     "params": [
@@ -3071,7 +3071,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 724,
+    "line": 734,
     "kind": "function",
     "name": "pickChaseGoalTile",
     "params": [
@@ -3085,7 +3085,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 789,
+    "line": 799,
     "kind": "arrow",
     "name": "pushNode",
     "params": [
@@ -3097,7 +3097,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 823,
+    "line": 833,
     "kind": "arrow",
     "name": "scoreNode",
     "params": [
@@ -3107,21 +3107,21 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 987,
+    "line": 997,
     "kind": "function",
     "name": "fetchAliveMonsters",
     "params": []
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1012,
+    "line": 1022,
     "kind": "function",
     "name": "fetchAliveHeroesWithPos",
     "params": []
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1025,
+    "line": 1035,
     "kind": "function",
     "name": "markLastHit",
     "params": [
@@ -3131,7 +3131,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1037,
+    "line": 1047,
     "kind": "function",
     "name": "updateMonsterPos",
     "params": [
@@ -3143,14 +3143,14 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1047,
+    "line": 1057,
     "kind": "function",
     "name": "tick",
     "params": []
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1074,
+    "line": 1084,
     "kind": "arrow",
     "name": "cleanupStore",
     "params": [
@@ -3159,7 +3159,7 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1110,
+    "line": 1120,
     "kind": "arrow",
     "name": "ensureCollisionFor",
     "params": [
@@ -3168,14 +3168,14 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1474,
+    "line": 1484,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 1479,
+    "line": 1489,
     "kind": "function",
     "name": "stop",
     "params": []
@@ -6282,7 +6282,54 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 59,
+    "line": 71,
+    "kind": "function",
+    "name": "setLoadingProgress",
+    "params": [
+      "value",
+      "immediate = false"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 80,
+    "kind": "function",
+    "name": "pickNextTipIndex",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 90,
+    "kind": "function",
+    "name": "swapLoadingTip",
+    "params": [
+      "immediate = false"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 94,
+    "kind": "arrow",
+    "name": "apply",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 106,
+    "kind": "function",
+    "name": "beginRetroLoading",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 120,
+    "kind": "function",
+    "name": "finishRetroLoading",
+    "params": []
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 145,
     "kind": "function",
     "name": "setRootVar",
     "params": [
@@ -6292,7 +6339,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 60,
+    "line": 146,
     "kind": "function",
     "name": "getRootVar",
     "params": [
@@ -6302,28 +6349,28 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 67,
+    "line": 153,
     "kind": "function",
     "name": "updateTopbarHeight",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 75,
+    "line": 161,
     "kind": "function",
     "name": "mountSceneHouse",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 91,
+    "line": 177,
     "kind": "function",
     "name": "applyViewport",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 115,
+    "line": 201,
     "kind": "function",
     "name": "makeVSplitter",
     "params": [
@@ -6333,7 +6380,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 117,
+    "line": 203,
     "kind": "function",
     "name": "onDown",
     "params": [
@@ -6342,7 +6389,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 125,
+    "line": 211,
     "kind": "function",
     "name": "onMove",
     "params": [
@@ -6351,14 +6398,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 132,
+    "line": 218,
     "kind": "function",
     "name": "onUp",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 150,
+    "line": 236,
     "kind": "function",
     "name": "onDown",
     "params": [
@@ -6367,7 +6414,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 158,
+    "line": 244,
     "kind": "function",
     "name": "onMove",
     "params": [
@@ -6376,21 +6423,21 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 165,
+    "line": 251,
     "kind": "function",
     "name": "onUp",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 177,
+    "line": 263,
     "kind": "function",
     "name": "applyUiFromSettings",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 209,
+    "line": 295,
     "kind": "function",
     "name": "markSeenId",
     "params": [
@@ -6399,7 +6446,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 210,
+    "line": 296,
     "kind": "function",
     "name": "hasSeenId",
     "params": [
@@ -6408,7 +6455,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 211,
+    "line": 297,
     "kind": "function",
     "name": "normStr",
     "params": [
@@ -6417,7 +6464,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 212,
+    "line": 298,
     "kind": "function",
     "name": "getTs",
     "params": [
@@ -6426,7 +6473,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 214,
+    "line": 300,
     "kind": "function",
     "name": "findPendingRowFor",
     "params": [
@@ -6435,7 +6482,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 234,
+    "line": 320,
     "kind": "function",
     "name": "appendChatRow",
     "params": [
@@ -6444,7 +6491,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 261,
+    "line": 347,
     "kind": "arrow",
     "name": "esc",
     "params": [
@@ -6453,21 +6500,21 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 298,
+    "line": 384,
     "kind": "function",
     "name": "initGlobalChatUI",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 340,
+    "line": 426,
     "kind": "function",
     "name": "sendChat",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 357,
+    "line": 443,
     "kind": "arrow",
     "name": "FALLBACK_LOAD_CONTENT",
     "params": []
