@@ -2,10 +2,12 @@
 import { onMessage } from '../ws/singleton.js';
 
 (function () {
+  const FLAGS = (typeof window !== 'undefined' && window.RuntimeFlags) ? window.RuntimeFlags : {};
+  const IS_MOBILE = !!(typeof window !== 'undefined' && (window.IS_MOBILE || FLAGS.isMobile));
   const POPS = []; // {x,y,text,kind,created,duration,vy}
-  const LIFE_MS = 800;
-  const MAX_POPUPS = 40;
-  const DEFAULT_OFFSET_Y = 18;
+  const LIFE_MS = IS_MOBILE ? 620 : 800;
+  const MAX_POPUPS = IS_MOBILE ? 18 : 40;
+  const DEFAULT_OFFSET_Y = IS_MOBILE ? 14 : 18;
 
   function now() { return performance.now(); }
 
@@ -38,7 +40,7 @@ import { onMessage } from '../ws/singleton.js';
 
   function pushPopup({ x, y, text, kind }) {
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    POPS.push({ x, y: y - DEFAULT_OFFSET_Y, text: String(text ?? ''), kind: kind || '', created: now(), duration: LIFE_MS, vy: -28 });
+    POPS.push({ x, y: y - DEFAULT_OFFSET_Y, text: String(text ?? ''), kind: kind || '', created: now(), duration: LIFE_MS, vy: IS_MOBILE ? -22 : -28 });
     if (POPS.length > MAX_POPUPS) POPS.shift();
   }
 
@@ -117,16 +119,20 @@ import { onMessage } from '../ws/singleton.js';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // contorno
-      ctx.fillStyle = 'rgba(0,0,0,0.65)';
-      ctx.fillText(p.text, sx + 1, sy + 1);
-      ctx.fillText(p.text, sx - 1, sy + 1);
-      ctx.fillText(p.text, sx + 1, sy - 1);
-      ctx.fillText(p.text, sx - 1, sy - 1);
-
-      // texto
       let color = '#ef4444';
       if (p.kind === 'heal' || p.text.startsWith('+')) color = '#10b981';
+
+      if (IS_MOBILE) {
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillText(p.text, sx + 1, sy + 1);
+      } else {
+        ctx.fillStyle = 'rgba(0,0,0,0.65)';
+        ctx.fillText(p.text, sx + 1, sy + 1);
+        ctx.fillText(p.text, sx - 1, sy + 1);
+        ctx.fillText(p.text, sx + 1, sy - 1);
+        ctx.fillText(p.text, sx - 1, sy - 1);
+      }
+
       ctx.fillStyle = color;
       ctx.fillText(p.text, sx, sy);
       ctx.restore();

@@ -1,0 +1,20 @@
+{
+  "name": "AFK Miners",
+  "short_name": "AFK Miners",
+  "start_url": "/app.html",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "icons": [
+    {
+      "src": "/img/ui/pixel-noise.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/ui/dither-bg.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
