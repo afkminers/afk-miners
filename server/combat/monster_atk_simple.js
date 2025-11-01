@@ -1788,25 +1788,23 @@ async function tick() {
         };
 
         if (Number.isFinite(distTiles) && distTiles === 0) {
-          if (canMoveNow) {
-            const separated = await resolveMonsterHeroOverlap({
-              monster: m,
-              heroTileX,
-              heroTileY,
-              tilesForMap,
-              heroTiles: heroTilesForMap,
-              mapCollision,
-              now,
-              movedSet: movedThisTick,
-              targetId: targetHero.hero_id,
-            });
-            if (separated) {
-              movesUsed++;
-              continue;
-            }
+          const separated = await resolveMonsterHeroOverlap({
+            monster: m,
+            heroTileX,
+            heroTileY,
+            tilesForMap,
+            heroTiles: heroTilesForMap,
+            mapCollision,
+            now,
+            movedSet: movedThisTick,
+            targetId: targetHero.hero_id,
+          });
+          if (separated) {
+            movesUsed++;
+            continue;
           }
           ensureFacingHero();
-          logDecision('WAIT');
+          logDecision('WAIT_OVERLAP');
           continue;
         }
 
