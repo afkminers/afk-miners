@@ -31,8 +31,6 @@ const heroOverlay = {
   meta: { width: 32, height: 32, anchorX: 0.5, anchorY: 0.9 },
 };
 
-const HERO_SAMPLE_INTERVAL_MS = 140;
-
 function normalizeHeroId(raw) {
   if (raw == null) return null;
   const id = String(raw);
@@ -411,7 +409,7 @@ function refreshHeroOverlayFromGlobals(ts) {
 
 function sampleHeroPosition(now) {
   const ctrl = window.GameScene?.controller;
-  if (ctrl && typeof ctrl.getPosition === 'function' && (now - heroOverlay.lastSampleAt >= HERO_SAMPLE_INTERVAL_MS)) {
+  if (ctrl && typeof ctrl.getPosition === 'function') {
     const pos = ctrl.getPosition();
     if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
       heroOverlay.pos = { x: pos.x, y: pos.y };
