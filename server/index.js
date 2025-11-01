@@ -347,17 +347,6 @@ async function bootstrapContentTables() {
     await run(`CREATE UNIQUE INDEX IF NOT EXISTS hero_last_pos_hero_id_uq ON hero_last_pos(hero_id)`);
     await run('CREATE INDEX IF NOT EXISTS idx_hero_last_pos_map ON hero_last_pos(map_key)');
 
-    await run(`
-      CREATE TABLE IF NOT EXISTS hero_last_pos (
-        hero_id TEXT PRIMARY KEY,
-        map_key TEXT NOT NULL,
-        x INTEGER NOT NULL,
-        y INTEGER NOT NULL,
-        updated_at TIMESTAMPTZ DEFAULT now()
-      )
-    `);
-    await run('CREATE INDEX IF NOT EXISTS idx_hero_last_pos_map ON hero_last_pos(map_key)');
-
     // hero_backpack_slots — conteúdo da mochila por herói (modelo Tibia-like)
     await run(`
       CREATE TABLE IF NOT EXISTS hero_backpack_slots (

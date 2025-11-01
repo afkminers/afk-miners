@@ -226,6 +226,7 @@ async function respawnHero(targetHeroId) {
 
   const spawn = await getHeroRespawnPoint(targetHeroId, {
     mapKey: RESPAWN_FALLBACK.mapKey,
+    forceStart: true,
   });
 
   const mapKey = spawn.mapKey || RESPAWN_FALLBACK.mapKey;

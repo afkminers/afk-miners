@@ -1067,7 +1067,6 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     if (distFromHome > leashRangePx + HOME_TOLERANCE_PX) {
       if (mob.targetHeroId) mob.threat.delete(String(mob.targetHeroId));
       mob.targetHeroId = null;
-      mob.lastKnownHeroPos = null;
       mob.mode = 'idle';
       mob.pendingStep = null;
       mob.combatStep = null;
@@ -1364,7 +1363,6 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       if (stepDist > leashRangePx + HOME_TOLERANCE_PX) {
         if (mob.targetHeroId) mob.threat.delete(String(mob.targetHeroId));
         mob.targetHeroId = null;
-        mob.lastKnownHeroPos = null;
         mob.mode = 'idle';
         mob.pendingStep = null;
         mob.combatStep = null;

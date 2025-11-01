@@ -61,25 +61,28 @@ async function getStartPoint(mapKey = DEFAULT_START.mapKey) {
 }
 
 async function getHeroRespawnPoint(heroOrId, opts = {}) {
-  const heroId = typeof heroOrId === 'object' ? heroOrId?.id || heroOrId?.heroId : heroOrId;
-  if (heroId) {
-    const saved = await get(
-      `SELECT map_key, x, y
-         FROM hero_last_pos
-        WHERE hero_id = $1
-        LIMIT 1`,
-      [String(heroId)]
-    ).catch(() => null);
-    if (saved) {
-      return normalizePoint(
-        { mapKey: saved.map_key, x: saved.x, y: saved.y },
-        DEFAULT_START
-      );
+  const fallbackMap =
+    (typeof heroOrId === 'object' && heroOrId?.map_key) || opts?.mapKey || DEFAULT_START.mapKey;
+
+  if (!opts?.forceStart) {
+    const heroId = typeof heroOrId === 'object' ? heroOrId?.id || heroOrId?.heroId : heroOrId;
+    if (heroId) {
+      const saved = await get(
+        `SELECT map_key, x, y
+           FROM hero_last_pos
+          WHERE hero_id = $1
+          LIMIT 1`,
+        [String(heroId)]
+      ).catch(() => null);
+      if (saved) {
+        return normalizePoint(
+          { mapKey: saved.map_key, x: saved.x, y: saved.y },
+          DEFAULT_START
+        );
+      }
     }
   }
 
-  const fallbackMap =
-    (typeof heroOrId === 'object' && heroOrId?.map_key) || opts?.mapKey || DEFAULT_START.mapKey;
   return getStartPoint(fallbackMap);
 }
 
