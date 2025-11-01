@@ -10,15 +10,29 @@ const HUD_CONTAINER_ID = "hud";
    UTIL: herói ativo + cache /api/player/me com dedupe e throttle
 ===================================================================================== */
 
+function normalizeHeroId(raw) {
+  if (raw == null) return null;
+  const id = String(raw).trim();
+  if (!id || id === "undefined" || id === "null") return null;
+  return id;
+}
+
 function getActiveHeroId() {
-  return (
-    window.ActiveHeroId ||
-    (window.Team && typeof Team.getActiveHeroId === "function" && Team.getActiveHeroId()) ||
-    (window.GameScene && window.GameScene.activeHeroId) ||
-    (window.Player && window.Player.activeHeroId) ||
-    window.CurrentHeroId ||
-    null
-  );
+  const candidates = [
+    window.ActiveHeroId,
+    window.Team?.getActiveHeroId?.(),
+    (window.GameScene && window.GameScene.activeHeroId),
+    (window.Player && window.Player.activeHeroId),
+    window.CurrentHeroId,
+    HeroState?.id,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeHeroId(candidate);
+    if (normalized) return normalized;
+  }
+
+  return null;
 }
 
 // Cache simples e dedupe para /api/player/me
@@ -79,10 +93,11 @@ async function getMe(force = false, signal) {
 const VitalsCache = new Map(); // heroId -> { hp, mana, cap, ts }
 
 async function fetchHeroVitals(heroId, signal) {
-  if (!heroId) return null;
+  const normalizedId = normalizeHeroId(heroId);
+  if (!normalizedId) return null;
 
   // cache leve de 5s
-  const cached = VitalsCache.get(String(heroId));
+  const cached = VitalsCache.get(normalizedId);
   if (cached && Date.now() - cached.ts < 5000) return cached;
 
   const controller = new AbortController();
@@ -90,8 +105,8 @@ async function fetchHeroVitals(heroId, signal) {
 
   // tenta alguns caminhos comuns sem quebrar se não existirem
   const candidates = [
-    `/api/hero/vitals/${encodeURIComponent(heroId)}`,
-    `/api/hero/vitals?id=${encodeURIComponent(heroId)}`,
+    `/api/hero/vitals/${encodeURIComponent(normalizedId)}`,
+    `/api/hero/vitals?id=${encodeURIComponent(normalizedId)}`,
   ];
 
   for (const url of candidates) {
@@ -108,7 +123,7 @@ async function fetchHeroVitals(heroId, signal) {
         maxCap: Number(v.maxCap ?? NaN),
         ts: Date.now(),
       };
-      VitalsCache.set(String(heroId), vitals);
+      VitalsCache.set(normalizedId, vitals);
       return vitals;
     } catch {
       // ignora e tenta o próximo
@@ -357,15 +372,16 @@ document.addEventListener("visibilitychange", () => {
 ===================================================================================== */
 
 function applyHeroHpUpdate(heroId, hp, maxHp) {
-  if (!heroId) return;
-  const cur = VitalsCache.get(String(heroId)) || { ts: 0 };
+  const resolvedId = normalizeHeroId(heroId) || getActiveHeroId();
+  if (!resolvedId) return;
+  const cur = VitalsCache.get(resolvedId) || { ts: 0 };
   const merged = {
     ...cur,
     hp: typeof hp === 'number' ? hp : cur.hp,
     maxHp: typeof maxHp === 'number' ? maxHp : cur.maxHp,
     ts: Date.now(),
   };
-  VitalsCache.set(String(heroId), merged);
+  VitalsCache.set(resolvedId, merged);
   // força refresh leve (respeita dedupe do /me)
   updateHudBars(false);
 }
