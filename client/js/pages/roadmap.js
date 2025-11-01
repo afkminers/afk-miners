@@ -1,5 +1,6 @@
 // client/js/pages/roadmap.js
 import { initPageChrome } from './common-nav.js';
+import { i18n } from '../i18n/core.js';
 
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).toLowerCase());
@@ -10,18 +11,37 @@ function setupForm() {
   const feedback = document.querySelector('.form-feedback');
   if (!form || !feedback) return;
 
+  function setFeedback(key, type) {
+    feedback.dataset.i18nKey = key || '';
+    if (key) {
+      feedback.textContent = i18n.t(key);
+    } else {
+      feedback.textContent = '';
+    }
+    feedback.classList.remove('success', 'error');
+    if (type) {
+      feedback.classList.add(type);
+    }
+  }
+
+  function refreshFeedback() {
+    const key = feedback.dataset.i18nKey;
+    if (!key) return;
+    feedback.textContent = i18n.t(key);
+  }
+
+  i18n.onChange(refreshFeedback);
+
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const email = new FormData(form).get('email');
     feedback.classList.remove('success', 'error');
     if (!validateEmail(email)) {
-      feedback.textContent = 'Please enter a valid email address to subscribe.';
-      feedback.classList.add('error');
+      setFeedback('roadmap.subscribeInvalid', 'error');
       return;
     }
 
-    feedback.textContent = 'Thanks! We will keep you posted with the next roadmap update.';
-    feedback.classList.add('success');
+    setFeedback('roadmap.subscribeSuccess', 'success');
     form.reset();
   });
 }
@@ -37,7 +57,9 @@ function focusMain() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  initPageChrome('/roadmap');
-  setupForm();
-  focusMain();
+  i18n.onReady(() => {
+    initPageChrome('/roadmap');
+    setupForm();
+    focusMain();
+  });
 });
