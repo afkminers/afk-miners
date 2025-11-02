@@ -10,12 +10,16 @@ import { publishPos, setMapKey } from './pos-publisher.js';
 import { onMessage, authenticate } from './ws/singleton.js';
 import { i18n } from './i18n/core.js';
 import { HeroState } from './state/hero-state.js';
+import { Camera2D } from './engine/camera2d.js';
+import { PlayerController } from './engine/player_controller.js';
+import { ClickToMove } from './engine/click_to_move.js';
+import { AStarGrid } from './engine/pathfinder.js';
+import { TILE, toTile, tileCenter, footColliderPx } from './engine/movement_contract.js';
 
 
 
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
-const TILE = 32;
 const playerVis = { w: 32, h: 32, img: null, heroKey: null, anchorX: 0.5, anchorY: 0.9 };
 // Desliga a IA local de mobs; posição deve vir do servidor
 const ENABLE_LOCAL_MOB_AI = false;
@@ -555,10 +559,24 @@ function heroSpriteMeta() {
 
 function heroFootboxTiles(px, py) {
   if (!Number.isFinite(px) || !Number.isFinite(py)) return [];
-  const cx = Math.floor(px / TILE);
-  const cy = Math.floor(py / TILE);
-  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return [];
-  return [monsterTileKey(cx, cy)];
+  if (!featureMovement()) {
+    const cx = legacyToTile(px);
+    const cy = legacyToTile(py);
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) return [];
+    return [monsterTileKey(cx, cy)];
+  }
+  const collider = footColliderPx(px, py);
+  const minCx = toTile(collider.x);
+  const maxCx = toTile(collider.x + collider.w - 0.0001);
+  const minCy = toTile(collider.y);
+  const maxCy = toTile(collider.y + collider.h - 0.0001);
+  const tiles = [];
+  for (let ty = minCy; ty <= maxCy; ty++) {
+    for (let tx = minCx; tx <= maxCx; tx++) {
+      tiles.push(monsterTileKey(tx, ty));
+    }
+  }
+  return tiles;
 }
 
 function updateHeroBlocking(px, py) {
@@ -636,8 +654,8 @@ function updateMonsterBlocking(state, worldX, worldY) {
         : (Number.isFinite(sprite?.y) ? sprite.y : NaN));
   if (!Number.isFinite(px) || !Number.isFinite(py)) return;
 
-  const cx = Math.floor(px / TILE);
-  const cy = Math.floor(py / TILE);
+  const cx = tileCoord(px);
+  const cy = tileCoord(py);
 
   if (!Number.isFinite(cx) || !Number.isFinite(cy)) return;
 
@@ -2300,8 +2318,8 @@ function updateRespawns(now) {
 
     // ===== IA dos mobs em passos de 32x32 (DESATIVADA; servidor manda posição) =====
     const hasGrid = !!grid && Number.isFinite(cols) && Number.isFinite(rows);
-    const cellOf   = (wx, wy) => ({ cx: Math.floor(wx / TILE), cy: Math.floor(wy / TILE) });
-    const centerOf = (cx, cy) => ({ x: cx * TILE + TILE / 2, y: cy * TILE + TILE / 2 });
+    const cellOf   = (wx, wy) => ({ cx: tileCoord(wx), cy: tileCoord(wy) });
+    const centerOf = (cx, cy) => ({ x: tileCenterPx(cx), y: tileCenterPx(cy) });
     const isBlocked = (cx, cy) => {
       if (!hasGrid) return false;
       if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) return true;
@@ -2380,3 +2398,7 @@ function applyCameraZoom() {
     camera.setZoom?.(zClamped);
   }
 }
+const featureMovement = () => typeof window !== 'undefined' && !!window.FEATURE_MOVEMENT_GRID_V1;
+const legacyToTile = (px) => Math.floor(px / TILE);
+const tileCoord = (px) => (featureMovement() ? toTile(px) : legacyToTile(px));
+const tileCenterPx = (t) => (featureMovement() ? tileCenter(t) : t * TILE + TILE / 2);

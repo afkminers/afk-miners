@@ -3,8 +3,7 @@
 // API: constructor({width,height,worldWidth,worldHeight}), follow(target),
 //      setZoom(z), getZoom(), resize(w,h), update(dt), apply(ctx, drawcb)
 
-(function(){
-  class Camera2D {
+export class Camera2D {
     constructor(opts){
       this.w = Number(opts?.width)  || 800;
       this.h = Number(opts?.height) || 600;
@@ -72,6 +71,6 @@
     }
   }
 
-  // expõe globalmente (sem modules)
+if (typeof window !== 'undefined') {
   window.Camera2D = Camera2D;
-})();
+}

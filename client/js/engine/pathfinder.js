@@ -1,7 +1,10 @@
 // client/js/engine/pathfinder.js
-(function () {
-  // A* em grid ortogonal (N/S/L/O). 1 = bloqueado, 0 = livre.
-  class AStarGrid {
+import { canCutCorner } from './movement_contract.js';
+
+const featureEnabled = () => typeof window !== 'undefined' && !!window.FEATURE_MOVEMENT_GRID_V1;
+
+// A* em grid ortogonal (N/S/L/O). 1 = bloqueado, 0 = livre.
+export class AStarGrid {
     constructor(grid, cols, rows) {
       this.grid = grid;
       this.cols = cols;
@@ -30,12 +33,32 @@
       for (const n of cand) {
         if (!this.isBlocked(n.x, n.y)) res.push(n);
       }
+      if (featureEnabled()) {
+        const diag = [
+          { x: cx + 1, y: cy + 1, cost: Math.SQRT2, sdx: 1, sdy: 1 },
+          { x: cx - 1, y: cy + 1, cost: Math.SQRT2, sdx: -1, sdy: 1 },
+          { x: cx + 1, y: cy - 1, cost: Math.SQRT2, sdx: 1, sdy: -1 },
+          { x: cx - 1, y: cy - 1, cost: Math.SQRT2, sdx: -1, sdy: -1 },
+        ];
+        for (const n of diag) {
+          if (this.isBlocked(n.x, n.y)) continue;
+          if (!canCutCorner(this, cx, cy, n.sdx, n.sdy)) continue;
+          res.push(n);
+        }
+      }
       return res;
     }
 
-    // Heurística Manhattan (coerente com movimento cardinal)
+    // Heurística adaptada conforme o modo de movimento
     heuristic(ax, ay, bx, by) {
-      return Math.abs(ax - bx) + Math.abs(ay - by);
+      const dx = Math.abs(ax - bx);
+      const dy = Math.abs(ay - by);
+      if (!featureEnabled()) {
+        return dx + dy;
+      }
+      const diag = Math.min(dx, dy);
+      const straight = Math.max(dx, dy) - diag;
+      return diag * Math.SQRT2 + straight;
     }
 
     findPath(start, goal, maxIter = 4000) {
@@ -89,9 +112,9 @@
       }
       return null; // não encontrou (ou estourou iterações)
     }
-  }
+}
 
-  class MinHeap {
+class MinHeap {
     constructor() { this.a = []; }
     empty() { return this.a.length === 0; }
     push(n) { this.a.push(n); this._bubble(this.a.length - 1); }
@@ -122,5 +145,6 @@
     }
   }
 
+if (typeof window !== 'undefined') {
   window.AStarGrid = AStarGrid;
-})();
+}
