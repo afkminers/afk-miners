@@ -37,6 +37,17 @@ async function jpost(u,body){
   return r.json();
 }
 
+function translate(key, fallback){
+  try{
+    const inst = window.i18n;
+    if (inst && typeof inst.t === 'function'){
+      const value = inst.t(key);
+      if (value != null && value !== key) return value;
+    }
+  }catch{}
+  return fallback;
+}
+
 /* ---------- Refs ---------- */
 const canvas  = document.getElementById('scene');
 const hud     = document.getElementById('hud');
@@ -287,6 +298,11 @@ summonModal?.addEventListener('click', (e)=>{ if(e.target===summonModal) summonM
 
 /* ---------- Logout ---------- */
 btnLogout?.addEventListener('click', async ()=>{
+  if (window.__IN_BATTLE) {
+    try { window.HeroBattle?.showExitWarning?.(); } catch {}
+    alert(translate('hud.battle.logoutBlocked', 'You cannot logout while in battle. Find a safe zone first.'));
+    return;
+  }
   try{ await jpost('/api/auth/logout',{}); }catch{}
   location.href='/index.html';
 });
