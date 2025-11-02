@@ -1453,5 +1453,29 @@
       "body": "{error:'ticket-create-failed' }"
     }
   ],
-  "GET /tick": []
+  "GET /tick": [],
+  "domain:friends": [
+    {
+      "status": 409,
+      "body": "{error:'FRIEND_ALREADY_EXISTS'}"
+    },
+    {
+      "status": 400,
+      "body": "{error:'FRIEND_SELF_NOT_ALLOWED'}"
+    },
+    {
+      "status": 404,
+      "body": "{error:'USER_NOT_FOUND'}"
+    }
+  ],
+  "domain:direct-messages": [
+    {
+      "status": 403,
+      "body": "{error:'DM_BLOCKED'}"
+    },
+    {
+      "status": 404,
+      "body": "{error:'USER_NOT_FOUND'}"
+    }
+  ]
 }
