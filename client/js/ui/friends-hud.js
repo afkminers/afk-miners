@@ -46,6 +46,10 @@ const ERROR_MESSAGES = {
   FRIEND_RATE_LIMIT: 'Muitas ações em sequência. Tente novamente em instantes.',
 };
 
+function getTopbarActionsContainer() {
+  return document.querySelector('#topbar .topbar-actions') || document.querySelector('.topbar .actions');
+}
+
 const SUCCESS_MESSAGES = {
   request: 'Solicitação enviada!',
   accept: 'Solicitação aceita. Agora vocês são amigos!',
@@ -685,11 +689,14 @@ function togglePanel() {
 }
 
 function ensureButtonInTopbar() {
-  const actions = document.querySelector('.topbar .actions');
+  const actions = getTopbarActionsContainer();
   if (!actions || !buttonEl) return;
   if (!actions.contains(buttonEl)) {
     try {
-      const anchor = actions.querySelector('#btnSettings') || actions.querySelector('#btnLogout');
+      const anchor =
+        actions.querySelector('#btnSettings') ||
+        actions.querySelector('[data-topbar-menu]') ||
+        actions.querySelector('#btnLogout');
       if (anchor) {
         actions.insertBefore(buttonEl, anchor);
       } else {
@@ -700,7 +707,7 @@ function ensureButtonInTopbar() {
 }
 
 function setupDom() {
-  const actions = document.querySelector('.topbar .actions');
+  const actions = getTopbarActionsContainer();
   if (!actions) return false;
   if (!buttonEl) {
     buttonEl = document.createElement('button');
