@@ -25,6 +25,28 @@ export default {
     menu: 'Menu',
     close: 'Close',
   },
+  hud: {
+    death: {
+      title: 'YOU ARE DEAD',
+      subtitle: 'Your hero was defeated. Click Revive to return to the temple start point.',
+      reviveButton: 'Revive',
+      note: 'Movement and interactions remain blocked while you are dead.',
+      revivePrompt: 'Click “Revive” to return to the start point.',
+    },
+    battle: {
+      title: 'Battle Mode',
+      description: 'You are in combat. Logging out now will leave your hero behind.',
+      tooltip: 'Battle mode — stay online until you reach safety.',
+      safeTooltip: 'Use the Logout button before closing the tab.',
+      logoutBlocked: 'You cannot logout while in battle. Find a safe zone first.',
+      leaveWarning: 'Battle mode active! Leaving now will keep your hero online and vulnerable.',
+      exitTitle: 'Battle mode active',
+      exitBody: 'Cancel and stay online — closing the game now leaves your hero exposed to the monsters.',
+      safeExitTitle: 'Logout before closing',
+      safeExitBody: 'Use the Logout button before closing this tab so your hero disconnects safely.',
+      safeExitPrompt: 'Logout before closing the tab to protect your hero.',
+    },
+  },
   settings: {
     open: 'Settings',
     mute: 'Mute SFX',
