@@ -6,6 +6,7 @@ import './tick.js';
 import { openSkills, openHeroes, openInventory, openSummonPanel } from './app_panels.js';
 import { getSocket, onMessage, wsSend, authenticate } from './ws/singleton.js';
 import { HeroState } from './state/hero-state.js';
+import { initFriendHud } from './ui/friends-hud.js';
 
 /* ---------- HTTP helpers + CSRF ---------- */
 let CSRF = null;
@@ -498,6 +499,9 @@ const FALLBACK_LOAD_CONTENT = async () => {
   try {
     await mountSceneHouse();        // a cena já publica pos pelo WS via pos-publisher.js
     setLoadingProgress(62);
+
+    await initFriendHud();
+    setLoadingProgress(72);
 
     await initGlobalChatUI();
     setLoadingProgress(82);
