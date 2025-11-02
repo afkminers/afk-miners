@@ -76,32 +76,32 @@
         <div class="tab-panels">
           <section class="tab-panel" data-panel="inventory" role="tabpanel">
             <div class="equip-grid">
-              <div class="equip-slot" data-slot="helmet" title="Capacete"></div>
-              <div class="equip-slot" data-slot="armor" title="Armadura"></div>
-              <div class="equip-slot" data-slot="legs" title="Pernas"></div>
-              <div class="equip-slot" data-slot="boots" title="Botas"></div>
-              <div class="equip-slot" data-slot="weapon" title="Arma"></div>
-              <div class="equip-slot" data-slot="shield" title="Escudo"></div>
-              <div class="equip-slot" data-slot="amulet" title="Amuleto"></div>
-              <div class="equip-slot" data-slot="ring" title="Anel"></div>
+              <div class="equip-slot" data-slot="helmet" title="Capacete" data-empty="true"></div>
+              <div class="equip-slot" data-slot="armor" title="Armadura" data-empty="true"></div>
+              <div class="equip-slot" data-slot="legs" title="Pernas" data-empty="true"></div>
+              <div class="equip-slot" data-slot="boots" title="Botas" data-empty="true"></div>
+              <div class="equip-slot" data-slot="weapon" title="Arma" data-empty="true"></div>
+              <div class="equip-slot" data-slot="shield" title="Escudo" data-empty="true"></div>
+              <div class="equip-slot" data-slot="amulet" title="Amuleto" data-empty="true"></div>
+              <div class="equip-slot" data-slot="ring" title="Anel" data-empty="true"></div>
             </div>
             <div class="bag-grid">
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
-              <div class="bag-slot"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
+              <div class="bag-slot" data-empty="true"></div>
             </div>
           </section>
           <section class="tab-panel" data-panel="skills" role="tabpanel" hidden>
@@ -130,14 +130,35 @@
 
   <footer id="bottombar">
     <section id="chat" class="pixel-panel" aria-label="Chat">
-      <div class="chat-tabs" role="tablist">
-        <button type="button" class="chat-tab" data-channel="local" aria-selected="true">Local</button>
-        <button type="button" class="chat-tab" data-channel="global" aria-selected="false">Global</button>
-        <button type="button" class="chat-tab" data-channel="comercio" aria-selected="false">Comércio</button>
-        <button type="button" class="chat-tab" data-channel="guild" aria-selected="false">Guild</button>
-        <button type="button" class="chat-tab" data-channel="ajuda" aria-selected="false">Ajuda</button>
+      <div class="chat-tabs" id="chatTabs" role="tablist">
+        <button type="button" class="chat-tab" data-channel="local" data-scope="local" aria-selected="true">Local</button>
+        <button type="button" class="chat-tab" data-channel="global" data-scope="global" aria-selected="false">Global</button>
+        <button type="button" class="chat-tab" data-channel="comercio" data-scope="comercio" aria-selected="false">Comércio</button>
+        <button type="button" class="chat-tab" data-channel="guild" data-scope="guild" aria-selected="false">Guild</button>
+        <button type="button" class="chat-tab" data-channel="ajuda" data-scope="ajuda" aria-selected="false">Ajuda</button>
+        <span class="chat-tab-anchor" data-dm-anchor hidden></span>
       </div>
-      <div class="chat-log" id="chatLog" role="log" aria-live="polite"></div>
+      <div class="chat-panels" id="chatPanels">
+        <div class="chat-panel" data-channel="local" data-scope="local">
+          <div class="chat-log" data-log="local" role="log" aria-live="polite"></div>
+        </div>
+        <div class="chat-panel" data-channel="global" data-scope="global" hidden>
+          <div class="chat-log" data-log="global" role="log" aria-live="polite"></div>
+        </div>
+        <div class="chat-panel" data-channel="comercio" data-scope="comercio" hidden>
+          <div class="chat-log" data-log="comercio" role="log" aria-live="polite"></div>
+        </div>
+        <div class="chat-panel" data-channel="guild" data-scope="guild" hidden>
+          <div class="chat-log" data-log="guild" role="log" aria-live="polite"></div>
+        </div>
+        <div class="chat-panel" data-channel="ajuda" data-scope="ajuda" hidden>
+          <div class="chat-log" data-log="ajuda" role="log" aria-live="polite"></div>
+        </div>
+        <div class="chat-panel chat-panel--log" data-scope="log" hidden>
+          <div class="chat-log chat-log--system" data-log="log" role="log" aria-live="polite"></div>
+        </div>
+        <div class="chat-panel-anchor" data-dm-anchor></div>
+      </div>
       <form id="chatForm" autocomplete="off">
         <input type="text" id="chatInput" name="message" placeholder="Digite uma mensagem..." aria-label="Mensagem do chat" />
         <button type="submit" class="sr-only">Enviar</button>

@@ -6,6 +6,7 @@ const defaultState = {
   session: 0,
   gold: 0,
   diamonds: 0,
+  level: 1,
   hp: { current: 0, max: 0 },
   mp: { current: 0, max: 0 },
   xp: { current: 0, max: 0 },
@@ -94,7 +95,16 @@ function applyBar(kind) {
   const max = Math.max(0, safeNumber(bar.max));
   const percent = max > 0 ? clampPercent((current / max) * 100) : 0;
   if (refs.fill) refs.fill.style.width = `${percent}%`;
-  if (refs.text) refs.text.textContent = `${numberFormatter.format(current)}/${numberFormatter.format(max)}`;
+  if (refs.text) {
+    const baseText = `${numberFormatter.format(current)}/${numberFormatter.format(max)}`;
+    if (kind === 'xp') {
+      const lvlRaw = Number(hudState.level);
+      const level = Number.isFinite(lvlRaw) ? Math.max(0, Math.floor(lvlRaw)) : null;
+      refs.text.textContent = level != null ? `Lv ${level} ${baseText}` : baseText;
+    } else {
+      refs.text.textContent = baseText;
+    }
+  }
 }
 
 function mergeStat(kind, payload, next) {
@@ -181,6 +191,17 @@ function updateHud(next = {}) {
   if (next.diamonds != null || next.gems != null) {
     setCurrency('diamonds', next.diamonds ?? next.gems);
   }
+  if (next.level != null) {
+    const level = Number(next.level);
+    if (Number.isFinite(level) && level > 0) {
+      hudState.level = level;
+    }
+  } else if (next.heroLevel != null) {
+    const heroLevel = Number(next.heroLevel);
+    if (Number.isFinite(heroLevel) && heroLevel > 0) {
+      hudState.level = heroLevel;
+    }
+  }
   mergeStat('hp', next.hp, next);
   mergeStat('mp', next.mp, next);
   mergeStat('xp', next.xp, next);
@@ -198,6 +219,11 @@ window.HUD = {
   setPlayerName,
   setPing,
   setSessionTime,
+  setLevel(level) {
+    if (!Number.isFinite(Number(level))) return;
+    hudState.level = Number(level);
+    applyBar('xp');
+  },
   setCurrency,
   applyBar,
   state: hudState,

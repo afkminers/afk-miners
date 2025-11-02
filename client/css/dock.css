@@ -299,6 +299,11 @@
   background: rgba(18,21,26,0.8);
   box-shadow: 0 0 0 1px var(--c-border) inset;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  text-align: center;
 }
 
 .play-shell .equip-slot::after,
@@ -312,6 +317,44 @@
   transform: translate(-50%, -50%);
   background: rgba(255,255,255,0.08);
   box-shadow: 0 0 0 1px rgba(255,255,255,0.12) inset;
+}
+
+.play-shell .equip-slot[data-empty="false"]::after,
+.play-shell .bag-slot[data-empty="false"]::after {
+  display: none;
+}
+
+.play-shell .equip-item,
+.play-shell .bag-slot {
+  font-size: 10px;
+  color: var(--c-text);
+  line-height: 1.2;
+}
+
+.play-shell .equip-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.play-shell .equip-name {
+  font-weight: bold;
+  display: block;
+}
+
+.play-shell .equip-meta {
+  color: var(--c-sub);
+  font-size: 9px;
+}
+
+.play-shell .bag-name {
+  display: block;
+}
+
+.play-shell .bag-qty {
+  color: var(--c-sub);
+  font-size: 9px;
 }
 
 .play-shell .bag-grid {
@@ -371,6 +414,32 @@
   gap: 6px;
 }
 
+.play-shell .chat-tabs [data-dm-anchor] {
+  display: none;
+}
+
+.play-shell .chat-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+
+.play-shell .chat-panel {
+  display: none;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.play-shell .chat-panel--active,
+.play-shell .chat-panel:not([hidden]) {
+  display: flex;
+}
+
+.play-shell .chat-panel-anchor {
+  display: none;
+}
+
 .play-shell .chat-tab {
   border: none;
   background: var(--c-panel-alt);
@@ -380,6 +449,44 @@
   font-size: 10px;
   text-transform: uppercase;
   box-shadow: 0 0 0 1px var(--c-border) inset, 0 2px 0 rgba(0,0,0,0.45);
+}
+
+.play-shell .chat-tab.dm-tab {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.play-shell .chat-tab.dm-tab .dm-tab-label {
+  flex: 1;
+  text-align: left;
+}
+
+.play-shell .chat-tab.dm-tab .dm-tab-badge {
+  display: inline-flex;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--c-accent);
+  color: #fff4c2;
+  font-size: 9px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.play-shell .chat-tab.dm-tab .dm-tab-badge[hidden] {
+  display: none;
+}
+
+.play-shell .chat-tab.dm-tab .dm-tab-close {
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  background: none;
+  border: none;
+  color: var(--c-text);
 }
 
 .play-shell .chat-tab[data-active="true"],
@@ -395,6 +502,7 @@
   overflow-y: auto;
   font-size: 10px;
   line-height: 1.4;
+  flex: 1 1 auto;
 }
 
 .play-shell .chat-line {
@@ -423,6 +531,17 @@
 
 .play-shell #chatInput:focus {
   outline: 2px solid var(--c-accent);
+}
+
+.play-shell #chat .chat-box,
+.play-shell #chat .chat-box--dm {
+  background: rgba(18,21,26,0.85);
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+  padding: 8px;
+  overflow-y: auto;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--c-text);
 }
 
 .play-shell #bottombar {
