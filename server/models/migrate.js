@@ -31,7 +31,17 @@ async function ensureSocialSchema() {
 
     await execSocialQuery(
       client,
-      "CREATE TYPE IF NOT EXISTS friend_status AS ENUM ('PENDING','ACCEPTED','BLOCKED')"
+      `
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM pg_type WHERE typname = 'friend_status'
+          ) THEN
+            CREATE TYPE friend_status AS ENUM ('PENDING','ACCEPTED','BLOCKED');
+          END IF;
+        END
+        $$;
+      `
     );
 
     await execSocialQuery(
