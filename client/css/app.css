@@ -881,25 +881,118 @@ html,body{
 }
 
 #chatDock{
-  display:grid; grid-template-rows: auto 1fr auto;
-  background:#0c1426; border-top:1px solid var(--border);
-  padding:8px;
-  height: var(--chatH);
-  min-height: 140px;
-  max-height: 50vh;
-  overflow: hidden;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  gap:10px;
+  background:#0c1426;
+  border-top:1px solid var(--border);
+  padding:12px;
+  height:var(--chatH);
+  min-height:140px;
+  max-height:50vh;
+  overflow:hidden;
 }
-#chatDock .tabs{ display:flex; gap:8px; margin-bottom:6px; }
-#chatDock .tabs button{ padding:6px 10px; border:1px solid var(--border); border-radius:8px; background:#18233a; color:#dfe6f6; transition:box-shadow .2s ease; }
-#chatDock .tabs .active{ background:#203053; }
-#chatDock .tabs .log-alert{ box-shadow:0 0 0 2px rgba(56,189,248,.45), 0 0 12px rgba(56,189,248,.35); }
-#chatDock .log{ background:#0a1120; border:1px solid var(--border); border-radius:8px; overflow:auto; }
-#chatDock form{ margin-top:6px; }
-#chatDock input{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:#0a1326; color:#e6ebf4; }
 
-/* caixa rolável ocupa o espaço restante do grid do chat */
-#chatBox{ height: 100%; }
-#chatDock .chat-box{ height: calc(100% - 82px); }
+.chat-tabs{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+}
+
+.chat-tabs__dm-anchor{ display:none; }
+
+.chat-tab{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 12px;
+  border:2px solid rgba(0,0,0,.85);
+  border-radius:10px;
+  background:linear-gradient(180deg,#263b63,#13213d);
+  color:#f5f8ff;
+  font-family:'Press Start 2P', monospace;
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  cursor:pointer;
+  box-shadow:0 3px 0 rgba(0,0,0,.6);
+  transition:filter .18s ease, transform .18s ease;
+  min-height:30px;
+  padding-inline:14px;
+}
+
+.chat-tab:hover,
+.chat-tab:focus-visible{
+  filter:brightness(1.15);
+  outline:none;
+}
+
+.chat-tab.active{
+  background:linear-gradient(180deg,#2f6df1,#1e4dd4);
+  color:#ffffff;
+}
+
+.chat-panels{
+  position:relative;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+
+.chat-box{
+  flex:1 1 auto;
+  height:100%;
+  overflow-y:auto;
+  background:#07101a;
+  padding:8px;
+  color:#e6eef6;
+  border-radius:4px;
+  border:1px solid rgba(255,255,255,0.04);
+}
+
+.chat-box.log{
+  background:#0a1120;
+}
+
+.chat-box[hidden]{
+  display:none !important;
+}
+
+#chatForm{
+  display:flex;
+  gap:8px;
+  margin:0;
+}
+
+#chatInput{
+  flex:1;
+  padding:8px 12px;
+  border-radius:4px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:#0a1326;
+  color:#e6ebf4;
+}
+
+#chatSend{
+  padding:8px 14px;
+  border-radius:4px;
+  border:0;
+  background:#2563eb;
+  color:#fff;
+  font-family:'Press Start 2P', monospace;
+  font-size:10px;
+  letter-spacing:.08em;
+  cursor:pointer;
+  box-shadow:0 3px 0 rgba(0,0,0,.45);
+}
+
+#chatSend:hover,
+#chatSend:focus-visible{
+  filter:brightness(1.12);
+  outline:none;
+}
 
 /* Chat styling */
 #chatBox .chat-row { padding:6px 8px; border-radius:4px; margin-bottom:6px; background:transparent; transition:background .12s; }
@@ -971,41 +1064,6 @@ body.overlay-chat #centerStage{
 }
 
 /* ===================== DM Chat ===================== */
-.chat-tabs{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  align-items:center;
-  padding:6px 8px;
-  background:rgba(11,18,32,.88);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:10px;
-}
-.chat-tab{
-  position:relative;
-  padding:6px 12px;
-  border:2px solid rgba(0,0,0,.9);
-  border-radius:10px;
-  background:linear-gradient(180deg,#263b63,#13213d);
-  color:#f5f8ff;
-  font-family:'Press Start 2P', monospace;
-  font-size:11px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  cursor:pointer;
-  box-shadow:0 3px 0 rgba(0,0,0,.65);
-  transition:filter .18s ease, transform .18s ease;
-  min-height:28px;
-}
-.chat-tab:hover,
-.chat-tab:focus-visible{
-  filter:brightness(1.15);
-  outline:none;
-}
-.chat-tab.active{
-  background:linear-gradient(180deg,#2f6df1,#1e4dd4);
-  color:#ffffff;
-}
 .chat-tab.dm-tab{
   display:flex;
   align-items:center;
@@ -1058,7 +1116,8 @@ body.overlay-chat #centerStage{
   display:flex;
   flex-direction:column;
   gap:8px;
-  height:180px;
+  height:100%;
+  min-height:100%;
   padding:8px;
   background:#07101a;
   border-radius:4px;

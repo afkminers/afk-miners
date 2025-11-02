@@ -7,11 +7,15 @@ const DM_SCOPE_PREFIX = 'dm:';
 const conversations = new Map();
 let tabsContainer = null;
 let panelsContainer = null;
+let tabsAnchorEl = null;
+let panelsAnchorEl = null;
 let inputEl = null;
 let focusInputFn = () => {};
 let currentScope = 'default';
 let currentUserId = null;
 let formEl = null;
+let setScopeFn = null;
+let getScopeFn = null;
 
 function nowIso() {
   return new Date().toISOString();
@@ -30,6 +34,18 @@ function resolveUserId() {
 
 function scopeForFriend(friendId) {
   return `${DM_SCOPE_PREFIX}${friendId}`;
+}
+
+function setActiveScope(scope) {
+  if (typeof setScopeFn === 'function') {
+    try {
+      setScopeFn(scope);
+      return;
+    } catch {
+      // fall back to local activation if the host callback fails
+    }
+  }
+  activateDmScope(scope);
 }
 
 export function isDmScope(scope) {
@@ -119,10 +135,18 @@ function createConversation(friendId, friendName) {
 
   const label = friendName || `Jogador ${friendId}`;
   const tabEl = createTabElement(friendId, label);
-  tabsContainer.appendChild(tabEl);
+  if (tabsAnchorEl && tabsAnchorEl.parentNode === tabsContainer) {
+    tabsContainer.insertBefore(tabEl, tabsAnchorEl);
+  } else {
+    tabsContainer.appendChild(tabEl);
+  }
 
   const { panel, loadMore, list } = createPanelElement(scope);
-  panelsContainer.appendChild(panel);
+  if (panelsAnchorEl && panelsAnchorEl.parentNode === panelsContainer) {
+    panelsContainer.insertBefore(panel, panelsAnchorEl);
+  } else {
+    panelsContainer.appendChild(panel);
+  }
 
   const conv = {
     friendId,
@@ -517,15 +541,34 @@ export function openConversation(friend) {
   const name = friend?.friendName || friend?.name || friendId;
   const conv = conversations.get(friendId) || createConversation(friendId, name);
   if (!conv) return;
-  activateDmScope(conv.scope);
+  setActiveScope(conv.scope);
 }
 
-export function initDmChat({ tabsEl, panelsEl, input, focusInput }) {
+export function initDmChat({
+  tabsEl,
+  panelsEl,
+  input,
+  focusInput,
+  tabsAnchorEl: providedTabsAnchor = null,
+  panelsAnchorEl: providedPanelsAnchor = null,
+  setScope,
+  getScope,
+}) {
   tabsContainer = tabsEl;
   panelsContainer = panelsEl;
+  tabsAnchorEl = providedTabsAnchor || (tabsContainer ? tabsContainer.querySelector('.chat-tabs__dm-anchor') : null);
+  panelsAnchorEl = providedPanelsAnchor || null;
   inputEl = input;
   focusInputFn = typeof focusInput === 'function' ? focusInput : () => {};
   formEl = null;
+  setScopeFn = typeof setScope === 'function' ? setScope : null;
+  getScopeFn = typeof getScope === 'function' ? getScope : null;
+  try {
+    const initialScope = typeof getScopeFn === 'function' ? getScopeFn() : null;
+    if (initialScope) {
+      currentScope = initialScope;
+    }
+  } catch {}
   if (input && typeof input.closest === 'function') {
     formEl = input.closest('form');
   }

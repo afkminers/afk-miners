@@ -424,10 +424,11 @@ async function initGlobalChatUI() {
   const chatLogBox = document.getElementById('chatLogBox');
   const chatInput  = document.getElementById('chatInput');
   const chatSend   = document.getElementById('chatSend');
-  const chatForm   = document.getElementById('chatForm');
-  const chatTabs   = document.querySelector('.chat-tabs');
-  const chatPanels = document.querySelector('.chat-panels');
-  if (!chatBox || !chatLogBox || !chatInput || !chatSend || !btnDefault || !btnGlobal || !btnLog || !chatForm) return;
+  const chatForm     = document.getElementById('chatForm');
+  const chatTabs     = document.getElementById('chatTabs');
+  const chatPanels   = document.getElementById('chatPanels');
+  const dmTabAnchor  = chatTabs ? chatTabs.querySelector('.chat-tabs__dm-anchor') : null;
+  if (!chatBox || !chatLogBox || !chatInput || !chatSend || !btnDefault || !btnGlobal || !btnLog || !chatForm || !chatTabs || !chatPanels) return;
 
   getSocket(); // garante conexão
 
@@ -479,12 +480,15 @@ async function initGlobalChatUI() {
     btnDefault.classList.toggle('active', scope === 'default');
     btnGlobal.classList.toggle('active', scope === 'global');
     btnLog.classList.toggle('active', scope === 'log');
+    btnDefault.setAttribute('aria-pressed', scope === 'default' ? 'true' : 'false');
+    btnGlobal.setAttribute('aria-pressed', scope === 'global' ? 'true' : 'false');
+    btnLog.setAttribute('aria-pressed', scope === 'log' ? 'true' : 'false');
 
     const dmScope = isDmScope(scope);
     const showChat = scope !== 'log' && !dmScope;
-    chatBox.style.display = showChat ? 'block' : 'none';
-    chatLogBox.style.display = scope === 'log' ? 'block' : 'none';
-    chatForm.style.display = scope === 'log' ? 'none' : 'flex';
+    chatBox.hidden = !showChat;
+    chatLogBox.hidden = scope !== 'log';
+    chatForm.hidden = scope === 'log';
 
     activateDmScope(scope);
 
@@ -492,6 +496,23 @@ async function initGlobalChatUI() {
       try { window.Chat.clearLogHighlight(); } catch {}
     }
   }
+
+  initDmChat({
+    tabsEl: chatTabs,
+    tabsAnchorEl: dmTabAnchor,
+    panelsEl: chatPanels,
+    input: chatInput,
+    focusInput: () => chatInput.focus(),
+    setScope,
+    getScope: () => chatScope,
+  });
+
+  window.addEventListener('dm:open', (event) => {
+    const detail = event.detail || {};
+    const friend = detail.friend || { friendId: detail.friendId };
+    if (!friend || !friend.friendId) return;
+    openDmConversation(friend);
+  });
 
   btnDefault.addEventListener('click', ()=> setScope('default'));
   btnGlobal.addEventListener('click',  ()=> setScope('global'));
