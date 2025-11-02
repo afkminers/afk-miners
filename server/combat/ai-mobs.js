@@ -12,6 +12,7 @@ const { getGrid } = require('../maps/grid');
 const { hasLineOfSightTiles } = require('./los');
 // const { inReachPx } = require('./geom');
 const { applyMobHit } = require('./service');
+const battleState = require('./battle-state');
 const { toTileCoords, chebyshevTiles, isValidTile } = require('../utils/tile-coords');
 const { resolveMonsterAttackProfile } = require('./monster_attack_profile');
 const {
@@ -1510,7 +1511,7 @@ function selectTargetByThreat(now, mob, heroes, losGrid) {
     mob.waitOrbitIndex = 0;
     mob.goalRotateIndex = 0;
     mob.requestOrbitShift = false;
-    mob.lastKnownHeroPos = null;
+    try { battleState.touchHero(bestId, { reason: 'aggro' }); } catch {}
     if (DEBUG_AI) console.log(`[ai-mobs] target set mob=${mob.instanceId} -> ${bestId} (threat=${bestV.toFixed(2)})`);
     return;
   }
@@ -1532,7 +1533,7 @@ function selectTargetByThreat(now, mob, heroes, losGrid) {
       mob.waitOrbitIndex = 0;
       mob.goalRotateIndex = 0;
       mob.requestOrbitShift = false;
-      mob.lastKnownHeroPos = null;
+      try { battleState.touchHero(bestId, { reason: 'aggro-switch' }); } catch {}
     }
   }
 
@@ -2108,6 +2109,7 @@ function removeHeroThreat(heroId) {
       mob.lastKnownHeroPos = null;
     }
   }
+  try { battleState.cooldown(heroId); } catch {}
 }
 
 // --------- Exports ----------

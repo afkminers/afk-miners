@@ -25,6 +25,21 @@ export default {
     menu: 'Menu',
     close: 'Close',
   },
+  hud: {
+    death: {
+      title: 'YOU ARE DEAD',
+      subtitle: 'Your hero was defeated. Click Revive to return to the temple start point.',
+      reviveButton: 'Revive',
+      note: 'Movement and interactions remain blocked while you are dead.',
+      revivePrompt: 'Click “Revive” to return to the start point.',
+    },
+    battle: {
+      title: 'Battle Mode',
+      description: 'You are in combat. Logging out now will leave your hero behind.',
+      logoutBlocked: 'You cannot logout while in battle. Find a safe zone first.',
+      leaveWarning: 'You are in battle! Leaving now may kill your hero.',
+    },
+  },
   settings: {
     open: 'Settings',
     mute: 'Mute SFX',
