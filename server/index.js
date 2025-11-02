@@ -1191,7 +1191,9 @@ async function seedAIMobsFromDB(aiMobs) {
                 name: String(payload.name || payload.username || payload.displayName || 'Anon')
               };
               console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
-              try { battleState.cancelOfflineHold(ws._player.id); } catch {}
+              presence
+                .onAuthenticated(ws)
+                .catch((err) => console.warn('[presence] cookie auth hook failed', err?.message));
             } catch (err) {
               console.log('[ws] jwt verify failed', err && err.message);
             }

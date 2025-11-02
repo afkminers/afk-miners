@@ -4081,44 +4081,5 @@
         ]
       }
     }
-  },
-  "components": {
-    "schemas": {
-      "FriendStatus": {
-        "type": "string",
-        "description": "Estados possíveis para uma relação de amizade.",
-        "enum": ["PENDING", "ACCEPTED", "BLOCKED"]
-      },
-      "Friend": {
-        "type": "object",
-        "description": "Relacionamento de amizade entre dois jogadores.",
-        "properties": {
-          "id": {"type": "integer", "format": "int64"},
-          "userAId": {"type": "string", "description": "Identificador canônico do primeiro jogador."},
-          "userBId": {"type": "string", "description": "Identificador canônico do segundo jogador."},
-          "pairKey": {"type": "string", "description": "Identificador canônico no formato min:max."},
-          "status": {"$ref": "#/components/schemas/FriendStatus"},
-          "createdAt": {"type": "string", "format": "date-time"},
-          "updatedAt": {"type": "string", "format": "date-time"}
-        },
-        "required": ["id", "userAId", "userBId", "pairKey", "status", "createdAt", "updatedAt"]
-      },
-      "DmMessage": {
-        "type": "object",
-        "description": "Mensagem direta privada entre dois jogadores.",
-        "properties": {
-          "id": {"type": "integer", "format": "int64"},
-          "conversationId": {"type": "string", "description": "Identificador canônico da conversa (par ordenado)."},
-          "senderId": {"type": "string"},
-          "recipientId": {"type": "string"},
-          "bodyOriginal": {"type": "string"},
-          "createdAt": {"type": "string", "format": "date-time"},
-          "deliveredAt": {"type": "string", "format": "date-time", "nullable": true},
-          "readAt": {"type": "string", "format": "date-time", "nullable": true},
-          "blockedAt": {"type": "string", "format": "date-time", "nullable": true}
-        },
-        "required": ["id", "conversationId", "senderId", "recipientId", "bodyOriginal", "createdAt"]
-      }
-    }
   }
 }
