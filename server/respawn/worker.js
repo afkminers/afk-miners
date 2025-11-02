@@ -148,7 +148,8 @@ async function respawnTick({ all, run }) {
         COALESCE(s.w, 0) AS w,
         COALESCE(s.h, 0) AS h,
         COALESCE(mm."healthMax", 0) AS health_max,
-        mm.speed                     AS speed
+        mm.speed                     AS speed,
+        COALESCE(s."leashPx", 0)    AS leash_px
       FROM monster_instances mi
       JOIN spawns s
         ON s.id = mi.spawn_id
@@ -258,7 +259,9 @@ async function respawnTick({ all, run }) {
           mapKey: resolvedMapKey,
           spawnRect: { x: r.x, y: r.y, w: r.w, h: r.h },
           monsterKey: r.monsterKey,
-          speed: r.speed
+          speed: r.speed,
+          leashPx: r.leash_px,
+          resetThreat: true,
         });
       }
     } catch {}

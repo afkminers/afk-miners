@@ -5,6 +5,7 @@ const { get, run } = require('../models/db');
 const { requireAuth } = require('../auth/middleware');
 const { ensureHeroSkills } = require('../models/hero_extra');
 const { computeHeroStats } = require('../services/heroStats'); // <- NOVO: importa cálculo dinâmico
+const { getStartPoint } = require('../services/spawnPoint');
 
 async function isHeroKeyGenerated() {
   try {
@@ -305,6 +306,46 @@ function buildStarterRouter() {
           );
         } catch (e) {
           console.warn('[starter] auto-equip bag falhou:', e?.message);
+        }
+
+        try {
+          const spawnPoint = await getStartPoint();
+
+          await run(
+            `
+            INSERT INTO hero_last_pos (hero_id, map_key, x, y, updated_at)
+            VALUES ($1,$2,$3,$4, NOW())
+            ON CONFLICT (hero_id) DO UPDATE
+              SET map_key = EXCLUDED.map_key,
+                  x = EXCLUDED.x,
+                  y = EXCLUDED.y,
+                  updated_at = NOW()
+            `,
+            [id, spawnPoint.mapKey, spawnPoint.x, spawnPoint.y]
+          );
+
+          await run(
+            `
+            INSERT INTO player_last_pos (player_id, map_key, x, y, last_seq, updated_at)
+            VALUES (
+              $1,
+              $2,
+              $3,
+              $4,
+              COALESCE((SELECT last_seq FROM player_last_pos WHERE player_id=$1 AND map_key=$2), 0) + 1,
+              NOW()
+            )
+            ON CONFLICT (player_id, map_key)
+            DO UPDATE SET
+              x = EXCLUDED.x,
+              y = EXCLUDED.y,
+              last_seq = player_last_pos.last_seq + 1,
+              updated_at = NOW()
+            `,
+            [playerId, spawnPoint.mapKey, spawnPoint.x, spawnPoint.y]
+          );
+        } catch (e) {
+          console.warn('[starter] failed to persist start point:', e?.message);
         }
 
         await run("COMMIT");
