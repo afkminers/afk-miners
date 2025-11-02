@@ -60,6 +60,7 @@ const gameTickRoutes = require('./routes/game_tick');
 const K = require('./balance/config');
 const buildStarterRouter = require('./starter/routes');
 const { startRespawnLoop, stopRespawnLoop } = require('./respawn/worker');
+const battleState = require('./combat/battle-state');
 
 // ws bus
 const { attach: attachWsBus, joinMapSocket } = require('./ws/bus');
@@ -298,9 +299,11 @@ async function bootstrapContentTables() {
         "monsterKey" TEXT,
         x INTEGER, y INTEGER, w INTEGER, h INTEGER,
         count INTEGER, "respawnSec" INTEGER,
-        "levelMin" INTEGER, "levelMax" INTEGER
+        "levelMin" INTEGER, "levelMax" INTEGER,
+        "leashPx" INTEGER
       )
     `);
+    try { await run('ALTER TABLE spawns ADD COLUMN IF NOT EXISTS "leashPx" INTEGER'); } catch(_) {}
 
     // chat_messages — nomes MINÚSCULOS
     await run(`
@@ -329,6 +332,21 @@ async function bootstrapContentTables() {
         PRIMARY KEY (player_id, map_key)
       )
     `);
+    await run(
+      `CREATE UNIQUE INDEX IF NOT EXISTS player_last_pos_player_map_uq ON player_last_pos(player_id, map_key)`
+    );
+
+    await run(`
+      CREATE TABLE IF NOT EXISTS hero_last_pos (
+        hero_id TEXT PRIMARY KEY,
+        map_key TEXT NOT NULL,
+        x INTEGER NOT NULL,
+        y INTEGER NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+    await run(`CREATE UNIQUE INDEX IF NOT EXISTS hero_last_pos_hero_id_uq ON hero_last_pos(hero_id)`);
+    await run('CREATE INDEX IF NOT EXISTS idx_hero_last_pos_map ON hero_last_pos(map_key)');
 
     // hero_backpack_slots — conteúdo da mochila por herói (modelo Tibia-like)
     await run(`
@@ -1026,7 +1044,8 @@ async function seedAIMobsFromDB(aiMobs) {
              COALESCE(mi.map_key, s."mapKey") AS map_key,
              s.x  AS sx, s.y  AS sy, s.w AS sw, s.h AS sh,
              s."monsterKey" AS monster_key,
-             mm.speed        AS speed
+             mm.speed        AS speed,
+             COALESCE(s."leashPx", 0) AS leash_px
         FROM monster_instances mi
         JOIN spawns s ON s.id = mi.spawn_id
         LEFT JOIN monsters_master mm ON mm.key = s."monsterKey"
@@ -1040,7 +1059,8 @@ async function seedAIMobsFromDB(aiMobs) {
         mapKey: r.map_key,
         spawnRect: { x: r.sx, y: r.sy, w: r.sw, h: r.sh },
         monsterKey: r.monster_key,
-        speed: r.speed
+        speed: r.speed,
+        leashPx: r.leash_px
       });
     }
     console.log(`[ai-mobs] seeded ${rows.length} alive instances from DB`);
@@ -1160,6 +1180,7 @@ async function seedAIMobsFromDB(aiMobs) {
                 name: String(payload.name || payload.username || payload.displayName || 'Anon')
               };
               console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
+              try { battleState.cancelOfflineHold(ws._player.id); } catch {}
             } catch (err) {
               console.log('[ws] jwt verify failed', err && err.message);
             }
@@ -1242,6 +1263,7 @@ async function seedAIMobsFromDB(aiMobs) {
 
           if (data.type === 'auth') {
             ws._player = { id: String(data.id || ''), name: String(data.name || 'Anonymous') };
+            try { battleState.cancelOfflineHold(ws._player.id); } catch {}
             try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
 
             // >>> NOVO: reforça presença após auth
@@ -1394,12 +1416,23 @@ async function seedAIMobsFromDB(aiMobs) {
             ws._presenceTimer = null;
           }
           if (ws._player?.id) {
-            // flush posição no logout + remove presença
-            flushOnePlayerPos(ws._player.id).catch(() => {});
+            const playerId = ws._player.id;
+            // flush posição no logout
+            flushOnePlayerPos(playerId).catch(() => {});
 
-            clearLivePlayerPosition(ws._player.id);
+            const activeHeroId = ws._activeHeroId ? String(ws._activeHeroId) : null;
+            const inBattle = (activeHeroId && battleState.isHeroInBattle(activeHeroId))
+              || battleState.hasActiveBattleForPlayer(playerId);
 
-            markOfflineByPlayer(ws._player.id).catch(() => {});
+            if (inBattle) {
+              battleState.holdPlayerOffline(playerId, () => {
+                try { clearLivePlayerPosition(playerId); } catch {}
+                markOfflineByPlayer(playerId).catch(() => {});
+              });
+            } else {
+              clearLivePlayerPosition(playerId);
+              markOfflineByPlayer(playerId).catch(() => {});
+            }
           }
         });
 
