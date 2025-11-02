@@ -25,6 +25,21 @@ export default {
     menu: 'Menu',
     close: 'Fechar',
   },
+  hud: {
+    death: {
+      title: 'VOCÊ ESTÁ MORTO',
+      subtitle: 'Seu herói foi derrotado. Clique em Reviver para voltar ao templo.',
+      reviveButton: 'Reviver',
+      note: 'Durante a morte, movimento e interações ficam bloqueados.',
+      revivePrompt: 'Clique em “Reviver” para retornar ao ponto inicial.',
+    },
+    battle: {
+      title: 'Modo de Batalha',
+      description: 'Você está em combate. Sair agora deixará seu herói vulnerável.',
+      logoutBlocked: 'Não é possível sair durante a batalha. Vá até uma área segura primeiro.',
+      leaveWarning: 'Você está em batalha! Se sair agora seu herói pode morrer.',
+    },
+  },
   settings: {
     open: 'Configurações',
     mute: 'Silenciar SFX',
