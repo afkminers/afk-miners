@@ -11,8 +11,7 @@
   <link rel="stylesheet" href="css/retro-overrides.css" />
   <link rel="stylesheet" href="css/dock.css" />
 </head>
-<body class="play-shell dock-left-collapsed dock-right-collapsed">
-  <div id="hud" class="sr-only" aria-hidden="true"></div>
+<body class="play-shell">
   <header id="topbar" class="pixel-panel">
     <div class="topbar-left">
       <button type="button" class="btn-icon" data-action="map" aria-label="Abrir mapa">Mapa</button>
@@ -57,8 +56,9 @@
     </aside>
 
     <main id="viewport" class="pixel-panel">
-      <div class="viewport-inner">
+      <div id="clientShell" class="viewport-inner">
         <canvas id="gameCanvas" width="640" height="384"></canvas>
+        <div id="hud" class="hud-layer" aria-live="polite" aria-atomic="false"></div>
       </div>
     </main>
 
@@ -208,6 +208,17 @@
     </section>
   </footer>
 
+  <script src="js/engine/camera2d.js"></script>
+  <script src="js/engine/input.js"></script>
+  <script src="js/engine/pathfinder.js"></script>
+  <script src="js/engine/player_controller.js"></script>
+  <script src="js/engine/click_to_move.js"></script>
+  <script type="module" src="js/combat/attack-controls.js"></script>
+  <script type="module">
+    import installCombatOverlay from './js/combat/render-combat.js';
+    try { installCombatOverlay(); }
+    catch (err) { console.error('[combat] overlay init failed', err); }
+  </script>
   <script type="module" src="js/ui/hud.js"></script>
   <script type="module" src="js/ui/tabs.js"></script>
   <script type="module" src="js/ui/chat.js"></script>
