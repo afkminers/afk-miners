@@ -54,7 +54,7 @@ async function main() {
     await fetchCsrf().catch(() => null);
 
     const status = await jget('/api/starter/status'); // { canSelect: boolean }
-    if (!status?.canSelect) { location.href = '/app.html'; return; }
+    if (!status?.canSelect) { location.href = '/play.html#house'; return; }
 
     const list = await jget('/api/starter/list');
     grid.innerHTML = '';
@@ -75,7 +75,7 @@ async function main() {
 
       const btn = card.querySelector('button');
       btn.onclick = async () => {
-        try { await jpost('/api/starter/select', { heroKey: h.heroKey }); location.href = '/app.html'; }
+        try { await jpost('/api/starter/select', { heroKey: h.heroKey }); location.href = '/play.html#house'; }
         catch (e) {
           console.error(e);
           let msg = e?.message || 'falha ao selecionar';
@@ -87,7 +87,7 @@ async function main() {
       grid.appendChild(card);
     }
 
-    if (btnSkip) btnSkip.onclick = () => { location.href = '/app.html'; };
+    if (btnSkip) btnSkip.onclick = () => { location.href = '/play.html#house'; };
 
   } catch (e) {
     console.error(e);

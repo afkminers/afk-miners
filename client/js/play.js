@@ -14,7 +14,19 @@ import { HeroState } from './state/hero-state.js';
 
 
 const QS = new URLSearchParams(location.search);
-const MAP_KEY = QS.get('map') || 'house';
+
+function resolveMapFromLocation() {
+  const qsMap = QS.get('map');
+  if (qsMap) return qsMap;
+  const hashRaw = typeof location.hash === 'string' ? location.hash.replace(/^#/, '') : '';
+  if (hashRaw) {
+    const [hashMap] = hashRaw.split(/[?&]/);
+    if (hashMap) return hashMap;
+  }
+  return 'house';
+}
+
+const MAP_KEY = resolveMapFromLocation();
 const TILE = 32;
 const playerVis = { w: 32, h: 32, img: null, heroKey: null, anchorX: 0.5, anchorY: 0.9 };
 // Desliga a IA local de mobs; posição deve vir do servidor

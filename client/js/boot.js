@@ -201,7 +201,7 @@ function showLanding(){
 /**
  * Regras de navegação:
  *  - Se PODE selecionar starter (não escolheu ainda) -> /starter.html
- *  - Senão -> /app.html#house
+ *  - Senão -> /play.html#house
  */
 async function goToGameAccordingToStarter() {
   try {
@@ -209,11 +209,11 @@ async function goToGameAccordingToStarter() {
     if (st?.canSelect) {
       location.href = '/starter.html';
     } else {
-      location.href = '/app.html#house';
+      location.href = '/play.html#house';
     }
   } catch {
     // fallback conservador: shell na House
-    location.href = '/app.html#house';
+    location.href = '/play.html#house';
   }
 }
 
