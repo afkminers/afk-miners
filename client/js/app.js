@@ -29,7 +29,10 @@ async function getCsrf(){
 }
 async function jget(u){
   const r = await fetch(u,{credentials:'include',headers:{'Accept':'application/json'},cache:'no-store'});
-  if (r.status === 401){ location.href='/index.html'; throw new Error('401'); }
+  if (r.status === 401){
+    safeNavigate('/index.html');
+    throw new Error('401');
+  }
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
@@ -38,10 +41,29 @@ async function jpost(u,body){
   const r = await fetch(u,{method:'POST',credentials:'include',
     headers:{'Content-Type':'application/json','Accept':'application/json', ...(tok?{'x-csrf-token':tok}:{})},
     body: JSON.stringify(body||{})});
-  if (r.status === 401){ location.href='/index.html'; throw new Error('401'); }
+  if (r.status === 401){
+    safeNavigate('/index.html');
+    throw new Error('401');
+  }
   if (r.status === 403){ CSRF=null; await getCsrf().catch(()=>null); return jpost(u,body); }
   if (!r.ok) throw new Error(await r.text());
   return r.json();
+}
+
+function safeNavigate(url){
+  try{ window.HeroBattle?.allowExitFor?.(2000); }catch{}
+  location.href = url;
+}
+
+function translate(key, fallback){
+  try{
+    const inst = window.i18n;
+    if (inst && typeof inst.t === 'function'){
+      const value = inst.t(key);
+      if (value != null && value !== key) return value;
+    }
+  }catch{}
+  return fallback;
 }
 
 /* ---------- Refs ---------- */
@@ -294,8 +316,13 @@ summonModal?.addEventListener('click', (e)=>{ if(e.target===summonModal) summonM
 
 /* ---------- Logout ---------- */
 btnLogout?.addEventListener('click', async ()=>{
+  if (window.__IN_BATTLE) {
+    try { window.HeroBattle?.showExitWarning?.(); } catch {}
+    alert(translate('hud.battle.logoutBlocked', 'You cannot logout while in battle. Find a safe zone first.'));
+    return;
+  }
   try{ await jpost('/api/auth/logout',{}); }catch{}
-  location.href='/index.html';
+  safeNavigate('/index.html');
 });
 
 /* ===================== CHAT / WS + HISTÓRICO ===================== */
@@ -526,7 +553,7 @@ const FALLBACK_LOAD_CONTENT = async () => {
     const st = await jget('/api/starter/status');
     if (st?.canSelect){
       finishRetroLoading();
-      location.href='/starter.html';
+      safeNavigate('/starter.html');
       return;
     }
   }catch{}
@@ -538,6 +565,9 @@ const FALLBACK_LOAD_CONTENT = async () => {
   try {
     await mountSceneHouse();        // a cena já publica pos pelo WS via pos-publisher.js
     setLoadingProgress(62);
+
+    await initFriendHud();
+    setLoadingProgress(72);
 
     await initGlobalChatUI();
     setLoadingProgress(72);

@@ -7,9 +7,18 @@ import { apiPost, getCsrf } from '../api.js';
   const state = {
     dead: false,
     heroId: null,
-    respawnAt: null,
-    timerHandle: null,
   };
+
+  function translate(key, fallback) {
+    try {
+      const inst = window.i18n;
+      if (inst && typeof inst.t === 'function') {
+        const value = inst.t(key);
+        if (value != null && value !== key) return value;
+      }
+    } catch {}
+    return fallback;
+  }
 
   // CSS injetado (sem depender de outro arquivo)
   const CSS = `
@@ -69,23 +78,19 @@ import { apiPost, getCsrf } from '../api.js';
     root.className = 'death-overlay';
     root.innerHTML = `
       <div class="death-card">
-        <div class="death-title">YOU ARE DEAD</div>
-        <div class="death-sub">Seu herói foi derrotado. Você pode aguardar o respawn automático ou reviver agora.</div>
-        <div class="death-count" id="death-count">—</div>
+        <div class="death-title" data-role="title"></div>
+        <div class="death-sub" data-role="subtitle"></div>
+        <div class="death-count" id="death-count" data-role="message">—</div>
         <div class="death-actions">
-          <button class="death-btn death-btn-primary" id="death-revive">Revive</button>
-          <button class="death-btn death-btn-secondary" id="death-stay">Aguardar</button>
+          <button class="death-btn death-btn-primary" id="death-revive" data-role="revive-btn"></button>
         </div>
-        <div class="death-note">Durante a morte, movimento/ataque e interações ficam bloqueados.</div>
+        <div class="death-note" data-role="note"></div>
       </div>
     `;
     document.body.appendChild(root);
 
     // Botões
     root.querySelector('#death-revive').addEventListener('click', onClickRevive);
-    root.querySelector('#death-stay').addEventListener('click', () => {
-      // Apenas mantém a tela, sem fechar. (Auto-respawn chegará pelo WS)
-    });
 
     // Bloqueio de input enquanto ativo (sem atrapalhar F5/DevTools)
     const allowKeys = new Set(['F5', 'F12', 'Escape']);
@@ -111,8 +116,32 @@ import { apiPost, getCsrf } from '../api.js';
     }, true);
   }
 
+  function applyTexts() {
+    const root = document.getElementById('death-overlay');
+    if (!root) return;
+    const setText = (selector, key, fallback) => {
+      const el = root.querySelector(selector);
+      if (!el) return;
+      const value = translate(key, fallback);
+      if (el.tagName === 'BUTTON') {
+        el.textContent = value;
+      } else {
+        el.textContent = value;
+      }
+    };
+
+    setText('[data-role="title"]', 'hud.death.title', 'YOU ARE DEAD');
+    setText('[data-role="subtitle"]', 'hud.death.subtitle', 'Your hero was defeated. Click Revive to return to the temple.');
+    setText('[data-role="revive-btn"]', 'hud.death.reviveButton', 'Revive');
+    setText('[data-role="note"]', 'hud.death.note', 'Movement and interactions remain blocked while you are dead.');
+    const message = translate('hud.death.revivePrompt', 'Click “Revive” to return to the start point.');
+    const msgEl = root.querySelector('[data-role="message"]');
+    if (msgEl) msgEl.textContent = message;
+  }
+
   function showOverlay() {
     ensureDom();
+    applyTexts();
     const el = document.getElementById('death-overlay');
     el.style.display = 'flex';
     document.body.style.pointerEvents = 'auto';
@@ -129,30 +158,6 @@ import { apiPost, getCsrf } from '../api.js';
     state.dead = false;
     window.__HERO_DEAD = false;
     window.dispatchEvent(new CustomEvent('hero:revived', { detail: { heroId: state.heroId } }));
-  }
-
-  function updateCountdown() {
-    const box = document.getElementById('death-count');
-    if (!box) return;
-
-    if (!state.respawnAt) { box.textContent = '—'; return; }
-    const leftMs = Math.max(0, state.respawnAt - Date.now());
-    const s = Math.ceil(leftMs / 1000);
-    if (s <= 0) {
-      box.textContent = 'Respawning...';
-      return;
-    }
-    box.textContent = `Respawn em ${s}s`;
-  }
-
-  function startTimer() {
-    stopTimer();
-    updateCountdown();
-    state.timerHandle = setInterval(updateCountdown, 250);
-  }
-  function stopTimer() {
-    if (state.timerHandle) clearInterval(state.timerHandle);
-    state.timerHandle = null;
   }
 
   async function onClickRevive() {
@@ -176,15 +181,12 @@ import { apiPost, getCsrf } from '../api.js';
   // ==== WS bindings ====
   onMessage('hero_dead', (msg) => {
     state.heroId = String(msg.heroId);
-    state.respawnAt = Number(msg.respawnAt || (Date.now() + (msg.respawnMs || 5000)));
     showOverlay();
-    startTimer();
   });
 
   onMessage('hero_respawn', (msg) => {
     // Segurança: só fecha se for o mesmo herói
     if (!state.heroId || String(msg.heroId) === String(state.heroId)) {
-      stopTimer();
       hideOverlay();
     }
   });
@@ -192,10 +194,12 @@ import { apiPost, getCsrf } from '../api.js';
   // Garantia: se o servidor mandar um snap de posição após revive automático, também fechamos
   onMessage('pos_snap_hero', (msg) => {
     if (!state.heroId || String(msg.heroId) === String(state.heroId)) {
-      stopTimer();
       hideOverlay();
     }
   });
+
+  document.addEventListener('i18n:ready', applyTexts);
+  document.addEventListener('i18n:change', applyTexts);
 
   // Expor helper
   window.DeathHUD = {

@@ -19,6 +19,7 @@ const {
 // Se você usa este serviço central de XP:
 const { giveXp } = require('../services/heroProgress');
 const { setLivePlayerPosition, markHeroAlive } = require('../player/live_positions');
+const battleState = require('./battle-state');
 
 const HERO_LAST_HIT_AT = new Map();
 const DEFAULT_RANGED_MIN = 2;
@@ -109,6 +110,7 @@ async function getHeroStats(heroId) {
   return await get(
     `SELECT
         ph.id AS hero_id,
+        ph."playerId"::text AS player_id,
         COALESCE(ph.attack,10) + COALESCE(i.atk,0) AS attack,
         COALESCE(ph.defense,10) AS defense,
         COALESCE(gear.total_def, 0) AS gear_defense,
@@ -282,6 +284,9 @@ async function respawnHero(targetHeroId) {
     const mod = ai();
     if (mod?.removeHeroThreat) mod.removeHeroThreat(targetHeroId);
   } catch {}
+  try {
+    battleState.forceLeave(targetHeroId, { reason: 'respawn' });
+  } catch {}
 }
 
 /** =======================
@@ -292,6 +297,10 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
   const inst = await getInstanceWithMonster(targetInstanceId);
   if (!hero || !inst) return { ok: false, message: 'attacker or target not found' };
   if (inst.state !== 'ALIVE') return { ok: false, message: 'target not alive' };
+
+  try {
+    await battleState.touchHero(hero.hero_id, { reason: 'hero-attack', playerId: hero.player_id });
+  } catch {}
 
   const resolvedWeaponType = weaponType || hero.weapon_type || null;
   const skillType   = await resolveSkillFromWeapon(resolvedWeaponType);
@@ -491,6 +500,10 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
 
   const inst = await getInstanceWithMonster(attackerInstanceId);
   if (!inst || inst.state !== 'ALIVE') return { ok: false, message: 'attacker not alive' };
+
+  try {
+    await battleState.touchHero(hero.hero_id, { reason: 'mob-attack', playerId: hero.player_id });
+  } catch {}
 
   const fallbackAttackerPos = {
     x: inst.x,
@@ -693,6 +706,9 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
       const mod = ai();
       if (mod?.removeHeroThreat) mod.removeHeroThreat(targetHeroId);
     } catch {}
+    try {
+      battleState.forceLeave(targetHeroId, { reason: 'death' });
+    } catch {}
   }
 
   broadcast({
@@ -714,19 +730,13 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
   });
 
   if (dead) {
-    const respawnAt = Date.now() + 10000;
     broadcast({
       type: 'hero_dead',
       heroId: targetHeroId,
       byMob: inst.monster_key,
       instanceId: inst.id,
-      respawnAt,
-      respawnMs: 10000
+      autoRespawn: false
     });
-
-    setTimeout(() => {
-      respawnHero(targetHeroId).catch(() => {});
-    }, 10000);
   }
 
   const nextInterval = Number.isFinite(attackProfile.intervalMs) ? attackProfile.intervalMs : Number(inst.attack_ms) || 0;
