@@ -60,6 +60,7 @@ const gameTickRoutes = require('./routes/game_tick');
 const K = require('./balance/config');
 const buildStarterRouter = require('./starter/routes');
 const { startRespawnLoop, stopRespawnLoop } = require('./respawn/worker');
+const battleState = require('./combat/battle-state');
 
 // ws bus
 const { attach: attachWsBus, joinMapSocket } = require('./ws/bus');
@@ -1272,6 +1273,7 @@ async function seedAIMobsFromDB(aiMobs) {
 
           if (data.type === 'auth') {
             ws._player = { id: String(data.id || ''), name: String(data.name || 'Anonymous') };
+            try { battleState.cancelOfflineHold(ws._player.id); } catch {}
             try { ws.send(JSON.stringify({ type:'auth_ok', id: ws._player.id })); } catch {}
 
             // >>> NOVO: reforça presença após auth
@@ -1431,12 +1433,23 @@ async function seedAIMobsFromDB(aiMobs) {
             console.warn('[presence] disconnect hook failed', err?.message);
           });
           if (ws._player?.id) {
-            // flush posição no logout + remove presença
-            flushOnePlayerPos(ws._player.id).catch(() => {});
+            const playerId = ws._player.id;
+            // flush posição no logout
+            flushOnePlayerPos(playerId).catch(() => {});
 
-            clearLivePlayerPosition(ws._player.id);
+            const activeHeroId = ws._activeHeroId ? String(ws._activeHeroId) : null;
+            const inBattle = (activeHeroId && battleState.isHeroInBattle(activeHeroId))
+              || battleState.hasActiveBattleForPlayer(playerId);
 
-            markOfflineByPlayer(ws._player.id).catch(() => {});
+            if (inBattle) {
+              battleState.holdPlayerOffline(playerId, () => {
+                try { clearLivePlayerPosition(playerId); } catch {}
+                markOfflineByPlayer(playerId).catch(() => {});
+              });
+            } else {
+              clearLivePlayerPosition(playerId);
+              markOfflineByPlayer(playerId).catch(() => {});
+            }
           }
         });
 
