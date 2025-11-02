@@ -298,6 +298,7 @@ summonModal?.addEventListener('click', (e)=>{ if(e.target===summonModal) summonM
 /* ---------- Logout ---------- */
 btnLogout?.addEventListener('click', async ()=>{
   if (window.__IN_BATTLE) {
+    try { window.HeroBattle?.showExitWarning?.(); } catch {}
     alert(translate('hud.battle.logoutBlocked', 'You cannot logout while in battle. Find a safe zone first.'));
     return;
   }

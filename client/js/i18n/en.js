@@ -36,8 +36,11 @@ export default {
     battle: {
       title: 'Battle Mode',
       description: 'You are in combat. Logging out now will leave your hero behind.',
+      tooltip: 'Battle mode — stay online until you reach safety.',
       logoutBlocked: 'You cannot logout while in battle. Find a safe zone first.',
-      leaveWarning: 'You are in battle! Leaving now may kill your hero.',
+      leaveWarning: 'Battle mode active! Leaving now will keep your hero online and vulnerable.',
+      exitTitle: 'Battle mode active',
+      exitBody: 'Cancel and stay online — closing the game now leaves your hero exposed to the monsters.',
     },
   },
   settings: {

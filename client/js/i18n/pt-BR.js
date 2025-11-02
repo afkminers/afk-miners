@@ -36,8 +36,11 @@ export default {
     battle: {
       title: 'Modo de Batalha',
       description: 'Você está em combate. Sair agora deixará seu herói vulnerável.',
+      tooltip: 'Modo de batalha — permaneça online até chegar em segurança.',
       logoutBlocked: 'Não é possível sair durante a batalha. Vá até uma área segura primeiro.',
-      leaveWarning: 'Você está em batalha! Se sair agora seu herói pode morrer.',
+      leaveWarning: 'Modo de batalha ativo! Se sair agora seu herói ficará vulnerável e online.',
+      exitTitle: 'Modo de batalha ativo',
+      exitBody: 'Cancele e permaneça no jogo — fechar agora deixa seu herói exposto aos monstros.',
     },
   },
   settings: {
