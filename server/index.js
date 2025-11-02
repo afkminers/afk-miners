@@ -50,6 +50,9 @@ const lootRoutes = require('./routes/loot'); // <<-- novo
 // Backpack (modelo Tibia-like)
 const backpackRoutes = require('./routes/backpack');
 
+// Social / Friends API
+const friendsRoutes = require('./routes/friends');
+
 // AFK & Farm
 const afkRoutes = require('./routes/afk');
 const farmRoutes = require('./routes/farm');
@@ -394,6 +397,7 @@ app.use(combatNearest);
 app.use('/api/player', requireAuth, playerRoutes);
 app.use('/api/gacha', requireAuth, gachaRoutes);
 app.use('/api/skills', requireAuth, skillsRoutes);
+app.use('/api/friends', requireAuth, friendsRoutes);
 
 // AFK / Farm
 app.use('/api/afk', requireAuth, afkRoutes);

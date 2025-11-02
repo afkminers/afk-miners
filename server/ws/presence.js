@@ -51,6 +51,66 @@ async function attachRedis({ wss, redisPub, redisSub }) {
   }
 }
 
+async function getPresenceSnapshot(userIds) {
+  const ids = Array.from(
+    new Set(
+      (Array.isArray(userIds) ? userIds : [])
+        .map((id) => (id == null ? null : String(id)))
+        .filter((id) => id)
+    )
+  );
+
+  const snapshot = new Map();
+  if (ids.length === 0) return snapshot;
+
+  const now = Date.now();
+
+  // Fallback to local state first (covers single-instance or recent activity)
+  for (const id of ids) {
+    const state = localStates.get(id);
+    if (!state) continue;
+    if (state.online) {
+      snapshot.set(id, { online: true, lastSeenAt: Number(state.lastRefreshAt) || now });
+    } else if (state.lastRefreshAt) {
+      snapshot.set(id, { online: false, lastSeenAt: Number(state.lastRefreshAt) || null });
+    }
+  }
+
+  if (redisPublisher) {
+    try {
+      const keys = ids.map((id) => KEY_PREFIX + id);
+      const values = await redisPublisher.mGet(keys);
+      if (Array.isArray(values)) {
+        for (let i = 0; i < values.length; i += 1) {
+          const raw = values[i];
+          if (raw == null) continue;
+          const ts = Number(raw);
+          const lastSeenAt = Number.isFinite(ts) && ts > 0 ? ts : now;
+          snapshot.set(ids[i], { online: true, lastSeenAt });
+        }
+      }
+    } catch (err) {
+      console.warn('[presence] snapshot read failed', err?.message);
+    }
+  }
+
+  const result = new Map();
+  for (const id of ids) {
+    if (snapshot.has(id)) {
+      const entry = snapshot.get(id) || {};
+      const last = Number(entry.lastSeenAt);
+      result.set(id, {
+        online: !!entry.online,
+        lastSeenAt: Number.isFinite(last) && last > 0 ? last : null,
+      });
+    } else {
+      result.set(id, { online: false, lastSeenAt: null });
+    }
+  }
+
+  return result;
+}
+
 function ensureSweepTimer() {
   if (sweepTimer) return;
   sweepTimer = setInterval(() => {
@@ -274,5 +334,6 @@ module.exports = {
   onAuthenticated,
   onHeartbeat,
   onDisconnect,
+  getPresenceSnapshot,
   stopSweepTimer,
 };
