@@ -184,6 +184,48 @@ async function loadMonsters(db, root) {
   }
 }
 
+function toNumber(val) {
+  if (val == null) return null;
+  if (typeof val === 'string' && val.trim() === '') return null;
+  const num = Number(val);
+  return Number.isFinite(num) ? num : null;
+}
+
+function parseLeashPx(props) {
+  if (!props || typeof props !== 'object') return null;
+  const pxCandidates = [
+    props.leashPx,
+    props.leash_px,
+    props.leashDistancePx,
+    props.leash_distance_px,
+    props.leash_range_px,
+    props.followPx,
+  ];
+  for (const raw of pxCandidates) {
+    const num = toNumber(raw);
+    if (num != null) return Math.max(0, Math.round(num));
+  }
+
+  const tileCandidates = [
+    props.leashTiles,
+    props.leash_tiles,
+    props.leash,
+    props.range,
+    props.radius,
+    props.maxDistance,
+    props.max_distance,
+    props.maxRange,
+    props.max_range,
+    props.followRange,
+  ];
+  for (const raw of tileCandidates) {
+    const num = toNumber(raw);
+    if (num != null) return Math.max(0, Math.round(num * 32));
+  }
+
+  return null;
+}
+
 async function loadItems(db, root) {
   const { get, run } = db;
 
@@ -382,28 +424,32 @@ async function loadMap(db, root, mapKey) {
         if (otype && otype !== 'spawn') continue;
 
         const props = Object.fromEntries((o.properties || []).map(p => [p.name, p.value]));
+        const leashPx = parseLeashPx(props);
         await run(`
           INSERT INTO spawns(
             "mapKey","monsterKey", x, y, w, h,
-            count, "respawnSec", "levelMin", "levelMax"
+            count, "respawnSec", "levelMin", "levelMax", "leashPx"
           )
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
         `, [
           mapKey, props.monsterKey || '',
           Math.round(o.x || 0), Math.round(o.y || 0),
           Math.round(o.width  || 0), Math.round(o.height || 0),
           Number(props.count || 1), Number(props.respawnSec || 60),
-          Number(props.levelMin || 1), Number(props.levelMax || 999)
+          Number(props.levelMin || 1), Number(props.levelMax || 999),
+          leashPx
         ]);
       }
     } else {
       for (const o of layer.objects) {
         const props = Object.fromEntries((o.properties || []).map(p => [p.name, p.value]));
+        const objectTypeRaw = ((o.class || o.type || '') + '').trim();
+        const type = objectTypeRaw ? objectTypeRaw.toLowerCase() : lname;
         await run(`
           INSERT INTO map_objects("mapKey", type, x, y, w, h, "propsJSON")
           VALUES ($1,$2,$3,$4,$5,$6,$7)
         `, [
-          mapKey, lname,
+          mapKey, type,
           Math.round(o.x || 0), Math.round(o.y || 0),
           Math.round(o.width || 0), Math.round(o.height || 0),
           JSON.stringify(props)

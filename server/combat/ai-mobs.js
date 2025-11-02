@@ -12,6 +12,7 @@ const { getGrid } = require('../maps/grid');
 const { hasLineOfSightTiles } = require('./los');
 // const { inReachPx } = require('./geom');
 const { applyMobHit } = require('./service');
+const battleState = require('./battle-state');
 const { toTileCoords, chebyshevTiles, isValidTile } = require('../utils/tile-coords');
 const { resolveMonsterAttackProfile } = require('./monster_attack_profile');
 const {
@@ -311,7 +312,8 @@ async function fetchAliveMonsters() {
           s.x  AS spawn_x,
           s.y  AS spawn_y,
           COALESCE(s.w, 0) AS spawn_w,
-          COALESCE(s.h, 0) AS spawn_h
+          COALESCE(s.h, 0) AS spawn_h,
+          COALESCE(s."leashPx", 0) AS leash_px
       FROM monster_instances mi
       JOIN monsters_master mm ON mm.id = mi.monster_id
       LEFT JOIN spawns s ON s.id = mi.spawn_id
@@ -329,6 +331,7 @@ async function fetchAliveMonsters() {
       attack_range: profile.rangeTiles,
       attack_ms: profile.intervalMs,
       attack_type: profile.type,
+      leash_px: Number(row.leash_px || 0),
     };
   });
 }
@@ -476,6 +479,39 @@ function ensureMob(instanceId, patch = {}) {
         ? { x: pendingStepPatch.x | 0, y: pendingStepPatch.y | 0 }
         : null);
 
+  const rawLeash = patch.leashPx ?? patch.leash_px ?? cur.leashRangePx ?? cur.leashPx ?? null;
+  const leashRangePx = Number.isFinite(rawLeash) && rawLeash > 0
+    ? Math.max(PX_PER_TILE, Math.round(rawLeash))
+    : null;
+
+  const resetThreat = patch.resetThreat === true;
+  const modeValue = patch.mode ?? cur.mode ?? 'idle';
+
+  let targetHeroId = null;
+  if (patch.targetHeroId !== undefined) {
+    targetHeroId = patch.targetHeroId == null ? null : String(patch.targetHeroId);
+  } else if (cur.targetHeroId != null) {
+    targetHeroId = String(cur.targetHeroId);
+  }
+
+  let threatMap;
+  if (patch.threat instanceof Map) threatMap = patch.threat;
+  else threatMap = resetThreat ? new Map() : (cur.threat || new Map());
+
+  const posUpdatedAt = Number(patch.posUpdatedAt ?? cur.posUpdatedAt ?? Date.now());
+  const lastSeenAt = Number(patch.lastSeenAt ?? cur.lastSeenAt ?? 0);
+  const repathAt = Number(patch.repathAt ?? cur.repathAt ?? 0);
+  const lastSwitchAt = Number(patch.lastSwitchAt ?? cur.lastSwitchAt ?? 0);
+  const agroSince = Number(patch.agroSince ?? cur.agroSince ?? 0);
+  const lastProgressAt = Number(patch.lastProgressAt ?? cur.lastProgressAt ?? Date.now());
+  const forcedAltUntil = Number(patch.forcedAltUntil ?? cur.forcedAltUntil ?? 0);
+  const combatStep = patch.combatStep === undefined ? (cur.combatStep || null) : patch.combatStep;
+  const lastCombatStepAt = Number(patch.lastCombatStepAt ?? cur.lastCombatStepAt ?? 0);
+  const nextAttackAt = Number(patch.nextAttackAt ?? cur.nextAttackAt ?? 0);
+  const returningHome = patch._returningHome !== undefined
+    ? Boolean(patch._returningHome)
+    : (resetThreat ? false : Boolean(cur._returningHome));
+
   const next = {
     instanceId: id,
     mapKey: patch.mapKey ?? cur.mapKey ?? null,
@@ -486,27 +522,27 @@ function ensureMob(instanceId, patch = {}) {
     monsterKey: patch.monsterKey ?? cur.monsterKey ?? null,
 
     // runtime
-    posUpdatedAt: Number(patch.posUpdatedAt ?? cur.posUpdatedAt ?? Date.now()),
-    mode: cur.mode || 'idle',
-    targetHeroId: cur.targetHeroId || null,
-    lastSeenAt: cur.lastSeenAt || 0,
-    repathAt: cur.repathAt || 0,
-    lastSwitchAt: cur.lastSwitchAt || 0,
-    threat: cur.threat || new Map(),
+    posUpdatedAt,
+    mode: modeValue,
+    targetHeroId,
+    lastSeenAt,
+    repathAt,
+    lastSwitchAt,
+    threat: threatMap,
     pendingStep,
 
-    agroSince: Number(patch.agroSince ?? cur.agroSince ?? 0),
-    lastProgressAt: Number(patch.lastProgressAt ?? cur.lastProgressAt ?? Date.now()),
-    forcedAltUntil: Number(patch.forcedAltUntil ?? cur.forcedAltUntil ?? 0),
-    combatStep: patch.combatStep === undefined ? (cur.combatStep || null) : patch.combatStep,
-    lastCombatStepAt: Number(patch.lastCombatStepAt ?? cur.lastCombatStepAt ?? 0),
+    agroSince,
+    lastProgressAt,
+    forcedAltUntil,
+    combatStep,
+    lastCombatStepAt,
 
 
     // === Ranges em PX e cooldown em ms, todos no mesmo relógio (ms) ===
     attackRangeTiles: Math.max(1, attackRangeTiles | 0),
     aggroRangePx:  (aggroRangeTiles  * PX_PER_TILE) | 0,
     attackMs,
-    nextAttackAt: Number(patch.nextAttackAt ?? cur.nextAttackAt ?? 0),
+    nextAttackAt,
     attackDamage,
     attackType,
     attackRequiresLos: attackRequiresLos ? true : false,
@@ -521,7 +557,9 @@ function ensureMob(instanceId, patch = {}) {
     // debug
     spawnRect,
     home,
-    _returningHome: cur._returningHome || false,
+    leashRangePx,
+    leashPx: leashRangePx,
+    _returningHome: returningHome,
   };
 
   mobs.set(id, next);
@@ -535,19 +573,37 @@ function computeRepathCooldownMs(mob) {
 }
 
 // Exposta para seed inicial a partir do index.js
-function seedPosition({ id, x, y, mapKey, spawnRect, speed = null, monsterKey = null }) {
-  ensureMob(id, {
-    x: (x | 0),
-    y: (y | 0),
-    mapKey: String(mapKey),
-    mode: 'idle',
-    targetHeroId: null,
-    posUpdatedAt: Date.now(),
+function seedPosition({ id, x, y, mapKey, spawnRect, speed = null, monsterKey = null, leashPx = null, resetThreat = false }) {
+  const now = Date.now();
+  const patch = {
+    x: Number.isFinite(x) ? (x | 0) : undefined,
+    y: Number.isFinite(y) ? (y | 0) : undefined,
+    mapKey: mapKey == null ? undefined : String(mapKey),
+    posUpdatedAt: now,
     spawnRect,
     speed,
     monsterKey,
-    pendingStep: null,
-  });
+    leashPx,
+  };
+
+  if (resetThreat) {
+    patch.resetThreat = true;
+    patch.mode = 'idle';
+    patch.targetHeroId = null;
+    patch.agroSince = 0;
+    patch.lastSeenAt = 0;
+    patch.repathAt = 0;
+    patch.lastSwitchAt = 0;
+    patch.pendingStep = null;
+    patch.forcedAltUntil = 0;
+    patch.combatStep = null;
+    patch.lastCombatStepAt = now;
+    patch.lastProgressAt = now;
+    patch.nextAttackAt = now;
+    patch._returningHome = false;
+  }
+
+  ensureMob(id, patch);
 }
 
 
@@ -593,6 +649,7 @@ async function start() {
       spawnRect,
       speed: r.speed,
       monsterKey: r.monster_key,
+      leashPx: r.leash_px,
       pendingStep: null,
     });
 
@@ -1024,6 +1081,24 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   decayThreat(mob, dt);
   selectTargetByThreat(now, mob, heroes, losGrid);
 
+  const leashRangePx = Number.isFinite(mob?.leashRangePx) ? mob.leashRangePx : null;
+  if (
+    leashRangePx != null && leashRangePx > 0 &&
+    mob?.home && Number.isFinite(mob.home.x) && Number.isFinite(mob.home.y)
+  ) {
+    const distFromHome = Math.hypot((mob.x ?? mob.home.x) - mob.home.x, (mob.y ?? mob.home.y) - mob.home.y);
+    if (distFromHome > leashRangePx + HOME_TOLERANCE_PX) {
+      if (mob.targetHeroId) mob.threat.delete(String(mob.targetHeroId));
+      mob.targetHeroId = null;
+      mob.mode = 'idle';
+      mob.pendingStep = null;
+      mob.combatStep = null;
+      mob.agroSince = 0;
+      await maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles });
+      return;
+    }
+  }
+
   if (!mob.targetHeroId) {
     mob.mode = 'idle';
     mob.agroSince = 0;
@@ -1271,6 +1346,23 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   }
 
   if (stepTarget) {
+    if (
+      leashRangePx != null && leashRangePx > 0 &&
+      mob?.home && Number.isFinite(mob.home.x) && Number.isFinite(mob.home.y)
+    ) {
+      const stepDist = Math.hypot(stepTarget.x - mob.home.x, stepTarget.y - mob.home.y);
+      if (stepDist > leashRangePx + HOME_TOLERANCE_PX) {
+        if (mob.targetHeroId) mob.threat.delete(String(mob.targetHeroId));
+        mob.targetHeroId = null;
+        mob.mode = 'idle';
+        mob.pendingStep = null;
+        mob.combatStep = null;
+        mob.agroSince = 0;
+        await maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles });
+        return;
+      }
+    }
+
     const reached = await moveMobAndPersist(mob, stepTarget, dt, losGrid, occupancy);
     if (reached) {
       mob.pendingStep = null;
@@ -1364,6 +1456,7 @@ function selectTargetByThreat(now, mob, heroes, losGrid) {
     mob.waitOrbitIndex = 0;
     mob.goalRotateIndex = 0;
     mob.requestOrbitShift = false;
+    try { battleState.touchHero(bestId, { reason: 'aggro' }); } catch {}
     if (DEBUG_AI) console.log(`[ai-mobs] target set mob=${mob.instanceId} -> ${bestId} (threat=${bestV.toFixed(2)})`);
     return;
   }
@@ -1385,6 +1478,7 @@ function selectTargetByThreat(now, mob, heroes, losGrid) {
       mob.waitOrbitIndex = 0;
       mob.goalRotateIndex = 0;
       mob.requestOrbitShift = false;
+      try { battleState.touchHero(bestId, { reason: 'aggro-switch' }); } catch {}
     }
   }
 
@@ -1959,6 +2053,7 @@ function removeHeroThreat(heroId) {
       mob.agroSince = 0;
     }
   }
+  try { battleState.cooldown(heroId); } catch {}
 }
 
 // --------- Exports ----------
