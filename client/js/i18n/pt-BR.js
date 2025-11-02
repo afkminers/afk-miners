@@ -25,6 +25,28 @@ export default {
     menu: 'Menu',
     close: 'Fechar',
   },
+  hud: {
+    death: {
+      title: 'VOCÊ ESTÁ MORTO',
+      subtitle: 'Seu herói foi derrotado. Clique em Reviver para voltar ao templo.',
+      reviveButton: 'Reviver',
+      note: 'Durante a morte, movimento e interações ficam bloqueados.',
+      revivePrompt: 'Clique em “Reviver” para retornar ao ponto inicial.',
+    },
+    battle: {
+      title: 'Modo de Batalha',
+      description: 'Você está em combate. Sair agora deixará seu herói vulnerável.',
+      tooltip: 'Modo de batalha — permaneça online até chegar em segurança.',
+      safeTooltip: 'Use o botão Sair antes de fechar a aba.',
+      logoutBlocked: 'Não é possível sair durante a batalha. Vá até uma área segura primeiro.',
+      leaveWarning: 'Modo de batalha ativo! Se sair agora seu herói ficará vulnerável e online.',
+      exitTitle: 'Modo de batalha ativo',
+      exitBody: 'Cancele e permaneça no jogo — fechar agora deixa seu herói exposto aos monstros.',
+      safeExitTitle: 'Deslogue antes de fechar',
+      safeExitBody: 'Use o botão Sair antes de fechar esta aba para desconectar seu herói em segurança.',
+      safeExitPrompt: 'Deslogue antes de fechar a aba para proteger seu herói.',
+    },
+  },
   settings: {
     open: 'Configurações',
     mute: 'Silenciar SFX',
