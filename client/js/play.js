@@ -75,6 +75,63 @@ function isTypingTarget(target) {
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
 }
 
+function logoutBlockedMessage() {
+  if (window.__IN_BATTLE) {
+    if (i18n && typeof i18n.t === 'function') {
+      try {
+        const translated = i18n.t('hud.battle.logoutBlocked');
+        if (translated && translated !== 'hud.battle.logoutBlocked') return translated;
+      } catch (_) {}
+    }
+    return 'Você não pode sair durante a batalha. Vá até uma área segura primeiro.';
+  }
+  return null;
+}
+
+async function performLogout() {
+  const blocked = logoutBlockedMessage();
+  if (blocked) {
+    alert(blocked);
+    return;
+  }
+  try {
+    const csrf = await getCsrf().catch(() => null);
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, csrf ? { 'x-csrf-token': csrf } : {}),
+      credentials: 'include',
+      body: '{}',
+    });
+  } catch (err) {
+    console.warn('[play] logout failed:', err?.message || err);
+  }
+  location.href = '/index.html';
+}
+
+function handleExitToLobby() {
+  const blocked = logoutBlockedMessage();
+  if (blocked) {
+    alert(blocked);
+    return;
+  }
+  location.href = '/index.html#house';
+}
+
+function initTopbarActions() {
+  document.querySelectorAll('[data-action="logout"]').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      performLogout();
+    });
+  });
+  document.querySelectorAll('[data-action="exit"]').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      handleExitToLobby();
+    });
+  });
+}
+
 function escapeHtml(text) {
   return String(text ?? '').replace(/[&<>"']/g, (ch) => ({
     '&': '&amp;',
@@ -790,6 +847,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDockControls();
   setupHotbarInteractions();
   startHudTimers();
+  initTopbarActions();
   hydratePlayerProfileAndHud({ force: true });
 });
 

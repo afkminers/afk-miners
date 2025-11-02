@@ -213,6 +213,17 @@ function updateHud(next = {}) {
 window.hudState = hudState;
 window.updateHud = updateHud;
 
+function applyHeroHpUpdate(heroId, hp, maxHp) {
+  if (hp != null) {
+    hudState.hp.current = safeNumber(hp);
+  }
+  if (maxHp != null) {
+    hudState.hp.max = safeNumber(maxHp);
+  }
+  applyBar('hp');
+  return hudState.hp;
+}
+
 window.HUD = {
   init: initHudShell,
   render: renderHud,
@@ -228,6 +239,8 @@ window.HUD = {
   applyBar,
   state: hudState,
 };
+
+window.HUD_ApplyHeroHpUpdate = applyHeroHpUpdate;
 
 document.addEventListener('DOMContentLoaded', () => {
   initHudShell();

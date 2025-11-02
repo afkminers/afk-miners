@@ -21,10 +21,16 @@
       <span class="player-name" id="playerName">Jogador</span>
     </div>
     <div class="topbar-right">
-      <span class="top-stat" id="pingDisplay"><span id="pingValue">0</span> ms</span>
-      <span class="top-stat" id="sessionDisplay"><span id="sessionTime">00:00</span></span>
-      <span class="top-currency" aria-label="Ouro"><span class="icon">🪙</span><span id="goldValue">0</span></span>
-      <span class="top-currency" aria-label="Diamantes"><span class="icon">💎</span><span id="diamondValue">0</span></span>
+      <div class="topbar-stats">
+        <span class="top-stat" id="pingDisplay"><span id="pingValue">0</span> ms</span>
+        <span class="top-stat" id="sessionDisplay"><span id="sessionTime">00:00</span></span>
+        <span class="top-currency" aria-label="Ouro"><span class="icon">🪙</span><span id="goldValue">0</span></span>
+        <span class="top-currency" aria-label="Diamantes"><span class="icon">💎</span><span id="diamondValue">0</span></span>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" class="btn-icon" data-action="exit" aria-label="Voltar ao lobby">Sair</button>
+        <button type="button" class="btn-icon btn-logout" data-action="logout" aria-label="Desconectar">Logout</button>
+      </div>
     </div>
   </header>
 
@@ -219,6 +225,14 @@
     try { installCombatOverlay(); }
     catch (err) { console.error('[combat] overlay init failed', err); }
   </script>
+  <script src="js/ui/chat-log.js"></script>
+  <script type="module" src="js/ui/hero-floating-damage.js"></script>
+  <script type="module" src="js/hud/death-overlay.js"></script>
+  <script type="module" src="js/hud/battle-status.js"></script>
+  <script src="js/map/loot-layer.js"></script>
+  <script src="js/ui/skill_notify.js"></script>
+  <script type="module" src="js/ui/levelup_notify.js"></script>
+  <script type="module" src="js/backpack/ui.js"></script>
   <script type="module" src="js/ui/hud.js"></script>
   <script type="module" src="js/ui/tabs.js"></script>
   <script type="module" src="js/ui/chat.js"></script>
