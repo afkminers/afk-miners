@@ -373,6 +373,10 @@
           <button id="chatSend" type="button" data-i18n="chat.send">Enviar</button>
         </form>
       </div>
+      <form id="chatForm" autocomplete="off">
+        <input id="chatInput" name="chat" placeholder="Digite uma mensagem…" data-i18n="chat.placeholder" data-i18n-attr="placeholder" />
+        <button id="chatSend" type="button" data-i18n="chat.send">Enviar</button>
+      </form>
     </footer>
   </main>
 
@@ -418,6 +422,7 @@
 
   <!-- HUD de morte / revive -->
   <script type="module" src="/js/hud/death-overlay.js"></script>
+  <script type="module" src="/js/hud/battle-status.js"></script>
 
   <!-- loot-mapa -->
   <script src="/js/map/loot-layer.js"></script>
