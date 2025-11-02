@@ -50,6 +50,10 @@ const lootRoutes = require('./routes/loot'); // <<-- novo
 // Backpack (modelo Tibia-like)
 const backpackRoutes = require('./routes/backpack');
 
+// Social / Friends API
+const friendsRoutes = require('./routes/friends');
+const directMessagesWs = require('./ws/direct-messages');
+
 // AFK & Farm
 const afkRoutes = require('./routes/afk');
 const farmRoutes = require('./routes/farm');
@@ -63,6 +67,7 @@ const { startRespawnLoop, stopRespawnLoop } = require('./respawn/worker');
 
 // ws bus
 const { attach: attachWsBus, joinMapSocket } = require('./ws/bus');
+const presence = require('./ws/presence');
 const { listAliveMonsters } = require('./ws/initial_monsters');
 
 // ======== Pipeline de Conteúdo ========
@@ -392,6 +397,7 @@ app.use(combatNearest);
 app.use('/api/player', requireAuth, playerRoutes);
 app.use('/api/gacha', requireAuth, gachaRoutes);
 app.use('/api/skills', requireAuth, skillsRoutes);
+app.use('/api/friends', requireAuth, friendsRoutes);
 
 // AFK / Farm
 app.use('/api/afk', requireAuth, afkRoutes);
@@ -900,7 +906,11 @@ function setupHeartbeat(wss) {
   function noop() {}
   wss.on('connection', (ws) => {
     ws.isAlive = true;
-    ws.on('pong', () => { ws.isAlive = true; });
+    ws.on('pong', () => {
+      ws.isAlive = true;
+      try { presence.onHeartbeat(ws); }
+      catch (err) { console.warn('[presence] heartbeat hook failed', err?.message); }
+    });
   });
   const interval = setInterval(() => {
     wss.clients.forEach((ws) => {
@@ -936,6 +946,8 @@ async function setupRedis(wss) {
         });
       } catch (e) { console.warn('[redis] bad pubsub message', e?.message); }
     });
+    try { await presence.attachRedis({ wss, redisPub, redisSub }); }
+    catch (err) { console.warn('[presence] attachRedis failed', err?.message); }
     console.log('[redis] connected and subscribed to chat:global');
   } catch (e) {
     console.warn('[redis] failed to connect — continuing without Redis', e?.message);
@@ -1162,7 +1174,7 @@ async function seedAIMobsFromDB(aiMobs) {
         ws._player = null;
         ws._mapKey = 'house'; // padrão até resolver abaixo
         ws.isAlive = true; // compat com heartbeat
-        ws._presenceTimer = null;
+        ws._dbPresenceTimer = null;
         ws._pos = null; // cache local da pos autorizada
         ws._activeHeroId = null;
         ws._heroAlive = true;
@@ -1179,6 +1191,9 @@ async function seedAIMobsFromDB(aiMobs) {
                 name: String(payload.name || payload.username || payload.displayName || 'Anon')
               };
               console.log(`[ws] session validated from cookie for ${addr} => id=${ws._player.id} name=${ws._player.name}`);
+              presence
+                .onAuthenticated(ws)
+                .catch((err) => console.warn('[presence] cookie auth hook failed', err?.message));
             } catch (err) {
               console.log('[ws] jwt verify failed', err && err.message);
             }
@@ -1228,13 +1243,14 @@ async function seedAIMobsFromDB(aiMobs) {
             // segue sem travar
           }
 
-          // >>> NOVO: marca presença assim que conectar (e renova a cada 15s)
+          // >>> Presença no DB legado + presença via Redis TTL
           try {
             if (ws._player?.id) {
               await upsertOnlineByPlayer(ws._player.id, ws._mapKey || 'house');
-              ws._presenceTimer = setInterval(() => {
+              ws._dbPresenceTimer = setInterval(() => {
                 upsertOnlineByPlayer(ws._player.id, ws._mapKey || 'house').catch(() => {});
-              }, 15000);
+              }, 45000);
+              presence.onAuthenticated(ws).catch(() => {});
             }
           } catch {}
         })();
@@ -1266,11 +1282,12 @@ async function seedAIMobsFromDB(aiMobs) {
             // >>> NOVO: reforça presença após auth
             try {
               await upsertOnlineByPlayer(ws._player.id, ws._mapKey || 'house');
-              if (!ws._presenceTimer) {
-                ws._presenceTimer = setInterval(() => {
+              if (!ws._dbPresenceTimer) {
+                ws._dbPresenceTimer = setInterval(() => {
                   upsertOnlineByPlayer(ws._player.id, ws._mapKey || 'house').catch(() => {});
-                }, 15000);
+                }, 45000);
               }
+              presence.onAuthenticated(ws).catch(() => {});
             } catch {}
 
             return;
@@ -1308,6 +1325,10 @@ async function seedAIMobsFromDB(aiMobs) {
                 }
               });
             }
+            return;
+          }
+
+          if (directMessagesWs.handleMessage(ws, data)) {
             return;
           }
 
@@ -1403,15 +1424,21 @@ async function seedAIMobsFromDB(aiMobs) {
 
         });
 
-        ws.on('pong', () => { ws.isAlive = true; }); // compat extra
+        ws.on('pong', () => {
+          ws.isAlive = true;
+          presence.onHeartbeat(ws).catch(() => {});
+        }); // compat extra
 
         ws.on('close', () => {
           const addr2 = req.socket.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
           console.log(`[ws] close from ${addr2} — clients=${wss.clients.size}`);
-          if (ws._presenceTimer) {
-            clearInterval(ws._presenceTimer);
-            ws._presenceTimer = null;
+          if (ws._dbPresenceTimer) {
+            clearInterval(ws._dbPresenceTimer);
+            ws._dbPresenceTimer = null;
           }
+          presence.onDisconnect(ws).catch((err) => {
+            console.warn('[presence] disconnect hook failed', err?.message);
+          });
           if (ws._player?.id) {
             // flush posição no logout + remove presença
             flushOnePlayerPos(ws._player.id).catch(() => {});
@@ -1458,12 +1485,14 @@ async function seedAIMobsFromDB(aiMobs) {
       try { const ai = require('./combat/ai-mobs'); ai.stop?.(); } catch {}
       try { stopPosFlusher(); await flushAllPlayerPos(); } catch {}
       try { stopRespawnLoop(); } catch {}
+      try { presence.stopSweepTimer(); } catch {}
       process.exit(0);
     });
     process.on('SIGTERM', async () => {
       try { const ai = require('./combat/ai-mobs'); ai.stop?.(); } catch {}
       try { stopPosFlusher(); await flushAllPlayerPos(); } catch {}
       try { stopRespawnLoop(); } catch {}
+      try { presence.stopSweepTimer(); } catch {}
       process.exit(0);
     });
 
