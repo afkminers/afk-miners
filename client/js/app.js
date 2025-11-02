@@ -22,7 +22,10 @@ async function getCsrf(){
 }
 async function jget(u){
   const r = await fetch(u,{credentials:'include',headers:{'Accept':'application/json'},cache:'no-store'});
-  if (r.status === 401){ location.href='/index.html'; throw new Error('401'); }
+  if (r.status === 401){
+    safeNavigate('/index.html');
+    throw new Error('401');
+  }
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
@@ -31,10 +34,18 @@ async function jpost(u,body){
   const r = await fetch(u,{method:'POST',credentials:'include',
     headers:{'Content-Type':'application/json','Accept':'application/json', ...(tok?{'x-csrf-token':tok}:{})},
     body: JSON.stringify(body||{})});
-  if (r.status === 401){ location.href='/index.html'; throw new Error('401'); }
+  if (r.status === 401){
+    safeNavigate('/index.html');
+    throw new Error('401');
+  }
   if (r.status === 403){ CSRF=null; await getCsrf().catch(()=>null); return jpost(u,body); }
   if (!r.ok) throw new Error(await r.text());
   return r.json();
+}
+
+function safeNavigate(url){
+  try{ window.HeroBattle?.allowExitFor?.(2000); }catch{}
+  location.href = url;
 }
 
 function translate(key, fallback){
@@ -304,7 +315,7 @@ btnLogout?.addEventListener('click', async ()=>{
     return;
   }
   try{ await jpost('/api/auth/logout',{}); }catch{}
-  location.href='/index.html';
+  safeNavigate('/index.html');
 });
 
 /* ===================== CHAT / WS + HISTÓRICO ===================== */
@@ -503,7 +514,7 @@ const FALLBACK_LOAD_CONTENT = async () => {
     const st = await jget('/api/starter/status');
     if (st?.canSelect){
       finishRetroLoading();
-      location.href='/starter.html';
+      safeNavigate('/starter.html');
       return;
     }
   }catch{}

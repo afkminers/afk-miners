@@ -8,7 +8,12 @@ import { onMessage } from '../ws/singleton.js';
     since: null,
     lastEventAt: null,
   };
+  const exitState = {
+    locked: true,
+    unlockTimer: null,
+  };
   let warningHideTimer = null;
+  let currentWarningMode = 'safe';
   window.__IN_BATTLE = false;
 
   const CSS = `
@@ -141,6 +146,31 @@ import { onMessage } from '../ws/singleton.js';
   }
   `;
 
+  const WARNING_MODES = {
+    battle: {
+      icon: '⚔️',
+      tooltipKey: 'hud.battle.tooltip',
+      tooltipFallback: 'Battle mode — stay online until you reach safety.',
+      titleKey: 'hud.battle.exitTitle',
+      titleFallback: 'Battle mode active',
+      bodyKey: 'hud.battle.exitBody',
+      bodyFallback: 'Cancel and stay online — closing the game now leaves your hero exposed to the monsters.',
+      promptKey: 'hud.battle.leaveWarning',
+      promptFallback: 'Battle mode active! Leaving now will keep your hero online and vulnerable.',
+    },
+    safe: {
+      icon: '🚪',
+      tooltipKey: 'hud.battle.safeTooltip',
+      tooltipFallback: 'Use the Logout button before closing the tab.',
+      titleKey: 'hud.battle.safeExitTitle',
+      titleFallback: 'Logout before closing',
+      bodyKey: 'hud.battle.safeExitBody',
+      bodyFallback: 'Use the Logout button before closing this tab so your hero disconnects safely.',
+      promptKey: 'hud.battle.safeExitPrompt',
+      promptFallback: 'Logout before closing the tab to protect your hero.',
+    },
+  };
+
   function translate(key, fallback) {
     try {
       const inst = window.i18n;
@@ -195,13 +225,28 @@ import { onMessage } from '../ws/singleton.js';
       document.body.appendChild(warn);
     }
 
-    applyTexts();
+    applyTexts(currentWarningMode);
   }
 
-  function applyTexts() {
+  function getWarningConfig(mode) {
+    if (mode && WARNING_MODES[mode]) return WARNING_MODES[mode];
+    return WARNING_MODES.battle;
+  }
+
+  function normalizeMode(mode) {
+    if (typeof mode === 'string' && WARNING_MODES[mode]) return mode;
+    if (typeof mode === 'string') return currentWarningMode;
+    return currentWarningMode;
+  }
+
+  function applyTexts(mode = currentWarningMode) {
+    const useMode = normalizeMode(mode);
+    currentWarningMode = useMode;
+    const config = getWarningConfig(useMode);
+
     const root = document.getElementById('battle-indicator');
     if (root) {
-      const tooltip = translate('hud.battle.tooltip', 'In battle — do not logout.');
+      const tooltip = translate(config.tooltipKey || 'hud.battle.tooltip', config.tooltipFallback || 'In battle — do not logout.');
       root.setAttribute('title', tooltip);
       root.setAttribute('aria-label', tooltip);
     }
@@ -210,11 +255,15 @@ import { onMessage } from '../ws/singleton.js';
     if (warn) {
       const titleEl = warn.querySelector('[data-role="warning-title"]');
       const bodyEl = warn.querySelector('[data-role="warning-body"]');
+      const iconEl = warn.querySelector('.battle-exit-warning-icon');
+      if (iconEl) {
+        iconEl.textContent = config.icon || '⚔️';
+      }
       if (titleEl) {
-        titleEl.textContent = translate('hud.battle.exitTitle', 'Battle mode active');
+        titleEl.textContent = translate(config.titleKey || 'hud.battle.exitTitle', config.titleFallback || 'Battle mode active');
       }
       if (bodyEl) {
-        bodyEl.textContent = translate('hud.battle.exitBody', 'Cancel and stay online or your hero will remain vulnerable.');
+        bodyEl.textContent = translate(config.bodyKey || 'hud.battle.exitBody', config.bodyFallback || 'Cancel and stay online or your hero will remain vulnerable.');
       }
     }
   }
@@ -236,8 +285,9 @@ import { onMessage } from '../ws/singleton.js';
     }
   }
 
-  function showExitWarning() {
+  function showExitWarning(mode = (state.inBattle ? 'battle' : 'safe')) {
     ensureDom();
+    applyTexts(mode);
     const warn = document.getElementById('battle-exit-warning');
     if (!warn) return;
     warn.classList.add('visible');
@@ -257,9 +307,7 @@ import { onMessage } from '../ws/singleton.js';
     const isActive = !!state.inBattle;
     root.classList.toggle('active', isActive);
     root.setAttribute('aria-hidden', isActive ? 'false' : 'true');
-    if (isActive) {
-      applyTexts();
-    }
+    applyTexts(isActive ? 'battle' : 'safe');
     window.__IN_BATTLE = !!state.inBattle;
     setBodyFlag(state.inBattle);
   }
@@ -291,23 +339,43 @@ import { onMessage } from '../ws/singleton.js';
     }
   }
 
+  function setExitLock(nextLocked) {
+    const shouldLock = !!nextLocked;
+    if (exitState.unlockTimer) {
+      window.clearTimeout(exitState.unlockTimer);
+      exitState.unlockTimer = null;
+    }
+    exitState.locked = shouldLock;
+  }
+
+  function allowExitFor(durationMs = 1500) {
+    setExitLock(false);
+    if (durationMs > 0) {
+      exitState.unlockTimer = window.setTimeout(() => {
+        setExitLock(true);
+      }, durationMs);
+    }
+  }
+
   function beforeUnload(ev) {
-    if (!state.inBattle) return;
-    const message = translate('hud.battle.leaveWarning', 'You are in battle! Leaving now may kill your hero.');
-    showExitWarning();
+    if (!exitState.locked) return;
+    const mode = state.inBattle ? 'battle' : 'safe';
+    const config = getWarningConfig(mode);
+    const message = translate(config.promptKey || 'hud.battle.leaveWarning', config.promptFallback || 'You are in battle! Leaving now may kill your hero.');
+    showExitWarning(mode);
     ev.preventDefault();
     ev.returnValue = message;
     return message;
   }
 
   function onKeydown(ev) {
-    if (!state.inBattle) return;
+    if (!exitState.locked) return;
     const key = ev.key || '';
     const isCloseCombo = ((ev.metaKey || ev.ctrlKey) && (key === 'w' || key === 'W'));
     if (isCloseCombo) {
       ev.preventDefault();
       ev.stopPropagation();
-      showExitWarning();
+      showExitWarning(state.inBattle ? 'battle' : 'safe');
     }
   }
 
@@ -331,6 +399,9 @@ import { onMessage } from '../ws/singleton.js';
   window.HeroBattle = {
     isInBattle: () => !!state.inBattle,
     getHeroId: () => state.heroId,
-    showExitWarning: () => showExitWarning(),
+    showExitWarning: (mode) => showExitWarning(mode),
+    lockExit: () => setExitLock(true),
+    unlockExit: () => setExitLock(false),
+    allowExitFor: (ms) => allowExitFor(ms),
   };
 })();
