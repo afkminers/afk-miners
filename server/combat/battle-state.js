@@ -238,7 +238,7 @@ function cooldown(heroId, ms = SAFE_GRACE_MS) {
   const grace = Math.max(0, Math.min(DEFAULT_TTL_MS, Number(ms) || 0));
   const nowTs = now();
   const candidate = nowTs - (DEFAULT_TTL_MS - grace);
-  if (candidate > state.lastTouch) {
+  if (candidate < state.lastTouch) {
     state.lastTouch = candidate;
   }
   scheduleCheck(hid);
