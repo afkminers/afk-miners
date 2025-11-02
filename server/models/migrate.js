@@ -1,6 +1,134 @@
 // server/models/migrate.js
-const { run } = require('./db');
+const { run, getPool } = require('./db');
 const { ensureHeroesSchema, seedHeroesIfEmpty } = require('./heroes');
+
+const MIGRATE_DEBUG = (() => {
+  const raw = process.env.DB_MIGRATE_DEBUG;
+  if (!raw) return false;
+  const lowered = raw.toLowerCase();
+  return lowered === '1' || lowered === 'true';
+})();
+
+async function execSocialQuery(client, sql, params = []) {
+  try {
+    await client.query(sql, params);
+  } catch (err) {
+    if (MIGRATE_DEBUG) {
+      console.error('[DB MIGRATE] failed SQL:', sql.trim());
+      if (params.length) {
+        console.error('[DB MIGRATE] params:', JSON.stringify(params));
+      }
+      console.error('[DB MIGRATE] error:', err.message);
+    }
+    throw err;
+  }
+}
+
+async function ensureSocialSchema() {
+  const client = await getPool().connect();
+  try {
+    await execSocialQuery(client, 'BEGIN');
+
+    await execSocialQuery(
+      client,
+      "CREATE TYPE IF NOT EXISTS friend_status AS ENUM ('PENDING','ACCEPTED','BLOCKED')"
+    );
+
+    await execSocialQuery(
+      client,
+      `
+        CREATE TABLE IF NOT EXISTS friendships (
+          id BIGSERIAL PRIMARY KEY,
+          user_a_id TEXT NOT NULL,
+          user_b_id TEXT NOT NULL,
+          status friend_status NOT NULL DEFAULT 'PENDING',
+          pair_left TEXT GENERATED ALWAYS AS (LEAST(user_a_id, user_b_id)) STORED,
+          pair_right TEXT GENERATED ALWAYS AS (GREATEST(user_a_id, user_b_id)) STORED,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+          CHECK (user_a_id <> user_b_id),
+          FOREIGN KEY (user_a_id) REFERENCES players(id) ON DELETE CASCADE,
+          FOREIGN KEY (user_b_id) REFERENCES players(id) ON DELETE CASCADE
+        )
+      `
+    );
+
+    await execSocialQuery(
+      client,
+      `CREATE UNIQUE INDEX IF NOT EXISTS friendships_pair_unique ON friendships (pair_left, pair_right)`
+    );
+
+    await execSocialQuery(
+      client,
+      `CREATE INDEX IF NOT EXISTS idx_friendships_user_a ON friendships (user_a_id)`
+    );
+    await execSocialQuery(
+      client,
+      `CREATE INDEX IF NOT EXISTS idx_friendships_user_b ON friendships (user_b_id)`
+    );
+    await execSocialQuery(
+      client,
+      `CREATE INDEX IF NOT EXISTS idx_friendships_status ON friendships (status)`
+    );
+
+    await execSocialQuery(
+      client,
+      `
+        CREATE TABLE IF NOT EXISTS direct_messages (
+          id BIGSERIAL PRIMARY KEY,
+          sender_id TEXT NOT NULL,
+          recipient_id TEXT NOT NULL,
+          conversation_left TEXT GENERATED ALWAYS AS (LEAST(sender_id, recipient_id)) STORED,
+          conversation_right TEXT GENERATED ALWAYS AS (GREATEST(sender_id, recipient_id)) STORED,
+          conversation_id TEXT GENERATED ALWAYS AS (
+            CASE
+              WHEN sender_id < recipient_id THEN sender_id || ':' || recipient_id
+              ELSE recipient_id || ':' || sender_id
+            END
+          ) STORED,
+          body_original TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+          delivered_at TIMESTAMPTZ,
+          read_at TIMESTAMPTZ,
+          blocked_at TIMESTAMPTZ,
+          CHECK (sender_id <> recipient_id),
+          FOREIGN KEY (sender_id) REFERENCES players(id) ON DELETE CASCADE,
+          FOREIGN KEY (recipient_id) REFERENCES players(id) ON DELETE CASCADE
+        )
+      `
+    );
+
+    await execSocialQuery(
+      client,
+      `CREATE INDEX IF NOT EXISTS idx_dm_conversation_created_at ON direct_messages (conversation_id, created_at DESC)`
+    );
+    await execSocialQuery(
+      client,
+      `CREATE INDEX IF NOT EXISTS idx_dm_sender_created_at ON direct_messages (sender_id, created_at DESC)`
+    );
+    await execSocialQuery(
+      client,
+      `CREATE INDEX IF NOT EXISTS idx_dm_recipient_created_at ON direct_messages (recipient_id, created_at DESC)`
+    );
+    await execSocialQuery(
+      client,
+      `CREATE INDEX IF NOT EXISTS idx_dm_participant_created_at ON direct_messages (conversation_left, conversation_right, created_at DESC)`
+    );
+
+    await execSocialQuery(client, 'COMMIT');
+  } catch (err) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackErr) {
+      if (MIGRATE_DEBUG) {
+        console.error('[DB MIGRATE] rollback failed:', rollbackErr.message);
+      }
+    }
+    throw err;
+  } finally {
+    client.release();
+  }
+}
 
 async function migrate() {
   // players
@@ -199,58 +327,7 @@ async function migrate() {
   `);
 
   // ---------- Social (amizades e DMs) ----------
-  await run(`CREATE TYPE IF NOT EXISTS friend_status AS ENUM ('PENDING','ACCEPTED','BLOCKED')`);
-
-  await run(`
-    CREATE TABLE IF NOT EXISTS friendships (
-      id BIGSERIAL PRIMARY KEY,
-      user_a_id TEXT NOT NULL,
-      user_b_id TEXT NOT NULL,
-      status friend_status NOT NULL DEFAULT 'PENDING',
-      pair_key TEXT GENERATED ALWAYS AS (
-        CASE
-          WHEN user_a_id < user_b_id THEN user_a_id || ':' || user_b_id
-          ELSE user_b_id || ':' || user_a_id
-        END
-      ) STORED NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-      CHECK (user_a_id <> user_b_id),
-      FOREIGN KEY (user_a_id) REFERENCES players(id) ON DELETE CASCADE,
-      FOREIGN KEY (user_b_id) REFERENCES players(id) ON DELETE CASCADE,
-      UNIQUE (pair_key)
-    )
-  `);
-
-  await run(`CREATE INDEX IF NOT EXISTS idx_friendships_user_a ON friendships (user_a_id)`);
-  await run(`CREATE INDEX IF NOT EXISTS idx_friendships_user_b ON friendships (user_b_id)`);
-  await run(`CREATE INDEX IF NOT EXISTS idx_friendships_status ON friendships (status)`);
-
-  await run(`
-    CREATE TABLE IF NOT EXISTS direct_messages (
-      id BIGSERIAL PRIMARY KEY,
-      sender_id TEXT NOT NULL,
-      recipient_id TEXT NOT NULL,
-      conversation_id TEXT GENERATED ALWAYS AS (
-        CASE
-          WHEN sender_id < recipient_id THEN sender_id || ':' || recipient_id
-          ELSE recipient_id || ':' || sender_id
-        END
-      ) STORED NOT NULL,
-      body_original TEXT NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-      delivered_at TIMESTAMPTZ,
-      read_at TIMESTAMPTZ,
-      blocked_at TIMESTAMPTZ,
-      CHECK (sender_id <> recipient_id),
-      FOREIGN KEY (sender_id) REFERENCES players(id) ON DELETE CASCADE,
-      FOREIGN KEY (recipient_id) REFERENCES players(id) ON DELETE CASCADE
-    )
-  `);
-
-  await run(`CREATE INDEX IF NOT EXISTS idx_dm_conversation_created_at ON direct_messages (conversation_id, created_at DESC)`);
-  await run(`CREATE INDEX IF NOT EXISTS idx_dm_sender_created_at ON direct_messages (sender_id, created_at DESC)`);
-  await run(`CREATE INDEX IF NOT EXISTS idx_dm_recipient_created_at ON direct_messages (recipient_id, created_at DESC)`);
+  await ensureSocialSchema();
 
   // ---------- Conteúdo (pipeline) ----------
   await run(`
