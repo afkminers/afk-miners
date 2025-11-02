@@ -7,6 +7,13 @@ import { openSkills, openHeroes, openInventory, openSummonPanel } from './app_pa
 import { getSocket, onMessage, wsSend, authenticate } from './ws/singleton.js';
 import { HeroState } from './state/hero-state.js';
 import { initFriendHud } from './ui/friends-hud.js';
+import {
+  initDmChat,
+  openConversation as openDmConversation,
+  isDmScope,
+  activateDmScope,
+  handleDmSubmit,
+} from './ui/dm-chat.js';
 
 /* ---------- HTTP helpers + CSRF ---------- */
 let CSRF = null;
@@ -418,6 +425,8 @@ async function initGlobalChatUI() {
   const chatInput  = document.getElementById('chatInput');
   const chatSend   = document.getElementById('chatSend');
   const chatForm   = document.getElementById('chatForm');
+  const chatTabs   = document.querySelector('.chat-tabs');
+  const chatPanels = document.querySelector('.chat-panels');
   if (!chatBox || !chatLogBox || !chatInput || !chatSend || !btnDefault || !btnGlobal || !btnLog || !chatForm) return;
 
   getSocket(); // garante conexão
@@ -449,6 +458,21 @@ async function initGlobalChatUI() {
     appendChatRow({ fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
   });
 
+  initDmChat({
+    tabsEl: chatTabs,
+    panelsEl: chatPanels,
+    input: chatInput,
+    focusInput: () => chatInput.focus(),
+  });
+
+  window.addEventListener('dm:open', (event) => {
+    const detail = event.detail || {};
+    const friend = detail.friend || { friendId: detail.friendId };
+    if (!friend || !friend.friendId) return;
+    setScope(`dm:${friend.friendId}`);
+    openDmConversation(friend);
+  });
+
   let chatScope = 'default';
   function setScope(scope) {
     chatScope = scope;
@@ -456,10 +480,13 @@ async function initGlobalChatUI() {
     btnGlobal.classList.toggle('active', scope === 'global');
     btnLog.classList.toggle('active', scope === 'log');
 
-    const showChat = scope !== 'log';
+    const dmScope = isDmScope(scope);
+    const showChat = scope !== 'log' && !dmScope;
     chatBox.style.display = showChat ? 'block' : 'none';
-    chatLogBox.style.display = showChat ? 'none' : 'block';
-    chatForm.style.display = showChat ? 'flex' : 'none';
+    chatLogBox.style.display = scope === 'log' ? 'block' : 'none';
+    chatForm.style.display = scope === 'log' ? 'none' : 'flex';
+
+    activateDmScope(scope);
 
     if (scope === 'log' && window.Chat?.clearLogHighlight) {
       try { window.Chat.clearLogHighlight(); } catch {}
@@ -477,6 +504,12 @@ async function initGlobalChatUI() {
     if (chatScope === 'log') {
       return;
     }
+    if (isDmScope(chatScope)) {
+      if (handleDmSubmit(chatScope, text)) {
+        chatInput.value = '';
+      }
+      return;
+    }
     if (chatScope === 'global') {
       wsSend({ type: 'chat', scope: 'global', text });
       chatInput.value = '';
@@ -487,7 +520,13 @@ async function initGlobalChatUI() {
   }
   chatSend.addEventListener('click', sendChat);
   chatForm.addEventListener('submit', (e)=>{ e.preventDefault(); sendChat(); });
-  chatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
+  chatInput.addEventListener('keydown', (e)=>{
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChat();
+    }
+  });
+
 }
 
 /* ===================== Conteúdo auxiliar (somente se cena modular falhar) ===================== */
@@ -531,6 +570,9 @@ const FALLBACK_LOAD_CONTENT = async () => {
     setLoadingProgress(72);
 
     await initGlobalChatUI();
+    setLoadingProgress(72);
+
+    await initFriendHud();
     setLoadingProgress(82);
 
     applyViewport();

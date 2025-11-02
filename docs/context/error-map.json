@@ -1474,6 +1474,34 @@
       "body": "{error:'DM_BLOCKED'}"
     },
     {
+      "status": 403,
+      "body": "{error:'DM_NOT_ALLOWED'}"
+    },
+    {
+      "status": 400,
+      "body": "{error:'DM_BODY_REQUIRED'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'DM_SEND_FAILED'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'DM_ACK_FAILED'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'DM_READ_FAILED'}"
+    },
+    {
+      "status": 429,
+      "body": "{error:'DM_HISTORY_RATE_LIMIT'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'DM_HISTORY_FAILED'}"
+    },
+    {
       "status": 404,
       "body": "{error:'USER_NOT_FOUND'}"
     }
@@ -1618,6 +1646,28 @@
     {
       "status": 500,
       "body": "{error:'FRIEND_UNBLOCK_FAILED'}"
+    }
+  ],
+  "GET /api/friends/{friendId}/dms": [
+    {
+      "status": 400,
+      "body": "{error:'FRIEND_ID_REQUIRED'}"
+    },
+    {
+      "status": 403,
+      "body": "{error:'DM_NOT_ALLOWED'}"
+    },
+    {
+      "status": 404,
+      "body": "{error:'FRIEND_NOT_FOUND'}"
+    },
+    {
+      "status": 429,
+      "body": "{error:'DM_HISTORY_RATE_LIMIT'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'DM_HISTORY_FAILED'}"
     }
   ]
 }

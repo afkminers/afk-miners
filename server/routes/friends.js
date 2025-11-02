@@ -5,6 +5,11 @@ const router = express.Router();
 const { all, get, run } = require('../models/db');
 const makeLimiter = require('../middleware/limiter');
 const { getPresenceSnapshot } = require('../ws/presence');
+const {
+  fetchMessages: fetchDirectMessages,
+  fetchFriendship: fetchDmFriendship,
+  countUnreadForPair,
+} = require('../services/direct-messages');
 
 const listLimiter = makeLimiter({
   windowMs: 1000,
@@ -16,6 +21,12 @@ const actionLimiter = makeLimiter({
   windowMs: 60_000,
   max: 20,
   message: { error: 'FRIEND_RATE_LIMIT' },
+});
+
+const dmHistoryLimiter = makeLimiter({
+  windowMs: 1000,
+  max: 30,
+  message: { error: 'DM_HISTORY_RATE_LIMIT' },
 });
 
 function sendError(res, status, code) {
@@ -355,6 +366,45 @@ router.post('/:friendId/unblock', actionLimiter, async (req, res) => {
   } catch (err) {
     console.error('[friends:unblock] failed', err?.message);
     res.status(500).json({ error: 'FRIEND_UNBLOCK_FAILED' });
+  }
+});
+
+router.get('/:friendId/dms', dmHistoryLimiter, async (req, res) => {
+  try {
+    const currentUserId = String(req.user?.id || '');
+    const friendId = normalizeId(req.params.friendId);
+    if (!friendId) return sendError(res, 400, 'FRIEND_ID_REQUIRED');
+
+    const relation = await fetchDmFriendship(currentUserId, friendId);
+    if (!relation || (String(relation.user_a_id) !== currentUserId && String(relation.user_b_id) !== currentUserId)) {
+      return sendError(res, 404, 'FRIEND_NOT_FOUND');
+    }
+    if (relation.status === 'BLOCKED') {
+      const blockerId = String(relation.user_a_id);
+      const errorCode = blockerId === currentUserId ? 'DM_BLOCKED' : 'DM_NOT_ALLOWED';
+      return sendError(res, 403, errorCode);
+    }
+    if (relation.status !== 'ACCEPTED') {
+      return sendError(res, 403, 'DM_NOT_ALLOWED');
+    }
+
+    const limit = Math.min(Math.max(Number(req.query.limit) || 30, 1), 100);
+    const before = req.query.before ? Number(req.query.before) : null;
+
+    const messages = await fetchDirectMessages({
+      userId: currentUserId,
+      friendId,
+      limit,
+      beforeId: Number.isFinite(before) && before > 0 ? before : null,
+    });
+
+    const nextCursor = messages.length === limit ? messages[0]?.id || null : null;
+    const unreadCount = await countUnreadForPair(currentUserId, friendId);
+
+    res.json({ ok: true, messages, nextCursor, unreadCount });
+  } catch (err) {
+    console.error('[friends:dms] failed', err?.message);
+    res.status(500).json({ error: 'DM_HISTORY_FAILED' });
   }
 });
 

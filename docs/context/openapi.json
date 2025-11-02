@@ -3856,6 +3856,79 @@
           }
         }
       }
+    },
+    "/api/friends/{friendId}/dms": {
+      "get": {
+        "summary": "Listar mensagens diretas",
+        "description": "Retorna o histórico paginado de mensagens diretas entre os dois jogadores.",
+        "tags": [
+          "friends"
+        ],
+        "parameters": [
+          {
+            "name": "friendId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identificador do outro participante da conversa."
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "description": "Cursor para buscar mensagens mais antigas (id exclusivo)."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 30
+            },
+            "description": "Quantidade máxima de mensagens a retornar."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Histórico carregado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DmHistoryResponse"
+                },
+                "example": {
+                  "ok": true,
+                  "messages": [
+                    {
+                      "id": 4521,
+                      "conversationId": "player-a:player-b",
+                      "senderId": "player-a",
+                      "recipientId": "player-b",
+                      "bodyOriginal": "Cheguei na House!",
+                      "createdAt": "2025-02-20T12:00:00.000Z",
+                      "deliveredAt": "2025-02-20T12:00:01.000Z",
+                      "readAt": null
+                    }
+                  ],
+                  "nextCursor": null,
+                  "unreadCount": 0
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4079,6 +4152,35 @@
         "required": [
           "username"
         ]
+      },
+      "DmHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DmMessage"
+            }
+          },
+          "nextCursor": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "unreadCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "ok",
+          "messages",
+          "unreadCount"
+        ],
+        "description": "Resposta paginada com o histórico de mensagens diretas."
       }
     }
   }

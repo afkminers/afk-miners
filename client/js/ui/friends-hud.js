@@ -3,6 +3,11 @@
 
 import { apiGet, apiPost, apiDelete } from '../api.js';
 import { getSocket, onMessage } from '../ws/singleton.js';
+import {
+  openConversation as openDmConversation,
+  syncUnreadFromServer,
+  syncFriendData,
+} from './dm-chat.js';
 
 const REFRESH_INTERVAL = 30_000;
 
@@ -95,7 +100,7 @@ function ensureContextMenu() {
   contextMenuEl.className = 'friend-context-menu';
   contextMenuEl.setAttribute('role', 'menu');
   contextMenuEl.innerHTML = `
-    <button type="button" class="friend-context-item" data-action="message" disabled title="Em breve">Send Message</button>
+    <button type="button" class="friend-context-item" data-action="message">Send Message</button>
     <button type="button" class="friend-context-item" data-action="remove">Remover</button>
     <button type="button" class="friend-context-item" data-action="block">Bloquear</button>
   `;
@@ -115,6 +120,12 @@ function openContextMenuFor(friend, anchorRect) {
   contextMenuFriendId = friend.friendId;
   const removeBtn = contextMenuEl.querySelector('[data-action="remove"]');
   const blockBtn = contextMenuEl.querySelector('[data-action="block"]');
+  const messageBtn = contextMenuEl.querySelector('[data-action="message"]');
+  if (messageBtn) {
+    const canMessage = friend.status === 'ACCEPTED' && friend.canMessage !== false;
+    messageBtn.disabled = !canMessage;
+    messageBtn.title = canMessage ? 'Enviar mensagem privada' : 'Mensagem indisponível';
+  }
   const canRemove = friend.status === 'ACCEPTED';
   if (removeBtn) {
     removeBtn.disabled = !canRemove;
@@ -386,11 +397,14 @@ function applyFriend(rawFriend) {
   const friend = normalizeFriend(rawFriend);
   if (!friend) return;
   friendsById.set(friend.friendId, friend);
+  syncUnreadFromServer(friend.friendId, friend.unreadCount || 0, { silent: true });
+  syncFriendData(friend);
 }
 
 function removeFriend(friendId) {
   if (!friendId) return;
   friendsById.delete(friendId);
+  syncUnreadFromServer(friendId, 0, { silent: true });
 }
 
 async function ensureCurrentUser() {
@@ -631,6 +645,12 @@ function handleContextMenuClick(event) {
     handleAction(mode, friendId).catch(() => {});
   } else if (action === 'remove') {
     handleAction('remove', friendId).catch(() => {});
+  } else if (action === 'message') {
+    const friend = friendsById.get(friendId);
+    if (friend && friend.status === 'ACCEPTED' && friend.canMessage !== false) {
+      openDmConversation(friend);
+      closePanel();
+    }
   }
   closeContextMenu();
 }
@@ -780,6 +800,18 @@ function bindEvents() {
     if (!contextMenuEl || !contextMenuEl.classList.contains('is-open')) return;
     if (!contextMenuEl.contains(event.target)) closeContextMenu();
   });
+
+  const unreadHandler = (event) => {
+    const detail = event.detail || {};
+    const friendId = detail.friendId ? String(detail.friendId) : null;
+    if (!friendId) return;
+    const friend = friendsById.get(friendId);
+    if (!friend) return;
+    friend.unreadCount = Number(detail.unreadCount || 0);
+    renderSections();
+  };
+  window.addEventListener('dm:unread', unreadHandler);
+  unsubscribers.push(() => window.removeEventListener('dm:unread', unreadHandler));
 }
 
 function bindPresenceEvents() {
