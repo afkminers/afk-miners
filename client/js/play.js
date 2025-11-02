@@ -20,6 +20,260 @@ const playerVis = { w: 32, h: 32, img: null, heroKey: null, anchorX: 0.5, anchor
 // Desliga a IA local de mobs; posição deve vir do servidor
 const ENABLE_LOCAL_MOB_AI = false;
 
+const sessionStartedAt = Date.now();
+let sessionTimerId = null;
+let pingTimerId = null;
+
+const DOCK_STORAGE = {
+  left: 'hudDockLeftCollapsed',
+  right: 'hudDockRightCollapsed',
+};
+
+const HOTBAR_KEYS = ['1', '2', '3', '4', '5', 'Q', 'E', 'R'];
+
+const mqLeft = window.matchMedia('(max-width: 1023px)');
+const mqRight = window.matchMedia('(max-width: 879px)');
+
+function getChatInput() {
+  return document.getElementById('chatInput');
+}
+
+function isTypingTarget(target) {
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+}
+
+function getStoredDockState(side) {
+  try {
+    return localStorage.getItem(DOCK_STORAGE[side]) === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
+function storeDockState(side, collapsed) {
+  try {
+    localStorage.setItem(DOCK_STORAGE[side], collapsed ? '1' : '0');
+  } catch (_) {}
+}
+
+function syncDockControls() {
+  ['left', 'right'].forEach((side) => {
+    const collapsed = document.body.classList.contains(`dock-${side}-collapsed`);
+    const auto = document.body.classList.contains(`dock-${side}-auto`);
+    const open = document.body.classList.contains(`dock-${side}-open`);
+    document.querySelectorAll(`[data-dock-toggle="${side}"]`).forEach((btn) => {
+      const expanded = auto ? open : !collapsed;
+      btn.setAttribute('aria-expanded', String(expanded));
+    });
+    document.querySelectorAll(`[data-dock-target="${side}"]`).forEach((btn) => {
+      const expanded = auto && open;
+      btn.setAttribute('aria-expanded', String(expanded));
+    });
+    const aside = document.getElementById(`dock-${side}`);
+    if (aside) aside.dataset.collapsed = collapsed && !open ? 'true' : 'false';
+  });
+}
+
+function setDockCollapsed(side, collapsed, { persist = true } = {}) {
+  document.body.classList.toggle(`dock-${side}-collapsed`, collapsed);
+  if (!collapsed) {
+    document.body.classList.remove(`dock-${side}-open`);
+  }
+  if (persist) storeDockState(side, collapsed);
+  syncDockControls();
+}
+
+function toggleDock(side) {
+  const auto = document.body.classList.contains(`dock-${side}-auto`);
+  if (auto) {
+    document.body.classList.toggle(`dock-${side}-open`);
+    syncDockControls();
+    return;
+  }
+  const collapsed = document.body.classList.contains(`dock-${side}-collapsed`);
+  setDockCollapsed(side, !collapsed, { persist: true });
+}
+
+function applyResponsiveDock() {
+  const leftAuto = mqLeft.matches;
+  const rightAuto = mqRight.matches;
+  document.body.classList.toggle('dock-left-auto', leftAuto);
+  document.body.classList.toggle('dock-right-auto', rightAuto);
+  if (leftAuto) {
+    document.body.classList.add('dock-left-collapsed');
+    document.body.classList.remove('dock-left-open');
+  } else {
+    setDockCollapsed('left', getStoredDockState('left'), { persist: false });
+  }
+  if (rightAuto) {
+    document.body.classList.add('dock-right-collapsed');
+    document.body.classList.remove('dock-right-open');
+  } else {
+    setDockCollapsed('right', getStoredDockState('right'), { persist: false });
+  }
+  syncDockControls();
+}
+
+function initDockControls() {
+  applyResponsiveDock();
+  mqLeft.addEventListener('change', applyResponsiveDock);
+  mqRight.addEventListener('change', applyResponsiveDock);
+  document.querySelectorAll('[data-dock-toggle]').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      const side = btn.getAttribute('data-dock-toggle');
+      if (!side) return;
+      toggleDock(side);
+    });
+  });
+  document.querySelectorAll('[data-dock-target]').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      const side = btn.getAttribute('data-dock-target');
+      if (!side) return;
+      document.body.classList.toggle(`dock-${side}-open`);
+      syncDockControls();
+    });
+  });
+  syncDockControls();
+}
+
+function highlightHotbar(key, className = 'active') {
+  const slot = document.querySelector(`.hot-slot[data-key="${key}"]`);
+  if (!slot) return;
+  slot.classList.add(className);
+  if (className === 'active') {
+    setTimeout(() => slot.classList.remove('active'), 220);
+  }
+}
+
+function focusHotbarSlot(key) {
+  const slot = document.querySelector(`.hot-slot[data-key="${key}"]`);
+  if (!slot) return;
+  slot.classList.add('focused');
+  try { slot.focus(); } catch (_) {}
+  setTimeout(() => slot.classList.remove('focused'), 300);
+}
+
+function handleGlobalKeydown(event) {
+  const key = event.key.toUpperCase();
+  if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey && !isTypingTarget(event.target)) {
+    const input = getChatInput();
+    if (input) {
+      event.preventDefault();
+      input.focus();
+    }
+    return;
+  }
+  if (event.key === 'Escape') {
+    const input = getChatInput();
+    if (input && document.activeElement === input) {
+      input.value = '';
+      event.preventDefault();
+    }
+    return;
+  }
+  if (event.key === 'F1') {
+    event.preventDefault();
+    if (window.Chat && typeof window.Chat.switchTo === 'function') {
+      window.Chat.switchTo('ajuda');
+    }
+    return;
+  }
+  if (event.ctrlKey && !event.altKey && !event.metaKey) {
+    if (event.code && event.code.startsWith('Digit')) {
+      const digit = event.code.replace('Digit', '');
+      if (HOTBAR_KEYS.includes(digit)) {
+        event.preventDefault();
+        focusHotbarSlot(digit);
+        highlightHotbar(digit);
+        return;
+      }
+    }
+  }
+  if (isTypingTarget(event.target)) return;
+  if (HOTBAR_KEYS.includes(key)) {
+    highlightHotbar(key);
+  }
+}
+
+function setupHotbarInteractions() {
+  document.querySelectorAll('.hot-slot').forEach((slot) => {
+    slot.addEventListener('click', () => {
+      const key = slot.dataset.key?.toUpperCase();
+      if (key) highlightHotbar(key);
+    });
+    slot.addEventListener('blur', () => {
+      slot.classList.remove('focused');
+    });
+  });
+  document.addEventListener('keydown', handleGlobalKeydown);
+}
+
+function tickSessionTime() {
+  if (window.HUD && typeof window.HUD.setSessionTime === 'function') {
+    window.HUD.setSessionTime(Date.now() - sessionStartedAt);
+  }
+}
+
+async function measurePing() {
+  const start = performance.now();
+  try {
+    const resp = await fetch('/api/status', { method: 'GET', cache: 'no-store', credentials: 'include' });
+    if (resp && resp.ok) {
+      await resp.text().catch(() => null);
+    }
+  } catch (_) {}
+  const elapsed = Math.round(performance.now() - start);
+  if (window.HUD && typeof window.HUD.setPing === 'function') {
+    window.HUD.setPing(elapsed);
+  }
+}
+
+function startHudTimers() {
+  tickSessionTime();
+  if (sessionTimerId) clearInterval(sessionTimerId);
+  sessionTimerId = setInterval(tickSessionTime, 1000);
+  measurePing();
+  if (pingTimerId) clearInterval(pingTimerId);
+  pingTimerId = setInterval(measurePing, 5000);
+}
+
+async function hydratePlayerName() {
+  try {
+    const resp = await fetch('/api/auth/me', { credentials: 'include' });
+    if (!resp.ok) return;
+    const data = await resp.json().catch(() => null);
+    const name = data?.name || data?.profile?.name;
+    if (name && window.HUD && typeof window.HUD.setPlayerName === 'function') {
+      window.HUD.setPlayerName(name);
+    }
+  } catch (_) {}
+}
+
+function bootstrapHudDefaults() {
+  if (typeof window.updateHud === 'function') {
+    window.updateHud({
+      hp: { current: 38, max: 500 },
+      mp: { current: 95, max: 120 },
+      xp: { current: 3500, max: 5000 },
+      stamina: { current: 120, max: 240 },
+      gold: 142,
+      diamonds: 27,
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initDockControls();
+  setupHotbarInteractions();
+  startHudTimers();
+  hydratePlayerName();
+  bootstrapHudDefaults();
+});
+
 
 // === buffer de pos_snap recebido cedo (antes do controller existir)
 let _earlySnap = null;

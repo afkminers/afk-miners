@@ -8,6 +8,20 @@ body{
   color: var(--ink);
 }
 
+.play-shell{
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+.play-shell .pixel-panel{
+  border:1px solid var(--c-border);
+  border-radius:0;
+}
+
+.play-shell .chat-log{
+  font-family:'Press Start 2P', monospace;
+}
+
 /* moldura “caixa retrô” */
 .ui-frame{
   position:relative;
