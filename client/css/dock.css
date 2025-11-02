@@ -130,3 +130,533 @@
   opacity: .7;
 }
 #shellGrip:hover{ opacity: 1; }
+
+/* ===================== Play Shell (Tibia-like) ===================== */
+.play-shell .dock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  min-height: 0;
+}
+
+.play-shell .dock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--c-sub);
+}
+
+.play-shell .dock-header h2 {
+  margin: 0;
+  font-size: 12px;
+  color: var(--c-text);
+}
+
+.play-shell .dock-collapse {
+  background: var(--c-panel-alt);
+  border: none;
+  color: var(--c-text);
+  padding: 6px 8px;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px var(--c-border) inset, 0 2px 0 rgba(0,0,0,0.45);
+  text-shadow: 1px 1px 0 #000;
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+}
+
+.play-shell .dock-section {
+  background: var(--c-panel-alt);
+  padding: 10px;
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.play-shell .dock-section > header {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--c-sub);
+  letter-spacing: 0.5px;
+}
+
+.play-shell .dock-section.minimap {
+  align-items: center;
+}
+
+.play-shell #hud-minimap {
+  width: 128px;
+  height: 128px;
+  image-rendering: pixelated;
+  box-shadow: 0 0 0 1px var(--c-border) inset, 0 0 0 2px rgba(0,0,0,0.65);
+  background: #000;
+}
+
+.play-shell .dock-section.party ul,
+.play-shell .dock-section.quests ol,
+.play-shell .quest-list,
+.play-shell .skill-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 10px;
+}
+
+.play-shell .dock-section.quests ol {
+  counter-reset: quest;
+}
+
+.play-shell .dock-section.quests li::before {
+  counter-increment: quest;
+  content: counter(quest) ".";
+  color: var(--c-sub);
+  margin-right: 6px;
+}
+
+.play-shell .dock-section.party li {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3px;
+  padding: 6px;
+  background: rgba(20,23,28,0.6);
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+}
+
+.play-shell .dock-section.party .name {
+  color: var(--c-text);
+}
+
+.play-shell .dock-section.party .hp {
+  color: var(--hp);
+}
+
+.play-shell .dock-section.party .mp {
+  color: var(--mp);
+}
+
+.play-shell .tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.play-shell .tab-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.play-shell .tab-buttons button {
+  background: var(--c-panel-alt);
+  color: var(--c-text);
+  padding: 8px 6px;
+  cursor: pointer;
+  border: none;
+  font-size: 10px;
+  text-transform: uppercase;
+  box-shadow: 0 0 0 1px var(--c-border) inset, 0 2px 0 rgba(0,0,0,0.5);
+}
+
+.play-shell .tab-buttons button[aria-selected="true"] {
+  background: var(--c-accent);
+  color: #fff4c2;
+}
+
+.play-shell .tab-panels {
+  position: relative;
+  min-height: 0;
+  flex: 1;
+}
+
+.play-shell .tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.play-shell .tab-panel[hidden] {
+  display: none;
+}
+
+.play-shell .equip-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(48px, 1fr));
+  gap: 8px;
+}
+
+.play-shell .equip-slot,
+.play-shell .bag-slot {
+  aspect-ratio: 1 / 1;
+  background: rgba(18,21,26,0.8);
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  text-align: center;
+}
+
+.play-shell .equip-slot::after,
+.play-shell .bag-slot::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.08);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.12) inset;
+}
+
+.play-shell .equip-slot[data-empty="false"]::after,
+.play-shell .bag-slot[data-empty="false"]::after {
+  display: none;
+}
+
+.play-shell .equip-item,
+.play-shell .bag-slot {
+  font-size: 10px;
+  color: var(--c-text);
+  line-height: 1.2;
+}
+
+.play-shell .equip-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.play-shell .equip-name {
+  font-weight: bold;
+  display: block;
+}
+
+.play-shell .equip-meta {
+  color: var(--c-sub);
+  font-size: 9px;
+}
+
+.play-shell .bag-name {
+  display: block;
+}
+
+.play-shell .bag-qty {
+  color: var(--c-sub);
+  font-size: 9px;
+}
+
+.play-shell .bag-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(48px, 1fr));
+  gap: 8px;
+}
+
+.play-shell .skill-list li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  align-items: center;
+  background: rgba(18,21,26,0.8);
+  padding: 6px 8px;
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+}
+
+.play-shell .skill-list .label {
+  font-size: 10px;
+  color: var(--c-text);
+}
+
+.play-shell .skill-bar {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 12px;
+  background: rgba(12,15,20,0.9);
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+  position: relative;
+}
+
+.play-shell .skill-bar .fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: var(--c-accent);
+}
+
+.play-shell .quest-list li {
+  background: rgba(18,21,26,0.8);
+  padding: 6px 8px;
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+}
+
+.play-shell #chat {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 8px;
+  padding: 12px;
+}
+
+.play-shell .chat-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.play-shell .chat-tabs [data-dm-anchor] {
+  display: none;
+}
+
+.play-shell .chat-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+
+.play-shell .chat-panel {
+  display: none;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.play-shell .chat-panel--active,
+.play-shell .chat-panel:not([hidden]) {
+  display: flex;
+}
+
+.play-shell .chat-panel-anchor {
+  display: none;
+}
+
+.play-shell .chat-tab {
+  border: none;
+  background: var(--c-panel-alt);
+  color: var(--c-text);
+  padding: 8px 4px;
+  cursor: pointer;
+  font-size: 10px;
+  text-transform: uppercase;
+  box-shadow: 0 0 0 1px var(--c-border) inset, 0 2px 0 rgba(0,0,0,0.45);
+}
+
+.play-shell .chat-tab.dm-tab {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.play-shell .chat-tab.dm-tab .dm-tab-label {
+  flex: 1;
+  text-align: left;
+}
+
+.play-shell .chat-tab.dm-tab .dm-tab-badge {
+  display: inline-flex;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--c-accent);
+  color: #fff4c2;
+  font-size: 9px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.play-shell .chat-tab.dm-tab .dm-tab-badge[hidden] {
+  display: none;
+}
+
+.play-shell .chat-tab.dm-tab .dm-tab-close {
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  background: none;
+  border: none;
+  color: var(--c-text);
+}
+
+.play-shell .chat-tab[data-active="true"],
+.play-shell .chat-tab[aria-selected="true"] {
+  background: var(--c-accent);
+  color: #fff4c2;
+}
+
+.play-shell .chat-log {
+  background: rgba(18,21,26,0.85);
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+  padding: 8px;
+  overflow-y: auto;
+  font-size: 10px;
+  line-height: 1.4;
+  flex: 1 1 auto;
+}
+
+.play-shell .chat-line {
+  margin-bottom: 4px;
+  color: var(--c-text);
+}
+
+.play-shell .chat-line strong {
+  color: var(--c-accent);
+}
+
+.play-shell #chatForm {
+  display: flex;
+  gap: 8px;
+}
+
+.play-shell #chatInput {
+  flex: 1;
+  background: rgba(18,21,26,0.85);
+  border: none;
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+  padding: 8px;
+  color: var(--c-text);
+  font-size: 10px;
+}
+
+.play-shell #chatInput:focus {
+  outline: 2px solid var(--c-accent);
+}
+
+.play-shell #chat .chat-box,
+.play-shell #chat .chat-box--dm {
+  background: rgba(18,21,26,0.85);
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+  padding: 8px;
+  overflow-y: auto;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--c-text);
+}
+
+.play-shell #bottombar {
+  display: grid;
+  grid-template-columns: minmax(320px, 2fr) minmax(240px, 1fr) minmax(260px, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.play-shell .hotbar-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(44px, 1fr));
+  gap: 8px;
+  padding: 12px;
+}
+
+.play-shell .hot-slot {
+  position: relative;
+  height: 48px;
+  background: rgba(18,21,26,0.85);
+  box-shadow: 0 0 0 1px var(--c-border) inset, 0 2px 0 rgba(0,0,0,0.45);
+  color: var(--c-text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.play-shell .hot-slot .hot-key {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+}
+
+.play-shell .hot-slot.active {
+  animation: hotbar-blink 0.25s ease;
+}
+
+.play-shell .hot-slot.focused {
+  outline: 2px solid var(--c-accent);
+  outline-offset: -2px;
+}
+
+@keyframes hotbar-blink {
+  0%,100% { filter: brightness(1); }
+  50% { filter: brightness(1.4); }
+}
+
+.play-shell .dock-float {
+  position: fixed;
+  bottom: 220px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: var(--c-accent);
+  color: #fff;
+  box-shadow: 0 0 0 1px var(--c-border) inset, 0 4px 0 rgba(0,0,0,0.55);
+  cursor: pointer;
+  display: none;
+  z-index: 50;
+  font-size: 16px;
+}
+
+.play-shell .dock-float[data-dock-target="left"] { left: 16px; }
+.play-shell .dock-float[data-dock-target="right"] { right: 16px; }
+
+@media (max-width: 1280px) {
+  .play-shell #bottombar {
+    grid-template-columns: minmax(280px, 2fr) minmax(220px, 1fr) minmax(220px, 1fr);
+  }
+}
+
+@media (max-width: 1023px) {
+  .play-shell #layout.grid {
+    grid-template-columns: 0 1fr 320px;
+  }
+  .play-shell.dock-left-open #layout.grid {
+    grid-template-columns: minmax(240px, 280px) 1fr 320px;
+  }
+  .play-shell #dock-left {
+    display: none;
+  }
+  .play-shell.dock-left-open #dock-left {
+    display: flex;
+    position: fixed;
+    top: 70px;
+    left: 12px;
+    bottom: 240px;
+    width: 260px;
+    z-index: 60;
+  }
+  .play-shell .dock-float[data-dock-target="left"] {
+    display: block;
+  }
+}
+
+@media (max-width: 879px) {
+  .play-shell #layout.grid {
+    grid-template-columns: 0 1fr 0;
+  }
+  .play-shell #dock-right {
+    display: none;
+  }
+  .play-shell.dock-right-open #dock-right {
+    display: flex;
+    position: fixed;
+    top: 70px;
+    right: 12px;
+    bottom: 240px;
+    width: 280px;
+    z-index: 60;
+  }
+  .play-shell .dock-float[data-dock-target="right"] {
+    display: block;
+  }
+  .play-shell #bottombar {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+}

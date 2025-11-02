@@ -14,11 +14,842 @@ import { HeroState } from './state/hero-state.js';
 
 
 const QS = new URLSearchParams(location.search);
-const MAP_KEY = QS.get('map') || 'house';
+
+function resolveMapFromLocation() {
+  const qsMap = QS.get('map');
+  if (qsMap) return qsMap;
+  const hashRaw = typeof location.hash === 'string' ? location.hash.replace(/^#/, '') : '';
+  if (hashRaw) {
+    const [hashMap] = hashRaw.split(/[?&]/);
+    if (hashMap) return hashMap;
+  }
+  return 'house';
+}
+
+const MAP_KEY = resolveMapFromLocation();
 const TILE = 32;
 const playerVis = { w: 32, h: 32, img: null, heroKey: null, anchorX: 0.5, anchorY: 0.9 };
 // Desliga a IA local de mobs; posição deve vir do servidor
 const ENABLE_LOCAL_MOB_AI = false;
+
+const sessionStartedAt = Date.now();
+let sessionTimerId = null;
+let pingTimerId = null;
+
+const DOCK_STORAGE = {
+  left: 'hudDockLeftCollapsed',
+  right: 'hudDockRightCollapsed',
+};
+
+const HOTBAR_KEYS = ['1', '2', '3', '4', '5', 'Q', 'E', 'R'];
+
+const mqLeft = window.matchMedia('(max-width: 1023px)');
+const mqRight = window.matchMedia('(max-width: 879px)');
+
+const profileCache = {
+  data: null,
+  ts: 0,
+  ttl: 8_000,
+  inflight: null,
+};
+
+const profileState = {
+  playerName: null,
+  heroes: [],
+  heroesById: new Map(),
+};
+
+const equipmentCache = new Map();
+const skillsCache = new Map();
+let inventoryCache = [];
+
+const numberFormatter = new Intl.NumberFormat('pt-BR');
+
+function getChatInput() {
+  return document.getElementById('chatInput');
+}
+
+function isTypingTarget(target) {
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+}
+
+function logoutBlockedMessage() {
+  if (window.__IN_BATTLE) {
+    if (i18n && typeof i18n.t === 'function') {
+      try {
+        const translated = i18n.t('hud.battle.logoutBlocked');
+        if (translated && translated !== 'hud.battle.logoutBlocked') return translated;
+      } catch (_) {}
+    }
+    return 'Você não pode sair durante a batalha. Vá até uma área segura primeiro.';
+  }
+  return null;
+}
+
+async function performLogout() {
+  const blocked = logoutBlockedMessage();
+  if (blocked) {
+    alert(blocked);
+    return;
+  }
+  try {
+    const csrf = await getCsrf().catch(() => null);
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, csrf ? { 'x-csrf-token': csrf } : {}),
+      credentials: 'include',
+      body: '{}',
+    });
+  } catch (err) {
+    console.warn('[play] logout failed:', err?.message || err);
+  }
+  location.href = '/index.html';
+}
+
+function handleExitToLobby() {
+  const blocked = logoutBlockedMessage();
+  if (blocked) {
+    alert(blocked);
+    return;
+  }
+  location.href = '/index.html#house';
+}
+
+function initTopbarActions() {
+  document.querySelectorAll('[data-action="logout"]').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      performLogout();
+    });
+  });
+  document.querySelectorAll('[data-action="exit"]').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      handleExitToLobby();
+    });
+  });
+}
+
+function escapeHtml(text) {
+  return String(text ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[ch] || ch));
+}
+
+function clampNumber(value, fallback = 0) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+function normalizeHeroPayload(raw = {}) {
+  const source = raw?.profile ? raw.profile : raw;
+  const idRaw = source?.id ?? source?.heroId ?? source?.hero_id ?? null;
+  const id = idRaw != null ? String(idRaw) : null;
+  if (!id) return null;
+
+  const heroKey = source?.heroKey ?? source?.key ?? source?.hero_key ?? null;
+  const className = source?.class ?? source?.heroClass ?? source?.hero_class ?? null;
+  const level = clampNumber(source?.level ?? source?.lvl ?? source?.heroLevel ?? 1, 1);
+  const xp = clampNumber(source?.xp ?? source?.experience ?? source?.currentXp ?? source?.xpCurrent ?? 0, 0);
+  const xpNeeded = clampNumber(
+    source?.xp_needed_next_level ??
+      source?.xpNeeded ??
+      source?.xp_next ??
+      source?.xpNext ??
+      source?.xpToNext ??
+      source?.xp_to_next ??
+      source?.xpMax ??
+      0,
+    0,
+  );
+  const hp = clampNumber(
+    source?.hp ??
+      source?.currentHp ??
+      source?.curHp ??
+      source?.hp_current ??
+      source?.hpCurrent ??
+      source?.health ??
+      source?.hpAtual ??
+      0,
+    0,
+  );
+  const maxHp = clampNumber(
+    source?.maxHp ??
+      source?.max_hp ??
+      source?.hpMax ??
+      source?.hp_max ??
+      source?.maxhp ??
+      source?.hpTotal ??
+      source?.hp_total ??
+      hp,
+    Math.max(hp, 0),
+  );
+  const mana = clampNumber(
+    source?.mana ??
+      source?.mp ??
+      source?.currentMana ??
+      source?.manaCurrent ??
+      source?.mana_current ??
+      source?.manaAtual ??
+      0,
+    0,
+  );
+  const maxMana = clampNumber(
+    source?.maxMana ??
+      source?.max_mana ??
+      source?.max_mp ??
+      source?.manaMax ??
+      source?.mana_max ??
+      source?.manaTotal ??
+      source?.mana_total ??
+      mana,
+    Math.max(mana, 0),
+  );
+  const staminaCurrent = clampNumber(
+    source?.stamina ??
+      source?.staminaCurrent ??
+      source?.stamina_current ??
+      source?.cap ??
+      source?.capacity ??
+      source?.maxCap ??
+      0,
+    0,
+  );
+  const staminaMax = clampNumber(
+    source?.staminaMax ??
+      source?.maxStamina ??
+      source?.stamina_max ??
+      source?.staminaCap ??
+      source?.capacityMax ??
+      source?.maxCap ??
+      staminaCurrent,
+    Math.max(staminaCurrent, 0),
+  );
+
+  const name = source?.name ?? source?.displayName ?? source?.heroName ?? source?.nickname ?? null;
+
+  return {
+    id,
+    heroKey: heroKey ? String(heroKey) : null,
+    class: className ? String(className) : null,
+    name: name ? String(name) : null,
+    level,
+    xp,
+    xpNeeded,
+    hp,
+    maxHp,
+    mana,
+    maxMana,
+    stamina: staminaCurrent,
+    staminaMax,
+    maxCap: clampNumber(source?.maxCap ?? source?.capacityMax ?? source?.capMax ?? staminaMax, staminaMax),
+    raw: source,
+  };
+}
+
+function ingestProfile(data) {
+  profileState.playerName = data?.name ?? data?.profile?.name ?? profileState.playerName ?? null;
+  profileState.heroes = [];
+  profileState.heroesById.clear();
+  const list = Array.isArray(data?.heroes) ? data.heroes : [];
+  for (const entry of list) {
+    const hero = normalizeHeroPayload(entry);
+    if (!hero) continue;
+    profileState.heroes.push(hero);
+    profileState.heroesById.set(hero.id, hero);
+  }
+}
+
+function upsertHero(hero) {
+  if (!hero || !hero.id) return;
+  const existing = profileState.heroesById.get(hero.id) || {};
+  const merged = { ...existing, ...hero };
+  profileState.heroesById.set(hero.id, merged);
+  let found = false;
+  profileState.heroes = profileState.heroes.map((entry) => {
+    if (entry.id === hero.id) {
+      found = true;
+      return { ...entry, ...merged };
+    }
+    return entry;
+  });
+  if (!found) {
+    profileState.heroes.push(merged);
+  }
+}
+
+function getHeroFromState(heroId) {
+  if (!heroId) return null;
+  return profileState.heroesById.get(String(heroId)) || null;
+}
+
+function getFirstAvailableHero() {
+  if (profileState.heroes.length > 0) {
+    return profileState.heroes[0];
+  }
+  return null;
+}
+
+async function fetchPlayerProfile({ force = false } = {}) {
+  const now = Date.now();
+  if (!force && profileCache.data && now - profileCache.ts < profileCache.ttl) {
+    return profileCache.data;
+  }
+  if (profileCache.inflight) return profileCache.inflight;
+
+  profileCache.inflight = apiGet('/api/player/me')
+    .then((data) => {
+      if (data) {
+        ingestProfile(data);
+        profileCache.data = data;
+        profileCache.ts = Date.now();
+      }
+      return data;
+    })
+    .catch((err) => {
+      console.warn('[play] fetchPlayerProfile failed:', err?.message || err);
+      return profileCache.data;
+    })
+    .finally(() => {
+      profileCache.inflight = null;
+    });
+
+  return profileCache.inflight;
+}
+
+function applyHeroToHud(hero) {
+  if (!hero) return;
+  const hpCurrent = Math.max(0, clampNumber(hero.hp, 0));
+  const hpMax = Math.max(hpCurrent, clampNumber(hero.maxHp, hpCurrent));
+  const manaCurrent = Math.max(0, clampNumber(hero.mana, 0));
+  const manaMax = Math.max(manaCurrent, clampNumber(hero.maxMana, manaCurrent));
+  const xpCurrent = Math.max(0, clampNumber(hero.xp, 0));
+  const xpMaxRaw = clampNumber(hero.xpNeeded, 0);
+  const xpMax = xpMaxRaw > 0 ? xpMaxRaw : Math.max(xpCurrent, xpMaxRaw);
+  const staminaCurrent = Math.max(0, clampNumber(hero.stamina ?? hero.maxCap ?? 0, 0));
+  const staminaMaxCandidate = clampNumber(hero.staminaMax ?? hero.maxCap ?? staminaCurrent, staminaCurrent || 1);
+  const staminaMax = Math.max(staminaCurrent, staminaMaxCandidate);
+
+  try { HeroState.setFromServer({
+    id: hero.id,
+    hp: hpCurrent,
+    max_hp: hpMax,
+    mana: manaCurrent,
+    max_mana: manaMax,
+    name: hero.name,
+    heroClass: hero.class,
+  }); } catch {}
+
+  if (typeof window.updateHud === 'function') {
+    window.updateHud({
+      level: hero.level,
+      hp: { current: hpCurrent, max: hpMax },
+      mp: { current: manaCurrent, max: manaMax },
+      xp: { current: xpCurrent, max: xpMax },
+      stamina: { current: staminaCurrent, max: staminaMax },
+    });
+  }
+}
+
+function getEquipmentSlotElement(slot) {
+  const normalized = String(slot || '').toLowerCase();
+  return document.querySelector(`.equip-grid .equip-slot[data-slot="${normalized}"]`);
+}
+
+function describeItem(stats = {}) {
+  const parts = [];
+  if (stats.atk != null) parts.push(`ATK ${stats.atk}`);
+  if (stats.def != null) parts.push(`DEF ${stats.def}`);
+  if (stats.weapon_type) parts.push(String(stats.weapon_type));
+  return parts.length ? parts.join(' · ') : '';
+}
+
+function renderEquipment(equipment) {
+  const slots = document.querySelectorAll('.equip-grid .equip-slot');
+  slots.forEach((slot) => {
+    slot.innerHTML = '';
+    slot.dataset.empty = 'true';
+  });
+  const list = Array.isArray(equipment) ? equipment : [];
+  for (const item of list) {
+    const slot = String(item?.slot || item?.slot_name || '').toUpperCase();
+    const slotMap = {
+      HELMET: 'helmet',
+      ARMOR: 'armor',
+      LEGS: 'legs',
+      BOOTS: 'boots',
+      WEAPON: 'weapon',
+      SHIELD: 'shield',
+      AMULET: 'amulet',
+      RING: 'ring',
+      BACK: 'back',
+    };
+    const key = slotMap[slot] || null;
+    if (!key) continue;
+    const el = getEquipmentSlotElement(key);
+    if (!el) continue;
+    el.dataset.empty = 'false';
+    const name = item?.name || item?.item_key || '—';
+    const tooltip = describeItem(item);
+    const content = document.createElement('div');
+    content.className = 'equip-item';
+    content.innerHTML = `
+      <span class="equip-name">${escapeHtml(name)}</span>
+      ${tooltip ? `<span class="equip-meta">${escapeHtml(tooltip)}</span>` : ''}
+    `;
+    el.innerHTML = '';
+    el.appendChild(content);
+  }
+}
+
+function renderInventory(items) {
+  const grid = document.querySelector('.bag-grid');
+  if (!grid) return;
+  const slots = Array.from(grid.querySelectorAll('.bag-slot'));
+  const list = Array.isArray(items) ? items.slice(0, slots.length) : [];
+  slots.forEach((slot, index) => {
+    const item = list[index] || null;
+    if (!item) {
+      slot.dataset.empty = 'true';
+      slot.innerHTML = '';
+      return;
+    }
+    slot.dataset.empty = 'false';
+    const name = item?.name || item?.item_key || '—';
+    const qty = clampNumber(item?.qty ?? item?.amount ?? item?.quantity ?? 1, 1);
+    slot.innerHTML = `
+      <span class="bag-name">${escapeHtml(name)}</span>
+      <span class="bag-qty">x${numberFormatter.format(qty)}</span>
+    `;
+  });
+}
+
+const SKILL_DISPLAY = [
+  { code: 'SWORD', id: 'sword', label: 'Sword' },
+  { code: 'AXE', id: 'axe', label: 'Axe' },
+  { code: 'DISTANCE', id: 'distance', label: 'Distance' },
+  { code: 'DEFENSE', id: 'defense', label: 'Defense' },
+  { code: 'MAGIC', id: 'magic', label: 'Magic' },
+];
+
+function renderSkills(skills) {
+  const listEl = document.querySelector('.skill-list');
+  if (!listEl) return;
+  const map = new Map();
+  for (const raw of Array.isArray(skills) ? skills : []) {
+    const type = String(raw?.skill_type || raw?.skill || raw?.type || '').toUpperCase();
+    if (!type) continue;
+    map.set(type, {
+      level: clampNumber(raw?.level ?? raw?.value ?? 1, 1),
+      progress: clampNumber(raw?.tries_progress ?? raw?.progress ?? 0, 0),
+      needed: clampNumber(raw?.tries_needed ?? raw?.needed ?? raw?.need ?? 0, 0),
+    });
+  }
+  listEl.innerHTML = '';
+  for (const skill of SKILL_DISPLAY) {
+    const data = map.get(skill.code) || { level: 1, progress: 0, needed: 0 };
+    const pct = data.needed > 0 ? Math.max(0, Math.min(100, (data.progress / data.needed) * 100)) : 0;
+    const item = document.createElement('li');
+    item.className = 'skill-item';
+    item.dataset.skill = skill.id;
+    item.innerHTML = `
+      <span class="label">${escapeHtml(skill.label)}</span>
+      <div class="skill-bar"><div class="fill" style="width:${pct.toFixed(1)}%"></div></div>
+      <span class="value">${numberFormatter.format(data.level)}</span>
+    `;
+    listEl.appendChild(item);
+  }
+}
+
+async function loadHeroEquipment(heroId, { force = false } = {}) {
+  const key = heroId ? String(heroId) : null;
+  if (!key) { renderEquipment([]); return []; }
+  if (!force && equipmentCache.has(key)) {
+    const cached = equipmentCache.get(key) || [];
+    renderEquipment(cached);
+    return cached;
+  }
+  try {
+    const data = await apiGet(`/api/equipment/${encodeURIComponent(key)}`);
+    const list = Array.isArray(data?.equipment) ? data.equipment : Array.isArray(data) ? data : [];
+    equipmentCache.set(key, list);
+    renderEquipment(list);
+    return list;
+  } catch (err) {
+    console.warn('[play] loadHeroEquipment failed:', err?.message || err);
+    renderEquipment([]);
+    return [];
+  }
+}
+
+async function loadHeroSkills(heroId, { force = false } = {}) {
+  const key = heroId ? String(heroId) : null;
+  if (!key) { renderSkills([]); return []; }
+  if (!force && skillsCache.has(key)) {
+    const cached = skillsCache.get(key) || [];
+    renderSkills(cached);
+    return cached;
+  }
+  try {
+    const data = await apiGet(`/api/skills/me?heroId=${encodeURIComponent(key)}`);
+    const list = Array.isArray(data?.skills) ? data.skills : Array.isArray(data) ? data : [];
+    skillsCache.set(key, list);
+    renderSkills(list);
+    return list;
+  } catch (err) {
+    console.warn('[play] loadHeroSkills failed:', err?.message || err);
+    renderSkills([]);
+    return [];
+  }
+}
+
+async function loadInventory({ force = false } = {}) {
+  if (!force && inventoryCache.length) {
+    renderInventory(inventoryCache);
+    return inventoryCache;
+  }
+  try {
+    const data = await apiGet('/api/inventory');
+    const list = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+    inventoryCache = list;
+    renderInventory(list);
+    return list;
+  } catch (err) {
+    console.warn('[play] loadInventory failed:', err?.message || err);
+    inventoryCache = [];
+    renderInventory([]);
+    return [];
+  }
+}
+
+async function fetchWallet() {
+  try {
+    const res = await fetch('/api/auth/me', { credentials: 'include', cache: 'no-store' });
+    if (!res.ok) return null;
+    const json = await res.json().catch(() => null);
+    const profile = json?.profile || json || null;
+    if (!profile) return null;
+    if (typeof window.updateHud === 'function') {
+      window.updateHud({
+        gold: profile.coins,
+        diamonds: profile.gems,
+      });
+    }
+    if (profile.name && window.HUD?.setPlayerName) {
+      window.HUD.setPlayerName(profile.name);
+    }
+    return profile;
+  } catch (err) {
+    console.warn('[play] fetchWallet failed:', err?.message || err);
+    return null;
+  }
+}
+
+async function hydratePlayerProfileAndHud({ force = false } = {}) {
+  try {
+    await Promise.all([
+      fetchPlayerProfile({ force }),
+      fetchWallet(),
+    ]);
+
+    if (profileState.playerName && window.HUD?.setPlayerName) {
+      window.HUD.setPlayerName(profileState.playerName);
+    }
+
+    let activeHero = null;
+    const activeHeroId = window.ActiveHeroId || window.GameScene?.activeHeroId || null;
+    if (activeHeroId) {
+      activeHero = getHeroFromState(activeHeroId);
+    }
+    if (!activeHero) {
+      activeHero = getFirstAvailableHero();
+      if (activeHero) {
+        try { window.setActiveHero(activeHero.id); } catch {}
+      }
+    }
+
+    if (activeHero) {
+      applyHeroToHud(activeHero);
+      await Promise.all([
+        loadHeroEquipment(activeHero.id, { force }),
+        loadHeroSkills(activeHero.id, { force }),
+      ]);
+    } else {
+      renderEquipment([]);
+      renderSkills([]);
+    }
+
+    await loadInventory({ force });
+  } catch (err) {
+    console.warn('[play] hydrate profile failed:', err?.message || err);
+  }
+}
+
+function handleHeroSnapshot(raw) {
+  const hero = normalizeHeroPayload(raw);
+  if (!hero) return;
+  upsertHero(hero);
+  const activeId = window.ActiveHeroId ? String(window.ActiveHeroId) : null;
+  if (activeId && hero.id === activeId) {
+    applyHeroToHud(hero);
+  }
+}
+
+async function onHeroActiveChanged(heroId) {
+  const normalized = heroId != null ? String(heroId) : null;
+  if (!normalized) return;
+  let hero = getHeroFromState(normalized);
+  if (!hero) {
+    await fetchPlayerProfile({ force: true });
+    hero = getHeroFromState(normalized);
+  }
+  if (hero) applyHeroToHud(hero);
+  await Promise.all([
+    loadHeroEquipment(normalized),
+    loadHeroSkills(normalized),
+  ]);
+}
+
+window.addEventListener('hero:state', (event) => {
+  if (!event?.detail) return;
+  handleHeroSnapshot(event.detail);
+});
+
+window.addEventListener('tick:hero', (event) => {
+  if (!event?.detail) return;
+  handleHeroSnapshot(event.detail);
+});
+
+window.addEventListener('hero:active-changed', (event) => {
+  const heroId = event?.detail?.heroId ?? event?.detail ?? null;
+  onHeroActiveChanged(heroId);
+});
+
+window.addEventListener('tick:backpack', () => {
+  loadInventory({ force: true });
+});
+
+window.addEventListener('backpack:update', () => {
+  loadInventory({ force: true });
+});
+
+document.addEventListener('coins-updated', (event) => {
+  const coins = event?.detail?.coins;
+  if (typeof coins === 'number' && typeof window.updateHud === 'function') {
+    window.updateHud({ gold: coins });
+  }
+});
+
+function getStoredDockState(side) {
+  try {
+    return localStorage.getItem(DOCK_STORAGE[side]) === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
+function storeDockState(side, collapsed) {
+  try {
+    localStorage.setItem(DOCK_STORAGE[side], collapsed ? '1' : '0');
+  } catch (_) {}
+}
+
+function syncDockControls() {
+  ['left', 'right'].forEach((side) => {
+    const collapsed = document.body.classList.contains(`dock-${side}-collapsed`);
+    const auto = document.body.classList.contains(`dock-${side}-auto`);
+    const open = document.body.classList.contains(`dock-${side}-open`);
+    document.querySelectorAll(`[data-dock-toggle="${side}"]`).forEach((btn) => {
+      const expanded = auto ? open : !collapsed;
+      btn.setAttribute('aria-expanded', String(expanded));
+    });
+    document.querySelectorAll(`[data-dock-target="${side}"]`).forEach((btn) => {
+      const expanded = auto && open;
+      btn.setAttribute('aria-expanded', String(expanded));
+    });
+    const aside = document.getElementById(`dock-${side}`);
+    if (aside) aside.dataset.collapsed = collapsed && !open ? 'true' : 'false';
+  });
+}
+
+function setDockCollapsed(side, collapsed, { persist = true } = {}) {
+  document.body.classList.toggle(`dock-${side}-collapsed`, collapsed);
+  if (!collapsed) {
+    document.body.classList.remove(`dock-${side}-open`);
+  }
+  if (persist) storeDockState(side, collapsed);
+  syncDockControls();
+}
+
+function toggleDock(side) {
+  const auto = document.body.classList.contains(`dock-${side}-auto`);
+  if (auto) {
+    document.body.classList.toggle(`dock-${side}-open`);
+    syncDockControls();
+    return;
+  }
+  const collapsed = document.body.classList.contains(`dock-${side}-collapsed`);
+  setDockCollapsed(side, !collapsed, { persist: true });
+}
+
+function applyResponsiveDock() {
+  const leftAuto = mqLeft.matches;
+  const rightAuto = mqRight.matches;
+  document.body.classList.toggle('dock-left-auto', leftAuto);
+  document.body.classList.toggle('dock-right-auto', rightAuto);
+  if (leftAuto) {
+    document.body.classList.add('dock-left-collapsed');
+    document.body.classList.remove('dock-left-open');
+  } else {
+    setDockCollapsed('left', getStoredDockState('left'), { persist: false });
+  }
+  if (rightAuto) {
+    document.body.classList.add('dock-right-collapsed');
+    document.body.classList.remove('dock-right-open');
+  } else {
+    setDockCollapsed('right', getStoredDockState('right'), { persist: false });
+  }
+  syncDockControls();
+}
+
+function initDockControls() {
+  applyResponsiveDock();
+  mqLeft.addEventListener('change', applyResponsiveDock);
+  mqRight.addEventListener('change', applyResponsiveDock);
+  document.querySelectorAll('[data-dock-toggle]').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      const side = btn.getAttribute('data-dock-toggle');
+      if (!side) return;
+      toggleDock(side);
+    });
+  });
+  document.querySelectorAll('[data-dock-target]').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      const side = btn.getAttribute('data-dock-target');
+      if (!side) return;
+      document.body.classList.toggle(`dock-${side}-open`);
+      syncDockControls();
+    });
+  });
+  syncDockControls();
+}
+
+function highlightHotbar(key, className = 'active') {
+  const slot = document.querySelector(`.hot-slot[data-key="${key}"]`);
+  if (!slot) return;
+  slot.classList.add(className);
+  if (className === 'active') {
+    setTimeout(() => slot.classList.remove('active'), 220);
+  }
+}
+
+function focusHotbarSlot(key) {
+  const slot = document.querySelector(`.hot-slot[data-key="${key}"]`);
+  if (!slot) return;
+  slot.classList.add('focused');
+  try { slot.focus(); } catch (_) {}
+  setTimeout(() => slot.classList.remove('focused'), 300);
+}
+
+function handleGlobalKeydown(event) {
+  const key = event.key.toUpperCase();
+  if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey && !isTypingTarget(event.target)) {
+    const input = getChatInput();
+    if (input) {
+      event.preventDefault();
+      input.focus();
+    }
+    return;
+  }
+  if (event.key === 'Escape') {
+    const input = getChatInput();
+    if (input && document.activeElement === input) {
+      input.value = '';
+      event.preventDefault();
+    }
+    return;
+  }
+  if (event.key === 'F1') {
+    event.preventDefault();
+    if (window.Chat && typeof window.Chat.switchTo === 'function') {
+      window.Chat.switchTo('ajuda');
+    }
+    return;
+  }
+  if (event.ctrlKey && !event.altKey && !event.metaKey) {
+    if (event.code && event.code.startsWith('Digit')) {
+      const digit = event.code.replace('Digit', '');
+      if (HOTBAR_KEYS.includes(digit)) {
+        event.preventDefault();
+        focusHotbarSlot(digit);
+        highlightHotbar(digit);
+        return;
+      }
+    }
+  }
+  if (isTypingTarget(event.target)) return;
+  if (HOTBAR_KEYS.includes(key)) {
+    highlightHotbar(key);
+  }
+}
+
+function setupHotbarInteractions() {
+  document.querySelectorAll('.hot-slot').forEach((slot) => {
+    slot.addEventListener('click', () => {
+      const key = slot.dataset.key?.toUpperCase();
+      if (key) highlightHotbar(key);
+    });
+    slot.addEventListener('blur', () => {
+      slot.classList.remove('focused');
+    });
+  });
+  document.addEventListener('keydown', handleGlobalKeydown);
+}
+
+function tickSessionTime() {
+  if (window.HUD && typeof window.HUD.setSessionTime === 'function') {
+    window.HUD.setSessionTime(Date.now() - sessionStartedAt);
+  }
+}
+
+async function measurePing() {
+  const start = performance.now();
+  try {
+    const resp = await fetch('/api/status', { method: 'GET', cache: 'no-store', credentials: 'include' });
+    if (resp && resp.ok) {
+      await resp.text().catch(() => null);
+    }
+  } catch (_) {}
+  const elapsed = Math.round(performance.now() - start);
+  if (window.HUD && typeof window.HUD.setPing === 'function') {
+    window.HUD.setPing(elapsed);
+  }
+}
+
+function startHudTimers() {
+  tickSessionTime();
+  if (sessionTimerId) clearInterval(sessionTimerId);
+  sessionTimerId = setInterval(tickSessionTime, 1000);
+  measurePing();
+  if (pingTimerId) clearInterval(pingTimerId);
+  pingTimerId = setInterval(measurePing, 5000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initDockControls();
+  setupHotbarInteractions();
+  startHudTimers();
+  initTopbarActions();
+  hydratePlayerProfileAndHud({ force: true });
+});
 
 
 // === buffer de pos_snap recebido cedo (antes do controller existir)
@@ -1342,7 +2173,7 @@ function pickElByIds(prefIds = [], fallbackSelectors = []) {
 const preferCanvasId = QS.get('canvas'); // ex: ?canvas=scene
 const preferHudId = QS.get('hud');    // ex: ?hud=hud
 
-const canvas = pickElByIds([preferCanvasId, 'view', 'scene'], ['canvas#view', 'canvas#scene', 'canvas']);
+const canvas = pickElByIds([preferCanvasId, 'gameCanvas', 'view', 'scene'], ['canvas#gameCanvas', 'canvas#view', 'canvas#scene', 'canvas']);
 const hud = pickElByIds([preferHudId, 'hud', 'app-hud'], ['#hud', '#app-hud']);
 
 if (!canvas) {
