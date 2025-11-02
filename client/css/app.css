@@ -881,8 +881,8 @@ html,body{
 }
 
 #chatDock{
-  display:flex;
-  flex-direction:column;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
   gap:10px;
   background:#0c1426;
   border-top:1px solid var(--border);
@@ -891,13 +891,6 @@ html,body{
   min-height:140px;
   max-height:50vh;
   overflow:hidden;
-}
-
-#chatDock .chat-controls{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  height:100%;
 }
 
 .chat-tabs{
@@ -946,7 +939,6 @@ html,body{
   height:100%;
   display:flex;
   flex-direction:column;
-  flex:1 1 auto;
 }
 
 .chat-box{
