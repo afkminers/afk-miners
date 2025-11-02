@@ -421,7 +421,7 @@ html,body{
   background:#0e1628; border:1px solid var(--border); padding:6px 10px; border-radius:8px; font-size:12px;
 }
 
-.hud .hud-friends-btn{
+.hud-friends-btn{
   display:inline-flex;
   align-items:center;
   gap:6px;
@@ -439,15 +439,15 @@ html,body{
   image-rendering:pixelated;
   transition:transform .12s ease, filter .12s ease;
 }
-.hud .hud-friends-btn:hover,
-.hud .hud-friends-btn:focus-visible,
-.hud .hud-friends-btn.is-active,
-.hud .hud-friends-btn[data-has-alert]{
+.hud-friends-btn:hover,
+.hud-friends-btn:focus-visible,
+.hud-friends-btn.is-active,
+.hud-friends-btn[data-has-alert]{
   filter:brightness(1.15);
   transform:translateY(-1px);
   outline:none;
 }
-.hud .hud-friends-btn__icon{
+.hud-friends-btn__icon{
   width:18px;
   height:18px;
   display:inline-block;
@@ -458,8 +458,8 @@ html,body{
   position:relative;
   box-shadow:0 0 0 2px rgba(0,0,0,.6);
 }
-.hud .hud-friends-btn__icon::before,
-.hud .hud-friends-btn__icon::after{
+.hud-friends-btn__icon::before,
+.hud-friends-btn__icon::after{
   content:"";
   position:absolute;
   inset:3px;
@@ -468,15 +468,15 @@ html,body{
   border-radius:2px;
   box-shadow:0 0 0 2px rgba(0,0,0,.6);
 }
-.hud .hud-friends-btn__icon::after{
+.hud-friends-btn__icon::after{
   inset:auto 3px 3px 3px;
   height:3px;
   background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.05));
 }
-.hud .hud-friends-btn__label{
+.hud-friends-btn__label{
   display:inline-block;
 }
-.hud .hud-friends-btn__badge{
+.hud-friends-btn__badge{
   min-width:18px;
   padding:2px 4px;
   border-radius:999px;
@@ -486,6 +486,16 @@ html,body{
   font-weight:600;
   text-align:center;
   box-shadow:0 0 0 2px #000;
+}
+
+.topbar .actions .hud-friends-btn{
+  margin-left:8px;
+  padding:6px 10px;
+  border:2px solid #000;
+  border-radius:10px;
+  background:linear-gradient(180deg,#1a2846,#0f172d);
+  color:#f5f8ff;
+  box-shadow:0 3px 0 #000, inset 0 -3px 0 rgba(0,0,0,.35);
 }
 
 .friend-panel{
@@ -830,7 +840,7 @@ html,body{
 }
 
 @media (max-width: 960px){
-  .hud .hud-friends-btn__label{ display:none; }
+  .hud-friends-btn__label{ display:none; }
 }
 
 @media (max-width: 680px){

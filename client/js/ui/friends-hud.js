@@ -28,7 +28,7 @@ let refreshTimer = null;
 let currentUserId = null;
 let loadPromise = null;
 let feedbackTimer = null;
-let hudObserver = null;
+let actionsObserver = null;
 
 const friendsById = new Map();
 const pendingActions = new Set();
@@ -684,23 +684,29 @@ function togglePanel() {
   else openPanel();
 }
 
-function ensureButtonInHud() {
-  const hud = document.getElementById('hud');
-  if (!hud || !buttonEl) return;
-  if (!hud.contains(buttonEl)) {
+function ensureButtonInTopbar() {
+  const actions = document.querySelector('.topbar .actions');
+  if (!actions || !buttonEl) return;
+  if (!actions.contains(buttonEl)) {
     try {
-      hud.appendChild(buttonEl);
+      const anchor = actions.querySelector('#btnSettings') || actions.querySelector('#btnLogout');
+      if (anchor) {
+        actions.insertBefore(buttonEl, anchor);
+      } else {
+        actions.appendChild(buttonEl);
+      }
     } catch {}
   }
 }
 
 function setupDom() {
-  const hud = document.getElementById('hud');
-  if (!hud) return false;
+  const actions = document.querySelector('.topbar .actions');
+  if (!actions) return false;
   if (!buttonEl) {
     buttonEl = document.createElement('button');
     buttonEl.type = 'button';
     buttonEl.className = 'hud-friends-btn';
+    buttonEl.id = 'btnFriends';
     buttonEl.setAttribute('aria-haspopup', 'dialog');
     buttonEl.setAttribute('aria-expanded', 'false');
     buttonEl.innerHTML = `
@@ -773,13 +779,13 @@ function setupDom() {
     };
   }
 
-  ensureButtonInHud();
+  ensureButtonInTopbar();
 
-  if (!hudObserver) {
-    hudObserver = new MutationObserver(() => ensureButtonInHud());
+  if (!actionsObserver) {
+    actionsObserver = new MutationObserver(() => ensureButtonInTopbar());
     try {
-      hudObserver.observe(hud, { childList: true });
-      unsubscribers.push(() => { try { hudObserver?.disconnect(); } catch {}; hudObserver = null; });
+      actionsObserver.observe(actions, { childList: true });
+      unsubscribers.push(() => { try { actionsObserver?.disconnect(); } catch {}; actionsObserver = null; });
     } catch {}
   }
 
