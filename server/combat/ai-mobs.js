@@ -43,6 +43,7 @@ const ALT_PATH_MAX_DEPTH = 16;        // profundidade máxima da busca alternati
 const COMBAT_DANCE_COOLDOWN_MS = 950; // intervalo para o "passinho" em combate
 const COMBAT_DANCE_RETURN_DELAY_MS = 180; // espera mínima antes de tentar voltar
 const COMBAT_DANCE_STAGE_TIMEOUT_MS = 850; // cancela se ficar travado em uma etapa
+const LAST_KNOWN_HERO_GRACE_MS = Math.max(GIVEUP_MS * 2, 16000);
 
 // Anti-hit fantasma (idades máximas aceitáveis das posições)
 const STALE_HERO_MS = Math.max(900, Number(LIVE_POS_TTL_MS) + 350);
@@ -139,13 +140,27 @@ function computeSpawnCenterPx(spawnRect, fallbackPos = null) {
 
 function canMobHitNow({ now, mob, tgtPos, losGrid }) {
   const mx = mob.x, my = mob.y;
-  const hx = tgtPos?.x, hy = tgtPos?.y;
+  let hx = tgtPos?.x;
+  let hy = tgtPos?.y;
 
   if (hx == null || hy == null || mx == null || my == null) {
     return { ok: false, reason: 'no_pos' };
   }
 
-  const heroAge = now - (tgtPos.updatedMs ?? 0);
+  let heroAge = now - (tgtPos.updatedMs ?? 0);
+
+  if (heroAge > STALE_HERO_MS) {
+    const mem = mob?.lastKnownHeroPos;
+    if (mem && Number.isFinite(mem.x) && Number.isFinite(mem.y)) {
+      const memAge = now - (mem.updatedMs ?? 0);
+      if (memAge <= LAST_KNOWN_HERO_GRACE_MS) {
+        hx = mem.x;
+        hy = mem.y;
+        heroAge = memAge;
+      }
+    }
+  }
+
   // ⚠️ Removido o gate por "stale_mob": mobAge não deve bloquear hit de mob parado.
   // A posição do mob é server-authoritative mesmo sem mover.
   if (heroAge > STALE_HERO_MS) return { ok: false, reason: `stale_hero_${heroAge}ms` };
@@ -170,7 +185,14 @@ function canMobHitNow({ now, mob, tgtPos, losGrid }) {
     return { ok: false, reason: 'no_los', mobTile, heroTile, distTiles };
   }
 
-  return { ok: true, distTiles, mobTile, heroTile };
+  return {
+    ok: true,
+    distTiles,
+    mobTile,
+    heroTile,
+    heroPx: { x: hx, y: hy },
+    heroAge,
+  };
 }
 
 function recordHeroObservation({ heroId, mapKey, x, y, now }) {
@@ -1106,6 +1128,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     mob.lastProgressAt = mob.posUpdatedAt || now;
     mob.pendingStep = null;
     mob.combatStep = null;
+    mob.lastKnownHeroPos = null;
     await maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles });
     return;
   }
@@ -1132,7 +1155,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   }
 
   if (!tgtPos) {
-    if (now - mob.lastSeenAt > GIVEUP_MS) { mob.targetHeroId = null; mob.mode = 'idle'; }
+    if (now - mob.lastSeenAt > GIVEUP_MS) { mob.targetHeroId = null; mob.mode = 'idle'; mob.lastKnownHeroPos = null; }
     mob.pendingStep = null;
     mob.combatStep = null;
     return;
@@ -1197,6 +1220,29 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   if (inRangeTiles && canSeeNow) {
     // compõe alvo com timestamp (se veio do DB, virá velho)
     let tgt = heroes.find(h => h.heroId === mob.targetHeroId);
+    if (tgt && Number.isFinite(tgt.x) && Number.isFinite(tgt.y)) {
+      mob.lastKnownHeroPos = {
+        x: tgt.x | 0,
+        y: tgt.y | 0,
+        updatedMs: now,
+      };
+    }
+
+    if (!tgt) {
+      const memPos = mob.lastKnownHeroPos;
+      if (memPos && Number.isFinite(memPos.x) && Number.isFinite(memPos.y)) {
+        const memAge = now - (memPos.updatedMs ?? 0);
+        if (memAge <= LAST_KNOWN_HERO_GRACE_MS) {
+          tgt = {
+            heroId: mob.targetHeroId,
+            x: memPos.x | 0,
+            y: memPos.y | 0,
+            updatedMs: memPos.updatedMs ?? 0,
+          };
+        }
+      }
+    }
+
     if (!tgt) {
       const fb = await getHeroLastPosPx(mob.targetHeroId, mob.mapKey);
       tgt = fb ? { heroId: mob.targetHeroId, x: fb.x, y: fb.y, updatedMs: fb.updatedMs || 0 } : null;
@@ -1241,6 +1287,14 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     mob.lastSeenAt = now;
     mob.lastProgressAt = now;
     mob.forcedAltUntil = 0;
+
+    if (gate.ok && gate.heroPx && Number.isFinite(gate.heroPx.x) && Number.isFinite(gate.heroPx.y)) {
+      mob.lastKnownHeroPos = {
+        x: gate.heroPx.x | 0,
+        y: gate.heroPx.y | 0,
+        updatedMs: now,
+      };
+    }
 
     const cd = Number(mob.attackMs || (K.MONSTER_SPEED_MS && K.MONSTER_SPEED_MS.DEFAULT) || 1200);
     if (now >= (mob.nextAttackAt || 0)) {
@@ -1440,6 +1494,7 @@ function selectTargetByThreat(now, mob, heroes, losGrid) {
     mob.waitOrbitIndex = 0;
     mob.goalRotateIndex = 0;
     mob.requestOrbitShift = false;
+    mob.lastKnownHeroPos = null;
     return;
   }
   if (!mob.targetHeroId) {
@@ -2051,6 +2106,7 @@ function removeHeroThreat(heroId) {
       mob.pendingStep = null;
       mob.combatStep = null;
       mob.agroSince = 0;
+      mob.lastKnownHeroPos = null;
     }
   }
   try { battleState.cooldown(heroId); } catch {}

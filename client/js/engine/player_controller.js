@@ -78,6 +78,7 @@
     // dt em segundos; dir = {x:-1..1, y:-1..1} (contínuo legado)
     update(dt, dir) {
       let dx = 0, dy = 0;
+      let maxDist = Infinity;
 
       // ------ Caminho (A*): chegar ao centro de CADA tile e publicar ------
       if (this.path && this.pathIdx < this.path.length) {
@@ -98,6 +99,7 @@
 
         dx = vx / (dist || 1);
         dy = vy / (dist || 1);
+        maxDist = dist;
 
       // ------ Step único (WASD) ------
       } else if (this._moving && this._stepTarget) {
@@ -114,6 +116,7 @@
         }
         dx = vx / (dist || 1);
         dy = vy / (dist || 1);
+        maxDist = dist;
 
       // ------ Contínuo legado (apenas se ninguém chamou requestStep e não há path) ------
       } else if (dir && (dir.x || dir.y)) {
@@ -129,8 +132,10 @@
 
       // Integra movimento com colisão
       const spd = this.speed;
-      const nx = this.x + dx * spd * dt;
-      const ny = this.y + dy * spd * dt;
+      const step = spd * dt;
+      const moveDist = Number.isFinite(maxDist) ? Math.min(step, maxDist) : step;
+      const nx = this.x + dx * moveDist;
+      const ny = this.y + dy * moveDist;
 
       const res = this.tryMove(nx, ny);
       const moved = (res.x !== this.x || res.y !== this.y);

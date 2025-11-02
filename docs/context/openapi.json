@@ -3524,6 +3524,562 @@
           }
         ]
       }
+    },
+    "/api/friends": {
+      "get": {
+        "summary": "Listar amizades e solicitações",
+        "description": "Retorna amigos aceitos, pendências e bloqueios com presença em tempo real e contadores de mensagens não lidas.",
+        "tags": [
+          "friends"
+        ],
+        "responses": {
+          "200": {
+            "description": "Listagem atual de amigos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FriendListResponse"
+                },
+                "example": {
+                  "ok": true,
+                  "friends": [
+                    {
+                      "friendshipId": 101,
+                      "friendId": "player-b",
+                      "friendName": "PlayerB",
+                      "status": "ACCEPTED",
+                      "pendingDirection": null,
+                      "blockedBy": null,
+                      "createdAt": "2025-02-16T12:00:00.000Z",
+                      "updatedAt": "2025-02-16T12:05:00.000Z",
+                      "online": true,
+                      "lastSeenAt": "2025-02-16T12:05:00.000Z",
+                      "unreadCount": 0,
+                      "canMessage": true
+                    },
+                    {
+                      "friendshipId": 202,
+                      "friendId": "player-c",
+                      "friendName": "PlayerC",
+                      "status": "PENDING",
+                      "pendingDirection": "incoming",
+                      "blockedBy": null,
+                      "createdAt": "2025-02-16T11:55:00.000Z",
+                      "updatedAt": "2025-02-16T11:55:00.000Z",
+                      "online": false,
+                      "lastSeenAt": null,
+                      "unreadCount": 3,
+                      "canMessage": false
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/friends/request": {
+      "post": {
+        "summary": "Enviar solicitação de amizade",
+        "description": "Cria uma nova solicitação de amizade usando o nome de usuário informado.",
+        "tags": [
+          "friends"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FriendRequestPayload"
+              },
+              "example": {
+                "username": "PlayerB"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Solicitação registrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FriendActionResponse"
+                },
+                "example": {
+                  "ok": true,
+                  "friendship": {
+                    "friendshipId": 101,
+                    "friendId": "player-b",
+                    "friendName": "PlayerB",
+                    "status": "ACCEPTED",
+                    "pendingDirection": null,
+                    "blockedBy": null,
+                    "createdAt": "2025-02-16T12:00:00.000Z",
+                    "updatedAt": "2025-02-16T12:05:05.000Z",
+                    "online": true,
+                    "lastSeenAt": "2025-02-16T12:05:05.000Z",
+                    "unreadCount": 0,
+                    "canMessage": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/friends/{friendId}/accept": {
+      "post": {
+        "summary": "Aceitar solicitação de amizade",
+        "description": "Aceita uma solicitação pendente enviada pelo amigo informado.",
+        "tags": [
+          "friends"
+        ],
+        "parameters": [
+          {
+            "name": "friendId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identificador do outro jogador na relação."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Relacionamento atualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FriendActionResponse"
+                },
+                "example": {
+                  "ok": true,
+                  "friendship": {
+                    "friendshipId": 101,
+                    "friendId": "player-b",
+                    "friendName": "PlayerB",
+                    "status": "ACCEPTED",
+                    "pendingDirection": null,
+                    "blockedBy": null,
+                    "createdAt": "2025-02-16T12:00:00.000Z",
+                    "updatedAt": "2025-02-16T12:05:05.000Z",
+                    "online": true,
+                    "lastSeenAt": "2025-02-16T12:05:05.000Z",
+                    "unreadCount": 0,
+                    "canMessage": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/friends/{friendId}/reject": {
+      "post": {
+        "summary": "Rejeitar solicitação de amizade",
+        "description": "Rejeita e remove a solicitação pendente do amigo informado.",
+        "tags": [
+          "friends"
+        ],
+        "parameters": [
+          {
+            "name": "friendId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identificador do outro jogador na relação."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Solicitação removida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                },
+                "example": {
+                  "ok": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/friends/{friendId}": {
+      "delete": {
+        "summary": "Remover amizade",
+        "description": "Remove um relacionamento aceito com o amigo informado.",
+        "tags": [
+          "friends"
+        ],
+        "parameters": [
+          {
+            "name": "friendId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identificador do outro jogador na relação."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Relacionamento removido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                },
+                "example": {
+                  "ok": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/friends/{friendId}/block": {
+      "post": {
+        "summary": "Bloquear usuário",
+        "description": "Cria ou atualiza o relacionamento para o estado bloqueado.",
+        "tags": [
+          "friends"
+        ],
+        "parameters": [
+          {
+            "name": "friendId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identificador do outro jogador na relação."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bloqueio registrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FriendActionResponse"
+                },
+                "example": {
+                  "ok": true,
+                  "friendship": {
+                    "friendshipId": 303,
+                    "friendId": "player-d",
+                    "friendName": "PlayerD",
+                    "status": "BLOCKED",
+                    "pendingDirection": null,
+                    "blockedBy": "player-a",
+                    "createdAt": "2025-02-16T12:10:00.000Z",
+                    "updatedAt": "2025-02-16T12:15:00.000Z",
+                    "online": false,
+                    "lastSeenAt": null,
+                    "unreadCount": 0,
+                    "canMessage": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/friends/{friendId}/unblock": {
+      "post": {
+        "summary": "Desbloquear usuário",
+        "description": "Remove o relacionamento bloqueado, permitindo novas interações futuramente.",
+        "tags": [
+          "friends"
+        ],
+        "parameters": [
+          {
+            "name": "friendId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identificador do outro jogador na relação."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bloqueio removido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                },
+                "example": {
+                  "ok": true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "FriendStatus": {
+        "type": "string",
+        "description": "Estados possíveis para uma relação de amizade.",
+        "enum": [
+          "PENDING",
+          "ACCEPTED",
+          "BLOCKED"
+        ]
+      },
+      "Friend": {
+        "type": "object",
+        "description": "Relacionamento de amizade entre dois jogadores.",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userAId": {
+            "type": "string",
+            "description": "Identificador canônico do primeiro jogador."
+          },
+          "userBId": {
+            "type": "string",
+            "description": "Identificador canônico do segundo jogador."
+          },
+          "pairKey": {
+            "type": "string",
+            "description": "Identificador canônico no formato min:max."
+          },
+          "status": {
+            "$ref": "#/components/schemas/FriendStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "userAId",
+          "userBId",
+          "pairKey",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "DmMessage": {
+        "type": "object",
+        "description": "Mensagem direta privada entre dois jogadores.",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "conversationId": {
+            "type": "string",
+            "description": "Identificador canônico da conversa (par ordenado)."
+          },
+          "senderId": {
+            "type": "string"
+          },
+          "recipientId": {
+            "type": "string"
+          },
+          "bodyOriginal": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deliveredAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "readAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "blockedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "conversationId",
+          "senderId",
+          "recipientId",
+          "bodyOriginal",
+          "createdAt"
+        ]
+      },
+      "FriendListItem": {
+        "type": "object",
+        "description": "Entrada de amizade com informações de presença e mensagens não lidas.",
+        "properties": {
+          "friendshipId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "friendId": {
+            "type": "string"
+          },
+          "friendName": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/FriendStatus"
+          },
+          "pendingDirection": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "incoming",
+              "outgoing"
+            ],
+            "description": "Direção da solicitação quando pendente."
+          },
+          "blockedBy": {
+            "type": "string",
+            "nullable": true,
+            "description": "Identificador de quem aplicou o bloqueio (se houver)."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "online": {
+            "type": "boolean"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "unreadCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "canMessage": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "friendshipId",
+          "friendId",
+          "status",
+          "online",
+          "unreadCount",
+          "canMessage"
+        ]
+      },
+      "FriendListResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "friends": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FriendListItem"
+            }
+          }
+        },
+        "required": [
+          "ok",
+          "friends"
+        ],
+        "description": "Resposta da listagem de amizades com status atual."
+      },
+      "FriendActionResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "friendship": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FriendListItem"
+              }
+            ],
+            "description": "Registro atualizado após a ação."
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "description": "Resposta para ações que retornam um relacionamento atualizado."
+      },
+      "FriendRequestPayload": {
+        "type": "object",
+        "description": "Payload para enviar solicitação de amizade usando o nome de usuário.",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Nome de usuário (case-insensitive)."
+          }
+        },
+        "required": [
+          "username"
+        ]
+      }
     }
   }
 }
