@@ -7,6 +7,8 @@ import {
   openConversation as openDmConversation,
   syncUnreadFromServer,
   syncFriendData,
+  sendNudge,
+  getNudgeErrorMessage,
 } from './dm-chat.js';
 
 const REFRESH_INTERVAL = 30_000;
@@ -44,6 +46,12 @@ const ERROR_MESSAGES = {
   FRIEND_BLOCKED_BY_OTHER: 'Somente quem bloqueou pode desbloquear.',
   FRIEND_LIST_RATE_LIMIT: 'Muitas consultas em sequência. Aguarde um pouco.',
   FRIEND_RATE_LIMIT: 'Muitas ações em sequência. Tente novamente em instantes.',
+  DM_NUDGE_COOLDOWN: 'Aguarde alguns segundos para cutucar de novo.',
+  DM_NUDGE_RATE_LIMIT: 'Muitas cutucadas seguidas. Tente mais tarde.',
+  DM_BLOCKED: 'Não é possível cutucar este jogador agora.',
+  DM_NOT_ALLOWED: 'Somente amigos aceitos podem usar nudge.',
+  DM_NUDGE_FAILED: 'Não foi possível enviar o nudge.',
+  DM_NUDGE_TIMEOUT: 'Não foi possível confirmar o nudge. Tente novamente.',
 };
 
 const SUCCESS_MESSAGES = {
@@ -53,6 +61,7 @@ const SUCCESS_MESSAGES = {
   remove: 'Amigo removido.',
   block: 'Jogador bloqueado.',
   unblock: 'Bloqueio removido.',
+  nudge: 'Nudge enviado!',
 };
 
 function escapeHtml(value) {
@@ -102,6 +111,7 @@ function ensureContextMenu() {
   contextMenuEl.setAttribute('role', 'menu');
   contextMenuEl.innerHTML = `
     <button type="button" class="friend-context-item" data-action="message">Send Message</button>
+    <button type="button" class="friend-context-item" data-action="nudge">Cutucar</button>
     <button type="button" class="friend-context-item" data-action="remove">Remover</button>
     <button type="button" class="friend-context-item" data-action="block">Bloquear</button>
   `;
@@ -122,10 +132,16 @@ function openContextMenuFor(friend, anchorRect) {
   const removeBtn = contextMenuEl.querySelector('[data-action="remove"]');
   const blockBtn = contextMenuEl.querySelector('[data-action="block"]');
   const messageBtn = contextMenuEl.querySelector('[data-action="message"]');
+  const nudgeBtn = contextMenuEl.querySelector('[data-action="nudge"]');
   if (messageBtn) {
     const canMessage = friend.status === 'ACCEPTED' && friend.canMessage !== false;
     messageBtn.disabled = !canMessage;
     messageBtn.title = canMessage ? 'Enviar mensagem privada' : 'Mensagem indisponível';
+  }
+  if (nudgeBtn) {
+    const canNudge = friend.status === 'ACCEPTED' && friend.canMessage !== false && friend.status !== 'BLOCKED';
+    nudgeBtn.disabled = !canNudge;
+    nudgeBtn.title = canNudge ? 'Enviar nudge' : 'Nudge indisponível';
   }
   const canRemove = friend.status === 'ACCEPTED';
   if (removeBtn) {
@@ -491,6 +507,33 @@ function mapError(err) {
   return ERROR_MESSAGES[code] || `Erro (${code}).`;
 }
 
+function mapNudgeError(err) {
+  const code = err?.code || err?.payload?.error || err?.message || 'DM_NUDGE_FAILED';
+  return getNudgeErrorMessage(code) || mapError({ message: code });
+}
+
+function highlightFriendRow(friendId) {
+  if (!surfaceEl) return;
+  const row = surfaceEl.querySelector(`.friend-item[data-friend-id="${friendId}"]`);
+  if (!row) return;
+  row.classList.add('is-nudged');
+  setTimeout(() => {
+    row.classList.remove('is-nudged');
+  }, 1000);
+}
+
+function triggerNudge(friendId) {
+  const id = String(friendId || '').trim();
+  if (!id) {
+    showFeedback('Amigo inválido.', 'error');
+    return;
+  }
+  highlightFriendRow(id);
+  sendNudge(id).catch((err) => {
+    showFeedback(mapNudgeError(err), 'error');
+  });
+}
+
 async function handleAction(action, friendId, options = {}) {
   const keyBase = friendId ? `${action}:${friendId}` : `${action}:${(options.username || '').toLowerCase()}`;
   if (!keyBase) return;
@@ -646,6 +689,8 @@ function handleContextMenuClick(event) {
     handleAction(mode, friendId).catch(() => {});
   } else if (action === 'remove') {
     handleAction('remove', friendId).catch(() => {});
+  } else if (action === 'nudge') {
+    triggerNudge(friendId);
   } else if (action === 'message') {
     const friend = friendsById.get(friendId);
     if (friend && friend.status === 'ACCEPTED' && friend.canMessage !== false) {
@@ -838,6 +883,23 @@ function bindEvents() {
   };
   window.addEventListener('dm:unread', unreadHandler);
   unsubscribers.push(() => window.removeEventListener('dm:unread', unreadHandler));
+
+  const nudgeEventHandler = (event) => {
+    const detail = event.detail || {};
+    const friendId = detail.friendId ? String(detail.friendId) : null;
+    if (!friendId) return;
+    if (detail.direction === 'incoming') {
+      highlightFriendRow(friendId);
+      showFeedback('Você recebeu um nudge!', 'info');
+    } else if (detail.direction === 'outgoing') {
+      highlightFriendRow(friendId);
+      showFeedback(SUCCESS_MESSAGES.nudge, 'success');
+    } else if (detail.direction === 'error') {
+      showFeedback(getNudgeErrorMessage(detail.error || 'DM_NUDGE_FAILED'), 'error');
+    }
+  };
+  window.addEventListener('dm:nudge', nudgeEventHandler);
+  unsubscribers.push(() => window.removeEventListener('dm:nudge', nudgeEventHandler));
 }
 
 function bindPresenceEvents() {

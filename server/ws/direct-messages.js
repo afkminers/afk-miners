@@ -9,6 +9,13 @@ const {
 } = require('../services/direct-messages');
 const bus = require('./bus');
 
+const NUDGE_COOLDOWN_MS = Number(process.env.DM_NUDGE_COOLDOWN_MS || 15_000);
+const NUDGE_RATE_WINDOW_MS = Number(process.env.DM_NUDGE_RATE_WINDOW_MS || 60_000);
+const NUDGE_RATE_LIMIT = Number(process.env.DM_NUDGE_RATE_LIMIT || 6);
+
+const pairCooldowns = new Map(); // key -> lastTimestamp
+const rateBuckets = new Map(); // senderId -> { count, resetAt }
+
 function resolveUserId(ws) {
   const candidates = [
     ws?._player?.id,
@@ -47,6 +54,48 @@ function send(ws, payload) {
   }
 }
 
+function pairKey(a, b) {
+  const left = String(a || '');
+  const right = String(b || '');
+  return left < right ? `${left}:${right}` : `${right}:${left}`;
+}
+
+function checkPairCooldown(senderId, friendId) {
+  const key = pairKey(senderId, friendId);
+  const last = pairCooldowns.get(key) || 0;
+  const now = Date.now();
+  if (now - last < NUDGE_COOLDOWN_MS) {
+    const err = new Error('DM_NUDGE_COOLDOWN');
+    err.code = 'DM_NUDGE_COOLDOWN';
+    throw err;
+  }
+  return key;
+}
+
+function markPairCooldown(key) {
+  pairCooldowns.set(key, Date.now());
+}
+
+function acquireRateBucket(senderId) {
+  const now = Date.now();
+  let bucket = rateBuckets.get(senderId);
+  if (!bucket || now > bucket.resetAt) {
+    bucket = { count: 0, resetAt: now + NUDGE_RATE_WINDOW_MS };
+  }
+  if (bucket.count >= NUDGE_RATE_LIMIT) {
+    const err = new Error('DM_NUDGE_RATE_LIMIT');
+    err.code = 'DM_NUDGE_RATE_LIMIT';
+    throw err;
+  }
+  return bucket;
+}
+
+function commitRateBucket(senderId, bucket) {
+  if (!bucket) return;
+  bucket.count += 1;
+  rateBuckets.set(senderId, bucket);
+}
+
 async function handleSend(ws, data) {
   const senderId = resolveUserId(ws);
   if (!senderId) return;
@@ -80,6 +129,40 @@ async function handleSend(ws, data) {
   } catch (err) {
     const code = err?.code || err?.payload?.error || 'DM_SEND_FAILED';
     send(ws, { type: 'dm:error', error: code, clientId });
+  }
+}
+
+async function handleNudge(ws, data) {
+  const senderId = resolveUserId(ws);
+  if (!senderId) return;
+  const friendId = String(data.to || data.friendId || data.targetId || '').trim();
+  if (!friendId) {
+    send(ws, { type: 'dm:error', error: 'FRIEND_NOT_FOUND', action: 'nudge' });
+    return;
+  }
+  if (friendId === senderId) {
+    send(ws, { type: 'dm:error', error: 'FRIEND_SELF_NOT_ALLOWED', action: 'nudge', friendId });
+    return;
+  }
+  let rateBucket;
+  let cooldownKey;
+  try {
+    cooldownKey = checkPairCooldown(senderId, friendId);
+    rateBucket = acquireRateBucket(senderId);
+    await ensureCanMessage({ senderId, recipientId: friendId });
+    markPairCooldown(cooldownKey);
+    commitRateBucket(senderId, rateBucket);
+    const payload = {
+      type: 'dm:nudge',
+      friendId,
+      fromId: senderId,
+      ts: new Date().toISOString(),
+    };
+    send(ws, payload);
+    bus.sendToPlayer(friendId, payload);
+  } catch (err) {
+    const code = err?.code || err?.payload?.error || 'DM_NUDGE_FAILED';
+    send(ws, { type: 'dm:error', error: code, action: 'nudge', friendId });
   }
 }
 
@@ -157,6 +240,9 @@ function handleMessage(ws, data) {
       return true;
     case 'dm:read':
       handleRead(ws, data).catch((err) => console.warn('[dm] read failed', err?.message));
+      return true;
+    case 'dm:nudge':
+      handleNudge(ws, data).catch((err) => console.warn('[dm] nudge failed', err?.message));
       return true;
     default:
       return false;

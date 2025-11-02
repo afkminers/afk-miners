@@ -1502,6 +1502,22 @@
       "body": "{error:'DM_HISTORY_FAILED'}"
     },
     {
+      "status": 429,
+      "body": "{error:'DM_NUDGE_RATE_LIMIT'}"
+    },
+    {
+      "status": 429,
+      "body": "{error:'DM_NUDGE_COOLDOWN'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'DM_NUDGE_FAILED'}"
+    },
+    {
+      "status": 504,
+      "body": "{error:'DM_NUDGE_TIMEOUT'}"
+    },
+    {
       "status": 404,
       "body": "{error:'USER_NOT_FOUND'}"
     }

@@ -4034,6 +4034,35 @@
           "createdAt"
         ]
       },
+      "DmNudgeEvent": {
+        "type": "object",
+        "description": "Evento WebSocket emitido ao enviar ou receber um nudge (cutucada).",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "dm:nudge"
+          },
+          "friendId": {
+            "type": "string",
+            "description": "Identificador do amigo que participa da conversa."
+          },
+          "fromId": {
+            "type": "string",
+            "description": "Identificador de quem originou o nudge."
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp ISO8601 do disparo."
+          }
+        },
+        "required": [
+          "type",
+          "friendId",
+          "fromId",
+          "ts"
+        ]
+      },
       "FriendListItem": {
         "type": "object",
         "description": "Entrada de amizade com informações de presença e mensagens não lidas.",

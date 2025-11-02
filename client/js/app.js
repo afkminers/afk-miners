@@ -14,6 +14,7 @@ import {
   activateDmScope,
   handleDmSubmit,
 } from './ui/dm-chat.js';
+import { renderRichText } from './ui/emoji.js';
 
 /* ---------- HTTP helpers + CSRF ---------- */
 let CSRF = null;
@@ -367,7 +368,6 @@ function appendChatRow(msg){
   const fromName = normStr(msg?.fromName || (isMe ? myName : 'Anon'));
   const text     = normStr(msg?.text || '');
 
-  // evita duplicatas
   if (id && hasSeenId(id)) return null;
 
   const row = document.createElement('div');
@@ -378,13 +378,31 @@ function appendChatRow(msg){
   row.setAttribute('data-ts', String(ts));
   row.classList.add(isMe ? 'me' : 'other');
 
-  const timeStr = new Date(ts).toLocaleTimeString();
-  const esc = (s)=> String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const displayName = esc(fromName);
-  const extraYou = isMe ? ' <span class="you-tag">(Você)</span>' : '';
-  row.innerHTML =
-    `<strong class="name">${displayName}</strong>${extraYou}: ${esc(text)}
-     <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${timeStr})</span>`;
+  const nameEl = document.createElement('strong');
+  nameEl.className = 'name';
+  nameEl.textContent = fromName;
+  row.appendChild(nameEl);
+
+  if (isMe) {
+    const youEl = document.createElement('span');
+    youEl.className = 'you-tag';
+    youEl.textContent = '(Você)';
+    row.appendChild(document.createTextNode(' '));
+    row.appendChild(youEl);
+  }
+
+  row.appendChild(document.createTextNode(': '));
+
+  const bodyEl = document.createElement('span');
+  bodyEl.className = 'chat-row__message';
+  renderRichText(bodyEl, text);
+  row.appendChild(bodyEl);
+
+  const timeEl = document.createElement('span');
+  timeEl.className = 'muted chat-row__time';
+  timeEl.textContent = `(${new Date(ts).toLocaleTimeString()})`;
+  row.appendChild(document.createTextNode(' '));
+  row.appendChild(timeEl);
 
   chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;
