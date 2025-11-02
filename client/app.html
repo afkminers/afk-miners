@@ -356,27 +356,21 @@
 
     <!-- CHAT -->
     <footer id="chatDock">
-      <div class="chat-controls" style="padding:12px;">
-        <div class="chat-tabs" style="display:flex; gap:8px; margin-bottom:8px;">
-          <button id="btnDefault" class="chat-tab active" type="button" style="padding:4px 8px" data-i18n="chat.default">Default</button>
-          <button id="btnGlobal" class="chat-tab" type="button" style="padding:4px 8px" data-i18n="chat.global">Global</button>
-          <button id="btnLog" class="chat-tab" type="button" style="padding:4px 8px" data-i18n="chat.log">Log</button>
-        </div>
-        <div class="chat-panels" style="display:flex; flex-direction:column; gap:0;">
-          <div id="chatBox" class="chat-box"
-            style="height:180px; overflow:auto; background:#07101a; padding:8px; color:#e6eef6; border-radius:4px; border:1px solid rgba(255,255,255,0.03);">
-          </div>
-          <div id="chatLogBox" class="chat-box log" aria-live="polite" aria-label="Game log" data-i18n-attr="aria-label" data-i18n-aria-label="chat.logAria"
-            style="height:180px; overflow:auto; background:#07101a; padding:8px; color:#e6eef6; border-radius:4px; border:1px solid rgba(255,255,255,0.03); display:none;">
-          </div>
-        </div>
-        <form id="chatForm" autocomplete="off" style="display:flex; gap:8px; margin-top:8px;">
-          <input id="chatInput" name="chat" placeholder="Digite uma mensagem…" data-i18n="chat.placeholder" data-i18n-attr="placeholder"
-            style="flex:1; padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.04); background:#07121a; color:#fff;" />
-          <button id="chatSend" type="button"
-            style="padding:8px 12px; border-radius:4px; background:#2563eb; color:#fff; border:0;" data-i18n="chat.send">Enviar</button>
-        </form>
+      <div class="chat-tabs" id="chatTabs" role="tablist" aria-label="Chat channels">
+        <button id="btnDefault" class="chat-tab active" type="button" data-scope="default" data-i18n="chat.default">Default</button>
+        <button id="btnGlobal" class="chat-tab" type="button" data-scope="global" data-i18n="chat.global">Global</button>
+        <button id="btnLog" class="chat-tab" type="button" data-scope="log" data-i18n="chat.log">Log</button>
+        <span class="chat-tabs__dm-anchor" aria-hidden="true"></span>
       </div>
+      <div class="chat-panels" id="chatPanels">
+        <div id="chatBox" class="chat-box" data-scope="default"></div>
+        <div id="chatLogBox" class="chat-box log" data-scope="log" aria-live="polite" aria-label="Game log" data-i18n-attr="aria-label"
+          data-i18n-aria-label="chat.logAria" hidden></div>
+      </div>
+      <form id="chatForm" autocomplete="off">
+        <input id="chatInput" name="chat" placeholder="Digite uma mensagem…" data-i18n="chat.placeholder" data-i18n-attr="placeholder" />
+        <button id="chatSend" type="button" data-i18n="chat.send">Enviar</button>
+      </form>
     </footer>
   </main>
 
