@@ -965,21 +965,27 @@ body.overlay-chat #centerStage{
   display:flex;
   flex-wrap:wrap;
   gap:8px;
+  align-items:center;
+  padding:6px 8px;
+  background:rgba(11,18,32,.88);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;
 }
 .chat-tab{
   position:relative;
-  padding:4px 10px;
-  border:2px solid #000;
-  border-radius:8px;
-  background:linear-gradient(180deg,#1e2f4b,#0f1728);
-  color:#f1f5ff;
+  padding:6px 12px;
+  border:2px solid rgba(0,0,0,.9);
+  border-radius:10px;
+  background:linear-gradient(180deg,#263b63,#13213d);
+  color:#f5f8ff;
   font-family:'Press Start 2P', monospace;
-  font-size:9px;
-  letter-spacing:.05em;
+  font-size:11px;
+  letter-spacing:.08em;
   text-transform:uppercase;
   cursor:pointer;
   box-shadow:0 3px 0 rgba(0,0,0,.65);
   transition:filter .18s ease, transform .18s ease;
+  min-height:28px;
 }
 .chat-tab:hover,
 .chat-tab:focus-visible{
@@ -987,14 +993,14 @@ body.overlay-chat #centerStage{
   outline:none;
 }
 .chat-tab.active{
-  background:linear-gradient(180deg,#2563eb,#1d4ed8);
-  color:#f8fbff;
+  background:linear-gradient(180deg,#2f6df1,#1e4dd4);
+  color:#ffffff;
 }
 .chat-tab.dm-tab{
   display:flex;
   align-items:center;
   gap:6px;
-  padding-right:6px;
+  padding-right:8px;
 }
 .chat-tab.dm-tab .dm-tab-label{
   max-width:120px;

@@ -28,6 +28,7 @@ let refreshTimer = null;
 let currentUserId = null;
 let loadPromise = null;
 let feedbackTimer = null;
+let hudObserver = null;
 
 const friendsById = new Map();
 const pendingActions = new Set();
@@ -683,85 +684,104 @@ function togglePanel() {
   else openPanel();
 }
 
+function ensureButtonInHud() {
+  const hud = document.getElementById('hud');
+  if (!hud || !buttonEl) return;
+  if (!hud.contains(buttonEl)) {
+    try {
+      hud.appendChild(buttonEl);
+    } catch {}
+  }
+}
+
 function setupDom() {
   const hud = document.getElementById('hud');
   if (!hud) return false;
-  if (buttonEl) return true;
+  if (!buttonEl) {
+    buttonEl = document.createElement('button');
+    buttonEl.type = 'button';
+    buttonEl.className = 'hud-friends-btn';
+    buttonEl.setAttribute('aria-haspopup', 'dialog');
+    buttonEl.setAttribute('aria-expanded', 'false');
+    buttonEl.innerHTML = `
+      <span class="hud-friends-btn__icon" aria-hidden="true"></span>
+      <span class="hud-friends-btn__label">Friends</span>
+      <span class="hud-friends-btn__badge" data-role="badge" hidden>0</span>
+    `;
+    badgeEl = buttonEl.querySelector('[data-role="badge"]');
 
-  buttonEl = document.createElement('button');
-  buttonEl.type = 'button';
-  buttonEl.className = 'hud-friends-btn';
-  buttonEl.setAttribute('aria-haspopup', 'dialog');
-  buttonEl.setAttribute('aria-expanded', 'false');
-  buttonEl.innerHTML = `
-    <span class="hud-friends-btn__icon" aria-hidden="true"></span>
-    <span class="hud-friends-btn__label">Friends</span>
-    <span class="hud-friends-btn__badge" data-role="badge" hidden>0</span>
-  `;
-  hud.appendChild(buttonEl);
-  badgeEl = buttonEl.querySelector('[data-role="badge"]');
-
-  panelEl = document.createElement('div');
-  panelEl.className = 'friend-panel';
-  panelEl.setAttribute('aria-hidden', 'true');
-  panelEl.innerHTML = `
-    <div class="friend-panel__overlay" data-close="1"></div>
-    <aside class="friend-panel__surface" role="dialog" aria-modal="false" aria-labelledby="friendPanelTitle" tabindex="-1">
-      <header class="friend-panel__header">
-        <h2 id="friendPanelTitle" class="friend-panel__title">Friend List</h2>
-        <button type="button" class="friend-panel__close" data-close="1" aria-label="Fechar">✕</button>
-      </header>
-      <div class="friend-panel__body">
-        <form class="friend-add-form" data-role="add-form">
-          <label class="sr-only" for="friendAddInput">Adicionar por nome de usuário</label>
-          <input id="friendAddInput" data-role="add-input" class="friend-input" type="text" maxlength="32" placeholder="Nome do jogador" autocomplete="off" />
-          <button type="submit" class="friend-add-btn">Adicionar</button>
-        </form>
-        <p class="friend-feedback" data-role="feedback" aria-live="polite"></p>
-        <div class="friend-loader" data-role="loader" hidden>Carregando…</div>
-        <div class="friend-sections">
-          <section class="friend-section" data-section="pending">
-            <header class="friend-section__header">
-              <h3>Pendente</h3>
-              <span class="friend-section__count" data-count="pending">0</span>
-            </header>
-            <div class="friend-list" data-list="pending"></div>
-          </section>
-          <section class="friend-section" data-section="friends">
-            <header class="friend-section__header">
-              <h3>Amigos</h3>
-              <span class="friend-section__count" data-count="friends">0</span>
-            </header>
-            <div class="friend-list" data-list="friends"></div>
-          </section>
-          <section class="friend-section" data-section="blocked">
-            <header class="friend-section__header">
-              <h3>Bloqueados</h3>
-              <span class="friend-section__count" data-count="blocked">0</span>
-            </header>
-            <div class="friend-list" data-list="blocked"></div>
-          </section>
+    panelEl = document.createElement('div');
+    panelEl.className = 'friend-panel';
+    panelEl.setAttribute('aria-hidden', 'true');
+    panelEl.innerHTML = `
+      <div class="friend-panel__overlay" data-close="1"></div>
+      <aside class="friend-panel__surface" role="dialog" aria-modal="false" aria-labelledby="friendPanelTitle" tabindex="-1">
+        <header class="friend-panel__header">
+          <h2 id="friendPanelTitle" class="friend-panel__title">Friend List</h2>
+          <button type="button" class="friend-panel__close" data-close="1" aria-label="Fechar">✕</button>
+        </header>
+        <div class="friend-panel__body">
+          <form class="friend-add-form" data-role="add-form">
+            <label class="sr-only" for="friendAddInput">Adicionar por nome de usuário</label>
+            <input id="friendAddInput" data-role="add-input" class="friend-input" type="text" maxlength="32" placeholder="Nome do jogador" autocomplete="off" />
+            <button type="submit" class="friend-add-btn">Adicionar</button>
+          </form>
+          <p class="friend-feedback" data-role="feedback" aria-live="polite"></p>
+          <div class="friend-loader" data-role="loader" hidden>Carregando…</div>
+          <div class="friend-sections">
+            <section class="friend-section" data-section="pending">
+              <header class="friend-section__header">
+                <h3>Pendente</h3>
+                <span class="friend-section__count" data-count="pending">0</span>
+              </header>
+              <div class="friend-list" data-list="pending"></div>
+            </section>
+            <section class="friend-section" data-section="friends">
+              <header class="friend-section__header">
+                <h3>Amigos</h3>
+                <span class="friend-section__count" data-count="friends">0</span>
+              </header>
+              <div class="friend-list" data-list="friends"></div>
+            </section>
+            <section class="friend-section" data-section="blocked">
+              <header class="friend-section__header">
+                <h3>Bloqueados</h3>
+                <span class="friend-section__count" data-count="blocked">0</span>
+              </header>
+              <div class="friend-list" data-list="blocked"></div>
+            </section>
+          </div>
         </div>
-      </div>
-    </aside>
-  `;
-  document.body.appendChild(panelEl);
+      </aside>
+    `;
+    document.body.appendChild(panelEl);
 
-  surfaceEl = panelEl.querySelector('.friend-panel__surface');
-  addFormEl = panelEl.querySelector('[data-role="add-form"]');
-  addInputEl = panelEl.querySelector('[data-role="add-input"]');
-  loaderEl = panelEl.querySelector('[data-role="loader"]');
-  feedbackEl = panelEl.querySelector('[data-role="feedback"]');
-  lists = {
-    pending: panelEl.querySelector('[data-list="pending"]'),
-    friends: panelEl.querySelector('[data-list="friends"]'),
-    blocked: panelEl.querySelector('[data-list="blocked"]'),
-  };
-  counts = {
-    pending: panelEl.querySelector('[data-count="pending"]'),
-    friends: panelEl.querySelector('[data-count="friends"]'),
-    blocked: panelEl.querySelector('[data-count="blocked"]'),
-  };
+    surfaceEl = panelEl.querySelector('.friend-panel__surface');
+    addFormEl = panelEl.querySelector('[data-role="add-form"]');
+    addInputEl = panelEl.querySelector('[data-role="add-input"]');
+    loaderEl = panelEl.querySelector('[data-role="loader"]');
+    feedbackEl = panelEl.querySelector('[data-role="feedback"]');
+    lists = {
+      pending: panelEl.querySelector('[data-list="pending"]'),
+      friends: panelEl.querySelector('[data-list="friends"]'),
+      blocked: panelEl.querySelector('[data-list="blocked"]'),
+    };
+    counts = {
+      pending: panelEl.querySelector('[data-count="pending"]'),
+      friends: panelEl.querySelector('[data-count="friends"]'),
+      blocked: panelEl.querySelector('[data-count="blocked"]'),
+    };
+  }
+
+  ensureButtonInHud();
+
+  if (!hudObserver) {
+    hudObserver = new MutationObserver(() => ensureButtonInHud());
+    try {
+      hudObserver.observe(hud, { childList: true });
+      unsubscribers.push(() => { try { hudObserver?.disconnect(); } catch {}; hudObserver = null; });
+    } catch {}
+  }
 
   return true;
 }
