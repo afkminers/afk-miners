@@ -129,6 +129,13 @@ async function run(q, params = []) {
   try {
     return await getPool().query(q, params);
   } catch (e) {
+    if (envBool('DB_MIGRATE_DEBUG', false)) {
+      console.error('[DB MIGRATE] failed SQL:', q.trim());
+      if (params.length) {
+        console.error('[DB MIGRATE] params:', JSON.stringify(params));
+      }
+      console.error('[DB MIGRATE] error:', e.message);
+    }
     if ((e && /timeout/i.test(e.message)) || e?.code === 'ETIMEDOUT') {
       logPoolState('run() timeout');
     }

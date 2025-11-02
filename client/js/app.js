@@ -6,6 +6,15 @@ import './tick.js';
 import { openSkills, openHeroes, openInventory, openSummonPanel } from './app_panels.js';
 import { getSocket, onMessage, wsSend, authenticate } from './ws/singleton.js';
 import { HeroState } from './state/hero-state.js';
+import { initFriendHud } from './ui/friends-hud.js';
+import {
+  initDmChat,
+  openConversation as openDmConversation,
+  isDmScope,
+  activateDmScope,
+  handleDmSubmit,
+} from './ui/dm-chat.js';
+import { renderRichText } from './ui/emoji.js';
 
 /* ---------- HTTP helpers + CSRF ---------- */
 let CSRF = null;
@@ -332,7 +341,6 @@ function appendChatRow(msg){
   const fromName = normStr(msg?.fromName || (isMe ? myName : 'Anon'));
   const text     = normStr(msg?.text || '');
 
-  // evita duplicatas
   if (id && hasSeenId(id)) return null;
 
   const row = document.createElement('div');
@@ -343,13 +351,31 @@ function appendChatRow(msg){
   row.setAttribute('data-ts', String(ts));
   row.classList.add(isMe ? 'me' : 'other');
 
-  const timeStr = new Date(ts).toLocaleTimeString();
-  const esc = (s)=> String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const displayName = esc(fromName);
-  const extraYou = isMe ? ' <span class="you-tag">(Você)</span>' : '';
-  row.innerHTML =
-    `<strong class="name">${displayName}</strong>${extraYou}: ${esc(text)}
-     <span class="muted" style="opacity:.6;font-size:11px;margin-left:8px">(${timeStr})</span>`;
+  const nameEl = document.createElement('strong');
+  nameEl.className = 'name';
+  nameEl.textContent = fromName;
+  row.appendChild(nameEl);
+
+  if (isMe) {
+    const youEl = document.createElement('span');
+    youEl.className = 'you-tag';
+    youEl.textContent = '(Você)';
+    row.appendChild(document.createTextNode(' '));
+    row.appendChild(youEl);
+  }
+
+  row.appendChild(document.createTextNode(': '));
+
+  const bodyEl = document.createElement('span');
+  bodyEl.className = 'chat-row__message';
+  renderRichText(bodyEl, text);
+  row.appendChild(bodyEl);
+
+  const timeEl = document.createElement('span');
+  timeEl.className = 'muted chat-row__time';
+  timeEl.textContent = `(${new Date(ts).toLocaleTimeString()})`;
+  row.appendChild(document.createTextNode(' '));
+  row.appendChild(timeEl);
 
   chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -389,8 +415,11 @@ async function initGlobalChatUI() {
   const chatLogBox = document.getElementById('chatLogBox');
   const chatInput  = document.getElementById('chatInput');
   const chatSend   = document.getElementById('chatSend');
-  const chatForm   = document.getElementById('chatForm');
-  if (!chatBox || !chatLogBox || !chatInput || !chatSend || !btnDefault || !btnGlobal || !btnLog || !chatForm) return;
+  const chatForm     = document.getElementById('chatForm');
+  const chatTabs     = document.getElementById('chatTabs');
+  const chatPanels   = document.getElementById('chatPanels');
+  const dmTabAnchor  = chatTabs ? chatTabs.querySelector('.chat-tabs__dm-anchor') : null;
+  if (!chatBox || !chatLogBox || !chatInput || !chatSend || !btnDefault || !btnGlobal || !btnLog || !chatForm || !chatTabs || !chatPanels) return;
 
   getSocket(); // garante conexão
 
@@ -427,16 +456,39 @@ async function initGlobalChatUI() {
     btnDefault.classList.toggle('active', scope === 'default');
     btnGlobal.classList.toggle('active', scope === 'global');
     btnLog.classList.toggle('active', scope === 'log');
+    btnDefault.setAttribute('aria-pressed', scope === 'default' ? 'true' : 'false');
+    btnGlobal.setAttribute('aria-pressed', scope === 'global' ? 'true' : 'false');
+    btnLog.setAttribute('aria-pressed', scope === 'log' ? 'true' : 'false');
 
-    const showChat = scope !== 'log';
-    chatBox.style.display = showChat ? 'block' : 'none';
-    chatLogBox.style.display = showChat ? 'none' : 'block';
-    chatForm.style.display = showChat ? 'flex' : 'none';
+    const dmScope = isDmScope(scope);
+    const showChat = scope !== 'log' && !dmScope;
+    chatBox.hidden = !showChat;
+    chatLogBox.hidden = scope !== 'log';
+    chatForm.hidden = scope === 'log';
+
+    activateDmScope(scope);
 
     if (scope === 'log' && window.Chat?.clearLogHighlight) {
       try { window.Chat.clearLogHighlight(); } catch {}
     }
   }
+
+  initDmChat({
+    tabsEl: chatTabs,
+    tabsAnchorEl: dmTabAnchor,
+    panelsEl: chatPanels,
+    input: chatInput,
+    focusInput: () => chatInput.focus(),
+    setScope,
+    getScope: () => chatScope,
+  });
+
+  window.addEventListener('dm:open', (event) => {
+    const detail = event.detail || {};
+    const friend = detail.friend || { friendId: detail.friendId };
+    if (!friend || !friend.friendId) return;
+    openDmConversation(friend);
+  });
 
   btnDefault.addEventListener('click', ()=> setScope('default'));
   btnGlobal.addEventListener('click',  ()=> setScope('global'));
@@ -449,6 +501,12 @@ async function initGlobalChatUI() {
     if (chatScope === 'log') {
       return;
     }
+    if (isDmScope(chatScope)) {
+      if (handleDmSubmit(chatScope, text)) {
+        chatInput.value = '';
+      }
+      return;
+    }
     if (chatScope === 'global') {
       wsSend({ type: 'chat', scope: 'global', text });
       chatInput.value = '';
@@ -459,7 +517,13 @@ async function initGlobalChatUI() {
   }
   chatSend.addEventListener('click', sendChat);
   chatForm.addEventListener('submit', (e)=>{ e.preventDefault(); sendChat(); });
-  chatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
+  chatInput.addEventListener('keydown', (e)=>{
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChat();
+    }
+  });
+
 }
 
 /* ===================== Conteúdo auxiliar (somente se cena modular falhar) ===================== */
@@ -500,6 +564,9 @@ const FALLBACK_LOAD_CONTENT = async () => {
     setLoadingProgress(62);
 
     await initGlobalChatUI();
+    setLoadingProgress(72);
+
+    await initFriendHud();
     setLoadingProgress(82);
 
     applyViewport();
