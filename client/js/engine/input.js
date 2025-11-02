@@ -31,22 +31,37 @@
     'KeyA','ArrowLeft','Numpad4',
     'KeyD','ArrowRight','Numpad6',
   ];
-  const _pressedEdge = new Set();
+  const STEP_REPEAT_MS = Number(window.ENV?.STEP_REPEAT_MS || 160);
+  const _stepState = new Map(); // code -> { down, first, lastAt }
 
-  function _edgeDown(code) {
-    if (!KEYS.has(code)) return false;     // tecla não está pressionada
-    if (_pressedEdge.has(code)) return false; // já consumimos o "down" desta tecla
-    _pressedEdge.add(code);
-    return true;
+  function _ensureStepState(code) {
+    let st = _stepState.get(code);
+    if (!st) {
+      st = { down: false, first: false, lastAt: 0 };
+      _stepState.set(code, st);
+    }
+    return st;
+  }
+
+  function _onKeyDown(code) {
+    const st = _ensureStepState(code);
+    if (!st.down) {
+      st.down = true;
+      st.first = true;
+      st.lastAt = 0;
+    }
   }
 
   function _onKeyUp(code) {
-    _pressedEdge.delete(code); // libera para detectar um novo "down" no futuro
+    const st = _ensureStepState(code);
+    st.down = false;
+    st.first = false;
+    st.lastAt = 0;
   }
 
   const Input = {
     attach(el = window, canvasEl = null) {
-      el.addEventListener('keydown', e => { KEYS.add(e.code); });
+      el.addEventListener('keydown', e => { KEYS.add(e.code); _onKeyDown(e.code); });
       el.addEventListener('keyup',   e => { KEYS.delete(e.code); _onKeyUp(e.code); });
       (canvasEl || el).addEventListener('mousemove', e => {
         MOUSE.x = e.clientX; MOUSE.y = e.clientY;
@@ -63,10 +78,20 @@
     // >>> NOVO: retorna UMA direção cardinal (x,y) quando alguma tecla entra em "down"
     // Ignora diagonais (Numpad7/9/1/3, Home/PageUp/End/PageDown) para andar 1 SQM por vez.
     getStepIntent() {
+      const now = performance.now();
       for (const code of CARD_KEYS) {
-        if (_edgeDown(code)) {
-          const m = MAP[code];
-          if (m && (m.x === 0 || m.y === 0)) return { x: m.x, y: m.y };
+        const m = MAP[code];
+        if (!m || (m.x && m.y)) continue; // ignora diagonais
+        const st = _stepState.get(code);
+        if (!st || !st.down) continue;
+        if (st.first) {
+          st.first = false;
+          st.lastAt = now;
+          return { x: m.x, y: m.y };
+        }
+        if ((now - st.lastAt) >= STEP_REPEAT_MS) {
+          st.lastAt = now;
+          return { x: m.x, y: m.y };
         }
       }
       return null;
