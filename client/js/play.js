@@ -70,6 +70,34 @@ const LOG_FALLBACKS = {
   'chat.logYouHitTarget': '[You] dealt {amount} to {target} (target HP: {hp})',
 };
 
+function normalizeHeroId(raw) {
+  if (raw == null) return null;
+  const id = String(raw).trim();
+  if (!id || id === 'undefined' || id === 'null') return null;
+  return id;
+}
+
+function resolveHeroId(raw) {
+  const direct = normalizeHeroId(raw);
+  if (direct) return direct;
+
+  const candidates = [
+    window.ActiveHeroId,
+    window.Team?.getActiveHeroId?.(),
+    window.GameScene?.activeHeroId,
+    window.Player?.activeHeroId,
+    window.CurrentHeroId,
+    HeroState?.id,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeHeroId(candidate);
+    if (normalized) return normalized;
+  }
+
+  return null;
+}
+
 function interpolate(template, vars = {}) {
   if (typeof template !== 'string') return template;
   return template.replace(/\{(\w+)\}/g, (_, token) => {
@@ -116,8 +144,8 @@ function resolveMobName(raw) {
 
 onMessage('hero_hp', (msg) => {
   if (window.HUD_ApplyHeroHpUpdate) {
-    const hid = String(msg.heroId);
-    window.HUD_ApplyHeroHpUpdate(hid, Number(msg.hp), Number(msg.maxHp));
+    const hid = resolveHeroId(msg.heroId ?? msg.id ?? msg.targetHeroId);
+    if (hid) window.HUD_ApplyHeroHpUpdate(hid, Number(msg.hp), Number(msg.maxHp));
   }
   // Log básico (se o chat ainda não tiver aba "Log")
   const mobName = resolveMobName(msg.byMob ?? msg.instanceId);
@@ -131,8 +159,8 @@ onMessage('hero_hp', (msg) => {
 // Respawn -> força refresh HUD imediato
 onMessage('hero_respawn', (msg) => {
   if (window.HUD_ApplyHeroHpUpdate) {
-    const hid = String(msg.heroId);
-    window.HUD_ApplyHeroHpUpdate(hid, Number(msg.hp), Number(msg.hp));
+    const hid = resolveHeroId(msg.heroId ?? msg.id ?? msg.targetHeroId);
+    if (hid) window.HUD_ApplyHeroHpUpdate(hid, Number(msg.hp), Number(msg.hp));
   }
 });
 
@@ -162,10 +190,13 @@ onMessage('combat_log', (m) => {
 // == NOVO: evento rico dizendo "quem bateu" ==
 onMessage('hero_hit', (msg) => {
   // Atualiza HUD de HP do herói
-  if (window.HUD_ApplyHeroHpUpdate && msg.heroId != null) {
-    const cur = Number(msg.hp);
-    const max = Number(msg.hpMax ?? msg.maxHp ?? msg.hp_max ?? msg.maxhp);
-    window.HUD_ApplyHeroHpUpdate(String(msg.heroId), cur, max);
+  if (window.HUD_ApplyHeroHpUpdate) {
+    const hid = resolveHeroId(msg.heroId ?? msg.id ?? msg.targetHeroId);
+    if (hid) {
+      const cur = Number(msg.hp);
+      const max = Number(msg.hpMax ?? msg.maxHp ?? msg.hp_max ?? msg.maxhp);
+      window.HUD_ApplyHeroHpUpdate(hid, cur, max);
+    }
   }
 
   // Nome do bicho que bateu (cai em chaves até achar algo útil)

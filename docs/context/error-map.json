@@ -1453,5 +1453,171 @@
       "body": "{error:'ticket-create-failed' }"
     }
   ],
-  "GET /tick": []
+  "GET /tick": [],
+  "domain:friends": [
+    {
+      "status": 409,
+      "body": "{error:'FRIEND_ALREADY_EXISTS'}"
+    },
+    {
+      "status": 400,
+      "body": "{error:'FRIEND_SELF_NOT_ALLOWED'}"
+    },
+    {
+      "status": 404,
+      "body": "{error:'USER_NOT_FOUND'}"
+    }
+  ],
+  "domain:direct-messages": [
+    {
+      "status": 403,
+      "body": "{error:'DM_BLOCKED'}"
+    },
+    {
+      "status": 404,
+      "body": "{error:'USER_NOT_FOUND'}"
+    }
+  ],
+  "GET /api/friends": [
+    {
+      "status": 429,
+      "body": "{error:'FRIEND_LIST_RATE_LIMIT'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'FRIEND_LIST_FAILED'}"
+    }
+  ],
+  "POST /api/friends/request": [
+    {
+      "status": 400,
+      "body": "{error:'USERNAME_REQUIRED'}"
+    },
+    {
+      "status": 400,
+      "body": "{error:'FRIEND_SELF_NOT_ALLOWED'}"
+    },
+    {
+      "status": 404,
+      "body": "{error:'USER_NOT_FOUND'}"
+    },
+    {
+      "status": 409,
+      "body": "{error:'FRIEND_ALREADY_EXISTS'}"
+    },
+    {
+      "status": 429,
+      "body": "{error:'FRIEND_RATE_LIMIT'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'FRIEND_REQUEST_FAILED'}"
+    }
+  ],
+  "POST /api/friends/{friendId}/accept": [
+    {
+      "status": 400,
+      "body": "{error:'FRIEND_ID_REQUIRED'}"
+    },
+    {
+      "status": 403,
+      "body": "{error:'FRIEND_REQUEST_NOT_FOR_YOU'}"
+    },
+    {
+      "status": 404,
+      "body": "{error:'FRIEND_REQUEST_NOT_FOUND'}"
+    },
+    {
+      "status": 429,
+      "body": "{error:'FRIEND_RATE_LIMIT'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'FRIEND_ACCEPT_FAILED'}"
+    }
+  ],
+  "POST /api/friends/{friendId}/reject": [
+    {
+      "status": 400,
+      "body": "{error:'FRIEND_ID_REQUIRED'}"
+    },
+    {
+      "status": 403,
+      "body": "{error:'FRIEND_REQUEST_NOT_FOR_YOU'}"
+    },
+    {
+      "status": 404,
+      "body": "{error:'FRIEND_REQUEST_NOT_FOUND'}"
+    },
+    {
+      "status": 429,
+      "body": "{error:'FRIEND_RATE_LIMIT'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'FRIEND_REJECT_FAILED'}"
+    }
+  ],
+  "DELETE /api/friends/{friendId}": [
+    {
+      "status": 400,
+      "body": "{error:'FRIEND_ID_REQUIRED'}"
+    },
+    {
+      "status": 404,
+      "body": "{error:'FRIEND_NOT_FOUND'}"
+    },
+    {
+      "status": 429,
+      "body": "{error:'FRIEND_RATE_LIMIT'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'FRIEND_REMOVE_FAILED'}"
+    }
+  ],
+  "POST /api/friends/{friendId}/block": [
+    {
+      "status": 400,
+      "body": "{error:'FRIEND_ID_REQUIRED'}"
+    },
+    {
+      "status": 400,
+      "body": "{error:'FRIEND_SELF_NOT_ALLOWED'}"
+    },
+    {
+      "status": 404,
+      "body": "{error:'USER_NOT_FOUND'}"
+    },
+    {
+      "status": 429,
+      "body": "{error:'FRIEND_RATE_LIMIT'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'FRIEND_BLOCK_FAILED'}"
+    }
+  ],
+  "POST /api/friends/{friendId}/unblock": [
+    {
+      "status": 400,
+      "body": "{error:'FRIEND_ID_REQUIRED'}"
+    },
+    {
+      "status": 403,
+      "body": "{error:'FRIEND_BLOCKED_BY_OTHER'}"
+    },
+    {
+      "status": 404,
+      "body": "{error:'FRIEND_NOT_FOUND'}"
+    },
+    {
+      "status": 429,
+      "body": "{error:'FRIEND_RATE_LIMIT'}"
+    },
+    {
+      "status": 500,
+      "body": "{error:'FRIEND_UNBLOCK_FAILED'}"
+    }
+  ]
 }
