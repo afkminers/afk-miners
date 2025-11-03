@@ -1,0 +1,77 @@
+/* client/css/chat-stable.css
+   "Stabilizador" do chat: impede que o conteúdo dos canais empurre o cabeçalho
+   e garante altura fixa com scroll interno, mesmo com muitas mensagens ou
+   diversas abas de DM. Projetado para sobrepor app.css sem alterar HTML.
+*/
+
+/* 1) Dock com altura fixa controlada por --chatH; nada cresce pra fora */
+#chatDock{
+  height: var(--chatH);
+  max-height: var(--chatH);
+  overflow: hidden;
+}
+
+/* 2) Flex columns com 'min-height:0' para permitir encolher e ativar scroll */
+#chatDock .chat-controls{ 
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;           /* crucial: permite painel encolher */
+}
+
+#chatDock .chat-panels{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;           /* ocupa o resto e habilita scroll interno */
+}
+
+#chatDock .chat-box{
+  flex: 1 1 auto;
+  min-height: 0;           /* conteúdo rola, não empurra o layout */
+  height: auto;            /* evita height:100% herdar alturas impossíveis */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* 3) Abas em uma ÚNICA linha; quando muitas, rolam na horizontal */
+#chatDock .chat-tabs{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;       /* não quebra linha */
+  overflow-x: auto;        /* scroll horizontal quando necessário */
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-gutter: stable both-edges;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* espacinho no fim pra não colar no canto */
+#chatDock .chat-tabs::after{
+  content: '';
+  flex: 0 0 8px;
+}
+
+/* scrollbars (opcional, discreto) */
+#chatDock .chat-tabs::-webkit-scrollbar{ height: 8px; }
+#chatDock .chat-tabs::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.15); border-radius: 8px; }
+#chatDock .chat-tabs::-webkit-scrollbar-track{ background: transparent; }
+
+/* 4) Input sempre fixo, sem variar de altura */
+#chatDock #chatForm{
+  flex: 0 0 auto;
+}
+
+/* 5) Log longo não empurra nada; apenas rola */
+#chatLogBox{
+  overflow-y: auto !important;
+}
+
+/* 6) Em modo overlay, mesmo comportamento */
+body.overlay-chat #chatDock{
+  height: var(--chatH);
+  max-height: var(--chatH);
+}
