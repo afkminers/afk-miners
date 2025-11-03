@@ -363,21 +363,31 @@
           <button id="btnLog" class="chat-tab" type="button" data-scope="log" data-i18n="chat.log">Log</button>
           <span class="chat-tabs__dm-anchor" aria-hidden="true"></span>
         </div>
+
         <div class="chat-panels" id="chatPanels">
           <div id="chatBox" class="chat-box" data-scope="default"></div>
-          <div id="chatLogBox" class="chat-box log" data-scope="log" aria-live="polite" aria-label="Game log" data-i18n-attr="aria-label"
-            data-i18n-aria-label="chat.logAria" hidden></div>
+          <div id="chatLogBox"
+              class="chat-box log"
+              data-scope="log"
+              aria-live="polite"
+              aria-label="Game log"
+              data-i18n-attr="aria-label"
+              data-i18n-aria-label="chat.logAria"
+              hidden></div>
         </div>
+
+        <!-- ÚNICO form do chat (o duplicado foi removido) -->
         <form id="chatForm" autocomplete="off">
-          <input id="chatInput" name="chat" placeholder="Digite uma mensagem…" data-i18n="chat.placeholder" data-i18n-attr="placeholder" />
+          <input id="chatInput"
+                name="chat"
+                placeholder="Digite uma mensagem…"
+                data-i18n="chat.placeholder"
+                data-i18n-attr="placeholder" />
           <button id="chatSend" type="button" data-i18n="chat.send">Enviar</button>
         </form>
       </div>
-      <form id="chatForm" autocomplete="off">
-        <input id="chatInput" name="chat" placeholder="Digite uma mensagem…" data-i18n="chat.placeholder" data-i18n-attr="placeholder" />
-        <button id="chatSend" type="button" data-i18n="chat.send">Enviar</button>
-      </form>
     </footer>
+
   </main>
 
   <!-- MODAL SUMMON -->
