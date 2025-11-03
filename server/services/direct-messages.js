@@ -45,6 +45,12 @@ function isBlockedRow(row) {
   return !!row && row.status === 'BLOCKED';
 }
 
+/**
+ * Verificação de permissão para DM.
+ * - Com allowWithoutFriendship=true: permite DM mesmo sem amizade aceita (ou sem relação),
+ *   mas ainda bloqueia "self" e casos BLOQUEADOS.
+ * - Com allowWithoutFriendship=false (padrão): exige amizade ACCEPTED.
+ */
 async function ensureCanMessage({ senderId, recipientId, allowWithoutFriendship = false }) {
   const sender = normalizeId(senderId);
   const recipient = normalizeId(recipientId);
@@ -63,7 +69,6 @@ async function ensureCanMessage({ senderId, recipientId, allowWithoutFriendship 
 
   // Bloqueio sempre impede DM
   if (relation && isBlockedRow(relation)) {
-    // Opcional: tratar quem bloqueou (user_a_id) diferente
     const blockerId = String(relation.user_a_id);
     const code = blockerId === sender ? 'DM_BLOCKED' : 'DM_NOT_ALLOWED';
     const err = new Error(code);
@@ -71,14 +76,14 @@ async function ensureCanMessage({ senderId, recipientId, allowWithoutFriendship 
     throw err;
   }
 
-  // Amizade aceita → permitido
+  // Amizade aceita → permitido sempre
   if (relation && relation.status === 'ACCEPTED') {
     return { ok: true, mode: 'friends' };
   }
 
-  // Sem amizade → permitido somente quando explicitamente liberado (envio por nome)
+  // Sem amizade aceita → só permite se explicitamente liberado
   if (allowWithoutFriendship) {
-    return { ok: true, mode: 'name' };
+    return { ok: true, mode: 'open' };
   }
 
   const error = new Error('DM_NOT_ALLOWED');

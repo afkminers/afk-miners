@@ -597,10 +597,23 @@ async function fetchHistory(conv, { append = false } = {}) {
   } catch (err) {
     const code = (err && (err.code || err.message)) || '';
     console.warn('[dm-chat] history failed', code);
-    // se não é amigo, trate como DM efêmera: marca como carregado e some com o botão
-    if (typeof code === 'string' && code.includes('FRIEND_NOT_FOUND')) {
+
+    // Tratar como DM efêmera quando não houver amizade aceita:
+    // FRIEND_NOT_FOUND (sem relação), DM_NOT_ALLOWED (pendente) ou DM_BLOCKED (bloqueado)
+    const codeStr = String(code || '');
+    if (
+      codeStr.includes('FRIEND_NOT_FOUND') ||
+      codeStr.includes('DM_NOT_ALLOWED') ||
+      codeStr.includes('DM_BLOCKED')
+    ) {
       conv.hasLoadedInitial = true;
       if (conv.loadMoreEl) conv.loadMoreEl.hidden = true;
+
+      // 🔧 Força modo "name": próximos envios irão por toName e o Nudge fica indisponível
+      if (conv.friendId) {
+        conv.friendId = '';
+        scheduleNudgeAvailabilityCheck(conv);
+      }
     }
   } finally {
     conv.loading = false;
@@ -685,16 +698,26 @@ function handleSendEvent(payload) {
   const iAmSender = String(message.senderId) === me;
   const partnerId = iAmSender ? String(message.recipientId) : String(message.senderId);
   const friendName = payload?.friendName || message.friendName || null;
+  const mode = payload?.mode || 'friends'; // 👈 vem do servidor
 
   // Procura conversa por id; se não achar e houver nome, tenta @nome
   let key = conversations.has(partnerId) ? partnerId : null;
   if (!key && friendName) key = findConvKeyByNameLower(friendName);
 
+  // Cria do jeito certo conforme o modo
   let conv = key ? conversations.get(key) : null;
-  if (!conv) conv = createConversation(partnerId, friendName || partnerId);
+  if (!conv) {
+    if (mode === 'name' && friendName) {
+      conv = createConversation('@' + String(friendName).toLowerCase(), friendName);
+    } else {
+      conv = createConversation(partnerId, friendName || partnerId);
+    }
+  }
 
-  // Se conversa era @nome e agora sabemos o id → upgrade
-  if (conv && !conv.friendId && partnerId) {
+  // 🔧 Se for "name", NÃO promover para ID; se for amigos, aí sim promove
+  if (mode === 'name') {
+    conv.friendId = '';
+  } else if (conv && !conv.friendId && partnerId) {
     conv = upgradeConversationKey(conv, partnerId, friendName);
   }
 
@@ -729,16 +752,26 @@ function handleRecvEvent(payload) {
   const me = resolveUserId();
   const fromId = String(message.senderId);
   const friendName = payload?.friendName || message.friendName || null;
+  const mode = payload?.mode || 'friends';
 
   // Tenta por id; se não houver, tenta @nome
   let key = conversations.has(fromId) ? fromId : null;
   if (!key && friendName) key = findConvKeyByNameLower(friendName);
 
+  // Cria do jeito certo
   let conv = key ? conversations.get(key) : null;
-  if (!conv) conv = createConversation(fromId, friendName || fromId);
+  if (!conv) {
+    if (mode === 'name' && friendName) {
+      conv = createConversation('@' + String(friendName).toLowerCase(), friendName);
+    } else {
+      conv = createConversation(fromId, friendName || fromId);
+    }
+  }
 
-  // Se era @nome e agora sabemos o id
-  if (conv && !conv.friendId) {
+  // 🔧 Não promover se for "name"; se for amigos, promove
+  if (mode === 'name') {
+    conv.friendId = '';
+  } else if (conv && !conv.friendId) {
     conv = upgradeConversationKey(conv, fromId, friendName);
   }
 

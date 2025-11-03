@@ -263,6 +263,7 @@
   {
     "file": "client\\js\\engine\\input.js",
     "symbols": [
+      "Input",
       "_ensureStepState",
       "_onKeyDown",
       "_onKeyUp",
@@ -379,10 +380,11 @@
     "symbols": [
       "applyTexts",
       "ensureDom",
+      "ensurePressStartFont",
       "hideOverlay",
       "onClickRevive",
       "showOverlay",
-      "translate"
+      "t"
     ]
   },
   {
@@ -712,17 +714,17 @@
       "blockFriendById",
       "ensureMenu",
       "extractNameAndId",
-      "findRowEl",
+      "getDock",
       "getFriends",
       "getMe",
       "hideMenu",
       "isSelf",
       "onMenuClick",
-      "openDmById",
-      "positionMenuFixed",
-      "resolveFriendIdByName",
+      "openDmByTarget",
+      "positionMenu",
+      "rowFromTarget",
       "showMenu",
-      "withinChat"
+      "showToast"
     ]
   },
   {
@@ -753,7 +755,6 @@
   {
     "file": "client\\js\\ui\\dm-chat.js",
     "symbols": [
-      "animateNudge",
       "appendMessage",
       "clearLocalCooldown",
       "closeConversation",
@@ -763,13 +764,12 @@
       "createPendingNudge",
       "createTabElement",
       "emitUnread",
-      "ensureCurrentUser",
       "ensureHistory",
       "ensureMuteWatcher",
       "ensureNudgeAudio",
       "fetchHistory",
+      "findConvKeyByNameLower",
       "findMessage",
-      "friendIdFromScope",
       "getLocalCooldownUntil",
       "getNudgeMessage",
       "handleAckEvent",
@@ -780,7 +780,12 @@
       "handleSend",
       "handleSendEvent",
       "isDmScope",
+      "isNameKey",
+      "keyFromId",
+      "keyFromName",
       "markRead",
+      "nameFromKey",
+      "norm",
       "nowIso",
       "playNudgeSound",
       "readMutePreference",
@@ -789,12 +794,13 @@
       "renderMessage",
       "resolveUserId",
       "scheduleNudgeAvailabilityCheck",
-      "scopeForFriend",
+      "scopeForKey",
       "scrollToBottom",
-      "setActiveScope",
       "setLocalCooldown",
       "settlePendingNudge",
-      "showNudgeFeedback"
+      "showNudgeFeedback",
+      "targetKeyFromScope",
+      "upgradeConversationKey"
     ]
   },
   {

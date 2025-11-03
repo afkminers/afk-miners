@@ -49,6 +49,10 @@
   },
   {
     "from": "client\\js\\play.js",
+    "to": "./engine/input.js"
+  },
+  {
+    "from": "client\\js\\play.js",
     "to": "./engine/movement_contract.js"
   },
   {

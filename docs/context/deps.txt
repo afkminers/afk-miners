@@ -10,6 +10,7 @@ client\js\play.js -> ./engine/camera2d.js
 client\js\play.js -> ./engine/player_controller.js
 client\js\play.js -> ./engine/click_to_move.js
 client\js\play.js -> ./engine/pathfinder.js
+client\js\play.js -> ./engine/input.js
 client\js\play.js -> ./engine/movement_contract.js
 client\js\gacha.js -> ./api.js
 client\js\gacha.js -> ./i18n/core.js

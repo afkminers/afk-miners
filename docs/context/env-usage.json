@@ -146,7 +146,7 @@
       },
       {
         "file": "server\\combat\\service.js",
-        "index": 15302
+        "index": 15412
       },
       {
         "file": "server\\combat\\routes.js",
@@ -384,7 +384,7 @@
     "occurrences": [
       {
         "file": "server\\ws\\direct-messages.js",
-        "index": 219
+        "index": 352
       }
     ],
     "defaults": [
@@ -396,7 +396,7 @@
     "occurrences": [
       {
         "file": "server\\ws\\direct-messages.js",
-        "index": 380
+        "index": 513
       }
     ],
     "defaults": [
@@ -408,7 +408,7 @@
     "occurrences": [
       {
         "file": "server\\ws\\direct-messages.js",
-        "index": 300
+        "index": 433
       }
     ],
     "defaults": [

@@ -1,5 +1,4 @@
 // server/ws/direct-messages.js
-
 'use strict';
 
 const {
@@ -122,10 +121,11 @@ async function handleSend(ws, data) {
       }
       const targetId = String(target.id);
 
+      // Permite DM sem amizade (mas ainda barra bloqueio e self)
       await ensureCanMessage({
         senderId,
         recipientId: targetId,
-        allowWithoutFriendship: true, // <- libera DM sem amizade, MAS bloqueio segue valendo
+        allowWithoutFriendship: true,
       });
 
       const row = await insertMessage({ senderId, recipientId: targetId, body });
@@ -137,6 +137,7 @@ async function handleSend(ws, data) {
         message,
         clientId,
         friendName: String(target.name || ''),
+        mode: 'name', // <- sinaliza DM sem amizade
       });
 
       // entrega para o destinatário
@@ -147,7 +148,9 @@ async function handleSend(ws, data) {
         fromId: senderId,
         unreadCount: unread,
         friendName: String(target.name || ''),
+        mode: 'name', // <- idem
       };
+
       if (targetId === senderId) {
         send(ws, recvPayload);
       } else {
@@ -161,14 +164,18 @@ async function handleSend(ws, data) {
     }
   }
 
-  // Caminho existente: envio por friendId (continua exigindo amizade)
+  // Caminho por friendId: agora também permite quando a relação está PENDING
   if (!friendIdRaw) {
     send(ws, { type: 'dm:error', error: 'FRIEND_ID_REQUIRED', clientId });
     return;
   }
 
   try {
-    await ensureCanMessage({ senderId, recipientId: friendIdRaw });
+    await ensureCanMessage({
+      senderId,
+      recipientId: friendIdRaw,
+      allowWithoutFriendship: true, // <- ajuste que resolve a falha com pedido pendente
+    });
     const row = await insertMessage({ senderId, recipientId: friendIdRaw, body });
     const message = mapMessage(row);
     const payload = { type: 'dm:send', message, clientId };
@@ -209,7 +216,10 @@ async function handleNudge(ws, data) {
   try {
     cooldownKey = checkPairCooldown(senderId, friendId);
     rateBucket = acquireRateBucket(senderId);
-    await ensureCanMessage({ senderId, recipientId: friendId }); // nudge continua exigindo amizade
+
+    // nudge continua exigindo amizade aceita
+    await ensureCanMessage({ senderId, recipientId: friendId });
+
     markPairCooldown(cooldownKey);
     commitRateBucket(senderId, rateBucket);
     const payload = {

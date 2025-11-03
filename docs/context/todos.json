@@ -1,21 +1,21 @@
 [
   {
     "file": "client\\js\\hud\\death-overlay.js",
-    "line": 60,
+    "line": 191,
     "tag": "NOTE",
     "text": "{"
   },
   {
     "file": "client\\js\\hud\\death-overlay.js",
-    "line": 87,
+    "line": 247,
     "tag": "NOTE",
     "text": "\" data-role=\"note\"></div>"
   },
   {
     "file": "client\\js\\hud\\death-overlay.js",
-    "line": 136,
+    "line": 295,
     "tag": "NOTE",
-    "text": "\"]', 'hud.death.note', 'Movement and interactions remain blocked while you are dead.');"
+    "text": "\"]', 'hud.death.note', 'Inputs are blocked while you are dead.');"
   },
   {
     "file": "client\\js\\i18n\\en.js",

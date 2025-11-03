@@ -1,5 +1,5 @@
 AFK Miners — Context Pack
-Commit: 092ec38 | Branch: main | Last Tag: n/a
+Commit: 0dcb3a5 | Branch: main | Last Tag: n/a
 
 == Estrutura (nível 4) ==
 2025-09-18_000141-auto.zip
@@ -272,6 +272,7 @@ data\sprites\monsters\teste.yml
 data\sprites\monsters\wolf.yml
 data\tilesets
 data\tilesets\kenney.tsx
+dm_files.txt
 docs
 docs\COMBAT_FLAGS.md
 docs\DEPLOY_CHECKLIST.md
@@ -353,6 +354,8 @@ docs\backups\2025-11-02_221329-pre-main-e396948.zip
 docs\backups\2025-11-02_221347-post-main-96fc8ef.zip
 docs\backups\2025-11-02_231844-pre-main-96fc8ef.zip
 docs\backups\2025-11-02_231903-post-main-092ec38.zip
+docs\backups\2025-11-03_015527-pre-main-092ec38.zip
+docs\backups\2025-11-03_015547-post-main-0dcb3a5.zip
 docs\context
 docs\context\API.md
 docs\context\changes-since.txt
@@ -1341,6 +1344,38 @@ docs\releases\2025-11-02_221403-auto\responses-sample.json
 docs\releases\2025-11-02_221403-auto\route-history.json
 docs\releases\2025-11-02_221403-auto\symbol-index.json
 docs\releases\2025-11-02_221403-auto\todos.json
+docs\releases\2025-11-02_231920-auto
+docs\releases\2025-11-02_231920-auto.zip
+docs\releases\2025-11-02_231920-auto\API.md
+docs\releases\2025-11-02_231920-auto\_README.txt
+docs\releases\2025-11-02_231920-auto\changes-since.txt
+docs\releases\2025-11-02_231920-auto\context-pack.txt
+docs\releases\2025-11-02_231920-auto\ctx.yml
+docs\releases\2025-11-02_231920-auto\data-summary.json
+docs\releases\2025-11-02_231920-auto\db-counts.txt
+docs\releases\2025-11-02_231920-auto\db-enums.json
+docs\releases\2025-11-02_231920-auto\db-extensions.txt
+docs\releases\2025-11-02_231920-auto\db-fks.json
+docs\releases\2025-11-02_231920-auto\db-functions.sql
+docs\releases\2025-11-02_231920-auto\db-indexes.json
+docs\releases\2025-11-02_231920-auto\db-schema.sql
+docs\releases\2025-11-02_231920-auto\db-sequences.json
+docs\releases\2025-11-02_231920-auto\db-sizes.txt
+docs\releases\2025-11-02_231920-auto\db-tables.json
+docs\releases\2025-11-02_231920-auto\db-triggers.sql
+docs\releases\2025-11-02_231920-auto\db-views.sql
+docs\releases\2025-11-02_231920-auto\deps-graph.json
+docs\releases\2025-11-02_231920-auto\deps.txt
+docs\releases\2025-11-02_231920-auto\endpoints-contracts.json
+docs\releases\2025-11-02_231920-auto\env-usage.json
+docs\releases\2025-11-02_231920-auto\error-map.json
+docs\releases\2025-11-02_231920-auto\function-signatures.json
+docs\releases\2025-11-02_231920-auto\openapi.json
+docs\releases\2025-11-02_231920-auto\package.json
+docs\releases\2025-11-02_231920-auto\responses-sample.json
+docs\releases\2025-11-02_231920-auto\route-history.json
+docs\releases\2025-11-02_231920-auto\symbol-index.json
+docs\releases\2025-11-02_231920-auto\todos.json
 exit
 fix-camel-columns.js
 fix-sql-columns.js
@@ -2427,6 +2462,7 @@ INTEGRATION_TEST.md
 _backup-meta.txt
 client-orphans.txt
 client.zip
+dm_files.txt
 exit
 fix-camel-columns.js
 fix-sql-columns.js
@@ -2448,14 +2484,14 @@ undo-fix-baks.js
 
 == Inventário por extensão ==
 .png : 637
-.json : 535
-.txt : 267
+.json : 552
+.txt : 275
 .js : 153
-.sql : 148
-.zip : 106
-.yml : 76
+.sql : 152
+.zip : 109
+.yml : 77
 .aseprite : 52
-.md : 38
+.md : 39
 .css : 37
 .gif : 28
 .html : 26
@@ -2479,6 +2515,8 @@ undo-fix-baks.js
 .tsx : 1
 
 == Top 20 maiores arquivos ==
+137535.4 KB	docs\backups\2025-11-03_015527-pre-main-092ec38.zip
+137535.2 KB	docs\backups\2025-11-03_015547-post-main-0dcb3a5.zip
 137529.5 KB	docs\backups\2025-11-02_231844-pre-main-96fc8ef.zip
 137529.3 KB	docs\backups\2025-11-02_231903-post-main-092ec38.zip
 137513.1 KB	docs\backups\2025-11-02_221329-pre-main-e396948.zip
@@ -2497,8 +2535,6 @@ undo-fix-baks.js
 137459.6 KB	docs\backups\2025-11-01_192223-pre-main-05e0d04.zip
 137459.6 KB	docs\backups\2025-11-01_192242-post-main-2cd78cf.zip
 137444.6 KB	docs\backups\2025-11-01_183612-pre-main-781c3af.zip
-137444.4 KB	docs\backups\2025-10-31_004020-pre-main-d31c463.zip
-137444.3 KB	docs\backups\2025-10-31_004040-post-main-1499a31.zip
 
 == Rotas detectadas (server) ==
 [GET] /_ping  (server\combat\routes.js:137)
@@ -2608,7 +2644,7 @@ client\leaderboard.html :: title="AFK Miners — Leaderboard" | scripts=3 | styl
 client\index.html :: title="AFK Miners — Login + Gacha" | scripts=5 | styles=7 | 49335 bytes
 client\house_debug.html :: title="House Debug" | scripts=1 | styles=0 | 1627 bytes
 client\house.html :: title="House" | scripts=0 | styles=0 | 754 bytes
-client\app.html :: title="AFK Miners — Game" | scripts=27 | styles=4 | 45563 bytes
+client\app.html :: title="AFK Miners — Game" | scripts=22 | styles=4 | 45376 bytes
 client\tools\otsp_finder.html :: title="OTSP Finder" | scripts=0 | styles=0 | 2834 bytes
 client\pages\treasure-hunt.html :: title="" | scripts=0 | styles=0 | 377 bytes
 client\pages\training.html :: title="" | scripts=0 | styles=0 | 294 bytes
@@ -2620,6 +2656,15 @@ client\pages\heroes.html :: title="" | scripts=0 | styles=0 | 298 bytes
 client\pages\dungeon.html :: title="" | scripts=0 | styles=0 | 295 bytes
 
 == YAML — sumário (repo inteiro) ==
+ERR docs\releases\2025-11-02_231920-auto\ctx.yml :: YAMLException: bad indentation of a sequence entry (20:11)
+
+ 17 |     notes: YAML/JSON de catálogo/config;  ...
+ 18 | 
+ 19 | endpoints:
+ 20 |   - [GET] /api/admin/content/map/:key/obj ...
+----------------^
+ 21 | 
+ 22 | important_env:
 ERR docs\releases\2025-11-02_221403-auto\ctx.yml :: YAMLException: bad indentation of a sequence entry (20:11)
 
  17 |     notes: YAML/JSON de catálogo/config;  ...
@@ -2953,6 +2998,23 @@ package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, 
 server\package.json :: 8 chaves | keys: name, version, description, main, scripts, dependencies, devDependencies, engines | 2377 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 83652 bytes
 server\content\data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 25614 bytes
+docs\releases\2025-11-02_231920-auto\todos.json :: 12 itens | 1960 bytes
+docs\releases\2025-11-02_231920-auto\symbol-index.json :: 129 itens | 36291 bytes
+docs\releases\2025-11-02_231920-auto\route-history.json :: 0 itens | 2 bytes
+docs\releases\2025-11-02_231920-auto\responses-sample.json :: 20 chaves | keys: GET /_ping, GET /_routes, POST /:friendId/accept, POST /:friendId/block, GET /:friendId/dms, POST /:friendId/reject, POST /:friendId/unblock, DELETE /:friendId, POST /:heroId/deposit, GET /:heroId/slots, GET /:heroId, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global | 7600 bytes
+docs\releases\2025-11-02_231920-auto\package.json :: 8 chaves | keys: name, version, description, main, scripts, dependencies, devDependencies, engines | 2377 bytes
+docs\releases\2025-11-02_231920-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 93901 bytes
+docs\releases\2025-11-02_231920-auto\function-signatures.json :: 1367 itens | 223672 bytes
+docs\releases\2025-11-02_231920-auto\error-map.json :: 20 chaves | keys: GET /_ping, GET /_routes, POST /:friendId/accept, POST /:friendId/block, GET /:friendId/dms, POST /:friendId/reject, POST /:friendId/unblock, DELETE /:friendId, POST /:heroId/deposit, GET /:heroId/slots, GET /:heroId, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global | 32271 bytes
+docs\releases\2025-11-02_231920-auto\env-usage.json :: 92 itens | 19590 bytes
+docs\releases\2025-11-02_231920-auto\endpoints-contracts.json :: 78 itens | 67357 bytes
+docs\releases\2025-11-02_231920-auto\deps-graph.json :: 59 itens | 4689 bytes
+docs\releases\2025-11-02_231920-auto\db-tables.json :: 3 chaves | keys: tables, tablesInfo, constraints | 125996 bytes
+docs\releases\2025-11-02_231920-auto\db-sequences.json :: 10 itens | 1412 bytes
+docs\releases\2025-11-02_231920-auto\db-indexes.json :: 116 itens | 25208 bytes
+docs\releases\2025-11-02_231920-auto\db-fks.json :: 12 chaves | keys: afk_boxes, afk_inventories, afk_workers, direct_messages, farm_plots, friendships, hero_equipment, map_loot_items, map_objects, monster_instances, player_inventories, spawns | 4675 bytes
+docs\releases\2025-11-02_231920-auto\db-enums.json :: 1 chaves | keys: friend_status | 73 bytes
+docs\releases\2025-11-02_231920-auto\data-summary.json :: 78 itens | 22277 bytes
 docs\releases\2025-11-02_221403-auto\todos.json :: 12 itens | 1960 bytes
 docs\releases\2025-11-02_221403-auto\symbol-index.json :: 128 itens | 35892 bytes
 docs\releases\2025-11-02_221403-auto\route-history.json :: 0 itens | 2 bytes
@@ -3459,28 +3521,28 @@ docs\releases\2025-09-17_132223-auto\endpoints-contracts.json :: 61 itens | 5909
 docs\releases\2025-09-17_132223-auto\deps-graph.json :: 18 itens | 1302 bytes
 docs\releases\2025-09-17_132223-auto\data-summary.json :: 38 itens | 8855 bytes
 docs\context\todos.json :: 12 itens | 1960 bytes
-docs\context\symbol-index.json :: 128 itens | 35892 bytes
+docs\context\symbol-index.json :: 129 itens | 36291 bytes
 docs\context\route-history.json :: 0 itens | 2 bytes
 docs\context\responses-sample.json :: 20 chaves | keys: GET /_ping, GET /_routes, POST /:friendId/accept, POST /:friendId/block, GET /:friendId/dms, POST /:friendId/reject, POST /:friendId/unblock, DELETE /:friendId, POST /:heroId/deposit, GET /:heroId/slots, GET /:heroId, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global | 7600 bytes
 docs\context\openapi.json :: 3 chaves | keys: openapi, info, paths | 93901 bytes
-docs\context\function-signatures.json :: 1350 itens | 220928 bytes
+docs\context\function-signatures.json :: 1367 itens | 223672 bytes
 docs\context\error-map.json :: 20 chaves | keys: GET /_ping, GET /_routes, POST /:friendId/accept, POST /:friendId/block, GET /:friendId/dms, POST /:friendId/reject, POST /:friendId/unblock, DELETE /:friendId, POST /:heroId/deposit, GET /:heroId/slots, GET /:heroId, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites, GET /api/chat/global | 32271 bytes
 docs\context\env-usage.json :: 92 itens | 19590 bytes
 docs\context\endpoints-contracts.json :: 78 itens | 67357 bytes
-docs\context\deps-graph.json :: 58 itens | 4611 bytes
+docs\context\deps-graph.json :: 59 itens | 4689 bytes
 docs\context\db-tables.json :: 3 chaves | keys: tables, tablesInfo, constraints | 125996 bytes
-docs\context\db-table-stats.json :: 44 itens | 23121 bytes
+docs\context\db-table-stats.json :: 44 itens | 23128 bytes
 docs\context\db-srvinfo.json :: 7 chaves | keys: raw_version, current_user, current_database, current_schema, snapshot_time, search_path, database_size_bytes | 352 bytes
 docs\context\db-sequences.json :: 10 itens | 1412 bytes
 docs\context\db-partitions.json :: 0 itens | 2 bytes
 docs\context\db-indexes.json :: 116 itens | 25208 bytes
-docs\context\db-index-usage.json :: 116 itens | 18814 bytes
+docs\context\db-index-usage.json :: 116 itens | 18816 bytes
 docs\context\db-fks.json :: 12 chaves | keys: afk_boxes, afk_inventories, afk_workers, direct_messages, farm_plots, friendships, hero_equipment, map_loot_items, map_objects, monster_instances, player_inventories, spawns | 4675 bytes
 docs\context\db-enums.json :: 1 chaves | keys: friend_status | 73 bytes
 docs\context\db-domains.json :: 0 itens | 2 bytes
 docs\context\db-comments.json :: 3 chaves | keys: tables, columns, indexes | 52 bytes
-docs\context\db-column-stats.json :: 176 itens | 187502 bytes
-docs\context\data-summary.json :: 77 itens | 21947 bytes
+docs\context\db-column-stats.json :: 176 itens | 188782 bytes
+docs\context\data-summary.json :: 78 itens | 22277 bytes
 data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 100774 bytes
 client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1779 bytes
 
@@ -3504,14 +3566,14 @@ client\js\dock.js :: bringToFront, clamp, createPanel, dockUndock, ensureShellBo
 client\js\engine\camera2d.js :: Camera2D
 client\js\engine\click_to_move.js :: ClickToMove
 client\js\engine\coords.js :: TILE
-client\js\engine\input.js :: _ensureStepState, _onKeyDown, _onKeyUp, clamp1, dirFromKeys
+client\js\engine\input.js :: Input, _ensureStepState, _onKeyDown, _onKeyUp, clamp1, dirFromKeys
 client\js\engine\movement_contract.js :: TILE, resolveBlocked
 client\js\engine\pathfinder.js :: AStarGrid, MinHeap
 client\js\engine\player_controller.js :: PlayerController
 client\js\farm_panel.js :: attachButton, getCsrf, jget, jpost, onAddPlot, onHarvest, onPlant, openFarm, renderAll, renderInfo, renderInv, renderPlots, stopAuto, toggleAuto, updateButtons
 client\js\gacha.js :: applyLanguage, bindGachaUI, cap, closeOverlay, doSummonAPI, done, fillPanel, flash, getHeroes, getInventory, hardCloseOverlay, heroCardMarkup, init, inlineHint, keySkip, lockButtons, loopPix, openOverlay, playChestSequence, playClick, playMultiSummon, playOneSummonAndReveal, playSfx, refreshFromServer, renderHeroes, resizePix, setAgainState, setRarityBg, showErrorInOverlay, skipOnce, spawnPix, spawnSparks, startPix, startSummon, stopPix, toast, translateRarity, updateOddsLabels, updateRarityLabels, wait
 client\js\hud\battle-status.js :: allowExitFor, applyTexts, beforeUnload, ensureDom, getWarningConfig, hideExitWarning, normalizeMode, onKeydown, setBattle, setBodyFlag, setExitLock, showExitWarning, translate, updateDom
-client\js\hud\death-overlay.js :: applyTexts, ensureDom, hideOverlay, onClickRevive, showOverlay, translate
+client\js\hud\death-overlay.js :: applyTexts, ensureDom, ensurePressStartFont, hideOverlay, onClickRevive, showOverlay, t
 client\js\i18n\core.js :: applyTranslations, changeLanguage, deepMerge, detectInitialLang, dispatchEvent, i18n, importBundle, interpolate, normalizeLang, persistLang, readCookieLang, resolveKey, schedulePrefetch, setDocumentLanguage, updateFormatters
 client\js\i18n\lang-menu.js :: closeMenu, handleOutsideClick, refresh, setOpen, setupMenu, updateFlag, updateOption
 client\js\landing_fx.js :: addSpark, drawLightning, glow, imgRect, loop, resize, seed, sel, start, stop, sync
@@ -3530,6 +3592,7 @@ client\js\play.js -> ./engine/camera2d.js
 client\js\play.js -> ./engine/player_controller.js
 client\js\play.js -> ./engine/click_to_move.js
 client\js\play.js -> ./engine/pathfinder.js
+client\js\play.js -> ./engine/input.js
 client\js\play.js -> ./engine/movement_contract.js
 client\js\gacha.js -> ./api.js
 client\js\gacha.js -> ./i18n/core.js
@@ -3567,8 +3630,7 @@ client\js\i18n\lang-menu.js -> ./core.js
 client\js\hud\death-overlay.js -> ../ws/singleton.js
 client\js\hud\death-overlay.js -> ../api.js
 client\js\hud\battle-status.js -> ../ws/singleton.js
-client\js\engine\player_controller.js -> ./movement_contract.js
-(+9 arestas em docs/context/deps.txt)
+(+10 arestas em docs/context/deps.txt)
 
 == Changes since last tag ==
 (sem tag anterior)
