@@ -121,6 +121,14 @@ async function handleSend(ws, data) {
       }
       const targetId = String(target.id);
 
+      // Descobre nomes para rotular corretamente
+      const recipientName = String(target.name || '');
+      let senderName = ws?._player?.name;
+      if (!senderName) {
+        const meRow = await get(`SELECT name FROM players WHERE id = $1 LIMIT 1`, [senderId]);
+        senderName = String(meRow?.name || '');
+      }
+
       // Permite DM sem amizade (mas ainda barra bloqueio e self)
       await ensureCanMessage({
         senderId,
@@ -131,24 +139,24 @@ async function handleSend(ws, data) {
       const row = await insertMessage({ senderId, recipientId: targetId, body });
       const message = mapMessage(row);
 
-      // resposta para quem enviou
+      // resposta para quem enviou (A): rotular com o NOME DO DESTINATÁRIO (B)
       send(ws, {
         type: 'dm:send',
         message,
         clientId,
-        friendName: String(target.name || ''),
+        friendName: recipientName,
         mode: 'name', // <- sinaliza DM sem amizade
       });
 
-      // entrega para o destinatário
+      // entrega para o destinatário (B): rotular com o NOME DO REMETENTE (A)
       const unread = await countUnreadForPair(targetId, senderId);
       const recvPayload = {
         type: 'dm:recv',
         message,
         fromId: senderId,
         unreadCount: unread,
-        friendName: String(target.name || ''),
-        mode: 'name', // <- idem
+        friendName: senderName, // <- fix: aqui vai o nome do REMETENTE
+        mode: 'name',
       };
 
       if (targetId === senderId) {
@@ -174,7 +182,7 @@ async function handleSend(ws, data) {
     await ensureCanMessage({
       senderId,
       recipientId: friendIdRaw,
-      allowWithoutFriendship: true, // <- ajuste que resolve a falha com pedido pendente
+      allowWithoutFriendship: true, // <- resolve falha com pedido pendente
     });
     const row = await insertMessage({ senderId, recipientId: friendIdRaw, body });
     const message = mapMessage(row);

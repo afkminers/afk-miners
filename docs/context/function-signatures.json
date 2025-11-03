@@ -9641,7 +9641,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 627,
+    "line": 625,
     "kind": "function",
     "name": "ensureHistory",
     "params": [
@@ -9650,7 +9650,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 632,
+    "line": 630,
     "kind": "function",
     "name": "markRead",
     "params": [
@@ -9659,7 +9659,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 643,
+    "line": 641,
     "kind": "function",
     "name": "findMessage",
     "params": [
@@ -9669,7 +9669,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 648,
+    "line": 646,
     "kind": "function",
     "name": "findConvKeyByNameLower",
     "params": [
@@ -9678,7 +9678,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 654,
+    "line": 652,
     "kind": "function",
     "name": "handleSend",
     "params": [
@@ -9688,7 +9688,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 693,
+    "line": 701,
     "kind": "function",
     "name": "handleSendEvent",
     "params": [
@@ -9697,7 +9697,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 748,
+    "line": 756,
     "kind": "function",
     "name": "handleRecvEvent",
     "params": [
@@ -9706,7 +9706,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 800,
+    "line": 808,
     "kind": "function",
     "name": "handleAckEvent",
     "params": [
@@ -9715,7 +9715,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 818,
+    "line": 826,
     "kind": "function",
     "name": "handleReadEvent",
     "params": [
@@ -9724,7 +9724,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 844,
+    "line": 852,
     "kind": "function",
     "name": "handleErrorEvent",
     "params": [
@@ -9733,7 +9733,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 883,
+    "line": 891,
     "kind": "function",
     "name": "handleNudgeEvent",
     "params": [
@@ -9742,7 +9742,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 917,
+    "line": 925,
     "kind": "function",
     "name": "activateDmScope",
     "params": [
@@ -9751,7 +9751,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 931,
+    "line": 939,
     "kind": "function",
     "name": "openConversation",
     "params": [
@@ -9760,7 +9760,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1014,
+    "line": 1022,
     "kind": "function",
     "name": "handleDmSubmit",
     "params": [
@@ -9770,7 +9770,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1019,
+    "line": 1027,
     "kind": "function",
     "name": "getDmScopeForFriend",
     "params": [
@@ -9779,7 +9779,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1023,
+    "line": 1031,
     "kind": "function",
     "name": "syncUnreadFromServer",
     "params": [
@@ -9790,7 +9790,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1033,
+    "line": 1041,
     "kind": "function",
     "name": "syncFriendData",
     "params": [
@@ -9799,7 +9799,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1045,
+    "line": 1053,
     "kind": "function",
     "name": "sendNudge",
     "params": [
@@ -9808,7 +9808,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1065,
+    "line": 1073,
     "kind": "function",
     "name": "getNudgeErrorMessage",
     "params": [
