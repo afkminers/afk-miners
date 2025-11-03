@@ -384,7 +384,7 @@
     "occurrences": [
       {
         "file": "server\\ws\\direct-messages.js",
-        "index": 352
+        "index": 351
       }
     ],
     "defaults": [
@@ -396,7 +396,7 @@
     "occurrences": [
       {
         "file": "server\\ws\\direct-messages.js",
-        "index": 513
+        "index": 512
       }
     ],
     "defaults": [
@@ -408,7 +408,7 @@
     "occurrences": [
       {
         "file": "server\\ws\\direct-messages.js",
-        "index": 433
+        "index": 432
       }
     ],
     "defaults": [

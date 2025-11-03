@@ -609,11 +609,9 @@ async function fetchHistory(conv, { append = false } = {}) {
       conv.hasLoadedInitial = true;
       if (conv.loadMoreEl) conv.loadMoreEl.hidden = true;
 
-      // 🔧 Força modo "name": próximos envios irão por toName e o Nudge fica indisponível
-      if (conv.friendId) {
-        conv.friendId = '';
-        scheduleNudgeAvailabilityCheck(conv);
-      }
+      // 🔧 Fixa em modo "name" para evitar novas tentativas por id
+      conv.friendId = '';
+      scheduleNudgeAvailabilityCheck(conv);
     }
   } finally {
     conv.loading = false;
@@ -662,14 +660,24 @@ function handleSend(scope, text) {
     const label = isNameKey(targetKey) ? nameFromKey(targetKey) : targetKey;
     conv = createConversation(targetKey, label);
   }
+    // Se a conversa é @nome, garantimos que continue sem friendId (name-mode pegajoso)
+  if (isNameKey(targetKey)) {
+    conv.friendId = '';
+  }
   if (!conv) return false;
 
   const clientId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
-  // Decide como enviar: por id ou por nome
+  // Decide como enviar: por id ou por nome (modo @nome é sempre por nome)
+  const byName = isNameKey(targetKey) || !conv.friendId;
   const payload = { type: 'dm:send', body: text, clientId };
-  if (conv.friendId) payload.to = conv.friendId;
-  else payload.toName = conv.friendName || nameFromKey(targetKey);
+  if (byName) {
+    const toName = (conv.friendName && String(conv.friendName).trim()) || nameFromKey(targetKey);
+    payload.toName = toName;
+  } else {
+    payload.to = String(conv.friendId);
+  }
+
 
   try { wsSend(payload); } catch (e) { /* UI marca falha abaixo via erro */ }
 

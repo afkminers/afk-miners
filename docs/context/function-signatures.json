@@ -582,7 +582,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 22,
+    "line": 21,
     "kind": "function",
     "name": "resolveUserId",
     "params": [
@@ -591,7 +591,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 38,
+    "line": 37,
     "kind": "function",
     "name": "mapMessage",
     "params": [
@@ -600,7 +600,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 51,
+    "line": 50,
     "kind": "function",
     "name": "send",
     "params": [
@@ -610,7 +610,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 60,
+    "line": 59,
     "kind": "function",
     "name": "pairKey",
     "params": [
@@ -620,7 +620,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 66,
+    "line": 65,
     "kind": "function",
     "name": "checkPairCooldown",
     "params": [
@@ -630,7 +630,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 78,
+    "line": 77,
     "kind": "function",
     "name": "markPairCooldown",
     "params": [
@@ -639,7 +639,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 82,
+    "line": 81,
     "kind": "function",
     "name": "acquireRateBucket",
     "params": [
@@ -648,7 +648,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 96,
+    "line": 95,
     "kind": "function",
     "name": "commitRateBucket",
     "params": [
@@ -658,7 +658,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 102,
+    "line": 101,
     "kind": "function",
     "name": "handleSend",
     "params": [
@@ -668,7 +668,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 195,
+    "line": 202,
     "kind": "function",
     "name": "handleNudge",
     "params": [
@@ -678,7 +678,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 229,
+    "line": 239,
     "kind": "function",
     "name": "handleAck",
     "params": [
@@ -688,7 +688,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 261,
+    "line": 271,
     "kind": "function",
     "name": "handleRead",
     "params": [
@@ -698,7 +698,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 292,
+    "line": 302,
     "kind": "function",
     "name": "handleMessage",
     "params": [
@@ -1490,7 +1490,7 @@
   },
   {
     "file": "server\\services\\direct-messages.js",
-    "line": 48,
+    "line": 54,
     "kind": "function",
     "name": "ensureCanMessage",
     "params": [
@@ -1501,7 +1501,7 @@
   },
   {
     "file": "server\\services\\direct-messages.js",
-    "line": 89,
+    "line": 94,
     "kind": "function",
     "name": "mapRow",
     "params": [
@@ -1510,7 +1510,7 @@
   },
   {
     "file": "server\\services\\direct-messages.js",
-    "line": 104,
+    "line": 109,
     "kind": "function",
     "name": "insertMessage",
     "params": [
@@ -1521,7 +1521,7 @@
   },
   {
     "file": "server\\services\\direct-messages.js",
-    "line": 121,
+    "line": 126,
     "kind": "function",
     "name": "fetchMessages",
     "params": [
@@ -1533,7 +1533,7 @@
   },
   {
     "file": "server\\services\\direct-messages.js",
-    "line": 138,
+    "line": 143,
     "kind": "function",
     "name": "markDelivered",
     "params": [
@@ -1543,7 +1543,7 @@
   },
   {
     "file": "server\\services\\direct-messages.js",
-    "line": 150,
+    "line": 155,
     "kind": "function",
     "name": "markRead",
     "params": [
@@ -1554,7 +1554,7 @@
   },
   {
     "file": "server\\services\\direct-messages.js",
-    "line": 168,
+    "line": 173,
     "kind": "function",
     "name": "countUnreadForPair",
     "params": [
@@ -1564,7 +1564,7 @@
   },
   {
     "file": "server\\services\\direct-messages.js",
-    "line": 183,
+    "line": 188,
     "kind": "function",
     "name": "listUnreadSummary",
     "params": [
@@ -9641,7 +9641,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 614,
+    "line": 627,
     "kind": "function",
     "name": "ensureHistory",
     "params": [
@@ -9650,7 +9650,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 619,
+    "line": 632,
     "kind": "function",
     "name": "markRead",
     "params": [
@@ -9659,7 +9659,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 630,
+    "line": 643,
     "kind": "function",
     "name": "findMessage",
     "params": [
@@ -9669,7 +9669,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 635,
+    "line": 648,
     "kind": "function",
     "name": "findConvKeyByNameLower",
     "params": [
@@ -9678,7 +9678,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 641,
+    "line": 654,
     "kind": "function",
     "name": "handleSend",
     "params": [
@@ -9688,7 +9688,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 680,
+    "line": 693,
     "kind": "function",
     "name": "handleSendEvent",
     "params": [
@@ -9697,7 +9697,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 725,
+    "line": 748,
     "kind": "function",
     "name": "handleRecvEvent",
     "params": [
@@ -9706,7 +9706,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 767,
+    "line": 800,
     "kind": "function",
     "name": "handleAckEvent",
     "params": [
@@ -9715,7 +9715,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 785,
+    "line": 818,
     "kind": "function",
     "name": "handleReadEvent",
     "params": [
@@ -9724,7 +9724,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 811,
+    "line": 844,
     "kind": "function",
     "name": "handleErrorEvent",
     "params": [
@@ -9733,7 +9733,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 850,
+    "line": 883,
     "kind": "function",
     "name": "handleNudgeEvent",
     "params": [
@@ -9742,7 +9742,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 884,
+    "line": 917,
     "kind": "function",
     "name": "activateDmScope",
     "params": [
@@ -9751,7 +9751,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 898,
+    "line": 931,
     "kind": "function",
     "name": "openConversation",
     "params": [
@@ -9760,7 +9760,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 981,
+    "line": 1014,
     "kind": "function",
     "name": "handleDmSubmit",
     "params": [
@@ -9770,7 +9770,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 986,
+    "line": 1019,
     "kind": "function",
     "name": "getDmScopeForFriend",
     "params": [
@@ -9779,7 +9779,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 990,
+    "line": 1023,
     "kind": "function",
     "name": "syncUnreadFromServer",
     "params": [
@@ -9790,7 +9790,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1000,
+    "line": 1033,
     "kind": "function",
     "name": "syncFriendData",
     "params": [
@@ -9799,7 +9799,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1012,
+    "line": 1045,
     "kind": "function",
     "name": "sendNudge",
     "params": [
@@ -9808,7 +9808,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1032,
+    "line": 1065,
     "kind": "function",
     "name": "getNudgeErrorMessage",
     "params": [
