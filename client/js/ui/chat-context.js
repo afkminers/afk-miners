@@ -1,28 +1,26 @@
 // client/js/ui/chat-context.js
-// Context menu no histórico do chat (Default/Global/Log).
-// Ações: Copiar nome, Enviar DM, Adicionar amigo, Bloquear.
-// v3: evita ações em si mesmo, usa apiGet/apiPost (CSRF), e posiciona o menu dentro do #chatDock.
+// Context menu do chat (Default/Global/Log).
+// Agora permite abrir DM POR NOME (sem amizade). Se houver friendId, usa id; se não houver, usa friendName.
+// Mantém Add/Block via API. Mantém posicionamento dentro do #chatDock.
 
 import { apiGet, apiPost } from '../api.js';
 
-const SCOPE_BOX_IDS = ['chatBox','chatLogBox']; // default + log
-let state = { name: null, id: null, anchorEl: null };
+const SCOPE_BOX_SEL = '#chatBox, #chatLogBox';
+let state = { name: null, id: null };
 
 const $ = (sel, root=document) => root.querySelector(sel);
+function getDock(){ return document.getElementById('chatDock'); }
 
-function withinChat(el) {
-  return !!el && SCOPE_BOX_IDS.some(id => document.getElementById(id)?.contains(el));
-}
-function findRowEl(target) {
+/* ---------- parse da linha ---------- */
+function rowFromTarget(target){
   let el = target;
-  for (let i=0;i<5 && el;i++) {
+  for (let i=0; i<6 && el; i++){
     if (el.dataset && (el.dataset.fromName || el.dataset.fromId || el.dataset.from)) return el;
     el = el.parentElement;
   }
-  el = target.closest?.('#chatBox > * , #chatLogBox > *') || null;
-  return el || target;
+  return target.closest?.('#chatBox > * , #chatLogBox > *') || null;
 }
-function extractNameAndId(el) {
+function extractNameAndId(el){
   const dataName = el?.dataset?.fromName || el?.dataset?.author || el?.dataset?.from || null;
   const dataId   = el?.dataset?.fromId   || null;
   if (dataName || dataId) return { name: dataName, id: dataId };
@@ -33,45 +31,75 @@ function extractNameAndId(el) {
   return { name: null, id: null };
 }
 
-function getMe() {
+/* ---------- me/self ---------- */
+function getMe(){
   const me = window._chat_me || {};
-  return {
-    id: String(me.id || ''),
-    name: String(me.name || '').toLocaleLowerCase()
-  };
+  return { id: String(me.id || ''), name: String(me.name || '').toLowerCase() };
 }
-function isSelf(targetId, targetName) {
+function isSelf(targetId, targetName){
   const me = getMe();
-  const byId = !!me.id && !!targetId && String(targetId) === String(me.id);
-  const byName = !!me.name && !!targetName && String(targetName).toLocaleLowerCase() === me.name;
+  const byId   = !!me.id && !!targetId && String(targetId) === me.id;
+  const byName = !!me.name && !!targetName && String(targetName).toLowerCase() === me.name;
   return !!(byId || byName);
 }
 
-async function getFriends() {
-  try {
+/* ---------- friends helpers ---------- */
+async function getFriends(){
+  try{
     const data = await apiGet('/api/friends');
-    return Array.isArray(data) ? data : (Array.isArray(data?.friends) ? data.friends : []);
-  } catch { return []; }
+    const arr = Array.isArray(data) ? data : (Array.isArray(data?.friends) ? data.friends : []);
+    return arr.map(x => {
+      const statusStr = String(x.status || x.state || '').toLowerCase();
+      const accepted =
+        x.accepted === true ||
+        x.isFriend === true ||
+        /^(accepted|friends?|ok|active)$/.test(statusStr);
+      const blocked =
+        x.blocked === true ||
+        x.isBlocked === true ||
+        /blocked/.test(statusStr);
+      return {
+        id: String(x.friendId ?? x.id ?? x.userId ?? x.uid ?? ''),
+        name: String(x.friendName ?? x.name ?? x.username ?? '').trim(),
+        accepted, blocked, status: statusStr
+      };
+    });
+  }catch{ return []; }
 }
-function openDmById(friendId, name) {
-  const detail = { friendId, friend: { friendId, friendName: name }};
-  window.dispatchEvent(new CustomEvent('dm:open', { detail }));
+async function addFriendByName(name){
+  return apiPost('/api/friends/request', { username: String(name||'').trim() });
 }
-async function resolveFriendIdByName(name) {
-  const friends = await getFriends();
-  const n = String(name || '').toLocaleLowerCase();
-  const found = friends.find?.(f => String(f.friendName || f.name || '').toLocaleLowerCase() === n);
-  return found ? String(found.friendId || found.id) : null;
-}
-async function addFriendByName(name) {
-  return apiPost('/api/friends/request', { username: String(name || '').trim() });
-}
-async function blockFriendById(friendId) {
+async function blockFriendById(friendId){
   return apiPost(`/api/friends/${encodeURIComponent(friendId)}/block`, {});
 }
 
-/* ======= UI ======= */
-function ensureMenu() {
+/* ---------- abrir DM ---------- */
+// Preferimos abrir com friendId; se não tiver, abrimos com friendName (DM efêmera por nome).
+async function openDmByTarget({ id, name }){
+  // Consulta lista de amigos e só usa friendId se houver amizade aceita
+  const friends = await getFriends();
+  const found = friends.find(f =>
+    (id && f.id === String(id)) ||
+    (name && f.name && f.name.toLowerCase() === String(name).toLowerCase())
+  );
+
+  const isAccepted = !!found?.accepted;
+
+  const friend = {};
+  if (isAccepted) {
+    friend.friendId   = String(found.id);
+    friend.friendName = found.name || name || '';
+  } else {
+    // Força DM efêmera por nome: sem id ⇒ sem histórico ⇒ backend aceita via toName
+    friend.friendName = String(name || '');
+  }
+
+  window.dispatchEvent(new CustomEvent('dm:open', { detail: { friend } }));
+}
+
+
+/* ---------- UI (menu) ---------- */
+function ensureMenu(){
   let el = document.getElementById('chatCtxMenu');
   if (el) return el;
   el = document.createElement('div');
@@ -79,113 +107,110 @@ function ensureMenu() {
   el.setAttribute('role','menu');
   el.innerHTML = `
     <div class="ctx-title" aria-live="polite"></div>
-    <button type="button" data-act="copy"  title="Copiar o nome">Copiar nome</button>
-    <button type="button" data-act="dm"    title="Abrir conversa privada">Enviar mensagem</button>
-    <button type="button" data-act="add"   title="Enviar solicitação de amizade">Adicionar amigo</button>
-    <button type="button" data-act="block" title="Bloquear jogador">Bloquear</button>
+    <button type="button" data-act="copy">Copiar nome</button>
+    <button type="button" data-act="dm">Enviar mensagem</button>
+    <button type="button" data-act="add">Adicionar amigo</button>
+    <button type="button" data-act="block">Bloquear</button>
   `;
-  (document.getElementById('chatDock') || document.body).appendChild(el);
+    // usar sempre o body quando for position: fixed (evita clipping/offsets)
+  document.body.appendChild(el);
   el.addEventListener('click', onMenuClick);
   return el;
 }
-
-function positionMenuFixed(el, clientX, clientY) {
-  // ancora dentro do chatDock; se não existir, dentro da viewport
-  const dock = document.getElementById('chatDock');
-  const bounds = dock ? dock.getBoundingClientRect() : {left:8, top:8, right: window.innerWidth-8, bottom: window.innerHeight-8};
-  el.hidden = false; // precisa estar visível para medir
+function positionMenu(el, clientX, clientY){
+  // limitar pelo viewport para position: fixed
+  const bounds = { left: 8, top: 8, right: window.innerWidth - 8, bottom: window.innerHeight - 8 };
+  el.hidden = false;
   const r = el.getBoundingClientRect();
   const pad = 8;
 
   let x = clientX + 6;
   let y = clientY + 6;
 
-  // Se estourar para a direita, cola no limite
-  if (x + r.width > bounds.right - pad) x = bounds.right - pad - r.width;
-  // Se estourar para baixo, abre para cima
+  if (x + r.width  > bounds.right  - pad) x = bounds.right  - pad - r.width;
   if (y + r.height > bounds.bottom - pad) y = clientY - r.height - 6;
-  // Clamps finais
-  x = Math.max(bounds.left + pad, Math.min(x, bounds.right - pad - r.width));
+
+  x = Math.max(bounds.left + pad, Math.min(x, bounds.right  - pad - r.width));
   y = Math.max(bounds.top  + pad, Math.min(y, bounds.bottom - pad - r.height));
 
+  el.style.position = 'fixed';
   el.style.left = `${Math.round(x)}px`;
   el.style.top  = `${Math.round(y)}px`;
 }
 
-function showMenu(clientX, clientY, name, id, anchorEl) {
-  state = { name, id, anchorEl };
+function showMenu(clientX, clientY, name, id){
   const el = ensureMenu();
-  el.querySelector('.ctx-title').textContent = name ? String(name) : '(desconhecido)';
+  state = { name, id };
+  el.querySelector('.ctx-title').textContent = name || '(desconhecido)';
 
-  // disponibilidade
   const self = isSelf(id, name);
-  const btnDM    = el.querySelector('[data-act="dm"]');
-  const btnAdd   = el.querySelector('[data-act="add"]');
-  const btnBlock = el.querySelector('[data-act="block"]');
+  ['dm','add','block'].forEach(act => {
+    const btn = el.querySelector(`[data-act="${act}"]`);
+    if (btn) btn.disabled = self;
+  });
 
-  [btnDM, btnAdd, btnBlock].forEach(b => { if (b) b.disabled = !!self; });
-  if (self) {
-    btnDM?.setAttribute('title','Você não pode abrir DM consigo mesmo.');
-    btnAdd?.setAttribute('title','Você não pode se adicionar.');
-    btnBlock?.setAttribute('title','Você não pode se bloquear.');
-  }
+  positionMenu(el, clientX, clientY);
 
-  positionMenuFixed(el, clientX, clientY);
-
-  // fechar
   const closer = () => hideMenu();
   window.addEventListener('click', closer, { capture:true, once:true });
   window.addEventListener('keydown', (e)=>{ if (e.key==='Escape') hideMenu(); }, { once:true });
   window.addEventListener('scroll', closer, { once:true });
   window.addEventListener('resize', closer, { once:true });
 }
-function hideMenu() {
+function hideMenu(){
   const el = document.getElementById('chatCtxMenu');
   if (el) el.hidden = true;
 }
 
-async function onMenuClick(e) {
+/* ---------- Toast retrô (sem alert) ---------- */
+function showToast(msg){
+  try{
+    if (window.Chat?.toast) return window.Chat.toast(String(msg));
+  }catch{}
+  // fallback minimalista
+  console.log('[toast]', msg);
+}
+
+/* ---------- ações ---------- */
+async function onMenuClick(e){
   const act = e.target?.dataset?.act;
   if (!act) return;
-  const name = state.name;
-  let   id   = state.id;
+  const { name, id } = state;
+  if (isSelf(id, name) && act !== 'copy'){ hideMenu(); return; }
 
-  // trava ações em si mesmo (evita FRIEND_SELF_NOT_ALLOWED do backend)
-  if (isSelf(id, name) && act !== 'copy') {
-    hideMenu();
-    return;
-  }
-
-  try {
-    if (act === 'copy') {
+  try{
+    if (act === 'copy'){
       await navigator.clipboard.writeText(String(name||''));
-    } else if (act === 'dm') {
-      if (!id) id = await resolveFriendIdByName(name);
-      if (id) openDmById(id, name);
-      else alert('Vocês ainda não são amigos. Envie um pedido antes.');
-    } else if (act === 'add') {
+      showToast('Nome copiado.');
+    } else if (act === 'dm'){
+      await openDmByTarget({ id, name });
+    } else if (act === 'add'){
       await addFriendByName(name);
-      alert('Solicitação de amizade enviada.');
-    } else if (act === 'block') {
-      if (!id) id = await resolveFriendIdByName(name);
-      if (!id) throw new Error('Só é possível bloquear amigos existentes.');
-      await blockFriendById(id);
-      alert('Jogador bloqueado.');
+      showToast('Solicitação de amizade enviada.');
+    } else if (act === 'block'){
+      if (id) {
+        await blockFriendById(id);
+        showToast('Jogador bloqueado.');
+      } else {
+        showToast('Para bloquear, adicione e identifique o jogador primeiro.');
+      }
     }
-  } catch (err) {
+  }catch(err){
     const msg = typeof err?.message === 'string' ? err.message : JSON.stringify(err);
-    alert(msg);
-  } finally {
+    showToast(msg);
+  }finally{
     hideMenu();
   }
 }
 
-/* ======= Handler global ======= */
-document.addEventListener('contextmenu', (e) => {
-  if (!withinChat(e.target)) return; // fora do chat → deixa menu do browser normal
-  const row = findRowEl(e.target);
+/* ---------- binding ---------- */
+const container = getDock() || document;
+container.addEventListener('contextmenu', (e) => {
+  const scope = e.target.closest?.(SCOPE_BOX_SEL);
+  if (!scope) return;
+  const row = rowFromTarget(e.target);
   const { name, id } = extractNameAndId(row);
-  if (!name) return;                 // sem nome conhecido → não intercepta
-  e.preventDefault();                // bloqueia menu do browser
-  showMenu(e.clientX, e.clientY, name, id, row);
-});
+  if (!name) return;
+  e.preventDefault();
+  showMenu(e.clientX, e.clientY, name, id);
+}, true);

@@ -1,0 +1,11 @@
+C:\Users\natha\meu-jogo\meu-jogo\client\js\app.js
+C:\Users\natha\meu-jogo\meu-jogo\client\js\ui\chat-context.js
+C:\Users\natha\meu-jogo\meu-jogo\client\js\ui\dm-chat.js
+C:\Users\natha\meu-jogo\meu-jogo\client\js\ui\friends-hud.js
+C:\Users\natha\meu-jogo\meu-jogo\server\index.js
+C:\Users\natha\meu-jogo\meu-jogo\server\models\migrate.js
+C:\Users\natha\meu-jogo\meu-jogo\server\node_modules\@redis\search\dist\lib\commands\CREATE.d.ts
+C:\Users\natha\meu-jogo\meu-jogo\server\node_modules\@redis\search\dist\lib\commands\CREATE.js
+C:\Users\natha\meu-jogo\meu-jogo\server\routes\friends.js
+C:\Users\natha\meu-jogo\meu-jogo\server\services\direct-messages.js
+C:\Users\natha\meu-jogo\meu-jogo\server\ws\direct-messages.js

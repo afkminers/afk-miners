@@ -1,9 +1,9 @@
 /* client/css/chat-context.css */
 #chatCtxMenu{
-  position: fixed;             /* fica acima e fora de overflow do chat */
-  z-index: 9999;
-  min-width: 180px;
-  max-width: 240px;
+  position: fixed;             /* sempre em viewport */
+  z-index: 100000;             /* acima de tudo */
+  min-width: 160px;
+  max-width: 220px;
   background: rgba(2,6,23,.97);
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 10px;
@@ -11,12 +11,12 @@
   padding: 6px;
   display: grid;
   gap: 4px;
-  font-size: 12px;             /* compacto */
+  font-size: 11px;             /* mais compacto */
 }
-#chatCtxMenu[hidden]{ display:none; }
+#chatCtxMenu[hidden]{ display:none !important; }
 
 #chatCtxMenu .ctx-title{
-  font-weight: 600;
+  font-weight: 700;
   color: #e2e8f0;
   opacity: .9;
   padding: 4px 6px 6px;
@@ -29,17 +29,45 @@
 
 #chatCtxMenu button{
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11px;
   text-align: left;
   padding: 6px 8px;
-  background: rgba(15,23,42,.7);
+  background: rgba(15,23,42,.78);
   color: #cbd5e1;
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 8px;
   cursor: pointer;
 }
-#chatCtxMenu button:hover{ background: rgba(30,41,59,.9); }
+#chatCtxMenu button:hover{ background: rgba(30,41,59,.92); }
 #chatCtxMenu button:disabled{
   opacity: .45;
   cursor: not-allowed;
+}
+
+/* garantir que o dock não esconda o menu por z-index/overflow */
+#chatDock { position: relative; z-index: 5; }
+
+/* ===== Toast retrô ===== */
+#retroToast{
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%) translateY(6px);
+  padding: 10px 14px;
+  background: rgba(2,6,23,.95);
+  color: #e6eef6;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 10px;
+  box-shadow: 0 10px 26px rgba(0,0,0,.45);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  letter-spacing: .3px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 100001;
+  transition: opacity .18s ease, transform .18s ease;
+}
+#retroToast.show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }

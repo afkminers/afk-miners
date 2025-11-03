@@ -5,7 +5,13 @@ import { renderRichText } from './emoji.js';
 
 const DM_SCOPE_PREFIX = 'dm:';
 
+// Agora as conversas podem ser chaveadas por:
+// - "123" (friendId)   → conversa com ID conhecido
+// - "@nome" (minúsculo) → conversa só por nome, sem amizade
+//
+// Map é indexado pela "chave do alvo" (targetKey), NÃO só por id.
 const conversations = new Map();
+
 const NUDGE_COOLDOWN_MS = 15_000;
 const NUDGE_ACK_TIMEOUT_MS = 5_000;
 const localNudgeCooldowns = new Map();
@@ -58,6 +64,8 @@ function playNudgeSound() {
 }
 
 ensureMuteWatcher();
+
+// ========= Estado da UI =========
 let tabsContainer = null;
 let panelsContainer = null;
 let tabsAnchorEl = null;
@@ -69,6 +77,41 @@ let currentUserId = null;
 let formEl = null;
 let setScopeFn = null;
 let getScopeFn = null;
+
+// ========= Helpers de chave/escopo =========
+function norm(s){ return String(s||'').trim(); }
+function keyFromId(id){ return String(id); }
+function keyFromName(name){ return '@' + String(name||'').toLowerCase(); }
+function isNameKey(key){ return typeof key === 'string' && key.startsWith('@'); }
+function nameFromKey(key){ return isNameKey(key) ? key.slice(1) : ''; }
+
+function scopeForKey(targetKey) {
+  return `${DM_SCOPE_PREFIX}${targetKey}`;
+}
+export function isDmScope(scope) {
+  return typeof scope === 'string' && scope.startsWith(DM_SCOPE_PREFIX);
+}
+function targetKeyFromScope(scope) {
+  if (!isDmScope(scope)) return null;
+  return scope.slice(DM_SCOPE_PREFIX.length);
+}
+
+function resolveUserId() {
+  if (currentUserId) return currentUserId;
+  try {
+    if (window._chat_me?.id) {
+      currentUserId = String(window._chat_me.id);
+      return currentUserId;
+    }
+  } catch {}
+  return null;
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+// ========= Nudge infra =========
 const nudgeErrorMessages = {
   DM_NUDGE_COOLDOWN: 'Aguarde alguns segundos para enviar outro nudge.',
   DM_NUDGE_RATE_LIMIT: 'Muitas cutucadas em sequência. Tente novamente mais tarde.',
@@ -78,27 +121,26 @@ const nudgeErrorMessages = {
   FRIEND_NOT_FOUND: 'Amizade não encontrada.',
   DM_NUDGE_FAILED: 'Falha ao enviar nudge.',
 };
-
 function createError(code) {
   const err = new Error(code || 'DM_NUDGE_FAILED');
   err.code = code || 'DM_NUDGE_FAILED';
   return err;
 }
-
+function getNudgeMessage(code) {
+  if (!code) return nudgeErrorMessages.DM_NUDGE_FAILED;
+  return nudgeErrorMessages[code] || `Erro (${code}).`;
+}
 function getLocalCooldownUntil(friendId) {
   return Number(localNudgeCooldowns.get(friendId)) || 0;
 }
-
 function setLocalCooldown(friendId, untilTs) {
   if (!friendId) return;
   localNudgeCooldowns.set(friendId, Number(untilTs) || Date.now());
 }
-
 function clearLocalCooldown(friendId) {
   if (!friendId) return;
   localNudgeCooldowns.delete(friendId);
 }
-
 function createPendingNudge(friendId) {
   if (pendingNudges.has(friendId)) {
     return pendingNudges.get(friendId);
@@ -117,7 +159,6 @@ function createPendingNudge(friendId) {
   pendingNudges.set(friendId, entry);
   return entry;
 }
-
 function settlePendingNudge(friendId, ok, code) {
   const entry = pendingNudges.get(friendId);
   if (!entry) return { ok: false };
@@ -134,130 +175,22 @@ function settlePendingNudge(friendId, ok, code) {
   return { ok: false, error: err.code };
 }
 
-function scheduleNudgeAvailabilityCheck(conv) {
-  if (!conv) return;
-  if (conv.nudgeTimer) {
-    clearTimeout(conv.nudgeTimer);
-    conv.nudgeTimer = null;
-  }
-  const now = Date.now();
-  const cooldownUntil = Math.max(getLocalCooldownUntil(conv.friendId), Number(conv.nudgeAvailableAt) || 0);
-  const remaining = Math.max(0, cooldownUntil - now);
-  if (conv.nudgeButtonEl) {
-    const busy = !!conv.nudgeBusy;
-    conv.nudgeButtonEl.disabled = busy || remaining > 0;
-    conv.nudgeButtonEl.classList.toggle('is-busy', busy);
-    if (remaining > 0) {
-      conv.nudgeButtonEl.title = `Aguarde ${Math.ceil(remaining / 1000)}s`;
-      conv.nudgeButtonEl.dataset.cooldown = String(Math.ceil(remaining / 1000));
-    } else {
-      conv.nudgeButtonEl.title = 'Enviar nudge';
-      conv.nudgeButtonEl.removeAttribute('data-cooldown');
-    }
-  }
-  if (remaining > 0) {
-    conv.nudgeTimer = setTimeout(() => {
-      conv.nudgeTimer = null;
-      scheduleNudgeAvailabilityCheck(conv);
-    }, Math.min(remaining, 1_000));
-  }
-}
-
-function showNudgeFeedback(conv, message, tone = 'info', duration = 2_000) {
-  if (!conv?.nudgeFeedbackEl) return;
-  conv.nudgeFeedbackEl.textContent = message || '';
-  if (message) {
-    conv.nudgeFeedbackEl.dataset.tone = tone;
-  } else {
-    conv.nudgeFeedbackEl.removeAttribute('data-tone');
-  }
-  conv.nudgeFeedbackEl.hidden = !message;
-  if (conv.nudgeFeedbackTimer) {
-    clearTimeout(conv.nudgeFeedbackTimer);
-    conv.nudgeFeedbackTimer = null;
-  }
-  if (message && duration > 0) {
-    conv.nudgeFeedbackTimer = setTimeout(() => {
-      conv.nudgeFeedbackEl.hidden = true;
-      conv.nudgeFeedbackEl.textContent = '';
-      conv.nudgeFeedbackEl.removeAttribute('data-tone');
-      conv.nudgeFeedbackTimer = null;
-    }, duration);
-  }
-}
-
-function animateNudge(conv, incoming) {
-  if (!conv) return;
-  const classes = incoming ? ['is-nudged', 'is-nudged--incoming'] : ['is-nudged'];
-  const apply = (el) => {
-    if (!el) return;
-    el.classList.add(...classes);
-    setTimeout(() => {
-      el.classList.remove(...classes);
-    }, 1_200);
-  };
-  apply(conv.tabEl);
-  apply(conv.panelEl);
-}
-
-function getNudgeMessage(code) {
-  if (!code) return nudgeErrorMessages.DM_NUDGE_FAILED;
-  return nudgeErrorMessages[code] || `Erro (${code}).`;
-}
-
-function nowIso() {
-  return new Date().toISOString();
-}
-
-function resolveUserId() {
-  if (currentUserId) return currentUserId;
-  try {
-    if (window._chat_me?.id) {
-      currentUserId = String(window._chat_me.id);
-      return currentUserId;
-    }
-  } catch {}
-  return null;
-}
-
-function scopeForFriend(friendId) {
-  return `${DM_SCOPE_PREFIX}${friendId}`;
-}
-
-function setActiveScope(scope) {
-  if (typeof setScopeFn === 'function') {
-    try {
-      setScopeFn(scope);
-      return;
-    } catch {
-      // fall back to local activation if the host callback fails
-    }
-  }
-  activateDmScope(scope);
-}
-
-export function isDmScope(scope) {
-  return typeof scope === 'string' && scope.startsWith(DM_SCOPE_PREFIX);
-}
-
-function friendIdFromScope(scope) {
-  if (!isDmScope(scope)) return null;
-  return scope.slice(DM_SCOPE_PREFIX.length);
-}
-
-function emitUnread(friendId, unreadCount) {
+// ========= UI util =========
+function emitUnread(targetKey, unreadCount) {
+  const friendId = isNameKey(targetKey) ? '' : String(targetKey);
   window.dispatchEvent(
     new CustomEvent('dm:unread', {
-      detail: { friendId: String(friendId), unreadCount: Number(unreadCount) || 0 },
+      detail: { friendId, unreadCount: Number(unreadCount) || 0 },
     })
   );
 }
+function removeElement(el) { try { el?.remove?.(); } catch {} }
 
-function createTabElement(friendId, friendName) {
+function createTabElement(targetKey, friendName) {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'chat-tab dm-tab';
-  btn.dataset.scope = scopeForFriend(friendId);
+  btn.dataset.scope = scopeForKey(targetKey);
   btn.innerHTML = `
     <span class="dm-tab-label">${friendName}</span>
     <span class="dm-tab-badge" aria-hidden="true"></span>
@@ -265,7 +198,6 @@ function createTabElement(friendId, friendName) {
   `;
   return btn;
 }
-
 function createPanelElement(scope) {
   const panel = document.createElement('div');
   panel.className = 'chat-box chat-box--dm';
@@ -304,18 +236,10 @@ function createPanelElement(scope) {
   return { panel, loadMore, list, nudgeButton, nudgeFeedback };
 }
 
-function ensureCurrentUser() {
-  const id = resolveUserId();
-  if (!id) return null;
-  return id;
-}
-
 function scrollToBottom(conv) {
   if (!conv || !conv.listEl) return;
   const shouldStick = conv.panelEl.scrollHeight - conv.panelEl.clientHeight - conv.panelEl.scrollTop < 64;
-  if (shouldStick) {
-    conv.panelEl.scrollTop = conv.panelEl.scrollHeight;
-  }
+  if (shouldStick) conv.panelEl.scrollTop = conv.panelEl.scrollHeight;
 }
 
 function renderBadge(conv) {
@@ -334,132 +258,64 @@ function renderBadge(conv) {
   }
 }
 
-function createConversation(friendId, friendName) {
-  if (!tabsContainer || !panelsContainer) return null;
-  const scope = scopeForFriend(friendId);
-  if (conversations.has(friendId)) return conversations.get(friendId);
-
-  const label = friendName || `Jogador ${friendId}`;
-  const tabEl = createTabElement(friendId, label);
-  if (tabsAnchorEl && tabsAnchorEl.parentNode === tabsContainer) {
-    tabsContainer.insertBefore(tabEl, tabsAnchorEl);
-  } else {
-    tabsContainer.appendChild(tabEl);
-  }
-
-  const { panel, loadMore, list, nudgeButton, nudgeFeedback } = createPanelElement(scope);
-  if (panelsAnchorEl && panelsAnchorEl.parentNode === panelsContainer) {
-    panelsContainer.insertBefore(panel, panelsAnchorEl);
-  } else {
-    panelsContainer.appendChild(panel);
-  }
-
-  const conv = {
-    friendId,
-    friendName: label,
-    scope,
-    tabEl,
-    panelEl: panel,
-    loadMoreEl: loadMore,
-    listEl: list,
-    nudgeButtonEl: nudgeButton,
-    nudgeFeedbackEl: nudgeFeedback,
-    messages: [],
-    nextCursor: null,
-    loading: false,
-    unreadCount: 0,
-    pending: new Map(),
-    hasLoadedInitial: false,
-    nudgeBusy: false,
-    nudgeTimer: null,
-    nudgeFeedbackTimer: null,
-    nudgeAvailableAt: getLocalCooldownUntil(friendId),
-  };
-
-  loadMore.addEventListener('click', () => {
-    if (!conv.loading) {
-      fetchHistory(conv, { append: true }).catch(() => {});
-    }
-  });
-
-  tabEl.addEventListener('click', (event) => {
-    if (event.target.closest('.dm-tab-close')) {
-      closeConversation(friendId);
-      return;
-    }
-    setActiveScope(conv.scope);
-  });
-
-  tabEl.addEventListener('keydown', (event) => {
-    if (event.key === 'Delete' || event.key === 'Backspace') {
-      event.preventDefault();
-      closeConversation(friendId);
-    }
-  });
-
-  if (nudgeButton) {
-    nudgeButton.addEventListener('click', () => {
-      if (conv.nudgeBusy) return;
-      conv.nudgeBusy = true;
-      showNudgeFeedback(conv, 'Enviando…', 'info', 0);
-      scheduleNudgeAvailabilityCheck(conv);
-      sendNudge(friendId)
-        .catch((err) => {
-          conv.nudgeBusy = false;
-          const code = err?.code || err?.message;
-          if (code === 'DM_NUDGE_COOLDOWN') {
-            const until = getLocalCooldownUntil(friendId);
-            if (until) conv.nudgeAvailableAt = Math.max(conv.nudgeAvailableAt || 0, until);
-          }
-          showNudgeFeedback(conv, getNudgeMessage(code), 'error', 4_000);
-          scheduleNudgeAvailabilityCheck(conv);
-        });
-    });
-  }
-
-  conversations.set(friendId, conv);
-  scheduleNudgeAvailabilityCheck(conv);
-  renderBadge(conv);
-  return conv;
-}
-
-function removeElement(el) {
-  if (el && el.remove) {
-    el.remove();
-  }
-}
-
-function closeConversation(friendId) {
-  const conv = conversations.get(friendId);
+function scheduleNudgeAvailabilityCheck(conv) {
   if (!conv) return;
-  const wasActive = currentScope === conv.scope;
-  conversations.delete(friendId);
-  if (conv.nudgeTimer) {
-    clearTimeout(conv.nudgeTimer);
-    conv.nudgeTimer = null;
+  if (conv.nudgeTimer) { clearTimeout(conv.nudgeTimer); conv.nudgeTimer = null; }
+
+  // se não tem friendId, nudge é indisponível (somente amigos)
+  if (!conv.friendId) {
+    if (conv.nudgeButtonEl) {
+      conv.nudgeButtonEl.disabled = true;
+      conv.nudgeButtonEl.title = 'Nudge disponível apenas para amigos.';
+    }
+    return;
   }
-  if (conv.nudgeFeedbackTimer) {
-    clearTimeout(conv.nudgeFeedbackTimer);
-    conv.nudgeFeedbackTimer = null;
+
+  const now = Date.now();
+  const cooldownUntil = Math.max(getLocalCooldownUntil(conv.friendId), Number(conv.nudgeAvailableAt) || 0);
+  const remaining = Math.max(0, cooldownUntil - now);
+  if (conv.nudgeButtonEl) {
+    const busy = !!conv.nudgeBusy;
+    conv.nudgeButtonEl.disabled = busy || remaining > 0;
+    conv.nudgeButtonEl.classList.toggle('is-busy', busy);
+    if (remaining > 0) {
+      conv.nudgeButtonEl.title = `Aguarde ${Math.ceil(remaining / 1000)}s`;
+      conv.nudgeButtonEl.dataset.cooldown = String(Math.ceil(remaining / 1000));
+    } else {
+      conv.nudgeButtonEl.title = 'Enviar nudge';
+      conv.nudgeButtonEl.removeAttribute('data-cooldown');
+    }
   }
-  removeElement(conv.tabEl);
-  removeElement(conv.panelEl);
-  if (wasActive) {
-    setActiveScope('default');
+  if (remaining > 0) {
+    conv.nudgeTimer = setTimeout(() => {
+      conv.nudgeTimer = null;
+      scheduleNudgeAvailabilityCheck(conv);
+    }, Math.min(remaining, 1_000));
   }
 }
 
-function findMessage(conv, predicate) {
-  if (!conv) return null;
-  for (const msg of conv.messages) {
-    if (predicate(msg)) return msg;
+function showNudgeFeedback(conv, message, tone = 'info', duration = 2_000) {
+  if (!conv?.nudgeFeedbackEl) return;
+  conv.nudgeFeedbackEl.textContent = message || '';
+  if (message) conv.nudgeFeedbackEl.dataset.tone = tone;
+  else conv.nudgeFeedbackEl.removeAttribute('data-tone');
+
+  conv.nudgeFeedbackEl.hidden = !message;
+  if (conv.nudgeFeedbackTimer) { clearTimeout(conv.nudgeFeedbackTimer); conv.nudgeFeedbackTimer = null; }
+  if (message && duration > 0) {
+    conv.nudgeFeedbackTimer = setTimeout(() => {
+      conv.nudgeFeedbackEl.hidden = true;
+      conv.nudgeFeedbackEl.textContent = '';
+      conv.nudgeFeedbackEl.removeAttribute('data-tone');
+      conv.nudgeFeedbackTimer = null;
+    }, duration);
   }
-  return null;
 }
 
+// ========= Render de mensagens =========
 function renderMessage(conv, message) {
   if (!conv || !conv.listEl) return;
-  const mine = message.senderId === ensureCurrentUser();
+  const mine = String(message.senderId) === resolveUserId();
   let row = message.__el;
   if (!row) {
     row = document.createElement('div');
@@ -480,21 +336,16 @@ function renderMessage(conv, message) {
 
   row.classList.toggle('from-me', mine);
   row.classList.toggle('from-them', !mine);
-  if (message.failed) row.classList.add('is-failed');
-  else row.classList.remove('is-failed');
+  if (message.failed) row.classList.add('is-failed'); else row.classList.remove('is-failed');
 
   const bubble = row.querySelector('.dm-message__bubble');
   const meta = row.querySelector('.dm-message__meta');
-  if (bubble) {
-    renderRichText(bubble, message.body || '');
-  }
+  if (bubble) { renderRichText(bubble, message.body || ''); }
   if (meta) {
     const parts = [];
     if (message.createdAt) {
       const dt = new Date(message.createdAt);
-      if (!Number.isNaN(dt.getTime())) {
-        parts.push(dt.toLocaleTimeString());
-      }
+      if (!Number.isNaN(dt.getTime())) parts.push(dt.toLocaleTimeString());
     }
     if (mine) {
       if (message.readAt) parts.push('Lida');
@@ -518,19 +369,181 @@ function appendMessage(conv, message, { emit = true, prepend = false } = {}) {
   }
   renderMessage(conv, msg);
   delete msg.insertBefore;
-  if (!prepend) {
-    scrollToBottom(conv);
-  }
-  if (emit && msg.senderId !== ensureCurrentUser()) {
+  if (!prepend) scrollToBottom(conv);
+
+  // ACK de leitura só se a mensagem veio do outro e houver friendId conhecido
+  if (emit && String(msg.senderId) !== resolveUserId() && conv.friendId) {
     const latestId = msg.id || null;
-    if (latestId) {
-      wsSend({ type: 'dm:ack', messageIds: [latestId], friendId: msg.senderId });
-    }
+    if (latestId) wsSend({ type: 'dm:ack', messageIds: [latestId], friendId: conv.friendId });
   }
 }
 
+// ========= Conversa (criar/fechar/upgrade) =========
+function createConversation(targetKey, friendName) {
+  if (!tabsContainer || !panelsContainer) return null;
+  if (conversations.has(targetKey)) return conversations.get(targetKey);
+
+  const label = friendName || (isNameKey(targetKey) ? nameFromKey(targetKey) : `Jogador ${targetKey}`);
+  const tabEl = createTabElement(targetKey, label);
+  if (tabsAnchorEl && tabsAnchorEl.parentNode === tabsContainer) {
+    tabsContainer.insertBefore(tabEl, tabsAnchorEl);
+  } else {
+    tabsContainer.appendChild(tabEl);
+  }
+
+  const scope = scopeForKey(targetKey);
+  const { panel, loadMore, list, nudgeButton, nudgeFeedback } = createPanelElement(scope);
+  if (panelsAnchorEl && panelsAnchorEl.parentNode === panelsContainer) {
+    panelsContainer.insertBefore(panel, panelsAnchorEl);
+  } else {
+    panelsContainer.appendChild(panel);
+  }
+
+  const conv = {
+    // chave principal desta conversa
+    key: targetKey,               // "123" ou "@nome"
+    friendId: isNameKey(targetKey) ? '' : String(targetKey),
+    friendName: label,
+    scope,
+    tabEl,
+    panelEl: panel,
+    loadMoreEl: loadMore,
+    listEl: list,
+    nudgeButtonEl: nudgeButton,
+    nudgeFeedbackEl: nudgeFeedback,
+    messages: [],
+    nextCursor: null,
+    loading: false,
+    unreadCount: 0,
+    pending: new Map(),
+    hasLoadedInitial: false,
+    nudgeBusy: false,
+    nudgeTimer: null,
+    nudgeFeedbackTimer: null,
+    nudgeAvailableAt: isNameKey(targetKey) ? 0 : getLocalCooldownUntil(targetKey),
+  };
+
+  if (loadMore) {
+    loadMore.addEventListener('click', () => {
+      if (!conv.loading) fetchHistory(conv, { append: true }).catch(() => {});
+    });
+  }
+
+  tabEl.addEventListener('click', (event) => {
+    if (event.target.closest('.dm-tab-close')) {
+      closeConversation(targetKey);
+      return;
+    }
+    // Primeiro avisa o host (se existir), depois ativa localmente.
+    try { if (typeof setScopeFn === 'function') setScopeFn(conv.scope); } catch {}
+    activateDmScope(conv.scope);
+  });
+
+
+  tabEl.addEventListener('keydown', (event) => {
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      event.preventDefault();
+      closeConversation(targetKey);
+    }
+  });
+
+  if (nudgeButton) {
+    nudgeButton.addEventListener('click', () => {
+      if (!conv.friendId) {
+        showNudgeFeedback(conv, 'Nudge disponível apenas para amigos.', 'info', 3000);
+        scheduleNudgeAvailabilityCheck(conv);
+        return;
+      }
+      if (conv.nudgeBusy) return;
+      conv.nudgeBusy = true;
+      showNudgeFeedback(conv, 'Enviando…', 'info', 0);
+      scheduleNudgeAvailabilityCheck(conv);
+      sendNudge(conv.friendId).catch((err) => {
+        conv.nudgeBusy = false;
+        const code = err?.code || err?.message;
+        if (code === 'DM_NUDGE_COOLDOWN') {
+          const until = getLocalCooldownUntil(conv.friendId);
+          if (until) conv.nudgeAvailableAt = Math.max(conv.nudgeAvailableAt || 0, until);
+        }
+        showNudgeFeedback(conv, getNudgeMessage(code), 'error', 4_000);
+        scheduleNudgeAvailabilityCheck(conv);
+      });
+    });
+  }
+
+  conversations.set(targetKey, conv);
+  scheduleNudgeAvailabilityCheck(conv);
+  renderBadge(conv);
+
+  return conv;
+}
+
+function closeConversation(targetKey) {
+  const conv = conversations.get(targetKey);
+  if (!conv) return;
+  const wasActive = currentScope === conv.scope;
+  conversations.delete(targetKey);
+
+  if (conv.nudgeTimer) { clearTimeout(conv.nudgeTimer); conv.nudgeTimer = null; }
+  if (conv.nudgeFeedbackTimer) { clearTimeout(conv.nudgeFeedbackTimer); conv.nudgeFeedbackTimer = null; }
+
+  removeElement(conv.tabEl);
+  removeElement(conv.panelEl);
+
+  if (wasActive) {
+  try { if (typeof setScopeFn === 'function') setScopeFn('default'); } catch {}
+  activateDmScope('default');
+}
+}
+
+// Migra @nome → id (quando o servidor revelar)
+function upgradeConversationKey(conv, newFriendId, maybeName) {
+  if (!conv || !newFriendId) return conv;
+  const oldKey = conv.key;
+  const newKey = keyFromId(newFriendId);
+  if (oldKey === newKey) return conv;
+
+  // Atualiza mapa
+  conversations.delete(oldKey);
+  conversations.set(newKey, conv);
+
+  // Atualiza campos da conversa
+  conv.key = newKey;
+  conv.friendId = newKey;
+  if (maybeName) conv.friendName = maybeName;
+
+  // Atualiza escopo/datasets
+  const oldScope = conv.scope;
+  conv.scope = scopeForKey(newKey);
+  if (conv.tabEl) conv.tabEl.dataset.scope = conv.scope;
+  if (conv.panelEl) conv.panelEl.dataset.scope = conv.scope;
+
+  // Label da aba
+  const label = conv.tabEl?.querySelector('.dm-tab-label');
+  if (label) label.textContent = conv.friendName || newKey;
+
+  // Se estava ativa, mantém ativa no novo escopo
+  if (currentScope === oldScope) {
+    currentScope = conv.scope;
+    activateDmScope(conv.scope);
+  }
+
+  // Recalcula disponibilidade do nudge e histórico
+  scheduleNudgeAvailabilityCheck(conv);
+  conv.hasLoadedInitial = false;
+  return conv;
+}
+
+// ========= Histórico / leitura =========
 async function fetchHistory(conv, { append = false } = {}) {
   if (!conv || conv.loading) return;
+  if (!conv.friendId) {
+    // DM por nome não tem endpoint de histórico
+    conv.hasLoadedInitial = true;
+    if (conv.loadMoreEl) { conv.loadMoreEl.hidden = true; }
+    return;
+  }
+
   conv.loading = true;
   if (conv.loadMoreEl) {
     conv.loadMoreEl.disabled = true;
@@ -542,6 +555,7 @@ async function fetchHistory(conv, { append = false } = {}) {
     if (!append) params.set('limit', '30');
     const res = await apiGet(`/api/friends/${conv.friendId}/dms${params.toString() ? `?${params}` : ''}`);
     const messages = Array.isArray(res?.messages) ? res.messages : [];
+
     if (!append) {
       conv.messages.length = 0;
       conv.listEl.innerHTML = '';
@@ -572,6 +586,7 @@ async function fetchHistory(conv, { append = false } = {}) {
         }, { emit: false, prepend: true });
       }
     }
+
     conv.nextCursor = res?.nextCursor || null;
     conv.unreadCount = Number(res?.unreadCount || 0);
     renderBadge(conv);
@@ -580,7 +595,13 @@ async function fetchHistory(conv, { append = false } = {}) {
     }
     conv.hasLoadedInitial = true;
   } catch (err) {
-    console.warn('[dm-chat] history failed', err?.message);
+    const code = (err && (err.code || err.message)) || '';
+    console.warn('[dm-chat] history failed', code);
+    // se não é amigo, trate como DM efêmera: marca como carregado e some com o botão
+    if (typeof code === 'string' && code.includes('FRIEND_NOT_FOUND')) {
+      conv.hasLoadedInitial = true;
+      if (conv.loadMoreEl) conv.loadMoreEl.hidden = true;
+    }
   } finally {
     conv.loading = false;
     if (conv.loadMoreEl) {
@@ -592,44 +613,60 @@ async function fetchHistory(conv, { append = false } = {}) {
 
 function ensureHistory(conv) {
   if (!conv || conv.loading) return;
-  if (!conv.hasLoadedInitial) {
-    fetchHistory(conv, { append: false }).catch(() => {});
-  }
+  if (!conv.hasLoadedInitial) fetchHistory(conv, { append: false }).catch(() => {});
 }
 
 function markRead(conv) {
-  if (!conv) return;
+  if (!conv || !conv.friendId) return;
   const latest = conv.messages.length > 0 ? conv.messages[conv.messages.length - 1] : null;
-  if (latest?.id) {
-    wsSend({ type: 'dm:read', friendId: conv.friendId, upToId: latest.id });
-  }
+  if (latest?.id) wsSend({ type: 'dm:read', friendId: conv.friendId, upToId: latest.id });
+
   conv.unreadCount = 0;
   renderBadge(conv);
-  emitUnread(conv.friendId, 0);
+  emitUnread(conv.key, 0);
 }
 
+// ========= Procura/aux =========
+function findMessage(conv, predicate) {
+  if (!conv) return null;
+  for (const msg of conv.messages) if (predicate(msg)) return msg;
+  return null;
+}
+function findConvKeyByNameLower(nameLower) {
+  const key = '@' + String(nameLower || '').toLowerCase();
+  return conversations.has(key) ? key : null;
+}
+
+// ========= Envio =========
 function handleSend(scope, text) {
   if (!isDmScope(scope)) return false;
-  const friendId = friendIdFromScope(scope);
-  if (!friendId) return false;
-  const conv = conversations.get(friendId) || createConversation(friendId, friendId);
+  const targetKey = targetKeyFromScope(scope);
+  if (!targetKey) return false;
+
+  // Garante conversa
+  let conv = conversations.get(targetKey);
+  if (!conv) {
+    const label = isNameKey(targetKey) ? nameFromKey(targetKey) : targetKey;
+    conv = createConversation(targetKey, label);
+  }
   if (!conv) return false;
 
   const clientId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-  const payload = {
-    type: 'dm:send',
-    to: friendId,
-    body: text,
-    clientId,
-  };
-  wsSend(payload);
 
+  // Decide como enviar: por id ou por nome
+  const payload = { type: 'dm:send', body: text, clientId };
+  if (conv.friendId) payload.to = conv.friendId;
+  else payload.toName = conv.friendName || nameFromKey(targetKey);
+
+  try { wsSend(payload); } catch (e) { /* UI marca falha abaixo via erro */ }
+
+  // Mensagem otimista
   const message = {
     id: null,
     clientId,
     body: text,
-    senderId: ensureCurrentUser(),
-    recipientId: friendId,
+    senderId: resolveUserId(),
+    recipientId: conv.friendId || null,
     createdAt: nowIso(),
     deliveredAt: null,
     readAt: null,
@@ -639,13 +676,30 @@ function handleSend(scope, text) {
   return true;
 }
 
+// ========= Eventos do servidor =========
 function handleSendEvent(payload) {
   const message = payload?.message;
   if (!message) return;
-  const friendId = message.senderId === ensureCurrentUser() ? message.recipientId : message.senderId;
-  const conv = conversations.get(friendId) || createConversation(friendId, friendId);
-  if (!conv) return;
-  const existing = message.clientId ? conv.pending.get(message.clientId) : null;
+
+  const me = resolveUserId();
+  const iAmSender = String(message.senderId) === me;
+  const partnerId = iAmSender ? String(message.recipientId) : String(message.senderId);
+  const friendName = payload?.friendName || message.friendName || null;
+
+  // Procura conversa por id; se não achar e houver nome, tenta @nome
+  let key = conversations.has(partnerId) ? partnerId : null;
+  if (!key && friendName) key = findConvKeyByNameLower(friendName);
+
+  let conv = key ? conversations.get(key) : null;
+  if (!conv) conv = createConversation(partnerId, friendName || partnerId);
+
+  // Se conversa era @nome e agora sabemos o id → upgrade
+  if (conv && !conv.friendId && partnerId) {
+    conv = upgradeConversationKey(conv, partnerId, friendName);
+  }
+
+  // Concilia pendente por clientId (envio meu)
+  const existing = message.clientId && conv.pending.get(message.clientId);
   if (existing) {
     existing.id = message.id;
     existing.createdAt = message.createdAt;
@@ -671,10 +725,23 @@ function handleSendEvent(payload) {
 function handleRecvEvent(payload) {
   const message = payload?.message;
   if (!message) return;
-  const friendId = message.senderId;
-  const existing = conversations.get(friendId);
-  const conv = existing || createConversation(friendId, friendId);
-  if (!conv) return;
+
+  const me = resolveUserId();
+  const fromId = String(message.senderId);
+  const friendName = payload?.friendName || message.friendName || null;
+
+  // Tenta por id; se não houver, tenta @nome
+  let key = conversations.has(fromId) ? fromId : null;
+  if (!key && friendName) key = findConvKeyByNameLower(friendName);
+
+  let conv = key ? conversations.get(key) : null;
+  if (!conv) conv = createConversation(fromId, friendName || fromId);
+
+  // Se era @nome e agora sabemos o id
+  if (conv && !conv.friendId) {
+    conv = upgradeConversationKey(conv, fromId, friendName);
+  }
+
   appendMessage(conv, {
     id: message.id,
     body: message.body || message.bodyOriginal,
@@ -684,25 +751,14 @@ function handleRecvEvent(payload) {
     deliveredAt: message.deliveredAt,
     readAt: message.readAt,
   });
+
   const unreadFromServer = Number(payload?.unreadCount || 0);
-  if (!existing) {
+  const isActive = currentScope === conv.scope;
+
+  if (!isActive) {
     conv.unreadCount = unreadFromServer || conv.unreadCount + 1;
     renderBadge(conv);
-    emitUnread(conv.friendId, conv.unreadCount);
-    window.dispatchEvent(
-      new CustomEvent('dm:open', {
-        detail: {
-          friendId,
-          friend: { friendId, friendName: conv.friendName },
-        },
-      })
-    );
-    return;
-  }
-  if (currentScope !== conv.scope) {
-    conv.unreadCount = unreadFromServer || conv.unreadCount + 1;
-    renderBadge(conv);
-    emitUnread(conv.friendId, conv.unreadCount);
+    emitUnread(conv.key, conv.unreadCount);
   } else {
     markRead(conv);
   }
@@ -711,8 +767,11 @@ function handleRecvEvent(payload) {
 function handleAckEvent(payload) {
   const friendId = payload?.friendId ? String(payload.friendId) : null;
   if (!friendId) return;
+
+  // Acha conversa (pode ter sido @nome → já atualizamos em send/recv)
   const conv = conversations.get(friendId);
   if (!conv) return;
+
   const ids = Array.isArray(payload?.messageIds) ? payload.messageIds : [];
   for (const id of ids) {
     const msg = findMessage(conv, (m) => m.id === Number(id));
@@ -726,21 +785,23 @@ function handleAckEvent(payload) {
 function handleReadEvent(payload) {
   const readerId = payload?.readerId ? String(payload.readerId) : null;
   const friendId = payload?.friendId ? String(payload.friendId) : null;
-  const me = ensureCurrentUser();
+  const me = resolveUserId();
   if (!readerId) return;
+
   if (readerId === me) {
     if (friendId && conversations.has(friendId)) {
       const conv = conversations.get(friendId);
       conv.unreadCount = Number(payload?.unreadCount || 0);
       renderBadge(conv);
-      emitUnread(conv.friendId, conv.unreadCount);
+      emitUnread(conv.key, conv.unreadCount);
     }
     return;
   }
+
   const conv = conversations.get(readerId);
   if (!conv) return;
   for (const msg of conv.messages) {
-    if (msg.senderId === me) {
+    if (String(msg.senderId) === me) {
       msg.readAt = payload?.readAt || nowIso();
       renderMessage(conv, msg);
     }
@@ -767,19 +828,13 @@ function handleErrorEvent(payload) {
         showNudgeFeedback(conv, getNudgeMessage(code), 'error', 4_000);
         scheduleNudgeAvailabilityCheck(conv);
       }
-      window.dispatchEvent(
-        new CustomEvent('dm:nudge', {
-          detail: {
-            friendId,
-            direction: 'error',
-            error: code,
-            ts: Date.now(),
-          },
-        })
-      );
+      window.dispatchEvent(new CustomEvent('dm:nudge', {
+        detail: { friendId, direction: 'error', error: code, ts: Date.now() },
+      }));
     }
     return;
   }
+
   const clientId = payload?.clientId;
   if (!clientId) return;
   for (const conv of conversations.values()) {
@@ -793,44 +848,39 @@ function handleErrorEvent(payload) {
 }
 
 function handleNudgeEvent(payload) {
-  const me = ensureCurrentUser();
+  const me = resolveUserId();
   const fromId = payload?.fromId ? String(payload.fromId) : null;
   const friendId = payload?.friendId ? String(payload.friendId) : null;
   if (!fromId || !friendId) return;
+
   const ts = Number(payload?.ts) || Date.now();
   const isSender = fromId === me;
   const partnerId = isSender ? friendId : fromId;
-  const conv = conversations.get(partnerId) || createConversation(partnerId, partnerId);
+
+  let conv = conversations.get(partnerId) || createConversation(partnerId, partnerId);
   if (isSender) {
     const result = settlePendingNudge(partnerId, true);
     const cooldownUntil = result?.cooldownUntil || getLocalCooldownUntil(partnerId) || (Date.now() + NUDGE_COOLDOWN_MS);
-    if (conv) {
-      conv.nudgeAvailableAt = Math.max(conv.nudgeAvailableAt || 0, cooldownUntil);
-    }
+    if (conv) conv.nudgeAvailableAt = Math.max(conv.nudgeAvailableAt || 0, cooldownUntil);
   } else {
     playNudgeSound();
   }
   if (conv) {
     conv.nudgeBusy = false;
-    if (payload?.friendName && (!conv.friendName || conv.friendName === partnerId)) {
-      conv.friendName = payload.friendName;
-    }
     const message = isSender ? 'Nudge enviado!' : `${conv.friendName || 'Seu amigo'} cutucou você!`;
     showNudgeFeedback(conv, message, isSender ? 'success' : 'info', isSender ? 2_000 : 4_000);
     scheduleNudgeAvailabilityCheck(conv);
-    animateNudge(conv, !isSender);
+    // anima (classe CSS)
+    const classes = isSender ? ['is-nudged'] : ['is-nudged', 'is-nudged--incoming'];
+    [conv.tabEl, conv.panelEl].forEach(el => { try { el.classList.add(...classes); setTimeout(()=>el.classList.remove(...classes), 1200); } catch {} });
   }
-  window.dispatchEvent(
-    new CustomEvent('dm:nudge', {
-      detail: {
-        friendId: partnerId,
-        direction: isSender ? 'outgoing' : 'incoming',
-        ts,
-      },
-    })
-  );
+
+  window.dispatchEvent(new CustomEvent('dm:nudge', {
+    detail: { friendId: partnerId, direction: isSender ? 'outgoing' : 'incoming', ts },
+  }));
 }
 
+// ========= API público (export) =========
 export function activateDmScope(scope) {
   currentScope = scope;
   conversations.forEach((conv) => {
@@ -842,18 +892,23 @@ export function activateDmScope(scope) {
       markRead(conv);
     }
   });
-  if (typeof focusInputFn === 'function') {
-    focusInputFn();
-  }
+  if (typeof focusInputFn === 'function') focusInputFn();
 }
 
 export function openConversation(friend) {
-  const friendId = String(friend?.friendId || friend?.id || friend);
-  if (!friendId) return;
-  const name = friend?.friendName || friend?.name || friendId;
-  const conv = conversations.get(friendId) || createConversation(friendId, name);
+  // Aceita { friendId, friendName } OU { id, name } OU valor direto (id)
+  const id = friend && (friend.friendId ?? friend.id);
+  const name = friend && (friend.friendName ?? friend.name);
+  const targetKey = id != null && String(id) !== '' ? keyFromId(id) : keyFromName(name || '');
+  if (!targetKey) return;
+
+  const label = name || (isNameKey(targetKey) ? nameFromKey(targetKey) : targetKey);
+  const conv = conversations.get(targetKey) || createConversation(targetKey, label);
   if (!conv) return;
-  setActiveScope(conv.scope);
+
+  // Primeiro tenta propagar pro host, depois garante local
+  try { if (typeof setScopeFn === 'function') setScopeFn(conv.scope); } catch {}
+  activateDmScope(conv.scope);
 }
 
 export function initDmChat({
@@ -875,18 +930,11 @@ export function initDmChat({
   formEl = null;
   setScopeFn = typeof setScope === 'function' ? setScope : null;
   getScopeFn = typeof getScope === 'function' ? getScope : null;
-  try {
-    const initialScope = typeof getScopeFn === 'function' ? getScopeFn() : null;
-    if (initialScope) {
-      currentScope = initialScope;
-    }
-  } catch {}
-  if (input && typeof input.closest === 'function') {
-    formEl = input.closest('form');
-  }
-  if (!formEl && input && input.form) {
-    formEl = input.form;
-  }
+
+  try { const initialScope = typeof getScopeFn === 'function' ? getScopeFn() : null; if (initialScope) currentScope = initialScope; } catch {}
+
+  if (input && typeof input.closest === 'function') formEl = input.closest('form');
+  if (!formEl && input && input.form) formEl = input.form;
 
   if (formEl) {
     formEl.addEventListener('submit', (event) => {
@@ -913,62 +961,63 @@ export function initDmChat({
       conversations.forEach((conv) => {
         conv.hasLoadedInitial = false;
         fetchHistory(conv, { append: false })
-          .then(() => {
-            if (conv.scope === currentScope) {
-              markRead(conv);
-            }
-          })
+          .then(() => { if (conv.scope === currentScope) markRead(conv); })
           .catch(() => {});
       });
     });
   }
 }
 
+// Permite que outros módulos abram a DM com:
+// window.dispatchEvent(new CustomEvent('dm:open', { detail: { friendId, friendName } }))
+try {
+  window.addEventListener('dm:open', (ev) => {
+    const d = ev?.detail || {};
+    openConversation(d.friend || d);
+  });
+} catch {}
+
+
 export function handleDmSubmit(scope, text) {
   return handleSend(scope, text);
 }
 
+// Compat: quando o chamador só tem friendId
 export function getDmScopeForFriend(friendId) {
-  return scopeForFriend(friendId);
+  return scopeForKey(keyFromId(friendId));
 }
 
 export function syncUnreadFromServer(friendId, unreadCount, opts = {}) {
-  const conv = conversations.get(friendId);
+  const key = keyFromId(friendId);
+  const conv = conversations.get(key);
   if (conv) {
     conv.unreadCount = Number(unreadCount || 0);
     renderBadge(conv);
   }
-  if (!opts?.silent) {
-    emitUnread(friendId, unreadCount);
-  }
+  if (!opts?.silent) emitUnread(key, unreadCount);
 }
 
 export function syncFriendData(friend) {
   const friendId = String(friend?.friendId || friend?.id || '');
   if (!friendId) return;
-  const conv = conversations.get(friendId);
+  const key = keyFromId(friendId);
+  const conv = conversations.get(key);
   if (!conv) return;
   const name = friend?.friendName || friend?.name || friendId;
   conv.friendName = name;
-  if (conv.tabEl) {
-    const label = conv.tabEl.querySelector('.dm-tab-label');
-    if (label) label.textContent = name;
-  }
+  const label = conv.tabEl?.querySelector('.dm-tab-label');
+  if (label) label.textContent = name;
 }
 
 export function sendNudge(friendId) {
   const id = String(friendId || '').trim();
-  if (!id) {
-    return Promise.reject(createError('FRIEND_NOT_FOUND'));
-  }
+  if (!id) return Promise.reject(createError('FRIEND_NOT_FOUND'));
+
   const now = Date.now();
   const cooldownUntil = getLocalCooldownUntil(id);
-  if (cooldownUntil && now < cooldownUntil) {
-    return Promise.reject(createError('DM_NUDGE_COOLDOWN'));
-  }
-  if (pendingNudges.has(id)) {
-    return pendingNudges.get(id).promise;
-  }
+  if (cooldownUntil && now < cooldownUntil) return Promise.reject(createError('DM_NUDGE_COOLDOWN'));
+  if (pendingNudges.has(id)) return pendingNudges.get(id).promise;
+
   const entry = createPendingNudge(id);
   try {
     wsSend({ type: 'dm:nudge', to: id });

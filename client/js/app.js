@@ -603,26 +603,24 @@ const FALLBACK_LOAD_CONTENT = async () => {
   setLoadingProgress(30);
 
   try {
-    await mountSceneHouse();        // a cena já publica pos pelo WS via pos-publisher.js
+    await mountSceneHouse();                // inicia a cena House
     setLoadingProgress(62);
 
-    await initFriendHud();
+    await initGlobalChatUI();               // chat primeiro (depende do auth/ws)
     setLoadingProgress(72);
 
-    await initGlobalChatUI();
-    setLoadingProgress(72);
-
-    await initFriendHud();
+    await initFriendHud();                  // carrega UMA vez
     setLoadingProgress(82);
 
     applyViewport();
     setLoadingProgress(90);
 
-    if (!currentScene) {            // fallback de conteúdo passivo, sem movimento/pos
+    if (!currentScene) {                    // fallback passivo (sem movimento/pos)
       await FALLBACK_LOAD_CONTENT();
     }
     setLoadingProgress(96);
   } catch (err) {
+
     console.error('Falha ao iniciar o cliente do jogo', err);
   } finally {
     finishRetroLoading();

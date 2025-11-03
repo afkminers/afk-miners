@@ -136,6 +136,10 @@
     "to": "./emoji.js"
   },
   {
+    "from": "client\\js\\ui\\chat-context.js",
+    "to": "../api.js"
+  },
+  {
     "from": "client\\js\\pages\\support.js",
     "to": "./common-nav.js"
   },

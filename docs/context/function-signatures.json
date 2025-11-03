@@ -7997,14 +7997,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 437,
+    "line": 438,
     "kind": "function",
     "name": "initGlobalChatUI",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 496,
+    "line": 497,
     "kind": "function",
     "name": "setScope",
     "params": [
@@ -8013,14 +8013,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 541,
+    "line": 542,
     "kind": "function",
     "name": "sendChat",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 573,
+    "line": 574,
     "kind": "arrow",
     "name": "FALLBACK_LOAD_CONTENT",
     "params": []
@@ -9872,6 +9872,158 @@
     "params": [
       "line",
       "{ color = '#d1fae5' } = {}"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 11,
+    "kind": "arrow",
+    "name": "$",
+    "params": [
+      "sel",
+      "root=document"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 13,
+    "kind": "function",
+    "name": "withinChat",
+    "params": [
+      "el"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 16,
+    "kind": "function",
+    "name": "findRowEl",
+    "params": [
+      "target"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 25,
+    "kind": "function",
+    "name": "extractNameAndId",
+    "params": [
+      "el"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 36,
+    "kind": "function",
+    "name": "getMe",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 43,
+    "kind": "function",
+    "name": "isSelf",
+    "params": [
+      "targetId",
+      "targetName"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 50,
+    "kind": "function",
+    "name": "getFriends",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 56,
+    "kind": "function",
+    "name": "openDmById",
+    "params": [
+      "friendId",
+      "name"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 60,
+    "kind": "function",
+    "name": "resolveFriendIdByName",
+    "params": [
+      "name"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 66,
+    "kind": "function",
+    "name": "addFriendByName",
+    "params": [
+      "name"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 69,
+    "kind": "function",
+    "name": "blockFriendById",
+    "params": [
+      "friendId"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 74,
+    "kind": "function",
+    "name": "ensureMenu",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 92,
+    "kind": "function",
+    "name": "positionMenuFixed",
+    "params": [
+      "el",
+      "clientX",
+      "clientY"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 115,
+    "kind": "function",
+    "name": "showMenu",
+    "params": [
+      "clientX",
+      "clientY",
+      "name",
+      "id",
+      "anchorEl"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 136,
+    "kind": "arrow",
+    "name": "closer",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 142,
+    "kind": "function",
+    "name": "hideMenu",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\chat-context.js",
+    "line": 147,
+    "kind": "function",
+    "name": "onMenuClick",
+    "params": [
+      "e"
     ]
   },
   {

@@ -1,3 +1,5 @@
+// server/ws/direct-messages.js
+
 'use strict';
 
 const {
@@ -8,6 +10,7 @@ const {
   countUnreadForPair,
 } = require('../services/direct-messages');
 const bus = require('./bus');
+const { get } = require('../models/db'); // resolver destinatário por nome quando não vier friendId
 
 const NUDGE_COOLDOWN_MS = Number(process.env.DM_NUDGE_COOLDOWN_MS || 15_000);
 const NUDGE_RATE_WINDOW_MS = Number(process.env.DM_NUDGE_RATE_WINDOW_MS || 60_000);
@@ -99,32 +102,89 @@ function commitRateBucket(senderId, bucket) {
 async function handleSend(ws, data) {
   const senderId = resolveUserId(ws);
   if (!senderId) return;
-  const friendId = String(data.to || data.friendId || '').trim();
+
+  const friendIdRaw = String(data.to || data.friendId || '').trim();
+  const toNameRaw = String(data.toName || data.username || '').trim();
   const body = data.body != null ? data.body : data.text;
   const clientId = data.clientId || null;
-  if (!friendId) {
+
+  // Caminho novo: envio por NOME (sem amizade), respeitando bloqueio
+  if (!friendIdRaw && toNameRaw) {
+    try {
+      const toName = toNameRaw.replace(/^@/, '');
+      const target = await get(
+        `SELECT id, name FROM players WHERE LOWER(name)=LOWER($1) LIMIT 1`,
+        [toName]
+      );
+      if (!target) {
+        send(ws, { type: 'dm:error', error: 'USER_NOT_FOUND', clientId });
+        return;
+      }
+      const targetId = String(target.id);
+
+      await ensureCanMessage({
+        senderId,
+        recipientId: targetId,
+        allowWithoutFriendship: true, // <- libera DM sem amizade, MAS bloqueio segue valendo
+      });
+
+      const row = await insertMessage({ senderId, recipientId: targetId, body });
+      const message = mapMessage(row);
+
+      // resposta para quem enviou
+      send(ws, {
+        type: 'dm:send',
+        message,
+        clientId,
+        friendName: String(target.name || ''),
+      });
+
+      // entrega para o destinatário
+      const unread = await countUnreadForPair(targetId, senderId);
+      const recvPayload = {
+        type: 'dm:recv',
+        message,
+        fromId: senderId,
+        unreadCount: unread,
+        friendName: String(target.name || ''),
+      };
+      if (targetId === senderId) {
+        send(ws, recvPayload);
+      } else {
+        bus.sendToPlayer(targetId, recvPayload);
+      }
+      return;
+    } catch (err) {
+      const code = err?.code || err?.payload?.error || 'DM_SEND_FAILED';
+      send(ws, { type: 'dm:error', error: code, clientId });
+      return;
+    }
+  }
+
+  // Caminho existente: envio por friendId (continua exigindo amizade)
+  if (!friendIdRaw) {
     send(ws, { type: 'dm:error', error: 'FRIEND_ID_REQUIRED', clientId });
     return;
   }
 
   try {
-    await ensureCanMessage({ senderId, recipientId: friendId });
-    const row = await insertMessage({ senderId, recipientId: friendId, body });
+    await ensureCanMessage({ senderId, recipientId: friendIdRaw });
+    const row = await insertMessage({ senderId, recipientId: friendIdRaw, body });
     const message = mapMessage(row);
     const payload = { type: 'dm:send', message, clientId };
     send(ws, payload);
 
-    const unread = await countUnreadForPair(friendId, senderId);
+    const unread = await countUnreadForPair(friendIdRaw, senderId);
     const recvPayload = {
       type: 'dm:recv',
       message,
       fromId: senderId,
       unreadCount: unread,
     };
-    if (friendId === senderId) {
+    if (friendIdRaw === senderId) {
       send(ws, recvPayload);
     } else {
-      bus.sendToPlayer(friendId, recvPayload);
+      bus.sendToPlayer(friendIdRaw, recvPayload);
     }
   } catch (err) {
     const code = err?.code || err?.payload?.error || 'DM_SEND_FAILED';
@@ -149,7 +209,7 @@ async function handleNudge(ws, data) {
   try {
     cooldownKey = checkPairCooldown(senderId, friendId);
     rateBucket = acquireRateBucket(senderId);
-    await ensureCanMessage({ senderId, recipientId: friendId });
+    await ensureCanMessage({ senderId, recipientId: friendId }); // nudge continua exigindo amizade
     markPairCooldown(cooldownKey);
     commitRateBucket(senderId, rateBucket);
     const payload = {

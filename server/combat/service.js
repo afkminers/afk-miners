@@ -4,7 +4,7 @@ const { get, run } = require('../models/db');
 const K = require('../balance/config');
 const { applyTries, getClassRate } = require('../skills/engine');
 const wsBus = require('../ws/bus');
-const { broadcast } = wsBus;
+const { broadcast, sendToPlayer, broadcastToMap } = wsBus;
 const { TILE } = require('./geom');
 const { toTileCoords, chebyshevTiles, isValidTile } = require('../utils/tile-coords');
 const { resolveMonsterAttackProfile } = require('./monster_attack_profile');
@@ -275,9 +275,11 @@ async function respawnHero(targetHeroId) {
     } catch {}
   }
 
-  // notifica cliente (snap + respawn)
-  broadcast({ type: 'pos_snap_hero', heroId: targetHeroId, mapKey, x, y });
-  broadcast({ type: 'hero_respawn', heroId: targetHeroId, hp: hpOnRevive, mapKey, x, y });
+  // notifica cliente (snap + respawn) — **apenas para o dono**
+  if (playerId) {
+    sendToPlayer(playerId, { type: 'pos_snap_hero', heroId: targetHeroId, mapKey, x, y });
+    sendToPlayer(playerId, { type: 'hero_respawn',  heroId: targetHeroId, hp: hpOnRevive, mapKey, x, y });
+  }
 
   // limpa ameaças para não nascer "em combate"
   try {
@@ -443,8 +445,8 @@ function normalizeCombatPosition(rawPos, fallback = {}) {
   const fb = fallback || {};
 
   const mapKey =
-    pos.mapKey ?? pos.map_key ?? pos.map ??
-    fb.mapKey ?? fb.map_key ?? fb.map ??
+    pos.mapKey ?? pos.map_key ?? pos.map ?? 
+    fb.mapKey ?? fb.map_key ?? fb.map ?? 
     null;
 
   const face = pos.face ?? fb.face ?? null;
@@ -711,7 +713,8 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
     } catch {}
   }
 
-  broadcast({
+  // ===== AQUI muda: unicast para o dono do herói =====
+  sendToPlayer(hero.player_id, {
     type: 'hero_hp',
     heroId: targetHeroId,
     hp: newHp,
@@ -721,7 +724,7 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
     dmg
   });
 
-  broadcast({
+  sendToPlayer(hero.player_id, {
     type: 'hero_dmg',
     heroId: targetHeroId,
     amount: dmg,
@@ -730,7 +733,7 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
   });
 
   if (dead) {
-    broadcast({
+    sendToPlayer(hero.player_id, {
       type: 'hero_dead',
       heroId: targetHeroId,
       byMob: inst.monster_key,
@@ -738,6 +741,7 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
       autoRespawn: false
     });
   }
+  // ===== fim das mudanças de unicast =====
 
   const nextInterval = Number.isFinite(attackProfile.intervalMs) ? attackProfile.intervalMs : Number(inst.attack_ms) || 0;
   const mobLabel = inst.monster_key || inst.monster_id || 'unknown';

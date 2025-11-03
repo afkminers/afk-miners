@@ -706,6 +706,26 @@
     ]
   },
   {
+    "file": "client\\js\\ui\\chat-context.js",
+    "symbols": [
+      "addFriendByName",
+      "blockFriendById",
+      "ensureMenu",
+      "extractNameAndId",
+      "findRowEl",
+      "getFriends",
+      "getMe",
+      "hideMenu",
+      "isSelf",
+      "onMenuClick",
+      "openDmById",
+      "positionMenuFixed",
+      "resolveFriendIdByName",
+      "showMenu",
+      "withinChat"
+    ]
+  },
+  {
     "file": "client\\js\\ui\\chat-log.js",
     "symbols": [
       "clearHighlight",

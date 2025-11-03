@@ -1,3 +1,4 @@
+// server/services/direct-messages.js
 'use strict';
 
 const MAX_BODY_LENGTH = 2000;
@@ -44,7 +45,7 @@ function isBlockedRow(row) {
   return !!row && row.status === 'BLOCKED';
 }
 
-async function ensureCanMessage({ senderId, recipientId }) {
+async function ensureCanMessage({ senderId, recipientId, allowWithoutFriendship = false }) {
   const sender = normalizeId(senderId);
   const recipient = normalizeId(recipientId);
   if (!sender || !recipient) {
@@ -57,23 +58,32 @@ async function ensureCanMessage({ senderId, recipientId }) {
     error.code = 'FRIEND_SELF_NOT_ALLOWED';
     throw error;
   }
+
   const relation = await fetchFriendship(sender, recipient);
-  if (!relation) {
-    const error = new Error('DM_NOT_ALLOWED');
-    error.code = 'DM_NOT_ALLOWED';
-    throw error;
+
+  // Bloqueio sempre impede DM
+  if (relation && isBlockedRow(relation)) {
+    // Opcional: tratar quem bloqueou (user_a_id) diferente
+    const blockerId = String(relation.user_a_id);
+    const code = blockerId === sender ? 'DM_BLOCKED' : 'DM_NOT_ALLOWED';
+    const err = new Error(code);
+    err.code = code;
+    throw err;
   }
-  if (isBlockedRow(relation)) {
-    const error = new Error('DM_BLOCKED');
-    error.code = 'DM_BLOCKED';
-    throw error;
+
+  // Amizade aceita → permitido
+  if (relation && relation.status === 'ACCEPTED') {
+    return { ok: true, mode: 'friends' };
   }
-  if (relation.status !== 'ACCEPTED') {
-    const error = new Error('DM_NOT_ALLOWED');
-    error.code = 'DM_NOT_ALLOWED';
-    throw error;
+
+  // Sem amizade → permitido somente quando explicitamente liberado (envio por nome)
+  if (allowWithoutFriendship) {
+    return { ok: true, mode: 'name' };
   }
-  return relation;
+
+  const error = new Error('DM_NOT_ALLOWED');
+  error.code = 'DM_NOT_ALLOWED';
+  throw error;
 }
 
 function mapRow(row) {

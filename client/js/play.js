@@ -14,6 +14,7 @@ import { Camera2D } from './engine/camera2d.js';
 import { PlayerController } from './engine/player_controller.js';
 import { ClickToMove } from './engine/click_to_move.js';
 import { AStarGrid } from './engine/pathfinder.js';
+import { Input } from './engine/input.js';
 import { TILE, toTile, tileCenter, footColliderPx } from './engine/movement_contract.js';
 
 
@@ -146,19 +147,31 @@ function resolveMobName(raw) {
   return `Mob ${value}`;
 }
 
+// … (helpers já definidos acima: normalizeHeroId, resolveHeroId, etc.)
+
 onMessage('hero_hp', (msg) => {
-  if (window.HUD_ApplyHeroHpUpdate) {
-    const hid = resolveHeroId(msg.heroId ?? msg.id ?? msg.targetHeroId);
-    if (hid) window.HUD_ApplyHeroHpUpdate(hid, Number(msg.hp), Number(msg.maxHp));
+  // Só mexe na HUD se o dano for do MEU herói ativo local
+  const myId   = resolveHeroId(); // pega do estado local (ActiveHeroId/Team/HeroState)
+  const target = normalizeHeroId(msg.heroId ?? msg.id ?? msg.targetHeroId);
+
+  if (!myId || !target || myId !== target) {
+    // Ignora updates de HP de outros jogadores/heróis
+    return;
   }
-  // Log básico (se o chat ainda não tiver aba "Log")
+
+  if (window.HUD_ApplyHeroHpUpdate) {
+    window.HUD_ApplyHeroHpUpdate(myId, Number(msg.hp), Number(msg.maxHp));
+  }
+
+  // Loga o dano só quando for comigo (mantém seu chat limpo)
   const mobName = resolveMobName(msg.byMob ?? msg.instanceId);
-  const amount = formatNumberLocale(msg.dmg);
+  const amount  = formatNumberLocale(msg.dmg);
   const current = formatNumberLocale(msg.hp);
-  const max = formatNumberLocale(msg.maxHp);
-  const line = translateLog('chat.logMobHitYou', { mob: mobName, amount, current, max });
+  const max     = formatNumberLocale(msg.maxHp);
+  const line    = translateLog('chat.logMobHitYou', { mob: mobName, amount, current, max });
   if (window.Chat?.pushLog) window.Chat.pushLog(line); else console.log('[LOG]', line);
 });
+
 
 // Respawn -> força refresh HUD imediato
 onMessage('hero_respawn', (msg) => {
