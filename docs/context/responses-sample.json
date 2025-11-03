@@ -12,6 +12,38 @@
     "{ok:false,error:'map-diff',message:'Alvo está em outro mapa.' }",
     "{ok:true,inRange,hasLineOfSight:hasLos,range:telemetry?.range || null,distance:telemetry?.distance || null,hero:telemetry?.hero || null,monster:telemetry?.monster || null,computedAt:telemetry?.computedAt || Date.now(),warnings,message:warnings[0]?.message,}"
   ],
+  "POST /:friendId/accept": [
+    "{ok:true,friendship }",
+    "{ok:true }",
+    "{ok:true }",
+    "{ok:true,friendship }",
+    "{ok:true }"
+  ],
+  "POST /:friendId/block": [
+    "{ok:true,friendship }",
+    "{ok:true }",
+    "{ok:true,messages,nextCursor,unreadCount }"
+  ],
+  "GET /:friendId/dms": [
+    "{ok:true,messages,nextCursor,unreadCount }"
+  ],
+  "POST /:friendId/reject": [
+    "{ok:true }",
+    "{ok:true }",
+    "{ok:true,friendship }",
+    "{ok:true }",
+    "{ok:true,messages,nextCursor,unreadCount }"
+  ],
+  "POST /:friendId/unblock": [
+    "{ok:true }",
+    "{ok:true,messages,nextCursor,unreadCount }"
+  ],
+  "DELETE /:friendId": [
+    "{ok:true }",
+    "{ok:true,friendship }",
+    "{ok:true }",
+    "{ok:true,messages,nextCursor,unreadCount }"
+  ],
   "POST /:heroId/deposit": [
     "{ok:true,placed }"
   ],
@@ -97,7 +129,11 @@
   ],
   "POST /gain/dev": [],
   "GET /": [
-    "{ok:true,items:rows }"
+    "{ok:true,friends }",
+    "{ok:true,friendship }",
+    "{ok:true,friendship }",
+    "{ok:true }",
+    "{ok:true }"
   ],
   "POST /harvest": [
     "{ok:true,yield_item:cfg.yield_item,amount:cfg.yield_qty }",
@@ -183,6 +219,13 @@
     "{ok:true }",
     "{ok:true }",
     "{profile }"
+  ],
+  "POST /request": [
+    "{ok:true,friendship }",
+    "{ok:true,friendship }",
+    "{ok:true }",
+    "{ok:true }",
+    "{ok:true,friendship }"
   ],
   "POST /revive": [
     "{ok:true,heroId:String(heroId),hp:Number(h2?.hp || 1),mapKey,x,y,}"

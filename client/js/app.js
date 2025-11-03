@@ -374,6 +374,7 @@ function appendChatRow(msg){
   row.className = 'chat-row';
   if (id != null) { row.setAttribute('data-chat-id', String(id)); markSeenId(id); }
   row.setAttribute('data-from', fromName);
+  if (fromId) row.setAttribute('data-from-id', fromId);
   row.setAttribute('data-text', text);
   row.setAttribute('data-ts', String(ts));
   row.classList.add(isMe ? 'me' : 'other');

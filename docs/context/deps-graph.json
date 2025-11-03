@@ -32,6 +32,26 @@
     "to": "./state/hero-state.js"
   },
   {
+    "from": "client\\js\\play.js",
+    "to": "./engine/camera2d.js"
+  },
+  {
+    "from": "client\\js\\play.js",
+    "to": "./engine/player_controller.js"
+  },
+  {
+    "from": "client\\js\\play.js",
+    "to": "./engine/click_to_move.js"
+  },
+  {
+    "from": "client\\js\\play.js",
+    "to": "./engine/pathfinder.js"
+  },
+  {
+    "from": "client\\js\\play.js",
+    "to": "./engine/movement_contract.js"
+  },
+  {
     "from": "client\\js\\gacha.js",
     "to": "./api.js"
   },
@@ -80,12 +100,40 @@
     "to": "./state/hero-state.js"
   },
   {
+    "from": "client\\js\\app.js",
+    "to": "./ui/friends-hud.js"
+  },
+  {
+    "from": "client\\js\\app.js",
+    "to": "./ui/emoji.js"
+  },
+  {
     "from": "client\\js\\ui\\hud_status.js",
     "to": "../state/hero-state.js"
   },
   {
     "from": "client\\js\\ui\\hero-floating-damage.js",
     "to": "../ws/singleton.js"
+  },
+  {
+    "from": "client\\js\\ui\\friends-hud.js",
+    "to": "../api.js"
+  },
+  {
+    "from": "client\\js\\ui\\friends-hud.js",
+    "to": "../ws/singleton.js"
+  },
+  {
+    "from": "client\\js\\ui\\dm-chat.js",
+    "to": "../api.js"
+  },
+  {
+    "from": "client\\js\\ui\\dm-chat.js",
+    "to": "../ws/singleton.js"
+  },
+  {
+    "from": "client\\js\\ui\\dm-chat.js",
+    "to": "./emoji.js"
   },
   {
     "from": "client\\js\\pages\\support.js",
@@ -138,6 +186,22 @@
   {
     "from": "client\\js\\hud\\death-overlay.js",
     "to": "../api.js"
+  },
+  {
+    "from": "client\\js\\hud\\battle-status.js",
+    "to": "../ws/singleton.js"
+  },
+  {
+    "from": "client\\js\\engine\\player_controller.js",
+    "to": "./movement_contract.js"
+  },
+  {
+    "from": "client\\js\\engine\\pathfinder.js",
+    "to": "./movement_contract.js"
+  },
+  {
+    "from": "client\\js\\engine\\click_to_move.js",
+    "to": "./movement_contract.js"
   },
   {
     "from": "client\\js\\combat\\render-combat.js",

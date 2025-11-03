@@ -144,7 +144,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 78,
+    "line": 84,
     "kind": "arrow",
     "name": "STEP_MIN_RATIO",
     "params": [
@@ -153,7 +153,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 85,
+    "line": 91,
     "kind": "function",
     "name": "isStepWithinSpeedCap",
     "params": [
@@ -166,7 +166,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 111,
+    "line": 117,
     "kind": "function",
     "name": "flushOnePlayerPos",
     "params": [
@@ -175,42 +175,42 @@
   },
   {
     "file": "server\\index.js",
-    "line": 134,
+    "line": 140,
     "kind": "function",
     "name": "flushAllPlayerPos",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 141,
+    "line": 147,
     "kind": "function",
     "name": "startPosFlusher",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 150,
+    "line": 156,
     "kind": "function",
     "name": "stopPosFlusher",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 159,
+    "line": 165,
     "kind": "arrow",
     "name": "syncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 222,
+    "line": 228,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 407,
+    "line": 431,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -219,7 +219,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 729,
+    "line": 753,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -228,7 +228,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 809,
+    "line": 833,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -237,14 +237,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 824,
+    "line": 848,
     "kind": "function",
     "name": "ensurePlayerOnlineTable",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 837,
+    "line": 861,
     "kind": "function",
     "name": "resolveActiveHeroId",
     "params": [
@@ -253,7 +253,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 862,
+    "line": 886,
     "kind": "function",
     "name": "upsertOnlineByPlayer",
     "params": [
@@ -263,7 +263,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 875,
+    "line": 899,
     "kind": "function",
     "name": "markOfflineByPlayer",
     "params": [
@@ -272,7 +272,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 881,
+    "line": 905,
     "kind": "function",
     "name": "setupHeartbeat",
     "params": [
@@ -281,14 +281,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 883,
+    "line": 907,
     "kind": "function",
     "name": "noop",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 901,
+    "line": 929,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -297,35 +297,35 @@
   },
   {
     "file": "server\\index.js",
-    "line": 934,
+    "line": 964,
     "kind": "function",
     "name": "checkIdleAndManageLoops",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 965,
+    "line": 995,
     "kind": "function",
     "name": "idleAwareSyncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 984,
+    "line": 1014,
     "kind": "function",
     "name": "startIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1000,
+    "line": 1030,
     "kind": "function",
     "name": "stopIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1021,
+    "line": 1051,
     "kind": "function",
     "name": "seedAIMobsFromDB",
     "params": [
@@ -334,7 +334,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 1346,
+    "line": 1388,
     "kind": "arrow",
     "name": "sameTile",
     "params": [
@@ -369,6 +369,163 @@
     "name": "get",
     "params": [
       "sessionId"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 19,
+    "kind": "function",
+    "name": "isSocketOpen",
+    "params": [
+      "ws"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 23,
+    "kind": "function",
+    "name": "attachRedis",
+    "params": [
+      "{ wss",
+      "redisPub",
+      "redisSub }"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 54,
+    "kind": "function",
+    "name": "getPresenceSnapshot",
+    "params": [
+      "userIds"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 114,
+    "kind": "function",
+    "name": "ensureSweepTimer",
+    "params": []
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 126,
+    "kind": "function",
+    "name": "stopSweepTimer",
+    "params": []
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 133,
+    "kind": "function",
+    "name": "handlePresenceMessage",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 149,
+    "kind": "function",
+    "name": "broadcastToFriends",
+    "params": [
+      "payload"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 160,
+    "kind": "function",
+    "name": "onAuthenticated",
+    "params": [
+      "ws"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 181,
+    "kind": "function",
+    "name": "resolveUserId",
+    "params": [
+      "ws"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 187,
+    "kind": "function",
+    "name": "loadFriendSet",
+    "params": [
+      "userId"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 208,
+    "kind": "function",
+    "name": "sendInitialSnapshot",
+    "params": [
+      "ws"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 236,
+    "kind": "function",
+    "name": "onHeartbeat",
+    "params": [
+      "ws"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 242,
+    "kind": "function",
+    "name": "markOnline",
+    "params": [
+      "userId",
+      "{ ts } = {}"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 270,
+    "kind": "function",
+    "name": "refreshPresence",
+    "params": [
+      "userId"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 297,
+    "kind": "function",
+    "name": "markOffline",
+    "params": [
+      "userId",
+      "{ reason",
+      "ts } = {}"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 312,
+    "kind": "function",
+    "name": "publishEvent",
+    "params": [
+      "type",
+      "userId",
+      "ts",
+      "extra = {}"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 322,
+    "kind": "function",
+    "name": "onDisconnect",
+    "params": [
+      "ws"
     ]
   },
   {
@@ -424,6 +581,132 @@
     "params": []
   },
   {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 19,
+    "kind": "function",
+    "name": "resolveUserId",
+    "params": [
+      "ws"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 35,
+    "kind": "function",
+    "name": "mapMessage",
+    "params": [
+      "row"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 48,
+    "kind": "function",
+    "name": "send",
+    "params": [
+      "ws",
+      "payload"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 57,
+    "kind": "function",
+    "name": "pairKey",
+    "params": [
+      "a",
+      "b"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 63,
+    "kind": "function",
+    "name": "checkPairCooldown",
+    "params": [
+      "senderId",
+      "friendId"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 75,
+    "kind": "function",
+    "name": "markPairCooldown",
+    "params": [
+      "key"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 79,
+    "kind": "function",
+    "name": "acquireRateBucket",
+    "params": [
+      "senderId"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 93,
+    "kind": "function",
+    "name": "commitRateBucket",
+    "params": [
+      "senderId",
+      "bucket"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 99,
+    "kind": "function",
+    "name": "handleSend",
+    "params": [
+      "ws",
+      "data"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 135,
+    "kind": "function",
+    "name": "handleNudge",
+    "params": [
+      "ws",
+      "data"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 169,
+    "kind": "function",
+    "name": "handleAck",
+    "params": [
+      "ws",
+      "data"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 201,
+    "kind": "function",
+    "name": "handleRead",
+    "params": [
+      "ws",
+      "data"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 232,
+    "kind": "function",
+    "name": "handleMessage",
+    "params": [
+      "ws",
+      "data"
+    ]
+  },
+  {
     "file": "server\\ws\\chat-handler.js",
     "line": 6,
     "kind": "function",
@@ -437,6 +720,25 @@
     "file": "server\\ws\\bus.js",
     "line": 9,
     "kind": "function",
+    "name": "resolveSocketPlayerId",
+    "params": [
+      "ws"
+    ]
+  },
+  {
+    "file": "server\\ws\\bus.js",
+    "line": 23,
+    "kind": "function",
+    "name": "forEachPlayerSocket",
+    "params": [
+      "playerId",
+      "fn"
+    ]
+  },
+  {
+    "file": "server\\ws\\bus.js",
+    "line": 37,
+    "kind": "function",
     "name": "isOpen",
     "params": [
       "sock"
@@ -444,7 +746,7 @@
   },
   {
     "file": "server\\ws\\bus.js",
-    "line": 14,
+    "line": 42,
     "kind": "function",
     "name": "roomOf",
     "params": [
@@ -453,7 +755,7 @@
   },
   {
     "file": "server\\ws\\bus.js",
-    "line": 21,
+    "line": 49,
     "kind": "function",
     "name": "attach",
     "params": [
@@ -462,7 +764,7 @@
   },
   {
     "file": "server\\ws\\bus.js",
-    "line": 26,
+    "line": 54,
     "kind": "function",
     "name": "broadcast",
     "params": [
@@ -471,7 +773,7 @@
   },
   {
     "file": "server\\ws\\bus.js",
-    "line": 37,
+    "line": 65,
     "kind": "function",
     "name": "joinMapSocket",
     "params": [
@@ -481,14 +783,14 @@
   },
   {
     "file": "server\\ws\\bus.js",
-    "line": 45,
+    "line": 73,
     "kind": "arrow",
     "name": "onClose",
     "params": []
   },
   {
     "file": "server\\ws\\bus.js",
-    "line": 62,
+    "line": 90,
     "kind": "function",
     "name": "moveSocketToMap",
     "params": [
@@ -498,7 +800,28 @@
   },
   {
     "file": "server\\ws\\bus.js",
-    "line": 75,
+    "line": 102,
+    "kind": "function",
+    "name": "movePlayerToMap",
+    "params": [
+      "playerId",
+      "mapKey",
+      "opts = {}"
+    ]
+  },
+  {
+    "file": "server\\ws\\bus.js",
+    "line": 117,
+    "kind": "function",
+    "name": "sendToPlayer",
+    "params": [
+      "playerId",
+      "obj"
+    ]
+  },
+  {
+    "file": "server\\ws\\bus.js",
+    "line": 126,
     "kind": "function",
     "name": "broadcastToMap",
     "params": [
@@ -635,21 +958,21 @@
   },
   {
     "file": "server\\starter\\routes.js",
-    "line": 9,
+    "line": 10,
     "kind": "function",
     "name": "isHeroKeyGenerated",
     "params": []
   },
   {
     "file": "server\\starter\\routes.js",
-    "line": 24,
+    "line": 25,
     "kind": "function",
     "name": "hasHpColumns",
     "params": []
   },
   {
     "file": "server\\starter\\routes.js",
-    "line": 38,
+    "line": 39,
     "kind": "function",
     "name": "buildStarterRouter",
     "params": []
@@ -774,6 +1097,78 @@
     "name": "createStarterHeroIfMissing",
     "params": [
       "playerId"
+    ]
+  },
+  {
+    "file": "server\\services\\spawnPoint.js",
+    "line": 9,
+    "kind": "function",
+    "name": "toInt",
+    "params": [
+      "value",
+      "fallback"
+    ]
+  },
+  {
+    "file": "server\\services\\spawnPoint.js",
+    "line": 14,
+    "kind": "function",
+    "name": "normalizePoint",
+    "params": [
+      "row",
+      "fallback = DEFAULT_START"
+    ]
+  },
+  {
+    "file": "server\\services\\spawnPoint.js",
+    "line": 35,
+    "kind": "function",
+    "name": "fetchStartRow",
+    "params": [
+      "mapKey"
+    ]
+  },
+  {
+    "file": "server\\services\\spawnPoint.js",
+    "line": 58,
+    "kind": "function",
+    "name": "getStartPoint",
+    "params": [
+      "mapKey = DEFAULT_START.mapKey"
+    ]
+  },
+  {
+    "file": "server\\services\\spawnPoint.js",
+    "line": 63,
+    "kind": "function",
+    "name": "getHeroRespawnPoint",
+    "params": [
+      "heroOrId",
+      "opts = {}"
+    ]
+  },
+  {
+    "file": "server\\services\\spawnPoint.js",
+    "line": 89,
+    "kind": "function",
+    "name": "setHeroRespawnPoint",
+    "params": [
+      "heroId",
+      "mapKey",
+      "x",
+      "y"
+    ]
+  },
+  {
+    "file": "server\\services\\spawnPoint.js",
+    "line": 106,
+    "kind": "function",
+    "name": "upsertPlayerLastPos",
+    "params": [
+      "playerId",
+      "mapKey",
+      "x",
+      "y"
     ]
   },
   {
@@ -1044,6 +1439,135 @@
     "name": "notifyLevelUpClient",
     "params": [
       "hero"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 7,
+    "kind": "function",
+    "name": "normalizeId",
+    "params": [
+      "value"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 13,
+    "kind": "function",
+    "name": "canonicalPair",
+    "params": [
+      "a",
+      "b"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 22,
+    "kind": "function",
+    "name": "sanitizeBody",
+    "params": [
+      "body"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 31,
+    "kind": "function",
+    "name": "fetchFriendship",
+    "params": [
+      "a",
+      "b"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 43,
+    "kind": "function",
+    "name": "isBlockedRow",
+    "params": [
+      "row"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 47,
+    "kind": "function",
+    "name": "ensureCanMessage",
+    "params": [
+      "{ senderId",
+      "recipientId }"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 79,
+    "kind": "function",
+    "name": "mapRow",
+    "params": [
+      "row"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 94,
+    "kind": "function",
+    "name": "insertMessage",
+    "params": [
+      "{ senderId",
+      "recipientId",
+      "body }"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 111,
+    "kind": "function",
+    "name": "fetchMessages",
+    "params": [
+      "{ userId",
+      "friendId",
+      "limit = 50",
+      "beforeId = null }"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 128,
+    "kind": "function",
+    "name": "markDelivered",
+    "params": [
+      "{ recipientId",
+      "messageIds }"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 140,
+    "kind": "function",
+    "name": "markRead",
+    "params": [
+      "{ recipientId",
+      "friendId",
+      "upToId }"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 158,
+    "kind": "function",
+    "name": "countUnreadForPair",
+    "params": [
+      "userId",
+      "friendId"
+    ]
+  },
+  {
+    "file": "server\\services\\direct-messages.js",
+    "line": 173,
+    "kind": "function",
+    "name": "listUnreadSummary",
+    "params": [
+      "userId"
     ]
   },
   {
@@ -1755,6 +2279,113 @@
     ]
   },
   {
+    "file": "server\\routes\\friends.js",
+    "line": 32,
+    "kind": "function",
+    "name": "sendError",
+    "params": [
+      "res",
+      "status",
+      "code"
+    ]
+  },
+  {
+    "file": "server\\routes\\friends.js",
+    "line": 36,
+    "kind": "function",
+    "name": "normalizeId",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "server\\routes\\friends.js",
+    "line": 41,
+    "kind": "function",
+    "name": "toIso",
+    "params": [
+      "value"
+    ]
+  },
+  {
+    "file": "server\\routes\\friends.js",
+    "line": 48,
+    "kind": "function",
+    "name": "findUserByUsername",
+    "params": [
+      "username"
+    ]
+  },
+  {
+    "file": "server\\routes\\friends.js",
+    "line": 55,
+    "kind": "function",
+    "name": "findUserById",
+    "params": [
+      "id"
+    ]
+  },
+  {
+    "file": "server\\routes\\friends.js",
+    "line": 59,
+    "kind": "function",
+    "name": "findFriendship",
+    "params": [
+      "currentUserId",
+      "otherId"
+    ]
+  },
+  {
+    "file": "server\\routes\\friends.js",
+    "line": 68,
+    "kind": "function",
+    "name": "loadFriendRows",
+    "params": [
+      "currentUserId"
+    ]
+  },
+  {
+    "file": "server\\routes\\friends.js",
+    "line": 94,
+    "kind": "function",
+    "name": "loadFriendRow",
+    "params": [
+      "currentUserId",
+      "otherId"
+    ]
+  },
+  {
+    "file": "server\\routes\\friends.js",
+    "line": 120,
+    "kind": "function",
+    "name": "fetchUnreadMap",
+    "params": [
+      "currentUserId"
+    ]
+  },
+  {
+    "file": "server\\routes\\friends.js",
+    "line": 142,
+    "kind": "function",
+    "name": "resolveFriendId",
+    "params": [
+      "row",
+      "currentUserId"
+    ]
+  },
+  {
+    "file": "server\\routes\\friends.js",
+    "line": 150,
+    "kind": "function",
+    "name": "buildFriendPayload",
+    "params": [
+      "row",
+      "{ currentUserId",
+      "presenceMap",
+      "unreadMap }"
+    ]
+  },
+  {
     "file": "server\\routes\\farm.js",
     "line": 26,
     "kind": "function",
@@ -1963,7 +2594,7 @@
   },
   {
     "file": "server\\respawn\\worker.js",
-    "line": 291,
+    "line": 294,
     "kind": "function",
     "name": "startRespawnLoop",
     "params": [
@@ -1972,7 +2603,7 @@
   },
   {
     "file": "server\\respawn\\worker.js",
-    "line": 300,
+    "line": 303,
     "kind": "function",
     "name": "stopRespawnLoop",
     "params": []
@@ -2051,6 +2682,33 @@
   {
     "file": "server\\models\\migrate.js",
     "line": 5,
+    "kind": "arrow",
+    "name": "MIGRATE_DEBUG",
+    "params": [
+      "("
+    ]
+  },
+  {
+    "file": "server\\models\\migrate.js",
+    "line": 12,
+    "kind": "function",
+    "name": "execSocialQuery",
+    "params": [
+      "client",
+      "sql",
+      "params = []"
+    ]
+  },
+  {
+    "file": "server\\models\\migrate.js",
+    "line": 27,
+    "kind": "function",
+    "name": "ensureSocialSchema",
+    "params": []
+  },
+  {
+    "file": "server\\models\\migrate.js",
+    "line": 143,
     "kind": "function",
     "name": "migrate",
     "params": []
@@ -2219,14 +2877,14 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 139,
+    "line": 146,
     "kind": "function",
     "name": "closePool",
     "params": []
   },
   {
     "file": "server\\models\\db.js",
-    "line": 152,
+    "line": 159,
     "kind": "arrow",
     "name": "shutdown",
     "params": []
@@ -2501,6 +3159,24 @@
     "file": "server\\content\\loader.js",
     "line": 187,
     "kind": "function",
+    "name": "toNumber",
+    "params": [
+      "val"
+    ]
+  },
+  {
+    "file": "server\\content\\loader.js",
+    "line": 194,
+    "kind": "function",
+    "name": "parseLeashPx",
+    "params": [
+      "props"
+    ]
+  },
+  {
+    "file": "server\\content\\loader.js",
+    "line": 229,
+    "kind": "function",
     "name": "loadItems",
     "params": [
       "db",
@@ -2509,7 +3185,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 265,
+    "line": 307,
     "kind": "function",
     "name": "loadSprites",
     "params": [
@@ -2519,7 +3195,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 346,
+    "line": 388,
     "kind": "function",
     "name": "loadMap",
     "params": [
@@ -2530,7 +3206,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 424,
+    "line": 470,
     "kind": "function",
     "name": "loadAll",
     "params": [
@@ -2621,21 +3297,21 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 20,
+    "line": 29,
     "kind": "function",
     "name": "posMod",
     "params": []
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 29,
+    "line": 38,
     "kind": "function",
     "name": "ai",
     "params": []
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 44,
+    "line": 53,
     "kind": "function",
     "name": "computeDamageTibiaLike",
     "params": [
@@ -2647,7 +3323,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 53,
+    "line": 62,
     "kind": "function",
     "name": "resolveWeaponSpeedMs",
     "params": [
@@ -2656,7 +3332,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 80,
+    "line": 89,
     "kind": "function",
     "name": "resolveSkillFromWeapon",
     "params": [
@@ -2665,7 +3341,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 90,
+    "line": 99,
     "kind": "function",
     "name": "getHeroSkillLevel",
     "params": [
@@ -2675,7 +3351,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 100,
+    "line": 109,
     "kind": "function",
     "name": "getHeroStats",
     "params": [
@@ -2684,7 +3360,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 127,
+    "line": 137,
     "kind": "function",
     "name": "getInstanceWithMonster",
     "params": [
@@ -2693,14 +3369,14 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 161,
+    "line": 171,
     "kind": "function",
     "name": "getDefaultReachPx",
     "params": []
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 163,
+    "line": 173,
     "kind": "function",
     "name": "getRespawnSeconds",
     "params": [
@@ -2709,7 +3385,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 173,
+    "line": 183,
     "kind": "function",
     "name": "rollLoot",
     "params": [
@@ -2718,7 +3394,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 192,
+    "line": 202,
     "kind": "function",
     "name": "persistDrops",
     "params": [
@@ -2729,7 +3405,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 212,
+    "line": 222,
     "kind": "function",
     "name": "respawnHero",
     "params": [
@@ -2738,7 +3414,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 260,
+    "line": 295,
     "kind": "function",
     "name": "applyHit",
     "params": [
@@ -2749,7 +3425,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 402,
+    "line": 441,
     "kind": "function",
     "name": "normalizeCombatPosition",
     "params": [
@@ -2759,7 +3435,7 @@
   },
   {
     "file": "server\\combat\\service.js",
-    "line": 456,
+    "line": 495,
     "kind": "function",
     "name": "applyMobHit",
     "params": [
@@ -3737,6 +4413,184 @@
     ]
   },
   {
+    "file": "server\\combat\\battle-state.js",
+    "line": 13,
+    "kind": "function",
+    "name": "now",
+    "params": []
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 21,
+    "kind": "function",
+    "name": "normalizeId",
+    "params": [
+      "id"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 27,
+    "kind": "function",
+    "name": "resolvePlayerId",
+    "params": [
+      "heroId",
+      "hintPlayerId = null"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 56,
+    "kind": "function",
+    "name": "addHeroToPlayer",
+    "params": [
+      "pid",
+      "hid"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 65,
+    "kind": "function",
+    "name": "removeHeroFromPlayer",
+    "params": [
+      "pid",
+      "hid"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 76,
+    "kind": "function",
+    "name": "scheduleCheck",
+    "params": [
+      "hid"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 86,
+    "kind": "function",
+    "name": "emit",
+    "params": [
+      "event"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 92,
+    "kind": "function",
+    "name": "notifyClient",
+    "params": [
+      "hid",
+      "state"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 109,
+    "kind": "function",
+    "name": "releaseOfflineHoldIfIdle",
+    "params": [
+      "playerId"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 121,
+    "kind": "function",
+    "name": "checkExpiry",
+    "params": [
+      "hid"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 132,
+    "kind": "function",
+    "name": "deactivate",
+    "params": [
+      "hid",
+      "opts = {}"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 151,
+    "kind": "function",
+    "name": "touchHero",
+    "params": [
+      "heroId",
+      "opts = {}"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 192,
+    "kind": "function",
+    "name": "isHeroInBattle",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 199,
+    "kind": "function",
+    "name": "hasActiveBattleForPlayer",
+    "params": [
+      "playerId"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 206,
+    "kind": "function",
+    "name": "holdPlayerOffline",
+    "params": [
+      "playerId",
+      "fn"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 214,
+    "kind": "function",
+    "name": "cancelOfflineHold",
+    "params": [
+      "playerId"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 220,
+    "kind": "function",
+    "name": "forceLeave",
+    "params": [
+      "heroId",
+      "opts = {}"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 233,
+    "kind": "function",
+    "name": "cooldown",
+    "params": [
+      "heroId",
+      "ms = SAFE_GRACE_MS"
+    ]
+  },
+  {
+    "file": "server\\combat\\battle-state.js",
+    "line": 247,
+    "kind": "function",
+    "name": "onStateChange",
+    "params": [
+      "fn"
+    ]
+  },
+  {
     "file": "server\\combat\\autoloop.js",
     "line": 15,
     "kind": "function",
@@ -3810,14 +4664,14 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 25,
+    "line": 26,
     "kind": "arrow",
     "name": "broadcast",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 76,
+    "line": 78,
     "kind": "function",
     "name": "hasLoSpx",
     "params": [
@@ -3830,7 +4684,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 83,
+    "line": 85,
     "kind": "function",
     "name": "normalizeMonsterPos",
     "params": [
@@ -3841,7 +4695,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 118,
+    "line": 120,
     "kind": "function",
     "name": "computeSpawnCenterPx",
     "params": [
@@ -3851,7 +4705,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 139,
+    "line": 141,
     "kind": "function",
     "name": "canMobHitNow",
     "params": [
@@ -3863,7 +4717,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 175,
+    "line": 198,
     "kind": "function",
     "name": "recordHeroObservation",
     "params": [
@@ -3876,7 +4730,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 205,
+    "line": 228,
     "kind": "function",
     "name": "updateHeroMemoryForMap",
     "params": [
@@ -3887,7 +4741,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 224,
+    "line": 247,
     "kind": "function",
     "name": "predictHeroTileCx",
     "params": [
@@ -3898,7 +4752,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 246,
+    "line": 269,
     "kind": "function",
     "name": "computeMobDensityPenalty",
     "params": [
@@ -3912,7 +4766,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 281,
+    "line": 304,
     "kind": "function",
     "name": "computeMobFlankBonus",
     "params": [
@@ -3925,14 +4779,14 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 300,
+    "line": 323,
     "kind": "function",
     "name": "fetchAliveMonsters",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 338,
+    "line": 363,
     "kind": "function",
     "name": "fetchOnlineHeroesInMap",
     "params": [
@@ -3941,7 +4795,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 387,
+    "line": 412,
     "kind": "function",
     "name": "getHeroLastPosPx",
     "params": [
@@ -3951,7 +4805,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 406,
+    "line": 431,
     "kind": "function",
     "name": "resolveMobSpeedPx",
     "params": [
@@ -3960,7 +4814,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 414,
+    "line": 439,
     "kind": "function",
     "name": "ensureMob",
     "params": [
@@ -3970,7 +4824,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 531,
+    "line": 591,
     "kind": "function",
     "name": "computeRepathCooldownMs",
     "params": [
@@ -3979,7 +4833,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 538,
+    "line": 598,
     "kind": "function",
     "name": "seedPosition",
     "params": [
@@ -3989,12 +4843,14 @@
       "mapKey",
       "spawnRect",
       "speed = null",
-      "monsterKey = null }"
+      "monsterKey = null",
+      "leashPx = null",
+      "resetThreat = false }"
     ]
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 556,
+    "line": 634,
     "kind": "function",
     "name": "addThreatFromHeroHit",
     "params": [
@@ -4005,21 +4861,21 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 566,
+    "line": 644,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 606,
+    "line": 685,
     "kind": "function",
     "name": "stop",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 657,
+    "line": 736,
     "kind": "function",
     "name": "tileKey",
     "params": [
@@ -4029,7 +4885,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 661,
+    "line": 740,
     "kind": "function",
     "name": "coerceTileSet",
     "params": [
@@ -4038,7 +4894,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 667,
+    "line": 746,
     "kind": "function",
     "name": "losGridRows",
     "params": [
@@ -4047,7 +4903,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 672,
+    "line": 751,
     "kind": "function",
     "name": "isSolidTile",
     "params": [
@@ -4058,7 +4914,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 682,
+    "line": 761,
     "kind": "function",
     "name": "isTileBlockedByMobs",
     "params": [
@@ -4070,7 +4926,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 695,
+    "line": 774,
     "kind": "function",
     "name": "estaAoLadoDoJogador",
     "params": [
@@ -4081,7 +4937,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 705,
+    "line": 784,
     "kind": "function",
     "name": "buildHeroTileSet",
     "params": [
@@ -4092,7 +4948,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 730,
+    "line": 809,
     "kind": "function",
     "name": "buildMobOccupancy",
     "params": [
@@ -4101,7 +4957,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 750,
+    "line": 829,
     "kind": "function",
     "name": "buildRingOptions",
     "params": [
@@ -4117,7 +4973,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 788,
+    "line": 867,
     "kind": "function",
     "name": "maybeReturnMobHome",
     "params": [
@@ -4130,7 +4986,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 895,
+    "line": 974,
     "kind": "function",
     "name": "teleportMobToTile",
     "params": [
@@ -4142,7 +4998,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 940,
+    "line": 1019,
     "kind": "function",
     "name": "resolveMobStacks",
     "params": [
@@ -4154,14 +5010,14 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 980,
+    "line": 1059,
     "kind": "function",
     "name": "tickLoop",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1023,
+    "line": 1102,
     "kind": "function",
     "name": "stepMob",
     "params": [
@@ -4176,7 +5032,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1286,
+    "line": 1432,
     "kind": "function",
     "name": "decayThreat",
     "params": [
@@ -4186,7 +5042,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1296,
+    "line": 1442,
     "kind": "function",
     "name": "selectTargetByThreat",
     "params": [
@@ -4198,7 +5054,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1397,
+    "line": 1546,
     "kind": "function",
     "name": "isBlockedPx",
     "params": [
@@ -4209,7 +5065,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1406,
+    "line": 1555,
     "kind": "function",
     "name": "selectMobChaseGoal",
     "params": [
@@ -4225,7 +5081,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1539,
+    "line": 1688,
     "kind": "function",
     "name": "planMobChaseStep",
     "params": [
@@ -4241,7 +5097,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1562,
+    "line": 1711,
     "kind": "function",
     "name": "pickCombatDanceStep",
     "params": [
@@ -4255,7 +5111,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1608,
+    "line": 1757,
     "kind": "function",
     "name": "maybeHandleCombatDance",
     "params": [
@@ -4271,7 +5127,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1688,
+    "line": 1837,
     "kind": "function",
     "name": "pickStepGreedy",
     "params": [
@@ -4286,7 +5142,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1757,
+    "line": 1906,
     "kind": "function",
     "name": "pickStepAlternate",
     "params": [
@@ -4302,7 +5158,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1857,
+    "line": 2006,
     "kind": "function",
     "name": "clampToMapPx",
     "params": [
@@ -4312,7 +5168,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1868,
+    "line": 2017,
     "kind": "function",
     "name": "moveMobAndPersist",
     "params": [
@@ -4325,7 +5181,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1949,
+    "line": 2098,
     "kind": "function",
     "name": "removeHeroThreat",
     "params": [
@@ -4907,7 +5763,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 26,
+    "line": 30,
     "kind": "function",
     "name": "_applyEarlySnapIfAny",
     "params": [
@@ -4916,14 +5772,32 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 46,
+    "line": 50,
     "kind": "function",
     "name": "bootAuth",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 73,
+    "line": 77,
+    "kind": "function",
+    "name": "normalizeHeroId",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 84,
+    "kind": "function",
+    "name": "resolveHeroId",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 105,
     "kind": "function",
     "name": "interpolate",
     "params": [
@@ -4933,7 +5807,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 84,
+    "line": 116,
     "kind": "function",
     "name": "formatNumberLocale",
     "params": [
@@ -4942,7 +5816,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 97,
+    "line": 129,
     "kind": "function",
     "name": "translateLog",
     "params": [
@@ -4952,7 +5826,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 109,
+    "line": 141,
     "kind": "function",
     "name": "resolveMobName",
     "params": [
@@ -4961,7 +5835,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 246,
+    "line": 281,
     "kind": "function",
     "name": "uniq",
     "params": [
@@ -4970,7 +5844,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 328,
+    "line": 363,
     "kind": "function",
     "name": "pickFreeSpriteForSpawn",
     "params": [
@@ -4979,7 +5853,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 380,
+    "line": 415,
     "kind": "function",
     "name": "getOrCreateServerMonsterState",
     "params": [
@@ -4988,7 +5862,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 409,
+    "line": 444,
     "kind": "function",
     "name": "resolveServerMoveSnapshot",
     "params": [
@@ -4998,7 +5872,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 475,
+    "line": 510,
     "kind": "function",
     "name": "currentSpriteRenderPos",
     "params": [
@@ -5008,7 +5882,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 495,
+    "line": 530,
     "kind": "function",
     "name": "computeTweenDuration",
     "params": [
@@ -5018,7 +5892,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 503,
+    "line": 538,
     "kind": "function",
     "name": "monsterTileKey",
     "params": [
@@ -5028,21 +5902,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 507,
+    "line": 542,
     "kind": "function",
     "name": "clearHeroBlocking",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 515,
+    "line": 550,
     "kind": "function",
     "name": "heroSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 525,
+    "line": 560,
     "kind": "function",
     "name": "heroFootboxTiles",
     "params": [
@@ -5052,7 +5926,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 533,
+    "line": 582,
     "kind": "function",
     "name": "updateHeroBlocking",
     "params": [
@@ -5062,7 +5936,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 573,
+    "line": 622,
     "kind": "function",
     "name": "removeMonsterFromTile",
     "params": [
@@ -5071,7 +5945,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 586,
+    "line": 635,
     "kind": "function",
     "name": "updateMonsterBlocking",
     "params": [
@@ -5082,7 +5956,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 623,
+    "line": 672,
     "kind": "function",
     "name": "clearMonsterBlocking",
     "params": [
@@ -5091,7 +5965,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 629,
+    "line": 678,
     "kind": "function",
     "name": "isTileBlockedByMonster",
     "params": [
@@ -5102,7 +5976,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 647,
+    "line": 696,
     "kind": "function",
     "name": "msgMatchesCurrentMap",
     "params": [
@@ -5111,7 +5985,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 656,
+    "line": 705,
     "kind": "function",
     "name": "ensureServerMonsterSprite",
     "params": [
@@ -5120,7 +5994,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 707,
+    "line": 756,
     "kind": "function",
     "name": "pickFaceFromDelta",
     "params": [
@@ -5131,7 +6005,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 723,
+    "line": 772,
     "kind": "function",
     "name": "updateSpriteFacingFromDelta",
     "params": [
@@ -5143,7 +6017,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 729,
+    "line": 778,
     "kind": "function",
     "name": "setMonsterAction",
     "params": [
@@ -5156,7 +6030,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 753,
+    "line": 802,
     "kind": "function",
     "name": "applyServerPosition",
     "params": [
@@ -5169,7 +6043,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 957,
+    "line": 1006,
     "kind": "function",
     "name": "updateServerDrivenMonsters",
     "params": [
@@ -5178,21 +6052,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1032,
+    "line": 1081,
     "kind": "function",
     "name": "retryBindPendingServerMonsters",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1068,
+    "line": 1117,
     "kind": "function",
     "name": "scheduleServerMonsterRetry",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1077,
+    "line": 1126,
     "kind": "function",
     "name": "handleServerMonsterRespawn",
     "params": [
@@ -5201,7 +6075,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1099,
+    "line": 1148,
     "kind": "function",
     "name": "handleServerMonsterMove",
     "params": [
@@ -5210,7 +6084,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1135,
+    "line": 1184,
     "kind": "function",
     "name": "handleServerMonsterDead",
     "params": [
@@ -5219,7 +6093,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1202,
+    "line": 1251,
     "kind": "function",
     "name": "getHeroWorldPosition",
     "params": [
@@ -5228,7 +6102,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1215,
+    "line": 1264,
     "kind": "function",
     "name": "triggerMonsterAttackAnimation",
     "params": [
@@ -5237,7 +6111,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1273,
+    "line": 1322,
     "kind": "function",
     "name": "normalizeLegacyMobPos",
     "params": [
@@ -5246,7 +6120,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1288,
+    "line": 1337,
     "kind": "function",
     "name": "handleLegacyMobPos",
     "params": [
@@ -5255,7 +6129,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1306,
+    "line": 1355,
     "kind": "function",
     "name": "pickElByIds",
     "params": [
@@ -5265,7 +6139,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1334,
+    "line": 1383,
     "kind": "arrow",
     "name": "$",
     "params": [
@@ -5274,7 +6148,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1340,
+    "line": 1389,
     "kind": "function",
     "name": "assetUrl",
     "params": [
@@ -5284,7 +6158,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1352,
+    "line": 1401,
     "kind": "function",
     "name": "normalizeTilesetPath",
     "params": [
@@ -5293,7 +6167,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1360,
+    "line": 1409,
     "kind": "function",
     "name": "loadTilesetImage",
     "params": [
@@ -5302,21 +6176,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1381,
+    "line": 1430,
     "kind": "function",
     "name": "applySmoothing",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1396,
+    "line": 1445,
     "kind": "function",
     "name": "resize",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1418,
+    "line": 1467,
     "kind": "function",
     "name": "loadImg",
     "params": [
@@ -5325,7 +6199,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1426,
+    "line": 1475,
     "kind": "function",
     "name": "imgReady",
     "params": [
@@ -5334,7 +6208,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1427,
+    "line": 1476,
     "kind": "function",
     "name": "ensureImgLoaded",
     "params": [
@@ -5343,7 +6217,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1436,
+    "line": 1485,
     "kind": "function",
     "name": "normKey",
     "params": [
@@ -5352,7 +6226,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1446,
+    "line": 1495,
     "kind": "function",
     "name": "indexSpriteMeta",
     "params": [
@@ -5361,7 +6235,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1458,
+    "line": 1507,
     "kind": "function",
     "name": "asObj",
     "params": [
@@ -5370,14 +6244,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1464,
+    "line": 1513,
     "kind": "function",
     "name": "loadSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1470,
+    "line": 1519,
     "kind": "function",
     "name": "findMetaFor",
     "params": [
@@ -5386,7 +6260,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1483,
+    "line": 1532,
     "kind": "function",
     "name": "buildMonsterCandidates",
     "params": [
@@ -5397,7 +6271,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1506,
+    "line": 1555,
     "kind": "function",
     "name": "loadMonsterImg",
     "params": [
@@ -5408,7 +6282,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1518,
+    "line": 1567,
     "kind": "function",
     "name": "inferMetaFromImage",
     "params": [
@@ -5418,7 +6292,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1605,
+    "line": 1654,
     "kind": "function",
     "name": "lootAtWorld",
     "params": [
@@ -5428,7 +6302,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1610,
+    "line": 1659,
     "kind": "function",
     "name": "drawLoot",
     "params": [
@@ -5437,14 +6311,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1621,
+    "line": 1670,
     "kind": "function",
     "name": "clear",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1623,
+    "line": 1672,
     "kind": "function",
     "name": "drawGround",
     "params": [
@@ -5453,7 +6327,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1649,
+    "line": 1698,
     "kind": "function",
     "name": "drawPlayer",
     "params": [
@@ -5462,7 +6336,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1667,
+    "line": 1716,
     "kind": "function",
     "name": "drawMob",
     "params": [
@@ -5471,7 +6345,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1856,
+    "line": 1905,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -5482,7 +6356,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1874,
+    "line": 1923,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -5491,7 +6365,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1884,
+    "line": 1933,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -5500,14 +6374,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1907,
+    "line": 1956,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1945,
+    "line": 1994,
     "kind": "function",
     "name": "addMobFromSpawn",
     "params": [
@@ -5516,7 +6390,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1991,
+    "line": 2040,
     "kind": "function",
     "name": "buildSpawnersFromDefs",
     "params": [
@@ -5525,7 +6399,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2005,
+    "line": 2054,
     "kind": "function",
     "name": "updateRespawns",
     "params": [
@@ -5534,7 +6408,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2029,
+    "line": 2078,
     "kind": "function",
     "name": "normalizeApiJson",
     "params": [
@@ -5543,7 +6417,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2060,
+    "line": 2109,
     "kind": "function",
     "name": "hasSolidProp",
     "params": [
@@ -5552,14 +6426,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2099,
+    "line": 2148,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2119,
+    "line": 2168,
     "kind": "arrow",
     "name": "monsterBlockChecker",
     "params": [
@@ -5569,7 +6443,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2236,
+    "line": 2285,
     "kind": "function",
     "name": "frame",
     "params": [
@@ -5578,7 +6452,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2272,
+    "line": 2321,
     "kind": "arrow",
     "name": "cellOf",
     "params": [
@@ -5588,7 +6462,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2273,
+    "line": 2322,
     "kind": "arrow",
     "name": "centerOf",
     "params": [
@@ -5598,7 +6472,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2274,
+    "line": 2323,
     "kind": "arrow",
     "name": "isBlocked",
     "params": [
@@ -5608,7 +6482,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2279,
+    "line": 2328,
     "kind": "arrow",
     "name": "inBound",
     "params": [
@@ -5619,7 +6493,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2287,
+    "line": 2336,
     "kind": "arrow",
     "name": "faceFrom",
     "params": [
@@ -5629,10 +6503,44 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2334,
+    "line": 2383,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 2401,
+    "kind": "arrow",
+    "name": "featureMovement",
+    "params": []
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 2402,
+    "kind": "arrow",
+    "name": "legacyToTile",
+    "params": [
+      "px"
+    ]
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 2403,
+    "kind": "arrow",
+    "name": "tileCoord",
+    "params": [
+      "px"
+    ]
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 2404,
+    "kind": "arrow",
+    "name": "tileCenterPx",
+    "params": [
+      "t"
+    ]
   },
   {
     "file": "client\\js\\login_fx.js",
@@ -6835,14 +7743,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 12,
+    "line": 21,
     "kind": "function",
     "name": "getCsrf",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 22,
+    "line": 31,
     "kind": "function",
     "name": "jget",
     "params": [
@@ -6851,7 +7759,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 28,
+    "line": 40,
     "kind": "function",
     "name": "jpost",
     "params": [
@@ -6861,7 +7769,26 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 71,
+    "line": 54,
+    "kind": "function",
+    "name": "safeNavigate",
+    "params": [
+      "url"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 59,
+    "kind": "function",
+    "name": "translate",
+    "params": [
+      "key",
+      "fallback"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 102,
     "kind": "function",
     "name": "setLoadingProgress",
     "params": [
@@ -6871,14 +7798,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 80,
+    "line": 111,
     "kind": "function",
     "name": "pickNextTipIndex",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 90,
+    "line": 121,
     "kind": "function",
     "name": "swapLoadingTip",
     "params": [
@@ -6887,28 +7814,28 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 94,
+    "line": 125,
     "kind": "arrow",
     "name": "apply",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 106,
+    "line": 137,
     "kind": "function",
     "name": "beginRetroLoading",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 120,
+    "line": 151,
     "kind": "function",
     "name": "finishRetroLoading",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 145,
+    "line": 176,
     "kind": "function",
     "name": "setRootVar",
     "params": [
@@ -6918,7 +7845,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 146,
+    "line": 177,
     "kind": "function",
     "name": "getRootVar",
     "params": [
@@ -6928,28 +7855,28 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 153,
+    "line": 184,
     "kind": "function",
     "name": "updateTopbarHeight",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 161,
+    "line": 192,
     "kind": "function",
     "name": "mountSceneHouse",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 177,
+    "line": 208,
     "kind": "function",
     "name": "applyViewport",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 201,
+    "line": 232,
     "kind": "function",
     "name": "makeVSplitter",
     "params": [
@@ -6959,7 +7886,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 203,
+    "line": 234,
     "kind": "function",
     "name": "onDown",
     "params": [
@@ -6968,7 +7895,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 211,
+    "line": 242,
     "kind": "function",
     "name": "onMove",
     "params": [
@@ -6977,14 +7904,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 218,
+    "line": 249,
     "kind": "function",
     "name": "onUp",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 236,
+    "line": 267,
     "kind": "function",
     "name": "onDown",
     "params": [
@@ -6993,7 +7920,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 244,
+    "line": 275,
     "kind": "function",
     "name": "onMove",
     "params": [
@@ -7002,21 +7929,21 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 251,
+    "line": 282,
     "kind": "function",
     "name": "onUp",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 263,
+    "line": 294,
     "kind": "function",
     "name": "applyUiFromSettings",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 295,
+    "line": 331,
     "kind": "function",
     "name": "markSeenId",
     "params": [
@@ -7025,7 +7952,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 296,
+    "line": 332,
     "kind": "function",
     "name": "hasSeenId",
     "params": [
@@ -7034,7 +7961,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 297,
+    "line": 333,
     "kind": "function",
     "name": "normStr",
     "params": [
@@ -7043,7 +7970,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 298,
+    "line": 334,
     "kind": "function",
     "name": "getTs",
     "params": [
@@ -7052,7 +7979,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 300,
+    "line": 336,
     "kind": "function",
     "name": "findPendingRowFor",
     "params": [
@@ -7061,7 +7988,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 320,
+    "line": 356,
     "kind": "function",
     "name": "appendChatRow",
     "params": [
@@ -7070,23 +7997,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 347,
-    "kind": "arrow",
-    "name": "esc",
-    "params": [
-      "s"
-    ]
-  },
-  {
-    "file": "client\\js\\app.js",
-    "line": 384,
+    "line": 437,
     "kind": "function",
     "name": "initGlobalChatUI",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 425,
+    "line": 496,
     "kind": "function",
     "name": "setScope",
     "params": [
@@ -7095,14 +8013,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 447,
+    "line": 541,
     "kind": "function",
     "name": "sendChat",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 467,
+    "line": 573,
     "kind": "arrow",
     "name": "FALLBACK_LOAD_CONTENT",
     "params": []
@@ -7796,19 +8714,28 @@
     "file": "client\\js\\ui\\hud_status.js",
     "line": 13,
     "kind": "function",
+    "name": "normalizeHeroId",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\hud_status.js",
+    "line": 20,
+    "kind": "function",
     "name": "getActiveHeroId",
     "params": []
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 33,
+    "line": 47,
     "kind": "function",
     "name": "cacheTTL",
     "params": []
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 39,
+    "line": 53,
     "kind": "function",
     "name": "getMe",
     "params": [
@@ -7818,7 +8745,7 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 81,
+    "line": 95,
     "kind": "function",
     "name": "fetchHeroVitals",
     "params": [
@@ -7828,7 +8755,7 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 120,
+    "line": 135,
     "kind": "function",
     "name": "fetchActiveHeroData",
     "params": [
@@ -7837,7 +8764,7 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 157,
+    "line": 172,
     "kind": "function",
     "name": "pct",
     "params": [
@@ -7847,7 +8774,7 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 163,
+    "line": 178,
     "kind": "function",
     "name": "renderHudBars",
     "params": [
@@ -7857,7 +8784,7 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 269,
+    "line": 284,
     "kind": "function",
     "name": "updateHudBars",
     "params": [
@@ -7866,7 +8793,7 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 308,
+    "line": 323,
     "kind": "function",
     "name": "wireToggles",
     "params": [
@@ -7876,14 +8803,14 @@
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 333,
+    "line": 348,
     "kind": "function",
     "name": "scheduleNextPoll",
     "params": []
   },
   {
     "file": "client\\js\\ui\\hud_status.js",
-    "line": 359,
+    "line": 374,
     "kind": "function",
     "name": "applyHeroHpUpdate",
     "params": [
@@ -7968,6 +8895,893 @@
     "params": [
       "ctx",
       "camera"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 67,
+    "kind": "function",
+    "name": "escapeHtml",
+    "params": [
+      "value"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 76,
+    "kind": "function",
+    "name": "parseTime",
+    "params": [
+      "value"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 83,
+    "kind": "function",
+    "name": "normalizeFriend",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 107,
+    "kind": "function",
+    "name": "ensureContextMenu",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 121,
+    "kind": "function",
+    "name": "closeContextMenu",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 128,
+    "kind": "function",
+    "name": "openContextMenuFor",
+    "params": [
+      "friend",
+      "anchorRect"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 183,
+    "kind": "function",
+    "name": "formatRelative",
+    "params": [
+      "ts"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 197,
+    "kind": "function",
+    "name": "showFeedback",
+    "params": [
+      "message",
+      "kind = 'info'"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 216,
+    "kind": "function",
+    "name": "setLoadingState",
+    "params": [
+      "isLoading"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 221,
+    "kind": "function",
+    "name": "setFormLoading",
+    "params": [
+      "isLoading"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 229,
+    "kind": "function",
+    "name": "setRowBusy",
+    "params": [
+      "friendId",
+      "busy"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 241,
+    "kind": "function",
+    "name": "updateButtonBadge",
+    "params": [
+      "pendingCount",
+      "unreadTotal"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 254,
+    "kind": "function",
+    "name": "renderSections",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 294,
+    "kind": "function",
+    "name": "renderSection",
+    "params": [
+      "key",
+      "items"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 323,
+    "kind": "function",
+    "name": "buildFriendRow",
+    "params": [
+      "friend"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 389,
+    "kind": "function",
+    "name": "updatePresenceFor",
+    "params": [
+      "friend"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 413,
+    "kind": "function",
+    "name": "applyFriend",
+    "params": [
+      "rawFriend"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 421,
+    "kind": "function",
+    "name": "removeFriend",
+    "params": [
+      "friendId"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 427,
+    "kind": "function",
+    "name": "ensureCurrentUser",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 446,
+    "kind": "function",
+    "name": "loadFriends",
+    "params": [
+      "{ silent = false } = {}"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 472,
+    "kind": "function",
+    "name": "startAutoRefresh",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 479,
+    "kind": "function",
+    "name": "stopAutoRefresh",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 486,
+    "kind": "function",
+    "name": "handlePresenceEvent",
+    "params": [
+      "kind",
+      "payload"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 505,
+    "kind": "function",
+    "name": "mapError",
+    "params": [
+      "err"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 510,
+    "kind": "function",
+    "name": "mapNudgeError",
+    "params": [
+      "err"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 515,
+    "kind": "function",
+    "name": "highlightFriendRow",
+    "params": [
+      "friendId"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 525,
+    "kind": "function",
+    "name": "triggerNudge",
+    "params": [
+      "friendId"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 537,
+    "kind": "function",
+    "name": "handleAction",
+    "params": [
+      "action",
+      "friendId",
+      "options = {}"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 607,
+    "kind": "function",
+    "name": "handlePanelClick",
+    "params": [
+      "event"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 635,
+    "kind": "function",
+    "name": "handleContextMenu",
+    "params": [
+      "event"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 644,
+    "kind": "function",
+    "name": "handleKeyboard",
+    "params": [
+      "event"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 680,
+    "kind": "function",
+    "name": "handleContextMenuClick",
+    "params": [
+      "event"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 704,
+    "kind": "function",
+    "name": "openPanel",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 715,
+    "kind": "function",
+    "name": "closePanel",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 725,
+    "kind": "function",
+    "name": "togglePanel",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 732,
+    "kind": "function",
+    "name": "ensureButtonInTopbar",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 747,
+    "kind": "function",
+    "name": "setupDom",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 840,
+    "kind": "function",
+    "name": "bindEvents",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 875,
+    "kind": "arrow",
+    "name": "unreadHandler",
+    "params": [
+      "event"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 887,
+    "kind": "arrow",
+    "name": "nudgeEventHandler",
+    "params": [
+      "event"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 905,
+    "kind": "function",
+    "name": "bindPresenceEvents",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "line": 911,
+    "kind": "function",
+    "name": "initFriendHud",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\emoji.js",
+    "line": 53,
+    "kind": "function",
+    "name": "resolveEmoji",
+    "params": [
+      "code"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\emoji.js",
+    "line": 62,
+    "kind": "function",
+    "name": "appendTextNode",
+    "params": [
+      "target",
+      "text"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\emoji.js",
+    "line": 67,
+    "kind": "function",
+    "name": "appendEmojiTokens",
+    "params": [
+      "target",
+      "value"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\emoji.js",
+    "line": 91,
+    "kind": "function",
+    "name": "renderRichText",
+    "params": [
+      "target",
+      "text"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\emoji.js",
+    "line": 107,
+    "kind": "function",
+    "name": "getEmojiFromCode",
+    "params": [
+      "code"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 17,
+    "kind": "function",
+    "name": "readMutePreference",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 26,
+    "kind": "function",
+    "name": "ensureMuteWatcher",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 29,
+    "kind": "arrow",
+    "name": "handler",
+    "params": [
+      "event"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 39,
+    "kind": "function",
+    "name": "ensureNudgeAudio",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 50,
+    "kind": "function",
+    "name": "playNudgeSound",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 66,
+    "kind": "arrow",
+    "name": "focusInputFn",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 82,
+    "kind": "function",
+    "name": "createError",
+    "params": [
+      "code"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 88,
+    "kind": "function",
+    "name": "getLocalCooldownUntil",
+    "params": [
+      "friendId"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 92,
+    "kind": "function",
+    "name": "setLocalCooldown",
+    "params": [
+      "friendId",
+      "untilTs"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 97,
+    "kind": "function",
+    "name": "clearLocalCooldown",
+    "params": [
+      "friendId"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 102,
+    "kind": "function",
+    "name": "createPendingNudge",
+    "params": [
+      "friendId"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 121,
+    "kind": "function",
+    "name": "settlePendingNudge",
+    "params": [
+      "friendId",
+      "ok",
+      "code"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 137,
+    "kind": "function",
+    "name": "scheduleNudgeAvailabilityCheck",
+    "params": [
+      "conv"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 166,
+    "kind": "function",
+    "name": "showNudgeFeedback",
+    "params": [
+      "conv",
+      "message",
+      "tone = 'info'",
+      "duration = 2_000"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 189,
+    "kind": "function",
+    "name": "animateNudge",
+    "params": [
+      "conv",
+      "incoming"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 192,
+    "kind": "arrow",
+    "name": "apply",
+    "params": [
+      "el"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 203,
+    "kind": "function",
+    "name": "getNudgeMessage",
+    "params": [
+      "code"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 208,
+    "kind": "function",
+    "name": "nowIso",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 212,
+    "kind": "function",
+    "name": "resolveUserId",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 223,
+    "kind": "function",
+    "name": "scopeForFriend",
+    "params": [
+      "friendId"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 227,
+    "kind": "function",
+    "name": "setActiveScope",
+    "params": [
+      "scope"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 239,
+    "kind": "function",
+    "name": "isDmScope",
+    "params": [
+      "scope"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 243,
+    "kind": "function",
+    "name": "friendIdFromScope",
+    "params": [
+      "scope"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 248,
+    "kind": "function",
+    "name": "emitUnread",
+    "params": [
+      "friendId",
+      "unreadCount"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 256,
+    "kind": "function",
+    "name": "createTabElement",
+    "params": [
+      "friendId",
+      "friendName"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 269,
+    "kind": "function",
+    "name": "createPanelElement",
+    "params": [
+      "scope"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 307,
+    "kind": "function",
+    "name": "ensureCurrentUser",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 313,
+    "kind": "function",
+    "name": "scrollToBottom",
+    "params": [
+      "conv"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 321,
+    "kind": "function",
+    "name": "renderBadge",
+    "params": [
+      "conv"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 337,
+    "kind": "function",
+    "name": "createConversation",
+    "params": [
+      "friendId",
+      "friendName"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 426,
+    "kind": "function",
+    "name": "removeElement",
+    "params": [
+      "el"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 432,
+    "kind": "function",
+    "name": "closeConversation",
+    "params": [
+      "friendId"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 452,
+    "kind": "function",
+    "name": "findMessage",
+    "params": [
+      "conv",
+      "predicate"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 460,
+    "kind": "function",
+    "name": "renderMessage",
+    "params": [
+      "conv",
+      "message"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 509,
+    "kind": "function",
+    "name": "appendMessage",
+    "params": [
+      "conv",
+      "message",
+      "{ emit = true",
+      "prepend = false } = {}"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 532,
+    "kind": "function",
+    "name": "fetchHistory",
+    "params": [
+      "conv",
+      "{ append = false } = {}"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 593,
+    "kind": "function",
+    "name": "ensureHistory",
+    "params": [
+      "conv"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 600,
+    "kind": "function",
+    "name": "markRead",
+    "params": [
+      "conv"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 611,
+    "kind": "function",
+    "name": "handleSend",
+    "params": [
+      "scope",
+      "text"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 642,
+    "kind": "function",
+    "name": "handleSendEvent",
+    "params": [
+      "payload"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 671,
+    "kind": "function",
+    "name": "handleRecvEvent",
+    "params": [
+      "payload"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 711,
+    "kind": "function",
+    "name": "handleAckEvent",
+    "params": [
+      "payload"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 726,
+    "kind": "function",
+    "name": "handleReadEvent",
+    "params": [
+      "payload"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 750,
+    "kind": "function",
+    "name": "handleErrorEvent",
+    "params": [
+      "payload"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 795,
+    "kind": "function",
+    "name": "handleNudgeEvent",
+    "params": [
+      "payload"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 834,
+    "kind": "function",
+    "name": "activateDmScope",
+    "params": [
+      "scope"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 850,
+    "kind": "function",
+    "name": "openConversation",
+    "params": [
+      "friend"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 927,
+    "kind": "function",
+    "name": "handleDmSubmit",
+    "params": [
+      "scope",
+      "text"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 931,
+    "kind": "function",
+    "name": "getDmScopeForFriend",
+    "params": [
+      "friendId"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 935,
+    "kind": "function",
+    "name": "syncUnreadFromServer",
+    "params": [
+      "friendId",
+      "unreadCount",
+      "opts = {}"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 946,
+    "kind": "function",
+    "name": "syncFriendData",
+    "params": [
+      "friend"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 959,
+    "kind": "function",
+    "name": "sendNudge",
+    "params": [
+      "friendId"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 983,
+    "kind": "function",
+    "name": "getNudgeErrorMessage",
+    "params": [
+      "code"
     ]
   },
   {
@@ -8717,14 +10531,24 @@
   },
   {
     "file": "client\\js\\hud\\death-overlay.js",
-    "line": 57,
+    "line": 12,
+    "kind": "function",
+    "name": "translate",
+    "params": [
+      "key",
+      "fallback"
+    ]
+  },
+  {
+    "file": "client\\js\\hud\\death-overlay.js",
+    "line": 66,
     "kind": "function",
     "name": "ensureDom",
     "params": []
   },
   {
     "file": "client\\js\\hud\\death-overlay.js",
-    "line": 92,
+    "line": 97,
     "kind": "arrow",
     "name": "blockInput",
     "params": [
@@ -8733,49 +10557,209 @@
   },
   {
     "file": "client\\js\\hud\\death-overlay.js",
-    "line": 114,
+    "line": 119,
+    "kind": "function",
+    "name": "applyTexts",
+    "params": []
+  },
+  {
+    "file": "client\\js\\hud\\death-overlay.js",
+    "line": 122,
+    "kind": "arrow",
+    "name": "setText",
+    "params": [
+      "selector",
+      "key",
+      "fallback"
+    ]
+  },
+  {
+    "file": "client\\js\\hud\\death-overlay.js",
+    "line": 142,
     "kind": "function",
     "name": "showOverlay",
     "params": []
   },
   {
     "file": "client\\js\\hud\\death-overlay.js",
-    "line": 126,
+    "line": 155,
     "kind": "function",
     "name": "hideOverlay",
     "params": []
   },
   {
     "file": "client\\js\\hud\\death-overlay.js",
-    "line": 134,
-    "kind": "function",
-    "name": "updateCountdown",
-    "params": []
-  },
-  {
-    "file": "client\\js\\hud\\death-overlay.js",
-    "line": 148,
-    "kind": "function",
-    "name": "startTimer",
-    "params": []
-  },
-  {
-    "file": "client\\js\\hud\\death-overlay.js",
-    "line": 153,
-    "kind": "function",
-    "name": "stopTimer",
-    "params": []
-  },
-  {
-    "file": "client\\js\\hud\\death-overlay.js",
-    "line": 158,
+    "line": 163,
     "kind": "function",
     "name": "onClickRevive",
     "params": []
   },
   {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 174,
+    "kind": "function",
+    "name": "translate",
+    "params": [
+      "key",
+      "fallback"
+    ]
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 185,
+    "kind": "function",
+    "name": "ensureDom",
+    "params": []
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 231,
+    "kind": "function",
+    "name": "getWarningConfig",
+    "params": [
+      "mode"
+    ]
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 236,
+    "kind": "function",
+    "name": "normalizeMode",
+    "params": [
+      "mode"
+    ]
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 242,
+    "kind": "function",
+    "name": "applyTexts",
+    "params": [
+      "mode = currentWarningMode"
+    ]
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 271,
+    "kind": "function",
+    "name": "setBodyFlag",
+    "params": [
+      "active"
+    ]
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 277,
+    "kind": "function",
+    "name": "hideExitWarning",
+    "params": []
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 288,
+    "kind": "function",
+    "name": "showExitWarning",
+    "params": [
+      "mode = (state.inBattle ? 'battle' : 'safe'"
+    ]
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 303,
+    "kind": "function",
+    "name": "updateDom",
+    "params": []
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 315,
+    "kind": "function",
+    "name": "setBattle",
+    "params": [
+      "active",
+      "payload = {}"
+    ]
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 342,
+    "kind": "function",
+    "name": "setExitLock",
+    "params": [
+      "nextLocked"
+    ]
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 351,
+    "kind": "function",
+    "name": "allowExitFor",
+    "params": [
+      "durationMs = 1500"
+    ]
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 360,
+    "kind": "function",
+    "name": "beforeUnload",
+    "params": [
+      "ev"
+    ]
+  },
+  {
+    "file": "client\\js\\hud\\battle-status.js",
+    "line": 371,
+    "kind": "function",
+    "name": "onKeydown",
+    "params": [
+      "ev"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\player_controller.js",
+    "line": 4,
+    "kind": "arrow",
+    "name": "legacyToTile",
+    "params": [
+      "px"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\player_controller.js",
+    "line": 5,
+    "kind": "arrow",
+    "name": "featureEnabled",
+    "params": []
+  },
+  {
     "file": "client\\js\\engine\\player_controller.js",
     "line": 6,
+    "kind": "arrow",
+    "name": "tileCoord",
+    "params": [
+      "px"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\player_controller.js",
+    "line": 7,
+    "kind": "arrow",
+    "name": "centerOfTile",
+    "params": [
+      "t"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\player_controller.js",
+    "line": 8,
+    "kind": "arrow",
+    "name": "snapThreshold",
+    "params": []
+  },
+  {
+    "file": "client\\js\\engine\\player_controller.js",
+    "line": 10,
     "kind": "method",
     "class": "PlayerController",
     "name": "constructor",
@@ -8789,7 +10773,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 25,
+    "line": 31,
     "kind": "method",
     "class": "PlayerController",
     "name": "setCollision",
@@ -8801,7 +10785,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 26,
+    "line": 32,
     "kind": "method",
     "class": "PlayerController",
     "name": "setDynamicBlockChecker",
@@ -8811,7 +10795,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 27,
+    "line": 33,
     "kind": "method",
     "class": "PlayerController",
     "name": "setPosition",
@@ -8822,7 +10806,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 28,
+    "line": 34,
     "kind": "method",
     "class": "PlayerController",
     "name": "getPosition",
@@ -8830,7 +10814,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 30,
+    "line": 36,
     "kind": "method",
     "class": "PlayerController",
     "name": "_snap",
@@ -8840,7 +10824,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 32,
+    "line": 38,
     "kind": "method",
     "class": "PlayerController",
     "name": "_centerOf",
@@ -8851,7 +10835,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 35,
+    "line": 43,
     "kind": "method",
     "class": "PlayerController",
     "name": "followPath",
@@ -8861,7 +10845,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 43,
+    "line": 51,
     "kind": "method",
     "class": "PlayerController",
     "name": "isBlockedCell",
@@ -8872,7 +10856,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 54,
+    "line": 62,
     "kind": "method",
     "class": "PlayerController",
     "name": "tryMove",
@@ -8883,7 +10867,27 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 62,
+    "line": 76,
+    "kind": "method",
+    "class": "PlayerController",
+    "name": "for",
+    "params": [
+      "let ty = minCy; ty <= maxCy; ty++"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\player_controller.js",
+    "line": 77,
+    "kind": "method",
+    "class": "PlayerController",
+    "name": "for",
+    "params": [
+      "let tx = minCx; tx <= maxCx; tx++"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\player_controller.js",
+    "line": 87,
     "kind": "method",
     "class": "PlayerController",
     "name": "requestStep",
@@ -8893,7 +10897,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 79,
+    "line": 104,
     "kind": "method",
     "class": "PlayerController",
     "name": "update",
@@ -8904,7 +10908,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 83,
+    "line": 111,
     "kind": "method",
     "class": "PlayerController",
     "name": "if",
@@ -8914,27 +10918,17 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 89,
+    "line": 168,
     "kind": "method",
     "class": "PlayerController",
     "name": "if",
     "params": [
-      "dist <= 1.0"
+      "feature"
     ]
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 107,
-    "kind": "method",
-    "class": "PlayerController",
-    "name": "if",
-    "params": [
-      "dist <= 1.0"
-    ]
-  },
-  {
-    "file": "client\\js\\engine\\player_controller.js",
-    "line": 139,
+    "line": 193,
     "kind": "method",
     "class": "PlayerController",
     "name": "if",
@@ -8944,7 +10938,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 142,
+    "line": 196,
     "kind": "method",
     "class": "PlayerController",
     "name": "if",
@@ -8954,7 +10948,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 144,
+    "line": 198,
     "kind": "method",
     "class": "PlayerController",
     "name": "if",
@@ -8963,8 +10957,45 @@
     ]
   },
   {
+    "file": "client\\js\\engine\\player_controller.js",
+    "line": 205,
+    "kind": "method",
+    "class": "PlayerController",
+    "name": "if",
+    "params": [
+      "feature"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\player_controller.js",
+    "line": 208,
+    "kind": "method",
+    "class": "PlayerController",
+    "name": "if",
+    "params": [
+      "window.DEBUG_MOVEMENT && this._debug.timer >= 1"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\player_controller.js",
+    "line": 226,
+    "kind": "method",
+    "class": "PlayerController",
+    "name": "if",
+    "params": [
+      "typeof window !== 'undefined'"
+    ]
+  },
+  {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 5,
+    "line": 4,
+    "kind": "arrow",
+    "name": "featureEnabled",
+    "params": []
+  },
+  {
+    "file": "client\\js\\engine\\pathfinder.js",
+    "line": 8,
     "kind": "method",
     "class": "AStarGrid",
     "name": "constructor",
@@ -8976,7 +11007,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 12,
+    "line": 15,
     "kind": "method",
     "class": "AStarGrid",
     "name": "isBlocked",
@@ -8987,7 +11018,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 19,
+    "line": 22,
     "kind": "method",
     "class": "AStarGrid",
     "name": "setDynamicBlocker",
@@ -8997,7 +11028,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 22,
+    "line": 25,
     "kind": "method",
     "class": "AStarGrid",
     "name": "neighbors",
@@ -9008,7 +11039,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 30,
+    "line": 33,
     "kind": "method",
     "class": "AStarGrid",
     "name": "for",
@@ -9018,7 +11049,17 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 37,
+    "line": 43,
+    "kind": "method",
+    "class": "AStarGrid",
+    "name": "for",
+    "params": [
+      "const n of diag"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\pathfinder.js",
+    "line": 53,
     "kind": "method",
     "class": "AStarGrid",
     "name": "heuristic",
@@ -9031,7 +11072,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 41,
+    "line": 64,
     "kind": "method",
     "class": "AStarGrid",
     "name": "findPath",
@@ -9043,7 +11084,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 52,
+    "line": 75,
     "kind": "arrow",
     "name": "key",
     "params": [
@@ -9053,7 +11094,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 62,
+    "line": 85,
     "kind": "method",
     "class": "AStarGrid",
     "name": "if",
@@ -9063,7 +11104,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 66,
+    "line": 89,
     "kind": "method",
     "class": "AStarGrid",
     "name": "while",
@@ -9073,7 +11114,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 95,
+    "line": 118,
     "kind": "method",
     "class": "MinHeap",
     "name": "constructor",
@@ -9081,7 +11122,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 96,
+    "line": 119,
     "kind": "method",
     "class": "MinHeap",
     "name": "empty",
@@ -9089,7 +11130,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 97,
+    "line": 120,
     "kind": "method",
     "class": "MinHeap",
     "name": "push",
@@ -9099,7 +11140,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 98,
+    "line": 121,
     "kind": "method",
     "class": "MinHeap",
     "name": "pop",
@@ -9107,7 +11148,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 105,
+    "line": 128,
     "kind": "method",
     "class": "MinHeap",
     "name": "_bubble",
@@ -9117,7 +11158,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 106,
+    "line": 129,
     "kind": "method",
     "class": "MinHeap",
     "name": "while",
@@ -9127,7 +11168,7 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 113,
+    "line": 136,
     "kind": "method",
     "class": "MinHeap",
     "name": "_sink",
@@ -9137,12 +11178,78 @@
   },
   {
     "file": "client\\js\\engine\\pathfinder.js",
-    "line": 114,
+    "line": 137,
     "kind": "method",
     "class": "MinHeap",
     "name": "for",
     "params": [
       ";;"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\pathfinder.js",
+    "line": 148,
+    "kind": "method",
+    "class": "MinHeap",
+    "name": "if",
+    "params": [
+      "typeof window !== 'undefined'"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\movement_contract.js",
+    "line": 27,
+    "kind": "function",
+    "name": "cheby",
+    "params": [
+      "a",
+      "b"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\movement_contract.js",
+    "line": 35,
+    "kind": "function",
+    "name": "normalizeStep",
+    "params": [
+      "dx",
+      "dy",
+      "speedPxPerSec",
+      "dt"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\movement_contract.js",
+    "line": 54,
+    "kind": "function",
+    "name": "resolveBlocked",
+    "params": [
+      "map",
+      "cx",
+      "cy"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\movement_contract.js",
+    "line": 70,
+    "kind": "function",
+    "name": "canCutCorner",
+    "params": [
+      "map",
+      "tx",
+      "ty",
+      "sdx",
+      "sdy"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\movement_contract.js",
+    "line": 82,
+    "kind": "function",
+    "name": "footColliderPx",
+    "params": [
+      "x",
+      "y"
     ]
   },
   {
@@ -9163,16 +11270,25 @@
   },
   {
     "file": "client\\js\\engine\\input.js",
-    "line": 36,
+    "line": 37,
     "kind": "function",
-    "name": "_edgeDown",
+    "name": "_ensureStepState",
     "params": [
       "code"
     ]
   },
   {
     "file": "client\\js\\engine\\input.js",
-    "line": 43,
+    "line": 46,
+    "kind": "function",
+    "name": "_onKeyDown",
+    "params": [
+      "code"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\input.js",
+    "line": 55,
     "kind": "function",
     "name": "_onKeyUp",
     "params": [
@@ -9201,7 +11317,23 @@
   },
   {
     "file": "client\\js\\engine\\click_to_move.js",
+    "line": 4,
+    "kind": "arrow",
+    "name": "legacyToTile",
+    "params": [
+      "px"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\click_to_move.js",
     "line": 5,
+    "kind": "arrow",
+    "name": "featureEnabled",
+    "params": []
+  },
+  {
+    "file": "client\\js\\engine\\click_to_move.js",
+    "line": 8,
     "kind": "method",
     "class": "ClickToMove",
     "name": "constructor",
@@ -9214,7 +11346,7 @@
   },
   {
     "file": "client\\js\\engine\\click_to_move.js",
-    "line": 9,
+    "line": 12,
     "kind": "method",
     "class": "ClickToMove",
     "name": "setGrid",
@@ -9224,7 +11356,7 @@
   },
   {
     "file": "client\\js\\engine\\click_to_move.js",
-    "line": 10,
+    "line": 13,
     "kind": "method",
     "class": "ClickToMove",
     "name": "setAStar",
@@ -9234,7 +11366,7 @@
   },
   {
     "file": "client\\js\\engine\\click_to_move.js",
-    "line": 12,
+    "line": 15,
     "kind": "method",
     "class": "ClickToMove",
     "name": "handleClick",
@@ -9244,8 +11376,18 @@
     ]
   },
   {
+    "file": "client\\js\\engine\\click_to_move.js",
+    "line": 28,
+    "kind": "method",
+    "class": "ClickToMove",
+    "name": "if",
+    "params": [
+      "typeof window !== 'undefined'"
+    ]
+  },
+  {
     "file": "client\\js\\engine\\camera2d.js",
-    "line": 8,
+    "line": 7,
     "kind": "method",
     "class": "Camera2D",
     "name": "constructor",
@@ -9255,7 +11397,7 @@
   },
   {
     "file": "client\\js\\engine\\camera2d.js",
-    "line": 22,
+    "line": 21,
     "kind": "method",
     "class": "Camera2D",
     "name": "getZoom",
@@ -9263,7 +11405,7 @@
   },
   {
     "file": "client\\js\\engine\\camera2d.js",
-    "line": 23,
+    "line": 22,
     "kind": "method",
     "class": "Camera2D",
     "name": "setZoom",
@@ -9273,7 +11415,7 @@
   },
   {
     "file": "client\\js\\engine\\camera2d.js",
-    "line": 29,
+    "line": 28,
     "kind": "method",
     "class": "Camera2D",
     "name": "resize",
@@ -9284,7 +11426,7 @@
   },
   {
     "file": "client\\js\\engine\\camera2d.js",
-    "line": 35,
+    "line": 34,
     "kind": "method",
     "class": "Camera2D",
     "name": "follow",
@@ -9294,7 +11436,7 @@
   },
   {
     "file": "client\\js\\engine\\camera2d.js",
-    "line": 38,
+    "line": 37,
     "kind": "method",
     "class": "Camera2D",
     "name": "update",
@@ -9304,7 +11446,7 @@
   },
   {
     "file": "client\\js\\engine\\camera2d.js",
-    "line": 49,
+    "line": 48,
     "kind": "method",
     "class": "Camera2D",
     "name": "apply",
@@ -9315,7 +11457,7 @@
   },
   {
     "file": "client\\js\\engine\\camera2d.js",
-    "line": 57,
+    "line": 56,
     "kind": "method",
     "class": "Camera2D",
     "name": "_clamp",
@@ -9323,7 +11465,7 @@
   },
   {
     "file": "client\\js\\engine\\camera2d.js",
-    "line": 61,
+    "line": 60,
     "kind": "method",
     "class": "Camera2D",
     "name": "if",
@@ -9333,12 +11475,22 @@
   },
   {
     "file": "client\\js\\engine\\camera2d.js",
-    "line": 67,
+    "line": 66,
     "kind": "method",
     "class": "Camera2D",
     "name": "if",
     "params": [
       "this.worldH > vh"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\camera2d.js",
+    "line": 74,
+    "kind": "method",
+    "class": "Camera2D",
+    "name": "if",
+    "params": [
+      "typeof window !== 'undefined'"
     ]
   },
   {

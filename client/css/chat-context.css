@@ -1,0 +1,45 @@
+/* client/css/chat-context.css */
+#chatCtxMenu{
+  position: fixed;             /* fica acima e fora de overflow do chat */
+  z-index: 9999;
+  min-width: 180px;
+  max-width: 240px;
+  background: rgba(2,6,23,.97);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.45);
+  padding: 6px;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;             /* compacto */
+}
+#chatCtxMenu[hidden]{ display:none; }
+
+#chatCtxMenu .ctx-title{
+  font-weight: 600;
+  color: #e2e8f0;
+  opacity: .9;
+  padding: 4px 6px 6px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#chatCtxMenu button{
+  font-family: inherit;
+  font-size: 12px;
+  text-align: left;
+  padding: 6px 8px;
+  background: rgba(15,23,42,.7);
+  color: #cbd5e1;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+  cursor: pointer;
+}
+#chatCtxMenu button:hover{ background: rgba(30,41,59,.9); }
+#chatCtxMenu button:disabled{
+  opacity: .45;
+  cursor: not-allowed;
+}

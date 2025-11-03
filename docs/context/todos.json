@@ -1,19 +1,37 @@
 [
   {
     "file": "client\\js\\hud\\death-overlay.js",
-    "line": 51,
+    "line": 60,
     "tag": "NOTE",
     "text": "{"
   },
   {
     "file": "client\\js\\hud\\death-overlay.js",
-    "line": 79,
+    "line": 87,
     "tag": "NOTE",
-    "text": "\">Durante a morte, movimento/ataque e interações ficam bloqueados.</div>"
+    "text": "\" data-role=\"note\"></div>"
+  },
+  {
+    "file": "client\\js\\hud\\death-overlay.js",
+    "line": 136,
+    "tag": "NOTE",
+    "text": "\"]', 'hud.death.note', 'Movement and interactions remain blocked while you are dead.');"
+  },
+  {
+    "file": "client\\js\\i18n\\en.js",
+    "line": 33,
+    "tag": "NOTE",
+    "text": "'Movement and interactions remain blocked while you are dead.',"
   },
   {
     "file": "client\\js\\i18n\\pt-BR.js",
-    "line": 194,
+    "line": 33,
+    "tag": "NOTE",
+    "text": "'Durante a morte, movimento e interações ficam bloqueados.',"
+  },
+  {
+    "file": "client\\js\\i18n\\pt-BR.js",
+    "line": 216,
     "tag": "TODO",
     "text": "o seu elenco.',"
   },

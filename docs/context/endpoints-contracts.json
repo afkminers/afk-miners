@@ -119,6 +119,280 @@
   },
   {
     "method": "POST",
+    "path": "/:friendId/accept",
+    "file": "server\\routes\\friends.js",
+    "line": 242,
+    "sample": {
+      "params": {
+        "friendId": 1
+      },
+      "query": {
+        "limit": 1,
+        "before": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_ACCEPT_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_REJECT_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_REMOVE_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_BLOCK_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_UNBLOCK_FAILED' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,friendship }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,friendship }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/:friendId/block",
+    "file": "server\\routes\\friends.js",
+    "line": 316,
+    "sample": {
+      "params": {
+        "friendId": 1
+      },
+      "query": {
+        "limit": 1,
+        "before": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_BLOCK_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_UNBLOCK_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'DM_HISTORY_FAILED' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,friendship }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,messages,nextCursor,unreadCount }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/:friendId/dms",
+    "file": "server\\routes\\friends.js",
+    "line": 372,
+    "sample": {
+      "params": {
+        "friendId": 1
+      },
+      "query": {
+        "limit": 1,
+        "before": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'DM_HISTORY_FAILED' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,messages,nextCursor,unreadCount }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/:friendId/reject",
+    "file": "server\\routes\\friends.js",
+    "line": 275,
+    "sample": {
+      "params": {
+        "friendId": 1
+      },
+      "query": {
+        "limit": 1,
+        "before": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_REJECT_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_REMOVE_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_BLOCK_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_UNBLOCK_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'DM_HISTORY_FAILED' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,friendship }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,messages,nextCursor,unreadCount }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/:friendId/unblock",
+    "file": "server\\routes\\friends.js",
+    "line": 350,
+    "sample": {
+      "params": {
+        "friendId": 1
+      },
+      "query": {
+        "limit": 1,
+        "before": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_UNBLOCK_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'DM_HISTORY_FAILED' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,messages,nextCursor,unreadCount }"
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/:friendId",
+    "file": "server\\routes\\friends.js",
+    "line": 297,
+    "sample": {
+      "params": {
+        "friendId": 1
+      },
+      "query": {
+        "limit": 1,
+        "before": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_REMOVE_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_BLOCK_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_UNBLOCK_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'DM_HISTORY_FAILED' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,friendship }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,messages,nextCursor,unreadCount }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
     "path": "/:heroId/deposit",
     "file": "server\\routes\\backpack.js",
     "line": 30,
@@ -255,7 +529,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 693,
+    "line": 717,
     "sample": {
       "params": {
         "key": "value"
@@ -289,7 +563,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 668,
+    "line": 692,
     "sample": {
       "params": {
         "key": "value"
@@ -331,7 +605,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 680,
+    "line": 704,
     "sample": {
       "params": {
         "key": "value"
@@ -369,7 +643,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 657,
+    "line": 681,
     "sample": {
       "query": {
         "map": "value"
@@ -412,7 +686,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 549,
+    "line": 573,
     "sample": {
       "query": {
         "map": "value"
@@ -457,7 +731,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 703,
+    "line": 727,
     "sample": {
       "query": {
         "map": "value"
@@ -480,7 +754,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 560,
+    "line": 584,
     "sample": {
       "query": {
         "map": "value"
@@ -521,7 +795,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 582,
+    "line": 606,
     "sample": {
       "query": {
         "map": "value"
@@ -568,7 +842,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1462,
+    "line": 1523,
     "sample": {
       "query": {
         "limit": 1
@@ -599,7 +873,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1485,
+    "line": 1546,
     "sample": {},
     "errors": [
       {
@@ -657,7 +931,7 @@
     "method": "GET",
     "path": "/api/csrf",
     "file": "server\\index.js",
-    "line": 213,
+    "line": 219,
     "sample": {},
     "errors": []
   },
@@ -1232,7 +1506,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 756,
+    "line": 780,
     "sample": {},
     "errors": []
   },
@@ -1252,6 +1526,57 @@
       {
         "status": 200,
         "body": "{ok:true,items:rows }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/",
+    "file": "server\\routes\\friends.js",
+    "line": 178,
+    "sample": {},
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_LIST_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_REQUEST_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_ACCEPT_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_REJECT_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_REMOVE_FAILED' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,friends }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,friendship }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,friendship }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
       }
     ]
   },
@@ -1485,7 +1810,7 @@
     "method": "GET",
     "path": "/leaderboard",
     "file": "server\\index.js",
-    "line": 752,
+    "line": 776,
     "sample": {},
     "errors": []
   },
@@ -1493,7 +1818,7 @@
     "method": "GET",
     "path": "/list",
     "file": "server\\starter\\routes.js",
-    "line": 42,
+    "line": 43,
     "sample": {
       "body": {
         "const playerId = req.user.id;\n\n    try {\n      const { heroKey": 1
@@ -1885,7 +2210,7 @@
     "method": "GET",
     "path": "/overview",
     "file": "server\\index.js",
-    "line": 740,
+    "line": 764,
     "sample": {},
     "errors": []
   },
@@ -2429,6 +2754,57 @@
   },
   {
     "method": "POST",
+    "path": "/request",
+    "file": "server\\routes\\friends.js",
+    "line": 200,
+    "sample": {},
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_REQUEST_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_ACCEPT_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_REJECT_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_REMOVE_FAILED' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'FRIEND_BLOCK_FAILED' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,friendship }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,friendship }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true }"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,friendship }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
     "path": "/revive",
     "file": "server\\routes\\revive.js",
     "line": 2,
@@ -2497,7 +2873,7 @@
     "method": "GET",
     "path": "/roadmap",
     "file": "server\\index.js",
-    "line": 744,
+    "line": 768,
     "sample": {},
     "errors": []
   },
@@ -2505,7 +2881,7 @@
     "method": "POST",
     "path": "/select",
     "file": "server\\starter\\routes.js",
-    "line": 104,
+    "line": 105,
     "sample": {
       "body": {
         "const playerId = req.user.id;\n\n    try {\n      const { heroKey": 1
@@ -2709,7 +3085,7 @@
     "method": "GET",
     "path": "/status",
     "file": "server\\starter\\routes.js",
-    "line": 86,
+    "line": 87,
     "sample": {
       "body": {
         "const playerId = req.user.id;\n\n    try {\n      const { heroKey": 1
@@ -2744,7 +3120,7 @@
     "method": "GET",
     "path": "/support",
     "file": "server\\index.js",
-    "line": 748,
+    "line": 772,
     "sample": {},
     "errors": []
   },

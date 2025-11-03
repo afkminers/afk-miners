@@ -4,7 +4,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 2671
+        "index": 2783
       }
     ],
     "defaults": []
@@ -14,7 +14,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 2848
+        "index": 2960
       }
     ],
     "defaults": []
@@ -24,7 +24,7 @@
     "occurrences": [
       {
         "file": "server\\combat\\ai-mobs.js",
-        "index": 2783
+        "index": 2895
       }
     ],
     "defaults": []
@@ -56,11 +56,35 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 5930
+        "index": 6161
       }
     ],
     "defaults": [
       "300000"
+    ]
+  },
+  {
+    "key": "BATTLE_COMBAT_TTL_MS",
+    "occurrences": [
+      {
+        "file": "server\\combat\\battle-state.js",
+        "index": 423
+      }
+    ],
+    "defaults": [
+      "15000"
+    ]
+  },
+  {
+    "key": "BATTLE_SAFE_GRACE_MS",
+    "occurrences": [
+      {
+        "file": "server\\combat\\battle-state.js",
+        "index": 512
+      }
+    ],
+    "defaults": [
+      "5000"
     ]
   },
   {
@@ -122,7 +146,7 @@
       },
       {
         "file": "server\\combat\\service.js",
-        "index": 14258
+        "index": 15302
       },
       {
         "file": "server\\combat\\routes.js",
@@ -156,7 +180,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2524
+        "index": 2755
       }
     ],
     "defaults": [
@@ -178,7 +202,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 25855
+        "index": 26843
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -224,7 +248,7 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 2164
+        "index": 2107
       }
     ],
     "defaults": [
@@ -236,11 +260,11 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 45920
+        "index": 44782
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 49831
+        "index": 48649
       }
     ],
     "defaults": []
@@ -250,11 +274,11 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 45753
+        "index": 44619
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 49440
+        "index": 48265
       }
     ],
     "defaults": []
@@ -264,15 +288,15 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 19655
+        "index": 19142
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 21261
+        "index": 20708
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 39918
+        "index": 38942
       },
       {
         "file": "server\\models\\db.js",
@@ -300,6 +324,16 @@
     "defaults": [
       "0"
     ]
+  },
+  {
+    "key": "DB_MIGRATE_DEBUG",
+    "occurrences": [
+      {
+        "file": "server\\models\\migrate.js",
+        "index": 187
+      }
+    ],
+    "defaults": []
   },
   {
     "key": "DEBUG_CATALOG_CACHE",
@@ -330,7 +364,7 @@
     "occurrences": [
       {
         "file": "server\\services\\httpCache.js",
-        "index": 163
+        "index": 158
       }
     ],
     "defaults": []
@@ -344,6 +378,42 @@
       }
     ],
     "defaults": []
+  },
+  {
+    "key": "DM_NUDGE_COOLDOWN_MS",
+    "occurrences": [
+      {
+        "file": "server\\ws\\direct-messages.js",
+        "index": 219
+      }
+    ],
+    "defaults": [
+      "15_000"
+    ]
+  },
+  {
+    "key": "DM_NUDGE_RATE_LIMIT",
+    "occurrences": [
+      {
+        "file": "server\\ws\\direct-messages.js",
+        "index": 380
+      }
+    ],
+    "defaults": [
+      "6"
+    ]
+  },
+  {
+    "key": "DM_NUDGE_RATE_WINDOW_MS",
+    "occurrences": [
+      {
+        "file": "server\\ws\\direct-messages.js",
+        "index": 300
+      }
+    ],
+    "defaults": [
+      "60_000"
+    ]
   },
   {
     "key": "ENDPOINT_METRICS_INTERVAL_MS",
@@ -384,7 +454,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 3770
+        "index": 4001
       }
     ],
     "defaults": [
@@ -396,7 +466,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 33562
+        "index": 34916
       }
     ],
     "defaults": []
@@ -406,7 +476,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 5795
+        "index": 6026
       }
     ],
     "defaults": [
@@ -418,7 +488,7 @@
     "occurrences": [
       {
         "file": "server\\middleware\\body-limit.js",
-        "index": 104
+        "index": 101
       }
     ],
     "defaults": [
@@ -430,7 +500,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 25762
+        "index": 26750
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -505,7 +575,7 @@
     "occurrences": [
       {
         "file": "server\\services\\loot.js",
-        "index": 393
+        "index": 384
       }
     ],
     "defaults": [
@@ -517,7 +587,7 @@
     "occurrences": [
       {
         "file": "server\\services\\loot.js",
-        "index": 309
+        "index": 301
       }
     ],
     "defaults": [
@@ -817,11 +887,11 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 5444
+        "index": 5675
       },
       {
         "file": "server\\skills\\routes.js",
-        "index": 4524
+        "index": 4378
       },
       {
         "file": "server\\routes\\farm.js",
@@ -848,11 +918,11 @@
     "occurrences": [
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 19784
+        "index": 19267
       },
       {
         "file": "server\\scripts\\gen-context.js",
-        "index": 19812
+        "index": 19295
       }
     ],
     "defaults": []
@@ -876,7 +946,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 5503
+        "index": 5734
       }
     ],
     "defaults": [
@@ -884,11 +954,47 @@
     ]
   },
   {
+    "key": "PRESENCE_GRACE_MS",
+    "occurrences": [
+      {
+        "file": "server\\ws\\presence.js",
+        "index": 146
+      }
+    ],
+    "defaults": [
+      "5000"
+    ]
+  },
+  {
+    "key": "PRESENCE_TTL_SECONDS",
+    "occurrences": [
+      {
+        "file": "server\\ws\\presence.js",
+        "index": 55
+      }
+    ],
+    "defaults": [
+      "60"
+    ]
+  },
+  {
+    "key": "PRESENCE_UPDATE_INTERVAL_MS",
+    "occurrences": [
+      {
+        "file": "server\\ws\\presence.js",
+        "index": 237
+      }
+    ],
+    "defaults": [
+      "30000"
+    ]
+  },
+  {
     "key": "REDIS_URL",
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 25712
+        "index": 26700
       }
     ],
     "defaults": [
@@ -948,7 +1054,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 25820
+        "index": 26808
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -965,7 +1071,47 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 6069
+        "index": 6300
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "START_MAP_KEY",
+    "occurrences": [
+      {
+        "file": "server\\services\\spawnPoint.js",
+        "index": 81
+      }
+    ],
+    "defaults": [
+      "house"
+    ]
+  },
+  {
+    "key": "START_POS_X",
+    "occurrences": [
+      {
+        "file": "server\\services\\spawnPoint.js",
+        "index": 147
+      },
+      {
+        "file": "server\\services\\spawnPoint.js",
+        "index": 182
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "START_POS_Y",
+    "occurrences": [
+      {
+        "file": "server\\services\\spawnPoint.js",
+        "index": 242
+      },
+      {
+        "file": "server\\services\\spawnPoint.js",
+        "index": 277
       }
     ],
     "defaults": []
@@ -975,7 +1121,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2758
+        "index": 2989
       }
     ],
     "defaults": [
@@ -987,7 +1133,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 2853
+        "index": 3084
       }
     ],
     "defaults": []
@@ -997,7 +1143,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 5687
+        "index": 5918
       }
     ],
     "defaults": [

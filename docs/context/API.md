@@ -8,6 +8,8 @@
 - `APP_ORIGIN`
 - `APP_ORIGINS` (defaults: process.env.APP_ORIGIN)
 - `ASSETS_CACHE_TTL_MS` (defaults: 300000)
+- `BATTLE_COMBAT_TTL_MS` (defaults: 15000)
+- `BATTLE_SAFE_GRACE_MS` (defaults: 5000)
 - `CATALOG_CACHE_ENABLED`
 - `CATALOG_CACHE_REFRESH_SEC` (defaults: 120)
 - `CLICK_PICK_RADIUS_PX` (defaults: 192)
@@ -25,10 +27,14 @@
 - `CTX_SYMBOLS`
 - `DATABASE_URL`
 - `DB_IDLE_CLOSE_MINUTES` (defaults: 0)
+- `DB_MIGRATE_DEBUG`
 - `DEBUG_CATALOG_CACHE`
 - `DEBUG_COMBAT`
 - `DEBUG_HTTP_CACHE`
 - `DEBUG_LOOT_CACHE`
+- `DM_NUDGE_COOLDOWN_MS` (defaults: 15_000)
+- `DM_NUDGE_RATE_LIMIT` (defaults: 6)
+- `DM_NUDGE_RATE_WINDOW_MS` (defaults: 60_000)
 - `ENDPOINT_METRICS_INTERVAL_MS` (defaults: 60000)
 - `ENDPOINT_METRICS_PROD`
 - `ENDPOINT_METRICS_TOP_N` (defaults: 10)
@@ -72,6 +78,9 @@
 - `PG_DUMP_PATH`
 - `PGSSLMODE`
 - `PORT` (defaults: 3000)
+- `PRESENCE_GRACE_MS` (defaults: 5000)
+- `PRESENCE_TTL_SECONDS` (defaults: 60)
+- `PRESENCE_UPDATE_INTERVAL_MS` (defaults: 30000)
 - `REDIS_URL` (defaults: null)
 - `RESPAWN_DEBUG` (defaults: )
 - `RESPAWN_RETRY_DELAY_MS` (defaults: 1000)
@@ -79,17 +88,79 @@
 - `RESPAWN_TILE_SEARCH_RADIUS` (defaults: 6)
 - `SESSION_COOKIE_NAME` (defaults: process.env.COOKIE_NAME)
 - `SKIP_MIGRATIONS_ON_BOOT`
+- `START_MAP_KEY` (defaults: house)
+- `START_POS_X`
+- `START_POS_Y`
 - `STEP_LAG_TOLERANCE_MS` (defaults: 90)
 - `STEP_MIN_RATIO`
 - `SYNC_SPAWNS_INTERVAL_MS` (defaults: 300000)
 
 ## Endpoints
 
+### DELETE /:friendId
+
+Arquivo: `server\routes\friends.js:297`
+
+**Payloads (exemplos inferidos):**
+- params:
+```json
+{
+  "friendId": 1
+}
+```
+- query:
+```json
+{
+  "limit": 1,
+  "before": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{
+  "ok": true
+}
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:'FRIEND_REMOVE_FAILED' }
+- `HTTP 500` → {error:'FRIEND_BLOCK_FAILED' }
+- `HTTP 500` → {error:'FRIEND_UNBLOCK_FAILED' }
+- `HTTP 500` → {error:'DM_HISTORY_FAILED' }
+
 ### GET /
 
-Arquivo: `server\index.js:756`
+Arquivo: `server\index.js:780`
 
 _Sem payload inferido_
+
+### GET /:friendId/dms
+
+Arquivo: `server\routes\friends.js:372`
+
+**Payloads (exemplos inferidos):**
+- params:
+```json
+{
+  "friendId": 1
+}
+```
+- query:
+```json
+{
+  "limit": 1,
+  "before": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,messages,nextCursor,unreadCount }
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:'DM_HISTORY_FAILED' }
 
 ### GET /:heroId
 
@@ -205,7 +276,7 @@ Arquivo: `server\combat\routes.js:138`
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:693`
+Arquivo: `server\index.js:717`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -233,7 +304,7 @@ Arquivo: `server\index.js:693`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:668`
+Arquivo: `server\index.js:692`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -263,7 +334,7 @@ Arquivo: `server\index.js:668`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:680`
+Arquivo: `server\index.js:704`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -292,7 +363,7 @@ Arquivo: `server\index.js:680`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:657`
+Arquivo: `server\index.js:681`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -317,7 +388,7 @@ Arquivo: `server\index.js:657`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:549`
+Arquivo: `server\index.js:573`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -339,7 +410,7 @@ Arquivo: `server\index.js:549`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:560`
+Arquivo: `server\index.js:584`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -360,7 +431,7 @@ Arquivo: `server\index.js:560`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:582`
+Arquivo: `server\index.js:606`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -386,7 +457,7 @@ Arquivo: `server\index.js:582`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1462`
+Arquivo: `server\index.js:1523`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -434,7 +505,7 @@ Arquivo: `server\routes\combat_nearest.js:30`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:213`
+Arquivo: `server\index.js:219`
 
 _Sem payload inferido_
 
@@ -626,13 +697,13 @@ _Sem payload inferido_
 
 ### GET /leaderboard
 
-Arquivo: `server\index.js:752`
+Arquivo: `server\index.js:776`
 
 _Sem payload inferido_
 
 ### GET /list
 
-Arquivo: `server\starter\routes.js:42`
+Arquivo: `server\starter\routes.js:43`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -729,7 +800,7 @@ Arquivo: `server\skills\routes.js:94`
 
 ### GET /overview
 
-Arquivo: `server\index.js:740`
+Arquivo: `server\index.js:764`
 
 _Sem payload inferido_
 
@@ -823,7 +894,7 @@ Arquivo: `server\routes\player.old.js:12`
 
 ### GET /roadmap
 
-Arquivo: `server\index.js:744`
+Arquivo: `server\index.js:768`
 
 _Sem payload inferido_
 
@@ -883,7 +954,7 @@ Arquivo: `server\routes\farm.js:71`
 
 ### GET /status
 
-Arquivo: `server\starter\routes.js:86`
+Arquivo: `server\starter\routes.js:87`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -906,7 +977,7 @@ Arquivo: `server\starter\routes.js:86`
 
 ### GET /support
 
-Arquivo: `server\index.js:748`
+Arquivo: `server\index.js:772`
 
 _Sem payload inferido_
 
@@ -946,6 +1017,129 @@ Arquivo: `server\gacha\routes.js:179`
 - `HTTP 400` → {error:r.error,cost:SUMMON_COST_COINS,pulls }
 - `HTTP 500` → {error:'Falha ao girar gacha' }
 
+### POST /:friendId/accept
+
+Arquivo: `server\routes\friends.js:242`
+
+**Payloads (exemplos inferidos):**
+- params:
+```json
+{
+  "friendId": 1
+}
+```
+- query:
+```json
+{
+  "limit": 1,
+  "before": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,friendship }
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:'FRIEND_ACCEPT_FAILED' }
+- `HTTP 500` → {error:'FRIEND_REJECT_FAILED' }
+- `HTTP 500` → {error:'FRIEND_REMOVE_FAILED' }
+- `HTTP 500` → {error:'FRIEND_BLOCK_FAILED' }
+- `HTTP 500` → {error:'FRIEND_UNBLOCK_FAILED' }
+
+### POST /:friendId/block
+
+Arquivo: `server\routes\friends.js:316`
+
+**Payloads (exemplos inferidos):**
+- params:
+```json
+{
+  "friendId": 1
+}
+```
+- query:
+```json
+{
+  "limit": 1,
+  "before": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,friendship }
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:'FRIEND_BLOCK_FAILED' }
+- `HTTP 500` → {error:'FRIEND_UNBLOCK_FAILED' }
+- `HTTP 500` → {error:'DM_HISTORY_FAILED' }
+
+### POST /:friendId/reject
+
+Arquivo: `server\routes\friends.js:275`
+
+**Payloads (exemplos inferidos):**
+- params:
+```json
+{
+  "friendId": 1
+}
+```
+- query:
+```json
+{
+  "limit": 1,
+  "before": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{
+  "ok": true
+}
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:'FRIEND_REJECT_FAILED' }
+- `HTTP 500` → {error:'FRIEND_REMOVE_FAILED' }
+- `HTTP 500` → {error:'FRIEND_BLOCK_FAILED' }
+- `HTTP 500` → {error:'FRIEND_UNBLOCK_FAILED' }
+- `HTTP 500` → {error:'DM_HISTORY_FAILED' }
+
+### POST /:friendId/unblock
+
+Arquivo: `server\routes\friends.js:350`
+
+**Payloads (exemplos inferidos):**
+- params:
+```json
+{
+  "friendId": 1
+}
+```
+- query:
+```json
+{
+  "limit": 1,
+  "before": "value"
+}
+```
+
+**Resposta de sucesso (amostra):**
+```json
+{
+  "ok": true
+}
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:'FRIEND_UNBLOCK_FAILED' }
+- `HTTP 500` → {error:'DM_HISTORY_FAILED' }
+
 ### POST /:heroId/deposit
 
 Arquivo: `server\routes\backpack.js:30`
@@ -969,7 +1163,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:703`
+Arquivo: `server\index.js:727`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -989,7 +1183,7 @@ Arquivo: `server\index.js:703`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1485`
+Arquivo: `server\index.js:1546`
 
 _Sem payload inferido_
 
@@ -1546,6 +1740,24 @@ _Sem payload inferido_
 - `HTTP 404` → {error:'Jogador não encontrado' }
 - `HTTP 500` → {error:'Falha ao obter perfil' }
 
+### POST /request
+
+Arquivo: `server\routes\friends.js:200`
+
+_Sem payload inferido_
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,friendship }
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:'FRIEND_REQUEST_FAILED' }
+- `HTTP 500` → {error:'FRIEND_ACCEPT_FAILED' }
+- `HTTP 500` → {error:'FRIEND_REJECT_FAILED' }
+- `HTTP 500` → {error:'FRIEND_REMOVE_FAILED' }
+- `HTTP 500` → {error:'FRIEND_BLOCK_FAILED' }
+
 ### POST /revive
 
 Arquivo: `server\routes\revive.js:2`
@@ -1570,7 +1782,7 @@ Arquivo: `server\routes\revive.js:2`
 
 ### POST /select
 
-Arquivo: `server\starter\routes.js:104`
+Arquivo: `server\starter\routes.js:105`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1603,8 +1815,20 @@ _Sem payload inferido_
 
 ## Tabela sintética de erros por rota
 
+- **DELETE /:friendId**
+  - HTTP 500: {error:'FRIEND_REMOVE_FAILED' }
+  - HTTP 500: {error:'FRIEND_BLOCK_FAILED' }
+  - HTTP 500: {error:'FRIEND_UNBLOCK_FAILED' }
+  - HTTP 500: {error:'DM_HISTORY_FAILED' }
 - **GET /**
   - HTTP 500: {ok:false,error:'inventory-failed',detail:String(e.message || e) }
+  - HTTP 500: {error:'FRIEND_LIST_FAILED' }
+  - HTTP 500: {error:'FRIEND_REQUEST_FAILED' }
+  - HTTP 500: {error:'FRIEND_ACCEPT_FAILED' }
+  - HTTP 500: {error:'FRIEND_REJECT_FAILED' }
+  - HTTP 500: {error:'FRIEND_REMOVE_FAILED' }
+- **GET /:friendId/dms**
+  - HTTP 500: {error:'DM_HISTORY_FAILED' }
 - **GET /:heroId**
   - HTTP 500: {ok:false,error:'equipment-failed' }
   - HTTP 400: {ok:false,error:'missing-params' }
@@ -1817,6 +2041,25 @@ _Sem payload inferido_
   - HTTP 400: {error:result.error,cost:SUMMON_COST_COINS }
   - HTTP 400: {error:r.error,cost:SUMMON_COST_COINS,pulls }
   - HTTP 500: {error:'Falha ao girar gacha' }
+- **POST /:friendId/accept**
+  - HTTP 500: {error:'FRIEND_ACCEPT_FAILED' }
+  - HTTP 500: {error:'FRIEND_REJECT_FAILED' }
+  - HTTP 500: {error:'FRIEND_REMOVE_FAILED' }
+  - HTTP 500: {error:'FRIEND_BLOCK_FAILED' }
+  - HTTP 500: {error:'FRIEND_UNBLOCK_FAILED' }
+- **POST /:friendId/block**
+  - HTTP 500: {error:'FRIEND_BLOCK_FAILED' }
+  - HTTP 500: {error:'FRIEND_UNBLOCK_FAILED' }
+  - HTTP 500: {error:'DM_HISTORY_FAILED' }
+- **POST /:friendId/reject**
+  - HTTP 500: {error:'FRIEND_REJECT_FAILED' }
+  - HTTP 500: {error:'FRIEND_REMOVE_FAILED' }
+  - HTTP 500: {error:'FRIEND_BLOCK_FAILED' }
+  - HTTP 500: {error:'FRIEND_UNBLOCK_FAILED' }
+  - HTTP 500: {error:'DM_HISTORY_FAILED' }
+- **POST /:friendId/unblock**
+  - HTTP 500: {error:'FRIEND_UNBLOCK_FAILED' }
+  - HTTP 500: {error:'DM_HISTORY_FAILED' }
 - **POST /:heroId/deposit**
   - HTTP 400: {error:'bad-args' }
   - HTTP 500: {error:'backpack-deposit-failed' }
@@ -1985,6 +2228,12 @@ _Sem payload inferido_
   - HTTP 500: {error:'Falha ao autenticar' }
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
+- **POST /request**
+  - HTTP 500: {error:'FRIEND_REQUEST_FAILED' }
+  - HTTP 500: {error:'FRIEND_ACCEPT_FAILED' }
+  - HTTP 500: {error:'FRIEND_REJECT_FAILED' }
+  - HTTP 500: {error:'FRIEND_REMOVE_FAILED' }
+  - HTTP 500: {error:'FRIEND_BLOCK_FAILED' }
 - **POST /revive**
   - HTTP 400: {ok:false,error:'missing-hero-id' }
   - HTTP 404: {ok:false,error:'hero-not-found' }

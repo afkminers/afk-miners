@@ -62,11 +62,13 @@
       "onMove",
       "onUp",
       "pickNextTipIndex",
+      "safeNavigate",
       "sendChat",
       "setLoadingProgress",
       "setRootVar",
       "setScope",
       "swapLoadingTip",
+      "translate",
       "updateTopbarHeight"
     ]
   },
@@ -261,10 +263,18 @@
   {
     "file": "client\\js\\engine\\input.js",
     "symbols": [
-      "_edgeDown",
+      "_ensureStepState",
+      "_onKeyDown",
       "_onKeyUp",
       "clamp1",
       "dirFromKeys"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\movement_contract.js",
+    "symbols": [
+      "TILE",
+      "resolveBlocked"
     ]
   },
   {
@@ -346,15 +356,33 @@
     ]
   },
   {
+    "file": "client\\js\\hud\\battle-status.js",
+    "symbols": [
+      "allowExitFor",
+      "applyTexts",
+      "beforeUnload",
+      "ensureDom",
+      "getWarningConfig",
+      "hideExitWarning",
+      "normalizeMode",
+      "onKeydown",
+      "setBattle",
+      "setBodyFlag",
+      "setExitLock",
+      "showExitWarning",
+      "translate",
+      "updateDom"
+    ]
+  },
+  {
     "file": "client\\js\\hud\\death-overlay.js",
     "symbols": [
+      "applyTexts",
       "ensureDom",
       "hideOverlay",
       "onClickRevive",
       "showOverlay",
-      "startTimer",
-      "stopTimer",
-      "updateCountdown"
+      "translate"
     ]
   },
   {
@@ -562,6 +590,7 @@
       "msgMatchesCurrentMap",
       "normKey",
       "normalizeApiJson",
+      "normalizeHeroId",
       "normalizeLegacyMobPos",
       "normalizeTilesetPath",
       "pickElByIds",
@@ -569,6 +598,7 @@
       "pickFreeSpriteForSpawn",
       "removeMonsterFromTile",
       "resize",
+      "resolveHeroId",
       "resolveMobName",
       "resolvePlayerSprite",
       "resolveServerMoveSnapshot",
@@ -701,6 +731,107 @@
     ]
   },
   {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "symbols": [
+      "animateNudge",
+      "appendMessage",
+      "clearLocalCooldown",
+      "closeConversation",
+      "createConversation",
+      "createError",
+      "createPanelElement",
+      "createPendingNudge",
+      "createTabElement",
+      "emitUnread",
+      "ensureCurrentUser",
+      "ensureHistory",
+      "ensureMuteWatcher",
+      "ensureNudgeAudio",
+      "fetchHistory",
+      "findMessage",
+      "friendIdFromScope",
+      "getLocalCooldownUntil",
+      "getNudgeMessage",
+      "handleAckEvent",
+      "handleErrorEvent",
+      "handleNudgeEvent",
+      "handleReadEvent",
+      "handleRecvEvent",
+      "handleSend",
+      "handleSendEvent",
+      "isDmScope",
+      "markRead",
+      "nowIso",
+      "playNudgeSound",
+      "readMutePreference",
+      "removeElement",
+      "renderBadge",
+      "renderMessage",
+      "resolveUserId",
+      "scheduleNudgeAvailabilityCheck",
+      "scopeForFriend",
+      "scrollToBottom",
+      "setActiveScope",
+      "setLocalCooldown",
+      "settlePendingNudge",
+      "showNudgeFeedback"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\emoji.js",
+    "symbols": [
+      "appendEmojiTokens",
+      "appendTextNode",
+      "renderRichText",
+      "resolveEmoji"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\friends-hud.js",
+    "symbols": [
+      "applyFriend",
+      "bindEvents",
+      "bindPresenceEvents",
+      "buildFriendRow",
+      "closeContextMenu",
+      "closePanel",
+      "ensureButtonInTopbar",
+      "ensureContextMenu",
+      "ensureCurrentUser",
+      "escapeHtml",
+      "formatRelative",
+      "handleAction",
+      "handleContextMenu",
+      "handleContextMenuClick",
+      "handleKeyboard",
+      "handlePanelClick",
+      "handlePresenceEvent",
+      "highlightFriendRow",
+      "initFriendHud",
+      "loadFriends",
+      "mapError",
+      "mapNudgeError",
+      "normalizeFriend",
+      "openContextMenuFor",
+      "openPanel",
+      "parseTime",
+      "removeFriend",
+      "renderSection",
+      "renderSections",
+      "setFormLoading",
+      "setLoadingState",
+      "setRowBusy",
+      "setupDom",
+      "showFeedback",
+      "startAutoRefresh",
+      "stopAutoRefresh",
+      "togglePanel",
+      "triggerNudge",
+      "updateButtonBadge",
+      "updatePresenceFor"
+    ]
+  },
+  {
     "file": "client\\js\\ui\\hero-floating-damage.js",
     "symbols": [
       "activeHeroId",
@@ -722,6 +853,7 @@
       "fetchHeroVitals",
       "getActiveHeroId",
       "getMe",
+      "normalizeHeroId",
       "pct",
       "renderHudBars",
       "scheduleNextPoll",
@@ -903,6 +1035,30 @@
     ]
   },
   {
+    "file": "server\\combat\\battle-state.js",
+    "symbols": [
+      "addHeroToPlayer",
+      "cancelOfflineHold",
+      "checkExpiry",
+      "cooldown",
+      "deactivate",
+      "emit",
+      "forceLeave",
+      "hasActiveBattleForPlayer",
+      "holdPlayerOffline",
+      "isHeroInBattle",
+      "normalizeId",
+      "notifyClient",
+      "now",
+      "onStateChange",
+      "releaseOfflineHoldIfIdle",
+      "removeHeroFromPlayer",
+      "resolvePlayerId",
+      "scheduleCheck",
+      "touchHero"
+    ]
+  },
+  {
     "file": "server\\combat\\geom.js",
     "symbols": [
       "chebyPx",
@@ -1067,12 +1223,14 @@
       "loadMap",
       "loadMonsters",
       "loadSprites",
+      "parseLeashPx",
       "read",
       "resolveItemsIndex",
       "resolveMapFile",
       "resolveMonstersIndex",
       "resolveSpritesBase",
-      "sha1"
+      "sha1",
+      "toNumber"
     ]
   },
   {
@@ -1190,6 +1348,8 @@
     "file": "server\\models\\migrate.js",
     "symbols": [
       "TEXT",
+      "ensureSocialSchema",
+      "execSocialQuery",
       "migrate"
     ]
   },
@@ -1245,6 +1405,22 @@
     "symbols": [
       "computeStage",
       "toMs"
+    ]
+  },
+  {
+    "file": "server\\routes\\friends.js",
+    "symbols": [
+      "buildFriendPayload",
+      "fetchUnreadMap",
+      "findFriendship",
+      "findUserById",
+      "findUserByUsername",
+      "loadFriendRow",
+      "loadFriendRows",
+      "normalizeId",
+      "resolveFriendId",
+      "sendError",
+      "toIso"
     ]
   },
   {
@@ -1363,6 +1539,24 @@
     ]
   },
   {
+    "file": "server\\services\\direct-messages.js",
+    "symbols": [
+      "canonicalPair",
+      "countUnreadForPair",
+      "ensureCanMessage",
+      "fetchFriendship",
+      "fetchMessages",
+      "insertMessage",
+      "isBlockedRow",
+      "listUnreadSummary",
+      "mapRow",
+      "markDelivered",
+      "markRead",
+      "normalizeId",
+      "sanitizeBody"
+    ]
+  },
+  {
     "file": "server\\services\\heroProgress.js",
     "symbols": [
       "applyLevelUp",
@@ -1421,6 +1615,18 @@
       "getMapLoot",
       "getStats",
       "invalidateMap"
+    ]
+  },
+  {
+    "file": "server\\services\\spawnPoint.js",
+    "symbols": [
+      "fetchStartRow",
+      "getHeroRespawnPoint",
+      "getStartPoint",
+      "normalizePoint",
+      "setHeroRespawnPoint",
+      "toInt",
+      "upsertPlayerLastPos"
     ]
   },
   {
@@ -1488,16 +1694,38 @@
       "attach",
       "broadcast",
       "broadcastToMap",
+      "forEachPlayerSocket",
       "isOpen",
       "joinMapSocket",
+      "movePlayerToMap",
       "moveSocketToMap",
-      "roomOf"
+      "resolveSocketPlayerId",
+      "roomOf",
+      "sendToPlayer"
     ]
   },
   {
     "file": "server\\ws\\chat-handler.js",
     "symbols": [
       "createChatPayload"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "symbols": [
+      "acquireRateBucket",
+      "checkPairCooldown",
+      "commitRateBucket",
+      "handleAck",
+      "handleMessage",
+      "handleNudge",
+      "handleRead",
+      "handleSend",
+      "mapMessage",
+      "markPairCooldown",
+      "pairKey",
+      "resolveUserId",
+      "send"
     ]
   },
   {
@@ -1519,6 +1747,28 @@
     "file": "server\\ws\\origins.js",
     "symbols": [
       "isOriginAllowed"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "symbols": [
+      "attachRedis",
+      "broadcastToFriends",
+      "ensureSweepTimer",
+      "getPresenceSnapshot",
+      "handlePresenceMessage",
+      "isSocketOpen",
+      "loadFriendSet",
+      "markOffline",
+      "markOnline",
+      "onAuthenticated",
+      "onDisconnect",
+      "onHeartbeat",
+      "publishEvent",
+      "refreshPresence",
+      "resolveUserId",
+      "sendInitialSnapshot",
+      "stopSweepTimer"
     ]
   },
   {
