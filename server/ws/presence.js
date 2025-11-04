@@ -275,9 +275,30 @@ function broadcastToFriends(payload) {
   wssRef.clients.forEach((sock) => {
     if (!isSocketOpen(sock)) return;
     if (!sock._friends || !sock._friends.has(payload.userId)) return;
-    try { sock.send(message); }
-    catch (err) { console.warn('[presence] send fail', err?.message); }
+    try {
+      sock.send(message);
+    } catch (err) {
+      console.warn('[presence] send fail', err?.message);
+    }
   });
+}
+
+// Envia para os amigos o snapshot "visível" (online/status/activity/lastSeenAt)
+async function broadcastPresenceUpdate(userId) {
+  try {
+    const id = String(userId);
+    const snapMap = await getPresenceSnapshot([id]);
+    const presence =
+      snapMap.get(id) || { online: false, lastSeenAt: null, status: 'OFFLINE', activity: null };
+    broadcastToFriends({
+      type: 'presence:update',
+      userId: id,
+      presence,
+      lastSeen: presence.lastSeenAt || Date.now(),
+    });
+  } catch (err) {
+    console.warn('[presence] broadcastPresenceUpdate failed', err?.message);
+  }
 }
 
 async function onAuthenticated(ws) {
@@ -378,7 +399,10 @@ async function markOnline(userId, { ts } = {}) {
   }
 
   try {
-    const previous = await redisPublisher.set(KEY_PREFIX + userId, String(now), { EX: TTL_SECONDS, GET: true });
+    const previous = await redisPublisher.set(KEY_PREFIX + userId, String(now), {
+      EX: TTL_SECONDS,
+      GET: true,
+    });
     if (!wasOnline && !previous) {
       await publishEvent('online', userId, now, { lastSeen: now });
     } else if (!wasOnline && previous) {
@@ -431,7 +455,10 @@ async function markOffline(userId, { reason, ts } = {}) {
     }
   }
 
-  await publishEvent('offline', userId, state.lastRefreshAt, { reason, lastSeen: state.lastRefreshAt });
+  await publishEvent('offline', userId, state.lastRefreshAt, {
+    reason,
+    lastSeen: state.lastRefreshAt,
+  });
   localStates.delete(userId);
 }
 
@@ -462,4 +489,5 @@ module.exports = {
   onDisconnect,
   getPresenceSnapshot,
   stopSweepTimer,
+  broadcastPresenceUpdate,
 };

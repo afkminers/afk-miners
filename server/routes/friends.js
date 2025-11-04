@@ -151,9 +151,16 @@ function buildFriendPayload(row, { currentUserId, presenceMap, unreadMap }) {
   if (!row) return null;
   const me = String(currentUserId);
   const friendId = resolveFriendId(row, me);
-  const presence = presenceMap?.get(friendId) || { online: false, lastSeenAt: null };
-  const unread = unreadMap?.get(friendId) || 0;
 
+  const presence =
+    presenceMap?.get(friendId) || {
+      online: false,
+      lastSeenAt: null,
+      status: 'OFFLINE',
+      activity: null,
+    };
+
+  const unread = unreadMap?.get(friendId) || 0;
   const lastSeenAt = presence.lastSeenAt ? toIso(presence.lastSeenAt) : null;
 
   return {
@@ -168,10 +175,16 @@ function buildFriendPayload(row, { currentUserId, presenceMap, unreadMap }) {
         : null,
     createdAt: toIso(row.created_at),
     updatedAt: toIso(row.updated_at),
+
+    // presença antiga (já usada pelo client)
     online: !!presence.online,
     lastSeenAt,
     unreadCount: unread,
     canMessage: row.status === 'ACCEPTED',
+
+    // presença estendida (Fase 2)
+    presenceStatus: presence.status || 'OFFLINE',
+    presenceActivity: presence.activity || null,
   };
 }
 
@@ -189,7 +202,9 @@ router.get('/', listLimiter, async (req, res) => {
     const presenceMap = await getPresenceSnapshot(friendIds);
     const unreadMap = await fetchUnreadMap(currentUserId);
 
-    const friends = rows.map((row) => buildFriendPayload(row, { currentUserId, presenceMap, unreadMap }));
+    const friends = rows.map((row) =>
+      buildFriendPayload(row, { currentUserId, presenceMap, unreadMap })
+    );
     res.json({ ok: true, friends });
   } catch (err) {
     console.error('[friends:list] failed', err?.message);
@@ -376,7 +391,10 @@ router.get('/:friendId/dms', dmHistoryLimiter, async (req, res) => {
     if (!friendId) return sendError(res, 400, 'FRIEND_ID_REQUIRED');
 
     const relation = await fetchDmFriendship(currentUserId, friendId);
-    if (!relation || (String(relation.user_a_id) !== currentUserId && String(relation.user_b_id) !== currentUserId)) {
+    if (
+      !relation ||
+      (String(relation.user_a_id) !== currentUserId && String(relation.user_b_id) !== currentUserId)
+    ) {
       return sendError(res, 404, 'FRIEND_NOT_FOUND');
     }
     if (relation.status === 'BLOCKED') {

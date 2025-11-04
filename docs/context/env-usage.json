@@ -202,7 +202,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 26843
+        "index": 26941
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -466,7 +466,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 34916
+        "index": 35014
       }
     ],
     "defaults": []
@@ -500,7 +500,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 26750
+        "index": 26848
       },
       {
         "file": "server\\auth\\middleware.js",
@@ -958,7 +958,7 @@
     "occurrences": [
       {
         "file": "server\\ws\\presence.js",
-        "index": 146
+        "index": 171
       }
     ],
     "defaults": [
@@ -970,7 +970,7 @@
     "occurrences": [
       {
         "file": "server\\ws\\presence.js",
-        "index": 55
+        "index": 80
       }
     ],
     "defaults": [
@@ -982,7 +982,7 @@
     "occurrences": [
       {
         "file": "server\\ws\\presence.js",
-        "index": 237
+        "index": 262
       }
     ],
     "defaults": [
@@ -994,7 +994,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 26700
+        "index": 26798
       }
     ],
     "defaults": [
@@ -1054,7 +1054,7 @@
     "occurrences": [
       {
         "file": "server\\index.js",
-        "index": 26808
+        "index": 26906
       },
       {
         "file": "server\\auth\\middleware.js",

@@ -203,14 +203,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 228,
+    "line": 231,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 431,
+    "line": 434,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -219,7 +219,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 753,
+    "line": 756,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -228,7 +228,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 833,
+    "line": 836,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -237,14 +237,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 848,
+    "line": 851,
     "kind": "function",
     "name": "ensurePlayerOnlineTable",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 861,
+    "line": 864,
     "kind": "function",
     "name": "resolveActiveHeroId",
     "params": [
@@ -253,7 +253,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 886,
+    "line": 889,
     "kind": "function",
     "name": "upsertOnlineByPlayer",
     "params": [
@@ -263,7 +263,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 899,
+    "line": 902,
     "kind": "function",
     "name": "markOfflineByPlayer",
     "params": [
@@ -272,7 +272,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 905,
+    "line": 908,
     "kind": "function",
     "name": "setupHeartbeat",
     "params": [
@@ -281,14 +281,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 907,
+    "line": 910,
     "kind": "function",
     "name": "noop",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 929,
+    "line": 932,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -297,35 +297,35 @@
   },
   {
     "file": "server\\index.js",
-    "line": 964,
+    "line": 967,
     "kind": "function",
     "name": "checkIdleAndManageLoops",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 995,
+    "line": 998,
     "kind": "function",
     "name": "idleAwareSyncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1014,
+    "line": 1017,
     "kind": "function",
     "name": "startIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1030,
+    "line": 1033,
     "kind": "function",
     "name": "stopIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1051,
+    "line": 1054,
     "kind": "function",
     "name": "seedAIMobsFromDB",
     "params": [
@@ -334,7 +334,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 1388,
+    "line": 1391,
     "kind": "arrow",
     "name": "sameTile",
     "params": [
@@ -373,7 +373,44 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 19,
+    "line": 25,
+    "kind": "function",
+    "name": "normalizeStatus",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 31,
+    "kind": "function",
+    "name": "normalizeActivity",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 41,
+    "kind": "function",
+    "name": "fetchManualPresence",
+    "params": [
+      "userIds"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 83,
+    "kind": "function",
+    "name": "computeVisiblePresence",
+    "params": [
+      "snapshot",
+      "manual"
+    ]
+  },
+  {
+    "file": "server\\ws\\presence.js",
+    "line": 124,
     "kind": "function",
     "name": "isSocketOpen",
     "params": [
@@ -382,7 +419,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 23,
+    "line": 128,
     "kind": "function",
     "name": "attachRedis",
     "params": [
@@ -393,7 +430,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 54,
+    "line": 164,
     "kind": "function",
     "name": "getPresenceSnapshot",
     "params": [
@@ -402,21 +439,21 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 114,
+    "line": 237,
     "kind": "function",
     "name": "ensureSweepTimer",
     "params": []
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 126,
+    "line": 249,
     "kind": "function",
     "name": "stopSweepTimer",
     "params": []
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 133,
+    "line": 256,
     "kind": "function",
     "name": "handlePresenceMessage",
     "params": [
@@ -425,7 +462,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 149,
+    "line": 272,
     "kind": "function",
     "name": "broadcastToFriends",
     "params": [
@@ -434,7 +471,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 160,
+    "line": 283,
     "kind": "function",
     "name": "onAuthenticated",
     "params": [
@@ -443,7 +480,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 181,
+    "line": 304,
     "kind": "function",
     "name": "resolveUserId",
     "params": [
@@ -452,7 +489,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 187,
+    "line": 310,
     "kind": "function",
     "name": "loadFriendSet",
     "params": [
@@ -461,7 +498,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 208,
+    "line": 331,
     "kind": "function",
     "name": "sendInitialSnapshot",
     "params": [
@@ -470,7 +507,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 236,
+    "line": 359,
     "kind": "function",
     "name": "onHeartbeat",
     "params": [
@@ -479,7 +516,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 242,
+    "line": 365,
     "kind": "function",
     "name": "markOnline",
     "params": [
@@ -489,7 +526,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 270,
+    "line": 393,
     "kind": "function",
     "name": "refreshPresence",
     "params": [
@@ -498,7 +535,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 297,
+    "line": 420,
     "kind": "function",
     "name": "markOffline",
     "params": [
@@ -509,7 +546,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 312,
+    "line": 438,
     "kind": "function",
     "name": "publishEvent",
     "params": [
@@ -521,7 +558,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 322,
+    "line": 448,
     "kind": "function",
     "name": "onDisconnect",
     "params": [

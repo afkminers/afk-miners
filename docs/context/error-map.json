@@ -1067,6 +1067,22 @@
     },
     {
       "status": 500,
+      "body": "{ok:false,error:'PRESENCE_FETCH_FAILED' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'INVALID_STATUS' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'INVALID_ACTIVITY' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'PRESENCE_UPDATE_FAILED' }"
+    },
+    {
+      "status": 500,
       "body": "{error:'me-failed' }"
     },
     {
@@ -1282,6 +1298,18 @@
     }
   ],
   "POST /": [
+    {
+      "status": 400,
+      "body": "{ok:false,error:'INVALID_STATUS' }"
+    },
+    {
+      "status": 400,
+      "body": "{ok:false,error:'INVALID_ACTIVITY' }"
+    },
+    {
+      "status": 500,
+      "body": "{ok:false,error:'PRESENCE_UPDATE_FAILED' }"
+    },
     {
       "status": 400,
       "body": "{error:result.error,cost:SUMMON_COST_COINS }"

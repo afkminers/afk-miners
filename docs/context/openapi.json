@@ -2000,6 +2000,24 @@
             }
           }
         },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "const me = req.user && req.user.id;\n  const { status": {
+                    "type": "number"
+                  },
+                  "activity": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "parameters": [
           {
             "name": "count",
@@ -2745,19 +2763,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "router.post('/gain/dev'": {
-                    "type": "string"
-                  },
-                  "async (req": {
-                    "type": "string"
-                  },
-                  "res) => {\n    try {\n      const { heroId": {
+                  "const me = req.user && req.user.id;\n  const { status": {
                     "type": "number"
                   },
-                  "heroClass": {
-                    "type": "string"
-                  },
-                  "skillType": {
+                  "activity": {
                     "type": "string"
                   }
                 }

@@ -7,6 +7,7 @@ import { openSkills, openHeroes, openInventory, openSummonPanel } from './app_pa
 import { getSocket, onMessage, wsSend, authenticate } from './ws/singleton.js';
 import { HeroState } from './state/hero-state.js';
 import { initFriendHud } from './ui/friends-hud.js';
+import { mountPresenceControls } from './ui/presence-controls.js'; // <— novo
 import {
   initDmChat,
   openConversation as openDmConversation,
@@ -610,6 +611,7 @@ const FALLBACK_LOAD_CONTENT = async () => {
     setLoadingProgress(72);
 
     await initFriendHud();                  // carrega UMA vez
+    await mountPresenceControls(); // <— monta os dropdowns no header do painel
     setLoadingProgress(82);
 
     applyViewport();

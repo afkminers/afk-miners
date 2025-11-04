@@ -529,7 +529,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/data",
     "file": "server\\index.js",
-    "line": 717,
+    "line": 720,
     "sample": {
       "params": {
         "key": "value"
@@ -563,7 +563,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/objects",
     "file": "server\\index.js",
-    "line": 692,
+    "line": 695,
     "sample": {
       "params": {
         "key": "value"
@@ -605,7 +605,7 @@
     "method": "GET",
     "path": "/api/admin/content/map/:key/spawns",
     "file": "server\\index.js",
-    "line": 704,
+    "line": 707,
     "sample": {
       "params": {
         "key": "value"
@@ -643,7 +643,7 @@
     "method": "GET",
     "path": "/api/admin/content/maps",
     "file": "server\\index.js",
-    "line": 681,
+    "line": 684,
     "sample": {
       "query": {
         "map": "value"
@@ -686,7 +686,7 @@
     "method": "GET",
     "path": "/api/admin/content/monsters",
     "file": "server\\index.js",
-    "line": 573,
+    "line": 576,
     "sample": {
       "query": {
         "map": "value"
@@ -731,7 +731,7 @@
     "method": "POST",
     "path": "/api/admin/content/reload-map",
     "file": "server\\index.js",
-    "line": 727,
+    "line": 730,
     "sample": {
       "query": {
         "map": "value"
@@ -754,7 +754,7 @@
     "method": "GET",
     "path": "/api/assets/items",
     "file": "server\\index.js",
-    "line": 584,
+    "line": 587,
     "sample": {
       "query": {
         "map": "value"
@@ -795,7 +795,7 @@
     "method": "GET",
     "path": "/api/assets/sprites",
     "file": "server\\index.js",
-    "line": 606,
+    "line": 609,
     "sample": {
       "query": {
         "map": "value"
@@ -842,7 +842,7 @@
     "method": "GET",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1523,
+    "line": 1526,
     "sample": {
       "query": {
         "limit": 1
@@ -873,7 +873,7 @@
     "method": "POST",
     "path": "/api/chat/global",
     "file": "server\\index.js",
-    "line": 1546,
+    "line": 1549,
     "sample": {},
     "errors": [
       {
@@ -1506,7 +1506,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\index.js",
-    "line": 780,
+    "line": 783,
     "sample": {},
     "errors": []
   },
@@ -1810,7 +1810,7 @@
     "method": "GET",
     "path": "/leaderboard",
     "file": "server\\index.js",
-    "line": 776,
+    "line": 779,
     "sample": {},
     "errors": []
   },
@@ -2142,6 +2142,46 @@
   {
     "method": "GET",
     "path": "/me",
+    "file": "server\\routes\\presence.js",
+    "line": 15,
+    "sample": {
+      "body": {
+        "const me = req.user && req.user.id;\n  const { status": 1,
+        "activity": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{ok:false,error:'PRESENCE_FETCH_FAILED' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'INVALID_STATUS' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'INVALID_ACTIVITY' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'PRESENCE_UPDATE_FAILED' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,status:row?.status || 'ONLINE',activity:row?.activity || 'HOUSE',updatedAt:row?.updatedAt || new Date().toISOString(),}"
+      },
+      {
+        "status": 200,
+        "body": "{ok:true,status:row?.status || 'ONLINE',activity:row?.activity || 'HOUSE' }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/me",
     "file": "server\\player\\routes.js",
     "line": 14,
     "sample": {},
@@ -2210,7 +2250,7 @@
     "method": "GET",
     "path": "/overview",
     "file": "server\\index.js",
-    "line": 764,
+    "line": 767,
     "sample": {},
     "errors": []
   },
@@ -2587,6 +2627,38 @@
   {
     "method": "POST",
     "path": "/",
+    "file": "server\\routes\\presence.js",
+    "line": 37,
+    "sample": {
+      "body": {
+        "const me = req.user && req.user.id;\n  const { status": 1,
+        "activity": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "body": "{ok:false,error:'INVALID_STATUS' }"
+      },
+      {
+        "status": 400,
+        "body": "{ok:false,error:'INVALID_ACTIVITY' }"
+      },
+      {
+        "status": 500,
+        "body": "{ok:false,error:'PRESENCE_UPDATE_FAILED' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,status:row?.status || 'ONLINE',activity:row?.activity || 'HOUSE' }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/",
     "file": "server\\gacha\\routes.js",
     "line": 179,
     "sample": {
@@ -2873,7 +2945,7 @@
     "method": "GET",
     "path": "/roadmap",
     "file": "server\\index.js",
-    "line": 768,
+    "line": 771,
     "sample": {},
     "errors": []
   },
@@ -3120,7 +3192,7 @@
     "method": "GET",
     "path": "/support",
     "file": "server\\index.js",
-    "line": 772,
+    "line": 775,
     "sample": {},
     "errors": []
   },

@@ -207,6 +207,14 @@ function createPanelElement(scope) {
   const toolbar = document.createElement('div');
   toolbar.className = 'dm-toolbar';
 
+  // slot de presença no topo da DM
+  const presenceBox = document.createElement('div');
+  presenceBox.className = 'dm-presence';
+  presenceBox.setAttribute('aria-live', 'polite');
+  presenceBox.style.marginRight = 'auto';
+  presenceBox.textContent = 'Offline';
+  toolbar.appendChild(presenceBox);
+
   const nudgeButton = document.createElement('button');
   nudgeButton.type = 'button';
   nudgeButton.className = 'dm-nudge-button';
@@ -233,8 +241,66 @@ function createPanelElement(scope) {
   panel.appendChild(toolbar);
   panel.appendChild(loadMore);
   panel.appendChild(list);
-  return { panel, loadMore, list, nudgeButton, nudgeFeedback };
+
+  // agora retornamos também o presenceBox
+  return { panel, loadMore, list, nudgeButton, nudgeFeedback, presenceBox };
 }
+
+function setDmPresence(conv, presence) {
+  if (!conv?.presenceBoxEl) return;
+
+  const online = !!presence?.online;
+  const st = String(
+    presence?.status || (online ? 'ONLINE' : 'OFFLINE')
+  ).toUpperCase();
+  const act = presence?.activity ? String(presence.activity).toUpperCase() : null;
+
+  let statusLabel;
+  switch (st) {
+    case 'AFK':
+      statusLabel = 'Ausente';
+      break;
+    case 'BUSY':
+      statusLabel = 'Ocupado';
+      break;
+    case 'ONLINE':
+      statusLabel = 'Online';
+      break;
+    default:
+      statusLabel = 'Offline';
+      break;
+  }
+
+  let text;
+  if (!online) {
+    text = 'Offline';
+  } else if (act) {
+    let activityLabel;
+    switch (act) {
+      case 'HOUSE':
+        activityLabel = 'na Casa';
+        break;
+      case 'ADVENTURE':
+        activityLabel = 'em Aventura';
+        break;
+      case 'TRAINING':
+        activityLabel = 'no Treinamento';
+        break;
+      case 'DUNGEON':
+        activityLabel = 'na Masmorra';
+        break;
+      default:
+        activityLabel = act;
+        break;
+    }
+    text = `${statusLabel} — ${activityLabel}`;
+  } else {
+    text = statusLabel;
+  }
+
+  conv.presenceBoxEl.textContent = text;
+}
+
 
 function scrollToBottom(conv) {
   if (!conv || !conv.listEl) return;
@@ -391,8 +457,16 @@ function createConversation(targetKey, friendName) {
     tabsContainer.appendChild(tabEl);
   }
 
+  // DEPOIS
   const scope = scopeForKey(targetKey);
-  const { panel, loadMore, list, nudgeButton, nudgeFeedback } = createPanelElement(scope);
+  const {
+    panel,
+    loadMore,
+    list,
+    nudgeButton,
+    nudgeFeedback,
+    presenceBox,        // 👈 adicionar aqui
+  } = createPanelElement(scope);
   if (panelsAnchorEl && panelsAnchorEl.parentNode === panelsContainer) {
     panelsContainer.insertBefore(panel, panelsAnchorEl);
   } else {
@@ -411,6 +485,7 @@ function createConversation(targetKey, friendName) {
     listEl: list,
     nudgeButtonEl: nudgeButton,
     nudgeFeedbackEl: nudgeFeedback,
+    presenceBoxEl: presenceBox,  // 👈 novo
     messages: [],
     nextCursor: null,
     loading: false,
@@ -422,6 +497,9 @@ function createConversation(targetKey, friendName) {
     nudgeFeedbackTimer: null,
     nudgeAvailableAt: isNameKey(targetKey) ? 0 : getLocalCooldownUntil(targetKey),
   };
+
+  // presença inicial padrão até chegar algo do servidor / friends HUD
+  setDmPresence(conv, { online: false, status: 'OFFLINE', activity: null });
 
   if (loadMore) {
     loadMore.addEventListener('click', () => {
@@ -940,17 +1018,30 @@ export function openConversation(friend) {
   // Aceita { friendId, friendName } OU { id, name } OU valor direto (id)
   const id = friend && (friend.friendId ?? friend.id);
   const name = friend && (friend.friendName ?? friend.name);
-  const targetKey = id != null && String(id) !== '' ? keyFromId(id) : keyFromName(name || '');
+  const targetKey =
+    id != null && String(id) !== '' ? keyFromId(id) : keyFromName(name || '');
   if (!targetKey) return;
 
   const label = name || (isNameKey(targetKey) ? nameFromKey(targetKey) : targetKey);
   const conv = conversations.get(targetKey) || createConversation(targetKey, label);
   if (!conv) return;
 
+  // se veio do Friends HUD, já aplica presença inicial
+  if (friend) {
+    setDmPresence(conv, {
+      online: !!friend.online,
+      status: friend.presenceStatus || (friend.online ? 'ONLINE' : 'OFFLINE'),
+      activity: friend.presenceActivity || null,
+    });
+  }
+
   // Primeiro tenta propagar pro host, depois garante local
-  try { if (typeof setScopeFn === 'function') setScopeFn(conv.scope); } catch {}
+  try {
+    if (typeof setScopeFn === 'function') setScopeFn(conv.scope);
+  } catch {}
   activateDmScope(conv.scope);
 }
+
 
 export function initDmChat({
   tabsEl,
@@ -996,18 +1087,32 @@ export function initDmChat({
   onMessage('dm:error', handleErrorEvent);
   onMessage('dm:nudge', handleNudgeEvent);
 
+  // atualiza presença no topo da DM quando o servidor mandar presence:update
+  onMessage('presence:update', (payload) => {
+    if (!payload?.userId || !payload?.presence) return;
+    const userId = String(payload.userId);
+    conversations.forEach((conv) => {
+      if (conv?.friendId && String(conv.friendId) === userId) {
+        setDmPresence(conv, payload.presence);
+      }
+    });
+  });
+
   const socket = getSocket();
   if (socket) {
     socket.addEventListener('open', () => {
       conversations.forEach((conv) => {
         conv.hasLoadedInitial = false;
         fetchHistory(conv, { append: false })
-          .then(() => { if (conv.scope === currentScope) markRead(conv); })
+          .then(() => {
+            if (conv.scope === currentScope) markRead(conv);
+          })
           .catch(() => {});
       });
     });
   }
 }
+
 
 // Permite que outros módulos abram a DM com:
 // window.dispatchEvent(new CustomEvent('dm:open', { detail: { friendId, friendName } }))

@@ -1,3 +1,4 @@
+//client/js/i18n/en.js
 export default {
   lang: {
     menu: 'Change language',
@@ -329,10 +330,46 @@ export default {
     logMobHitYou: '[Damage] {mob} hit you for {amount} (HP: {current}/{max})',
     logYouHitTarget: '[You] dealt {amount} to {target} (target HP: {hp})',
   },
+  friends: {
+    empty: {
+      pending: 'No friend requests.',
+      friends: 'No friends yet.',
+      blocked: 'No blocked players.',
+    },
+  },
   loading: {
     badge: 'AFK Miners',
     preparing: 'Preparing the world…',
     tipLabel: 'Miners’ tip',
     loading: 'Loading…',
+  },
+
+  // ===== Presence / Status / Activity (Phase 2) =====
+  presence: {
+    status: { label: 'Status' },
+    activity: { label: 'Playing now' },
+    playingNow: { prefix: 'Playing now:' },
+    changed: {
+      status: 'Status changed to {status}.',
+      activity: 'Activity: {activity}.',
+    },
+    invisibleNote: 'You are invisible (Appear Offline).',
+  },
+  status: {
+    online: 'Online',
+    afk: 'AFK (Away)',
+    busy: 'Busy',
+    appearOffline: 'Appear Offline',
+  },
+  activity: {
+    house: 'House',
+    adventure: 'Adventure',
+    training: 'Training',
+    dungeon: 'Dungeon',
+  },
+  hints: {
+    busy: 'Busy reduces loud alerts and interruptions.',
+    afk: 'AFK indicates temporary absence.',
+    appearOffline: 'Shows you as Offline to others.',
   },
 };

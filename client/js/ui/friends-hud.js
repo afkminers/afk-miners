@@ -3,6 +3,8 @@
 
 import { apiGet, apiPost, apiDelete } from '../api.js';
 import { getSocket, onMessage } from '../ws/singleton.js';
+import { i18n } from '../i18n/core.js';
+
 import {
   openConversation as openDmConversation,
   syncUnreadFromServer,
@@ -10,6 +12,7 @@ import {
   sendNudge,
   getNudgeErrorMessage,
 } from './dm-chat.js';
+
 
 const REFRESH_INTERVAL = 30_000;
 
@@ -88,6 +91,7 @@ function normalizeFriend(raw) {
   const createdAt = parseTime(raw.createdAt) ?? Date.now();
   const updatedAt = parseTime(raw.updatedAt) ?? createdAt;
   const lastSeen = parseTime(raw.lastSeenAt);
+
   return {
     friendshipId: Number(raw.friendshipId) || null,
     friendId,
@@ -98,11 +102,21 @@ function normalizeFriend(raw) {
     createdAt,
     updatedAt,
     unreadCount: Number(raw.unreadCount) || 0,
+
     online: !!raw.online,
     lastSeenAt: lastSeen,
     canMessage: !!raw.canMessage,
+
+    // presença estendida vinda do backend
+    presenceStatus: String(
+      raw.presenceStatus || (raw.online ? 'ONLINE' : 'OFFLINE')
+    ).toUpperCase(),
+    presenceActivity: raw.presenceActivity
+      ? String(raw.presenceActivity).toUpperCase()
+      : null,
   };
 }
+
 
 function ensureContextMenu() {
   if (contextMenuEl) return;
@@ -192,6 +206,52 @@ function formatRelative(ts) {
   if (hours < 24) return `há ${hours}h`;
   const days = Math.round(hours / 24);
   return `há ${days}d`;
+}
+
+// NOVO: helpers para status/atividade da presença
+function describeStatusLabel(status) {
+  const st = String(status || '').toUpperCase();
+  if (st === 'AFK') return 'Ausente';
+  if (st === 'BUSY') return 'Ocupado';
+  if (st === 'ONLINE') return 'Online';
+  return 'Offline';
+}
+
+function describeActivityLabel(activity) {
+  const ac = String(activity || '').toUpperCase();
+  if (ac === 'HOUSE') return 'na Casa';
+  if (ac === 'ADVENTURE') return 'em Aventura';
+  if (ac === 'TRAINING') return 'no Treinamento';
+  if (ac === 'DUNGEON') return 'na Masmorra';
+  return null;
+}
+
+function buildPresenceText(friend) {
+  const statusLabel = describeStatusLabel(friend.presenceStatus);
+  if (!friend.online) {
+    if (friend.lastSeenAt) {
+      return `Visto ${formatRelative(friend.lastSeenAt)}`;
+    }
+    return 'Offline';
+  }
+  const activityLabel = describeActivityLabel(friend.presenceActivity);
+  return activityLabel ? `${statusLabel} — ${activityLabel}` : statusLabel;
+}
+
+function buildPresenceTitle(friend) {
+  if (friend.online) {
+    const activityLabel = describeActivityLabel(friend.presenceActivity);
+    const statusLabel = describeStatusLabel(friend.presenceStatus);
+    return activityLabel ? `${statusLabel} — ${activityLabel}` : statusLabel;
+  }
+  if (friend.lastSeenAt) {
+    try {
+      return new Date(friend.lastSeenAt).toLocaleString();
+    } catch {
+      return 'Offline';
+    }
+  }
+  return 'Ainda sem presença registrada';
 }
 
 function showFeedback(message, kind = 'info') {
@@ -300,16 +360,18 @@ function renderSection(key, items) {
   if (!items.length) {
     const empty = document.createElement('div');
     empty.className = 'friend-empty';
-    empty.textContent =
-      key === 'pending'
-        ? 'Nenhuma solicitação.'
-        : key === 'friends'
-          ? 'Nenhum amigo ainda.'
-          : 'Nenhum bloqueado.';
+
+    let textKey;
+    if (key === 'pending') textKey = 'friends.empty.pending';
+    else if (key === 'friends') textKey = 'friends.empty.friends';
+    else textKey = 'friends.empty.blocked';
+
+    empty.textContent = i18n.t(textKey);
     container.appendChild(empty);
     if (contextMenuFriendId) closeContextMenu();
     return;
   }
+
   const frag = document.createDocumentFragment();
   for (const friend of items) {
     frag.appendChild(buildFriendRow(friend));
@@ -329,16 +391,16 @@ function buildFriendRow(friend) {
   if (friend.direction) row.dataset.direction = friend.direction;
   row.dataset.online = friend.online ? '1' : '0';
 
-  const initials = escapeHtml((friend.name || '?').trim().slice(0, 1).toUpperCase() || '?');
-  const presenceText = friend.online ? 'Online agora' : (friend.lastSeenAt ? `Visto ${formatRelative(friend.lastSeenAt)}` : 'Offline');
-  const presenceTitle = friend.online
-    ? 'Online agora'
-    : friend.lastSeenAt
-      ? new Date(friend.lastSeenAt).toLocaleString()
-      : 'Ainda sem presença registrada';
-  const unread = friend.unreadCount > 0
-    ? `<span class="friend-unread" aria-label="${friend.unreadCount} mensagens não lidas">${friend.unreadCount}</span>`
-    : '';
+  const initials = escapeHtml(
+    (friend.name || '?').trim().slice(0, 1).toUpperCase() || '?'
+  );
+  const presenceText = buildPresenceText(friend);
+  const presenceTitle = buildPresenceTitle(friend);
+  const unread =
+    friend.unreadCount > 0
+      ? `<span class="friend-unread" aria-label="${friend.unreadCount} mensagens não lidas">${friend.unreadCount}</span>`
+      : '';
+
 
   let tag = '';
   if (friend.status === 'PENDING') {
@@ -391,14 +453,13 @@ function updatePresenceFor(friend) {
   const row = panelEl.querySelector(`[data-friend-id="${friend.friendId}"]`);
   if (!row) return;
   row.dataset.online = friend.online ? '1' : '0';
+
   const dot = row.querySelector('[data-role="presence-dot"]');
   const label = row.querySelector('[data-role="presence-label"]');
-  const title = friend.online
-    ? 'Online agora'
-    : friend.lastSeenAt
-      ? new Date(friend.lastSeenAt).toLocaleString()
-      : 'Ainda sem presença registrada';
-  const text = friend.online ? 'Online agora' : (friend.lastSeenAt ? `Visto ${formatRelative(friend.lastSeenAt)}` : 'Offline');
+
+  const text = buildPresenceText(friend);
+  const title = buildPresenceTitle(friend);
+
   if (dot) {
     dot.classList.toggle('is-online', !!friend.online);
     dot.classList.toggle('is-offline', !friend.online);
@@ -409,6 +470,7 @@ function updatePresenceFor(friend) {
     label.setAttribute('title', title);
   }
 }
+
 
 function applyFriend(rawFriend) {
   const friend = normalizeFriend(rawFriend);
@@ -488,17 +550,37 @@ function handlePresenceEvent(kind, payload) {
   const friendId = String(payload.userId);
   const friend = friendsById.get(friendId);
   if (!friend) return;
-  const ts = Number(payload.lastSeen || payload.ts || Date.now());
-  if (kind === 'online') {
+
+  const baseTs = Number(payload.lastSeen || payload.ts || Date.now());
+  const ts = Number.isFinite(baseTs) ? baseTs : Date.now();
+
+  if (kind === 'update' && payload.presence) {
+    const p = payload.presence;
+    friend.online = !!p.online;
+    const pt = Number(p.lastSeenAt || ts);
+    if (Number.isFinite(pt)) friend.lastSeenAt = pt;
+    friend.presenceStatus = String(
+      p.status || (friend.online ? 'ONLINE' : 'OFFLINE')
+    ).toUpperCase();
+    friend.presenceActivity = p.activity
+      ? String(p.activity).toUpperCase()
+      : null;
+  } else if (kind === 'online') {
     friend.online = true;
     friend.lastSeenAt = ts;
+    if (!friend.presenceStatus) {
+      friend.presenceStatus = 'ONLINE';
+    }
   } else if (kind === 'offline') {
     friend.online = false;
     friend.lastSeenAt = ts;
+    friend.presenceStatus = 'OFFLINE';
+    friend.presenceActivity = null;
   } else {
     friend.online = true;
-    if (ts) friend.lastSeenAt = ts;
+    friend.lastSeenAt = ts;
   }
+
   updatePresenceFor(friend);
 }
 

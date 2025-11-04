@@ -131,7 +131,7 @@ Arquivo: `server\routes\friends.js:297`
 
 ### GET /
 
-Arquivo: `server\index.js:780`
+Arquivo: `server\index.js:783`
 
 _Sem payload inferido_
 
@@ -276,7 +276,7 @@ Arquivo: `server\combat\routes.js:138`
 
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:717`
+Arquivo: `server\index.js:720`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -304,7 +304,7 @@ Arquivo: `server\index.js:717`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:692`
+Arquivo: `server\index.js:695`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -334,7 +334,7 @@ Arquivo: `server\index.js:692`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:704`
+Arquivo: `server\index.js:707`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -363,7 +363,7 @@ Arquivo: `server\index.js:704`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:681`
+Arquivo: `server\index.js:684`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -388,7 +388,7 @@ Arquivo: `server\index.js:681`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:573`
+Arquivo: `server\index.js:576`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -410,7 +410,7 @@ Arquivo: `server\index.js:573`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:584`
+Arquivo: `server\index.js:587`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -431,7 +431,7 @@ Arquivo: `server\index.js:584`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:606`
+Arquivo: `server\index.js:609`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -457,7 +457,7 @@ Arquivo: `server\index.js:606`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1523`
+Arquivo: `server\index.js:1526`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -697,7 +697,7 @@ _Sem payload inferido_
 
 ### GET /leaderboard
 
-Arquivo: `server\index.js:776`
+Arquivo: `server\index.js:779`
 
 _Sem payload inferido_
 
@@ -800,7 +800,7 @@ Arquivo: `server\skills\routes.js:94`
 
 ### GET /overview
 
-Arquivo: `server\index.js:764`
+Arquivo: `server\index.js:767`
 
 _Sem payload inferido_
 
@@ -894,7 +894,7 @@ Arquivo: `server\routes\player.old.js:12`
 
 ### GET /roadmap
 
-Arquivo: `server\index.js:768`
+Arquivo: `server\index.js:771`
 
 _Sem payload inferido_
 
@@ -977,7 +977,7 @@ Arquivo: `server\starter\routes.js:87`
 
 ### GET /support
 
-Arquivo: `server\index.js:772`
+Arquivo: `server\index.js:775`
 
 _Sem payload inferido_
 
@@ -997,25 +997,26 @@ Arquivo: `server\routes\game_tick.js:10`
 
 ### POST /
 
-Arquivo: `server\gacha\routes.js:179`
+Arquivo: `server\routes\presence.js:37`
 
 **Payloads (exemplos inferidos):**
-- query:
+- body:
 ```json
 {
-  "count": 1
+  "const me = req.user && req.user.id;\n  const { status": 1,
+  "activity": "value"
 }
 ```
 
 **Resposta de sucesso (amostra):**
 ```json
-{cost:SUMMON_COST_COINS,pulls,newBalance:updated }
+{ok:true,status:row?.status || 'ONLINE',activity:row?.activity || 'HOUSE' }
 ```
 
 **Erros conhecidos:**
-- `HTTP 400` → {error:result.error,cost:SUMMON_COST_COINS }
-- `HTTP 400` → {error:r.error,cost:SUMMON_COST_COINS,pulls }
-- `HTTP 500` → {error:'Falha ao girar gacha' }
+- `HTTP 400` → {ok:false,error:'INVALID_STATUS' }
+- `HTTP 400` → {ok:false,error:'INVALID_ACTIVITY' }
+- `HTTP 500` → {ok:false,error:'PRESENCE_UPDATE_FAILED' }
 
 ### POST /:friendId/accept
 
@@ -1163,7 +1164,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:727`
+Arquivo: `server\index.js:730`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -1183,7 +1184,7 @@ Arquivo: `server\index.js:727`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1546`
+Arquivo: `server\index.js:1549`
 
 _Sem payload inferido_
 
@@ -1983,6 +1984,10 @@ _Sem payload inferido_
   - HTTP 500: {error:'Falha ao listar skills do herói' }
   - HTTP 400: {error:'heroId e skillType são obrigatórios' }
   - HTTP 500: {error:'Falha ao aplicar ganho' }
+  - HTTP 500: {ok:false,error:'PRESENCE_FETCH_FAILED' }
+  - HTTP 400: {ok:false,error:'INVALID_STATUS' }
+  - HTTP 400: {ok:false,error:'INVALID_ACTIVITY' }
+  - HTTP 500: {ok:false,error:'PRESENCE_UPDATE_FAILED' }
   - HTTP 500: {error:'me-failed' }
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
@@ -2038,6 +2043,9 @@ _Sem payload inferido_
 - **GET /support**
 - **GET /tick**
 - **POST /**
+  - HTTP 400: {ok:false,error:'INVALID_STATUS' }
+  - HTTP 400: {ok:false,error:'INVALID_ACTIVITY' }
+  - HTTP 500: {ok:false,error:'PRESENCE_UPDATE_FAILED' }
   - HTTP 400: {error:result.error,cost:SUMMON_COST_COINS }
   - HTTP 400: {error:r.error,cost:SUMMON_COST_COINS,pulls }
   - HTTP 500: {error:'Falha ao girar gacha' }
