@@ -218,6 +218,9 @@ app.use(idlePoolCloser.trackActivity);
 // 1) CSRF BEFORE guard
 app.get('/api/csrf', csrfRoute);
 
+// ========= ROTAS DE PRESENÇA =========
+app.use('/api/presence', require('./routes/presence'));
+
 // 2) CSRF guard global (métodos que mudam estado)
 app.use(requireCsrf);
 

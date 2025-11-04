@@ -153,6 +153,11 @@ async function migrate() {
     )
   `);
 
+  // Presence columns (manual status/activity) — Phase 1
+  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS presence_status TEXT NOT NULL DEFAULT 'ONLINE'`);
+  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS presence_activity TEXT NOT NULL DEFAULT 'HOUSE'`);
+  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS presence_updated_at TIMESTAMPTZ NOT NULL DEFAULT now()`);
+
   // garante colunas base (PG suporta IF NOT EXISTS)
   await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS name TEXT`);
   await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS createdAt BIGINT`);

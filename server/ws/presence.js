@@ -1,3 +1,4 @@
+// server/ws/presence.js
 'use strict';
 
 const TTL_SECONDS = Math.max(30, Number(process.env.PRESENCE_TTL_SECONDS || 60));
@@ -15,6 +16,110 @@ let wssRef = null;
 let sweepTimer = null;
 
 const localStates = new Map(); // userId -> { online, lastRefreshAt, lastBroadcastAt }
+
+// ===== Manual presence (status + activity) — Fase 1 =====
+
+const MANUAL_STATUS = new Set(['ONLINE', 'AFK', 'BUSY', 'APPEAR_OFFLINE']);
+const MANUAL_ACTIVITY = new Set(['HOUSE', 'ADVENTURE', 'TRAINING', 'DUNGEON']);
+
+function normalizeStatus(raw) {
+  const value = String(raw || '').toUpperCase();
+  if (!MANUAL_STATUS.has(value)) return 'ONLINE';
+  return value;
+}
+
+function normalizeActivity(raw) {
+  const value = String(raw || '').toUpperCase();
+  if (!MANUAL_ACTIVITY.has(value)) return 'HOUSE';
+  return value;
+}
+
+/**
+ * Lê presence_status / presence_activity da tabela players para uma lista de userIds.
+ * Retorna Map(userId -> { status, activity }) com valores normalizados.
+ */
+async function fetchManualPresence(userIds) {
+  const ids = Array.from(
+    new Set(
+      (Array.isArray(userIds) ? userIds : [])
+        .map((id) => (id == null ? null : String(id)))
+        .filter((id) => id)
+    )
+  );
+  if (ids.length === 0) return new Map();
+
+  let rows;
+  try {
+    rows = await all(
+      `SELECT id,
+              COALESCE(presence_status, 'ONLINE')  AS status,
+              COALESCE(presence_activity, 'HOUSE') AS activity
+         FROM players
+        WHERE id = ANY($1::text[])`,
+      [ids]
+    );
+  } catch (err) {
+    console.warn('[presence] manual presence query failed', err?.message);
+    return new Map();
+  }
+
+  const map = new Map();
+  for (const r of rows || []) {
+    if (!r || !r.id) continue;
+    map.set(String(r.id), {
+      status: normalizeStatus(r.status),
+      activity: normalizeActivity(r.activity),
+    });
+  }
+  return map;
+}
+
+/**
+ * Aplica as regras de produto:
+ * - APPEAR_OFFLINE => sempre parecer OFFLINE para terceiros
+ * - Se online de verdade: status pode ser ONLINE/AFK/BUSY; activity é mostrada
+ * - Se offline: sempre OFFLINE, activity null
+ */
+function computeVisiblePresence(snapshot, manual) {
+  const baseOnline = !!(snapshot && snapshot.online);
+  const baseLast = snapshot && snapshot.lastSeenAt != null ? Number(snapshot.lastSeenAt) : null;
+  const lastSeenAt = Number.isFinite(baseLast) && baseLast > 0 ? baseLast : null;
+
+  const statusRaw = manual && manual.status != null ? manual.status : 'ONLINE';
+  const activityRaw = manual && manual.activity != null ? manual.activity : 'HOUSE';
+
+  const status = normalizeStatus(statusRaw);
+  const activity = normalizeActivity(activityRaw);
+
+  // Aparecer Offline: sempre parecer offline para terceiros
+  if (status === 'APPEAR_OFFLINE') {
+    return {
+      online: false,
+      lastSeenAt,
+      status: 'OFFLINE',
+      activity: null,
+    };
+  }
+
+  if (baseOnline) {
+    const visStatus = status === 'AFK' || status === 'BUSY' ? status : 'ONLINE';
+    return {
+      online: true,
+      lastSeenAt,
+      status: visStatus,
+      activity,
+    };
+  }
+
+  return {
+    online: false,
+    lastSeenAt,
+    status: 'OFFLINE',
+    activity: null,
+  };
+}
+
+// ===== Fim camada manual =====
 
 function isSocketOpen(ws) {
   return ws && ws.readyState === 1;
@@ -51,6 +156,11 @@ async function attachRedis({ wss, redisPub, redisSub }) {
   }
 }
 
+/**
+ * Retorna Map(userId -> { online, lastSeenAt, status, activity })
+ * - online/lastSeenAt continuam com a semântica antiga
+ * - status/activity são calculados com base na tabela players
+ */
 async function getPresenceSnapshot(userIds) {
   const ids = Array.from(
     new Set(
@@ -108,6 +218,19 @@ async function getPresenceSnapshot(userIds) {
     }
   }
 
+  // Enriquecer com status/activity manuais (sem quebrar quem só usa online/lastSeenAt)
+  try {
+    const manuals = await fetchManualPresence(ids);
+    for (const id of ids) {
+      const base = result.get(id) || { online: false, lastSeenAt: null };
+      const manual = manuals.get(id) || null;
+      const vis = computeVisiblePresence(base, manual);
+      result.set(id, vis);
+    }
+  } catch (err) {
+    console.warn('[presence] manual presence enrichment failed', err?.message);
+  }
+
   return result;
 }
 
@@ -160,7 +283,7 @@ function broadcastToFriends(payload) {
 async function onAuthenticated(ws) {
   const userId = resolveUserId(ws);
   if (!userId) return;
-  if (!ws._presence) ws._presence = { };
+  if (!ws._presence) ws._presence = {};
   if (ws._presence.userId === userId && ws._presence.bound) {
     refreshPresence(userId).catch(() => {});
     return;
@@ -245,7 +368,7 @@ async function markOnline(userId, { ts } = {}) {
   const state = localStates.get(userId) || { online: false, lastRefreshAt: 0, lastBroadcastAt: 0 };
   state.lastRefreshAt = now;
 
-  let wasOnline = state.online === true;
+  const wasOnline = state.online === true;
   state.online = true;
   localStates.set(userId, state);
 
@@ -301,8 +424,11 @@ async function markOffline(userId, { reason, ts } = {}) {
   state.online = false;
   state.lastRefreshAt = ts || Date.now();
   if (redisPublisher) {
-    try { await redisPublisher.del(KEY_PREFIX + userId); }
-    catch (err) { console.warn('[presence] redis del failed', err?.message); }
+    try {
+      await redisPublisher.del(KEY_PREFIX + userId);
+    } catch (err) {
+      console.warn('[presence] redis del failed', err?.message);
+    }
   }
 
   await publishEvent('offline', userId, state.lastRefreshAt, { reason, lastSeen: state.lastRefreshAt });
