@@ -796,6 +796,7 @@
       "scheduleNudgeAvailabilityCheck",
       "scopeForKey",
       "scrollToBottom",
+      "setDmPresence",
       "setLocalCooldown",
       "settlePendingNudge",
       "showNudgeFeedback",
@@ -819,8 +820,12 @@
       "bindEvents",
       "bindPresenceEvents",
       "buildFriendRow",
+      "buildPresenceText",
+      "buildPresenceTitle",
       "closeContextMenu",
       "closePanel",
+      "describeActivityLabel",
+      "describeStatusLabel",
       "ensureButtonInTopbar",
       "ensureContextMenu",
       "ensureCurrentUser",
@@ -893,6 +898,16 @@
       "ensureContainer",
       "playSound",
       "showLevelUp"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\presence-controls.js",
+    "symbols": [
+      "applyChange",
+      "labelForActivity",
+      "labelForStatus",
+      "mountPresenceControls",
+      "showMiniToast"
     ]
   },
   {
@@ -1779,6 +1794,7 @@
     "file": "server\\ws\\presence.js",
     "symbols": [
       "attachRedis",
+      "broadcastPresenceUpdate",
       "broadcastToFriends",
       "computeVisiblePresence",
       "ensureSweepTimer",

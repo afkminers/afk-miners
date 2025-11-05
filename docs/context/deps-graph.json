@@ -109,7 +109,19 @@
   },
   {
     "from": "client\\js\\app.js",
+    "to": "./ui/presence-controls.js"
+  },
+  {
+    "from": "client\\js\\app.js",
     "to": "./ui/emoji.js"
+  },
+  {
+    "from": "client\\js\\ui\\presence-controls.js",
+    "to": "../api.js"
+  },
+  {
+    "from": "client\\js\\ui\\presence-controls.js",
+    "to": "../i18n/core.js"
   },
   {
     "from": "client\\js\\ui\\hud_status.js",
@@ -126,6 +138,10 @@
   {
     "from": "client\\js\\ui\\friends-hud.js",
     "to": "../ws/singleton.js"
+  },
+  {
+    "from": "client\\js\\ui\\friends-hud.js",
+    "to": "../i18n/core.js"
   },
   {
     "from": "client\\js\\ui\\dm-chat.js",

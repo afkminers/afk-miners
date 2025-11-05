@@ -121,7 +121,7 @@
     "method": "POST",
     "path": "/:friendId/accept",
     "file": "server\\routes\\friends.js",
-    "line": 242,
+    "line": 257,
     "sample": {
       "params": {
         "friendId": 1
@@ -180,7 +180,7 @@
     "method": "POST",
     "path": "/:friendId/block",
     "file": "server\\routes\\friends.js",
-    "line": 316,
+    "line": 331,
     "sample": {
       "params": {
         "friendId": 1
@@ -223,7 +223,7 @@
     "method": "GET",
     "path": "/:friendId/dms",
     "file": "server\\routes\\friends.js",
-    "line": 372,
+    "line": 387,
     "sample": {
       "params": {
         "friendId": 1
@@ -250,7 +250,7 @@
     "method": "POST",
     "path": "/:friendId/reject",
     "file": "server\\routes\\friends.js",
-    "line": 275,
+    "line": 290,
     "sample": {
       "params": {
         "friendId": 1
@@ -309,7 +309,7 @@
     "method": "POST",
     "path": "/:friendId/unblock",
     "file": "server\\routes\\friends.js",
-    "line": 350,
+    "line": 365,
     "sample": {
       "params": {
         "friendId": 1
@@ -344,7 +344,7 @@
     "method": "DELETE",
     "path": "/:friendId",
     "file": "server\\routes\\friends.js",
-    "line": 297,
+    "line": 312,
     "sample": {
       "params": {
         "friendId": 1
@@ -1533,7 +1533,7 @@
     "method": "GET",
     "path": "/",
     "file": "server\\routes\\friends.js",
-    "line": 178,
+    "line": 191,
     "sample": {},
     "errors": [
       {
@@ -2828,7 +2828,7 @@
     "method": "POST",
     "path": "/request",
     "file": "server\\routes\\friends.js",
-    "line": 200,
+    "line": 215,
     "sample": {},
     "errors": [
       {

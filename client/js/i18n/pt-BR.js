@@ -40,11 +40,14 @@ export default {
       tooltip: 'Modo de batalha — permaneça online até chegar em segurança.',
       safeTooltip: 'Use o botão Sair antes de fechar a aba.',
       logoutBlocked: 'Não é possível sair durante a batalha. Vá até uma área segura primeiro.',
-      leaveWarning: 'Modo de batalha ativo! Se sair agora seu herói ficará vulnerável e online.',
+      leaveWarning:
+        'Modo de batalha ativo! Se sair agora seu herói ficará vulnerável e online.',
       exitTitle: 'Modo de batalha ativo',
-      exitBody: 'Cancele e permaneça no jogo — fechar agora deixa seu herói exposto aos monstros.',
+      exitBody:
+        'Cancele e permaneça no jogo — fechar agora deixa seu herói exposto aos monstros.',
       safeExitTitle: 'Deslogue antes de fechar',
-      safeExitBody: 'Use o botão Sair antes de fechar esta aba para desconectar seu herói em segurança.',
+      safeExitBody:
+        'Use o botão Sair antes de fechar esta aba para desconectar seu herói em segurança.',
       safeExitPrompt: 'Deslogue antes de fechar a aba para proteger seu herói.',
     },
   },
@@ -98,8 +101,10 @@ export default {
     caption: 'Leaderboard do AFK Miners',
     weeklySoon: 'Ranking semanal em breve',
     heroHeadline: 'Salão das Lendas AFK',
-    heroCopy: 'Acompanhe os mineradores mais bravos, seus heróis mais fortes e as habilidades mais afiadas do reino. Use as abas para explorar jogadores, heróis individuais ou especialistas em habilidades.',
-    panelIntro: 'Alterne entre Jogadores, Heróis ou Habilidades. Escolha sua visão e mantenha-se à frente da concorrência.',
+    heroCopy:
+      'Acompanhe os mineradores mais bravos, seus heróis mais fortes e as habilidades mais afiadas do reino. Use as abas para explorar jogadores, heróis individuais ou especialistas em habilidades.',
+    panelIntro:
+      'Alterne entre Jogadores, Heróis ou Habilidades. Escolha sua visão e mantenha-se à frente da concorrência.',
   },
   skills: {
     distance: 'Combate à distância',
@@ -147,34 +152,45 @@ export default {
     next: 'Próximo',
     subscribe: 'Inscreva-se para novidades',
     heroTitle: 'Roadmap e expansão do mundo',
-    heroCopy: 'Acompanhe a jornada de AFK Miners enquanto forjamos novos sistemas, raids e melhorias de qualidade de vida para a guilda.',
+    heroCopy:
+      'Acompanhe a jornada de AFK Miners enquanto forjamos novos sistemas, raids e melhorias de qualidade de vida para a guilda.',
     milestones: 'Marcos',
     subscribeTitle: 'Fique à frente das notas de patch',
-    subscribeCopy: 'Assine para receber atualizações do roadmap, prévias e convites para recursos em beta fechado.',
+    subscribeCopy:
+      'Assine para receber atualizações do roadmap, prévias e convites para recursos em beta fechado.',
     subscribeInvalid: 'Informe um e-mail válido para assinar.',
     subscribeSuccess: 'Valeu! Você receberá a próxima atualização do roadmap.',
     phase1Title: 'Fase 1 — Forja do Lançamento',
-    phase1Copy: 'Loop AFK central, elenco de heróis, expedições de mineração e a primeira masmorra liberada para todos os fundadores.',
+    phase1Copy:
+      'Loop AFK central, elenco de heróis, expedições de mineração e a primeira masmorra liberada para todos os fundadores.',
     phase2Title: 'Fase 2 — Fronteira das Guildas',
-    phase2Copy: 'Salões de guilda, expedições cooperativas, automação de treinamento aprimorada e uma interface renovada para gestão da equipe.',
+    phase2Copy:
+      'Salões de guilda, expedições cooperativas, automação de treinamento aprimorada e uma interface renovada para gestão da equipe.',
     phase3Title: 'Fase 3 — Guerras de Cristal',
-    phase3Copy: 'Ligas PvP assíncronas, relíquias sazonais, rankings entre servidores e eventos de chefes cinematográficos.',
+    phase3Copy:
+      'Ligas PvP assíncronas, relíquias sazonais, rankings entre servidores e eventos de chefes cinematográficos.',
     phase4Title: 'Fase 4 — Profundezas Infinitas',
-    phase4Copy: 'Andares procedurais, forja de relíquias, moradias e APIs avançadas de automação para mineradores veteranos.',
+    phase4Copy:
+      'Andares procedurais, forja de relíquias, moradias e APIs avançadas de automação para mineradores veteranos.',
   },
   support: {
     title: 'Suporte',
     heroTitle: 'Suporte e ajuda da comunidade',
-    heroCopy: 'Precisa de ajuda com a conta, progresso ou quer enviar uma sugestão? Nossa equipe e a comunidade estão prontas para ouvir.',
+    heroCopy:
+      'Precisa de ajuda com a conta, progresso ou quer enviar uma sugestão? Nossa equipe e a comunidade estão prontas para ouvir.',
     faqTitle: 'Perguntas frequentes',
     faqRecover: 'Como recuperar meu login?',
-    faqRecoverBody: 'Use a tela de login do jogo e clique em “Esqueci a senha”. Se a conta estiver vinculada a um e-mail, você receberá instruções de redefinição. Fale conosco caso não tenha mais acesso à caixa de entrada.',
+    faqRecoverBody:
+      'Use a tela de login do jogo e clique em “Esqueci a senha”. Se a conta estiver vinculada a um e-mail, você receberá instruções de redefinição. Fale conosco caso não tenha mais acesso à caixa de entrada.',
     faqProgress: 'Onde está meu progresso offline?',
-    faqProgressBody: 'Os heróis continuam minerando e treinando enquanto você está ausente. Acesse os painéis Tesouro e Treinamento ao entrar para resgatar recompensas pendentes e revisar os registros de combate.',
+    faqProgressBody:
+      'Os heróis continuam minerando e treinando enquanto você está ausente. Acesse os painéis Tesouro e Treinamento ao entrar para resgatar recompensas pendentes e revisar os registros de combate.',
     faqBug: 'Como posso reportar um bug?',
-    faqBugBody: 'Envie um ticket abaixo com passos de reprodução, capturas de tela ou o ID da partida. Triamos bugs diariamente e publicamos notas de hotfix na página de roadmap.',
+    faqBugBody:
+      'Envie um ticket abaixo com passos de reprodução, capturas de tela ou o ID da partida. Triamos bugs diariamente e publicamos notas de hotfix na página de roadmap.',
     faqIdeas: 'Posso enviar ideias ou feedback de balanceamento?',
-    faqIdeasBody: 'Com certeza! Envie sugestões pelo formulário ou entre em nosso Discord para debater builds com outros mineradores.',
+    faqIdeasBody:
+      'Com certeza! Envie sugestões pelo formulário ou entre em nosso Discord para debater builds com outros mineradores.',
     formTitle: 'Criar um ticket de suporte',
     name: 'Nome',
     email: 'E-mail',
@@ -198,33 +214,49 @@ export default {
     modes: 'Modos de jogo',
     art: 'Arte e estilo',
     heroTitle: 'Forje sua lenda AFK',
-    heroCopy: 'AFK Miners é um MMORPG retrô em que seus heróis cavam, treinam e conquistam mesmo enquanto você está offline. Monte sua equipe, conquiste tesouros e volte sempre para um reino mais rico.',
+    heroCopy:
+      'AFK Miners é um MMORPG retrô em que seus heróis cavam, treinam e conquistam mesmo enquanto você está offline. Monte sua equipe, conquiste tesouros e volte sempre para um reino mais rico.',
     cta: 'Entrar no reino',
     whatIs: 'O que é AFK Miners',
-    whatIsCopy: 'AFK Miners mistura progressão idle com combate tático. Monte uma equipe de heróis em pixel art, envie-os para minas proibidas e volte para distribuir o saque, evoluir habilidades e liberar novas regiões.',
+    whatIsCopy:
+      'AFK Miners mistura progressão idle com combate tático. Monte uma equipe de heróis em pixel art, envie-os para minas proibidas e volte para distribuir o saque, evoluir habilidades e liberar novas regiões.',
     join: 'Junte-se à expedição',
-    joinCopy: 'Pronto para convocar sua guilda mineradora? Comece a jogar agora e construa uma lenda que prospera enquanto você descansa.',
+    joinCopy:
+      'Pronto para convocar sua guilda mineradora? Comece a jogar agora e construa uma lenda que prospera enquanto você descansa.',
     joinCta: 'Jogar agora',
-    howToSummon: '<strong>Convocar &amp; recrutar:</strong> Desbloqueie heróis com funções distintas e atributos de combate.',
-    howToAssign: '<strong>Distribuir tarefas:</strong> Envie esquadrões para as atividades de Tesouro, Treinamento, Masmorra ou PvP.',
-    howToCollect: '<strong>Coletar recompensas:</strong> Receba ouro, diamantes, equipamentos e experiência ao fim de cada expedição.',
-    howToOptimize: '<strong>Otimizar builds:</strong> Equipe armas, treine habilidades e ajuste raridades para cada desafio.',
+    howToSummon:
+      '<strong>Convocar &amp; recrutar:</strong> Desbloqueie heróis com funções distintas e atributos de combate.',
+    howToAssign:
+      '<strong>Distribuir tarefas:</strong> Envie esquadrões para as atividades de Tesouro, Treinamento, Masmorra ou PvP.',
+    howToCollect:
+      '<strong>Coletar recompensas:</strong> Receba ouro, diamantes, equipamentos e experiência ao fim de cada expedição.',
+    howToOptimize:
+      '<strong>Otimizar builds:</strong> Equipe armas, treine habilidades e ajuste raridades para cada desafio.',
     heroesCommonTitle: 'Comum &amp; Raro',
-    heroesCommonBody: 'Heróis iniciais como Aric ou Lyria garantem as primeiras minas e liberam sinergias de classe enquanto você aprende as rotações.',
+    heroesCommonBody:
+      'Heróis iniciais como Aric ou Lyria garantem as primeiras minas e liberam sinergias de classe enquanto você aprende as rotações.',
     heroesEpicTitle: 'Épico &amp; Lendário',
-    heroesEpicBody: 'Guardas de alto nível como Seraph ou Ragnar reforçam sua linha de frente com atributos superiores e crescimento único de habilidades.',
+    heroesEpicBody:
+      'Guardas de alto nível como Seraph ou Ragnar reforçam sua linha de frente com atributos superiores e crescimento único de habilidades.',
     heroesMythicTitle: 'Relíquias Míticas',
-    heroesMythicBody: 'Campeões míticos como Auriel trazem poder incomparável e bônus passivos que transformam todo o seu elenco.',
-    economyCopy: 'O ouro alimenta treinamentos, melhorias e entradas em masmorras. Diamantes liberam invocações premium, finalizações instantâneas e cosméticos de prestígio. Equilibre as duas moedas para acelerar a progressão sem perder oportunidades diárias.',
+    heroesMythicBody:
+      'Campeões míticos como Auriel trazem poder incomparável e bônus passivos que transformam todo o seu elenco.',
+    economyCopy:
+      'O ouro alimenta treinamentos, melhorias e entradas em masmorras. Diamantes liberam invocações premium, finalizações instantâneas e cosméticos de prestígio. Equilibre as duas moedas para acelerar a progressão sem perder oportunidades diárias.',
     modesTreasureTitle: 'Caça ao Tesouro',
-    modesTreasureBody: 'Envie mineradores para cavar minérios raros e artefatos. Missões mais longas rendem ganhos maiores e encontros secretos.',
+    modesTreasureBody:
+      'Envie mineradores para cavar minérios raros e artefatos. Missões mais longas rendem ganhos maiores e encontros secretos.',
     modesTrainingTitle: 'Campo de Treinamento',
-    modesTrainingBody: 'Melhore habilidades essenciais enquanto está offline. Programe rotinas por herói e acumule bônus específicos de classe.',
+    modesTrainingBody:
+      'Melhore habilidades essenciais enquanto está offline. Programe rotinas por herói e acumule bônus específicos de classe.',
     modesDungeonTitle: 'Incursões em Masmorras',
-    modesDungeonBody: 'Enfrente chefes em pixel art com mecânicas artesanais. Saqueie equipamentos poderosos e fragmentos de runa.',
+    modesDungeonBody:
+      'Enfrente chefes em pixel art com mecânicas artesanais. Saqueie equipamentos poderosos e fragmentos de runa.',
     modesPvpTitle: 'Arenas PvP',
-    modesPvpBody: 'Suba nos ranques competitivos em duelos assíncronos. Ajuste os builds para responder ao meta semanal e ganhar troféus.',
-    artCopy: 'AFK Miners homenageia aventuras clássicas ao estilo Tibia com pixel art artesanal, feitiços vibrantes e uma paleta medieval acolhedora. Cada tela é otimizada para clareza no desktop e no mobile sem perder o charme nostálgico.',
+    modesPvpBody:
+      'Suba nos ranques competitivos em duelos assíncronos. Ajuste os builds para responder ao meta semanal e ganhar troféus.',
+    artCopy:
+      'AFK Miners homenageia aventuras clássicas ao estilo Tibia com pixel art artesanal, feitiços vibrantes e uma paleta medieval acolhedora. Cada tela é otimizada para clareza no desktop e no mobile sem perder o charme nostálgico.',
   },
   rarity: {
     COMMON: 'Comum',
@@ -354,12 +386,15 @@ export default {
       activity: 'Atividade: {activity}.',
     },
     invisibleNote: 'Você está invisível (Aparecer Offline).',
+    invisible: { note: 'Você está invisível (Aparecer Offline).' }, // alias p/ chamadas antigas
   },
+
   status: {
     online: 'Online',
     afk: 'AFK (Ausente)',
     busy: 'Ocupado',
     appearOffline: 'Aparecer Offline',
+    offline: 'Offline', // NOVO
   },
   activity: {
     house: 'Casa',
@@ -371,5 +406,12 @@ export default {
     busy: 'Ocupado reduz alertas sonoros e interrupções.',
     afk: 'AFK indica ausência temporária.',
     appearOffline: 'Mostra você como Offline para os outros.',
+  },
+
+  dm: {
+    nudge: {
+      unavailable: 'Destinatário indisponível.',
+      sent: 'Nudge enviado!',
+    },
   },
 };

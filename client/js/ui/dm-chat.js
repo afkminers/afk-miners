@@ -2,6 +2,13 @@
 import { apiGet } from '../api.js';
 import { getSocket, onMessage, wsSend } from '../ws/singleton.js';
 import { renderRichText } from './emoji.js';
+import { getMyPresence } from './presence-controls.js';
+
+// i18n global (já configurado em lang-menu.js)
+const i18n = (window && window.i18n) || {
+  t(key) { return key; },
+};
+
 
 const DM_SCOPE_PREFIX = 'dm:';
 
@@ -109,6 +116,18 @@ function resolveUserId() {
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+// Estou em "Aparecer Offline"?
+function isAppearOffline() {
+  try {
+    if (typeof getMyPresence !== 'function') return false;
+    const me = getMyPresence();
+    const status = String(me?.status || '').toUpperCase();
+    return status === 'APPEAR_OFFLINE';
+  } catch {
+    return false;
+  }
 }
 
 // ========= Nudge infra =========
@@ -255,51 +274,32 @@ function setDmPresence(conv, presence) {
   ).toUpperCase();
   const act = presence?.activity ? String(presence.activity).toUpperCase() : null;
 
-  let statusLabel;
-  switch (st) {
-    case 'AFK':
-      statusLabel = 'Ausente';
-      break;
-    case 'BUSY':
-      statusLabel = 'Ocupado';
-      break;
-    case 'ONLINE':
-      statusLabel = 'Online';
-      break;
-    default:
-      statusLabel = 'Offline';
-      break;
-  }
+  const statusLabel =
+    st === 'AFK' ? i18n.t('status.afk') :
+    st === 'BUSY' ? i18n.t('status.busy') :
+    st === 'APPEAR_OFFLINE' ? i18n.t('status.appearOffline') :
+    st === 'OFFLINE' ? i18n.t('status.offline') :
+    i18n.t('status.online');
+
+  const activityLabel =
+    act === 'HOUSE' ? i18n.t('activity.house') :
+    act === 'ADVENTURE' ? i18n.t('activity.adventure') :
+    act === 'TRAINING' ? i18n.t('activity.training') :
+    act === 'DUNGEON' ? i18n.t('activity.dungeon') :
+    null;
 
   let text;
   if (!online) {
-    text = 'Offline';
-  } else if (act) {
-    let activityLabel;
-    switch (act) {
-      case 'HOUSE':
-        activityLabel = 'na Casa';
-        break;
-      case 'ADVENTURE':
-        activityLabel = 'em Aventura';
-        break;
-      case 'TRAINING':
-        activityLabel = 'no Treinamento';
-        break;
-      case 'DUNGEON':
-        activityLabel = 'na Masmorra';
-        break;
-      default:
-        activityLabel = act;
-        break;
-    }
-    text = `${statusLabel} — ${activityLabel}`;
+    text = i18n.t('status.offline');
+  } else if (activityLabel) {
+    text = `${statusLabel} — ${i18n.t('presence.playingNow.prefix')} ${activityLabel}`;
   } else {
     text = statusLabel;
   }
 
   conv.presenceBoxEl.textContent = text;
 }
+
 
 
 function scrollToBottom(conv) {
@@ -707,13 +707,34 @@ function ensureHistory(conv) {
 
 function markRead(conv) {
   if (!conv || !conv.friendId) return;
-  const latest = conv.messages.length > 0 ? conv.messages[conv.messages.length - 1] : null;
-  if (latest?.id) wsSend({ type: 'dm:read', friendId: conv.friendId, upToId: latest.id });
+
+  // Se estou em "Aparecer Offline", NÃO manda dm:read pro servidor.
+  // O outro jogador não recebe o status "Lida".
+  if (isAppearOffline()) {
+    // Mas localmente limpamos o contador de não lidas da aba.
+    conv.unreadCount = 0;
+    renderBadge(conv);
+    emitUnread(conv.key, 0);
+    return;
+  }
+
+  const latest = conv.messages.length > 0
+    ? conv.messages[conv.messages.length - 1]
+    : null;
+
+  if (latest?.id) {
+    wsSend({
+      type: 'dm:read',
+      friendId: conv.friendId,
+      upToId: latest.id,
+    });
+  }
 
   conv.unreadCount = 0;
   renderBadge(conv);
   emitUnread(conv.key, 0);
 }
+
 
 // ========= Procura/aux =========
 function findMessage(conv, predicate) {
@@ -976,28 +997,83 @@ function handleNudgeEvent(payload) {
   const isSender = fromId === me;
   const partnerId = isSender ? friendId : fromId;
 
+  const isUnavailable = payload?.mode === 'unavailable';
+  const isSilent = !!payload?.silent;
+
   let conv = conversations.get(partnerId) || createConversation(partnerId, partnerId);
+
   if (isSender) {
     const result = settlePendingNudge(partnerId, true);
-    const cooldownUntil = result?.cooldownUntil || getLocalCooldownUntil(partnerId) || (Date.now() + NUDGE_COOLDOWN_MS);
-    if (conv) conv.nudgeAvailableAt = Math.max(conv.nudgeAvailableAt || 0, cooldownUntil);
+    const cooldownUntil =
+      result?.cooldownUntil ||
+      getLocalCooldownUntil(partnerId) ||
+      (Date.now() + NUDGE_COOLDOWN_MS);
+    if (conv) {
+      conv.nudgeAvailableAt = Math.max(conv.nudgeAvailableAt || 0, cooldownUntil);
+    }
   } else {
-    playNudgeSound();
-  }
-  if (conv) {
-    conv.nudgeBusy = false;
-    const message = isSender ? 'Nudge enviado!' : `${conv.friendName || 'Seu amigo'} cutucou você!`;
-    showNudgeFeedback(conv, message, isSender ? 'success' : 'info', isSender ? 2_000 : 4_000);
-    scheduleNudgeAvailabilityCheck(conv);
-    // anima (classe CSS)
-    const classes = isSender ? ['is-nudged'] : ['is-nudged', 'is-nudged--incoming'];
-    [conv.tabEl, conv.panelEl].forEach(el => { try { el.classList.add(...classes); setTimeout(()=>el.classList.remove(...classes), 1200); } catch {} });
+    // decide se toca ou não o som
+    let shouldSilent = isSilent;
+    try {
+      const mine = typeof getMyPresence === 'function' ? getMyPresence() : null;
+      if (mine && String(mine.status || '').toUpperCase() === 'BUSY') {
+        shouldSilent = true;
+      }
+    } catch {}
+    if (!shouldSilent) {
+      playNudgeSound();
+    }
   }
 
-  window.dispatchEvent(new CustomEvent('dm:nudge', {
-    detail: { friendId: partnerId, direction: isSender ? 'outgoing' : 'incoming', ts },
-  }));
+  if (conv) {
+    conv.nudgeBusy = false;
+
+    let message;
+    let tone = 'info';
+    let duration = 4000;
+
+    if (isSender && isUnavailable) {
+      message =
+        (i18n && typeof i18n.t === 'function'
+          ? i18n.t('dm.nudge.unavailable')
+          : null) || 'Destinatário indisponível.';
+      tone = 'warn';
+      duration = 3000;
+    } else {
+      if (isSender) {
+        message =
+          (i18n && typeof i18n.t === 'function'
+            ? i18n.t('dm.nudge.sent')
+            : null) || 'Nudge enviado!';
+        tone = 'success';
+        duration = 2000;
+      } else {
+        message = `${conv.friendName || 'Seu amigo'} cutucou você!`;
+        tone = 'info';
+        duration = 4000;
+      }
+    }
+
+    showNudgeFeedback(conv, message, tone, duration);
+    scheduleNudgeAvailabilityCheck(conv);
+
+    // anima (classe CSS)
+    const classes = isSender ? ['is-nudged'] : ['is-nudged', 'is-nudged--incoming'];
+    [conv.tabEl, conv.panelEl].forEach((el) => {
+      try {
+        el.classList.add(...classes);
+        setTimeout(() => el.classList.remove(...classes), 1200);
+      } catch {}
+    });
+  }
+
+  window.dispatchEvent(
+    new CustomEvent('dm:nudge', {
+      detail: { friendId: partnerId, direction: isSender ? 'outgoing' : 'incoming', ts },
+    }),
+  );
 }
+
 
 // ========= API público (export) =========
 export function activateDmScope(scope) {

@@ -99,7 +99,7 @@
 
 ### DELETE /:friendId
 
-Arquivo: `server\routes\friends.js:297`
+Arquivo: `server\routes\friends.js:312`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -137,7 +137,7 @@ _Sem payload inferido_
 
 ### GET /:friendId/dms
 
-Arquivo: `server\routes\friends.js:372`
+Arquivo: `server\routes\friends.js:387`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -1020,7 +1020,7 @@ Arquivo: `server\routes\presence.js:37`
 
 ### POST /:friendId/accept
 
-Arquivo: `server\routes\friends.js:242`
+Arquivo: `server\routes\friends.js:257`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -1051,7 +1051,7 @@ Arquivo: `server\routes\friends.js:242`
 
 ### POST /:friendId/block
 
-Arquivo: `server\routes\friends.js:316`
+Arquivo: `server\routes\friends.js:331`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -1080,7 +1080,7 @@ Arquivo: `server\routes\friends.js:316`
 
 ### POST /:friendId/reject
 
-Arquivo: `server\routes\friends.js:275`
+Arquivo: `server\routes\friends.js:290`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -1113,7 +1113,7 @@ Arquivo: `server\routes\friends.js:275`
 
 ### POST /:friendId/unblock
 
-Arquivo: `server\routes\friends.js:350`
+Arquivo: `server\routes\friends.js:365`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -1743,7 +1743,7 @@ _Sem payload inferido_
 
 ### POST /request
 
-Arquivo: `server\routes\friends.js:200`
+Arquivo: `server\routes\friends.js:215`
 
 _Sem payload inferido_
 

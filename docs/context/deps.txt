@@ -25,11 +25,15 @@ client\js\app.js -> ./app_panels.js
 client\js\app.js -> ./ws/singleton.js
 client\js\app.js -> ./state/hero-state.js
 client\js\app.js -> ./ui/friends-hud.js
+client\js\app.js -> ./ui/presence-controls.js
 client\js\app.js -> ./ui/emoji.js
+client\js\ui\presence-controls.js -> ../api.js
+client\js\ui\presence-controls.js -> ../i18n/core.js
 client\js\ui\hud_status.js -> ../state/hero-state.js
 client\js\ui\hero-floating-damage.js -> ../ws/singleton.js
 client\js\ui\friends-hud.js -> ../api.js
 client\js\ui\friends-hud.js -> ../ws/singleton.js
+client\js\ui\friends-hud.js -> ../i18n/core.js
 client\js\ui\dm-chat.js -> ../api.js
 client\js\ui\dm-chat.js -> ../ws/singleton.js
 client\js\ui\dm-chat.js -> ./emoji.js

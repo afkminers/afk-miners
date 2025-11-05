@@ -19,19 +19,19 @@
   },
   {
     "file": "client\\js\\i18n\\en.js",
-    "line": 33,
+    "line": 34,
     "tag": "NOTE",
     "text": "'Movement and interactions remain blocked while you are dead.',"
   },
   {
     "file": "client\\js\\i18n\\pt-BR.js",
-    "line": 33,
+    "line": 34,
     "tag": "NOTE",
     "text": "'Durante a morte, movimento e interações ficam bloqueados.',"
   },
   {
     "file": "client\\js\\i18n\\pt-BR.js",
-    "line": 216,
+    "line": 217,
     "tag": "TODO",
     "text": "o seu elenco.',"
   },

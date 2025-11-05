@@ -98,8 +98,10 @@ export default {
     caption: 'AFK Miners leaderboard',
     weeklySoon: 'Weekly rankings coming soon',
     heroHeadline: 'Hall of Idle Legends',
-    heroCopy: 'Track the bravest miners, their strongest heroes, and the sharpest skills in the realm. Filter by tabs to explore players, individual heroes, or skill specialists.',
-    panelIntro: 'Switch tabs to view Players, Heroes, or Skills. Choose your view and stay ahead of the competition.',
+    heroCopy:
+      'Track the bravest miners, their strongest heroes, and the sharpest skills in the realm. Filter by tabs to explore players, individual heroes, or skill specialists.',
+    panelIntro:
+      'Switch tabs to view Players, Heroes, or Skills. Choose your view and stay ahead of the competition.',
   },
   skills: {
     distance: 'Distance Fighting',
@@ -147,34 +149,44 @@ export default {
     next: 'Next',
     subscribe: 'Subscribe for updates',
     heroTitle: 'Roadmap & World Expansion',
-    heroCopy: 'Follow the journey of AFK Miners as we forge new systems, raids, and quality-of-life improvements for our guild.',
+    heroCopy:
+      'Follow the journey of AFK Miners as we forge new systems, raids, and quality-of-life improvements for our guild.',
     milestones: 'Milestones',
     subscribeTitle: 'Stay Ahead of the Patch Notes',
     subscribeCopy: 'Subscribe to receive roadmap updates, sneak peeks, and invites to closed beta features.',
     subscribeInvalid: 'Please enter a valid email address to subscribe.',
     subscribeSuccess: 'Thanks! We will keep you posted with the next roadmap update.',
     phase1Title: 'Phase 1 — Launch Forge',
-    phase1Copy: 'Core AFK loop, hero roster, mining expeditions, and the first dungeon released to all founders.',
+    phase1Copy:
+      'Core AFK loop, hero roster, mining expeditions, and the first dungeon released to all founders.',
     phase2Title: 'Phase 2 — Guild Frontier',
-    phase2Copy: 'Guild halls, co-op expeditions, improved training automation, and a refreshed UI for roster management.',
+    phase2Copy:
+      'Guild halls, co-op expeditions, improved training automation, and a refreshed UI for roster management.',
     phase3Title: 'Phase 3 — Crystal Wars',
-    phase3Copy: 'Async PvP leagues, seasonal relics, cross-server leaderboards, and cinematic boss events.',
+    phase3Copy:
+      'Async PvP leagues, seasonal relics, cross-server leaderboards, and cinematic boss events.',
     phase4Title: 'Phase 4 — Endless Depths',
-    phase4Copy: 'Procedural dungeon tiers, relic crafting, housing, and advanced automation APIs for veteran miners.',
+    phase4Copy:
+      'Procedural dungeon tiers, relic crafting, housing, and advanced automation APIs for veteran miners.',
   },
   support: {
     title: 'Support',
     heroTitle: 'Support & Community Help',
-    heroCopy: 'Need help with your account, progress, or have a suggestion? Our support team and community are here to listen.',
+    heroCopy:
+      'Need help with your account, progress, or have a suggestion? Our support team and community are here to listen.',
     faqTitle: 'Frequently Asked Questions',
     faqRecover: 'How do I recover my login?',
-    faqRecoverBody: 'Use the in-game login screen and press “Forgot password”. If the account is linked to an email, you will receive reset instructions. Contact support if you no longer have access to the inbox.',
+    faqRecoverBody:
+      'Use the in-game login screen and press “Forgot password”. If the account is linked to an email, you will receive reset instructions. Contact support if you no longer have access to the inbox.',
     faqProgress: 'Where is my offline progress?',
-    faqProgressBody: 'Heroes continue mining and training when you are away. Visit the Treasure and Training panels after logging in to claim pending rewards and review detailed battle logs.',
+    faqProgressBody:
+      'Heroes continue mining and training when you are away. Visit the Treasure and Training panels after logging in to claim pending rewards and review detailed battle logs.',
     faqBug: 'How can I report a bug?',
-    faqBugBody: 'Submit a ticket below with reproduction steps, screenshots, or the match ID. We triage bugs daily and publish hotfix notes on the roadmap page.',
+    faqBugBody:
+      'Submit a ticket below with reproduction steps, screenshots, or the match ID. We triage bugs daily and publish hotfix notes on the roadmap page.',
     faqIdeas: 'Can I share ideas or balance feedback?',
-    faqIdeasBody: 'Absolutely. Send suggestions through the form or join our Discord tavern to debate builds with other miners.',
+    faqIdeasBody:
+      'Absolutely. Send suggestions through the form or join our Discord tavern to debate builds with other miners.',
     formTitle: 'Create a Support Ticket',
     name: 'Name',
     email: 'Email',
@@ -198,33 +210,49 @@ export default {
     modes: 'Game Modes',
     art: 'Art & Style',
     heroTitle: 'Forge Your Idle Legacy',
-    heroCopy: 'AFK Miners is a retro MMORPG where your heroes dig, train, and conquer even while you are offline. Plan your squad, claim treasures, and return to a richer kingdom every session.',
+    heroCopy:
+      'AFK Miners is a retro MMORPG where your heroes dig, train, and conquer even while you are offline. Plan your squad, claim treasures, and return to a richer kingdom every session.',
     cta: 'Enter the Realm',
     whatIs: 'What is AFK Miners',
-    whatIsCopy: 'AFK Miners blends idle progression with tactical combat. Assemble a team of pixel-perfect heroes, send them to mine forbidden caverns, and return to distribute loot, upgrade skills, and unlock new regions.',
+    whatIsCopy:
+      'AFK Miners blends idle progression with tactical combat. Assemble a team of pixel-perfect heroes, send them to mine forbidden caverns, and return to distribute loot, upgrade skills, and unlock new regions.',
     join: 'Join the Expedition',
-    joinCopy: 'Ready to deploy your mining guild? Start playing now and build a legend that thrives while you relax.',
+    joinCopy:
+      'Ready to deploy your mining guild? Start playing now and build a legend that thrives while you relax.',
     joinCta: 'Play Now',
-    howToSummon: '<strong>Summon &amp; Recruit:</strong> Unlock heroes with distinct roles and combat stats.',
-    howToAssign: '<strong>Assign Tasks:</strong> Send squads to Treasure, Training, Dungeon, or PvP activities.',
-    howToCollect: '<strong>Collect Rewards:</strong> Claim gold, diamonds, gear, and experience after every run.',
-    howToOptimize: '<strong>Optimize Builds:</strong> Equip weapons, train skills, and tailor rarities for each challenge.',
+    howToSummon:
+      '<strong>Summon &amp; Recruit:</strong> Unlock heroes with distinct roles and combat stats.',
+    howToAssign:
+      '<strong>Assign Tasks:</strong> Send squads to Treasure, Training, Dungeon, or PvP activities.',
+    howToCollect:
+      '<strong>Collect Rewards:</strong> Claim gold, diamonds, gear, and experience after every run.',
+    howToOptimize:
+      '<strong>Optimize Builds:</strong> Equip weapons, train skills, and tailor rarities for each challenge.',
     heroesCommonTitle: 'Common &amp; Rare',
-    heroesCommonBody: 'Starter heroes such as Aric or Lyria secure early mines and unlock class synergies while you learn rotations.',
+    heroesCommonBody:
+      'Starter heroes such as Aric or Lyria secure early mines and unlock class synergies while you learn rotations.',
     heroesEpicTitle: 'Epic &amp; Legendary',
-    heroesEpicBody: 'High-tier guardians like Seraph or Ragnar shift your frontline with superior stats and unique skill growth.',
+    heroesEpicBody:
+      'High-tier guardians like Seraph or Ragnar shift your frontline with superior stats and unique skill growth.',
     heroesMythicTitle: 'Mythic Relics',
-    heroesMythicBody: 'Mythic champions such as Auriel bring unmatched power and passive boosts that reshape your entire roster.',
-    economyCopy: 'Gold fuels training, upgrades, and dungeon entries. Diamonds unlock premium summons, instant finishes, and prestigious cosmetics. Balance both currencies to speed up your progression without missing daily opportunities.',
+    heroesMythicBody:
+      'Mythic champions such as Auriel bring unmatched power and passive boosts that reshape your entire roster.',
+    economyCopy:
+      'Gold fuels training, upgrades, and dungeon entries. Diamonds unlock premium summons, instant finishes, and prestigious cosmetics. Balance both currencies to speed up your progression without missing daily opportunities.',
     modesTreasureTitle: 'Treasure Hunt',
-    modesTreasureBody: 'Send miners to dig rare ores and artifacts. Longer runs bring higher yields and secret encounters.',
+    modesTreasureBody:
+      'Send miners to dig rare ores and artifacts. Longer runs bring higher yields and secret encounters.',
     modesTrainingTitle: 'Training Grounds',
-    modesTrainingBody: 'Improve core skills while you are offline. Queue routines per hero and stack class-specific bonuses.',
+    modesTrainingBody:
+      'Improve core skills while you are offline. Queue routines per hero and stack class-specific bonuses.',
     modesDungeonTitle: 'Dungeon Raids',
-    modesDungeonBody: 'Challenge pixel bosses with handcrafted mechanics. Loot powerful equipment and rune shards.',
+    modesDungeonBody:
+      'Challenge pixel bosses with handcrafted mechanics. Loot powerful equipment and rune shards.',
     modesPvpTitle: 'PvP Arenas',
-    modesPvpBody: 'Climb competitive ladders in async duels. Tune builds to counter the weekly meta and earn trophies.',
-    artCopy: 'AFK Miners pays homage to classic Tibia-like adventures with hand-crafted pixel art, vibrant spells, and a warm medieval palette. Every screen is optimized for clarity on desktop and mobile while preserving nostalgic charm.',
+    modesPvpBody:
+      'Climb competitive ladders in async duels. Tune builds to counter the weekly meta and earn trophies.',
+    artCopy:
+      'AFK Miners pays homage to classic Tibia-like adventures with hand-crafted pixel art, vibrant spells, and a warm medieval palette. Every screen is optimized for clarity on desktop and mobile while preserving nostalgic charm.',
   },
   rarity: {
     COMMON: 'Common',
@@ -354,12 +382,15 @@ export default {
       activity: 'Activity: {activity}.',
     },
     invisibleNote: 'You are invisible (Appear Offline).',
+    invisible: { note: 'You are invisible (Appear Offline).' }, // alias
   },
+
   status: {
     online: 'Online',
     afk: 'AFK (Away)',
     busy: 'Busy',
     appearOffline: 'Appear Offline',
+    offline: 'Offline', // NEW
   },
   activity: {
     house: 'House',
@@ -371,5 +402,12 @@ export default {
     busy: 'Busy reduces loud alerts and interruptions.',
     afk: 'AFK indicates temporary absence.',
     appearOffline: 'Shows you as Offline to others.',
+  },
+
+  dm: {
+    nudge: {
+      unavailable: 'Recipient unavailable.',
+      sent: 'Nudge sent!',
+    },
   },
 };

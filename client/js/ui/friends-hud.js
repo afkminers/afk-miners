@@ -211,18 +211,19 @@ function formatRelative(ts) {
 // NOVO: helpers para status/atividade da presença
 function describeStatusLabel(status) {
   const st = String(status || '').toUpperCase();
-  if (st === 'AFK') return 'Ausente';
-  if (st === 'BUSY') return 'Ocupado';
-  if (st === 'ONLINE') return 'Online';
-  return 'Offline';
+  if (st === 'AFK') return i18n.t('status.afk');
+  if (st === 'BUSY') return i18n.t('status.busy');
+  if (st === 'ONLINE') return i18n.t('status.online');
+  if (st === 'APPEAR_OFFLINE') return i18n.t('status.appearOffline');
+  return i18n.t('status.offline');
 }
 
 function describeActivityLabel(activity) {
   const ac = String(activity || '').toUpperCase();
-  if (ac === 'HOUSE') return 'na Casa';
-  if (ac === 'ADVENTURE') return 'em Aventura';
-  if (ac === 'TRAINING') return 'no Treinamento';
-  if (ac === 'DUNGEON') return 'na Masmorra';
+  if (ac === 'HOUSE') return i18n.t('activity.house');
+  if (ac === 'ADVENTURE') return i18n.t('activity.adventure');
+  if (ac === 'TRAINING') return i18n.t('activity.training');
+  if (ac === 'DUNGEON') return i18n.t('activity.dungeon');
   return null;
 }
 

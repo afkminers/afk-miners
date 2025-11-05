@@ -10,6 +10,7 @@ const {
 } = require('../services/direct-messages');
 const bus = require('./bus');
 const { get } = require('../models/db'); // resolver destinatário por nome quando não vier friendId
+const presence = require('./presence'); // <- NOVO: para checar status do alvo no nudge
 
 const NUDGE_COOLDOWN_MS = Number(process.env.DM_NUDGE_COOLDOWN_MS || 15_000);
 const NUDGE_RATE_WINDOW_MS = Number(process.env.DM_NUDGE_RATE_WINDOW_MS || 60_000);
@@ -98,6 +99,25 @@ function commitRateBucket(senderId, bucket) {
   rateBuckets.set(senderId, bucket);
 }
 
+// tenta ler um snapshot de presença, mas sem quebrar se a API mudar
+async function getPresenceSnapshotSafe(userId) {
+  if (!userId || !presence) return null;
+  try {
+    if (typeof presence.getPresenceSnapshot === 'function') {
+      return await presence.getPresenceSnapshot(userId);
+    }
+    if (typeof presence.getPresenceForUser === 'function') {
+      return await presence.getPresenceForUser(userId);
+    }
+    if (typeof presence.getPresence === 'function') {
+      return await presence.getPresence(userId);
+    }
+  } catch (err) {
+    console.warn('[dm] presence snapshot failed', err?.message);
+  }
+  return null;
+}
+
 async function handleSend(ws, data) {
   const senderId = resolveUserId(ws);
   if (!senderId) return;
@@ -155,7 +175,7 @@ async function handleSend(ws, data) {
         message,
         fromId: senderId,
         unreadCount: unread,
-        friendName: senderName, // <- fix: aqui vai o nome do REMETENTE
+        friendName: senderName, // <- aqui vai o nome do REMETENTE
         mode: 'name',
       };
 
@@ -228,15 +248,45 @@ async function handleNudge(ws, data) {
     // nudge continua exigindo amizade aceita
     await ensureCanMessage({ senderId, recipientId: friendId });
 
+    // snapshot de presença do destinatário (se existir)
+    const snap = await getPresenceSnapshotSafe(friendId);
+    const status = String(snap?.status || '').toUpperCase();
+
+    // OFFLINE ou APPEAR_OFFLINE => não cutuca o alvo, só responde para o remetente
+    const isUnavailable =
+      !!snap && (status === 'OFFLINE' || status === 'APPEAR_OFFLINE');
+
+    if (isUnavailable) {
+      markPairCooldown(cooldownKey);
+      commitRateBucket(senderId, rateBucket);
+      const payload = {
+        type: 'dm:nudge',
+        friendId,
+        fromId: senderId,
+        ts: new Date().toISOString(),
+        mode: 'unavailable', // remetente vê "destinatário indisponível"
+      };
+      send(ws, payload);
+      return;
+    }
+
+    // BUSY => entrega "silenciosa" (cliente decide não tocar som)
+    const silent = !!snap && status === 'BUSY';
+
     markPairCooldown(cooldownKey);
     commitRateBucket(senderId, rateBucket);
+
     const payload = {
       type: 'dm:nudge',
       friendId,
       fromId: senderId,
       ts: new Date().toISOString(),
+      ...(silent ? { silent: true } : {}),
     };
+
+    // confirma para o remetente
     send(ws, payload);
+    // e envia para o destinatário (se estiver conectado)
     bus.sendToPlayer(friendId, payload);
   } catch (err) {
     const code = err?.code || err?.payload?.error || 'DM_NUDGE_FAILED';
