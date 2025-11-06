@@ -13,6 +13,8 @@ import {
   getNudgeErrorMessage,
 } from './dm-chat.js';
 
+import { getMyPresence } from './presence-controls.js';
+
 const REFRESH_INTERVAL = 30_000;
 
 let initPromise = null;
@@ -100,6 +102,13 @@ function ensureMsnLayer() {
 // mostra popup tipo MSN quando amigo fica online
 function showFriendOnlineToast(friend) {
   if (!friend || typeof document === 'undefined') return;
+
+  // respeita meu status local: se eu estiver ocupado ou aparecer offline, não mostra popup
+  try {
+    const me = getMyPresence && getMyPresence();
+    const myStatus = String(me?.status || 'ONLINE').toUpperCase();
+    if (myStatus === 'BUSY' || myStatus === 'APPEAR_OFFLINE') return;
+  } catch {}
 
   // não faz sentido mostrar popup para bloqueados
   if (friend.status === 'BLOCKED') return;
