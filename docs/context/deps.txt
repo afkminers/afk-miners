@@ -37,6 +37,7 @@ client\js\ui\friends-hud.js -> ../i18n/core.js
 client\js\ui\dm-chat.js -> ../api.js
 client\js\ui\dm-chat.js -> ../ws/singleton.js
 client\js\ui\dm-chat.js -> ./emoji.js
+client\js\ui\dm-chat.js -> ./presence-controls.js
 client\js\ui\chat-context.js -> ../api.js
 client\js\pages\support.js -> ./common-nav.js
 client\js\pages\support.js -> ../api.js

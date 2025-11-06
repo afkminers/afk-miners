@@ -628,7 +628,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 21,
+    "line": 22,
     "kind": "function",
     "name": "resolveUserId",
     "params": [
@@ -637,7 +637,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 37,
+    "line": 38,
     "kind": "function",
     "name": "mapMessage",
     "params": [
@@ -646,7 +646,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 50,
+    "line": 51,
     "kind": "function",
     "name": "send",
     "params": [
@@ -656,7 +656,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 59,
+    "line": 60,
     "kind": "function",
     "name": "pairKey",
     "params": [
@@ -666,7 +666,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 65,
+    "line": 66,
     "kind": "function",
     "name": "checkPairCooldown",
     "params": [
@@ -676,7 +676,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 77,
+    "line": 78,
     "kind": "function",
     "name": "markPairCooldown",
     "params": [
@@ -685,7 +685,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 81,
+    "line": 82,
     "kind": "function",
     "name": "acquireRateBucket",
     "params": [
@@ -694,7 +694,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 95,
+    "line": 96,
     "kind": "function",
     "name": "commitRateBucket",
     "params": [
@@ -704,7 +704,16 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 101,
+    "line": 103,
+    "kind": "function",
+    "name": "getPresenceSnapshotSafe",
+    "params": [
+      "userId"
+    ]
+  },
+  {
+    "file": "server\\ws\\direct-messages.js",
+    "line": 121,
     "kind": "function",
     "name": "handleSend",
     "params": [
@@ -714,7 +723,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 210,
+    "line": 230,
     "kind": "function",
     "name": "handleNudge",
     "params": [
@@ -724,7 +733,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 247,
+    "line": 297,
     "kind": "function",
     "name": "handleAck",
     "params": [
@@ -734,7 +743,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 279,
+    "line": 329,
     "kind": "function",
     "name": "handleRead",
     "params": [
@@ -744,7 +753,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 310,
+    "line": 360,
     "kind": "function",
     "name": "handleMessage",
     "params": [
@@ -8736,7 +8745,14 @@
   },
   {
     "file": "client\\js\\ui\\presence-controls.js",
-    "line": 8,
+    "line": 11,
+    "kind": "function",
+    "name": "getMyPresence",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\presence-controls.js",
+    "line": 22,
     "kind": "function",
     "name": "labelForStatus",
     "params": [
@@ -8745,7 +8761,7 @@
   },
   {
     "file": "client\\js\\ui\\presence-controls.js",
-    "line": 17,
+    "line": 32,
     "kind": "function",
     "name": "labelForActivity",
     "params": [
@@ -8754,14 +8770,21 @@
   },
   {
     "file": "client\\js\\ui\\presence-controls.js",
-    "line": 27,
+    "line": 42,
     "kind": "function",
     "name": "mountPresenceControls",
     "params": []
   },
   {
     "file": "client\\js\\ui\\presence-controls.js",
-    "line": 72,
+    "line": 71,
+    "kind": "function",
+    "name": "markActivity",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\presence-controls.js",
+    "line": 145,
     "kind": "function",
     "name": "applyChange",
     "params": [
@@ -8770,12 +8793,12 @@
   },
   {
     "file": "client\\js\\ui\\presence-controls.js",
-    "line": 93,
+    "line": 179,
     "kind": "function",
     "name": "showMiniToast",
     "params": [
       "text",
-      "tone='info'"
+      "tone = 'info'"
     ]
   },
   {
@@ -9059,7 +9082,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 220,
+    "line": 221,
     "kind": "function",
     "name": "describeActivityLabel",
     "params": [
@@ -9068,7 +9091,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 229,
+    "line": 230,
     "kind": "function",
     "name": "buildPresenceText",
     "params": [
@@ -9077,7 +9100,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 241,
+    "line": 242,
     "kind": "function",
     "name": "buildPresenceTitle",
     "params": [
@@ -9086,7 +9109,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 257,
+    "line": 258,
     "kind": "function",
     "name": "showFeedback",
     "params": [
@@ -9096,7 +9119,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 276,
+    "line": 277,
     "kind": "function",
     "name": "setLoadingState",
     "params": [
@@ -9105,7 +9128,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 281,
+    "line": 282,
     "kind": "function",
     "name": "setFormLoading",
     "params": [
@@ -9114,7 +9137,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 289,
+    "line": 290,
     "kind": "function",
     "name": "setRowBusy",
     "params": [
@@ -9124,7 +9147,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 301,
+    "line": 302,
     "kind": "function",
     "name": "updateButtonBadge",
     "params": [
@@ -9134,14 +9157,14 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 314,
+    "line": 315,
     "kind": "function",
     "name": "renderSections",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 354,
+    "line": 355,
     "kind": "function",
     "name": "renderSection",
     "params": [
@@ -9151,7 +9174,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 385,
+    "line": 386,
     "kind": "function",
     "name": "buildFriendRow",
     "params": [
@@ -9160,7 +9183,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 451,
+    "line": 452,
     "kind": "function",
     "name": "updatePresenceFor",
     "params": [
@@ -9169,7 +9192,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 475,
+    "line": 476,
     "kind": "function",
     "name": "applyFriend",
     "params": [
@@ -9178,7 +9201,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 483,
+    "line": 484,
     "kind": "function",
     "name": "removeFriend",
     "params": [
@@ -9187,14 +9210,14 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 489,
+    "line": 490,
     "kind": "function",
     "name": "ensureCurrentUser",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 508,
+    "line": 509,
     "kind": "function",
     "name": "loadFriends",
     "params": [
@@ -9203,21 +9226,21 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 534,
+    "line": 535,
     "kind": "function",
     "name": "startAutoRefresh",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 541,
+    "line": 542,
     "kind": "function",
     "name": "stopAutoRefresh",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 548,
+    "line": 549,
     "kind": "function",
     "name": "handlePresenceEvent",
     "params": [
@@ -9227,7 +9250,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 587,
+    "line": 588,
     "kind": "function",
     "name": "mapError",
     "params": [
@@ -9236,7 +9259,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 592,
+    "line": 593,
     "kind": "function",
     "name": "mapNudgeError",
     "params": [
@@ -9245,7 +9268,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 597,
+    "line": 598,
     "kind": "function",
     "name": "highlightFriendRow",
     "params": [
@@ -9254,7 +9277,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 607,
+    "line": 608,
     "kind": "function",
     "name": "triggerNudge",
     "params": [
@@ -9263,7 +9286,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 619,
+    "line": 620,
     "kind": "function",
     "name": "handleAction",
     "params": [
@@ -9274,7 +9297,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 689,
+    "line": 690,
     "kind": "function",
     "name": "handlePanelClick",
     "params": [
@@ -9283,7 +9306,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 717,
+    "line": 718,
     "kind": "function",
     "name": "handleContextMenu",
     "params": [
@@ -9292,7 +9315,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 726,
+    "line": 727,
     "kind": "function",
     "name": "handleKeyboard",
     "params": [
@@ -9301,7 +9324,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 762,
+    "line": 763,
     "kind": "function",
     "name": "handleContextMenuClick",
     "params": [
@@ -9310,49 +9333,49 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 786,
+    "line": 787,
     "kind": "function",
     "name": "openPanel",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 797,
+    "line": 798,
     "kind": "function",
     "name": "closePanel",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 807,
+    "line": 808,
     "kind": "function",
     "name": "togglePanel",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 814,
+    "line": 815,
     "kind": "function",
     "name": "ensureButtonInTopbar",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 829,
+    "line": 830,
     "kind": "function",
     "name": "setupDom",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 922,
+    "line": 923,
     "kind": "function",
     "name": "bindEvents",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 957,
+    "line": 958,
     "kind": "arrow",
     "name": "unreadHandler",
     "params": [
@@ -9361,7 +9384,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 969,
+    "line": 970,
     "kind": "arrow",
     "name": "nudgeEventHandler",
     "params": [
@@ -9370,14 +9393,14 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 987,
+    "line": 988,
     "kind": "function",
     "name": "bindPresenceEvents",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 993,
+    "line": 994,
     "kind": "function",
     "name": "initFriendHud",
     "params": []
@@ -9432,21 +9455,21 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 23,
+    "line": 30,
     "kind": "function",
     "name": "readMutePreference",
     "params": []
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 32,
+    "line": 39,
     "kind": "function",
     "name": "ensureMuteWatcher",
     "params": []
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 35,
+    "line": 42,
     "kind": "arrow",
     "name": "handler",
     "params": [
@@ -9455,28 +9478,28 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 45,
+    "line": 52,
     "kind": "function",
     "name": "ensureNudgeAudio",
     "params": []
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 56,
+    "line": 63,
     "kind": "function",
     "name": "playNudgeSound",
     "params": []
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 74,
+    "line": 81,
     "kind": "arrow",
     "name": "focusInputFn",
     "params": []
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 82,
+    "line": 89,
     "kind": "function",
     "name": "norm",
     "params": [
@@ -9485,7 +9508,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 83,
+    "line": 90,
     "kind": "function",
     "name": "keyFromId",
     "params": [
@@ -9494,7 +9517,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 84,
+    "line": 91,
     "kind": "function",
     "name": "keyFromName",
     "params": [
@@ -9503,7 +9526,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 85,
+    "line": 92,
     "kind": "function",
     "name": "isNameKey",
     "params": [
@@ -9512,7 +9535,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 86,
+    "line": 93,
     "kind": "function",
     "name": "nameFromKey",
     "params": [
@@ -9521,7 +9544,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 88,
+    "line": 95,
     "kind": "function",
     "name": "scopeForKey",
     "params": [
@@ -9530,7 +9553,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 91,
+    "line": 98,
     "kind": "function",
     "name": "isDmScope",
     "params": [
@@ -9539,7 +9562,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 94,
+    "line": 101,
     "kind": "function",
     "name": "targetKeyFromScope",
     "params": [
@@ -9548,21 +9571,28 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 99,
+    "line": 106,
     "kind": "function",
     "name": "resolveUserId",
     "params": []
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 110,
+    "line": 117,
     "kind": "function",
     "name": "nowIso",
     "params": []
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 124,
+    "line": 122,
+    "kind": "function",
+    "name": "isAppearOffline",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\dm-chat.js",
+    "line": 143,
     "kind": "function",
     "name": "createError",
     "params": [
@@ -9571,7 +9601,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 129,
+    "line": 148,
     "kind": "function",
     "name": "getNudgeMessage",
     "params": [
@@ -9580,7 +9610,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 133,
+    "line": 152,
     "kind": "function",
     "name": "getLocalCooldownUntil",
     "params": [
@@ -9589,7 +9619,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 136,
+    "line": 155,
     "kind": "function",
     "name": "setLocalCooldown",
     "params": [
@@ -9599,7 +9629,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 140,
+    "line": 159,
     "kind": "function",
     "name": "clearLocalCooldown",
     "params": [
@@ -9608,7 +9638,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 144,
+    "line": 163,
     "kind": "function",
     "name": "createPendingNudge",
     "params": [
@@ -9617,7 +9647,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 162,
+    "line": 181,
     "kind": "function",
     "name": "settlePendingNudge",
     "params": [
@@ -9628,7 +9658,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 179,
+    "line": 198,
     "kind": "function",
     "name": "emitUnread",
     "params": [
@@ -9638,7 +9668,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 187,
+    "line": 206,
     "kind": "function",
     "name": "removeElement",
     "params": [
@@ -9647,7 +9677,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 189,
+    "line": 208,
     "kind": "function",
     "name": "createTabElement",
     "params": [
@@ -9657,7 +9687,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 201,
+    "line": 220,
     "kind": "function",
     "name": "createPanelElement",
     "params": [
@@ -9666,7 +9696,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 249,
+    "line": 268,
     "kind": "function",
     "name": "setDmPresence",
     "params": [
@@ -9795,7 +9825,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 719,
+    "line": 740,
     "kind": "function",
     "name": "findMessage",
     "params": [
@@ -9805,7 +9835,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 724,
+    "line": 745,
     "kind": "function",
     "name": "findConvKeyByNameLower",
     "params": [
@@ -9814,7 +9844,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 730,
+    "line": 751,
     "kind": "function",
     "name": "handleSend",
     "params": [
@@ -9824,7 +9854,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 779,
+    "line": 800,
     "kind": "function",
     "name": "handleSendEvent",
     "params": [
@@ -9833,7 +9863,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 834,
+    "line": 855,
     "kind": "function",
     "name": "handleRecvEvent",
     "params": [
@@ -9842,7 +9872,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 886,
+    "line": 907,
     "kind": "function",
     "name": "handleAckEvent",
     "params": [
@@ -9851,7 +9881,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 904,
+    "line": 925,
     "kind": "function",
     "name": "handleReadEvent",
     "params": [
@@ -9860,7 +9890,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 930,
+    "line": 951,
     "kind": "function",
     "name": "handleErrorEvent",
     "params": [
@@ -9869,7 +9899,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 969,
+    "line": 990,
     "kind": "function",
     "name": "handleNudgeEvent",
     "params": [
@@ -9878,7 +9908,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1003,
+    "line": 1079,
     "kind": "function",
     "name": "activateDmScope",
     "params": [
@@ -9887,7 +9917,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1017,
+    "line": 1093,
     "kind": "function",
     "name": "openConversation",
     "params": [
@@ -9896,7 +9926,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1127,
+    "line": 1203,
     "kind": "function",
     "name": "handleDmSubmit",
     "params": [
@@ -9906,7 +9936,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1132,
+    "line": 1208,
     "kind": "function",
     "name": "getDmScopeForFriend",
     "params": [
@@ -9915,7 +9945,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1136,
+    "line": 1212,
     "kind": "function",
     "name": "syncUnreadFromServer",
     "params": [
@@ -9926,7 +9956,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1146,
+    "line": 1222,
     "kind": "function",
     "name": "syncFriendData",
     "params": [
@@ -9935,7 +9965,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1158,
+    "line": 1234,
     "kind": "function",
     "name": "sendNudge",
     "params": [
@@ -9944,7 +9974,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1178,
+    "line": 1254,
     "kind": "function",
     "name": "getNudgeErrorMessage",
     "params": [

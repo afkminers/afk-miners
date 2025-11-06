@@ -52,7 +52,7 @@ function ensureMuteWatcher() {
 function ensureNudgeAudio() {
   if (nudgeAudio) return;
   try {
-    nudgeAudio = new Audio('/sfx/click.mp3');
+    nudgeAudio = new Audio('/sfx/nudge.mp3');
     nudgeAudio.preload = 'auto';
     nudgeAudio.volume = 0.75;
   } catch {

@@ -156,6 +156,10 @@
     "to": "./emoji.js"
   },
   {
+    "from": "client\\js\\ui\\dm-chat.js",
+    "to": "./presence-controls.js"
+  },
+  {
     "from": "client\\js\\ui\\chat-context.js",
     "to": "../api.js"
   },

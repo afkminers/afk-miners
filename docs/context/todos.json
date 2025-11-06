@@ -24,6 +24,12 @@
     "text": "'Movement and interactions remain blocked while you are dead.',"
   },
   {
+    "file": "client\\js\\i18n\\en.js",
+    "line": 385,
+    "tag": "NOTE",
+    "text": "'You are invisible (Appear Offline).' }, // alias"
+  },
+  {
     "file": "client\\js\\i18n\\pt-BR.js",
     "line": 34,
     "tag": "NOTE",
@@ -31,9 +37,27 @@
   },
   {
     "file": "client\\js\\i18n\\pt-BR.js",
-    "line": 217,
+    "line": 243,
     "tag": "TODO",
     "text": "o seu elenco.',"
+  },
+  {
+    "file": "client\\js\\i18n\\pt-BR.js",
+    "line": 389,
+    "tag": "NOTE",
+    "text": "'Você está invisível (Aparecer Offline).' }, // alias p/ chamadas antigas"
+  },
+  {
+    "file": "client\\js\\ui\\presence-controls.js",
+    "line": 138,
+    "tag": "NOTE",
+    "text": "';"
+  },
+  {
+    "file": "client\\js\\ui\\presence-controls.js",
+    "line": 141,
+    "tag": "NOTE",
+    "text": "');"
   },
   {
     "file": "docs\\COMBAT_FLAGS.md",

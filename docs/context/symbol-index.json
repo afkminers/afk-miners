@@ -779,6 +779,7 @@
       "handleRecvEvent",
       "handleSend",
       "handleSendEvent",
+      "isAppearOffline",
       "isDmScope",
       "isNameKey",
       "keyFromId",
@@ -904,9 +905,10 @@
     "file": "client\\js\\ui\\presence-controls.js",
     "symbols": [
       "applyChange",
+      "getMyPresence",
       "labelForActivity",
       "labelForStatus",
-      "mountPresenceControls",
+      "markActivity",
       "showMiniToast"
     ]
   },
@@ -1757,6 +1759,7 @@
       "acquireRateBucket",
       "checkPairCooldown",
       "commitRateBucket",
+      "getPresenceSnapshotSafe",
       "handleAck",
       "handleMessage",
       "handleNudge",
