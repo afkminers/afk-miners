@@ -9,7 +9,6 @@ const i18n = (window && window.i18n) || {
   t(key) { return key; },
 };
 
-
 const DM_SCOPE_PREFIX = 'dm:';
 
 // Agora as conversas podem ser chaveadas por:
@@ -26,6 +25,7 @@ const pendingNudges = new Map();
 
 let sfxMuted = false;
 let nudgeAudio = null;
+let messageAudio = null; // áudio para mensagem recebida
 
 function readMutePreference() {
   try {
@@ -70,6 +70,28 @@ function playNudgeSound() {
   } catch {}
 }
 
+// ===== Som de mensagem =====
+function ensureMessageAudio() {
+  if (messageAudio) return;
+  try {
+    messageAudio = new Audio('/sfx/message.mp3');
+    messageAudio.preload = 'auto';
+    messageAudio.volume = 0.8;
+  } catch {
+    messageAudio = null;
+  }
+}
+
+function playMessageSound() {
+  if (sfxMuted) return;
+  ensureMessageAudio();
+  if (!messageAudio) return;
+  try {
+    messageAudio.currentTime = 0;
+    messageAudio.play().catch(() => {});
+  } catch {}
+}
+
 ensureMuteWatcher();
 
 // ========= Estado da UI =========
@@ -86,11 +108,11 @@ let setScopeFn = null;
 let getScopeFn = null;
 
 // ========= Helpers de chave/escopo =========
-function norm(s){ return String(s||'').trim(); }
-function keyFromId(id){ return String(id); }
-function keyFromName(name){ return '@' + String(name||'').toLowerCase(); }
-function isNameKey(key){ return typeof key === 'string' && key.startsWith('@'); }
-function nameFromKey(key){ return isNameKey(key) ? key.slice(1) : ''; }
+function norm(s) { return String(s || '').trim(); }
+function keyFromId(id) { return String(id); }
+function keyFromName(name) { return '@' + String(name || '').toLowerCase(); }
+function isNameKey(key) { return typeof key === 'string' && key.startsWith('@'); }
+function nameFromKey(key) { return isNameKey(key) ? key.slice(1) : ''; }
 
 function scopeForKey(targetKey) {
   return `${DM_SCOPE_PREFIX}${targetKey}`;
@@ -200,10 +222,18 @@ function emitUnread(targetKey, unreadCount) {
   window.dispatchEvent(
     new CustomEvent('dm:unread', {
       detail: { friendId, unreadCount: Number(unreadCount) || 0 },
-    })
+    }),
   );
 }
 function removeElement(el) { try { el?.remove?.(); } catch {} }
+
+// tremida da tela do jogo ao receber nudge
+function shakeGameScreen() {
+  const host = document.getElementById('clientShell') || document.body;
+  if (!host) return;
+  host.classList.add('screen-shake');
+  setTimeout(() => host.classList.remove('screen-shake'), 650);
+}
 
 function createTabElement(targetKey, friendName) {
   const btn = document.createElement('button');
@@ -270,7 +300,7 @@ function setDmPresence(conv, presence) {
 
   const online = !!presence?.online;
   const st = String(
-    presence?.status || (online ? 'ONLINE' : 'OFFLINE')
+    presence?.status || (online ? 'ONLINE' : 'OFFLINE'),
   ).toUpperCase();
   const act = presence?.activity ? String(presence.activity).toUpperCase() : null;
 
@@ -299,8 +329,6 @@ function setDmPresence(conv, presence) {
 
   conv.presenceBoxEl.textContent = text;
 }
-
-
 
 function scrollToBottom(conv) {
   if (!conv || !conv.listEl) return;
@@ -383,9 +411,12 @@ function renderMessage(conv, message) {
   if (!conv || !conv.listEl) return;
   const mine = String(message.senderId) === resolveUserId();
   let row = message.__el;
+
   if (!row) {
     row = document.createElement('div');
-    row.className = 'dm-message';
+    row.className =
+      'dm-message' +
+      (message.isSystem ? ' dm-system' : (mine ? ' from-me' : ' from-them'));
     row.dataset.messageId = message.id ? String(message.id) : '';
     row.dataset.clientId = message.clientId || '';
     row.innerHTML = `
@@ -398,6 +429,15 @@ function renderMessage(conv, message) {
     } else {
       conv.listEl.appendChild(row);
     }
+  }
+
+  // Mensagem de sistema: texto simples, centralizado, sem meta
+  if (message.isSystem) {
+    const bubble = row.querySelector('.dm-message__bubble');
+    const meta = row.querySelector('.dm-message__meta');
+    if (bubble) bubble.textContent = message.body || '';
+    if (meta) meta.textContent = '';
+    return;
   }
 
   row.classList.toggle('from-me', mine);
@@ -457,7 +497,6 @@ function createConversation(targetKey, friendName) {
     tabsContainer.appendChild(tabEl);
   }
 
-  // DEPOIS
   const scope = scopeForKey(targetKey);
   const {
     panel,
@@ -465,7 +504,7 @@ function createConversation(targetKey, friendName) {
     list,
     nudgeButton,
     nudgeFeedback,
-    presenceBox,        // 👈 adicionar aqui
+    presenceBox,
   } = createPanelElement(scope);
   if (panelsAnchorEl && panelsAnchorEl.parentNode === panelsContainer) {
     panelsContainer.insertBefore(panel, panelsAnchorEl);
@@ -474,7 +513,6 @@ function createConversation(targetKey, friendName) {
   }
 
   const conv = {
-    // chave principal desta conversa
     key: targetKey,               // "123" ou "@nome"
     friendId: isNameKey(targetKey) ? '' : String(targetKey),
     friendName: label,
@@ -485,7 +523,7 @@ function createConversation(targetKey, friendName) {
     listEl: list,
     nudgeButtonEl: nudgeButton,
     nudgeFeedbackEl: nudgeFeedback,
-    presenceBoxEl: presenceBox,  // 👈 novo
+    presenceBoxEl: presenceBox,
     messages: [],
     nextCursor: null,
     loading: false,
@@ -516,7 +554,6 @@ function createConversation(targetKey, friendName) {
     try { if (typeof setScopeFn === 'function') setScopeFn(conv.scope); } catch {}
     activateDmScope(conv.scope);
   });
-
 
   tabEl.addEventListener('keydown', (event) => {
     if (event.key === 'Delete' || event.key === 'Backspace') {
@@ -569,9 +606,9 @@ function closeConversation(targetKey) {
   removeElement(conv.panelEl);
 
   if (wasActive) {
-  try { if (typeof setScopeFn === 'function') setScopeFn('default'); } catch {}
-  activateDmScope('default');
-}
+    try { if (typeof setScopeFn === 'function') setScopeFn('default'); } catch {}
+    activateDmScope('default');
+  }
 }
 
 // Migra @nome → id (quando o servidor revelar)
@@ -735,7 +772,6 @@ function markRead(conv) {
   emitUnread(conv.key, 0);
 }
 
-
 // ========= Procura/aux =========
 function findMessage(conv, predicate) {
   if (!conv) return null;
@@ -759,7 +795,7 @@ function handleSend(scope, text) {
     const label = isNameKey(targetKey) ? nameFromKey(targetKey) : targetKey;
     conv = createConversation(targetKey, label);
   }
-    // Se a conversa é @nome, garantimos que continue sem friendId (name-mode pegajoso)
+  // Se a conversa é @nome, garantimos que continue sem friendId (name-mode pegajoso)
   if (isNameKey(targetKey)) {
     conv.friendId = '';
   }
@@ -776,7 +812,6 @@ function handleSend(scope, text) {
   } else {
     payload.to = String(conv.friendId);
   }
-
 
   try { wsSend(payload); } catch (e) { /* UI marca falha abaixo via erro */ }
 
@@ -805,7 +840,7 @@ function handleSendEvent(payload) {
   const iAmSender = String(message.senderId) === me;
   const partnerId = iAmSender ? String(message.recipientId) : String(message.senderId);
   const friendName = payload?.friendName || message.friendName || null;
-  const mode = payload?.mode || 'friends'; // 👈 vem do servidor
+  const mode = payload?.mode || 'friends'; // vem do servidor
 
   // Procura conversa por id; se não achar e houver nome, tenta @nome
   let key = conversations.has(partnerId) ? partnerId : null;
@@ -821,7 +856,7 @@ function handleSendEvent(payload) {
     }
   }
 
-  // 🔧 Se for "name", NÃO promover para ID; se for amigos, aí sim promove
+  // Se for "name", NÃO promover para ID; se for amigos, aí sim promove
   if (mode === 'name') {
     conv.friendId = '';
   } else if (conv && !conv.friendId && partnerId) {
@@ -875,7 +910,7 @@ function handleRecvEvent(payload) {
     }
   }
 
-  // 🔧 Não promover se for "name"; se for amigos, promove
+  // Não promover se for "name"; se for amigos, promove
   if (mode === 'name') {
     conv.friendId = '';
   } else if (conv && !conv.friendId) {
@@ -895,10 +930,19 @@ function handleRecvEvent(payload) {
   const unreadFromServer = Number(payload?.unreadCount || 0);
   const isActive = currentScope === conv.scope;
 
+  // Sempre tocar SFX de mensagem que vem do outro
+  try {
+    if (String(message.senderId) !== me) {
+      playMessageSound();
+    }
+  } catch {}
+
   if (!isActive) {
     conv.unreadCount = unreadFromServer || conv.unreadCount + 1;
     renderBadge(conv);
     emitUnread(conv.key, conv.unreadCount);
+    // Piscar a aba até o jogador abrir a conversa
+    if (conv.tabEl) conv.tabEl.classList.add('is-attn-blink');
   } else {
     markRead(conv);
   }
@@ -1021,7 +1065,9 @@ function handleNudgeEvent(payload) {
       }
     } catch {}
     if (!shouldSilent) {
-      playNudgeSound();
+      try { playNudgeSound(); } catch {}
+      // treme a tela do jogo do B
+      shakeGameScreen();
     }
   }
 
@@ -1054,10 +1100,24 @@ function handleNudgeEvent(payload) {
       }
     }
 
+    // se eu RECEBI o nudge: piscar aba + mensagem de sistema
+    if (!isSender) {
+      if (conv.tabEl) {
+        conv.tabEl.classList.add('is-nudged', 'is-nudged--incoming', 'is-attn-blink');
+      }
+      const who = conv.friendName || 'Seu amigo';
+      appendMessage(conv, {
+        isSystem: true,
+        body: `${who} chamou sua atenção.`,
+        senderId: fromId,
+        createdAt: new Date(ts).toISOString(),
+      }, { emit: false });
+    }
+
     showNudgeFeedback(conv, message, tone, duration);
     scheduleNudgeAvailabilityCheck(conv);
 
-    // anima (classe CSS)
+    // anima (classe CSS) na aba e no painel
     const classes = isSender ? ['is-nudged'] : ['is-nudged', 'is-nudged--incoming'];
     [conv.tabEl, conv.panelEl].forEach((el) => {
       try {
@@ -1074,7 +1134,6 @@ function handleNudgeEvent(payload) {
   );
 }
 
-
 // ========= API público (export) =========
 export function activateDmScope(scope) {
   currentScope = scope;
@@ -1085,6 +1144,10 @@ export function activateDmScope(scope) {
     if (isActive) {
       ensureHistory(conv);
       markRead(conv);
+      // remove efeitos de atenção quando a pessoa abriu a aba
+      if (conv.tabEl) {
+        conv.tabEl.classList.remove('is-attn-blink', 'is-nudged', 'is-nudged--incoming');
+      }
     }
   });
   if (typeof focusInputFn === 'function') focusInputFn();
@@ -1118,7 +1181,6 @@ export function openConversation(friend) {
   activateDmScope(conv.scope);
 }
 
-
 export function initDmChat({
   tabsEl,
   panelsEl,
@@ -1139,7 +1201,10 @@ export function initDmChat({
   setScopeFn = typeof setScope === 'function' ? setScope : null;
   getScopeFn = typeof getScope === 'function' ? getScope : null;
 
-  try { const initialScope = typeof getScopeFn === 'function' ? getScopeFn() : null; if (initialScope) currentScope = initialScope; } catch {}
+  try {
+    const initialScope = typeof getScopeFn === 'function' ? getScopeFn() : null;
+    if (initialScope) currentScope = initialScope;
+  } catch {}
 
   if (input && typeof input.closest === 'function') formEl = input.closest('form');
   if (!formEl && input && input.form) formEl = input.form;
@@ -1189,7 +1254,6 @@ export function initDmChat({
   }
 }
 
-
 // Permite que outros módulos abram a DM com:
 // window.dispatchEvent(new CustomEvent('dm:open', { detail: { friendId, friendName } }))
 try {
@@ -1198,7 +1262,6 @@ try {
     openConversation(d.friend || d);
   });
 } catch {}
-
 
 export function handleDmSubmit(scope, text) {
   return handleSend(scope, text);

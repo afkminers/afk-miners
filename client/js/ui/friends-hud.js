@@ -13,7 +13,6 @@ import {
   getNudgeErrorMessage,
 } from './dm-chat.js';
 
-
 const REFRESH_INTERVAL = 30_000;
 
 let initPromise = null;
@@ -38,6 +37,138 @@ let actionsObserver = null;
 const friendsById = new Map();
 const pendingActions = new Set();
 const unsubscribers = [];
+
+// ==== SFX / mute / popup MSN ====
+
+// reutiliza a mesma preferência usada no dm-chat.js
+let sfxMuted = false;
+let onlineAudio = null;
+let msnLayerEl = null;
+
+function readMutePreference() {
+  try {
+    const muted = localStorage.getItem('sfx-muted');
+    return muted === '1' || muted === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function ensureMuteWatcher() {
+  if (typeof window === 'undefined') return;
+  sfxMuted = readMutePreference();
+  const handler = (event) => {
+    const muted = !!(event?.detail?.muted);
+    sfxMuted = muted;
+  };
+  window.addEventListener('sfx-mute', handler);
+  if (typeof document !== 'undefined') {
+    document.addEventListener('sfx-mute', handler);
+  }
+}
+
+function ensureOnlineAudio() {
+  if (onlineAudio) return;
+  try {
+    onlineAudio = new Audio('/sfx/online.mp3');
+    onlineAudio.preload = 'auto';
+    onlineAudio.volume = 0.8;
+  } catch {
+    onlineAudio = null;
+  }
+}
+
+function playOnlineSound() {
+  if (sfxMuted) return;
+  ensureOnlineAudio();
+  if (!onlineAudio) return;
+  try {
+    onlineAudio.currentTime = 0;
+    onlineAudio.play().catch(() => {});
+  } catch {}
+}
+
+function ensureMsnLayer() {
+  if (msnLayerEl) return msnLayerEl;
+  if (typeof document === 'undefined') return null;
+  msnLayerEl = document.createElement('div');
+  msnLayerEl.className = 'msn-popup-layer';
+  document.body.appendChild(msnLayerEl);
+  return msnLayerEl;
+}
+
+// mostra popup tipo MSN quando amigo fica online
+function showFriendOnlineToast(friend) {
+  if (!friend || typeof document === 'undefined') return;
+
+  // não faz sentido mostrar popup para bloqueados
+  if (friend.status === 'BLOCKED') return;
+
+  const layer = ensureMsnLayer();
+  if (!layer) return;
+
+  const popup = document.createElement('div');
+  popup.className = 'msn-popup';
+
+  const initials = escapeHtml(
+    (friend.name || '?').trim().slice(0, 1).toUpperCase() || '?',
+  );
+  const presenceText = buildPresenceText(friend) || 'Online';
+
+  popup.innerHTML = `
+    <div class="friend-avatar" aria-hidden="true">
+      <span class="friend-avatar__bg"></span>
+      <span class="friend-avatar__initial">${initials}</span>
+    </div>
+    <div>
+      <div class="msn-popup__name">${escapeHtml(friend.name)}</div>
+      <div class="msn-popup__status">${escapeHtml(presenceText)}</div>
+    </div>
+    <button type="button" class="msn-popup__close" aria-label="Fechar">✕</button>
+  `;
+
+  const closeBtn = popup.querySelector('.msn-popup__close');
+
+  const remove = () => {
+    if (!popup.parentNode) return;
+    popup.style.opacity = '0';
+    popup.style.transform = 'translateY(10px)';
+    setTimeout(() => {
+      try { popup.remove(); } catch {}
+      if (layer && !layer.children.length) {
+        try { layer.remove(); } catch {}
+        msnLayerEl = null;
+      }
+    }, 220);
+  };
+
+  closeBtn?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    remove();
+  });
+
+  // clicar no popup abre a DM com o amigo
+  popup.addEventListener('click', () => {
+    try {
+      openDmConversation(friend);
+    } catch {}
+    remove();
+  });
+
+  layer.appendChild(popup);
+
+  // auto-fechar
+  const timeout = setTimeout(remove, 4500);
+  popup.addEventListener('mouseenter', () => clearTimeout(timeout));
+
+  // som de amigo online
+  try {
+    playOnlineSound();
+  } catch {}
+}
+
+// inicia watcher de mute logo que o módulo carrega
+ensureMuteWatcher();
 
 const ERROR_MESSAGES = {
   USER_NOT_FOUND: 'Jogador não encontrado.',
@@ -105,18 +236,19 @@ function normalizeFriend(raw) {
 
     online: !!raw.online,
     lastSeenAt: lastSeen,
-    canMessage: !!raw.canMessage,
+
+    // se o backend não mandar nada, assume que pode mandar mensagem
+    canMessage: raw.canMessage === false ? false : true,
 
     // presença estendida vinda do backend
     presenceStatus: String(
-      raw.presenceStatus || (raw.online ? 'ONLINE' : 'OFFLINE')
+      raw.presenceStatus || (raw.online ? 'ONLINE' : 'OFFLINE'),
     ).toUpperCase(),
     presenceActivity: raw.presenceActivity
       ? String(raw.presenceActivity).toUpperCase()
       : null,
   };
 }
-
 
 function ensureContextMenu() {
   if (contextMenuEl) return;
@@ -393,7 +525,7 @@ function buildFriendRow(friend) {
   row.dataset.online = friend.online ? '1' : '0';
 
   const initials = escapeHtml(
-    (friend.name || '?').trim().slice(0, 1).toUpperCase() || '?'
+    (friend.name || '?').trim().slice(0, 1).toUpperCase() || '?',
   );
   const presenceText = buildPresenceText(friend);
   const presenceTitle = buildPresenceTitle(friend);
@@ -401,7 +533,6 @@ function buildFriendRow(friend) {
     friend.unreadCount > 0
       ? `<span class="friend-unread" aria-label="${friend.unreadCount} mensagens não lidas">${friend.unreadCount}</span>`
       : '';
-
 
   let tag = '';
   if (friend.status === 'PENDING') {
@@ -471,7 +602,6 @@ function updatePresenceFor(friend) {
     label.setAttribute('title', title);
   }
 }
-
 
 function applyFriend(rawFriend) {
   const friend = normalizeFriend(rawFriend);
@@ -546,6 +676,7 @@ function stopAutoRefresh() {
   }
 }
 
+// <<< CORRIGIDO: leva em conta APPEAR_OFFLINE para detectar transição "visível" → popup >>>
 function handlePresenceEvent(kind, payload) {
   if (!payload || !payload.userId) return;
   const friendId = String(payload.userId);
@@ -555,13 +686,20 @@ function handlePresenceEvent(kind, payload) {
   const baseTs = Number(payload.lastSeen || payload.ts || Date.now());
   const ts = Number.isFinite(baseTs) ? baseTs : Date.now();
 
+  // estado ANTES da atualização
+  const prevOnline = !!friend.online;
+  const prevStatus = String(
+    friend.presenceStatus || (prevOnline ? 'ONLINE' : 'OFFLINE'),
+  ).toUpperCase();
+
+  // aplica atualização recebida do servidor
   if (kind === 'update' && payload.presence) {
     const p = payload.presence;
     friend.online = !!p.online;
     const pt = Number(p.lastSeenAt || ts);
     if (Number.isFinite(pt)) friend.lastSeenAt = pt;
     friend.presenceStatus = String(
-      p.status || (friend.online ? 'ONLINE' : 'OFFLINE')
+      p.status || (friend.online ? 'ONLINE' : 'OFFLINE'),
     ).toUpperCase();
     friend.presenceActivity = p.activity
       ? String(p.activity).toUpperCase()
@@ -580,6 +718,26 @@ function handlePresenceEvent(kind, payload) {
   } else {
     friend.online = true;
     friend.lastSeenAt = ts;
+  }
+
+  const isOnline = !!friend.online;
+  const nowStatus = String(
+    friend.presenceStatus || (isOnline ? 'ONLINE' : 'OFFLINE'),
+  ).toUpperCase();
+
+  // "visível" = online e NÃO em Aparecer Offline
+  const wasVisible = prevOnline && prevStatus !== 'APPEAR_OFFLINE';
+  const isVisible = isOnline && nowStatus !== 'APPEAR_OFFLINE';
+
+  // se acabou de ficar visível (offline / aparecer offline → online "de verdade"), dispara popup e som
+  if (
+    !wasVisible &&
+    isVisible &&
+    (!currentUserId || friend.friendId !== currentUserId)
+  ) {
+    try {
+      showFriendOnlineToast(friend);
+    } catch {}
   }
 
   updatePresenceFor(friend);
