@@ -464,7 +464,7 @@ function renderMessage(conv, message) {
 }
 
 function appendMessage(conv, message, { emit = true, prepend = false } = {}) {
-  if (!conv) return;
+  if (!conv) return null;
   const msg = { ...message };
   msg.createdAt = msg.createdAt || nowIso();
   if (prepend) {
@@ -482,6 +482,7 @@ function appendMessage(conv, message, { emit = true, prepend = false } = {}) {
     const latestId = msg.id || null;
     if (latestId) wsSend({ type: 'dm:ack', messageIds: [latestId], friendId: conv.friendId });
   }
+  return msg;
 }
 
 // ========= Conversa (criar/fechar/upgrade) =========
@@ -826,8 +827,8 @@ function handleSend(scope, text) {
     deliveredAt: null,
     readAt: null,
   };
-  conv.pending.set(clientId, message);
-  appendMessage(conv, message, { emit: false });
+  const rendered = appendMessage(conv, message, { emit: false });
+  conv.pending.set(clientId, rendered || message);
   return true;
 }
 
