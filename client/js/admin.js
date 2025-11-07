@@ -99,6 +99,10 @@ async function apiFetch(url, options = {}) {
     await csrfApi.ensureCsrfCookie(false);
   }
   let token = csrfApi?.getCsrfToken ? await csrfApi.getCsrfToken() : null;
+  if (!token && csrfApi?.ensureCsrfCookie) {
+    await csrfApi.ensureCsrfCookie(true);
+    token = csrfApi?.getCsrfToken ? await csrfApi.getCsrfToken() : null;
+  }
 
   const buildOptions = (tok) => {
     const headers = {
@@ -144,14 +148,37 @@ async function readJson(res) {
   }
 }
 
-function handleAuthError(res) {
+async function handleAuthError(res) {
+  let payload = null;
+  try {
+    payload = await res.clone().json();
+  } catch (_) {
+    payload = null;
+  }
+
   if (res.status === 401) {
     showBanner('Faça login no jogo e recarregue esta página.', 'error');
     dom.status.textContent = 'Sessão expirada';
     return true;
   }
   if (res.status === 403) {
-    showBanner('Acesso negado (admin). Adicione seu nome em ADMIN_NAMES.', 'error');
+    const errorKey = typeof payload?.error === 'string' ? payload.error : '';
+    if (errorKey === 'forbidden_admin') {
+      showBanner('Acesso negado (admin). Adicione seu nome em ADMIN_NAMES.', 'error');
+      dom.status.textContent = 'Acesso negado';
+      return true;
+    }
+    if (errorKey && /csrf/i.test(errorKey)) {
+      showBanner('Token de segurança inválido. Recarregue a página e tente novamente.', 'error');
+      dom.status.textContent = 'Falha de segurança';
+      return true;
+    }
+    if (errorKey) {
+      showBanner(errorKey, 'error');
+      dom.status.textContent = 'Erro de permissão';
+      return true;
+    }
+    showBanner('Ação bloqueada pelo servidor.', 'error');
     dom.status.textContent = 'Acesso negado';
     return true;
   }
@@ -165,7 +192,7 @@ async function loadPosts(showToastOnSuccess = false) {
     const url = `/api/admin/posts?page=${encodeURIComponent(page)}&lang=${encodeURIComponent(locale)}`;
     const res = await apiFetch(url, { method: 'GET' });
     if (!res.ok) {
-      if (handleAuthError(res)) return;
+      if (await handleAuthError(res)) return;
       const payload = await readJson(res);
       showToast(payload?.error || 'Falha ao carregar posts', 'error');
       return;
@@ -331,7 +358,7 @@ async function submitPostForm(event) {
   try {
     const res = await apiFetch(url, { method, body: payload, csrf: true });
     if (!res.ok) {
-      if (handleAuthError(res)) return;
+      if (await handleAuthError(res)) return;
       const data = await readJson(res);
       showToast(data?.error || 'Falha ao salvar post', 'error');
       return;
@@ -352,7 +379,7 @@ async function deletePost(id) {
   try {
     const res = await apiFetch(`/api/admin/posts/${id}`, { method: 'DELETE', csrf: true });
     if (!res.ok) {
-      if (handleAuthError(res)) return;
+      if (await handleAuthError(res)) return;
       const data = await readJson(res);
       showToast(data?.error || 'Falha ao excluir post', 'error');
       return;
@@ -394,7 +421,7 @@ async function reorderPost(id, direction) {
       csrf: true,
     });
     if (!res.ok) {
-      if (handleAuthError(res)) return;
+      if (await handleAuthError(res)) return;
       const data = await readJson(res);
       showToast(data?.error || 'Falha ao reordenar', 'error');
       return;
@@ -415,7 +442,7 @@ async function loadOverrides(showToastOnSuccess = false) {
     if (prefix) params.set('prefix', prefix);
     const res = await apiFetch(`/api/admin/i18n?${params.toString()}`, { method: 'GET' });
     if (!res.ok) {
-      if (handleAuthError(res)) return;
+      if (await handleAuthError(res)) return;
       const data = await readJson(res);
       showToast(data?.error || 'Falha ao carregar overrides', 'error');
       return;
@@ -526,7 +553,7 @@ async function submitOverrideForm(event) {
   try {
     const res = await apiFetch(url, { method, body: payload, csrf: true });
     if (!res.ok) {
-      if (handleAuthError(res)) return;
+      if (await handleAuthError(res)) return;
       const data = await readJson(res);
       showToast(data?.error || 'Falha ao salvar override', 'error');
       return;
@@ -547,7 +574,7 @@ async function deleteOverride(id) {
   try {
     const res = await apiFetch(`/api/admin/i18n/${id}`, { method: 'DELETE', csrf: true });
     if (!res.ok) {
-      if (handleAuthError(res)) return;
+      if (await handleAuthError(res)) return;
       const data = await readJson(res);
       showToast(data?.error || 'Falha ao excluir override', 'error');
       return;
