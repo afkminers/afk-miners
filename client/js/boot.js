@@ -217,13 +217,21 @@ async function goToGameAccordingToStarter() {
   }
 }
 
-async function showApp(profile) {
+async function showApp(profile, options = {}) {
   stopLoginFx();
   __profile = profile;
   window.__isAuth = true;
   updateHud(profile);
+  setLogoutVisibility(true);
+  setLoggedOutGlow(false);
+  closeMobileMenu();
+  authScreen?.classList.add('hidden');
+  appMain?.classList.remove('hidden');
   await gacha.init?.(profile);
-  goToGameAccordingToStarter();
+
+  if (options.autoRedirect) {
+    await goToGameAccordingToStarter();
+  }
 }
 
 /* ========= Sessão ========= */
@@ -282,7 +290,7 @@ btnLogin?.addEventListener('click', async (ev) => {
     if (!me?.profile) { setI18nMessage(loginMsg, 'auth.sessionMissing'); return; }
 
     celebrate();
-    await goToGameAccordingToStarter();
+    await showApp(me.profile, { autoRedirect: false });
   } catch {
     setI18nMessage(loginMsg, 'auth.loginFailed');
   } finally {
@@ -307,7 +315,7 @@ btnRegister?.addEventListener('click', async (ev) => {
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json());
     if (!me?.profile) { setI18nMessage(regMsg, 'auth.sessionMissing'); return; }
 
-    await goToGameAccordingToStarter();
+    await showApp(me.profile, { autoRedirect: false });
   } catch (e) {
     const msg = (e?.message || '').toLowerCase();
     if (msg.includes('já está em uso') || msg.includes('duplicate')) {

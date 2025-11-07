@@ -359,6 +359,8 @@ html,body{
   padding:8px 12px; background:#0a1020; border-bottom:1px solid var(--border);
 }
 .topbar .brand{ font-weight:700; letter-spacing:.5px; }
+.topbar .brand.brand--home-link{ cursor:pointer; }
+.topbar .brand.brand--home-link:focus{ outline:2px solid #fff; outline-offset:4px; }
 .topbar .actions button{
   margin-left:8px; padding:8px 12px; border-radius:10px; border:1px solid var(--border);
   background:var(--pill); color:var(--text); cursor:pointer;
