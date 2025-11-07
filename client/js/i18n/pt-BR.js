@@ -13,6 +13,7 @@ export default {
     play: 'Jogar',
     leaderboard: 'Leaderboard',
     support: 'Suporte',
+    adminPanel: 'Painel Admin',
   },
   common: {
     rows: 'Linhas',
@@ -172,6 +173,7 @@ export default {
     phase4Title: 'Fase 4 — Profundezas Infinitas',
     phase4Copy:
       'Andares procedurais, forja de relíquias, moradias e APIs avançadas de automação para mineradores veteranos.',
+    updatesTitle: 'Últimas atualizações',
   },
   support: {
     title: 'Suporte',
@@ -257,6 +259,7 @@ export default {
       'Suba nos ranques competitivos em duelos assíncronos. Ajuste os builds para responder ao meta semanal e ganhar troféus.',
     artCopy:
       'AFK Miners homenageia aventuras clássicas ao estilo Tibia com pixel art artesanal, feitiços vibrantes e uma paleta medieval acolhedora. Cada tela é otimizada para clareza no desktop e no mobile sem perder o charme nostálgico.',
+    updatesTitle: 'Últimas atualizações',
   },
   rarity: {
     COMMON: 'Comum',
@@ -350,6 +353,7 @@ export default {
     },
     coinsLabel: 'Moedas: {value}',
     userInfoNamed: '{name} • {coins}',
+    returnToWebsite: 'Voltar para a página inicial',
     toastNotEnough: 'Moedas insuficientes',
   },
   chat: {
