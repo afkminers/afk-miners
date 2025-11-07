@@ -840,14 +840,13 @@ function handleSendEvent(payload) {
   const iAmSender = String(message.senderId) === me;
   const partnerId = iAmSender ? String(message.recipientId) : String(message.senderId);
   const friendName = payload?.friendName || message.friendName || null;
-  const mode = payload?.mode || 'friends'; // vem do servidor
+  const mode = payload?.mode || 'friends';
 
-  // Procura conversa por id; se não achar e houver nome, tenta @nome
+  // Procura/Cria conversa
   let key = conversations.has(partnerId) ? partnerId : null;
   if (!key && friendName) key = findConvKeyByNameLower(friendName);
-
-  // Cria do jeito certo conforme o modo
   let conv = key ? conversations.get(key) : null;
+
   if (!conv) {
     if (mode === 'name' && friendName) {
       conv = createConversation('@' + String(friendName).toLowerCase(), friendName);
@@ -856,27 +855,31 @@ function handleSendEvent(payload) {
     }
   }
 
-  // Se for "name", NÃO promover para ID; se for amigos, aí sim promove
   if (mode === 'name') {
     conv.friendId = '';
   } else if (conv && !conv.friendId && partnerId) {
     conv = upgradeConversationKey(conv, partnerId, friendName);
   }
 
-  // Concilia pendente por clientId (envio meu)
-  const existing = message.clientId && conv.pending.get(message.clientId);
+  // 🔧 AQUI ESTÁ A MUDANÇA IMPORTANTE
+  const clientId = message.clientId || payload.clientId || null;
+  const existing = clientId ? conv.pending.get(clientId) : null;
+
   if (existing) {
+    // Atualiza a mensagem otimista em vez de criar outra
     existing.id = message.id;
+    existing.clientId = clientId;
     existing.createdAt = message.createdAt;
     existing.deliveredAt = message.deliveredAt;
     existing.readAt = message.readAt;
     existing.failed = false;
     renderMessage(conv, existing);
-    conv.pending.delete(message.clientId);
+    conv.pending.delete(clientId);
   } else {
+    // Não encontrou pendente (ex.: reabriu a DM em outro dispositivo)
     appendMessage(conv, {
       id: message.id,
-      clientId: payload.clientId || null,
+      clientId,
       body: message.body || message.bodyOriginal,
       senderId: message.senderId,
       recipientId: message.recipientId,
@@ -886,6 +889,7 @@ function handleSendEvent(payload) {
     });
   }
 }
+
 
 function handleRecvEvent(payload) {
   const message = payload?.message;
