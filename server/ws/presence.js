@@ -385,19 +385,28 @@ async function onHeartbeat(ws) {
 
 async function markOnline(userId, { ts } = {}) {
   if (!userId) return;
+
   const now = Number(ts) || Date.now();
-  const state = localStates.get(userId) || { online: false, lastRefreshAt: 0, lastBroadcastAt: 0 };
+  const state =
+    localStates.get(userId) || { online: false, lastRefreshAt: 0, lastBroadcastAt: 0 };
+
   state.lastRefreshAt = now;
 
   const wasOnline = state.online === true;
   state.online = true;
   localStates.set(userId, state);
 
+  // Ambiente SEM Redis: usa broadcast direto pros amigos via WS.
   if (!redisPublisher) {
-    console.log('[presence] redis unavailable, skipping set for', userId);
+    try {
+      await broadcastPresenceUpdate(userId);
+    } catch (err) {
+      console.warn('[presence] markOnline broadcast (no redis) failed', err?.message);
+    }
     return;
   }
 
+  // Ambiente COM Redis (comportamento antigo, mantido)
   try {
     const previous = await redisPublisher.set(KEY_PREFIX + userId, String(now), {
       EX: TTL_SECONDS,
@@ -406,7 +415,7 @@ async function markOnline(userId, { ts } = {}) {
     if (!wasOnline && !previous) {
       await publishEvent('online', userId, now, { lastSeen: now });
     } else if (!wasOnline && previous) {
-      // ensure watchers know we are online even if leftover key existed
+      // garante evento "online" mesmo se sobrou chave antiga
       await publishEvent('online', userId, now, { lastSeen: now });
     }
   } catch (err) {
@@ -414,53 +423,89 @@ async function markOnline(userId, { ts } = {}) {
   }
 }
 
+
 async function refreshPresence(userId) {
-  if (!userId || !redisPublisher) return;
+  if (!userId) return;
+
   const now = Date.now();
-  const state = localStates.get(userId) || { online: false, lastRefreshAt: 0, lastBroadcastAt: 0 };
+  const state =
+    localStates.get(userId) || { online: false, lastRefreshAt: 0, lastBroadcastAt: 0 };
+
   state.lastRefreshAt = now;
   if (!state.online) state.online = true;
   localStates.set(userId, state);
 
-  try {
-    const refreshed = await redisPublisher.expire(KEY_PREFIX + userId, TTL_SECONDS);
-    if (refreshed !== 1) {
-      await redisPublisher.set(KEY_PREFIX + userId, String(now), { EX: TTL_SECONDS });
-      if (!state.sentRecovery) {
-        await publishEvent('online', userId, now, { lastSeen: now });
-        state.sentRecovery = true;
+  if (redisPublisher) {
+    // caminho antigo: renova TTL no Redis
+    try {
+      const refreshed = await redisPublisher.expire(KEY_PREFIX + userId, TTL_SECONDS);
+      if (refreshed !== 1) {
+        await redisPublisher.set(KEY_PREFIX + userId, String(now), { EX: TTL_SECONDS });
+        if (!state.sentRecovery) {
+          await publishEvent('online', userId, now, { lastSeen: now });
+          state.sentRecovery = true;
+        }
+      }
+    } catch (err) {
+      console.warn('[presence] refresh failed', err?.message);
+    }
+
+    if (now - (state.lastBroadcastAt || 0) >= UPDATE_INTERVAL_MS) {
+      state.lastBroadcastAt = now;
+      publishEvent('update', userId, now, { lastSeen: now }).catch(() => {});
+    }
+  } else {
+    // sem Redis: a cada UPDATE_INTERVAL_MS manda um snapshot pros amigos
+    if (now - (state.lastBroadcastAt || 0) >= UPDATE_INTERVAL_MS) {
+      state.lastBroadcastAt = now;
+      try {
+        await broadcastPresenceUpdate(userId);
+      } catch (err) {
+        console.warn('[presence] refresh broadcast (no redis) failed', err?.message);
       }
     }
-  } catch (err) {
-    console.warn('[presence] refresh failed', err?.message);
-  }
-
-  if (now - (state.lastBroadcastAt || 0) >= UPDATE_INTERVAL_MS) {
-    state.lastBroadcastAt = now;
-    publishEvent('update', userId, now, { lastSeen: now }).catch(() => {});
   }
 }
 
+
 async function markOffline(userId, { reason, ts } = {}) {
   if (!userId) return;
-  const state = localStates.get(userId) || { online: false, lastRefreshAt: 0, lastBroadcastAt: 0 };
+
+  const state =
+    localStates.get(userId) || { online: false, lastRefreshAt: 0, lastBroadcastAt: 0 };
+
   if (!state.online) return;
+
   state.online = false;
   state.lastRefreshAt = ts || Date.now();
-  if (redisPublisher) {
+  localStates.set(userId, state);
+
+  if (!redisPublisher) {
+    // sem Redis: broadcast direto pros amigos usando snapshot visível
     try {
-      await redisPublisher.del(KEY_PREFIX + userId);
+      await broadcastPresenceUpdate(userId);
     } catch (err) {
-      console.warn('[presence] redis del failed', err?.message);
+      console.warn('[presence] markOffline broadcast (no redis) failed', err?.message);
     }
+    localStates.delete(userId);
+    return;
+  }
+
+  // com Redis: comportamento antigo
+  try {
+    await redisPublisher.del(KEY_PREFIX + userId);
+  } catch (err) {
+    console.warn('[presence] redis del failed', err?.message);
   }
 
   await publishEvent('offline', userId, state.lastRefreshAt, {
     reason,
     lastSeen: state.lastRefreshAt,
   });
+
   localStates.delete(userId);
 }
+
 
 async function publishEvent(type, userId, ts, extra = {}) {
   if (!redisPublisher) return;

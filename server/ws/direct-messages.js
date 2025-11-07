@@ -102,10 +102,15 @@ function commitRateBucket(senderId, bucket) {
 // tenta ler um snapshot de presença, mas sem quebrar se a API mudar
 async function getPresenceSnapshotSafe(userId) {
   if (!userId || !presence) return null;
+
   try {
+    // assinatura atual de getPresenceSnapshot: (userIds: string[] | string[]) => Map
     if (typeof presence.getPresenceSnapshot === 'function') {
-      return await presence.getPresenceSnapshot(userId);
+      const map = await presence.getPresenceSnapshot([userId]);
+      return map.get(String(userId)) || null;
     }
+
+    // ganchos alternativos, se algum dia você criar
     if (typeof presence.getPresenceForUser === 'function') {
       return await presence.getPresenceForUser(userId);
     }
@@ -117,6 +122,7 @@ async function getPresenceSnapshotSafe(userId) {
   }
   return null;
 }
+
 
 async function handleSend(ws, data) {
   const senderId = resolveUserId(ws);

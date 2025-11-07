@@ -932,32 +932,51 @@ function setupHeartbeat(wss) {
 async function setupRedis(wss) {
   if (!REDIS_URL) {
     console.log('[redis] REDIS_URL not set — running without Redis pub/sub (single-instance)');
+
+    // mesmo sem Redis, conecta o módulo de presença ao wss
+    try {
+      await presence.attachRedis({ wss, redisPub: null, redisSub: null });
+    } catch (err) {
+      console.warn('[presence] attachRedis without Redis failed', err?.message);
+    }
+
     return;
   }
+
   try {
     redisPub = createClient({ url: REDIS_URL });
     redisSub = redisPub.duplicate();
     await redisPub.connect();
     await redisSub.connect();
+
     await redisSub.subscribe('chat:global', (message) => {
       try {
         const obj = JSON.parse(message);
         const out = JSON.stringify(obj);
-        wss.clients.forEach(c => {
+        wss.clients.forEach((c) => {
           if (c && c.readyState === WebSocketLib.OPEN) {
             try { c.send(out); } catch { /* ignore */ }
           }
         });
-      } catch (e) { console.warn('[redis] bad pubsub message', e?.message); }
+      } catch (e) {
+        console.warn('[redis] bad pubsub message', e?.message);
+      }
     });
-    try { await presence.attachRedis({ wss, redisPub, redisSub }); }
-    catch (err) { console.warn('[presence] attachRedis failed', err?.message); }
+
+    try {
+      await presence.attachRedis({ wss, redisPub, redisSub });
+    } catch (err) {
+      console.warn('[presence] attachRedis failed', err?.message);
+    }
+
     console.log('[redis] connected and subscribed to chat:global');
   } catch (e) {
     console.warn('[redis] failed to connect — continuing without Redis', e?.message);
-    redisPub = null; redisSub = null;
+    redisPub = null;
+    redisSub = null;
   }
 }
+
 
 // ========= IDLE-AWARE SCHEDULER =========
 
