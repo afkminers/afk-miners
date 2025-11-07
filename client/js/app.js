@@ -77,6 +77,21 @@ const splitL  = document.getElementById('splitLeft');
 const splitR  = document.getElementById('splitRight');
 const chatDock= document.getElementById('chatDock');
 
+const homeBrand = document.querySelector('[data-home-link]');
+if (homeBrand) {
+  homeBrand.classList.add('brand--home-link');
+  const goHome = (ev) => {
+    ev?.preventDefault?.();
+    safeNavigate('/index.html');
+  };
+  homeBrand.addEventListener('click', goHome);
+  homeBrand.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      goHome(ev);
+    }
+  });
+}
+
 /* ---------- Tela de loading retro ---------- */
 const loadingScreenEl   = document.getElementById('loadingScreen');
 const loadingBarEl      = loadingScreenEl?.querySelector('[data-loading-bar]');

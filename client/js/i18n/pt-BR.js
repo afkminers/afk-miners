@@ -352,6 +352,7 @@ export default {
     },
     coinsLabel: 'Moedas: {value}',
     userInfoNamed: '{name} • {coins}',
+    returnToWebsite: 'Voltar para a página inicial',
     toastNotEnough: 'Moedas insuficientes',
   },
   chat: {

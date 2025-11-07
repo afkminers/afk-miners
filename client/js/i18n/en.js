@@ -348,6 +348,7 @@ export default {
     },
     coinsLabel: 'Coins: {value}',
     userInfoNamed: '{name} • {coins}',
+    returnToWebsite: 'Back to website home',
     toastNotEnough: 'Not enough coins',
   },
   chat: {
