@@ -211,19 +211,49 @@ async function handleSend(ws, data) {
       recipientId: friendIdRaw,
       allowWithoutFriendship: true, // <- resolve falha com pedido pendente
     });
+
+    // Descobre nome de quem ENVIA (A) e de quem RECEBE (B)
+    let senderName = null;
+    let recipientName = null;
+
+    try {
+      const [rowSender, rowRecipient] = await Promise.all([
+        get(`SELECT name FROM players WHERE id = $1 LIMIT 1`, [senderId]),
+        get(`SELECT name FROM players WHERE id = $1 LIMIT 1`, [friendIdRaw]),
+      ]);
+      senderName = String(rowSender?.name || '').trim() || null;
+      recipientName = String(rowRecipient?.name || '').trim() || null;
+    } catch (e) {
+      console.warn('[dm] failed to resolve player names', e?.message);
+    }
+
     const row = await insertMessage({ senderId, recipientId: friendIdRaw, body });
     const message = mapMessage(row);
-    const payload = { type: 'dm:send', message, clientId };
-    send(ws, payload);
+
+    // Para QUEM ESTÁ ENVIANDO:
+    // friendName = nome do outro (destinatário)
+    const sendPayload = {
+      type: 'dm:send',
+      message,
+      clientId,
+      friendName: recipientName || friendIdRaw, // fallback pro id se der ruim
+    };
+    send(ws, sendPayload);
 
     const unread = await countUnreadForPair(friendIdRaw, senderId);
+
+    // Para QUEM RECEBE:
+    // friendName = nome de quem enviou
     const recvPayload = {
       type: 'dm:recv',
       message,
       fromId: senderId,
       unreadCount: unread,
+      friendName: senderName || senderId, // fallback pro id se der ruim
     };
+
     if (friendIdRaw === senderId) {
+      // DM consigo mesmo (raro, mas ok)
       send(ws, recvPayload);
     } else {
       bus.sendToPlayer(friendIdRaw, recvPayload);
