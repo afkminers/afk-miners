@@ -9013,21 +9013,21 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 48,
+    "line": 50,
     "kind": "function",
     "name": "readMutePreference",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 57,
+    "line": 59,
     "kind": "function",
     "name": "ensureMuteWatcher",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 60,
+    "line": 62,
     "kind": "arrow",
     "name": "handler",
     "params": [
@@ -9036,28 +9036,28 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 70,
+    "line": 72,
     "kind": "function",
     "name": "ensureOnlineAudio",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 81,
+    "line": 83,
     "kind": "function",
     "name": "playOnlineSound",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 91,
+    "line": 93,
     "kind": "function",
     "name": "ensureMsnLayer",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 101,
+    "line": 103,
     "kind": "function",
     "name": "showFriendOnlineToast",
     "params": [
@@ -9066,14 +9066,14 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 132,
+    "line": 141,
     "kind": "arrow",
     "name": "remove",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 201,
+    "line": 210,
     "kind": "function",
     "name": "escapeHtml",
     "params": [
@@ -9082,7 +9082,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 210,
+    "line": 219,
     "kind": "function",
     "name": "parseTime",
     "params": [
@@ -9091,7 +9091,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 217,
+    "line": 226,
     "kind": "function",
     "name": "normalizeFriend",
     "params": [
@@ -9100,21 +9100,21 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 253,
+    "line": 262,
     "kind": "function",
     "name": "ensureContextMenu",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 267,
+    "line": 276,
     "kind": "function",
     "name": "closeContextMenu",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 274,
+    "line": 283,
     "kind": "function",
     "name": "openContextMenuFor",
     "params": [
@@ -9124,7 +9124,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 329,
+    "line": 338,
     "kind": "function",
     "name": "formatRelative",
     "params": [
@@ -9133,7 +9133,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 344,
+    "line": 353,
     "kind": "function",
     "name": "describeStatusLabel",
     "params": [
@@ -9142,7 +9142,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 353,
+    "line": 362,
     "kind": "function",
     "name": "describeActivityLabel",
     "params": [
@@ -9151,7 +9151,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 362,
+    "line": 371,
     "kind": "function",
     "name": "buildPresenceText",
     "params": [
@@ -9160,7 +9160,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 374,
+    "line": 383,
     "kind": "function",
     "name": "buildPresenceTitle",
     "params": [
@@ -9169,7 +9169,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 390,
+    "line": 399,
     "kind": "function",
     "name": "showFeedback",
     "params": [
@@ -9179,7 +9179,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 409,
+    "line": 418,
     "kind": "function",
     "name": "setLoadingState",
     "params": [
@@ -9188,7 +9188,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 414,
+    "line": 423,
     "kind": "function",
     "name": "setFormLoading",
     "params": [
@@ -9197,7 +9197,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 422,
+    "line": 431,
     "kind": "function",
     "name": "setRowBusy",
     "params": [
@@ -9207,7 +9207,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 434,
+    "line": 443,
     "kind": "function",
     "name": "updateButtonBadge",
     "params": [
@@ -9217,14 +9217,14 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 447,
+    "line": 456,
     "kind": "function",
     "name": "renderSections",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 487,
+    "line": 496,
     "kind": "function",
     "name": "renderSection",
     "params": [
@@ -9234,7 +9234,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 518,
+    "line": 527,
     "kind": "function",
     "name": "buildFriendRow",
     "params": [
@@ -9243,7 +9243,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 583,
+    "line": 592,
     "kind": "function",
     "name": "updatePresenceFor",
     "params": [
@@ -9252,7 +9252,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 606,
+    "line": 615,
     "kind": "function",
     "name": "applyFriend",
     "params": [
@@ -9261,7 +9261,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 614,
+    "line": 623,
     "kind": "function",
     "name": "removeFriend",
     "params": [
@@ -9270,14 +9270,14 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 620,
+    "line": 629,
     "kind": "function",
     "name": "ensureCurrentUser",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 639,
+    "line": 648,
     "kind": "function",
     "name": "loadFriends",
     "params": [
@@ -9286,21 +9286,21 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 665,
+    "line": 674,
     "kind": "function",
     "name": "startAutoRefresh",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 672,
+    "line": 681,
     "kind": "function",
     "name": "stopAutoRefresh",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 680,
+    "line": 689,
     "kind": "function",
     "name": "handlePresenceEvent",
     "params": [
@@ -9310,7 +9310,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 746,
+    "line": 755,
     "kind": "function",
     "name": "mapError",
     "params": [
@@ -9319,7 +9319,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 751,
+    "line": 760,
     "kind": "function",
     "name": "mapNudgeError",
     "params": [
@@ -9328,7 +9328,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 756,
+    "line": 765,
     "kind": "function",
     "name": "highlightFriendRow",
     "params": [
@@ -9337,7 +9337,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 766,
+    "line": 775,
     "kind": "function",
     "name": "triggerNudge",
     "params": [
@@ -9346,7 +9346,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 778,
+    "line": 787,
     "kind": "function",
     "name": "handleAction",
     "params": [
@@ -9357,7 +9357,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 848,
+    "line": 857,
     "kind": "function",
     "name": "handlePanelClick",
     "params": [
@@ -9366,7 +9366,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 876,
+    "line": 885,
     "kind": "function",
     "name": "handleContextMenu",
     "params": [
@@ -9375,7 +9375,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 885,
+    "line": 894,
     "kind": "function",
     "name": "handleKeyboard",
     "params": [
@@ -9384,7 +9384,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 921,
+    "line": 930,
     "kind": "function",
     "name": "handleContextMenuClick",
     "params": [
@@ -9393,49 +9393,49 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 945,
+    "line": 954,
     "kind": "function",
     "name": "openPanel",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 956,
+    "line": 965,
     "kind": "function",
     "name": "closePanel",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 966,
+    "line": 975,
     "kind": "function",
     "name": "togglePanel",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 973,
+    "line": 982,
     "kind": "function",
     "name": "ensureButtonInTopbar",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 988,
+    "line": 997,
     "kind": "function",
     "name": "setupDom",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 1081,
+    "line": 1090,
     "kind": "function",
     "name": "bindEvents",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 1116,
+    "line": 1125,
     "kind": "arrow",
     "name": "unreadHandler",
     "params": [
@@ -9444,7 +9444,7 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 1128,
+    "line": 1137,
     "kind": "arrow",
     "name": "nudgeEventHandler",
     "params": [
@@ -9453,14 +9453,14 @@
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 1146,
+    "line": 1155,
     "kind": "function",
     "name": "bindPresenceEvents",
     "params": []
   },
   {
     "file": "client\\js\\ui\\friends-hud.js",
-    "line": 1152,
+    "line": 1161,
     "kind": "function",
     "name": "initFriendHud",
     "params": []

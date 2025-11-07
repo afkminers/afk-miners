@@ -17,6 +17,181 @@ import { getMyPresence } from './presence-controls.js';
 
 const REFRESH_INTERVAL = 30_000;
 
+// ===== Presença por REST (fallbacks) =====
+// 1) Endpoint específico (se existir)
+// 2) Polling via /api/friends (fallback-of-fallback)
+// Ambos desligam sozinhos quando não necessários.
+const PRESENCE_POLL_MS = 20_000;
+const FRIENDS_POLL_MS  = 5_000;
+
+const presenceEndpoint = {
+  tried: false,
+  available: null, // null desconhecido | true existe | false não existe
+  timer: null,
+  lastSince: 0,
+};
+
+const friendsPoller = {
+  enabled: false,
+  timer: null,
+};
+
+let lastWsPresenceAt = 0;
+
+function stopPresenceEndpointPolling() {
+  if (presenceEndpoint.timer) {
+    clearTimeout(presenceEndpoint.timer);
+    presenceEndpoint.timer = null;
+  }
+}
+
+function schedulePresenceEndpointPolling() {
+  stopPresenceEndpointPolling();
+  if (presenceEndpoint.available !== true) return;
+  presenceEndpoint.timer = setTimeout(fetchPresenceSnapshot, PRESENCE_POLL_MS);
+}
+
+async function fetchPresenceSnapshot() {
+  if (presenceEndpoint.available === false) return;
+
+  const qs = presenceEndpoint.lastSince
+    ? `?since=${encodeURIComponent(presenceEndpoint.lastSince)}`
+    : '';
+  const candidates = [
+    `/api/presence/friends${qs}`,
+    `/api/friends/presence${qs}`,
+  ];
+
+  try {
+    let data = null;
+    let ok = false;
+
+    for (const url of candidates) {
+      try {
+        data = await apiGet(url);
+        ok = true;
+        break;
+      } catch {
+        // tenta a próxima
+      }
+    }
+
+    if (!ok) {
+      presenceEndpoint.available = false;
+      stopPresenceEndpointPolling();
+      // cai para /api/friends polling
+      startFriendsPolling();
+      return;
+    }
+
+    presenceEndpoint.available = true;
+
+    if (Array.isArray(data?.events)) {
+      for (const ev of data.events) {
+        handlePresenceEvent(ev.type || 'update', ev);
+        if (ev.ts && ev.ts > presenceEndpoint.lastSince) {
+          presenceEndpoint.lastSince = ev.ts;
+        }
+      }
+    }
+  } catch {
+    presenceEndpoint.available = false;
+    stopPresenceEndpointPolling();
+    // cai para /api/friends polling
+    startFriendsPolling();
+    return;
+  }
+
+  schedulePresenceEndpointPolling();
+}
+
+function startFriendsPolling() {
+  if (friendsPoller.enabled) return;
+  friendsPoller.enabled = true;
+  console.info('[friends-hud] ativando polling via /api/friends (fallback).');
+  tickFriendsPolling();
+}
+
+function stopFriendsPolling() {
+  friendsPoller.enabled = false;
+  if (friendsPoller.timer) {
+    clearTimeout(friendsPoller.timer);
+    friendsPoller.timer = null;
+  }
+}
+
+async function tickFriendsPolling() {
+  if (!friendsPoller.enabled) return;
+  try {
+    const data = await apiGet('/api/friends');
+    const list = Array.isArray(data?.friends) ? data.friends : [];
+    // aplica diffs de presença e dispara popups nas transições
+    for (const raw of list) {
+      const id = String(
+        raw.friendId ?? raw.friendshipId ?? raw.userId ?? raw.id ?? '',
+      ).trim();
+      if (!id) continue;
+
+      const existing = friendsById.get(id);
+      if (!existing) {
+        applyFriend(raw);
+        continue;
+      }
+
+      const prevOnline = !!existing.online;
+      const prevStatus = String(
+        existing.presenceStatus || (prevOnline ? 'ONLINE' : 'OFFLINE'),
+      ).toUpperCase();
+
+      if (raw.online != null) existing.online = !!raw.online;
+      if (raw.lastSeenAt || raw.lastSeen) {
+        const ts = parseTime(raw.lastSeenAt || raw.lastSeen);
+        if (ts) existing.lastSeenAt = ts;
+      }
+      if (raw.presenceStatus || raw.status) {
+        existing.presenceStatus = String(
+          raw.presenceStatus || raw.status,
+        ).toUpperCase();
+      }
+      if (raw.presenceActivity || raw.activity) {
+        existing.presenceActivity = String(
+          raw.presenceActivity || raw.activity,
+        ).toUpperCase();
+      }
+
+      const isOnline = !!existing.online;
+      const nowStatus = String(
+        existing.presenceStatus || (isOnline ? 'ONLINE' : 'OFFLINE'),
+      ).toUpperCase();
+
+      const wasVisible = prevOnline && prevStatus !== 'APPEAR_OFFLINE';
+      const isVisible = isOnline && nowStatus !== 'APPEAR_OFFLINE';
+
+      if (!wasVisible && isVisible && (!currentUserId || existing.friendId !== currentUserId)) {
+        try { showFriendOnlineToast(existing); } catch {}
+      }
+
+      updatePresenceFor(existing);
+    }
+    renderSections();
+  } catch {
+    // silencioso
+  } finally {
+    if (friendsPoller.enabled) {
+      friendsPoller.timer = setTimeout(tickFriendsPolling, FRIENDS_POLL_MS);
+    }
+  }
+}
+
+// watchdog: se WS não emitir nada por um tempo, liga o polling via /api/friends
+function kickWatchdog() {
+  lastWsPresenceAt = Date.now();
+  // Se chegou evento WS, desliga o polling /api/friends
+  stopFriendsPolling();
+}
+
+// ====== Estado/UI ======
+
 let initPromise = null;
 let buttonEl = null;
 let panelEl = null;
@@ -42,9 +217,9 @@ const unsubscribers = [];
 
 // ==== SFX / mute / popup MSN ====
 
-// reutiliza a mesma preferência usada no dm-chat.js
 let sfxMuted = false;
 let onlineAudio = null;
+let audioUnlocked = false;
 let msnLayerEl = null;
 
 function readMutePreference() {
@@ -78,6 +253,37 @@ function ensureOnlineAudio() {
   } catch {
     onlineAudio = null;
   }
+  if (!onlineAudio) {
+    try {
+      onlineAudio = new Audio('/sfx/nudge.mp3');
+      onlineAudio.preload = 'auto';
+      onlineAudio.volume = 0.8;
+    } catch {
+      onlineAudio = null;
+    }
+  }
+}
+
+function unlockAudioOnce() {
+  if (audioUnlocked) return;
+  const unlock = () => {
+    ensureOnlineAudio();
+    try {
+      if (onlineAudio) {
+        onlineAudio.muted = true;
+        onlineAudio.play().then(() => {
+          onlineAudio.pause();
+          onlineAudio.currentTime = 0;
+          onlineAudio.muted = false;
+        }).catch(() => {});
+      }
+    } catch {}
+    audioUnlocked = true;
+    window.removeEventListener('pointerdown', unlock, true);
+    window.removeEventListener('keydown', unlock, true);
+  };
+  window.addEventListener('pointerdown', unlock, true);
+  window.addEventListener('keydown', unlock, true);
 }
 
 function playOnlineSound() {
@@ -103,14 +309,12 @@ function ensureMsnLayer() {
 function showFriendOnlineToast(friend) {
   if (!friend || typeof document === 'undefined') return;
 
-  // respeita meu status local: se eu estiver ocupado ou aparecer offline, não mostra popup
   try {
     const me = getMyPresence && getMyPresence();
     const myStatus = String(me?.status || 'ONLINE').toUpperCase();
     if (myStatus === 'BUSY' || myStatus === 'APPEAR_OFFLINE') return;
   } catch {}
 
-  // não faz sentido mostrar popup para bloqueados
   if (friend.status === 'BLOCKED') return;
 
   const layer = ensureMsnLayer();
@@ -156,27 +360,19 @@ function showFriendOnlineToast(friend) {
     remove();
   });
 
-  // clicar no popup abre a DM com o amigo
   popup.addEventListener('click', () => {
-    try {
-      openDmConversation(friend);
-    } catch {}
+    try { openDmConversation(friend); } catch {}
     remove();
   });
 
   layer.appendChild(popup);
 
-  // auto-fechar
   const timeout = setTimeout(remove, 4500);
   popup.addEventListener('mouseenter', () => clearTimeout(timeout));
 
-  // som de amigo online
-  try {
-    playOnlineSound();
-  } catch {}
+  try { playOnlineSound(); } catch {}
 }
 
-// inicia watcher de mute logo que o módulo carrega
 ensureMuteWatcher();
 
 const ERROR_MESSAGES = {
@@ -246,10 +442,8 @@ function normalizeFriend(raw) {
     online: !!raw.online,
     lastSeenAt: lastSeen,
 
-    // se o backend não mandar nada, assume que pode mandar mensagem
     canMessage: raw.canMessage === false ? false : true,
 
-    // presença estendida vinda do backend
     presenceStatus: String(
       raw.presenceStatus || (raw.online ? 'ONLINE' : 'OFFLINE'),
     ).toUpperCase(),
@@ -310,7 +504,6 @@ function openContextMenuFor(friend, anchorRect) {
     blockBtn.dataset.mode = isBlockedByMe ? 'unblock' : 'block';
     blockBtn.disabled = false;
     if (friend.status === 'BLOCKED' && friend.blockedBy && friend.blockedBy !== currentUserId) {
-      // Não podemos desbloquear se outro usuário bloqueou.
       blockBtn.disabled = false;
       blockBtn.dataset.mode = 'block';
       blockBtn.textContent = 'Bloquear';
@@ -349,7 +542,6 @@ function formatRelative(ts) {
   return `há ${days}d`;
 }
 
-// NOVO: helpers para status/atividade da presença
 function describeStatusLabel(status) {
   const st = String(status || '').toUpperCase();
   if (st === 'AFK') return i18n.t('status.afk');
@@ -475,14 +667,14 @@ function renderSections() {
     const nameB = b.name.toLowerCase();
     if (nameA < nameB) return -1;
     if (nameA > nameB) return 1;
-    return (a.friendId < b.friendId ? -1 : 1);
+    return a.friendId < b.friendId ? -1 : 1;
   });
   blocked.sort((a, b) => {
     const nameA = a.name.toLowerCase();
     const nameB = b.name.toLowerCase();
     if (nameA < nameB) return -1;
     if (nameA > nameB) return 1;
-    return (a.friendId < b.friendId ? -1 : 1);
+    return a.friendId < b.friendId ? -1 : 1;
   });
 
   renderSection('pending', pending);
@@ -636,9 +828,7 @@ async function ensureCurrentUser() {
     const data = await apiGet('/api/player/me');
     const profile = data?.profile ? data.profile : data;
     const id = profile?.id ?? profile?.playerId;
-    if (id != null) {
-      currentUserId = String(id);
-    }
+    if (id != null) currentUserId = String(id);
   } catch (err) {
     console.warn('[friends-hud] não foi possível obter o usuário atual', err?.message);
   }
@@ -654,9 +844,7 @@ async function loadFriends({ silent = false } = {}) {
       const data = await apiGet('/api/friends');
       const list = Array.isArray(data?.friends) ? data.friends : [];
       friendsById.clear();
-      for (const raw of list) {
-        applyFriend(raw);
-      }
+      for (const raw of list) applyFriend(raw);
       renderSections();
     } catch (err) {
       if (!silent) {
@@ -685,48 +873,68 @@ function stopAutoRefresh() {
   }
 }
 
-// <<< CORRIGIDO: leva em conta APPEAR_OFFLINE para detectar transição "visível" → popup >>>
+// leva em conta APPEAR_OFFLINE e diferentes formatos de payload
 function handlePresenceEvent(kind, payload) {
-  if (!payload || !payload.userId) return;
-  const friendId = String(payload.userId);
-  const friend = friendsById.get(friendId);
-  if (!friend) return;
+  if (!payload) return;
 
-  const baseTs = Number(payload.lastSeen || payload.ts || Date.now());
+  const friendId =
+    (payload.userId != null ? String(payload.userId) : null) ||
+    (payload.friendId != null ? String(payload.friendId) : null) ||
+    (payload.id != null ? String(payload.id) : null);
+
+  if (!friendId) {
+    console.debug('[presence] ignorado: payload sem id', payload);
+    return;
+  }
+
+  let friend = friendsById.get(friendId);
+  if (!friend) {
+    loadFriends({ silent: true }).then(() => {
+      const f2 = friendsById.get(friendId);
+      if (f2) handlePresenceEvent(kind, payload);
+    }).catch(() => {});
+    return;
+  }
+
+  const baseTs =
+    Number(payload.ts) ||
+    Number(payload.lastSeen) ||
+    Number(payload.lastSeenAt) ||
+    Number(payload?.presence?.lastSeenAt) ||
+    Date.now();
   const ts = Number.isFinite(baseTs) ? baseTs : Date.now();
 
-  // estado ANTES da atualização
   const prevOnline = !!friend.online;
   const prevStatus = String(
     friend.presenceStatus || (prevOnline ? 'ONLINE' : 'OFFLINE'),
   ).toUpperCase();
 
-  // aplica atualização recebida do servidor
   if (kind === 'update' && payload.presence) {
     const p = payload.presence;
-    friend.online = !!p.online;
+    if (p.online != null) friend.online = !!p.online;
     const pt = Number(p.lastSeenAt || ts);
     if (Number.isFinite(pt)) friend.lastSeenAt = pt;
     friend.presenceStatus = String(
       p.status || (friend.online ? 'ONLINE' : 'OFFLINE'),
     ).toUpperCase();
-    friend.presenceActivity = p.activity
-      ? String(p.activity).toUpperCase()
-      : null;
+    friend.presenceActivity = p.activity ? String(p.activity).toUpperCase() : null;
   } else if (kind === 'online') {
-    friend.online = true;
+    friend.online = payload.online != null ? !!payload.online : true;
     friend.lastSeenAt = ts;
-    if (!friend.presenceStatus) {
-      friend.presenceStatus = 'ONLINE';
-    }
+    friend.presenceStatus = String(
+      payload.status || friend.presenceStatus || 'ONLINE',
+    ).toUpperCase();
+    if (payload.activity) friend.presenceActivity = String(payload.activity).toUpperCase();
   } else if (kind === 'offline') {
     friend.online = false;
     friend.lastSeenAt = ts;
     friend.presenceStatus = 'OFFLINE';
     friend.presenceActivity = null;
   } else {
-    friend.online = true;
+    if (payload.online != null) friend.online = !!payload.online;
     friend.lastSeenAt = ts;
+    if (payload.status) friend.presenceStatus = String(payload.status).toUpperCase();
+    if (payload.activity) friend.presenceActivity = String(payload.activity).toUpperCase();
   }
 
   const isOnline = !!friend.online;
@@ -734,19 +942,14 @@ function handlePresenceEvent(kind, payload) {
     friend.presenceStatus || (isOnline ? 'ONLINE' : 'OFFLINE'),
   ).toUpperCase();
 
-  // "visível" = online e NÃO em Aparecer Offline
   const wasVisible = prevOnline && prevStatus !== 'APPEAR_OFFLINE';
   const isVisible = isOnline && nowStatus !== 'APPEAR_OFFLINE';
 
-  // se acabou de ficar visível (offline / aparecer offline → online "de verdade"), dispara popup e som
-  if (
-    !wasVisible &&
-    isVisible &&
-    (!currentUserId || friend.friendId !== currentUserId)
-  ) {
-    try {
-      showFriendOnlineToast(friend);
-    } catch {}
+  // chegou evento WS — marca e desliga polling /api/friends
+  kickWatchdog();
+
+  if (!wasVisible && isVisible && (!currentUserId || friend.friendId !== currentUserId)) {
+    try { showFriendOnlineToast(friend); } catch {}
   }
 
   updatePresenceFor(friend);
@@ -1010,7 +1213,9 @@ function setupDom() {
       <span class="hud-friends-btn__badge" data-role="badge" hidden>0</span>
     `;
     badgeEl = buttonEl.querySelector('[data-role="badge"]');
+  }
 
+  if (!panelEl) {
     panelEl = document.createElement('div');
     panelEl.className = 'friend-panel';
     panelEl.setAttribute('aria-hidden', 'true');
@@ -1153,20 +1358,40 @@ function bindEvents() {
 }
 
 function bindPresenceEvents() {
-  unsubscribers.push(onMessage('presence:online', (payload) => handlePresenceEvent('online', payload)));
-  unsubscribers.push(onMessage('presence:offline', (payload) => handlePresenceEvent('offline', payload)));
-  unsubscribers.push(onMessage('presence:update', (payload) => handlePresenceEvent('update', payload)));
+  unsubscribers.push(onMessage('presence:online', (payload) => { kickWatchdog(); handlePresenceEvent('online', payload); }));
+  unsubscribers.push(onMessage('presence:offline', (payload) => { kickWatchdog(); handlePresenceEvent('offline', payload); }));
+  unsubscribers.push(onMessage('presence:update', (payload) => { kickWatchdog(); handlePresenceEvent('update', payload); }));
+  unsubscribers.push(onMessage('presence:events', (payload) => {
+    kickWatchdog();
+    const raw = payload || {};
+    const t = String(raw.type || raw.kind || raw.event || '').toLowerCase();
+    const map = { online: 'online', offline: 'offline', update: 'update', status: 'update' };
+    const k = map[t] || 'update';
+    handlePresenceEvent(k, raw);
+  }));
 }
 
 export function initFriendHud() {
   if (initPromise) return initPromise;
   initPromise = (async () => {
     if (!setupDom()) return;
+    unlockAudioOnce();
     bindEvents();
     bindPresenceEvents();
     getSocket();
     await ensureCurrentUser();
     await loadFriends({ silent: true });
+
+    // tenta o endpoint de presença; se não tiver, ele mesmo liga /api/friends
+    if (!presenceEndpoint.tried) {
+      presenceEndpoint.tried = true;
+      fetchPresenceSnapshot().catch(() => startFriendsPolling());
+    }
+
+    // watchdog: se nenhum evento WS chegar nos primeiros 8s, ativa /api/friends
+    setTimeout(() => {
+      if (!lastWsPresenceAt) startFriendsPolling();
+    }, 8000);
   })().catch((err) => {
     console.error('[friends-hud] init failed', err);
   });
@@ -1176,4 +1401,7 @@ export function initFriendHud() {
 window.addEventListener('beforeunload', () => {
   unsubscribers.forEach((fn) => { try { fn(); } catch {} });
   unsubscribers.length = 0;
+  stopAutoRefresh();
+  stopPresenceEndpointPolling();
+  stopFriendsPolling();
 });

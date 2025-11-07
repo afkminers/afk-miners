@@ -34,6 +34,7 @@ client\js\ui\hero-floating-damage.js -> ../ws/singleton.js
 client\js\ui\friends-hud.js -> ../api.js
 client\js\ui\friends-hud.js -> ../ws/singleton.js
 client\js\ui\friends-hud.js -> ../i18n/core.js
+client\js\ui\friends-hud.js -> ./presence-controls.js
 client\js\ui\dm-chat.js -> ../api.js
 client\js\ui\dm-chat.js -> ../ws/singleton.js
 client\js\ui\dm-chat.js -> ./emoji.js

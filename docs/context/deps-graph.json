@@ -144,6 +144,10 @@
     "to": "../i18n/core.js"
   },
   {
+    "from": "client\\js\\ui\\friends-hud.js",
+    "to": "./presence-controls.js"
+  },
+  {
     "from": "client\\js\\ui\\dm-chat.js",
     "to": "../api.js"
   },

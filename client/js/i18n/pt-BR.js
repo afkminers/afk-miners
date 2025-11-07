@@ -1,4 +1,4 @@
-//client/js/i18n/pt-BR.js
+// client/js/i18n/pt-BR.js
 export default {
   lang: {
     menu: 'Trocar idioma',
@@ -394,7 +394,7 @@ export default {
     afk: 'AFK (Ausente)',
     busy: 'Ocupado',
     appearOffline: 'Aparecer Offline',
-    offline: 'Offline', // NOVO
+    offline: 'Offline',
   },
   activity: {
     house: 'Casa',
@@ -407,6 +407,36 @@ export default {
     afk: 'AFK indica ausência temporária.',
     appearOffline: 'Mostra você como Offline para os outros.',
   },
+
+  news: {
+    sectionTitle: 'ÚLTIMAS NOTÍCIAS',
+    sectionSubtitle: 'Atualizações da equipe AFK Miners.',
+    viewAll: 'Ver todas as atualizações',
+    tickerTitle: 'Ticker de Notícias',
+    tickerEmpty: 'Nenhuma notícia ainda.',
+
+    // Post 1
+    post1Badge: 'Devlog',
+    post1Title: 'SITE DO AFK MINERS E HUB DE LOGIN ESTÃO NO AR',
+    post1Body:
+      'Nossa nova homepage está no ar com login seguro, seletor de idioma e um preview dos heróis do gacha. Este hub de notícias vai crescer com devlogs curtos conforme adicionarmos novos sistemas.',
+    post1Link: 'Ver visão geral →',
+
+    // Post 2
+    post2Badge: 'Roadmap',
+    post2Title: 'ROADMAP DA ALPHA: CASA, CAÇA AO TESOURO E TREINAMENTO',
+    post2Body:
+      'Definimos o roadmap de curto prazo com foco na Casa/Saguão como hub principal, mapas de Caça ao Tesouro com respawn infinito e a primeira Arena de Treino de habilidades.',
+    post2Link: 'Abrir roadmap →',
+
+    // Post 3
+    post3Badge: 'Tech',
+    post3Title: 'BACKEND MMO CORE: CHAT, PRESENÇA E TRABALHADORES AFK',
+    post3Body:
+      'O backend agora tem canais de chat persistentes, presença manual e a primeira versão dos trabalhadores AFK e sistemas de farm conectados ao Postgres.',
+    post3Link: 'Ver notas técnicas →',
+  },
+
 
   dm: {
     nudge: {

@@ -4,9 +4,12 @@
   <meta charset="UTF-8" />
   <title>AFK Miners — Login + Gacha</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&display=swap"
+  rel="stylesheet"
+/>
   <link rel="stylesheet" href="css/colors.css">
   <link rel="stylesheet" href="css/retro-overrides.css">
   <link rel="stylesheet" href="css/auth.css">
@@ -346,14 +349,207 @@
     }
     .site-footer small{ opacity:.85; }
 
+
+    /* ====== HOME NEWS HUB (timeline estilo launcher) ====== */
+    .home-news{
+      position: relative;
+      z-index: 3;
+      padding: 10px 12px 0;
+      margin-top: 4px;
+      font-family:"Press Start 2P", monospace;
+      color:#ffe8c0;
+    }
+
+    .home-news-inner{
+      max-width: 1100px;
+      margin: 0 auto;
+      background:
+        radial-gradient(circle at top, rgba(255,215,160,.18), transparent 55%),
+        #2b1814;
+      border-radius: 18px;
+      border: 6px solid #000;
+      box-shadow:
+        0 8px 0 #000,
+        0 18px 26px rgba(0,0,0,.7),
+        0 0 0 2px rgba(255,232,192,.05) inset;
+      padding: 10px 14px 12px;
+    }
+
+    .home-news-header{
+      display:flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px 16px;
+      padding-bottom: 4px;
+      border-bottom: 2px solid rgba(0,0,0,.6);
+      text-shadow: 0 2px 0 rgba(0,0,0,.7);
+    }
+    .home-news-title{
+      margin: 0 0 4px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      line-height: 1.4;
+    }
+
+    .home-news-sub{
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      opacity: .9;
+      text-align: right;
+      line-height: 1.4;
+    }
+
+    .home-news-actions{
+      margin-left:auto;
+      font-size: 8px;
+    }
+    .home-news-archive-link{
+      text-decoration: underline;
+      opacity:.9;
+    }
+
+    /* lista vertical de posts */
+    .home-news-list{
+      margin-top: 8px;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+    }
+
+    .home-news-article{
+      position:relative;
+      background:#1b1112;
+      border-radius: 14px;
+      border: 4px solid #000;
+      box-shadow:
+        0 4px 0 #000,
+        0 10px 20px rgba(0,0,0,.7);
+      padding: 8px 10px;
+      display:grid;
+      grid-template-columns: 96px minmax(0,1fr);
+      column-gap: 10px;
+      align-items:flex-start;
+      font-size: 9px;
+      line-height: 1.6;
+    }
+
+    /* trilho da timeline + bolinha */
+    .home-news-article::before{
+      content:"";
+      position:absolute;
+      left: 14px;
+      top: 10px;
+      bottom: 10px;
+      width: 2px;
+      background: rgba(255,232,192,.22);
+      opacity:.9;
+    }
+    .home-news-article::after{
+      content:"";
+      position:absolute;
+      left: 9px;
+      top: 14px;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:#ffbf55;
+      box-shadow:0 0 0 2px #000;
+    }
+
+    .home-news-meta{
+      position:relative;
+      padding-left: 20px;
+      padding-right: 6px;
+      border-right: 1px solid rgba(255,232,192,.18);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing:.08em;
+    }
+    .home-news-date{
+      display:block;
+      margin-bottom:4px;
+      opacity:.9;
+    }
+    .home-news-badge{
+      display:inline-block;
+      padding:2px 7px;
+      border-radius: 10px;
+      background: linear-gradient(180deg,#ffb23e,#f39b2d);
+      color:#2b1512;
+      box-shadow: 0 2px 0 #2b1512;
+      font-size:8px;
+    }
+
+    .home-news-content{
+      padding-left: 4px;
+    }
+    .home-news-article-title{
+      margin:0 0 4px;
+      font-size:10px;
+      text-transform: uppercase;
+    }
+    .home-news-body{
+      margin:0;
+    }
+    .home-news-body p{
+      margin:0 0 4px;
+    }
+    .home-news-link{
+      display:inline-block;
+      margin-top:2px;
+      font-size:8px;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 800px){
+      .home-news-header{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+      .home-news-sub{
+        text-align:left;
+      }
+      .home-news-article{
+        grid-template-columns: minmax(0,1fr);
+        row-gap: 4px;
+      }
+      .home-news-meta{
+        border-right:none;
+        padding-right:0;
+        margin-bottom:2px;
+      }
+      .home-news-article::before{
+        left: 12px;
+      }
+      .home-news-article::after{
+        left: 7px;
+      }
+    }
+
+    @media (max-width: 640px){
+      .home-news{
+        padding-inline: 8px;
+      }
+      .home-news-inner{
+        padding-inline: 10px;
+      }
+    }
+
+
     /* ====== MODO EMBUTIDO (abre dentro do shell via ?embed=1#view) ====== */
     body.embedded .site-header,
     body.embedded #landingBg,
     body.embedded #landingFx,
     body.embedded #landingFxBack,
     body.embedded .login-heroes,
+    body.embedded .home-news,
     body.embedded .retro-footer { display:none !important; }
     body.embedded #appMain { display:block !important; }
+
   </style>
 </head>
 <body class="force-anim logged-out">
@@ -460,10 +656,101 @@
     </div>
   </header>
 
+  <!-- Home News / Devlog -->
+  <section class="home-news" aria-label="Latest news">
+    <div class="home-news-inner">
+      <header class="home-news-header">
+        <div>
+          <h2 class="home-news-title" data-i18n="news.sectionTitle">Latest News</h2>
+          <p class="home-news-sub" data-i18n="news.sectionSubtitle">
+            Updates from the AFK Miners team.
+          </p>
+        </div>
+        <div class="home-news-actions">
+          <a href="/roadmap" class="home-news-archive-link" data-i18n="news.viewAll">
+            View all updates
+          </a>
+        </div>
+      </header>
+
+      <div class="home-news-list" data-news-feed>
+        <!-- POST 1 -->
+        <article class="home-news-article">
+          <div class="home-news-meta">
+            <time datetime="2025-11-06" class="home-news-date">Nov 06 2025</time>
+            <span class="home-news-badge" data-i18n="news.post1Badge">Devlog</span>
+          </div>
+          <div class="home-news-content">
+            <h3 class="home-news-article-title" data-i18n="news.post1Title">
+              AFK MINERS WEBSITE & LOGIN HUB ARE LIVE
+            </h3>
+            <div class="home-news-body">
+              <p data-i18n="news.post1Body">
+                Our new homepage is online with secure login, language switcher and a preview
+                of the gacha heroes. This news hub will grow with short devlogs as we add new systems.
+              </p>
+              <a href="/overview" class="home-news-link" data-i18n="news.post1Link">
+                Read the overview →
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- POST 2 -->
+        <article class="home-news-article">
+          <div class="home-news-meta">
+            <time datetime="2025-10-20" class="home-news-date">Oct 20 2025</time>
+            <span class="home-news-badge" data-i18n="news.post2Badge">Roadmap</span>
+          </div>
+          <div class="home-news-content">
+            <h3 class="home-news-article-title" data-i18n="news.post2Title">
+              ALPHA ROADMAP: HOUSE, TREASURE HUNT & TRAINING
+            </h3>
+            <div class="home-news-body">
+              <p data-i18n="news.post2Body">
+                We defined the short-term roadmap focusing on the House/Lobby as the main hub,
+                Treasure Hunt maps with infinite respawn and the first Training Arena for skills.
+              </p>
+              <a href="/roadmap" class="home-news-link" data-i18n="news.post2Link">
+                Open roadmap →
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- POST 3 -->
+        <article class="home-news-article">
+          <div class="home-news-meta">
+            <time datetime="2025-09-15" class="home-news-date">Sep 15 2025</time>
+            <span class="home-news-badge" data-i18n="news.post3Badge">Tech</span>
+          </div>
+          <div class="home-news-content">
+            <h3 class="home-news-article-title" data-i18n="news.post3Title">
+              BACKEND MMO CORE: CHAT, PRESENCE & AFK WORKERS
+            </h3>
+            <div class="home-news-body">
+              <p data-i18n="news.post3Body">
+                The backend now has persistent chat channels, manual presence
+                and the first version of AFK workers and farming systems wired to Postgres.
+              </p>
+              <a href="/roadmap" class="home-news-link" data-i18n="news.post3Link">
+                See technical notes →
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- futuros posts: só copiar/colar mais <article> aqui -->
+      </div>
+    </div>
+  </section>
+
+
   <!-- Landing BG -->
   <div id="landingBg" aria-hidden="true"></div>
   <canvas id="landingFxBack" class="fx-layer"></canvas>
   <canvas id="landingFx" class="fx-layer"></canvas>
+
 
   <!-- Heróis -->
   <div class="login-heroes" aria-hidden="true">

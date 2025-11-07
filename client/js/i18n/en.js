@@ -404,6 +404,36 @@ export default {
     appearOffline: 'Shows you as Offline to others.',
   },
 
+  news: {
+    sectionTitle: 'Latest News',
+    sectionSubtitle: 'Updates from the AFK Miners team.',
+    viewAll: 'View all updates',
+    tickerTitle: 'News Ticker',
+    tickerEmpty: 'No news yet.',
+
+    // Post 1
+    post1Badge: 'Devlog',
+    post1Title: 'AFK MINERS WEBSITE & LOGIN HUB ARE LIVE',
+    post1Body:
+      'Our new homepage is online with secure login, language switcher and a preview of the gacha heroes. This news hub will grow with short devlogs as we add new systems.',
+    post1Link: 'Read the overview →',
+
+    // Post 2
+    post2Badge: 'Roadmap',
+    post2Title: 'ALPHA ROADMAP: HOUSE, TREASURE HUNT & TRAINING',
+    post2Body:
+      'We defined the short-term roadmap focusing on the House/Lobby as the main hub, Treasure Hunt maps with infinite respawn and the first Training Arena for skills.',
+    post2Link: 'Open roadmap →',
+
+    // Post 3
+    post3Badge: 'Tech',
+    post3Title: 'BACKEND MMO CORE: CHAT, PRESENCE & AFK WORKERS',
+    post3Body:
+      'The backend now has persistent chat channels, manual presence and the first version of AFK workers and farming systems wired to Postgres.',
+    post3Link: 'See technical notes →',
+  },
+
+
   dm: {
     nudge: {
       unavailable: 'Recipient unavailable.',
@@ -411,3 +441,5 @@ export default {
     },
   },
 };
+
+
