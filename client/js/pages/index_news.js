@@ -120,6 +120,14 @@ function init() {
     window.i18n.onReady((readyLang) => load(readyLang));
     window.i18n.onChange((nextLang) => load(nextLang));
   }
+  document.addEventListener('cms-posts-changed', (event) => {
+    const detail = event?.detail || {};
+    if (detail.page !== 'index') return;
+    const current = currentLang();
+    if (!detail.locale || detail.locale === current) {
+      load(current);
+    }
+  });
 }
 
 if (document.readyState === 'loading') {

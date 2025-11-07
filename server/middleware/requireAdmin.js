@@ -38,7 +38,7 @@ function enforceAdmin(req, res, next) {
 
   if (!isAdminName(sessionUser.name)) {
     if (!res.headersSent) {
-      res.status(403).json({ error: 'forbidden' });
+      res.status(403).json({ error: 'forbidden_admin' });
     }
     return;
   }
