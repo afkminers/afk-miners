@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AFK Miners — Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/css/colors.css" />
+  <link rel="stylesheet" href="/css/retro-overrides.css" />
+  <link rel="stylesheet" href="/css/main.css" />
+  <style>
+    :root {
+      --admin-bg: #140e12;
+      --admin-panel: #201419;
+      --admin-border: #45252d;
+      --admin-highlight: #f1b24a;
+    }
+    body.admin-page {
+      background: var(--admin-bg);
+      font-family: 'Pixelify Sans', 'Press Start 2P', monospace;
+      color: #fbe7d3;
+      margin: 0;
+      min-height: 100vh;
+    }
+    .admin-shell {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px 16px 64px;
+    }
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+    .admin-header h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 20px;
+      margin: 0;
+    }
+    .admin-status {
+      font-size: 14px;
+      color: #f8dede;
+    }
+    .admin-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .admin-tab {
+      background: #3b1d24;
+      color: #fbe7d3;
+      border: 3px solid var(--admin-border);
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #000;
+      transition: filter 0.2s ease, transform 0.15s ease;
+    }
+    .admin-tab:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+    .admin-tab.is-active {
+      background: linear-gradient(#f5c56b, #df9a3e);
+      color: #2b1512;
+    }
+    .admin-panel {
+      background: var(--admin-panel);
+      border: 4px solid var(--admin-border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 12px 0 rgba(0, 0, 0, 0.45);
+      display: none;
+    }
+    .admin-panel.is-active {
+      display: block;
+    }
+    .panel-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+      justify-content: space-between;
+    }
+    .panel-header h2 {
+      margin: 0;
+      font-size: 16px;
+      font-family: 'Press Start 2P', monospace;
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .filters label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .filters select,
+    .filters input,
+    .filters button {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 3px solid var(--admin-border);
+      background: #341921;
+      color: #fbe7d3;
+      font-family: inherit;
+      font-size: 12px;
+    }
+    .filters button {
+      cursor: pointer;
+      background: #44222b;
+    }
+    .filters button:hover {
+      filter: brightness(1.1);
+    }
+    .posts-list {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .post-card {
+      background: rgba(10, 6, 8, 0.65);
+      border: 3px solid #2e151c;
+      border-radius: 14px;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .post-card-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .post-card h3 {
+      margin: 0;
+      font-size: 14px;
+    }
+    .post-meta {
+      font-size: 11px;
+      opacity: 0.8;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .post-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .post-actions button {
+      padding: 6px 10px;
+      border: 3px solid #2b1512;
+      border-radius: 8px;
+      background: #5b2f35;
+      color: #fbe7d3;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .post-actions button:hover {
+      filter: brightness(1.1);
+    }
+    .post-actions button[data-move] {
+      width: 32px;
+      text-align: center;
+      font-family: 'Press Start 2P', monospace;
+    }
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .form-row label {
+      flex: 1;
+      min-width: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .form-row input,
+    .form-row textarea,
+    .form-row select {
+      padding: 8px;
+      border-radius: 8px;
+      border: 3px solid var(--admin-border);
+      background: #341921;
+      color: #fbe7d3;
+      font-family: inherit;
+      font-size: 13px;
+      min-height: 38px;
+    }
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .btn-primary {
+      background: linear-gradient(#f5c56b, #df9a3e);
+      color: #2b1512;
+      border: 3px solid #2b1512;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      background: #3b1d24;
+      color: #fbe7d3;
+      border: 3px solid #2b1512;
+      cursor: pointer;
+    }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #5b2f35;
+      color: #fbe7d3;
+      padding: 12px 18px;
+      border: 3px solid #2b1512;
+      border-radius: 12px;
+      box-shadow: 0 8px 0 rgba(0, 0, 0, 0.4);
+      font-size: 13px;
+      display: none;
+      max-width: 320px;
+      z-index: 1000;
+    }
+    .toast.is-visible {
+      display: block;
+    }
+    .empty-state {
+      font-size: 13px;
+      opacity: 0.8;
+    }
+    .i18n-help {
+      margin-top: 18px;
+      font-size: 12px;
+      line-height: 1.4;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 12px;
+      border-radius: 12px;
+      border: 2px dashed #51313a;
+    }
+    .i18n-help ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+    .i18n-help li {
+      margin: 2px 0;
+    }
+    .status-banner {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 3px solid #512a30;
+      background: rgba(0, 0, 0, 0.35);
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+    .status-banner.error {
+      border-color: #a94e5c;
+      background: rgba(169, 78, 92, 0.2);
+    }
+    .status-banner.success {
+      border-color: #4ea96a;
+      background: rgba(78, 169, 106, 0.2);
+    }
+    @media (max-width: 720px) {
+      .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .form-row label {
+        min-width: 140px;
+      }
+    }
+  </style>
+</head>
+<body class="admin-page">
+  <main class="admin-shell" id="adminApp">
+    <header class="admin-header">
+      <h1>AFK Miners — Admin CMS</h1>
+      <div class="admin-status" id="adminStatus">Verificando sessão...</div>
+    </header>
+
+    <div class="status-banner" id="adminBanner" hidden></div>
+
+    <nav class="admin-tabs" role="tablist">
+      <button class="admin-tab is-active" data-tab="posts" role="tab" aria-controls="panel-posts" aria-selected="true">
+        Posts / Notícias
+      </button>
+      <button class="admin-tab" data-tab="i18n" role="tab" aria-controls="panel-i18n" aria-selected="false">
+        Textos (i18n overrides)
+      </button>
+    </nav>
+
+    <section class="admin-panel is-active" id="panel-posts" data-panel="posts" role="tabpanel">
+      <div class="panel-header">
+        <h2>Gerenciar Posts</h2>
+        <div class="filters">
+          <label>
+            Página
+            <select id="postsPageSelect">
+              <option value="index">Home</option>
+              <option value="overview">Overview</option>
+              <option value="roadmap">Roadmap</option>
+            </select>
+          </label>
+          <label>
+            Idioma
+            <select id="postsLocaleSelect">
+              <option value="en">en</option>
+              <option value="pt-BR">pt-BR</option>
+            </select>
+          </label>
+          <button id="postsRefresh" type="button">Recarregar</button>
+        </div>
+      </div>
+
+      <div class="posts-list" id="postsList"></div>
+
+      <form id="postForm" class="form-grid" autocomplete="off">
+        <input type="hidden" id="postId" />
+        <h3 id="postFormTitle">Novo post</h3>
+        <div class="form-row">
+          <label>
+            Página
+            <select id="formPage">
+              <option value="index">index</option>
+              <option value="overview">overview</option>
+              <option value="roadmap">roadmap</option>
+            </select>
+          </label>
+          <label>
+            Idioma
+            <select id="formLocale">
+              <option value="en">en</option>
+              <option value="pt-BR">pt-BR</option>
+            </select>
+          </label>
+          <label>
+            Sort index
+            <input type="number" id="formSort" value="0" />
+          </label>
+          <label>
+            Publicado?
+            <select id="formPublished">
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Título
+            <input type="text" id="formTitle" required />
+          </label>
+          <label>
+            Tag
+            <input type="text" id="formTag" placeholder="Devlog, Roadmap..." />
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Resumo
+            <textarea id="formSummary" required></textarea>
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Corpo (HTML opcional)
+            <textarea id="formBody" placeholder="<p>Texto em HTML simples</p>"></textarea>
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Link href
+            <input type="text" id="formLinkHref" placeholder="/overview" />
+          </label>
+          <label>
+            Link label
+            <input type="text" id="formLinkLabel" placeholder="Leia mais →" />
+          </label>
+          <label>
+            Publicado em
+            <input type="datetime-local" id="formPublishedAt" />
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="postCancel">Cancelar</button>
+          <button type="submit" class="btn-primary" id="postSubmit">Salvar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="admin-panel" id="panel-i18n" data-panel="i18n" role="tabpanel" hidden>
+      <div class="panel-header">
+        <h2>Textos / Overrides</h2>
+        <div class="filters">
+          <label>
+            Idioma
+            <select id="i18nLocaleSelect">
+              <option value="en">en</option>
+              <option value="pt-BR">pt-BR</option>
+            </select>
+          </label>
+          <label>
+            Prefixo
+            <input type="text" id="i18nPrefix" placeholder="overview." />
+          </label>
+          <button id="i18nRefresh" type="button">Recarregar</button>
+        </div>
+      </div>
+
+      <div class="posts-list" id="i18nList"></div>
+
+      <form id="i18nForm" class="form-grid" autocomplete="off">
+        <input type="hidden" id="i18nId" />
+        <h3 id="i18nFormTitle">Adicionar override</h3>
+        <div class="form-row">
+          <label>
+            Idioma
+            <select id="i18nFormLocale">
+              <option value="en">en</option>
+              <option value="pt-BR">pt-BR</option>
+            </select>
+          </label>
+          <label>
+            Chave
+            <input type="text" id="i18nFormKey" placeholder="overview.heroTitle" required />
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Valor (HTML básico permitido)
+            <textarea id="i18nFormValue" required></textarea>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="i18nCancel">Cancelar</button>
+          <button type="submit" class="btn-primary" id="i18nSubmit">Salvar</button>
+        </div>
+      </form>
+
+      <aside class="i18n-help">
+        <strong>Dicas de chaves frequentes:</strong>
+        <ul>
+          <li>news.sectionTitle, news.sectionSubtitle</li>
+          <li>overview.heroTitle, overview.heroCopy</li>
+          <li>overview.join, overview.joinCopy</li>
+          <li>roadmap.heroTitle, roadmap.heroCopy</li>
+          <li>roadmap.milestones, roadmap.subscribeTitle</li>
+        </ul>
+      </aside>
+    </section>
+  </main>
+
+  <div class="toast" id="adminToast" role="status" aria-live="polite"></div>
+
+  <script src="/js/csrf.js"></script>
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

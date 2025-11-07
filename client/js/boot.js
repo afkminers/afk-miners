@@ -25,6 +25,8 @@ const regMsg      = document.getElementById('regMsg');
 const btnLogout     = document.getElementById('btnLogout');
 const btnLogoutTop  = document.getElementById('btnLogoutTop');
 const mobileLogout  = document.getElementById('mobileLogout');
+const btnAdminPanel = document.getElementById('btnAdminPanel');
+const mobileAdmin   = document.getElementById('mobileAdmin');
 
 // Header buttons
 const btnPlay   = document.getElementById('btnPlay');
@@ -90,6 +92,7 @@ const ctx = {
 // ===== Estado de sessão =====
 let __profile = null;
 window.__isAuth = false;
+window.__isAdmin = false;
 let lastCoinsValue = 0;
 let lastNameValue = '';
 
@@ -179,6 +182,11 @@ function setLogoutVisibility(signed){
   btnLogoutTop?.classList.toggle('hidden', !show);
   mobileLogout?.classList.toggle('hidden', !show);
 }
+function setAdminVisibility(isAdmin) {
+  const show = !!isAdmin;
+  btnAdminPanel?.classList.toggle('hidden', !show);
+  mobileAdmin?.classList.toggle('hidden', !show);
+}
 function setLoggedOutGlow(on){
   document.body.classList.toggle('logged-out', !!on);
 }
@@ -192,9 +200,11 @@ function showLanding(){
   appMain?.classList.add('hidden');
   authScreen?.classList.add('hidden');
   setLogoutVisibility(false);
+  setAdminVisibility(false);
   setLoggedOutGlow(true);
   closeMobileMenu();
   window.__isAuth = false;
+  window.__isAdmin = false;
   initLoginFx();
 }
 
@@ -217,13 +227,24 @@ async function goToGameAccordingToStarter() {
   }
 }
 
-async function showApp(profile) {
+async function showApp(profile, options = {}) {
   stopLoginFx();
   __profile = profile;
   window.__isAuth = true;
+  const isAdmin = !!options.isAdmin;
+  window.__isAdmin = isAdmin;
   updateHud(profile);
+  setLogoutVisibility(true);
+  setAdminVisibility(isAdmin);
+  setLoggedOutGlow(false);
+  closeMobileMenu();
+  authScreen?.classList.add('hidden');
+  appMain?.classList.remove('hidden');
   await gacha.init?.(profile);
-  goToGameAccordingToStarter();
+
+  if (options.autoRedirect) {
+    await goToGameAccordingToStarter();
+  }
 }
 
 /* ========= Sessão ========= */
@@ -232,7 +253,7 @@ async function trySession() {
   try {
     const me = await apiGet(`${API}/api/auth/me`);
     if (me?.profile) {
-      await showApp(me.profile);
+      await showApp(me.profile, { isAdmin: !!me.isAdmin });
     } else {
       showLanding();
     }
@@ -282,7 +303,7 @@ btnLogin?.addEventListener('click', async (ev) => {
     if (!me?.profile) { setI18nMessage(loginMsg, 'auth.sessionMissing'); return; }
 
     celebrate();
-    await goToGameAccordingToStarter();
+    await showApp(me.profile, { autoRedirect: false, isAdmin: !!me.isAdmin });
   } catch {
     setI18nMessage(loginMsg, 'auth.loginFailed');
   } finally {
@@ -307,7 +328,7 @@ btnRegister?.addEventListener('click', async (ev) => {
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json());
     if (!me?.profile) { setI18nMessage(regMsg, 'auth.sessionMissing'); return; }
 
-    await goToGameAccordingToStarter();
+    await showApp(me.profile, { autoRedirect: false, isAdmin: !!me.isAdmin });
   } catch (e) {
     const msg = (e?.message || '').toLowerCase();
     if (msg.includes('já está em uso') || msg.includes('duplicate')) {
