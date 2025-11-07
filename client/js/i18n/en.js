@@ -168,6 +168,7 @@ export default {
     phase4Title: 'Phase 4 — Endless Depths',
     phase4Copy:
       'Procedural dungeon tiers, relic crafting, housing, and advanced automation APIs for veteran miners.',
+    updatesTitle: 'Latest Updates',
   },
   support: {
     title: 'Support',
@@ -253,6 +254,7 @@ export default {
       'Climb competitive ladders in async duels. Tune builds to counter the weekly meta and earn trophies.',
     artCopy:
       'AFK Miners pays homage to classic Tibia-like adventures with hand-crafted pixel art, vibrant spells, and a warm medieval palette. Every screen is optimized for clarity on desktop and mobile while preserving nostalgic charm.',
+    updatesTitle: 'Latest Updates',
   },
   rarity: {
     COMMON: 'Common',

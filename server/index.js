@@ -43,6 +43,9 @@ const supportRoutes = require('./routes/support');
 const leaderboardRoutes = require('./routes/leaderboard');
 
 const { loadSpriteMetaFromDisk } = require('./utils/loadSpriteMetaFromDisk');
+const requireAdmin = require('./middleware/requireAdmin');
+const cmsI18n = require('./cms/i18n');
+const cmsPosts = require('./cms/posts');
 
 // Loot (pickup + listar loots)
 const lootRoutes = require('./routes/loot'); // <<-- novo
@@ -782,6 +785,20 @@ app.get('/leaderboard', (_req, res) => {
 
 app.get('/', (_req, res) => {
   res.sendFile(path.join(CLIENT_ROOT_DIR, 'index.html'));
+});
+
+const contentRouter = express.Router();
+contentRouter.use(cmsI18n.publicRouter);
+contentRouter.use(cmsPosts.publicRouter);
+app.use('/api/content', contentRouter);
+
+const adminRouter = express.Router();
+adminRouter.use(cmsI18n.adminRouter);
+adminRouter.use(cmsPosts.adminRouter);
+app.use('/api/admin', requireAdmin, adminRouter);
+
+app.get('/admin', requireAdmin, (_req, res) => {
+  res.sendFile(path.join(CLIENT_ROOT_DIR, 'admin.html'));
 });
 
 // ========= STATIC

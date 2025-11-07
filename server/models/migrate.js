@@ -596,6 +596,39 @@ async function migrate() {
     )
   `);
 
+  await run(`
+    CREATE TABLE IF NOT EXISTS cms_i18n_overrides (
+      id SERIAL PRIMARY KEY,
+      locale TEXT NOT NULL,
+      key TEXT NOT NULL,
+      value TEXT NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT now(),
+      UNIQUE (locale, key)
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS cms_posts (
+      id SERIAL PRIMARY KEY,
+      page TEXT NOT NULL,
+      locale TEXT NOT NULL,
+      title TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      body_html TEXT,
+      tag TEXT,
+      link_href TEXT,
+      link_label TEXT,
+      published_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      sort_index INT NOT NULL DEFAULT 0,
+      is_published BOOLEAN NOT NULL DEFAULT TRUE
+    )
+  `);
+
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_cms_posts_page_locale
+      ON cms_posts (page, locale, is_published, sort_index DESC, published_at DESC)
+  `);
+
   // popula heróis base se vazio
   await seedHeroesIfEmpty();
 }
