@@ -13,6 +13,7 @@ export default {
     play: 'Play',
     leaderboard: 'Leaderboard',
     support: 'Support',
+    adminPanel: 'Admin Panel',
   },
   common: {
     rows: 'Rows',

@@ -155,7 +155,7 @@
       position:absolute; right:10px; top:4px;
       display:flex; align-items:center; gap:8px;
     }
-    .btn-logout, .btn-gear, .btn-hamb{
+    .btn-logout, .btn-gear, .btn-hamb, .btn-admin{
       display:flex; align-items:center; justify-content:center;
       gap:8px;
       padding:8px 12px;
@@ -166,7 +166,7 @@
       cursor:pointer; min-height:36px;
       transition: filter .15s ease, transform .08s ease;
     }
-    .btn-logout:hover, .btn-gear:hover, .btn-hamb:hover{ filter:brightness(1.06); transform: translateY(-1px); }
+    .btn-logout:hover, .btn-gear:hover, .btn-hamb:hover, .btn-admin:hover{ filter:brightness(1.06); transform: translateY(-1px); }
     .btn-gear, .btn-hamb{ width:42px; padding:8px; }
     .btn-gear svg, .btn-hamb svg{ width:20px; height:20px; display:block; }
 
@@ -611,16 +611,24 @@
         </button>
 
         <button id="btnLogoutTop" class="btn-logout hidden" title="Logout" data-i18n="common.logout" data-i18n-attr="title">Logout</button>
+        <a
+          id="btnAdminPanel"
+          class="btn-admin hidden"
+          href="/admin"
+          data-i18n="nav.adminPanel"
+          data-i18n-attr="title"
+          title="Admin panel"
+        >Admin</a>
         <div style="position:relative">
-        <button
-          id="btnGear"
-          class="btn-gear"
-          data-i18n-attr="title,aria-label"
-          data-i18n-title="settings.open"
-          data-i18n-aria-label="settings.open"
-          aria-haspopup="true"
-          aria-expanded="false"
-        >
+          <button
+            id="btnGear"
+            class="btn-gear"
+            data-i18n-attr="title,aria-label"
+            data-i18n-title="settings.open"
+            data-i18n-aria-label="settings.open"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges">
               <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
               <path d="M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12M12 2v3M12 19v3"/>
@@ -652,6 +660,7 @@
       <a href="/roadmap" data-i18n="nav.roadmap">Roadmap</a>
       <a href="/leaderboard" data-i18n="nav.leaderboard">Leaderboard</a>
       <a href="/support" data-i18n="nav.support">Support</a>
+      <a id="mobileAdmin" class="hidden" href="/admin" data-i18n="nav.adminPanel">Admin panel</a>
       <button id="mobileLogout" class="hidden" data-i18n="common.logout">Logout</button>
     </div>
   </header>
