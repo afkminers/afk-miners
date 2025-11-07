@@ -297,35 +297,35 @@
   },
   {
     "file": "server\\index.js",
-    "line": 967,
+    "line": 986,
     "kind": "function",
     "name": "checkIdleAndManageLoops",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 998,
+    "line": 1017,
     "kind": "function",
     "name": "idleAwareSyncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1017,
+    "line": 1036,
     "kind": "function",
     "name": "startIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1033,
+    "line": 1052,
     "kind": "function",
     "name": "stopIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1054,
+    "line": 1073,
     "kind": "function",
     "name": "seedAIMobsFromDB",
     "params": [
@@ -334,7 +334,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 1391,
+    "line": 1410,
     "kind": "arrow",
     "name": "sameTile",
     "params": [
@@ -535,7 +535,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 417,
+    "line": 427,
     "kind": "function",
     "name": "refreshPresence",
     "params": [
@@ -544,7 +544,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 444,
+    "line": 471,
     "kind": "function",
     "name": "markOffline",
     "params": [
@@ -555,7 +555,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 465,
+    "line": 510,
     "kind": "function",
     "name": "publishEvent",
     "params": [
@@ -567,7 +567,7 @@
   },
   {
     "file": "server\\ws\\presence.js",
-    "line": 475,
+    "line": 520,
     "kind": "function",
     "name": "onDisconnect",
     "params": [
@@ -713,7 +713,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 121,
+    "line": 127,
     "kind": "function",
     "name": "handleSend",
     "params": [
@@ -723,7 +723,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 230,
+    "line": 236,
     "kind": "function",
     "name": "handleNudge",
     "params": [
@@ -733,7 +733,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 297,
+    "line": 303,
     "kind": "function",
     "name": "handleAck",
     "params": [
@@ -743,7 +743,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 329,
+    "line": 335,
     "kind": "function",
     "name": "handleRead",
     "params": [
@@ -753,7 +753,7 @@
   },
   {
     "file": "server\\ws\\direct-messages.js",
-    "line": 360,
+    "line": 366,
     "kind": "function",
     "name": "handleMessage",
     "params": [

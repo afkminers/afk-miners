@@ -1,0 +1,93 @@
+{
+  "en": {
+    "home": {
+      "news": [
+        {
+          "id": "post-1",
+          "date": "2025-11-06",
+          "badge": "Devlog",
+          "title": "AFK MINERS WEBSITE & LOGIN HUB ARE LIVE",
+          "body": "Our new homepage is online with secure login, language switcher and a preview of the gacha heroes. This news hub will grow with short devlogs as we add new systems.",
+          "linkHref": "/overview",
+          "linkLabel": "Read the overview →"
+        },
+        {
+          "id": "post-2",
+          "date": "2025-10-20",
+          "badge": "Roadmap",
+          "title": "ALPHA ROADMAP: HOUSE, TREASURE HUNT & TRAINING",
+          "body": "We defined the short-term roadmap focusing on the House/Lobby as the main hub, Treasure Hunt maps with infinite respawn and the first Training Arena for skills.",
+          "linkHref": "/roadmap",
+          "linkLabel": "Open roadmap →"
+        },
+        {
+          "id": "post-3",
+          "date": "2025-09-15",
+          "badge": "Tech",
+          "title": "BACKEND MMO CORE: CHAT, PRESENCE & AFK WORKERS",
+          "body": "The backend now has persistent chat channels, manual presence and the first version of AFK workers and farming systems wired to Postgres.",
+          "linkHref": "/roadmap",
+          "linkLabel": "See technical notes →"
+        }
+      ]
+    },
+
+    "overview": {
+      "topics": [
+        {
+          "id": "ov-1",
+          "title": "What is AFK Miners",
+          "body": "AFK Miners blends idle progression with tactical combat..."
+        }
+      ]
+    },
+
+    "roadmap": {
+      "phases": [
+        {
+          "id": "phase-1",
+          "badge": "Phase 1",
+          "title": "Launch Forge",
+          "body": "Core AFK loop, hero roster, mining expeditions..."
+        }
+      ]
+    },
+
+    "support": {
+      "faqs": [
+        {
+          "id": "faq-1",
+          "question": "How do I recover my login?",
+          "answer": "Use the in-game login screen and press “Forgot password”..."
+        }
+      ]
+    },
+
+    "leaderboard": {
+      "intro": "Track the bravest miners and their heroes in the Hall of Idle Legends."
+    }
+  },
+
+  "pt-BR": {
+    "home": {
+      "news": [
+        {
+          "id": "post-1",
+          "date": "2025-11-06",
+          "badge": "Devlog",
+          "title": "SITE DO AFK MINERS & LOGIN HUB ESTÃO NO AR",
+          "body": "Nossa nova homepage está online com login seguro, seletor de idioma e uma prévia dos heróis do gacha. Este hub de notícias vai crescer com devlogs curtos conforme adicionamos novos sistemas.",
+          "linkHref": "/overview",
+          "linkLabel": "Ler a visão geral →"
+        }
+      ]
+    },
+
+    "overview": { "topics": [] },
+    "roadmap": { "phases": [] },
+    "support": { "faqs": [] },
+    "leaderboard": {
+      "intro": "Acompanhe os mineradores mais bravos e seus heróis na Sala das Lendas AFK."
+    }
+  }
+}

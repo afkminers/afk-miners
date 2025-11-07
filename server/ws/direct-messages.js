@@ -104,13 +104,13 @@ async function getPresenceSnapshotSafe(userId) {
   if (!userId || !presence) return null;
 
   try {
-    // assinatura atual de getPresenceSnapshot: (userIds: string[] | string[]) => Map
+    // assinatura atual: getPresenceSnapshot(userIds[]) => Map(userId -> presence)
     if (typeof presence.getPresenceSnapshot === 'function') {
       const map = await presence.getPresenceSnapshot([userId]);
       return map.get(String(userId)) || null;
     }
 
-    // ganchos alternativos, se algum dia você criar
+    // fallback futuros, se o módulo de presença ganhar outras APIs
     if (typeof presence.getPresenceForUser === 'function') {
       return await presence.getPresenceForUser(userId);
     }
@@ -122,6 +122,7 @@ async function getPresenceSnapshotSafe(userId) {
   }
   return null;
 }
+
 
 
 async function handleSend(ws, data) {
