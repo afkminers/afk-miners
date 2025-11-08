@@ -554,6 +554,7 @@ async function fetchOverrides(locale, prefixes = ['']) {
 }
 
 // === CSRF para o painel inline (usa o mesmo cookie/global de /admin) ===
+// === CSRF para o painel inline (usa o mesmo cookie/global de /admin) ===
 function readCookie(name) {
   return (
     document.cookie
@@ -576,10 +577,19 @@ let csrfToken = null;
 const CSRF_COOKIE_NAME = 'csrf';
 
 async function ensureCsrf(force = false) {
-  // se já temos token em cache e não é pra forçar, usa ele
+  // 1) tenta reaproveitar o CSRF global (csrf.js) se existir
+  if (!force && window.CSRF && typeof window.CSRF.getCsrfToken === 'function') {
+    const t = await window.CSRF.getCsrfToken();
+    if (t) {
+      csrfToken = t;
+      return csrfToken;
+    }
+  }
+
+  // 2) se já temos cache e não é pra forçar, usa
   if (!force && csrfToken) return csrfToken;
 
-  // tenta primeiro pegar do cookie
+  // 3) tenta ler direto do cookie
   if (!force) {
     const fromCookie = readCookie(CSRF_COOKIE_NAME);
     if (fromCookie) {
@@ -588,7 +598,7 @@ async function ensureCsrf(force = false) {
     }
   }
 
-  // se não tiver cookie ou for "force", chama /api/csrf
+  // 4) fallback: chama /api/csrf
   try {
     const res = await fetch('/api/csrf', {
       method: 'GET',
@@ -635,9 +645,8 @@ async function csrfFetch(url, options) {
       'X-Requested-With': 'fetch',
     };
     if (tok) {
-      headers['X-CSRF-Token'] = tok;
+      // *** APENAS UM HEADER ***
       headers['x-csrf-token'] = tok;
-      headers['csrf-token'] = tok;
     }
     return {
       method,
@@ -650,7 +659,7 @@ async function csrfFetch(url, options) {
   // 1ª tentativa
   let response = await fetch(url, buildOptions(token));
 
-  // Se tomou 403 (token velho ou errado), tenta renovar e repetir 1x
+  // Se tomou 403 (token velho), tenta renovar e repetir 1x
   if (response.status === 403) {
     const fresh = await ensureCsrf(true);
     if (fresh && fresh !== token) {
@@ -660,6 +669,7 @@ async function csrfFetch(url, options) {
 
   return response;
 }
+
 
 function formatDate(iso, locale) {
   if (!iso) return '';

@@ -93,11 +93,12 @@
       const baseHeaders = {
         'Content-Type': 'application/json',
         'X-Requested-With': 'fetch',
-        // redundantes pra qualquer middleware
-        'X-CSRF-Token': token || '',
-        'x-csrf-token': token || '',
-        'csrf-token': token || '',
       };
+
+      if (token) {
+        // *** APENAS UM HEADER ***
+        baseHeaders['x-csrf-token'] = token;
+      }
 
       return fetch(u.toString(), {
         method: 'POST',
