@@ -1,11 +1,10 @@
 // Overlay único de combate: hp bar, target box e floaters.
 // NUNCA "adivinha" posição. Só desenha se houver sprite vinculada via GameScene.
-//client/js/combat/render-combat.js
-
+// client/js/combat/render-combat.js
 
 import { apiPost } from '../api.js';
 import { getSocket, onMessage } from '../ws/singleton.js';
-import { playHeroAttackSfx, playHeroMissSfx } from '../sfx/combat-sfx.js';
+import { playHeroAttackSfx } from '../sfx/combat-sfx.js'; // <<< NOVO
 
 const TILE = 32;
 const HALF_TILE = TILE / 2;
@@ -15,8 +14,6 @@ const state = {
   floaters: [],
   selectedTargetId: null,
 };
-
-const missEffects = [];
 
 const lastHeroFloaterAt = new Map(); // heroId -> ts
 
@@ -176,25 +173,6 @@ function pushFloaterAtSprite(sprite, text, ttl = 900, color = "rgba(255,0,0,0.92
   state.floaters.push({ x, y, text, ttl, vy: -0.038, color, outline });
 }
 
-function pushMissEffectAtSprite(sprite) {
-  if (!sprite) return;
-  const meta = sprite.meta || {};
-  const frameW = meta.frame?.width ?? 32;
-  const frameH = meta.frame?.height ?? 32;
-  const ax = meta.anchor?.x ?? 0.5;
-  const ay = meta.anchor?.y ?? 0.9;
-  const cx = Math.round(sprite.x - frameW * ax + frameW * 0.5);
-  const cy = Math.round(sprite.y - frameH * ay + frameH * 0.25);
-  const baseRadius = Math.max(10, Math.min(18, Math.round(frameW * 0.45)));
-  missEffects.push({
-    x: cx,
-    y: cy,
-    ttl: 420,
-    initialTtl: 420,
-    radius: baseRadius,
-  });
-}
-
 function pushHeroDamageFloater(heroId, amount) {
   const dmg = Math.round(Math.abs(Number(amount)));
   if (!Number.isFinite(dmg) || dmg <= 0) return;
@@ -286,25 +264,7 @@ function updateAndDrawFloaters(ctx, dtMs) {
     const f = list[i];
     f.ttl -= dtMs;
     if (f.ttl <= 0) { list.splice(i, 1); continue; }
-    const vy = Number.isFinite(f.vy) ? f.vy : 0;
-    if (vy !== 0) f.y += vy * dtMs;
-    if (f.kind === 'miss-cloud') {
-      const initial = f.initialTtl || (f.initialTtl = f.ttl);
-      const progress = initial > 0 ? Math.max(0, Math.min(1, 1 - (f.ttl / initial))) : 0;
-      const baseRadius = f.radius || 14;
-      const radius = baseRadius * (0.65 + progress * 0.6);
-      const alpha = Math.max(0, 0.6 - progress * 0.6);
-      ctx.save();
-      const gradient = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, radius);
-      gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
-      gradient.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.arc(Math.round(f.x), Math.round(f.y), radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-      continue;
-    }
+    f.y += f.vy * dtMs;
     ctx.save();
     ctx.font = 'bold 12px "Trebuchet MS", Arial, sans-serif';
     ctx.textAlign = 'center';
@@ -313,27 +273,6 @@ function updateAndDrawFloaters(ctx, dtMs) {
     ctx.strokeText(f.text, Math.round(f.x), Math.round(f.y));
     ctx.fillStyle = f.color || "rgba(255,0,0,0.9)";
     ctx.fillText(f.text, Math.round(f.x), Math.round(f.y));
-    ctx.restore();
-  }
-}
-
-function updateAndDrawMissEffects(ctx, dtMs) {
-  for (let i = missEffects.length - 1; i >= 0; i--) {
-    const eff = missEffects[i];
-    eff.ttl -= dtMs;
-    if (eff.ttl <= 0) { missEffects.splice(i, 1); continue; }
-    const initial = eff.initialTtl || 1;
-    const progress = Math.max(0, Math.min(1, 1 - (eff.ttl / initial)));
-    const radius = (eff.radius || 14) * (0.65 + progress * 0.6);
-    const alpha = Math.max(0, 0.6 - progress * 0.6);
-    ctx.save();
-    const gradient = ctx.createRadialGradient(eff.x, eff.y, 0, eff.x, eff.y, radius);
-    gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
-    gradient.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(Math.round(eff.x), Math.round(eff.y), radius, 0, Math.PI * 2);
-    ctx.fill();
     ctx.restore();
   }
 }
@@ -381,19 +320,6 @@ function installWsHandlers() {
     if (!s) unbound.add(id);
 
     const dmg = (typeof msg.dmg === 'number') ? msg.dmg : (prevHp != null ? Math.max(0, prevHp - m.hp) : 0);
-    const heroHitId = normalizeHeroId(msg.byHero ?? msg.heroId ?? msg.fromHeroId);
-    const activeHeroId = normalizeHeroId(getActiveHeroIdMaybe());
-    const isMyHeroHit = heroHitId && activeHeroId && heroHitId === activeHeroId;
-    const hasExplicitDamage = typeof msg.dmg === 'number';
-    const didDamage = Number.isFinite(dmg) && dmg > 0;
-    if (isMyHeroHit && hasExplicitDamage) {
-      if (didDamage) {
-        playHeroAttackSfx({ heroId: heroHitId, payload: msg });
-      } else if (s) {
-        playHeroMissSfx();
-        pushMissEffectAtSprite(s);
-      }
-    }
     if (dmg > 0 && s) {
       const isCrit = dmg >= (m.maxHp / 2);
       pushFloaterAtSprite(s, `-${dmg}`, 950, isCrit ? "#fff176" : "#ff4444", isCrit ? "#000" : "#fff");
@@ -768,8 +694,21 @@ function drawTargetBox(ctx) {
 /* --------------- Install API --------------- */
 export default function installCombatOverlay() {
   onMessage('hero_hp', (msg) => { updateHeroOverlayFrom(msg); });
-  onMessage('hero_hit', (msg) => { updateHeroOverlayFrom(msg); spawnHeroDamageFloater(msg); });
+
+  // <<< ÚNICO LUGAR ONDE A GENTE TOCA SOM DE ATAQUE DO HERÓI
+  onMessage('hero_hit', (msg) => {
+    updateHeroOverlayFrom(msg);
+    spawnHeroDamageFloater(msg);
+    try {
+      const heroId = normalizeHeroId(msg.heroId ?? msg.byHero ?? msg.playerHeroId ?? msg.id);
+      playHeroAttackSfx({ heroId, payload: msg });
+    } catch (err) {
+      console.warn('[combat-sfx] hero_hit error', err);
+    }
+  });
+
   onMessage('hero_dmg', (msg) => { updateHeroOverlayFrom(msg); spawnHeroDamageFloater(msg); });
+
   window.addEventListener('hero:state', (ev) => { updateHeroOverlayFrom(ev.detail); });
   window.addEventListener('tick:hero', (ev) => { updateHeroOverlayFrom(ev.detail); });
   window.addEventListener('hero:active-changed', () => { resetHeroOverlayState(); });
@@ -922,13 +861,12 @@ export default function installCombatOverlay() {
           const s = ensureSpriteBind(m.id, m.key, m.spawnId);
           if (!s) { needRebind.add(m.id); continue; }
           drawHpBarAtSprite(ctx, s, m.hp, m.maxHp);
-        drawMonsterNameAtSprite(ctx, s, m.key, m.hp, m.maxHp); // Nome acompanha cor da barra
-      }
-      drawHeroOverlayBars(ctx, now);
-      drawTargetBox(ctx);
-      updateAndDrawFloaters(ctx, dt * 1000);
-      updateAndDrawMissEffects(ctx, dt * 1000);
-    };
+          drawMonsterNameAtSprite(ctx, s, m.key, m.hp, m.maxHp); // Nome acompanha cor da barra
+        }
+        drawHeroOverlayBars(ctx, now);
+        drawTargetBox(ctx);
+        updateAndDrawFloaters(ctx, dt * 1000);
+      };
 
       if (camera?.apply) camera.apply(ctx, drawAll);
       else drawAll();

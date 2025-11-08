@@ -599,7 +599,8 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
     return { ok: false, message: 'invalid-coords' };
   }
 
-  const attackProfile = resolveMonsterAttackProfile(inst, attackInfo || {});
+  const attackProfile = await resolveMonsterAttackProfile(inst, attackInfo || {});
+  console.log('[PROFILE]', inst.monster_key, inst.id, attackProfile);
   const distTiles = chebyshevTiles(attackerTile, heroTile);
   const rangeTiles = Number.isFinite(attackProfile.rangeTiles) ? attackProfile.rangeTiles : 1;
   const minRangeTilesRaw = Number(attackProfile.minRangeTiles);
@@ -645,12 +646,51 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
     });
   }
 
-  if (!inRangeTiles || !hasLOS) {
+  // Flags vindas da IA para dizer "já validei alcance/LOS"
+  const skipInternalRangeCheck = attackInfo && attackInfo.skipInternalRangeCheck === true;
+  const skipInternalLosCheck   = attackInfo && attackInfo.skipInternalLosCheck === true;
+
+  // Se estiver no MESMO tile e for melee, considera em alcance
+  let effectiveInRange = inRangeTiles;
+  if (!effectiveInRange &&
+      attackProfile &&
+      attackProfile.type === 'melee' &&
+      Number.isFinite(distTiles) &&
+      distTiles === 0) {
+    effectiveInRange = true;
+  }
+
+  // Se a posição veio de DB/snapshot, não vamos derrubar o ataque por range
+  const heroPosSource = hpos && hpos.source;
+  const ignoreRangeGuardForDbSource =
+    heroPosSource === 'db' || heroPosSource === 'snapshot';
+
+  const failingRange =
+    !effectiveInRange &&
+    !skipInternalRangeCheck &&
+    !ignoreRangeGuardForDbSource;
+
+  const failingLos =
+    !hasLOS &&
+    !skipInternalLosCheck;
+
+  if (failingRange || failingLos) {
     if (DEBUG_COMBAT) {
-      console.log(`[HARD-GUARD] BLOCK inst=${inst.id} hero=${targetHeroId}`);
+      console.log(
+        `[HARD-GUARD] BLOCK inst=${inst.id} hero=${targetHeroId}`,
+        {
+          inRangeTiles,
+          effectiveInRange,
+          hasLOS,
+          heroPosSource,
+          skipInternalRangeCheck,
+          skipInternalLosCheck,
+        }
+      );
     }
     return { ok: false, message: 'out of reach or no los' };
   }
+
 
   // --- DANO (resto do código mantido) ---
   const profileMin = Number.isFinite(attackProfile.min) ? Math.max(0, Math.floor(attackProfile.min)) : 0;

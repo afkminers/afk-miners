@@ -558,6 +558,14 @@ router.post('/hit', express.json(), async (req, res) => {
       dead: result.dead,
     };
 
+    // <<< NOVO: devolver info da arma / herói para o cliente
+    if (weaponType) {
+      payload.weaponType = weaponType;
+      payload.weapon_type = weaponType; // 2 nomes pra facilitar reuse
+    }
+    payload.heroId = String(heroIdFromSess);
+    payload.attackerHeroId = String(heroIdFromSess);
+
     if (telemetry) {
       payload.range = telemetry.range;
       payload.distance = telemetry.distance;

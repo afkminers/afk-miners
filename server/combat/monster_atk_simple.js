@@ -2104,6 +2104,9 @@ async function tick() {
               type: attackType,
               requiresLos,
               chancePercent,
+              // <<< NOVO
+              skipInternalRangeCheck: true,
+              skipInternalLosCheck: true,
             },
             attackerPos: {
               x: Number.isFinite(m.x) ? m.x : undefined,
@@ -2128,6 +2131,8 @@ async function tick() {
         } catch (err) {
           console.warn('[monster_atk_simple] applyMobHit error:', err?.message);
         }
+
+
 
         if (attackRes?.ok) {
           if (attackRes.attackerPos) {

@@ -2,6 +2,8 @@
 import { apiGet, apiPost, getCsrf } from '../api.js';
 import { HeroState } from '../state/hero-state.js';
 import { showCombatMessage, hideCombatMessage } from '../ui/combat-message.js';
+import { playHeroAttackSfx } from '../sfx/combat-sfx.js'; // <<< NOVO
+
 
 
 
@@ -392,6 +394,15 @@ async function doHit() {
 
     clearCombatWarnings();
 
+    // <<< NOVO: tocar SFX de acordo com a arma/hero
+    try {
+      playHeroAttackSfx({
+        heroId: hero.id,
+        payload: resp, // contém weaponType, heroId, etc.
+      });
+    } catch (err) {
+      console.warn('[combat-sfx] error on hit', err);
+    }
 
     const id     = String(resp.id || resp.targetId || combatState.targetId);
     const hpNow  = Number(resp.hpAfter ?? resp.hp);
@@ -416,6 +427,7 @@ async function doHit() {
     }
   }
 }
+
 
 function startLoop(intervalMs) {
   const ms = Math.max(400, Number(intervalMs) || combatState.attackIntervalMs || DEFAULT_ATTACK_INTERVAL_MS);
