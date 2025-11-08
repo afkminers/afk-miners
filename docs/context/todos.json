@@ -1,5 +1,41 @@
 [
   {
+    "file": "client\\js\\admin-inline.js",
+    "line": 375,
+    "tag": "NOTE",
+    "text": "{"
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1229,
+    "tag": "NOTE",
+    "text": "= document.createElement('p');"
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1230,
+    "tag": "NOTE",
+    "text": ".className = 'inline-admin-note';"
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1231,
+    "tag": "NOTE",
+    "text": ".textContent = tUI('adminOnly');"
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1232,
+    "tag": "NOTE",
+    "text": ");"
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1376,
+    "tag": "NOTE",
+    "text": ";"
+  },
+  {
     "file": "client\\js\\hud\\death-overlay.js",
     "line": 191,
     "tag": "NOTE",
@@ -19,31 +55,31 @@
   },
   {
     "file": "client\\js\\i18n\\en.js",
-    "line": 34,
+    "line": 35,
     "tag": "NOTE",
     "text": "'Movement and interactions remain blocked while you are dead.',"
   },
   {
     "file": "client\\js\\i18n\\en.js",
-    "line": 385,
+    "line": 389,
     "tag": "NOTE",
     "text": "'You are invisible (Appear Offline).' }, // alias"
   },
   {
     "file": "client\\js\\i18n\\pt-BR.js",
-    "line": 34,
+    "line": 35,
     "tag": "NOTE",
     "text": "'Durante a morte, movimento e interações ficam bloqueados.',"
   },
   {
     "file": "client\\js\\i18n\\pt-BR.js",
-    "line": 243,
+    "line": 245,
     "tag": "TODO",
     "text": "o seu elenco.',"
   },
   {
     "file": "client\\js\\i18n\\pt-BR.js",
-    "line": 389,
+    "line": 393,
     "tag": "NOTE",
     "text": "'Você está invisível (Aparecer Offline).' }, // alias p/ chamadas antigas"
   },

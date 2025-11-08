@@ -131,7 +131,7 @@ Arquivo: `server\routes\friends.js:312`
 
 ### GET /
 
-Arquivo: `server\index.js:783`
+Arquivo: `server\index.js:786`
 
 _Sem payload inferido_
 
@@ -274,9 +274,15 @@ Arquivo: `server\combat\routes.js:138`
 - `HTTP 400` → {ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }
 - `HTTP 404` → {ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }
 
+### GET /admin
+
+Arquivo: `server\index.js:800`
+
+_Sem payload inferido_
+
 ### GET /api/admin/content/map/:key/data
 
-Arquivo: `server\index.js:720`
+Arquivo: `server\index.js:723`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -304,7 +310,7 @@ Arquivo: `server\index.js:720`
 
 ### GET /api/admin/content/map/:key/objects
 
-Arquivo: `server\index.js:695`
+Arquivo: `server\index.js:698`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -334,7 +340,7 @@ Arquivo: `server\index.js:695`
 
 ### GET /api/admin/content/map/:key/spawns
 
-Arquivo: `server\index.js:707`
+Arquivo: `server\index.js:710`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -363,7 +369,7 @@ Arquivo: `server\index.js:707`
 
 ### GET /api/admin/content/maps
 
-Arquivo: `server\index.js:684`
+Arquivo: `server\index.js:687`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -388,7 +394,7 @@ Arquivo: `server\index.js:684`
 
 ### GET /api/admin/content/monsters
 
-Arquivo: `server\index.js:576`
+Arquivo: `server\index.js:579`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -410,7 +416,7 @@ Arquivo: `server\index.js:576`
 
 ### GET /api/assets/items
 
-Arquivo: `server\index.js:587`
+Arquivo: `server\index.js:590`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -431,7 +437,7 @@ Arquivo: `server\index.js:587`
 
 ### GET /api/assets/sprites
 
-Arquivo: `server\index.js:609`
+Arquivo: `server\index.js:612`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -457,7 +463,7 @@ Arquivo: `server\index.js:609`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1545`
+Arquivo: `server\index.js:1562`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -505,7 +511,7 @@ Arquivo: `server\routes\combat_nearest.js:30`
 
 ### GET /api/csrf
 
-Arquivo: `server\index.js:219`
+Arquivo: `server\index.js:222`
 
 _Sem payload inferido_
 
@@ -697,7 +703,7 @@ _Sem payload inferido_
 
 ### GET /leaderboard
 
-Arquivo: `server\index.js:779`
+Arquivo: `server\index.js:782`
 
 _Sem payload inferido_
 
@@ -800,7 +806,7 @@ Arquivo: `server\skills\routes.js:94`
 
 ### GET /overview
 
-Arquivo: `server\index.js:767`
+Arquivo: `server\index.js:770`
 
 _Sem payload inferido_
 
@@ -894,7 +900,7 @@ Arquivo: `server\routes\player.old.js:12`
 
 ### GET /roadmap
 
-Arquivo: `server\index.js:771`
+Arquivo: `server\index.js:774`
 
 _Sem payload inferido_
 
@@ -977,7 +983,7 @@ Arquivo: `server\starter\routes.js:87`
 
 ### GET /support
 
-Arquivo: `server\index.js:775`
+Arquivo: `server\index.js:778`
 
 _Sem payload inferido_
 
@@ -1164,7 +1170,7 @@ Arquivo: `server\routes\backpack.js:30`
 
 ### POST /api/admin/content/reload-map
 
-Arquivo: `server\index.js:730`
+Arquivo: `server\index.js:733`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -1184,7 +1190,7 @@ Arquivo: `server\index.js:730`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1568`
+Arquivo: `server\index.js:1585`
 
 _Sem payload inferido_
 
@@ -1470,7 +1476,7 @@ Arquivo: `server\combat\routes.js:482`
 
 ### POST /login
 
-Arquivo: `server\auth\routes.js:70`
+Arquivo: `server\auth\routes.js:71`
 
 _Sem payload inferido_
 
@@ -1490,7 +1496,7 @@ _Sem payload inferido_
 
 ### POST /logout
 
-Arquivo: `server\auth\routes.js:87`
+Arquivo: `server\auth\routes.js:88`
 
 _Sem payload inferido_
 
@@ -1718,7 +1724,7 @@ Arquivo: `server\combat\routes.js:269`
 
 ### POST /register
 
-Arquivo: `server\auth\routes.js:34`
+Arquivo: `server\auth\routes.js:35`
 
 _Sem payload inferido_
 
@@ -1858,6 +1864,7 @@ _Sem payload inferido_
   - HTTP 500: {ok:false,error:'start-failed' }
   - HTTP 400: {ok:false,error:'missing-params',message:'Herói e monstro são obrigatórios.' }
   - HTTP 404: {ok:false,error:'monster-not-found',message:'Monstro não encontrado.' }
+- **GET /admin**
 - **GET /api/admin/content/map/:key/data**
   - HTTP 404: {error:'map not found' }
   - HTTP 500: {error:err.message }

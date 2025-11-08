@@ -116,6 +116,10 @@
     "to": "./ui/emoji.js"
   },
   {
+    "from": "client\\js\\admin-inline.js",
+    "to": "./i18n/core.js"
+  },
+  {
     "from": "client\\js\\ui\\presence-controls.js",
     "to": "../api.js"
   },
@@ -168,6 +172,10 @@
     "to": "../api.js"
   },
   {
+    "from": "client\\js\\pages\\support_inline_admin.js",
+    "to": "../admin-inline.js"
+  },
+  {
     "from": "client\\js\\pages\\support.js",
     "to": "./common-nav.js"
   },
@@ -180,12 +188,20 @@
     "to": "../i18n/core.js"
   },
   {
+    "from": "client\\js\\pages\\roadmap_inline_admin.js",
+    "to": "../admin-inline.js"
+  },
+  {
     "from": "client\\js\\pages\\roadmap.js",
     "to": "./common-nav.js"
   },
   {
     "from": "client\\js\\pages\\roadmap.js",
     "to": "../i18n/core.js"
+  },
+  {
+    "from": "client\\js\\pages\\overview_inline_admin.js",
+    "to": "../admin-inline.js"
   },
   {
     "from": "client\\js\\pages\\overview.js",
@@ -206,6 +222,10 @@
   {
     "from": "client\\js\\pages\\leaderboard.js",
     "to": "../i18n/core.js"
+  },
+  {
+    "from": "client\\js\\pages\\index_inline_admin.js",
+    "to": "../admin-inline.js"
   },
   {
     "from": "client\\js\\i18n\\lang-menu.js",
@@ -244,6 +264,10 @@
     "to": "../ws/singleton.js"
   },
   {
+    "from": "client\\js\\combat\\render-combat.js",
+    "to": "../sfx/combat-sfx.js"
+  },
+  {
     "from": "client\\js\\combat\\attack-controls.js",
     "to": "../api.js"
   },
@@ -254,6 +278,10 @@
   {
     "from": "client\\js\\combat\\attack-controls.js",
     "to": "../ui/combat-message.js"
+  },
+  {
+    "from": "client\\js\\combat\\attack-controls.js",
+    "to": "../sfx/combat-sfx.js"
   },
   {
     "from": "client\\js\\combat\\actions.js",

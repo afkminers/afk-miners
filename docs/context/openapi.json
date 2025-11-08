@@ -635,6 +635,15 @@
         ]
       }
     },
+    "/admin": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/admin/content/map/:key/data": {
       "get": {
         "responses": {

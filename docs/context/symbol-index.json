@@ -1,5 +1,76 @@
 [
   {
+    "file": "client\\js\\admin-inline.js",
+    "symbols": [
+      "buildFields",
+      "buildPanel",
+      "buildPostsForm",
+      "collectPostPayload",
+      "createFloatingButton",
+      "csrfFetch",
+      "decorateLivePosts",
+      "deletePost",
+      "ensureAdminSession",
+      "ensureCsrf",
+      "ensureLocaleValues",
+      "ensureStyles",
+      "fetchAdminPosts",
+      "fetchOverrides",
+      "formatDate",
+      "getActiveLang",
+      "initInlineAdmin",
+      "loadBundle",
+      "mapOverrides",
+      "openPostEditor",
+      "populatePostForm",
+      "readCookie",
+      "refreshLocale",
+      "refreshPostsList",
+      "renderPostsList",
+      "resetField",
+      "resetPostForm",
+      "resolveKey",
+      "saveField",
+      "setPostFormMode",
+      "setStatus",
+      "submitPost",
+      "tUI",
+      "toLocalInputValue",
+      "togglePanel",
+      "updateFieldUI",
+      "updateUiTexts"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "symbols": [
+      "apiFetch",
+      "checkAuth",
+      "deleteOverride",
+      "deletePost",
+      "handleAuthError",
+      "hideBanner",
+      "init",
+      "loadOverrides",
+      "loadPosts",
+      "readJson",
+      "renderOverrides",
+      "renderPosts",
+      "reorderPost",
+      "resetOverrideForm",
+      "resetPostForm",
+      "setupEvents",
+      "setupTabs",
+      "showBanner",
+      "showToast",
+      "startEditOverride",
+      "startEditPost",
+      "submitOverrideForm",
+      "submitPostForm",
+      "toLocalDatetimeInput"
+    ]
+  },
+  {
     "file": "client\\js\\afk_panel.js",
     "symbols": [
       "attachButton",
@@ -106,6 +177,7 @@
       "goToGameAccordingToStarter",
       "handleLogout",
       "refreshMessages",
+      "setAdminVisibility",
       "setI18nMessage",
       "setLoggedOutGlow",
       "setLogoutVisibility",
@@ -395,6 +467,8 @@
       "deepMerge",
       "detectInitialLang",
       "dispatchEvent",
+      "expandOverrideMap",
+      "fetchOverrides",
       "i18n",
       "importBundle",
       "interpolate",
@@ -486,6 +560,16 @@
     ]
   },
   {
+    "file": "client\\js\\pages\\index_news.js",
+    "symbols": [
+      "currentLang",
+      "formatDate",
+      "init",
+      "load",
+      "render"
+    ]
+  },
+  {
     "file": "client\\js\\pages\\leaderboard.js",
     "symbols": [
       "bindEvents",
@@ -514,10 +598,30 @@
     ]
   },
   {
+    "file": "client\\js\\pages\\overview_updates.js",
+    "symbols": [
+      "currentLang",
+      "formatDate",
+      "init",
+      "load",
+      "render"
+    ]
+  },
+  {
     "file": "client\\js\\pages\\overview.js",
     "symbols": [
       "focusMain",
       "setupHeroCta"
+    ]
+  },
+  {
+    "file": "client\\js\\pages\\roadmap_updates.js",
+    "symbols": [
+      "currentLang",
+      "formatDate",
+      "init",
+      "load",
+      "render"
     ]
   },
   {
@@ -670,6 +774,27 @@
       "load",
       "save",
       "set"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "symbols": [
+      "classifyFromHeroClass",
+      "classifyFromHeroKey",
+      "classifyFromString",
+      "gatherHeroSnapshot",
+      "getActiveHeroIdMaybe",
+      "getActiveHeroKeyMaybe",
+      "makeAudio",
+      "normalizeBool",
+      "normalizeId",
+      "normalizeString",
+      "normalizeUpper",
+      "playFrom",
+      "playHeroMeleeHit",
+      "primeCacheFromPlayer",
+      "rememberHeroMeta",
+      "resolveHeroAttackNature"
     ]
   },
   {
@@ -1032,6 +1157,29 @@
     ]
   },
   {
+    "file": "server\\cms\\i18n.js",
+    "symbols": [
+      "expandFlatObject",
+      "normalizeLocale",
+      "sanitizeValue"
+    ]
+  },
+  {
+    "file": "server\\cms\\posts.js",
+    "symbols": [
+      "mapPostRow",
+      "sanitizeBody"
+    ]
+  },
+  {
+    "file": "server\\cms\\sanitize.js",
+    "symbols": [
+      "sanitizeOverrideValue",
+      "sanitizePostBody",
+      "sanitizeRichText"
+    ]
+  },
+  {
     "file": "server\\combat\\ai-mobs.js",
     "symbols": [
       "addThreatFromHeroHit",
@@ -1368,6 +1516,16 @@
       "endpointMetrics",
       "getMetrics",
       "logTopEndpoints"
+    ]
+  },
+  {
+    "file": "server\\middleware\\requireAdmin.js",
+    "symbols": [
+      "enforceAdmin",
+      "getAdminNames",
+      "isAdminName",
+      "parseAdmins",
+      "requireAdmin"
     ]
   },
   {

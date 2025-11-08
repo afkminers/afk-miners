@@ -205,6 +205,7 @@
       "body": "{ok:false,error:'equip-failed' }"
     }
   ],
+  "GET /admin": [],
   "GET /api/admin/content/map/:key/data": [
     {
       "status": 404,

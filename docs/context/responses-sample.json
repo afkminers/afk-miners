@@ -57,6 +57,7 @@
     "{ok:true,unequipped:prevItem }",
     "{ok:true,equipped:desiredKey,swappedFrom:prevItem || null }"
   ],
+  "GET /admin": [],
   "GET /api/admin/content/map/:key/data": [
     "{ok:true,reloaded:mapKey }"
   ],
@@ -157,11 +158,11 @@
   "POST /login": [
     "{ok:true }",
     "{ok:true }",
-    "{profile }"
+    "{profile,isAdmin:isAdminName(profile.name) }"
   ],
   "POST /logout": [
     "{ok:true }",
-    "{profile }"
+    "{profile,isAdmin:isAdminName(profile.name) }"
   ],
   "POST /loot/drop": [
     "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
@@ -175,7 +176,7 @@
     "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
   ],
   "GET /me": [
-    "{profile }"
+    "{profile,isAdmin:isAdminName(profile.name) }"
   ],
   "POST /move": [
     "{ok:true,x,y,seq }"
@@ -218,7 +219,7 @@
   "POST /register": [
     "{ok:true }",
     "{ok:true }",
-    "{profile }"
+    "{profile,isAdmin:isAdminName(profile.name) }"
   ],
   "POST /request": [
     "{ok:true,friendship }",

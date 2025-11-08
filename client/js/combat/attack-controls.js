@@ -81,34 +81,26 @@ function getMouseWorldFromEvent(e, canvas) {
  * Returns monster ID if found, null otherwise
  */
 function localPickUnderCursor(worldPos) {
-  // Try to use the existing pickMobAtWorld function from render-combat.js
+  // 1) Tenta primeiro o picker do overlay, mas sem deixar quebrar o handler
   if (window.CombatUI && typeof window.CombatUI.pickMobAtWorld === 'function') {
-    return window.CombatUI.pickMobAtWorld(worldPos);
-  }
-  
-  // Fallback: implement basic local picking by iterating through combat state monsters
-  if (!window.combatState?.monsters) return null;
-  
-  const all = Array.from(window.combatState.monsters.values());
-  for (const m of all) {
-    const s = window.GameScene?.getMobByInstanceId?.(String(m.id));
-    if (!s || s.hidden || s.dead) continue;
-    
-    const meta = s.meta || {};
-    const frameW = meta.frame?.width ?? 32;
-    const frameH = meta.frame?.height ?? 32;
-    const ax = meta.anchor?.x ?? 0.5;
-    const ay = meta.anchor?.y ?? 0.9;
-    const ox = Math.round(s.x - frameW * ax);
-    const oy = Math.round(s.y - frameH * ay);
-    
-    if (worldPos.x >= ox && worldPos.x <= ox + frameW && 
-        worldPos.y >= oy && worldPos.y <= oy + frameH) {
-      return m.id;
+    try {
+      const id = window.CombatUI.pickMobAtWorld(worldPos);
+      if (id) return id;
+    } catch (err) {
+      console.warn('[attack] CombatUI.pickMobAtWorld error, falling back', err);
     }
   }
-  return null;
+
+  // 2) Fallback local: usa nosso pickMobAtWorld deste arquivo,
+  // que não depende do estado do overlay nem de range
+  try {
+    return pickMobAtWorld(worldPos);
+  } catch (err) {
+    console.warn('[attack] local pickMobAtWorld error', err);
+    return null;
+  }
 }
+
 
 let ACTIVE_HERO = { id: null, heroClass: null };
 function weaponForClass(heroClass) {
@@ -344,34 +336,61 @@ function warnLos(resp = {}, opts = {}) {
 /** Local sprite picking with robust fallbacks for missing metadata */
 function pickMobAtWorld(pt) {
   const K = 64; // default sprite size
-  const all = Array.from((window.combatState?.monsters || new Map()).values());
-  
-  for (const m of all) {
-    const s = window.GameScene?.getMobByInstanceId?.(String(m.id));
+
+  // 1) Fonte principal: monsters que o cliente já conhece via combatState
+  const csMonsters = (window.combatState && window.combatState.monsters)
+    ? Array.from(window.combatState.monsters.values())
+    : [];
+
+  // 2) Se ainda não temos nada no estado de combate, tentamos serverMonsters do GameScene
+  let candidates = csMonsters;
+  if (!candidates.length) {
+    const server = window.GameScene && window.GameScene.serverMonsters;
+    if (server && typeof server.forEach === 'function') {
+      const tmp = [];
+      server.forEach((entry, id) => {
+        if (!entry) return;
+        // garante que temos um id em cada candidato
+        tmp.push({ id: String(id), ...entry });
+      });
+      candidates = tmp;
+    }
+  }
+
+  if (!candidates.length) return null;
+
+  for (const m of candidates) {
+    const id = String(m.id);
+    const s = window.GameScene?.getMobByInstanceId?.(id);
     if (!s || s.hidden || s.dead) continue;
-    
+
     const meta = s.meta || {};
-    // Use meta.frame if available, fallback to s.width/s.height, then default
+
+    // Usa meta.frame se existir, senão largura/altura do sprite, senão um default
     let frameW = meta.frame?.width;
     let frameH = meta.frame?.height;
-    
+
     if (!frameW || !frameH) {
       frameW = s.width || K;
       frameH = s.height || K;
     }
-    
+
     const ax = meta.anchor?.x ?? 0.5;
     const ay = meta.anchor?.y ?? 0.9;
-    
+
     const ox = Math.round(s.x - frameW * ax);
     const oy = Math.round(s.y - frameH * ay);
-    
-    if (pt.x >= ox && pt.x <= ox + frameW && pt.y >= oy && pt.y <= oy + frameH) {
-      return m.id;
+
+    if (
+      pt.x >= ox && pt.x <= ox + frameW &&
+      pt.y >= oy && pt.y <= oy + frameH
+    ) {
+      return id;
     }
   }
   return null;
 }
+
 
 async function doHit() {
   if (!combatState.attacking || !combatState.targetId) return;

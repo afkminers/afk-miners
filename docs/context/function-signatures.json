@@ -144,7 +144,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 84,
+    "line": 87,
     "kind": "arrow",
     "name": "STEP_MIN_RATIO",
     "params": [
@@ -153,7 +153,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 91,
+    "line": 94,
     "kind": "function",
     "name": "isStepWithinSpeedCap",
     "params": [
@@ -166,7 +166,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 117,
+    "line": 120,
     "kind": "function",
     "name": "flushOnePlayerPos",
     "params": [
@@ -175,42 +175,42 @@
   },
   {
     "file": "server\\index.js",
-    "line": 140,
+    "line": 143,
     "kind": "function",
     "name": "flushAllPlayerPos",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 147,
+    "line": 150,
     "kind": "function",
     "name": "startPosFlusher",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 156,
+    "line": 159,
     "kind": "function",
     "name": "stopPosFlusher",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 165,
+    "line": 168,
     "kind": "arrow",
     "name": "syncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 231,
+    "line": 234,
     "kind": "function",
     "name": "bootstrapContentTables",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 434,
+    "line": 437,
     "kind": "function",
     "name": "resolveSkillType",
     "params": [
@@ -219,7 +219,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 756,
+    "line": 759,
     "kind": "function",
     "name": "safeParse",
     "params": [
@@ -228,7 +228,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 836,
+    "line": 853,
     "kind": "function",
     "name": "parseCookies",
     "params": [
@@ -237,14 +237,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 851,
+    "line": 868,
     "kind": "function",
     "name": "ensurePlayerOnlineTable",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 864,
+    "line": 881,
     "kind": "function",
     "name": "resolveActiveHeroId",
     "params": [
@@ -253,7 +253,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 889,
+    "line": 906,
     "kind": "function",
     "name": "upsertOnlineByPlayer",
     "params": [
@@ -263,7 +263,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 902,
+    "line": 919,
     "kind": "function",
     "name": "markOfflineByPlayer",
     "params": [
@@ -272,7 +272,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 908,
+    "line": 925,
     "kind": "function",
     "name": "setupHeartbeat",
     "params": [
@@ -281,14 +281,14 @@
   },
   {
     "file": "server\\index.js",
-    "line": 910,
+    "line": 927,
     "kind": "function",
     "name": "noop",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 932,
+    "line": 949,
     "kind": "function",
     "name": "setupRedis",
     "params": [
@@ -297,35 +297,35 @@
   },
   {
     "file": "server\\index.js",
-    "line": 986,
+    "line": 1003,
     "kind": "function",
     "name": "checkIdleAndManageLoops",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1017,
+    "line": 1034,
     "kind": "function",
     "name": "idleAwareSyncSpawns",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1036,
+    "line": 1053,
     "kind": "function",
     "name": "startIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1052,
+    "line": 1069,
     "kind": "function",
     "name": "stopIdleScheduler",
     "params": []
   },
   {
     "file": "server\\index.js",
-    "line": 1073,
+    "line": 1090,
     "kind": "function",
     "name": "seedAIMobsFromDB",
     "params": [
@@ -334,7 +334,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 1410,
+    "line": 1427,
     "kind": "arrow",
     "name": "sameTile",
     "params": [
@@ -2946,6 +2946,53 @@
     "params": []
   },
   {
+    "file": "server\\middleware\\requireAdmin.js",
+    "line": 8,
+    "kind": "function",
+    "name": "parseAdmins",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "server\\middleware\\requireAdmin.js",
+    "line": 15,
+    "kind": "function",
+    "name": "getAdminNames",
+    "params": []
+  },
+  {
+    "file": "server\\middleware\\requireAdmin.js",
+    "line": 34,
+    "kind": "function",
+    "name": "isAdminName",
+    "params": [
+      "name"
+    ]
+  },
+  {
+    "file": "server\\middleware\\requireAdmin.js",
+    "line": 41,
+    "kind": "function",
+    "name": "enforceAdmin",
+    "params": [
+      "req",
+      "res",
+      "next"
+    ]
+  },
+  {
+    "file": "server\\middleware\\requireAdmin.js",
+    "line": 60,
+    "kind": "function",
+    "name": "requireAdmin",
+    "params": [
+      "req",
+      "res",
+      "next"
+    ]
+  },
+  {
     "file": "server\\middleware\\endpoint-metrics.js",
     "line": 19,
     "kind": "function",
@@ -4313,14 +4360,14 @@
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 2297,
+    "line": 2302,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\monster_atk_simple.js",
-    "line": 2302,
+    "line": 2307,
     "kind": "function",
     "name": "stop",
     "params": []
@@ -5245,6 +5292,98 @@
     ]
   },
   {
+    "file": "server\\cms\\sanitize.js",
+    "line": 30,
+    "kind": "function",
+    "name": "sanitizeRichText",
+    "params": [
+      "value"
+    ]
+  },
+  {
+    "file": "server\\cms\\sanitize.js",
+    "line": 35,
+    "kind": "function",
+    "name": "sanitizeOverrideValue",
+    "params": [
+      "value"
+    ]
+  },
+  {
+    "file": "server\\cms\\sanitize.js",
+    "line": 39,
+    "kind": "function",
+    "name": "sanitizePostBody",
+    "params": [
+      "value"
+    ]
+  },
+  {
+    "file": "server\\cms\\posts.js",
+    "line": 11,
+    "kind": "function",
+    "name": "sanitizeBody",
+    "params": [
+      "value"
+    ]
+  },
+  {
+    "file": "server\\cms\\posts.js",
+    "line": 18,
+    "kind": "arrow",
+    "name": "optionalString",
+    "params": [
+      "max"
+    ]
+  },
+  {
+    "file": "server\\cms\\posts.js",
+    "line": 71,
+    "kind": "function",
+    "name": "mapPostRow",
+    "params": [
+      "row"
+    ]
+  },
+  {
+    "file": "server\\cms\\posts.js",
+    "line": 219,
+    "kind": "arrow",
+    "name": "pushUpdate",
+    "params": [
+      "clause",
+      "value"
+    ]
+  },
+  {
+    "file": "server\\cms\\i18n.js",
+    "line": 10,
+    "kind": "function",
+    "name": "sanitizeValue",
+    "params": [
+      "value"
+    ]
+  },
+  {
+    "file": "server\\cms\\i18n.js",
+    "line": 16,
+    "kind": "function",
+    "name": "normalizeLocale",
+    "params": [
+      "raw",
+      "fallback = 'en'"
+    ]
+  },
+  {
+    "file": "server\\cms\\i18n.js",
+    "line": 24,
+    "kind": "function",
+    "name": "expandFlatObject",
+    "params": [
+      "source"
+    ]
+  },
+  {
     "file": "server\\balance\\config.js",
     "line": 4,
     "kind": "arrow",
@@ -5266,7 +5405,7 @@
   },
   {
     "file": "server\\auth\\routes.js",
-    "line": 16,
+    "line": 17,
     "kind": "function",
     "name": "validateName",
     "params": [
@@ -5275,7 +5414,7 @@
   },
   {
     "file": "server\\auth\\routes.js",
-    "line": 24,
+    "line": 25,
     "kind": "function",
     "name": "validatePassword",
     "params": [
@@ -5284,7 +5423,7 @@
   },
   {
     "file": "server\\auth\\routes.js",
-    "line": 29,
+    "line": 30,
     "kind": "function",
     "name": "noStore",
     "params": [
@@ -5375,6 +5514,24 @@
       "req",
       "res",
       "next"
+    ]
+  },
+  {
+    "file": "server\\auth\\middleware.js",
+    "line": 156,
+    "kind": "arrow",
+    "name": "queryToken",
+    "params": [
+      "("
+    ]
+  },
+  {
+    "file": "server\\auth\\middleware.js",
+    "line": 160,
+    "kind": "arrow",
+    "name": "bodyToken",
+    "params": [
+      "("
     ]
   },
   {
@@ -7582,7 +7739,7 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 96,
+    "line": 99,
     "kind": "function",
     "name": "clearMessage",
     "params": [
@@ -7591,7 +7748,7 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 103,
+    "line": 106,
     "kind": "function",
     "name": "setI18nMessage",
     "params": [
@@ -7602,7 +7759,7 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 114,
+    "line": 117,
     "kind": "function",
     "name": "setRawMessage",
     "params": [
@@ -7612,14 +7769,14 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 121,
+    "line": 124,
     "kind": "function",
     "name": "refreshMessages",
     "params": []
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 135,
+    "line": 138,
     "kind": "function",
     "name": "updateHud",
     "params": [
@@ -7628,7 +7785,7 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 177,
+    "line": 180,
     "kind": "function",
     "name": "setLogoutVisibility",
     "params": [
@@ -7637,7 +7794,16 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 182,
+    "line": 185,
+    "kind": "function",
+    "name": "setAdminVisibility",
+    "params": [
+      "isAdmin"
+    ]
+  },
+  {
+    "file": "client\\js\\boot.js",
+    "line": 190,
     "kind": "function",
     "name": "setLoggedOutGlow",
     "params": [
@@ -7646,44 +7812,45 @@
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 185,
+    "line": 193,
     "kind": "function",
     "name": "closeMobileMenu",
     "params": []
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 191,
+    "line": 199,
     "kind": "function",
     "name": "showLanding",
     "params": []
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 206,
+    "line": 216,
     "kind": "function",
     "name": "goToGameAccordingToStarter",
     "params": []
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 220,
+    "line": 230,
     "kind": "function",
     "name": "showApp",
     "params": [
-      "profile"
+      "profile",
+      "options = {}"
     ]
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 230,
+    "line": 251,
     "kind": "function",
     "name": "trySession",
     "params": []
   },
   {
     "file": "client\\js\\boot.js",
-    "line": 324,
+    "line": 345,
     "kind": "function",
     "name": "handleLogout",
     "params": []
@@ -7844,7 +8011,16 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 103,
+    "line": 83,
+    "kind": "arrow",
+    "name": "goHome",
+    "params": [
+      "ev"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 118,
     "kind": "function",
     "name": "setLoadingProgress",
     "params": [
@@ -7854,14 +8030,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 112,
+    "line": 127,
     "kind": "function",
     "name": "pickNextTipIndex",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 122,
+    "line": 137,
     "kind": "function",
     "name": "swapLoadingTip",
     "params": [
@@ -7870,28 +8046,28 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 126,
+    "line": 141,
     "kind": "arrow",
     "name": "apply",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 138,
+    "line": 153,
     "kind": "function",
     "name": "beginRetroLoading",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 152,
+    "line": 167,
     "kind": "function",
     "name": "finishRetroLoading",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 177,
+    "line": 192,
     "kind": "function",
     "name": "setRootVar",
     "params": [
@@ -7901,7 +8077,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 178,
+    "line": 193,
     "kind": "function",
     "name": "getRootVar",
     "params": [
@@ -7911,28 +8087,28 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 185,
+    "line": 200,
     "kind": "function",
     "name": "updateTopbarHeight",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 193,
+    "line": 208,
     "kind": "function",
     "name": "mountSceneHouse",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 209,
+    "line": 224,
     "kind": "function",
     "name": "applyViewport",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 233,
+    "line": 248,
     "kind": "function",
     "name": "makeVSplitter",
     "params": [
@@ -7942,7 +8118,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 235,
+    "line": 250,
     "kind": "function",
     "name": "onDown",
     "params": [
@@ -7951,7 +8127,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 243,
+    "line": 258,
     "kind": "function",
     "name": "onMove",
     "params": [
@@ -7960,46 +8136,46 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 250,
+    "line": 265,
     "kind": "function",
     "name": "onUp",
     "params": []
-  },
-  {
-    "file": "client\\js\\app.js",
-    "line": 268,
-    "kind": "function",
-    "name": "onDown",
-    "params": [
-      "e"
-    ]
-  },
-  {
-    "file": "client\\js\\app.js",
-    "line": 276,
-    "kind": "function",
-    "name": "onMove",
-    "params": [
-      "e"
-    ]
   },
   {
     "file": "client\\js\\app.js",
     "line": 283,
     "kind": "function",
+    "name": "onDown",
+    "params": [
+      "e"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 291,
+    "kind": "function",
+    "name": "onMove",
+    "params": [
+      "e"
+    ]
+  },
+  {
+    "file": "client\\js\\app.js",
+    "line": 298,
+    "kind": "function",
     "name": "onUp",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 295,
+    "line": 310,
     "kind": "function",
     "name": "applyUiFromSettings",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 332,
+    "line": 347,
     "kind": "function",
     "name": "markSeenId",
     "params": [
@@ -8008,7 +8184,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 333,
+    "line": 348,
     "kind": "function",
     "name": "hasSeenId",
     "params": [
@@ -8017,7 +8193,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 334,
+    "line": 349,
     "kind": "function",
     "name": "normStr",
     "params": [
@@ -8026,7 +8202,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 335,
+    "line": 350,
     "kind": "function",
     "name": "getTs",
     "params": [
@@ -8035,7 +8211,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 337,
+    "line": 352,
     "kind": "function",
     "name": "findPendingRowFor",
     "params": [
@@ -8044,7 +8220,7 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 357,
+    "line": 372,
     "kind": "function",
     "name": "appendChatRow",
     "params": [
@@ -8053,14 +8229,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 439,
+    "line": 454,
     "kind": "function",
     "name": "initGlobalChatUI",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 483,
+    "line": 498,
     "kind": "function",
     "name": "setScope",
     "params": [
@@ -8069,14 +8245,14 @@
   },
   {
     "file": "client\\js\\app.js",
-    "line": 532,
+    "line": 547,
     "kind": "function",
     "name": "sendChat",
     "params": []
   },
   {
     "file": "client\\js\\app.js",
-    "line": 564,
+    "line": 579,
     "kind": "arrow",
     "name": "FALLBACK_LOAD_CONTENT",
     "params": []
@@ -8448,6 +8624,600 @@
     "line": 196,
     "kind": "function",
     "name": "attachButton",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 53,
+    "kind": "function",
+    "name": "showToast",
+    "params": [
+      "message",
+      "type = 'info'"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 62,
+    "kind": "function",
+    "name": "showBanner",
+    "params": [
+      "message",
+      "kind = 'info'"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 71,
+    "kind": "function",
+    "name": "hideBanner",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 76,
+    "kind": "function",
+    "name": "toLocalDatetimeInput",
+    "params": [
+      "iso"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 85,
+    "kind": "function",
+    "name": "apiFetch",
+    "params": [
+      "url",
+      "options = {}"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 107,
+    "kind": "arrow",
+    "name": "buildOptions",
+    "params": [
+      "tok"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 125,
+    "kind": "arrow",
+    "name": "withToken",
+    "params": [
+      "tok"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 146,
+    "kind": "function",
+    "name": "readJson",
+    "params": [
+      "res"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 156,
+    "kind": "function",
+    "name": "handleAuthError",
+    "params": [
+      "res"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 193,
+    "kind": "function",
+    "name": "loadPosts",
+    "params": [
+      "showToastOnSuccess = false"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 217,
+    "kind": "function",
+    "name": "renderPosts",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 301,
+    "kind": "function",
+    "name": "resetPostForm",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 317,
+    "kind": "function",
+    "name": "startEditPost",
+    "params": [
+      "post"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 334,
+    "kind": "function",
+    "name": "submitPostForm",
+    "params": [
+      "event"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 381,
+    "kind": "function",
+    "name": "deletePost",
+    "params": [
+      "id"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 403,
+    "kind": "function",
+    "name": "reorderPost",
+    "params": [
+      "id",
+      "direction"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 442,
+    "kind": "function",
+    "name": "loadOverrides",
+    "params": [
+      "showToastOnSuccess = false"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 466,
+    "kind": "function",
+    "name": "renderOverrides",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 520,
+    "kind": "function",
+    "name": "resetOverrideForm",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 528,
+    "kind": "function",
+    "name": "startEditOverride",
+    "params": [
+      "item"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 537,
+    "kind": "function",
+    "name": "submitOverrideForm",
+    "params": [
+      "event"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 576,
+    "kind": "function",
+    "name": "deleteOverride",
+    "params": [
+      "id"
+    ]
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 598,
+    "kind": "function",
+    "name": "setupTabs",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 621,
+    "kind": "function",
+    "name": "setupEvents",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 638,
+    "kind": "function",
+    "name": "checkAuth",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin.js",
+    "line": 667,
+    "kind": "function",
+    "name": "init",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 119,
+    "kind": "function",
+    "name": "getActiveLang",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 128,
+    "kind": "function",
+    "name": "tUI",
+    "params": [
+      "key"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 138,
+    "kind": "function",
+    "name": "ensureStyles",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 483,
+    "kind": "function",
+    "name": "resolveKey",
+    "params": [
+      "messages",
+      "key"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 497,
+    "kind": "function",
+    "name": "loadBundle",
+    "params": [
+      "locale"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 523,
+    "kind": "function",
+    "name": "mapOverrides",
+    "params": [
+      "rows"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 532,
+    "kind": "function",
+    "name": "fetchOverrides",
+    "params": [
+      "locale",
+      "prefixes = ['']"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 555,
+    "kind": "function",
+    "name": "readCookie",
+    "params": [
+      "name"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 573,
+    "kind": "function",
+    "name": "ensureCsrf",
+    "params": [
+      "force = false"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 593,
+    "kind": "function",
+    "name": "csrfFetch",
+    "params": [
+      "url",
+      "options"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 599,
+    "kind": "arrow",
+    "name": "doRequest",
+    "params": [
+      "tok"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 623,
+    "kind": "function",
+    "name": "formatDate",
+    "params": [
+      "iso",
+      "locale"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 637,
+    "kind": "function",
+    "name": "setStatus",
+    "params": [
+      "message",
+      "type = 'info'"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 643,
+    "kind": "function",
+    "name": "ensureLocaleValues",
+    "params": [
+      "locale"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 686,
+    "kind": "function",
+    "name": "updateFieldUI",
+    "params": [
+      "locale",
+      "key"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 711,
+    "kind": "function",
+    "name": "refreshLocale",
+    "params": [
+      "locale"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 726,
+    "kind": "function",
+    "name": "saveField",
+    "params": [
+      "locale",
+      "field",
+      "control"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 762,
+    "kind": "function",
+    "name": "resetField",
+    "params": [
+      "locale",
+      "field"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 795,
+    "kind": "function",
+    "name": "toLocalInputValue",
+    "params": [
+      "iso"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 804,
+    "kind": "function",
+    "name": "collectPostPayload",
+    "params": [
+      "form",
+      "page"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 841,
+    "kind": "function",
+    "name": "setPostFormMode",
+    "params": [
+      "mode"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 857,
+    "kind": "function",
+    "name": "resetPostForm",
+    "params": [
+      "locale"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 869,
+    "kind": "arrow",
+    "name": "setValue",
+    "params": [
+      "selector",
+      "value = ''"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 895,
+    "kind": "function",
+    "name": "populatePostForm",
+    "params": [
+      "post"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 907,
+    "kind": "arrow",
+    "name": "setValue",
+    "params": [
+      "selector",
+      "value = ''"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 934,
+    "kind": "function",
+    "name": "deletePost",
+    "params": [
+      "postId",
+      "locale"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 957,
+    "kind": "function",
+    "name": "submitPost",
+    "params": [
+      "form",
+      "config"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 990,
+    "kind": "function",
+    "name": "fetchAdminPosts",
+    "params": [
+      "locale"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1005,
+    "kind": "function",
+    "name": "renderPostsList",
+    "params": [
+      "locale"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1066,
+    "kind": "function",
+    "name": "refreshPostsList",
+    "params": [
+      "locale"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1081,
+    "kind": "function",
+    "name": "decorateLivePosts",
+    "params": [
+      "locale"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1111,
+    "kind": "function",
+    "name": "openPostEditor",
+    "params": [
+      "postId",
+      "locale"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1134,
+    "kind": "function",
+    "name": "buildFields",
+    "params": [
+      "config"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1220,
+    "kind": "function",
+    "name": "buildPostsForm",
+    "params": [
+      "config"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1388,
+    "kind": "function",
+    "name": "buildPanel",
+    "params": [
+      "config"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1493,
+    "kind": "function",
+    "name": "togglePanel",
+    "params": [
+      "force"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1503,
+    "kind": "function",
+    "name": "ensureAdminSession",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1529,
+    "kind": "function",
+    "name": "updateUiTexts",
+    "params": []
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1593,
+    "kind": "function",
+    "name": "createFloatingButton",
+    "params": [
+      "config"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1610,
+    "kind": "function",
+    "name": "initInlineAdmin",
+    "params": [
+      "config"
+    ]
+  },
+  {
+    "file": "client\\js\\admin-inline.js",
+    "line": 1613,
+    "kind": "arrow",
+    "name": "ready",
     "params": []
   },
   {
@@ -9911,7 +10681,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 488,
+    "line": 489,
     "kind": "function",
     "name": "createConversation",
     "params": [
@@ -9921,7 +10691,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 596,
+    "line": 597,
     "kind": "function",
     "name": "closeConversation",
     "params": [
@@ -9930,7 +10700,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 615,
+    "line": 616,
     "kind": "function",
     "name": "upgradeConversationKey",
     "params": [
@@ -9941,7 +10711,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 653,
+    "line": 654,
     "kind": "function",
     "name": "fetchHistory",
     "params": [
@@ -9951,7 +10721,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 740,
+    "line": 741,
     "kind": "function",
     "name": "ensureHistory",
     "params": [
@@ -9960,7 +10730,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 745,
+    "line": 746,
     "kind": "function",
     "name": "markRead",
     "params": [
@@ -9969,7 +10739,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 776,
+    "line": 777,
     "kind": "function",
     "name": "findMessage",
     "params": [
@@ -9979,7 +10749,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 781,
+    "line": 782,
     "kind": "function",
     "name": "findConvKeyByNameLower",
     "params": [
@@ -9988,7 +10758,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 787,
+    "line": 788,
     "kind": "function",
     "name": "handleSend",
     "params": [
@@ -9998,7 +10768,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 835,
+    "line": 836,
     "kind": "function",
     "name": "handleSendEvent",
     "params": [
@@ -10007,7 +10777,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 894,
+    "line": 895,
     "kind": "function",
     "name": "handleRecvEvent",
     "params": [
@@ -10016,7 +10786,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 955,
+    "line": 956,
     "kind": "function",
     "name": "handleAckEvent",
     "params": [
@@ -10025,7 +10795,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 973,
+    "line": 974,
     "kind": "function",
     "name": "handleReadEvent",
     "params": [
@@ -10034,7 +10804,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 999,
+    "line": 1000,
     "kind": "function",
     "name": "handleErrorEvent",
     "params": [
@@ -10043,7 +10813,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1038,
+    "line": 1039,
     "kind": "function",
     "name": "handleNudgeEvent",
     "params": [
@@ -10052,7 +10822,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1142,
+    "line": 1143,
     "kind": "function",
     "name": "activateDmScope",
     "params": [
@@ -10061,7 +10831,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1160,
+    "line": 1161,
     "kind": "function",
     "name": "openConversation",
     "params": [
@@ -10070,7 +10840,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1270,
+    "line": 1271,
     "kind": "function",
     "name": "handleDmSubmit",
     "params": [
@@ -10080,7 +10850,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1275,
+    "line": 1276,
     "kind": "function",
     "name": "getDmScopeForFriend",
     "params": [
@@ -10089,7 +10859,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1279,
+    "line": 1280,
     "kind": "function",
     "name": "syncUnreadFromServer",
     "params": [
@@ -10100,7 +10870,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1289,
+    "line": 1290,
     "kind": "function",
     "name": "syncFriendData",
     "params": [
@@ -10109,7 +10879,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1301,
+    "line": 1302,
     "kind": "function",
     "name": "sendNudge",
     "params": [
@@ -10118,7 +10888,7 @@
   },
   {
     "file": "client\\js\\ui\\dm-chat.js",
-    "line": 1321,
+    "line": 1322,
     "kind": "function",
     "name": "getNudgeErrorMessage",
     "params": [
@@ -10365,6 +11135,183 @@
     ]
   },
   {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 8,
+    "kind": "function",
+    "name": "makeAudio",
+    "params": [
+      "src"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 19,
+    "kind": "function",
+    "name": "playFrom",
+    "params": [
+      "audio"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 36,
+    "kind": "function",
+    "name": "playHeroMeleeHit",
+    "params": []
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 40,
+    "kind": "function",
+    "name": "playHeroRangedHit",
+    "params": []
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 44,
+    "kind": "function",
+    "name": "playHeroMissSfx",
+    "params": []
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 68,
+    "kind": "function",
+    "name": "normalizeId",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 75,
+    "kind": "function",
+    "name": "normalizeString",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 80,
+    "kind": "function",
+    "name": "normalizeUpper",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 85,
+    "kind": "function",
+    "name": "normalizeBool",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 97,
+    "kind": "function",
+    "name": "rememberHeroMeta",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 120,
+    "kind": "function",
+    "name": "primeCacheFromPlayer",
+    "params": []
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 133,
+    "kind": "function",
+    "name": "getActiveHeroIdMaybe",
+    "params": []
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 146,
+    "kind": "function",
+    "name": "getActiveHeroKeyMaybe",
+    "params": []
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 167,
+    "kind": "arrow",
+    "name": "prime",
+    "params": []
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 182,
+    "kind": "function",
+    "name": "gatherHeroSnapshot",
+    "params": [
+      "heroId"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 228,
+    "kind": "function",
+    "name": "classifyFromString",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 246,
+    "kind": "function",
+    "name": "classifyFromHeroKey",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 252,
+    "kind": "function",
+    "name": "classifyFromHeroClass",
+    "params": [
+      "raw"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 262,
+    "kind": "function",
+    "name": "resolveHeroAttackNature",
+    "params": [
+      "{ heroId",
+      "payload }"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 346,
+    "kind": "function",
+    "name": "playHeroAttackSfx",
+    "params": [
+      "{ heroId",
+      "payload }"
+    ]
+  },
+  {
+    "file": "client\\js\\sfx\\combat-sfx.js",
+    "line": 364,
+    "kind": "function",
+    "name": "__test_only__resolveHeroAttackNature",
+    "params": [
+      "input"
+    ]
+  },
+  {
     "file": "client\\js\\scenes\\house.js",
     "line": 3,
     "kind": "function",
@@ -10408,6 +11355,49 @@
     "params": []
   },
   {
+    "file": "client\\js\\pages\\roadmap_updates.js",
+    "line": 6,
+    "kind": "function",
+    "name": "formatDate",
+    "params": [
+      "iso",
+      "lang"
+    ]
+  },
+  {
+    "file": "client\\js\\pages\\roadmap_updates.js",
+    "line": 21,
+    "kind": "function",
+    "name": "render",
+    "params": [
+      "posts",
+      "lang"
+    ]
+  },
+  {
+    "file": "client\\js\\pages\\roadmap_updates.js",
+    "line": 107,
+    "kind": "function",
+    "name": "load",
+    "params": [
+      "lang"
+    ]
+  },
+  {
+    "file": "client\\js\\pages\\roadmap_updates.js",
+    "line": 120,
+    "kind": "function",
+    "name": "currentLang",
+    "params": []
+  },
+  {
+    "file": "client\\js\\pages\\roadmap_updates.js",
+    "line": 128,
+    "kind": "function",
+    "name": "init",
+    "params": []
+  },
+  {
     "file": "client\\js\\pages\\roadmap.js",
     "line": 5,
     "kind": "function",
@@ -10445,6 +11435,49 @@
     "line": 49,
     "kind": "function",
     "name": "focusMain",
+    "params": []
+  },
+  {
+    "file": "client\\js\\pages\\overview_updates.js",
+    "line": 6,
+    "kind": "function",
+    "name": "formatDate",
+    "params": [
+      "iso",
+      "lang"
+    ]
+  },
+  {
+    "file": "client\\js\\pages\\overview_updates.js",
+    "line": 21,
+    "kind": "function",
+    "name": "render",
+    "params": [
+      "posts",
+      "lang"
+    ]
+  },
+  {
+    "file": "client\\js\\pages\\overview_updates.js",
+    "line": 107,
+    "kind": "function",
+    "name": "load",
+    "params": [
+      "lang"
+    ]
+  },
+  {
+    "file": "client\\js\\pages\\overview_updates.js",
+    "line": 120,
+    "kind": "function",
+    "name": "currentLang",
+    "params": []
+  },
+  {
+    "file": "client\\js\\pages\\overview_updates.js",
+    "line": 128,
+    "kind": "function",
+    "name": "init",
     "params": []
   },
   {
@@ -10632,6 +11665,49 @@
   {
     "file": "client\\js\\pages\\leaderboard.js",
     "line": 602,
+    "kind": "function",
+    "name": "init",
+    "params": []
+  },
+  {
+    "file": "client\\js\\pages\\index_news.js",
+    "line": 6,
+    "kind": "function",
+    "name": "formatDate",
+    "params": [
+      "iso",
+      "lang"
+    ]
+  },
+  {
+    "file": "client\\js\\pages\\index_news.js",
+    "line": 21,
+    "kind": "function",
+    "name": "render",
+    "params": [
+      "posts",
+      "lang"
+    ]
+  },
+  {
+    "file": "client\\js\\pages\\index_news.js",
+    "line": 107,
+    "kind": "function",
+    "name": "load",
+    "params": [
+      "lang"
+    ]
+  },
+  {
+    "file": "client\\js\\pages\\index_news.js",
+    "line": 120,
+    "kind": "function",
+    "name": "currentLang",
+    "params": []
+  },
+  {
+    "file": "client\\js\\pages\\index_news.js",
+    "line": 128,
     "kind": "function",
     "name": "init",
     "params": []
@@ -10959,6 +12035,24 @@
     "file": "client\\js\\i18n\\core.js",
     "line": 109,
     "kind": "function",
+    "name": "expandOverrideMap",
+    "params": [
+      "map"
+    ]
+  },
+  {
+    "file": "client\\js\\i18n\\core.js",
+    "line": 132,
+    "kind": "function",
+    "name": "fetchOverrides",
+    "params": [
+      "locale"
+    ]
+  },
+  {
+    "file": "client\\js\\i18n\\core.js",
+    "line": 148,
+    "kind": "function",
     "name": "resolveKey",
     "params": [
       "messages",
@@ -10967,7 +12061,7 @@
   },
   {
     "file": "client\\js\\i18n\\core.js",
-    "line": 123,
+    "line": 162,
     "kind": "function",
     "name": "interpolate",
     "params": [
@@ -10977,7 +12071,7 @@
   },
   {
     "file": "client\\js\\i18n\\core.js",
-    "line": 134,
+    "line": 173,
     "kind": "function",
     "name": "applyTranslations",
     "params": [
@@ -10986,7 +12080,7 @@
   },
   {
     "file": "client\\js\\i18n\\core.js",
-    "line": 172,
+    "line": 211,
     "kind": "function",
     "name": "updateFormatters",
     "params": [
@@ -10995,7 +12089,7 @@
   },
   {
     "file": "client\\js\\i18n\\core.js",
-    "line": 185,
+    "line": 224,
     "kind": "function",
     "name": "dispatchEvent",
     "params": [
@@ -11005,7 +12099,7 @@
   },
   {
     "file": "client\\js\\i18n\\core.js",
-    "line": 192,
+    "line": 231,
     "kind": "function",
     "name": "changeLanguage",
     "params": [
@@ -11014,7 +12108,7 @@
   },
   {
     "file": "client\\js\\i18n\\core.js",
-    "line": 236,
+    "line": 278,
     "kind": "function",
     "name": "schedulePrefetch",
     "params": []
@@ -12339,14 +13433,14 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 729,
+    "line": 742,
     "kind": "arrow",
     "name": "resetDragState",
     "params": []
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 823,
+    "line": 836,
     "kind": "function",
     "name": "pickMobAtWorld",
     "params": [
@@ -12355,7 +13449,7 @@
   },
   {
     "file": "client\\js\\combat\\render-combat.js",
-    "line": 845,
+    "line": 858,
     "kind": "arrow",
     "name": "drawAll",
     "params": []
@@ -12383,7 +13477,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 46,
+    "line": 48,
     "kind": "arrow",
     "name": "toTile",
     "params": [
@@ -12392,7 +13486,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 47,
+    "line": 49,
     "kind": "arrow",
     "name": "chebyshevSqm",
     "params": [
@@ -12404,7 +13498,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 51,
+    "line": 53,
     "kind": "function",
     "name": "safeNumber",
     "params": [
@@ -12413,21 +13507,21 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 56,
+    "line": 58,
     "kind": "function",
     "name": "pickCanvas",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 62,
+    "line": 64,
     "kind": "function",
     "name": "pickCamera",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 63,
+    "line": 65,
     "kind": "function",
     "name": "screenToWorld",
     "params": [
@@ -12438,7 +13532,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 70,
+    "line": 72,
     "kind": "function",
     "name": "getMouseWorldFromEvent",
     "params": [
@@ -12448,7 +13542,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 81,
+    "line": 83,
     "kind": "function",
     "name": "localPickUnderCursor",
     "params": [
@@ -12457,7 +13551,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 112,
+    "line": 114,
     "kind": "function",
     "name": "weaponForClass",
     "params": [
@@ -12466,7 +13560,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 119,
+    "line": 121,
     "kind": "function",
     "name": "attackIntervalForWeaponType",
     "params": [
@@ -12475,14 +13569,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 130,
+    "line": 132,
     "kind": "function",
     "name": "ensureActiveHero",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 149,
+    "line": 151,
     "kind": "function",
     "name": "emitCombatWarning",
     "params": [
@@ -12492,14 +13586,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 160,
+    "line": 162,
     "kind": "function",
     "name": "clearCombatWarnings",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 166,
+    "line": 168,
     "kind": "function",
     "name": "resolveWarningFromPayload",
     "params": [
@@ -12508,7 +13602,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 183,
+    "line": 185,
     "kind": "function",
     "name": "friendlyMessage",
     "params": [
@@ -12518,7 +13612,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 196,
+    "line": 198,
     "kind": "function",
     "name": "handleCombatWarning",
     "params": [
@@ -12528,7 +13622,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 227,
+    "line": 229,
     "kind": "function",
     "name": "resolveServerTarget",
     "params": [
@@ -12538,14 +13632,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 250,
+    "line": 252,
     "kind": "function",
     "name": "getHeroWorldPos",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 260,
+    "line": 262,
     "kind": "function",
     "name": "messageFromWarning",
     "params": [
@@ -12555,7 +13649,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 267,
+    "line": 269,
     "kind": "function",
     "name": "hasWarning",
     "params": [
@@ -12565,7 +13659,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 274,
+    "line": 276,
     "kind": "function",
     "name": "extractWarning",
     "params": [
@@ -12575,7 +13669,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 288,
+    "line": 290,
     "kind": "function",
     "name": "composeRangeMessage",
     "params": [
@@ -12584,7 +13678,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 303,
+    "line": 305,
     "kind": "function",
     "name": "pushCombatLog",
     "params": [
@@ -12593,7 +13687,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 312,
+    "line": 314,
     "kind": "function",
     "name": "warnRange",
     "params": [
@@ -12603,7 +13697,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 327,
+    "line": 329,
     "kind": "function",
     "name": "warnLos",
     "params": [
@@ -12613,7 +13707,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 343,
+    "line": 345,
     "kind": "function",
     "name": "pickMobAtWorld",
     "params": [
@@ -12622,14 +13716,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 374,
+    "line": 376,
     "kind": "function",
     "name": "doHit",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 420,
+    "line": 432,
     "kind": "function",
     "name": "startLoop",
     "params": [
@@ -12638,7 +13732,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 430,
+    "line": 442,
     "kind": "function",
     "name": "startAttack",
     "params": [
@@ -12647,7 +13741,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 496,
+    "line": 508,
     "kind": "function",
     "name": "stopAttack",
     "params": [
@@ -12656,14 +13750,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 511,
+    "line": 523,
     "kind": "function",
     "name": "attachControls",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 518,
+    "line": 530,
     "kind": "arrow",
     "name": "suppressContextMenu",
     "params": [
@@ -12672,7 +13766,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 530,
+    "line": 542,
     "kind": "arrow",
     "name": "onPointerDown",
     "params": [
