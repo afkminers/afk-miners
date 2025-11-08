@@ -95,7 +95,8 @@ async function getGrid(mapKey) {
 
   // mapa (JSON do Tiled) — a fonte do tamanho correto
   const mapRow = await get(
-    `SELECT key, "dataJSON" AS "dataJSON" FROM maps WHERE key = $1`,
+    // ⚠️ SEM aspas: usa a coluna datajson (criada como dataJSON sem aspas)
+    `SELECT key, dataJSON AS "dataJSON" FROM maps WHERE key = $1`,
     [mapKey]
   );
   if (!mapRow || !mapRow.dataJSON) {
@@ -115,7 +116,7 @@ async function getGrid(mapKey) {
     );
   }
 
-  // objetos sólidos (preferência) – usa os nomes reais da tabela: "mapKey" e "propsJSON"
+  // objetos sólidos (preferência) – usa "propsJSON", que bate com o schema
   const objs = await all(
     `
     SELECT x, y, w, h, type, "propsJSON" AS "propsJSON"

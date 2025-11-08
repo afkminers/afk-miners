@@ -3078,7 +3078,7 @@
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 17,
+    "line": 34,
     "kind": "function",
     "name": "markSolidRect",
     "params": [
@@ -3093,7 +3093,7 @@
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 33,
+    "line": 52,
     "kind": "function",
     "name": "buildCollisionFromObjects",
     "params": [
@@ -3104,7 +3104,7 @@
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 58,
+    "line": 77,
     "kind": "function",
     "name": "buildCollisionFromTiled",
     "params": [
@@ -3113,7 +3113,7 @@
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 68,
+    "line": 89,
     "kind": "function",
     "name": "getGrid",
     "params": [
