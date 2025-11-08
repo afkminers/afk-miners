@@ -5,6 +5,7 @@
 
 import { apiPost } from '../api.js';
 import { getSocket, onMessage } from '../ws/singleton.js';
+import { playHeroAttackSfx, playHeroMissSfx } from '../sfx/combat-sfx.js';
 
 const TILE = 32;
 const HALF_TILE = TILE / 2;
@@ -14,6 +15,8 @@ const state = {
   floaters: [],
   selectedTargetId: null,
 };
+
+const missEffects = [];
 
 const lastHeroFloaterAt = new Map(); // heroId -> ts
 
@@ -173,6 +176,25 @@ function pushFloaterAtSprite(sprite, text, ttl = 900, color = "rgba(255,0,0,0.92
   state.floaters.push({ x, y, text, ttl, vy: -0.038, color, outline });
 }
 
+function pushMissEffectAtSprite(sprite) {
+  if (!sprite) return;
+  const meta = sprite.meta || {};
+  const frameW = meta.frame?.width ?? 32;
+  const frameH = meta.frame?.height ?? 32;
+  const ax = meta.anchor?.x ?? 0.5;
+  const ay = meta.anchor?.y ?? 0.9;
+  const cx = Math.round(sprite.x - frameW * ax + frameW * 0.5);
+  const cy = Math.round(sprite.y - frameH * ay + frameH * 0.25);
+  const baseRadius = Math.max(10, Math.min(18, Math.round(frameW * 0.45)));
+  missEffects.push({
+    x: cx,
+    y: cy,
+    ttl: 420,
+    initialTtl: 420,
+    radius: baseRadius,
+  });
+}
+
 function pushHeroDamageFloater(heroId, amount) {
   const dmg = Math.round(Math.abs(Number(amount)));
   if (!Number.isFinite(dmg) || dmg <= 0) return;
@@ -277,6 +299,27 @@ function updateAndDrawFloaters(ctx, dtMs) {
   }
 }
 
+function updateAndDrawMissEffects(ctx, dtMs) {
+  for (let i = missEffects.length - 1; i >= 0; i--) {
+    const eff = missEffects[i];
+    eff.ttl -= dtMs;
+    if (eff.ttl <= 0) { missEffects.splice(i, 1); continue; }
+    const initial = eff.initialTtl || 1;
+    const progress = Math.max(0, Math.min(1, 1 - (eff.ttl / initial)));
+    const radius = (eff.radius || 14) * (0.65 + progress * 0.6);
+    const alpha = Math.max(0, 0.6 - progress * 0.6);
+    ctx.save();
+    const gradient = ctx.createRadialGradient(eff.x, eff.y, 0, eff.x, eff.y, radius);
+    gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(Math.round(eff.x), Math.round(eff.y), radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
 /* --------------- Instala handlers de WS (singleton) --------------- */
 function installWsHandlers() {
   getSocket(); // garante conexão
@@ -320,6 +363,19 @@ function installWsHandlers() {
     if (!s) unbound.add(id);
 
     const dmg = (typeof msg.dmg === 'number') ? msg.dmg : (prevHp != null ? Math.max(0, prevHp - m.hp) : 0);
+    const heroHitId = normalizeHeroId(msg.byHero ?? msg.heroId ?? msg.fromHeroId);
+    const activeHeroId = normalizeHeroId(getActiveHeroIdMaybe());
+    const isMyHeroHit = heroHitId && activeHeroId && heroHitId === activeHeroId;
+    const hasExplicitDamage = typeof msg.dmg === 'number';
+    const didDamage = Number.isFinite(dmg) && dmg > 0;
+    if (isMyHeroHit && hasExplicitDamage) {
+      if (didDamage) {
+        playHeroAttackSfx({ heroId: heroHitId, payload: msg });
+      } else if (s) {
+        playHeroMissSfx();
+        pushMissEffectAtSprite(s);
+      }
+    }
     if (dmg > 0 && s) {
       const isCrit = dmg >= (m.maxHp / 2);
       pushFloaterAtSprite(s, `-${dmg}`, 950, isCrit ? "#fff176" : "#ff4444", isCrit ? "#000" : "#fff");
@@ -848,12 +904,13 @@ export default function installCombatOverlay() {
           const s = ensureSpriteBind(m.id, m.key, m.spawnId);
           if (!s) { needRebind.add(m.id); continue; }
           drawHpBarAtSprite(ctx, s, m.hp, m.maxHp);
-          drawMonsterNameAtSprite(ctx, s, m.key, m.hp, m.maxHp); // Nome acompanha cor da barra
-        }
-        drawHeroOverlayBars(ctx, now);
-        drawTargetBox(ctx);
-        updateAndDrawFloaters(ctx, dt * 1000);
-      };
+        drawMonsterNameAtSprite(ctx, s, m.key, m.hp, m.maxHp); // Nome acompanha cor da barra
+      }
+      drawHeroOverlayBars(ctx, now);
+      drawTargetBox(ctx);
+      updateAndDrawFloaters(ctx, dt * 1000);
+      updateAndDrawMissEffects(ctx, dt * 1000);
+    };
 
       if (camera?.apply) camera.apply(ctx, drawAll);
       else drawAll();
