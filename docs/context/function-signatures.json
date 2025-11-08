@@ -3069,7 +3069,7 @@
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 6,
+    "line": 8,
     "kind": "function",
     "name": "hasSolidPropRow",
     "params": [
@@ -3078,18 +3078,33 @@
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 15,
+    "line": 17,
+    "kind": "function",
+    "name": "markSolidRect",
+    "params": [
+      "grid",
+      "cols",
+      "rows",
+      "x",
+      "y",
+      "w",
+      "h"
+    ]
+  },
+  {
+    "file": "server\\maps\\grid.js",
+    "line": 33,
     "kind": "function",
     "name": "buildCollisionFromObjects",
     "params": [
-      "mapW",
-      "mapH",
+      "cols",
+      "rows",
       "objs"
     ]
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 32,
+    "line": 58,
     "kind": "function",
     "name": "buildCollisionFromTiled",
     "params": [
@@ -3098,7 +3113,7 @@
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 42,
+    "line": 68,
     "kind": "function",
     "name": "getGrid",
     "params": [
@@ -5120,7 +5135,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1102,
+    "line": 1110,
     "kind": "function",
     "name": "stepMob",
     "params": [
@@ -5135,7 +5150,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1432,
+    "line": 1440,
     "kind": "function",
     "name": "decayThreat",
     "params": [
@@ -5145,7 +5160,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1442,
+    "line": 1450,
     "kind": "function",
     "name": "selectTargetByThreat",
     "params": [
@@ -5157,7 +5172,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1546,
+    "line": 1554,
     "kind": "function",
     "name": "isBlockedPx",
     "params": [
@@ -5168,7 +5183,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1555,
+    "line": 1563,
     "kind": "function",
     "name": "selectMobChaseGoal",
     "params": [
@@ -5184,7 +5199,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1688,
+    "line": 1696,
     "kind": "function",
     "name": "planMobChaseStep",
     "params": [
@@ -5200,7 +5215,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1711,
+    "line": 1719,
     "kind": "function",
     "name": "pickCombatDanceStep",
     "params": [
@@ -5214,7 +5229,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1757,
+    "line": 1765,
     "kind": "function",
     "name": "maybeHandleCombatDance",
     "params": [
@@ -5230,7 +5245,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1837,
+    "line": 1845,
     "kind": "function",
     "name": "pickStepGreedy",
     "params": [
@@ -5245,7 +5260,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1906,
+    "line": 1914,
     "kind": "function",
     "name": "pickStepAlternate",
     "params": [
@@ -5261,7 +5276,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 2006,
+    "line": 2014,
     "kind": "function",
     "name": "clampToMapPx",
     "params": [
@@ -5271,7 +5286,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 2017,
+    "line": 2025,
     "kind": "function",
     "name": "moveMobAndPersist",
     "params": [
@@ -5284,7 +5299,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 2098,
+    "line": 2106,
     "kind": "function",
     "name": "removeHeroThreat",
     "params": [
@@ -5432,7 +5447,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 25,
+    "line": 27,
     "kind": "function",
     "name": "normalizeSameSite",
     "params": [
@@ -5441,14 +5456,14 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 51,
+    "line": 54,
     "kind": "function",
     "name": "cookieOpts",
     "params": []
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 63,
+    "line": 66,
     "kind": "function",
     "name": "setAuthCookie",
     "params": [
@@ -5458,7 +5473,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 68,
+    "line": 71,
     "kind": "function",
     "name": "clearAuthCookie",
     "params": [
@@ -5467,7 +5482,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 79,
+    "line": 82,
     "kind": "function",
     "name": "isLeaderboardRequest",
     "params": [
@@ -5476,7 +5491,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 84,
+    "line": 87,
     "kind": "function",
     "name": "logLeaderboardBlock",
     "params": [
@@ -5486,7 +5501,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 91,
+    "line": 94,
     "kind": "function",
     "name": "requireAuth",
     "params": [
@@ -5497,17 +5512,17 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 126,
+    "line": 129,
     "kind": "function",
     "name": "csrfRoute",
     "params": [
-      "_req",
+      "req",
       "res"
     ]
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 140,
+    "line": 155,
     "kind": "function",
     "name": "requireCsrf",
     "params": [
@@ -5518,7 +5533,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 156,
+    "line": 171,
     "kind": "arrow",
     "name": "queryToken",
     "params": [
@@ -5527,7 +5542,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 160,
+    "line": 175,
     "kind": "arrow",
     "name": "bodyToken",
     "params": [

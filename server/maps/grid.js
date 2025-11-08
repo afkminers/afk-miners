@@ -74,7 +74,7 @@ async function getGrid(mapKey) {
 
   // mapa (JSON do Tiled) — a fonte do tamanho correto
   const mapRow = await get(
-    `SELECT key, data_json AS "dataJSON" FROM maps WHERE key = $1`,
+    `SELECT key, dataJSON AS "dataJSON" FROM maps WHERE key = $1`,
     [mapKey]
   );
   if (!mapRow || !mapRow.dataJSON) throw new Error(`[maps/grid] map not found: ${mapKey}`);

@@ -192,7 +192,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 642
+        "index": 643
       }
     ],
     "defaults": []
@@ -206,7 +206,7 @@
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 579
+        "index": 580
       }
     ],
     "defaults": []
@@ -216,7 +216,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 1107
+        "index": 1289
       }
     ],
     "defaults": []
@@ -226,7 +226,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 1230
+        "index": 1412
       }
     ],
     "defaults": []
@@ -236,7 +236,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 1168
+        "index": 1350
       }
     ],
     "defaults": [
@@ -1058,7 +1058,7 @@
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 542
+        "index": 543
       }
     ],
     "defaults": [

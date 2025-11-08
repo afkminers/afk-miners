@@ -1496,7 +1496,8 @@
       "buildCollisionFromObjects",
       "buildCollisionFromTiled",
       "getGrid",
-      "hasSolidPropRow"
+      "hasSolidPropRow",
+      "markSolidRect"
     ]
   },
   {
