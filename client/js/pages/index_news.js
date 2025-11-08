@@ -1,5 +1,7 @@
+// client/js/index_news.js
 const feedRoot = document.querySelector('[data-news-feed]');
 const PAGE_KEY = 'index';
+
 const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTHS_PT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
@@ -7,30 +9,41 @@ function formatDate(iso, lang) {
   if (!iso) return '';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
+
   const day = String(date.getDate()).padStart(2, '0');
   const monthIndex = date.getMonth();
   const year = date.getFullYear();
+
   if (lang === 'pt-BR') {
     const month = MONTHS_PT[monthIndex] || '';
     return `${day} ${month} ${year}`;
   }
+
   const month = MONTHS_EN[monthIndex] || '';
   return `${month} ${day} ${year}`;
 }
 
 function render(posts, lang) {
   if (!feedRoot) return;
+
   feedRoot.dataset.cmsPage = PAGE_KEY;
   feedRoot.dataset.cmsLocale = lang;
   feedRoot.innerHTML = '';
+
   if (!posts.length) {
     const empty = document.createElement('div');
     empty.className = 'empty-state';
-    empty.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('news.tickerEmpty') : 'No news yet.';
+    empty.textContent =
+      (window.i18n && window.i18n.t)
+        ? window.i18n.t('news.tickerEmpty')
+        : 'No news yet.';
+
     feedRoot.appendChild(empty);
+
     document.dispatchEvent(new CustomEvent('cms-posts-rendered', {
       detail: { page: PAGE_KEY, locale: lang, posts: [] },
     }));
+
     return;
   }
 
@@ -64,7 +77,7 @@ function render(posts, lang) {
 
     const title = document.createElement('h3');
     title.className = 'home-news-article-title';
-    title.textContent = post.title;
+    title.textContent = post.title || '';
     content.appendChild(title);
 
     const body = document.createElement('div');
@@ -87,10 +100,12 @@ function render(posts, lang) {
       link.className = 'home-news-link';
       link.href = post.link_href;
       link.textContent = post.link_label || post.link_href;
+
       if (/^https?:/i.test(post.link_href)) {
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
       }
+
       body.appendChild(link);
     }
 
@@ -104,13 +119,26 @@ function render(posts, lang) {
   }));
 }
 
-async function load(lang) {
+// carrega posts para um idioma, com fallback opcional para 'en'
+async function load(lang, { allowFallback = true } = {}) {
   if (!feedRoot) return;
+
   try {
-    const res = await fetch(`/api/content/posts?page=index&lang=${encodeURIComponent(lang)}`);
-    if (!res.ok) throw new Error('failed');
-    const data = await res.json();
-    render(Array.isArray(data) ? data : [], lang);
+    const res = await fetch(
+      `/api/content/posts?page=${encodeURIComponent(PAGE_KEY)}&lang=${encodeURIComponent(lang)}`
+    );
+    if (!res.ok) throw new Error(`failed: ${res.status}`);
+
+    const data = await res.json().catch(() => []);
+    const posts = Array.isArray(data) ? data : [];
+
+    // Fallback: se não tem post para o idioma atual e ele NÃO é 'en',
+    // tenta uma vez buscar em inglês.
+    if (!posts.length && allowFallback && lang !== 'en') {
+      return load('en', { allowFallback: false });
+    }
+
+    render(posts, lang);
   } catch (err) {
     console.warn('[news] failed to load posts', err);
     render([], lang);
@@ -127,17 +155,22 @@ function currentLang() {
 
 function init() {
   if (!feedRoot) return;
-  const lang = currentLang();
-  load(lang);
-  if (window.i18n) {
-    window.i18n.onReady((readyLang) => load(readyLang));
+
+  const initialLang = currentLang();
+  load(initialLang);
+
+  // Quando o idioma do site muda, recarrega o feed
+  if (window.i18n && typeof window.i18n.onChange === 'function') {
     window.i18n.onChange((nextLang) => load(nextLang));
   }
+
+  // Quando o painel admin alterar posts dessa página, recarrega
   document.addEventListener('cms-posts-changed', (event) => {
     const detail = event?.detail || {};
-    if (detail.page !== 'index') return;
+    if (detail.page !== PAGE_KEY) return;
+
     const current = currentLang();
-    if (!detail.locale || detail.locale === current) {
+    if (!detail.locale || detail.locale === current || detail.locale === 'en') {
       load(current);
     }
   });

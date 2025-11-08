@@ -318,11 +318,11 @@
       },
       {
         "file": "server\\models\\db.js",
-        "index": 1447
+        "index": 1686
       },
       {
         "file": "server\\models\\db.js",
-        "index": 2101
+        "index": 2416
       }
     ],
     "defaults": []
@@ -345,6 +345,20 @@
       {
         "file": "server\\models\\migrate.js",
         "index": 187
+      }
+    ],
+    "defaults": []
+  },
+  {
+    "key": "DB_SCHEMA",
+    "occurrences": [
+      {
+        "file": "server\\models\\db.js",
+        "index": 821
+      },
+      {
+        "file": "server\\models\\db.js",
+        "index": 846
       }
     ],
     "defaults": []
@@ -946,11 +960,11 @@
     "occurrences": [
       {
         "file": "server\\models\\db.js",
-        "index": 1281
+        "index": 1520
       },
       {
         "file": "server\\models\\db.js",
-        "index": 1306
+        "index": 1545
       }
     ],
     "defaults": []

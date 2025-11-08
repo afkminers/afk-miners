@@ -2880,21 +2880,21 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 28,
+    "line": 35,
     "kind": "function",
     "name": "buildPool",
     "params": []
   },
   {
     "file": "server\\models\\db.js",
-    "line": 83,
+    "line": 95,
     "kind": "function",
     "name": "getPool",
     "params": []
   },
   {
     "file": "server\\models\\db.js",
-    "line": 89,
+    "line": 101,
     "kind": "function",
     "name": "logPoolState",
     "params": [
@@ -2903,7 +2903,7 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 100,
+    "line": 112,
     "kind": "function",
     "name": "all",
     "params": [
@@ -2913,7 +2913,7 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 112,
+    "line": 124,
     "kind": "function",
     "name": "get",
     "params": [
@@ -2923,7 +2923,7 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 128,
+    "line": 140,
     "kind": "function",
     "name": "run",
     "params": [
@@ -2933,14 +2933,14 @@
   },
   {
     "file": "server\\models\\db.js",
-    "line": 146,
+    "line": 158,
     "kind": "function",
     "name": "closePool",
     "params": []
   },
   {
     "file": "server\\models\\db.js",
-    "line": 159,
+    "line": 171,
     "kind": "arrow",
     "name": "shutdown",
     "params": []
