@@ -91,11 +91,12 @@ async function getGrid(mapKey) {
 
   // objetos sólidos (preferência)
   const objs = await all(
-    `SELECT x, y, w, h, type, props_json AS "propsJSON"
+    `SELECT x, y, w, h, type, propsJSON AS "propsJSON"
        FROM map_objects
-      WHERE map_key = $1`,
+      WHERE mapKey = $1`,
     [mapKey]
   );
+
 
   const built = (objs && objs.length)
     ? buildCollisionFromObjects(cols, rows, objs)

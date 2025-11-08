@@ -458,6 +458,22 @@ async function migrate() {
     )
   `);
 
+  // Compat: bancos antigos podem ter criado a coluna como "dataJSON" (case sensitive)
+  await run(`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1
+          FROM information_schema.columns
+         WHERE table_name = 'maps'
+           AND column_name = 'dataJSON'
+      ) THEN
+        -- renomeia "dataJSON" (case sensitive) -> dataJSON (identificador normal = datajson)
+        ALTER TABLE maps RENAME COLUMN "dataJSON" TO dataJSON;
+      END IF;
+    END$$;
+  `);
+
   await run(`
     CREATE TABLE IF NOT EXISTS map_objects (
       id SERIAL PRIMARY KEY,
@@ -496,7 +512,7 @@ async function migrate() {
 
   await run(`CREATE INDEX IF NOT EXISTS idx_hero_last_pos_map ON hero_last_pos(map_key)`);
 
-    // ---------- Loot (map_loot) ----------
+  // ---------- Loot (map_loot) ----------
   await run(`
     CREATE TABLE IF NOT EXISTS map_loot (
       id TEXT PRIMARY KEY,
@@ -508,7 +524,6 @@ async function migrate() {
       created_at TIMESTAMPTZ DEFAULT now()
     )
   `);
-
 
   // ---------- Chat ----------
   await run(`
