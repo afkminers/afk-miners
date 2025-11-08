@@ -1,40 +1,82 @@
 // csrf.js — helpers globais de HTTP com CSRF robusto
 (() => {
+  const CSRF_COOKIE = 'csrf';
   const state = { token: null };
 
   function readCookie(name) {
-    const hit = document.cookie.split('; ').find(v => v.startsWith(name + '='));
-    return hit ? decodeURIComponent(hit.split('=')[1]) : null;
+    if (typeof document === 'undefined') return null;
+    return (
+      document.cookie
+        .split(';')
+        .map((p) => p.trim())
+        .filter(Boolean)
+        .map((p) => p.split('='))
+        .filter(([key]) => key === name)
+        .map(([, value]) => {
+          try {
+            return decodeURIComponent(value);
+          } catch {
+            return value;
+          }
+        })[0] || null
+    );
   }
 
-  // GET /api/csrf -> seta cookie e retorna o token (também em header X-Csrf-Token)
+  // GET /api/csrf -> seta cookie + retorna token (também em header)
   async function fetchCsrf() {
-    const r = await fetch('/api/csrf', { credentials: 'include' });
-    // mesmo se 200 sem body, usamos header/cookie
-    const hdr = r.headers.get('X-Csrf-Token');
-    const ck = readCookie('csrf');
-    state.token = hdr || ck || null;
+    const res = await fetch('/api/csrf', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+
+    const hdr =
+      res.headers.get('X-CSRF-Token') ||
+      res.headers.get('x-csrf-token') ||
+      res.headers.get('csrf-token');
+
+    let bodyToken = null;
+    try {
+      const json = await res.json();
+      bodyToken = json?.csrfToken || json?.csrf || json?.token || null;
+    } catch {
+      bodyToken = null;
+    }
+
+    const ck = readCookie(CSRF_COOKIE);
+    state.token = hdr || bodyToken || ck || null;
     return state.token;
   }
 
-  // Quando force=true, SEMPRE chama o endpoint para rotacionar token
+  // force=true => SEMPRE chama /api/csrf pra rotacionar token
   async function ensureCsrfCookie(force = false) {
     if (!force) {
-      const c = readCookie('csrf');
-      if (c) { state.token = c; return c; }
+      const c = readCookie(CSRF_COOKIE);
+      if (c) {
+        state.token = c;
+        return c;
+      }
+      if (state.token) return state.token;
     }
     return await fetchCsrf();
   }
 
   async function getCsrfToken() {
     if (state.token) return state.token;
-    return await ensureCsrfCookie();
+    return await ensureCsrfCookie(false);
   }
 
   async function jget(url) {
-    const r = await fetch(url, { credentials: 'include' });
-    if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
-    return r.json();
+    const res = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) {
+      throw new Error(`${res.status} ${res.statusText} @ ${url}`);
+    }
+    return res.json();
   }
 
   async function jpost(url, body, extraOpts = {}) {
@@ -44,15 +86,17 @@
 
     const doFetch = async (token) => {
       const u = new URL(url, location.origin);
-      if (token && !u.searchParams.has('csrf')) u.searchParams.set('csrf', token);
+      if (token && !u.searchParams.has('csrf')) {
+        u.searchParams.set('csrf', token);
+      }
 
       const baseHeaders = {
         'Content-Type': 'application/json',
         'X-Requested-With': 'fetch',
-        // redundantes para diferentes middlewares
+        // redundantes pra qualquer middleware
         'X-CSRF-Token': token || '',
         'x-csrf-token': token || '',
-        'csrf-token':  token || '',
+        'csrf-token': token || '',
       };
 
       return fetch(u.toString(), {
@@ -65,23 +109,27 @@
     };
 
     // primeira tentativa
-    let r = await doFetch(tok);
+    let res = await doFetch(tok);
 
-    // se 403, força RENOVAÇÃO real e tenta 1x novamente
-    if (r.status === 403) {
-      state.token = null;                 // zera cache
-      await ensureCsrfCookie(true);       // <-- força GET /api/csrf
+    // se 403, força token novo e tenta de novo
+    if (res.status === 403) {
+      state.token = null;
+      await ensureCsrfCookie(true);
       tok = await getCsrfToken();
-      r = await doFetch(tok);
+      res = await doFetch(tok);
     }
 
-    if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
-    return r.json();
+    if (!res.ok) {
+      throw new Error(`${res.status} ${res.statusText} @ ${url}`);
+    }
+    return res.json();
   }
 
-  // expõe de forma namespaced (evita colisão com jpost de outros arquivos)
+  // expõe de forma namespaced
   window.CSRF = {
-    get token() { return state.token; },
+    get token() {
+      return state.token;
+    },
     fetchCsrf,
     ensureCsrfCookie,
     getCsrfToken,
@@ -89,7 +137,7 @@
     jpost,
   };
 
-  // compat (se alguém usa global solto)
+  // compat (globais antigos)
   window.fetchCsrf = fetchCsrf;
   window.ensureCsrfCookie = ensureCsrfCookie;
   window.getCsrfToken = getCsrfToken;

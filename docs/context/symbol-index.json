@@ -1145,7 +1145,8 @@
       "normalizeSameSite",
       "requireAuth",
       "requireCsrf",
-      "setAuthCookie"
+      "setAuthCookie",
+      "shortToken"
     ]
   },
   {

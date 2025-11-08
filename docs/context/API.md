@@ -17,11 +17,12 @@
 - `COMBAT_DEBUG` (defaults: )
 - `COMBAT_HERO_POS_MAX_AGE_MS`
 - `CONTENT_PIPELINE` (defaults: off)
-- `COOKIE_DOMAIN`
+- `COOKIE_DOMAIN` (defaults: )
 - `COOKIE_NAME`
 - `COOKIE_SAME_SITE`
 - `COOKIE_SECURE`
 - `CSRF_COOKIE` (defaults: csrf)
+- `CSRF_DEBUG` (defaults: 0)
 - `CTX_DEPTH` (defaults: 4)
 - `CTX_IMPORTS`
 - `CTX_SYMBOLS`

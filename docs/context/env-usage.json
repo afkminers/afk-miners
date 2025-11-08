@@ -192,10 +192,12 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 643
+        "index": 691
       }
     ],
-    "defaults": []
+    "defaults": [
+      ""
+    ]
   },
   {
     "key": "COOKIE_NAME",
@@ -206,7 +208,7 @@
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 580
+        "index": 572
       }
     ],
     "defaults": []
@@ -216,7 +218,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 1289
+        "index": 1098
       }
     ],
     "defaults": []
@@ -226,7 +228,7 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 1412
+        "index": 1294
       }
     ],
     "defaults": []
@@ -236,11 +238,23 @@
     "occurrences": [
       {
         "file": "server\\auth\\middleware.js",
-        "index": 1350
+        "index": 1185
       }
     ],
     "defaults": [
       "csrf"
+    ]
+  },
+  {
+    "key": "CSRF_DEBUG",
+    "occurrences": [
+      {
+        "file": "server\\auth\\middleware.js",
+        "index": 1726
+      }
+    ],
+    "defaults": [
+      "0"
     ]
   },
   {
@@ -504,7 +518,7 @@
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 443
+        "index": 444
       }
     ],
     "defaults": [
@@ -903,7 +917,7 @@
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 385
+        "index": 386
       }
     ],
     "defaults": [
@@ -1058,7 +1072,7 @@
       },
       {
         "file": "server\\auth\\middleware.js",
-        "index": 543
+        "index": 535
       }
     ],
     "defaults": [

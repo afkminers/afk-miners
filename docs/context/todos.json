@@ -1,37 +1,37 @@
 [
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 375,
+    "line": 376,
     "tag": "NOTE",
     "text": "{"
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1229,
+    "line": 1230,
     "tag": "NOTE",
     "text": "= document.createElement('p');"
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1230,
+    "line": 1231,
     "tag": "NOTE",
     "text": ".className = 'inline-admin-note';"
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1231,
+    "line": 1232,
     "tag": "NOTE",
     "text": ".textContent = tUI('adminOnly');"
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1232,
+    "line": 1233,
     "tag": "NOTE",
     "text": ");"
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1376,
+    "line": 1377,
     "tag": "NOTE",
     "text": ";"
   },

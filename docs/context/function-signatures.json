@@ -3069,7 +3069,7 @@
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 8,
+    "line": 13,
     "kind": "function",
     "name": "hasSolidPropRow",
     "params": [
@@ -3078,7 +3078,7 @@
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 34,
+    "line": 41,
     "kind": "function",
     "name": "markSolidRect",
     "params": [
@@ -3093,7 +3093,7 @@
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 52,
+    "line": 60,
     "kind": "function",
     "name": "buildCollisionFromObjects",
     "params": [
@@ -3104,7 +3104,7 @@
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 77,
+    "line": 84,
     "kind": "function",
     "name": "buildCollisionFromTiled",
     "params": [
@@ -3113,7 +3113,7 @@
   },
   {
     "file": "server\\maps\\grid.js",
-    "line": 89,
+    "line": 96,
     "kind": "function",
     "name": "getGrid",
     "params": [
@@ -5447,7 +5447,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 27,
+    "line": 25,
     "kind": "function",
     "name": "normalizeSameSite",
     "params": [
@@ -5456,14 +5456,14 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 54,
+    "line": 59,
     "kind": "function",
     "name": "cookieOpts",
     "params": []
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 66,
+    "line": 71,
     "kind": "function",
     "name": "setAuthCookie",
     "params": [
@@ -5473,7 +5473,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 71,
+    "line": 76,
     "kind": "function",
     "name": "clearAuthCookie",
     "params": [
@@ -5482,7 +5482,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 82,
+    "line": 89,
     "kind": "function",
     "name": "isLeaderboardRequest",
     "params": [
@@ -5491,7 +5491,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 87,
+    "line": 94,
     "kind": "function",
     "name": "logLeaderboardBlock",
     "params": [
@@ -5501,7 +5501,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 94,
+    "line": 102,
     "kind": "function",
     "name": "requireAuth",
     "params": [
@@ -5512,7 +5512,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 129,
+    "line": 140,
     "kind": "function",
     "name": "csrfRoute",
     "params": [
@@ -5522,7 +5522,16 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 155,
+    "line": 165,
+    "kind": "function",
+    "name": "shortToken",
+    "params": [
+      "tok"
+    ]
+  },
+  {
+    "file": "server\\auth\\middleware.js",
+    "line": 174,
     "kind": "function",
     "name": "requireCsrf",
     "params": [
@@ -5533,7 +5542,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 171,
+    "line": 211,
     "kind": "arrow",
     "name": "queryToken",
     "params": [
@@ -5542,7 +5551,7 @@
   },
   {
     "file": "server\\auth\\middleware.js",
-    "line": 175,
+    "line": 220,
     "kind": "arrow",
     "name": "bodyToken",
     "params": [
@@ -8863,14 +8872,14 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 119,
+    "line": 120,
     "kind": "function",
     "name": "getActiveLang",
     "params": []
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 128,
+    "line": 129,
     "kind": "function",
     "name": "tUI",
     "params": [
@@ -8879,14 +8888,14 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 138,
+    "line": 139,
     "kind": "function",
     "name": "ensureStyles",
     "params": []
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 483,
+    "line": 484,
     "kind": "function",
     "name": "resolveKey",
     "params": [
@@ -8896,7 +8905,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 497,
+    "line": 498,
     "kind": "function",
     "name": "loadBundle",
     "params": [
@@ -8905,7 +8914,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 523,
+    "line": 524,
     "kind": "function",
     "name": "mapOverrides",
     "params": [
@@ -8914,7 +8923,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 532,
+    "line": 533,
     "kind": "function",
     "name": "fetchOverrides",
     "params": [
@@ -8924,7 +8933,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 555,
+    "line": 556,
     "kind": "function",
     "name": "readCookie",
     "params": [
@@ -8933,7 +8942,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 573,
+    "line": 574,
     "kind": "function",
     "name": "ensureCsrf",
     "params": [
@@ -8942,7 +8951,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 593,
+    "line": 594,
     "kind": "function",
     "name": "csrfFetch",
     "params": [
@@ -8952,7 +8961,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 599,
+    "line": 600,
     "kind": "arrow",
     "name": "doRequest",
     "params": [
@@ -8961,7 +8970,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 623,
+    "line": 624,
     "kind": "function",
     "name": "formatDate",
     "params": [
@@ -8971,7 +8980,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 637,
+    "line": 638,
     "kind": "function",
     "name": "setStatus",
     "params": [
@@ -8981,7 +8990,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 643,
+    "line": 644,
     "kind": "function",
     "name": "ensureLocaleValues",
     "params": [
@@ -8990,7 +8999,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 686,
+    "line": 687,
     "kind": "function",
     "name": "updateFieldUI",
     "params": [
@@ -9000,7 +9009,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 711,
+    "line": 712,
     "kind": "function",
     "name": "refreshLocale",
     "params": [
@@ -9009,7 +9018,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 726,
+    "line": 727,
     "kind": "function",
     "name": "saveField",
     "params": [
@@ -9020,7 +9029,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 762,
+    "line": 763,
     "kind": "function",
     "name": "resetField",
     "params": [
@@ -9030,7 +9039,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 795,
+    "line": 796,
     "kind": "function",
     "name": "toLocalInputValue",
     "params": [
@@ -9039,7 +9048,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 804,
+    "line": 805,
     "kind": "function",
     "name": "collectPostPayload",
     "params": [
@@ -9049,7 +9058,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 841,
+    "line": 842,
     "kind": "function",
     "name": "setPostFormMode",
     "params": [
@@ -9058,7 +9067,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 857,
+    "line": 858,
     "kind": "function",
     "name": "resetPostForm",
     "params": [
@@ -9067,7 +9076,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 869,
+    "line": 870,
     "kind": "arrow",
     "name": "setValue",
     "params": [
@@ -9077,7 +9086,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 895,
+    "line": 896,
     "kind": "function",
     "name": "populatePostForm",
     "params": [
@@ -9086,7 +9095,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 907,
+    "line": 908,
     "kind": "arrow",
     "name": "setValue",
     "params": [
@@ -9096,7 +9105,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 934,
+    "line": 935,
     "kind": "function",
     "name": "deletePost",
     "params": [
@@ -9106,7 +9115,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 957,
+    "line": 958,
     "kind": "function",
     "name": "submitPost",
     "params": [
@@ -9116,7 +9125,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 990,
+    "line": 991,
     "kind": "function",
     "name": "fetchAdminPosts",
     "params": [
@@ -9125,7 +9134,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1005,
+    "line": 1006,
     "kind": "function",
     "name": "renderPostsList",
     "params": [
@@ -9134,7 +9143,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1066,
+    "line": 1067,
     "kind": "function",
     "name": "refreshPostsList",
     "params": [
@@ -9143,7 +9152,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1081,
+    "line": 1082,
     "kind": "function",
     "name": "decorateLivePosts",
     "params": [
@@ -9152,7 +9161,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1111,
+    "line": 1112,
     "kind": "function",
     "name": "openPostEditor",
     "params": [
@@ -9162,7 +9171,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1134,
+    "line": 1135,
     "kind": "function",
     "name": "buildFields",
     "params": [
@@ -9171,7 +9180,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1220,
+    "line": 1221,
     "kind": "function",
     "name": "buildPostsForm",
     "params": [
@@ -9180,7 +9189,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1388,
+    "line": 1389,
     "kind": "function",
     "name": "buildPanel",
     "params": [
@@ -9189,7 +9198,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1493,
+    "line": 1494,
     "kind": "function",
     "name": "togglePanel",
     "params": [
@@ -9198,21 +9207,21 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1503,
+    "line": 1504,
     "kind": "function",
     "name": "ensureAdminSession",
     "params": []
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1529,
+    "line": 1530,
     "kind": "function",
     "name": "updateUiTexts",
     "params": []
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1593,
+    "line": 1594,
     "kind": "function",
     "name": "createFloatingButton",
     "params": [
@@ -9221,7 +9230,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1610,
+    "line": 1611,
     "kind": "function",
     "name": "initInlineAdmin",
     "params": [
@@ -9230,7 +9239,7 @@
   },
   {
     "file": "client\\js\\admin-inline.js",
-    "line": 1613,
+    "line": 1614,
     "kind": "arrow",
     "name": "ready",
     "params": []

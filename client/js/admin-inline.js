@@ -553,71 +553,111 @@ async function fetchOverrides(locale, prefixes = ['']) {
   return mapOverrides(results);
 }
 
+// === CSRF para o painel inline (usa o mesmo cookie/global de /admin) ===
 function readCookie(name) {
-  return document.cookie
-    .split(';')
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map((part) => part.split('='))
-    .filter(([key]) => key === name)
-    .map(([, value]) => {
-      try {
-        return decodeURIComponent(value);
-      } catch {
-        return value;
-      }
-    })[0] || null;
+  return (
+    document.cookie
+      .split(';')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => part.split('='))
+      .filter(([key]) => key === name)
+      .map(([, value]) => {
+        try {
+          return decodeURIComponent(value);
+        } catch {
+          return value;
+        }
+      })[0] || null
+  );
 }
 
 let csrfToken = null;
+const CSRF_COOKIE_NAME = 'csrf';
 
 async function ensureCsrf(force = false) {
+  // se já temos token em cache e não é pra forçar, usa ele
   if (!force && csrfToken) return csrfToken;
+
+  // tenta primeiro pegar do cookie
   if (!force) {
-    const cookie = readCookie('csrf');
-    if (cookie) {
-      csrfToken = cookie;
+    const fromCookie = readCookie(CSRF_COOKIE_NAME);
+    if (fromCookie) {
+      csrfToken = fromCookie;
       return csrfToken;
     }
   }
+
+  // se não tiver cookie ou for "force", chama /api/csrf
   try {
-    const res = await fetch('/api/csrf', { credentials: 'include' });
-    const header = res.headers.get('X-Csrf-Token');
-    csrfToken = header || readCookie('csrf');
+    const res = await fetch('/api/csrf', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+
+    const headerToken =
+      res.headers.get('X-CSRF-Token') ||
+      res.headers.get('x-csrf-token') ||
+      res.headers.get('csrf-token');
+
+    let bodyToken = null;
+    try {
+      const json = await res.json();
+      bodyToken = json?.csrfToken || json?.csrf || json?.token || null;
+    } catch {
+      bodyToken = null;
+    }
+
+    const cookieToken = readCookie(CSRF_COOKIE_NAME);
+
+    csrfToken = headerToken || bodyToken || cookieToken || null;
   } catch (err) {
     console.warn('[inline-admin] csrf fetch failed', err);
-    csrfToken = readCookie('csrf');
+    csrfToken = readCookie(CSRF_COOKIE_NAME);
   }
+
   return csrfToken;
 }
 
 async function csrfFetch(url, options) {
   const { method = 'POST', body } = options || {};
+
   let token = await ensureCsrf(false);
   if (!token || !String(token).trim()) {
     token = await ensureCsrf(true);
   }
-  const doRequest = async (tok) => fetch(url, {
-    method,
-    credentials: 'include',
-    headers: {
+
+  const buildOptions = (tok) => {
+    const headers = {
       'Content-Type': 'application/json',
       'X-Requested-With': 'fetch',
-      'X-CSRF-Token': tok || '',
-      'x-csrf-token': tok || '',
-      'csrf-token': tok || '',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  let response = await doRequest(token);
-  if (response.status === 403) {
-    token = await ensureCsrf(true);
-    if (!token || !String(token).trim()) {
-      token = await ensureCsrf(true);
+    };
+    if (tok) {
+      headers['X-CSRF-Token'] = tok;
+      headers['x-csrf-token'] = tok;
+      headers['csrf-token'] = tok;
     }
-    response = await doRequest(token);
+    return {
+      method,
+      credentials: 'include',
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    };
+  };
+
+  // 1ª tentativa
+  let response = await fetch(url, buildOptions(token));
+
+  // Se tomou 403 (token velho ou errado), tenta renovar e repetir 1x
+  if (response.status === 403) {
+    const fresh = await ensureCsrf(true);
+    if (fresh && fresh !== token) {
+      response = await fetch(url, buildOptions(fresh));
+    }
   }
+
   return response;
 }
 
