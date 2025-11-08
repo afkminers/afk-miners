@@ -106,6 +106,45 @@ function deepMerge(target, source) {
   return out;
 }
 
+function expandOverrideMap(map) {
+  const result = {};
+  if (!map || typeof map !== 'object') return result;
+  for (const [flatKey, value] of Object.entries(map)) {
+    if (!flatKey) continue;
+    const segments = flatKey.split('.');
+    let node = result;
+    for (let i = 0; i < segments.length; i += 1) {
+      const segment = segments[i];
+      if (!segment) continue;
+      if (i === segments.length - 1) {
+        node[segment] = value;
+      } else {
+        if (!node[segment] || typeof node[segment] !== 'object') {
+          node[segment] = {};
+        }
+        node = node[segment];
+      }
+    }
+  }
+  return result;
+}
+
+async function fetchOverrides(locale) {
+  if (typeof fetch === 'undefined') return {};
+  try {
+    const url = `/api/content/i18n-overrides?lang=${encodeURIComponent(locale)}`;
+    const res = await fetch(url, { credentials: 'include' });
+    if (!res.ok) {
+      return {};
+    }
+    const data = await res.json();
+    return data || {};
+  } catch (err) {
+    console.warn('[i18n] Failed to load overrides for', locale, err);
+    return {};
+  }
+}
+
 function resolveKey(messages, key) {
   if (!messages) return undefined;
   const parts = String(key).split('.');
@@ -196,12 +235,15 @@ async function changeLanguage(nextLang) {
   }
 
   const fallback = await importBundle(FALLBACK_LANG);
-  fallbackMessages = fallback || {};
+  const fallbackOverrides = expandOverrideMap(await fetchOverrides(FALLBACK_LANG));
+  fallbackMessages = deepMerge(fallback || {}, fallbackOverrides);
 
   let messages = fallbackMessages;
   if (normalized !== FALLBACK_LANG) {
     const specific = await importBundle(normalized);
-    messages = deepMerge(fallbackMessages, specific);
+    const specificOverrides = expandOverrideMap(await fetchOverrides(normalized));
+    const specificMerged = deepMerge(specific || {}, specificOverrides);
+    messages = deepMerge(fallbackMessages, specificMerged);
   }
 
   activeMessages = messages || {};

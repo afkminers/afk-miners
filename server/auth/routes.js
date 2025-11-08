@@ -9,6 +9,7 @@ const {
   clearAuthCookie,
   requireAuth,
 } = require('./middleware');
+const { isAdminName } = require('../middleware/requireAdmin');
 
 const router = express.Router();
 
@@ -101,7 +102,7 @@ router.get('/me', requireAuth, async (req, res) => {
       [req.user.id]
     );
     if (!profile) return res.status(404).json({ error: 'Jogador não encontrado' });
-    res.json({ profile });
+    res.json({ profile, isAdmin: isAdminName(profile.name) });
   } catch (e) {
     console.error('[auth/me] error:', e);
     res.status(500).json({ error: 'Falha ao obter perfil' });
