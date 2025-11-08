@@ -1,3 +1,4 @@
+//client/js/admin-inline.js
 import { i18n } from './i18n/core.js';
 
 const SUPPORTED_LOCALES = ['en', 'pt-BR'];

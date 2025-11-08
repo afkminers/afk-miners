@@ -4,7 +4,12 @@ const { get, all } = require('../models/db');
 const TILE = 32;
 const cache = new Map(); // mapKey -> { grid: Uint8Array, cols, rows }
 
-/** propsJSON pode vir como array [{name,value}], objeto {solid:true} ou string JSON */
+/**
+ * propsJSON pode vir como:
+ * - array [{ name, value }]
+ * - objeto { solid: true }
+ * - string JSON
+ */
 function hasSolidPropRow(row) {
   try {
     let p = row.propsJSON;
@@ -14,7 +19,7 @@ function hasSolidPropRow(row) {
       try {
         p = JSON.parse(p);
       } catch {
-        // se não der parse, ignora e cai no return false
+        // se não der parse, deixa passar e retorna false
       }
     }
 
@@ -27,7 +32,9 @@ function hasSolidPropRow(row) {
     if (p && typeof p === 'object') {
       return p.solid === true || p.solid === 1;
     }
-  } catch {}
+  } catch {
+    // ignora erros e considera não-sólido
+  }
   return false;
 }
 
@@ -36,6 +43,7 @@ function markSolidRect(grid, cols, rows, x, y, w, h) {
   const y0 = Math.floor(y / TILE);
   const x1 = Math.floor((x + w - 1) / TILE);
   const y1 = Math.floor((y + h - 1) / TILE);
+
   for (let cy = y0; cy <= y1; cy++) {
     if (cy < 0 || cy >= rows) continue;
     for (let cx = x0; cx <= x1; cx++) {
@@ -71,8 +79,7 @@ function buildCollisionFromObjects(cols, rows, objs) {
 
 /**
  * Fallback minimalista para mapas do Tiled: cria grid vazia do tamanho certo.
- * (Se você quiser, dá pra enriquecer lendo layers/tiles com flag de colisão,
- * mas manter vazio evita colisões fantasmas e mantém a IA fiel ao mapa.)
+ * (Tudo walkable por padrão, sem colisão fantasma.)
  */
 function buildCollisionFromTiled(json) {
   const cols = (json && Number(json.width)) | 0;
@@ -82,21 +89,22 @@ function buildCollisionFromTiled(json) {
       `[maps/grid] invalid tiled dims width=${json?.width} height=${json?.height}`
     );
   }
-  const grid = new Uint8Array(cols * rows); // tudo walkable por padrão
+  const grid = new Uint8Array(cols * rows);
   return { grid, cols, rows };
 }
 
 async function getGrid(mapKey) {
   if (!mapKey) throw new Error('[maps/grid] missing mapKey');
 
-  // cache
+  // cache em memória
   const cached = cache.get(mapKey);
   if (cached) return cached;
 
   // mapa (JSON do Tiled) — a fonte do tamanho correto
+  // Aqui usamos SEMPRE a coluna "dataJSON" (com aspas),
+  // mas o migrate garante que ela existe e está sincronizada.
   const mapRow = await get(
-    // ⚠️ SEM aspas: usa a coluna datajson (criada como dataJSON sem aspas)
-    `SELECT key, dataJSON AS "dataJSON" FROM maps WHERE key = $1`,
+    `SELECT key, "dataJSON" AS "dataJSON" FROM maps WHERE key = $1`,
     [mapKey]
   );
   if (!mapRow || !mapRow.dataJSON) {
@@ -116,7 +124,8 @@ async function getGrid(mapKey) {
     );
   }
 
-  // objetos sólidos (preferência) – usa "propsJSON", que bate com o schema
+  // objetos sólidos (preferência) – usa "propsJSON" / "mapKey",
+  // que o migrate também garante que existem e estão preenchidos.
   const objs = await all(
     `
     SELECT x, y, w, h, type, "propsJSON" AS "propsJSON"

@@ -154,16 +154,21 @@ async function migrate() {
   `);
 
   // Presence columns (manual status/activity) — Phase 1
-  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS presence_status TEXT NOT NULL DEFAULT 'ONLINE'`);
-  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS presence_activity TEXT NOT NULL DEFAULT 'HOUSE'`);
-  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS presence_updated_at TIMESTAMPTZ NOT NULL DEFAULT now()`);
+  await run(`
+    ALTER TABLE players
+      ADD COLUMN IF NOT EXISTS presence_status TEXT NOT NULL DEFAULT 'ONLINE',
+      ADD COLUMN IF NOT EXISTS presence_activity TEXT NOT NULL DEFAULT 'HOUSE',
+      ADD COLUMN IF NOT EXISTS presence_updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  `);
 
-  // garante colunas base (PG suporta IF NOT EXISTS)
+  // garante colunas base
   await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS name TEXT`);
   await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS createdAt BIGINT`);
-  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS password_hash TEXT DEFAULT ''`);
+  await run(
+    `ALTER TABLE players ADD COLUMN IF NOT EXISTS password_hash TEXT DEFAULT ''`
+  );
 
-  // índice único case-insensitive (equivalente ao COLLATE NOCASE do SQLite)
+  // índice único case-insensitive
   await run(`
     CREATE UNIQUE INDEX IF NOT EXISTS players_name_uq
       ON players (LOWER(name))
@@ -173,35 +178,35 @@ async function migrate() {
   // catálogo de heróis (tabela mestre)
   await ensureHeroesSchema();
 
-  // heróis do jogador (é o que o app usa em todas as rotas)
+  // heróis do jogador
   await run(`
     CREATE TABLE IF NOT EXISTS player_heroes (
       id TEXT PRIMARY KEY,
-      playerId TEXT NOT NULL,
-      heroKey TEXT NOT NULL,
+      "playerId" TEXT NOT NULL,
+      "heroKey" TEXT NOT NULL,
       name TEXT NOT NULL,
       rarity TEXT NOT NULL,
       attack INTEGER NOT NULL,
       defense INTEGER NOT NULL,
       speed INTEGER NOT NULL,
       level INTEGER NOT NULL DEFAULT 1,
-      createdAt BIGINT NOT NULL,
-      isStarter BOOLEAN NOT NULL DEFAULT FALSE,
-      FOREIGN KEY (playerId) REFERENCES players(id)
+      "createdAt" BIGINT NOT NULL,
+      "isStarter" BOOLEAN NOT NULL DEFAULT FALSE,
+      FOREIGN KEY ("playerId") REFERENCES players(id)
     )
   `);
 
   await run(`
     ALTER TABLE player_heroes
-      ADD COLUMN IF NOT EXISTS heroKey TEXT,
+      ADD COLUMN IF NOT EXISTS "heroKey" TEXT,
       ADD COLUMN IF NOT EXISTS name TEXT,
       ADD COLUMN IF NOT EXISTS rarity TEXT DEFAULT 'COMMON',
       ADD COLUMN IF NOT EXISTS attack INTEGER DEFAULT 1,
       ADD COLUMN IF NOT EXISTS defense INTEGER DEFAULT 1,
       ADD COLUMN IF NOT EXISTS speed INTEGER DEFAULT 1,
       ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1,
-      ADD COLUMN IF NOT EXISTS createdAt BIGINT,
-      ADD COLUMN IF NOT EXISTS isStarter BOOLEAN DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS "createdAt" BIGINT,
+      ADD COLUMN IF NOT EXISTS "isStarter" BOOLEAN DEFAULT FALSE,
       ADD COLUMN IF NOT EXISTS xp BIGINT DEFAULT 0,
       ADD COLUMN IF NOT EXISTS hp INTEGER DEFAULT 100,
       ADD COLUMN IF NOT EXISTS max_hp INTEGER DEFAULT 100,
@@ -209,7 +214,7 @@ async function migrate() {
       ADD COLUMN IF NOT EXISTS max_mana INTEGER DEFAULT 50,
       ADD COLUMN IF NOT EXISTS alive BOOLEAN DEFAULT TRUE,
       ADD COLUMN IF NOT EXISTS last_respawn_at TIMESTAMPTZ,
-      ADD COLUMN IF NOT EXISTS death_count INTEGER DEFAULT 0;
+      ADD COLUMN IF NOT EXISTS death_count INTEGER DEFAULT 0
   `);
 
   await run(`
@@ -236,29 +241,32 @@ async function migrate() {
     )
   `);
 
-  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS level INTEGER NOT NULL DEFAULT 1`);
-  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS xp BIGINT NOT NULL DEFAULT 0`);
-  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS hp_max INTEGER NOT NULL DEFAULT 100`);
-  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS mana_max INTEGER NOT NULL DEFAULT 50`);
-  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS hp INTEGER NOT NULL DEFAULT 100`);
-  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS mana INTEGER NOT NULL DEFAULT 50`);
-  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS class TEXT DEFAULT ''`);
-  await run(`ALTER TABLE hero_progress ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now()`);
+  await run(`
+    ALTER TABLE hero_progress
+      ADD COLUMN IF NOT EXISTS level INTEGER NOT NULL DEFAULT 1,
+      ADD COLUMN IF NOT EXISTS xp BIGINT NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS hp_max INTEGER NOT NULL DEFAULT 100,
+      ADD COLUMN IF NOT EXISTS mana_max INTEGER NOT NULL DEFAULT 50,
+      ADD COLUMN IF NOT EXISTS hp INTEGER NOT NULL DEFAULT 100,
+      ADD COLUMN IF NOT EXISTS mana INTEGER NOT NULL DEFAULT 50,
+      ADD COLUMN IF NOT EXISTS class TEXT DEFAULT '',
+      ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now()
+  `);
 
   await run(`
     CREATE INDEX IF NOT EXISTS idx_hero_progress_level
       ON hero_progress (level DESC, updated_at DESC)
   `);
 
-  // posições por mapa (usada em /api/player/pos)
+  // posições por mapa
   await run(`
     CREATE TABLE IF NOT EXISTS player_positions (
       "playerId" TEXT NOT NULL,
-      mapKey   TEXT NOT NULL,
+      "mapKey"   TEXT NOT NULL,
       x INTEGER NOT NULL,
       y INTEGER NOT NULL,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      PRIMARY KEY ("playerId", mapKey),
+      updated_at TIMESTAMPTZ DEFAULT now(),
+      PRIMARY KEY ("playerId", "mapKey"),
       FOREIGN KEY ("playerId") REFERENCES players(id)
     )
   `);
@@ -308,15 +316,15 @@ async function migrate() {
     CREATE TABLE IF NOT EXISTS hero_training (
       hero_id TEXT PRIMARY KEY,
       skill_type TEXT,
-      status TEXT, -- 'RUNNING' | 'STOPPED'
-      started_at   TIMESTAMP WITH TIME ZONE,
-      last_tick_at TIMESTAMP WITH TIME ZONE,
+      status TEXT,
+      started_at   TIMESTAMPTZ,
+      last_tick_at TIMESTAMPTZ,
       energy_current REAL,
       energy_max REAL,
       energy_spent REAL,
       session_seconds INTEGER,
       daily_seconds INTEGER,
-      daily_reset_at TIMESTAMP WITH TIME ZONE,
+      daily_reset_at TIMESTAMPTZ,
       notes TEXT
     )
   `);
@@ -333,15 +341,18 @@ async function migrate() {
     )
   `);
 
-  await run(`ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now()`);
-  await run(`ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'open'`);
+  await run(`
+    ALTER TABLE support_tickets
+      ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'open'
+  `);
 
   await run(`
     CREATE INDEX IF NOT EXISTS idx_support_tickets_status
       ON support_tickets (status, created_at DESC)
   `);
 
-  // ---------- Social (amizades e DMs) ----------
+  // ---------- Social ----------
   await ensureSocialSchema();
 
   // ---------- Conteúdo (pipeline) ----------
@@ -349,7 +360,7 @@ async function migrate() {
     CREATE TABLE IF NOT EXISTS content_files (
       path TEXT PRIMARY KEY,
       checksum TEXT NOT NULL,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      updated_at TIMESTAMPTZ DEFAULT now()
     )
   `);
 
@@ -359,18 +370,18 @@ async function migrate() {
       key TEXT UNIQUE,
       name TEXT,
       xp INTEGER,
-      healthMax INTEGER,
+      "healthMax" INTEGER,
       speed INTEGER,
       attack_range INTEGER,
       aggro_range INTEGER,
       attack_ms INTEGER,
-      flagsJSON   TEXT,
-      elementsJSON TEXT,
-      attacksJSON  TEXT,
-      defensesJSON TEXT,
-      lootJSON     TEXT,
-      lookJSON     TEXT,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      "flagsJSON"   TEXT,
+      "elementsJSON" TEXT,
+      "attacksJSON"  TEXT,
+      "defensesJSON" TEXT,
+      "lootJSON"     TEXT,
+      "lookJSON"     TEXT,
+      updated_at TIMESTAMPTZ DEFAULT now()
     )
   `);
 
@@ -386,9 +397,7 @@ async function migrate() {
     CREATE TABLE IF NOT EXISTS items_master (
       id SERIAL PRIMARY KEY,
       key TEXT UNIQUE,
-      -- jsonb para metadados (ex.: { icon, slots, stackable, ... })
       "dataJSON" JSONB DEFAULT '{}'::jsonb,
-      -- colunas planas úteis para consultas/UI
       name TEXT,
       kind TEXT,
       slot TEXT,
@@ -398,11 +407,10 @@ async function migrate() {
       def INTEGER,
       slots INTEGER,
       stackable BOOLEAN,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      updated_at TIMESTAMPTZ DEFAULT now()
     )
   `);
 
-  // Caso exista como TEXT em algum ambiente, converte pra JSONB
   await run(`
     DO $$
     BEGIN
@@ -414,12 +422,11 @@ async function migrate() {
            AND data_type <> 'jsonb'
       ) THEN
         ALTER TABLE items_master
-        ALTER COLUMN "dataJSON" TYPE jsonb USING "dataJSON"::jsonb;
+          ALTER COLUMN "dataJSON" TYPE jsonb USING "dataJSON"::jsonb;
       END IF;
     END$$;
   `);
 
-  // Trigger: sempre que dataJSON tiver "icon", espelha em sprite (ajuda a UI)
   await run(`
     CREATE OR REPLACE FUNCTION items_master_sync_sprite()
     RETURNS trigger LANGUAGE plpgsql AS $$
@@ -446,59 +453,101 @@ async function migrate() {
       key TEXT UNIQUE,
       kind TEXT,
       dataJSON TEXT,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      updated_at TIMESTAMPTZ DEFAULT now()
     )
   `);
 
+  // ----- MAPAS -----
   await run(`
     CREATE TABLE IF NOT EXISTS maps (
       key TEXT PRIMARY KEY,
       dataJSON TEXT,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      updated_at TIMESTAMPTZ DEFAULT now()
     )
   `);
 
-  // Compat: bancos antigos podem ter criado a coluna como "dataJSON" (case sensitive)
+  // garante que existam SEMPRE as duas variantes: dataJSON e "dataJSON"
   await run(`
-    DO $$
-    BEGIN
-      IF EXISTS (
-        SELECT 1
-          FROM information_schema.columns
-         WHERE table_name = 'maps'
-           AND column_name = 'dataJSON'
-      ) THEN
-        -- renomeia "dataJSON" (case sensitive) -> dataJSON (identificador normal = datajson)
-        ALTER TABLE maps RENAME COLUMN "dataJSON" TO dataJSON;
-      END IF;
-    END$$;
+    ALTER TABLE maps
+      ADD COLUMN IF NOT EXISTS dataJSON TEXT
+  `);
+  await run(`
+    ALTER TABLE maps
+      ADD COLUMN IF NOT EXISTS "dataJSON" TEXT
   `);
 
+  // sincroniza conteúdo entre as duas colunas
+  await run(`
+    UPDATE maps
+       SET dataJSON = COALESCE(dataJSON, "dataJSON"),
+           "dataJSON" = COALESCE("dataJSON", dataJSON)
+  `);
+
+  // ----- OBJETOS DE MAPA -----
   await run(`
     CREATE TABLE IF NOT EXISTS map_objects (
       id SERIAL PRIMARY KEY,
       mapKey TEXT,
       type TEXT,
-      x INTEGER, y INTEGER, w INTEGER, h INTEGER,
+      x INTEGER,
+      y INTEGER,
+      w INTEGER,
+      h INTEGER,
       propsJSON TEXT,
       FOREIGN KEY (mapKey) REFERENCES maps(key)
     )
   `);
 
+  // também cria variantes com aspas
+  await run(`
+    ALTER TABLE map_objects
+      ADD COLUMN IF NOT EXISTS mapKey TEXT
+  `);
+  await run(`
+    ALTER TABLE map_objects
+      ADD COLUMN IF NOT EXISTS "mapKey" TEXT
+  `);
+  await run(`
+    ALTER TABLE map_objects
+      ADD COLUMN IF NOT EXISTS propsJSON TEXT
+  `);
+  await run(`
+    ALTER TABLE map_objects
+      ADD COLUMN IF NOT EXISTS "propsJSON" TEXT
+  `);
+
+  // sincroniza dados entre todas as variantes
+  await run(`
+    UPDATE map_objects
+       SET mapKey   = COALESCE(mapKey, "mapKey"),
+           "mapKey" = COALESCE("mapKey", mapKey),
+           propsJSON   = COALESCE(propsJSON, "propsJSON"),
+           "propsJSON" = COALESCE("propsJSON", propsJSON)
+  `);
+
+  // ----- SPAWNS -----
   await run(`
     CREATE TABLE IF NOT EXISTS spawns (
       id SERIAL PRIMARY KEY,
       mapKey TEXT,
       monsterKey TEXT,
-      x INTEGER, y INTEGER, w INTEGER, h INTEGER,
-      count INTEGER, respawnSec INTEGER,
-      levelMin INTEGER, levelMax INTEGER,
+      x INTEGER,
+      y INTEGER,
+      w INTEGER,
+      h INTEGER,
+      count INTEGER,
+      respawnSec INTEGER,
+      levelMin INTEGER,
+      levelMax INTEGER,
       "leashPx" INTEGER,
       FOREIGN KEY (mapKey) REFERENCES maps(key)
     )
   `);
 
-  await run(`ALTER TABLE spawns ADD COLUMN IF NOT EXISTS "leashPx" INTEGER`);
+  await run(`
+    ALTER TABLE spawns
+      ADD COLUMN IF NOT EXISTS "leashPx" INTEGER
+  `);
 
   await run(`
     CREATE TABLE IF NOT EXISTS hero_last_pos (
@@ -510,7 +559,10 @@ async function migrate() {
     )
   `);
 
-  await run(`CREATE INDEX IF NOT EXISTS idx_hero_last_pos_map ON hero_last_pos(map_key)`);
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_hero_last_pos_map
+      ON hero_last_pos(map_key)
+  `);
 
   // ---------- Loot (map_loot) ----------
   await run(`
@@ -533,7 +585,7 @@ async function migrate() {
       fromId TEXT,
       fromName TEXT,
       text TEXT NOT NULL,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      created_at TIMESTAMPTZ DEFAULT now()
     )
   `);
 
@@ -547,8 +599,8 @@ async function migrate() {
       produce_amount INTEGER NOT NULL DEFAULT 1,
       rate_sec INTEGER NOT NULL DEFAULT 10,
       assigned_box TEXT,
-      last_collected TIMESTAMP WITH TIME ZONE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      last_collected TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT now(),
       FOREIGN KEY (player_id) REFERENCES players(id)
     )
   `);
@@ -560,7 +612,7 @@ async function migrate() {
       kind TEXT NOT NULL,
       level INTEGER NOT NULL DEFAULT 1,
       capacity INTEGER NOT NULL DEFAULT 100,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      created_at TIMESTAMPTZ DEFAULT now(),
       FOREIGN KEY (player_id) REFERENCES players(id)
     )
   `);
@@ -575,13 +627,13 @@ async function migrate() {
     )
   `);
 
-  // ---------- (Opcional) Infra de equipamento/inventário do jogo ----------
+  // ---------- Equip/Inventário ----------
   await run(`
     CREATE TABLE IF NOT EXISTS hero_equipment (
       hero_id TEXT NOT NULL,
       slot TEXT NOT NULL,
       item_key TEXT,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT now(),
       PRIMARY KEY (hero_id, slot)
     )
   `);
@@ -604,13 +656,14 @@ async function migrate() {
       y INTEGER NOT NULL,
       crop_key TEXT,
       stage INTEGER NOT NULL DEFAULT 0,
-      planted_at TIMESTAMP WITH TIME ZONE,
-      next_at    TIMESTAMP WITH TIME ZONE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      planted_at TIMESTAMPTZ,
+      next_at    TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT now(),
       FOREIGN KEY (player_id) REFERENCES players(id)
     )
   `);
 
+  // ---------- CMS ----------
   await run(`
     CREATE TABLE IF NOT EXISTS cms_i18n_overrides (
       id SERIAL PRIMARY KEY,
