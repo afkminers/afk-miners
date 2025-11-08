@@ -1453,13 +1453,27 @@ async function seedAIMobsFromDB(aiMobs) {
             }
 
 
-            // broadcast p/ outros jogadores
-            const out = { type:'pos', id:String(pid), x: nx, y: ny, name: ws._player?.name || '' };
-            wss.clients.forEach(c => {
-              if (c !== ws && c.readyState === WebSocketLib.OPEN) {
-                try { c.send(JSON.stringify(out)); } catch {}
-              }
-            });
+            // broadcast p/ outros jogadores (apenas no mesmo mapa)
+            const out = {
+              type: 'pos',
+              id: String(pid),
+              x: nx,
+              y: ny,
+              mapKey,
+              name: ws._player?.name || '',
+            };
+
+            // se tiver helper global por mapa, usa ele; senão, cai no broadcast antigo
+            if (typeof global._sendToMap === 'function') {
+              try { global._sendToMap(mapKey, out); } catch {}
+            } else {
+              wss.clients.forEach((c) => {
+                if (c !== ws && c.readyState === WebSocketLib.OPEN) {
+                  try { c.send(JSON.stringify(out)); } catch {}
+                }
+              });
+            }
+
             return;
           }
 
