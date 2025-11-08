@@ -1,4 +1,5 @@
 const feedRoot = document.querySelector('[data-news-feed]');
+const PAGE_KEY = 'index';
 const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTHS_PT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
@@ -19,18 +20,26 @@ function formatDate(iso, lang) {
 
 function render(posts, lang) {
   if (!feedRoot) return;
+  feedRoot.dataset.cmsPage = PAGE_KEY;
+  feedRoot.dataset.cmsLocale = lang;
   feedRoot.innerHTML = '';
   if (!posts.length) {
     const empty = document.createElement('div');
     empty.className = 'empty-state';
     empty.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('news.tickerEmpty') : 'No news yet.';
     feedRoot.appendChild(empty);
+    document.dispatchEvent(new CustomEvent('cms-posts-rendered', {
+      detail: { page: PAGE_KEY, locale: lang, posts: [] },
+    }));
     return;
   }
 
   posts.forEach((post) => {
     const article = document.createElement('article');
     article.className = 'home-news-article';
+    article.dataset.cmsPostId = String(post.id);
+    article.dataset.cmsPage = PAGE_KEY;
+    article.dataset.cmsLocale = lang;
 
     const meta = document.createElement('div');
     meta.className = 'home-news-meta';
@@ -89,6 +98,10 @@ function render(posts, lang) {
     article.appendChild(content);
     feedRoot.appendChild(article);
   });
+
+  document.dispatchEvent(new CustomEvent('cms-posts-rendered', {
+    detail: { page: PAGE_KEY, locale: lang, posts },
+  }));
 }
 
 async function load(lang) {

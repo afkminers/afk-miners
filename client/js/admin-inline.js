@@ -30,9 +30,20 @@ const uiText = {
     postIsPublished: 'Visible on website',
     postSortIndex: 'Sort index',
     postSubmit: 'Publish post',
+    postUpdate: 'Update post',
+    postNew: 'New post',
+    postCancelEdit: 'Cancel edit',
     postSaved: 'Post saved! It will appear on the page shortly.',
     postError: 'Could not save the post. Check the fields and try again.',
     postRequired: 'Fill the required fields before saving.',
+    postListTitle: 'Existing posts',
+    postListEmpty: 'No posts published yet.',
+    postEdit: 'Edit',
+    postEditOnPage: 'Edit',
+    postDelete: 'Delete',
+    postDeleteConfirm: 'Delete this post? This action cannot be undone.',
+    postDeleted: 'Post removed.',
+    postDraft: 'Draft',
     adminOnly: 'Only visible to administrators.',
   },
   'pt-BR': {
@@ -62,9 +73,20 @@ const uiText = {
     postIsPublished: 'Visível no site',
     postSortIndex: 'Índice de ordenação',
     postSubmit: 'Publicar notícia',
+    postUpdate: 'Atualizar notícia',
+    postNew: 'Nova notícia',
+    postCancelEdit: 'Cancelar edição',
     postSaved: 'Post salvo! Ele aparecerá na página em instantes.',
     postError: 'Não foi possível salvar o post. Verifique os campos e tente novamente.',
     postRequired: 'Preencha os campos obrigatórios antes de salvar.',
+    postListTitle: 'Postagens existentes',
+    postListEmpty: 'Nenhuma postagem publicada ainda.',
+    postEdit: 'Editar',
+    postEditOnPage: 'Editar',
+    postDelete: 'Excluir',
+    postDeleteConfirm: 'Excluir esta postagem? Essa ação não pode ser desfeita.',
+    postDeleted: 'Post removido.',
+    postDraft: 'Rascunho',
     adminOnly: 'Visível apenas para administradores.',
   },
 };
@@ -82,6 +104,7 @@ const bundleCache = new Map();
 const overridesCache = new Map(); // locale => Map(key, override)
 const baseValuesCache = new Map(); // locale => Map(key, baseValue)
 const effectiveValuesCache = new Map(); // locale => Map(key, effective)
+const adminPostsCache = new Map(); // locale => array of posts
 
 const panelState = {
   config: null,
@@ -339,10 +362,118 @@ function ensureStyles() {
       font-size: 12px;
       cursor: pointer;
     }
+    .inline-posts-form .inline-posts-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .inline-posts-form button[data-post-cancel] {
+      background: transparent;
+      border: 2px solid #6c3843;
+      color: #fbe7d3;
+    }
     .inline-admin-note {
       font-size: 10px;
       color: rgba(255,255,255,0.55);
       margin-bottom: 8px;
+    }
+    .inline-posts-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .inline-posts-header h4 {
+      margin: 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .inline-posts-header button {
+      background: #44222b;
+      color: #fbe7d3;
+      border: 3px solid #2b1512;
+      border-radius: 9px;
+      padding: 6px 12px;
+      font-family: 'Press Start 2P', 'Pixelify Sans', monospace;
+      font-size: 10px;
+      cursor: pointer;
+    }
+    .inline-posts-header button:hover {
+      filter: brightness(1.1);
+    }
+    .inline-posts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .inline-posts-item {
+      position: relative;
+      padding: 10px 12px;
+      border: 2px solid #43252e;
+      border-radius: 12px;
+      background: rgba(26, 14, 18, 0.92);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .inline-posts-item strong {
+      font-size: 12px;
+      font-family: 'Pixelify Sans', 'Press Start 2P', monospace;
+    }
+    .inline-posts-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 10px;
+      opacity: 0.75;
+    }
+    .inline-posts-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .inline-posts-actions button {
+      background: #5b2f35;
+      color: #fbe7d3;
+      border: 2px solid #2b1512;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .inline-posts-actions button[data-variant="danger"] {
+      background: #5f1d1d;
+      border-color: #2b0d12;
+    }
+    .inline-posts-empty {
+      font-size: 11px;
+      opacity: 0.7;
+      padding: 6px 0;
+    }
+    .inline-admin-has-button {
+      position: relative;
+    }
+    .inline-post-live-edit {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(37, 21, 26, 0.92);
+      color: #fbe7d3;
+      border: 2px solid #f7c96c;
+      border-radius: 9px;
+      padding: 4px 10px;
+      font-family: 'Press Start 2P', 'Pixelify Sans', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      z-index: 5;
+    }
+    .inline-post-live-edit:hover {
+      filter: brightness(1.1);
     }
   `;
   document.head.appendChild(style);
@@ -462,7 +593,7 @@ async function ensureCsrf(force = false) {
 async function csrfFetch(url, options) {
   const { method = 'POST', body } = options || {};
   let token = await ensureCsrf(false);
-  if (!token) {
+  if (!token || !String(token).trim()) {
     token = await ensureCsrf(true);
   }
   const doRequest = async (tok) => fetch(url, {
@@ -470,6 +601,7 @@ async function csrfFetch(url, options) {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      'X-Requested-With': 'fetch',
       'X-CSRF-Token': tok || '',
       'x-csrf-token': tok || '',
       'csrf-token': tok || '',
@@ -480,6 +612,9 @@ async function csrfFetch(url, options) {
   let response = await doRequest(token);
   if (response.status === 403) {
     token = await ensureCsrf(true);
+    if (!token || !String(token).trim()) {
+      token = await ensureCsrf(true);
+    }
     response = await doRequest(token);
   }
   return response;
@@ -579,7 +714,13 @@ async function refreshLocale(locale) {
   panelState.controls.forEach((_, key) => {
     updateFieldUI(locale, key);
   });
-  setStatus(tUI('adminOnly'), 'info');
+  let postsOk = true;
+  if (panelState.config?.posts?.enabled) {
+    postsOk = await refreshPostsList(locale);
+  }
+  if (postsOk) {
+    setStatus(tUI('adminOnly'), 'info');
+  }
 }
 
 async function saveField(locale, field, control) {
@@ -661,6 +802,8 @@ function toLocalInputValue(iso) {
 }
 
 function collectPostPayload(form, page) {
+  const idRaw = form.querySelector('[data-post-id]')?.value || '';
+  const id = Number(idRaw);
   const locale = form.querySelector('[data-post-locale]')?.value || 'en';
   const title = form.querySelector('[data-post-title]')?.value.trim() || '';
   const summary = form.querySelector('[data-post-summary]')?.value.trim() || '';
@@ -680,6 +823,7 @@ function collectPostPayload(form, page) {
   }
 
   return {
+    id: Number.isFinite(id) && id > 0 ? id : null,
     page,
     locale,
     title,
@@ -694,31 +838,297 @@ function collectPostPayload(form, page) {
   };
 }
 
+function setPostFormMode(mode) {
+  const form = panelState.elements?.postForm;
+  if (!form) return;
+  const normalized = mode === 'edit' ? 'edit' : 'create';
+  form.dataset.mode = normalized;
+  const submit = panelState.elements?.postSubmit;
+  if (submit) {
+    submit.textContent = normalized === 'edit' ? tUI('postUpdate') : tUI('postSubmit');
+  }
+  const cancel = panelState.elements?.postCancel;
+  if (cancel) {
+    cancel.hidden = normalized !== 'edit';
+    cancel.textContent = tUI('postCancelEdit');
+  }
+}
+
+function resetPostForm(locale) {
+  const form = panelState.elements?.postForm;
+  if (!form) return;
+  const targetLocale = locale || panelState.currentLocale || getActiveLang();
+  const localeSelect = form.querySelector('[data-post-locale]');
+  if (localeSelect) {
+    localeSelect.value = targetLocale;
+  }
+  const idInput = form.querySelector('[data-post-id]');
+  if (idInput) {
+    idInput.value = '';
+  }
+  const setValue = (selector, value = '') => {
+    const field = form.querySelector(selector);
+    if (field) field.value = value;
+  };
+  setValue('[data-post-title]', '');
+  setValue('[data-post-summary]', '');
+  setValue('[data-post-body]', '');
+  setValue('[data-post-tag]', '');
+  setValue('[data-post-link-label]', '');
+  setValue('[data-post-link-href]', '');
+  const publishedInput = form.querySelector('[data-post-published]');
+  if (publishedInput) {
+    publishedInput.value = toLocalInputValue(new Date().toISOString());
+  }
+  const visibleInput = form.querySelector('[data-post-visible]');
+  if (visibleInput) {
+    visibleInput.checked = true;
+  }
+  const sortInput = form.querySelector('[data-post-sort]');
+  if (sortInput) {
+    const defaultSort = panelState.config?.posts?.defaultSort ?? 0;
+    sortInput.value = String(defaultSort);
+  }
+  setPostFormMode('create');
+}
+
+function populatePostForm(post) {
+  if (!post) return;
+  const form = panelState.elements?.postForm;
+  if (!form) return;
+  const idInput = form.querySelector('[data-post-id]');
+  if (idInput) {
+    idInput.value = post.id != null ? String(post.id) : '';
+  }
+  const localeSelect = form.querySelector('[data-post-locale]');
+  if (localeSelect) {
+    localeSelect.value = post.locale || panelState.currentLocale || getActiveLang();
+  }
+  const setValue = (selector, value = '') => {
+    const field = form.querySelector(selector);
+    if (field) field.value = value || '';
+  };
+  setValue('[data-post-title]', post.title || '');
+  setValue('[data-post-summary]', post.summary || '');
+  setValue('[data-post-body]', post.body_html || '');
+  setValue('[data-post-tag]', post.tag || '');
+  setValue('[data-post-link-label]', post.link_label || '');
+  setValue('[data-post-link-href]', post.link_href || '');
+  const publishedInput = form.querySelector('[data-post-published]');
+  if (publishedInput) {
+    const iso = post.published_at || new Date().toISOString();
+    publishedInput.value = toLocalInputValue(iso);
+  }
+  const visibleInput = form.querySelector('[data-post-visible]');
+  if (visibleInput) {
+    visibleInput.checked = post.is_published !== false;
+  }
+  const sortInput = form.querySelector('[data-post-sort]');
+  if (sortInput) {
+    const sortValue = Number.isFinite(post.sort_index) ? post.sort_index : panelState.config?.posts?.defaultSort ?? 0;
+    sortInput.value = String(sortValue);
+  }
+  setPostFormMode('edit');
+}
+
+async function deletePost(postId, locale) {
+  if (!Number.isFinite(Number(postId))) return;
+  if (!window.confirm(tUI('postDeleteConfirm'))) return;
+  const targetLocale = locale || panelState.currentLocale || getActiveLang();
+  try {
+    setStatus(tUI('loading'), 'info');
+    const res = await csrfFetch(`/api/admin/posts/${postId}`, { method: 'DELETE' });
+    const data = await res.json().catch(() => ({ ok: false }));
+    if (!res.ok || data?.error) {
+      throw new Error(data?.error || 'delete_failed');
+    }
+    await refreshPostsList(targetLocale);
+    setStatus(tUI('postDeleted'), 'success');
+    document.dispatchEvent(new CustomEvent('cms-posts-changed', {
+      detail: { page: panelState.config?.posts?.page, locale: targetLocale },
+    }));
+    resetPostForm(targetLocale);
+  } catch (err) {
+    console.error('[inline-admin] post delete failed', err);
+    setStatus(tUI('postError'), 'error');
+  }
+}
+
 async function submitPost(form, config) {
-  const payload = collectPostPayload(form, config.page);
+  const collected = collectPostPayload(form, config.page);
+  const { id, ...payload } = collected;
   if (!payload.title || !payload.summary) {
     setStatus(tUI('postRequired'), 'error');
     return;
   }
   try {
     setStatus(tUI('loading'), 'info');
-    const res = await csrfFetch('/api/admin/posts', { method: 'POST', body: payload });
+    const isUpdate = Number.isFinite(id);
+    const endpoint = isUpdate ? `/api/admin/posts/${id}` : '/api/admin/posts';
+    const method = isUpdate ? 'PUT' : 'POST';
+    const res = await csrfFetch(endpoint, { method, body: payload });
     const data = await res.json().catch(() => null);
     if (!res.ok || !data) {
       throw new Error(data?.error || 'post_failed');
     }
-    form.reset();
-    if (config.defaultSort != null) {
-      form.querySelector('[data-post-sort]').value = String(config.defaultSort);
+    if (isUpdate) {
+      populatePostForm(data);
+    } else {
+      resetPostForm(payload.locale);
     }
+    await refreshPostsList(payload.locale);
     setStatus(tUI('postSaved'), 'success');
     document.dispatchEvent(new CustomEvent('cms-posts-changed', {
       detail: { page: config.page, locale: payload.locale },
     }));
   } catch (err) {
-    console.error('[inline-admin] post create failed', err);
+    console.error('[inline-admin] post save failed', err);
     setStatus(tUI('postError'), 'error');
   }
+}
+
+async function fetchAdminPosts(locale) {
+  if (!panelState.config?.posts?.enabled) return [];
+  const page = panelState.config.posts.page;
+  const url = `/api/admin/posts?page=${encodeURIComponent(page)}&lang=${encodeURIComponent(locale)}`;
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || 'failed_to_load_posts');
+  }
+  const data = await res.json().catch(() => []);
+  const posts = Array.isArray(data) ? data : [];
+  adminPostsCache.set(locale, posts);
+  return posts;
+}
+
+function renderPostsList(locale) {
+  const list = panelState.elements?.postsList;
+  if (!list) return;
+  const posts = adminPostsCache.get(locale) || [];
+  list.innerHTML = '';
+  if (!posts.length) {
+    const empty = document.createElement('p');
+    empty.className = 'inline-posts-empty';
+    empty.textContent = tUI('postListEmpty');
+    list.appendChild(empty);
+    return;
+  }
+
+  posts.forEach((post) => {
+    const item = document.createElement('article');
+    item.className = 'inline-posts-item';
+    item.dataset.postId = String(post.id);
+
+    const title = document.createElement('strong');
+    title.textContent = post.title || `#${post.id}`;
+    item.appendChild(title);
+
+    const meta = document.createElement('div');
+    meta.className = 'inline-posts-meta';
+    const date = document.createElement('span');
+    date.textContent = formatDate(post.published_at, locale) || '—';
+    meta.appendChild(date);
+    const sort = document.createElement('span');
+    sort.textContent = `sort=${Number.isFinite(post.sort_index) ? post.sort_index : 0}`;
+    meta.appendChild(sort);
+    if (post.is_published === false) {
+      const draft = document.createElement('span');
+      draft.textContent = tUI('postDraft');
+      meta.appendChild(draft);
+    }
+    item.appendChild(meta);
+
+    const actions = document.createElement('div');
+    actions.className = 'inline-posts-actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.textContent = tUI('postEdit');
+    editBtn.addEventListener('click', () => {
+      populatePostForm(post);
+      togglePanel(true);
+    });
+    actions.appendChild(editBtn);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.dataset.variant = 'danger';
+    deleteBtn.textContent = tUI('postDelete');
+    deleteBtn.addEventListener('click', () => deletePost(post.id, post.locale));
+    actions.appendChild(deleteBtn);
+
+    item.appendChild(actions);
+    list.appendChild(item);
+  });
+}
+
+async function refreshPostsList(locale) {
+  if (!panelState.config?.posts?.enabled) return true;
+  const targetLocale = locale || panelState.currentLocale || getActiveLang();
+  try {
+    await fetchAdminPosts(targetLocale);
+    renderPostsList(targetLocale);
+    decorateLivePosts(targetLocale);
+    return true;
+  } catch (err) {
+    console.error('[inline-admin] posts fetch failed', err);
+    setStatus(tUI('postError'), 'error');
+    return false;
+  }
+}
+
+function decorateLivePosts(locale) {
+  if (!adminState.isAdmin) return;
+  const config = panelState.config;
+  if (!config?.posts?.enabled) return;
+  const pageKey = config.posts.page;
+  if (!pageKey) return;
+  const targetLocale = locale || getActiveLang();
+  const selector = `[data-cms-page="${pageKey}"][data-cms-post-id]`;
+  const nodes = document.querySelectorAll(selector);
+  nodes.forEach((node) => {
+    if (!(node instanceof HTMLElement)) return;
+    node.classList.add('inline-admin-has-button');
+    let button = node.querySelector('.inline-post-live-edit');
+    if (!button) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'inline-post-live-edit';
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const postId = Number(node.dataset.cmsPostId);
+        const postLocale = node.dataset.cmsLocale || targetLocale;
+        openPostEditor(postId, postLocale);
+      });
+      node.appendChild(button);
+    }
+    button.textContent = tUI('postEditOnPage');
+  });
+}
+
+async function openPostEditor(postId, locale) {
+  if (!Number.isFinite(Number(postId))) return;
+  const isAdmin = await ensureAdminSession();
+  if (!isAdmin) return;
+  if (!panelState.built) {
+    buildPanel(panelState.config);
+  }
+  const desiredLocale = locale || panelState.currentLocale || getActiveLang();
+  if (panelState.elements?.localeSelect && panelState.currentLocale !== desiredLocale) {
+    panelState.elements.localeSelect.value = desiredLocale;
+    panelState.currentLocale = desiredLocale;
+    await refreshLocale(desiredLocale);
+  } else {
+    await refreshPostsList(desiredLocale);
+  }
+  const posts = adminPostsCache.get(desiredLocale) || [];
+  const found = posts.find((post) => Number(post.id) === Number(postId));
+  if (found) {
+    populatePostForm(found);
+  }
+  togglePanel(true);
 }
 
 function buildFields(config) {
@@ -821,9 +1231,30 @@ function buildPostsForm(config) {
   note.textContent = tUI('adminOnly');
   section.appendChild(note);
 
+  const header = document.createElement('div');
+  header.className = 'inline-posts-header';
+  const listTitle = document.createElement('h4');
+  listTitle.textContent = tUI('postListTitle');
+  header.appendChild(listTitle);
+  const newBtn = document.createElement('button');
+  newBtn.type = 'button';
+  newBtn.textContent = tUI('postNew');
+  newBtn.addEventListener('click', () => resetPostForm(panelState.currentLocale || getActiveLang()));
+  header.appendChild(newBtn);
+  section.appendChild(header);
+
+  const list = document.createElement('div');
+  list.className = 'inline-posts-list';
+  section.appendChild(list);
+
   const form = document.createElement('form');
   form.className = 'inline-posts-form';
   form.noValidate = true;
+
+  const idInput = document.createElement('input');
+  idInput.type = 'hidden';
+  idInput.dataset.postId = '';
+  form.appendChild(idInput);
 
   const localeLabel = document.createElement('label');
   localeLabel.textContent = tUI('postLocale');
@@ -916,10 +1347,23 @@ function buildPostsForm(config) {
   sortField.appendChild(sortInput);
   form.appendChild(sortField);
 
+  const actions = document.createElement('div');
+  actions.className = 'inline-posts-actions';
+
   const submit = document.createElement('button');
   submit.type = 'submit';
   submit.textContent = tUI('postSubmit');
-  form.appendChild(submit);
+  actions.appendChild(submit);
+
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.dataset.postCancel = '';
+  cancel.textContent = tUI('postCancelEdit');
+  cancel.hidden = true;
+  cancel.addEventListener('click', () => resetPostForm(panelState.currentLocale || getActiveLang()));
+  actions.appendChild(cancel);
+
+  form.appendChild(actions);
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -927,6 +1371,18 @@ function buildPostsForm(config) {
   });
 
   section.appendChild(form);
+
+  panelState.elements.postsSectionTitle = title;
+  panelState.elements.postsNote = note;
+  panelState.elements.postsList = list;
+  panelState.elements.postListTitle = listTitle;
+  panelState.elements.postNewBtn = newBtn;
+  panelState.elements.postForm = form;
+  panelState.elements.postSubmit = submit;
+  panelState.elements.postCancel = cancel;
+
+  resetPostForm(panelState.currentLocale || getActiveLang());
+  renderPostsList(panelState.currentLocale || getActiveLang());
 }
 
 function buildPanel(config) {
@@ -1009,6 +1465,14 @@ function buildPanel(config) {
     status,
     headerTitle: title,
     closeBtn: close,
+    postsSectionTitle: null,
+    postsNote: null,
+    postsList: null,
+    postListTitle: null,
+    postForm: null,
+    postSubmit: null,
+    postCancel: null,
+    postNewBtn: null,
   };
 
   buildFields(config);
@@ -1103,8 +1567,23 @@ function updateUiTexts() {
     if (buttons?.[1]) buttons[1].textContent = tUI('reset');
   });
   if (panelState.config?.posts?.enabled) {
-    buildPostsForm(panelState.config);
+    if (panelState.elements.postsSectionTitle) {
+      panelState.elements.postsSectionTitle.textContent = tUI('postsTitle');
+    }
+    if (panelState.elements.postsNote) {
+      panelState.elements.postsNote.textContent = tUI('adminOnly');
+    }
+    if (panelState.elements.postListTitle) {
+      panelState.elements.postListTitle.textContent = tUI('postListTitle');
+    }
+    if (panelState.elements.postNewBtn) {
+      panelState.elements.postNewBtn.textContent = tUI('postNew');
+    }
+    const mode = panelState.elements.postForm?.dataset?.mode === 'edit' ? 'edit' : 'create';
+    setPostFormMode(mode);
+    renderPostsList(panelState.currentLocale || getActiveLang());
   }
+  decorateLivePosts(panelState.currentLocale || getActiveLang());
 }
 
 i18n.onChange(() => {
@@ -1130,10 +1609,12 @@ function createFloatingButton(config) {
 
 export async function initInlineAdmin(config) {
   if (!config) return;
+  panelState.config = config;
   const ready = async () => {
     const isAdmin = await ensureAdminSession();
     if (!isAdmin) return;
     createFloatingButton(config);
+    decorateLivePosts(getActiveLang());
   };
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', ready, { once: true });
@@ -1141,3 +1622,27 @@ export async function initInlineAdmin(config) {
     ready();
   }
 }
+
+document.addEventListener('cms-posts-rendered', (event) => {
+  if (!adminState.isAdmin) return;
+  const detail = event?.detail || {};
+  if (!panelState.config?.posts?.enabled) return;
+  if (detail.page !== panelState.config.posts.page) return;
+  decorateLivePosts(detail.locale || panelState.currentLocale || getActiveLang());
+});
+
+window.inlineAdmin = window.inlineAdmin || {};
+window.inlineAdmin.openPanel = async function openPanelInline() {
+  const isAdmin = await ensureAdminSession();
+  if (!isAdmin) return;
+  if (!panelState.built) {
+    buildPanel(panelState.config);
+  }
+  togglePanel(true);
+};
+window.inlineAdmin.editPost = async function editPostInline(postId, locale) {
+  await openPostEditor(postId, locale);
+};
+window.inlineAdmin.refreshPosts = async function refreshPostsInline(locale) {
+  await refreshPostsList(locale);
+};

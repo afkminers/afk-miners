@@ -152,9 +152,28 @@ function requireCsrf(req, res, next) {
   }
 
   // 2) valida token double-submit
-  const hdr = req.get('x-csrf-token') || req.get('X-CSRF-Token') || '';
-  const ck  = req.cookies[CSRF_COOKIE] || '';
-  if (!hdr || !ck || hdr !== ck) {
+  const headerToken = (req.get('x-csrf-token') || req.get('X-CSRF-Token') || req.get('csrf-token') || '').trim();
+  const queryToken = (() => {
+    const value = req.query?.csrf || req.query?._csrf || req.query?.csrfToken || req.query?.token;
+    return typeof value === 'string' ? value.trim() : '';
+  })();
+  const bodyToken = (() => {
+    if (!req.body || typeof req.body !== 'object') return '';
+    const value =
+      req.body.csrf ||
+      req.body._csrf ||
+      req.body.csrfToken ||
+      req.body.csrf_token ||
+      req.body.token ||
+      '';
+    return typeof value === 'string' ? value.trim() : '';
+  })();
+
+  const ck = (req.cookies[CSRF_COOKIE] || '').trim();
+  const candidates = [headerToken, bodyToken, queryToken].filter(Boolean);
+  const valid = ck && candidates.some((value) => value === ck);
+
+  if (!valid) {
     logLeaderboardBlock(req, 'csrf-token-mismatch');
     return res.status(403).json({ error: 'CSRF inválido' });
   }

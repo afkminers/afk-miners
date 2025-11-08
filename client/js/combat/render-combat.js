@@ -286,7 +286,25 @@ function updateAndDrawFloaters(ctx, dtMs) {
     const f = list[i];
     f.ttl -= dtMs;
     if (f.ttl <= 0) { list.splice(i, 1); continue; }
-    f.y += f.vy * dtMs;
+    const vy = Number.isFinite(f.vy) ? f.vy : 0;
+    if (vy !== 0) f.y += vy * dtMs;
+    if (f.kind === 'miss-cloud') {
+      const initial = f.initialTtl || (f.initialTtl = f.ttl);
+      const progress = initial > 0 ? Math.max(0, Math.min(1, 1 - (f.ttl / initial))) : 0;
+      const baseRadius = f.radius || 14;
+      const radius = baseRadius * (0.65 + progress * 0.6);
+      const alpha = Math.max(0, 0.6 - progress * 0.6);
+      ctx.save();
+      const gradient = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, radius);
+      gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(Math.round(f.x), Math.round(f.y), radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      continue;
+    }
     ctx.save();
     ctx.font = 'bold 12px "Trebuchet MS", Arial, sans-serif';
     ctx.textAlign = 'center';
