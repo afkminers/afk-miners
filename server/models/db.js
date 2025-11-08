@@ -23,6 +23,13 @@ function envBool(keys, def) {
   return def;
 }
 
+/**
+ * Schema lógico do projeto.
+ * Se DB_SCHEMA não estiver definido, cai em "public" para não explodir em produção.
+ */
+const RAW_SCHEMA = process.env.DB_SCHEMA && process.env.DB_SCHEMA.trim();
+const DB_SCHEMA = RAW_SCHEMA || 'public';
+
 let pool = null;
 
 function buildPool() {
@@ -54,13 +61,15 @@ function buildPool() {
   const p = new Pool(cfg);
 
   p.on('connect', (client) => {
+    const initSql = `
+      SET statement_timeout = '15s';
+      SET idle_in_transaction_session_timeout = '10s';
+      SET search_path TO "${DB_SCHEMA}";
+    `;
     client
-      .query(`
-        SET statement_timeout = '15s';
-        SET idle_in_transaction_session_timeout = '10s';
-      `)
+      .query(initSql)
       .catch((e) => {
-        console.warn('[DB] failed to set session timeouts:', e.message);
+        console.warn('[DB] failed to set session timeouts/search_path:', e.message);
       });
   });
 
@@ -71,10 +80,13 @@ function buildPool() {
   try {
     const u = new URL(process.env.DATABASE_URL);
     console.log(
-      `[DB] pool ready -> host=${u.hostname} db=${(u.pathname || '').replace('/', '')} max=${cfg.max}`
+      `[DB] pool ready -> host=${u.hostname} db=${(u.pathname || '').replace(
+        '/',
+        ''
+      )} schema=${DB_SCHEMA} max=${cfg.max}`
     );
   } catch {
-    console.log('[DB] pool ready.');
+    console.log(`[DB] pool ready (schema=${DB_SCHEMA}).`);
   }
 
   return p;
@@ -166,4 +178,4 @@ process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
 // Keep backward compatibility
-module.exports = { pool: getPool, getPool, all, get, run, closePool };
+module.exports = { pool: getPool, getPool, all, get, run, closePool, DB_SCHEMA };
