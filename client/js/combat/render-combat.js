@@ -16,6 +16,8 @@ const state = {
   selectedTargetId: null,
 };
 
+const missEffects = [];
+
 const lastHeroFloaterAt = new Map(); // heroId -> ts
 
 const unbound = new Set(); // ids sem sprite vinculada
@@ -183,15 +185,13 @@ function pushMissEffectAtSprite(sprite) {
   const ay = meta.anchor?.y ?? 0.9;
   const cx = Math.round(sprite.x - frameW * ax + frameW * 0.5);
   const cy = Math.round(sprite.y - frameH * ay + frameH * 0.25);
-  const radius = Math.max(10, Math.min(18, Math.round(frameW * 0.45)));
-  state.floaters.push({
-    kind: 'miss-cloud',
+  const baseRadius = Math.max(10, Math.min(18, Math.round(frameW * 0.45)));
+  missEffects.push({
     x: cx,
     y: cy,
     ttl: 420,
     initialTtl: 420,
-    radius,
-    vy: 0,
+    radius: baseRadius,
   });
 }
 
@@ -317,6 +317,27 @@ function updateAndDrawFloaters(ctx, dtMs) {
   }
 }
 
+function updateAndDrawMissEffects(ctx, dtMs) {
+  for (let i = missEffects.length - 1; i >= 0; i--) {
+    const eff = missEffects[i];
+    eff.ttl -= dtMs;
+    if (eff.ttl <= 0) { missEffects.splice(i, 1); continue; }
+    const initial = eff.initialTtl || 1;
+    const progress = Math.max(0, Math.min(1, 1 - (eff.ttl / initial)));
+    const radius = (eff.radius || 14) * (0.65 + progress * 0.6);
+    const alpha = Math.max(0, 0.6 - progress * 0.6);
+    ctx.save();
+    const gradient = ctx.createRadialGradient(eff.x, eff.y, 0, eff.x, eff.y, radius);
+    gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(Math.round(eff.x), Math.round(eff.y), radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
 /* --------------- Instala handlers de WS (singleton) --------------- */
 function installWsHandlers() {
   getSocket(); // garante conexão
@@ -365,12 +386,12 @@ function installWsHandlers() {
     const isMyHeroHit = heroHitId && activeHeroId && heroHitId === activeHeroId;
     const hasExplicitDamage = typeof msg.dmg === 'number';
     const didDamage = Number.isFinite(dmg) && dmg > 0;
-    if (isMyHeroHit) {
+    if (isMyHeroHit && hasExplicitDamage) {
       if (didDamage) {
         playHeroAttackSfx({ heroId: heroHitId, payload: msg });
-      } else if ((hasExplicitDamage && dmg <= 0) || (prevHp != null && prevHp <= m.hp)) {
+      } else if (s) {
         playHeroMissSfx();
-        if (s) pushMissEffectAtSprite(s);
+        pushMissEffectAtSprite(s);
       }
     }
     if (dmg > 0 && s) {
@@ -901,12 +922,13 @@ export default function installCombatOverlay() {
           const s = ensureSpriteBind(m.id, m.key, m.spawnId);
           if (!s) { needRebind.add(m.id); continue; }
           drawHpBarAtSprite(ctx, s, m.hp, m.maxHp);
-          drawMonsterNameAtSprite(ctx, s, m.key, m.hp, m.maxHp); // Nome acompanha cor da barra
-        }
-        drawHeroOverlayBars(ctx, now);
-        drawTargetBox(ctx);
-        updateAndDrawFloaters(ctx, dt * 1000);
-      };
+        drawMonsterNameAtSprite(ctx, s, m.key, m.hp, m.maxHp); // Nome acompanha cor da barra
+      }
+      drawHeroOverlayBars(ctx, now);
+      drawTargetBox(ctx);
+      updateAndDrawFloaters(ctx, dt * 1000);
+      updateAndDrawMissEffects(ctx, dt * 1000);
+    };
 
       if (camera?.apply) camera.apply(ctx, drawAll);
       else drawAll();
