@@ -1,3 +1,4 @@
+//client/js/admin.js
 const state = {
   user: null,
   posts: [],
@@ -334,6 +335,7 @@ function startEditPost(post) {
 async function submitPostForm(event) {
   event.preventDefault();
   const id = dom.posts.hiddenId.value;
+
   const payload = {
     page: dom.posts.page.value,
     locale: dom.posts.locale.value,
@@ -346,6 +348,8 @@ async function submitPostForm(event) {
     sort_index: Number(dom.posts.sort.value) || 0,
     is_published: dom.posts.published.value === 'true',
   };
+
+  const originalLocale = payload.locale; // <- guarda o idioma que o user escolheu
 
   const publishedValue = dom.posts.publishedAt.value;
   if (publishedValue) {
@@ -361,6 +365,7 @@ async function submitPostForm(event) {
   const url = id ? `/api/admin/posts/${id}` : '/api/admin/posts';
 
   try {
+    // 1) Salva o post "normal" (pt-BR ou en)
     const res = await apiFetch(url, { method, body: payload, csrf: true });
     if (!res.ok) {
       if (await handleAuthError(res)) return;
@@ -368,10 +373,48 @@ async function submitPostForm(event) {
       showToast(data?.error || 'Falha ao salvar post', 'error');
       return;
     }
-    await res.json();
+
+    const saved = await res.json().catch(() => null);
+    if (!saved) {
+      showToast('Resposta inválida do servidor ao salvar post', 'error');
+      return;
+    }
+
     showToast('Post salvo com sucesso!', 'success');
     resetPostForm();
     await loadPosts();
+
+    // 2) Se for um NOVO post em pt-BR, cria automaticamente um rascunho em EN
+    if (!id && originalLocale === 'pt-BR') {
+      try {
+        const enPayload = {
+          ...payload,
+          locale: 'en',          // muda o idioma
+          is_published: false,   // deixa como rascunho pra você revisar depois
+        };
+
+        const resEn = await apiFetch('/api/admin/posts', {
+          method: 'POST',
+          body: enPayload,
+          csrf: true,
+        });
+
+        if (!resEn.ok) {
+          const dataEn = await readJson(resEn);
+          console.warn(
+            '[admin] falha ao criar rascunho EN',
+            dataEn?.error || resEn.status,
+          );
+          // não mostra erro pro usuário pra não assustar;
+          // o importante é que o PT-BR já foi salvo
+        } else {
+          console.log('[admin] rascunho EN criado automaticamente');
+        }
+      } catch (errDraft) {
+        console.error('[admin] erro ao criar rascunho EN', errDraft);
+        // silencioso; só loga no console
+      }
+    }
   } catch (err) {
     console.error(err);
     showToast('Erro ao salvar post', 'error');

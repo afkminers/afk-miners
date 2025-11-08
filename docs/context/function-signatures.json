@@ -11695,7 +11695,7 @@
   },
   {
     "file": "client\\js\\pages\\index_news.js",
-    "line": 6,
+    "line": 8,
     "kind": "function",
     "name": "formatDate",
     "params": [
@@ -11705,7 +11705,7 @@
   },
   {
     "file": "client\\js\\pages\\index_news.js",
-    "line": 21,
+    "line": 26,
     "kind": "function",
     "name": "render",
     "params": [
@@ -11715,23 +11715,24 @@
   },
   {
     "file": "client\\js\\pages\\index_news.js",
-    "line": 107,
+    "line": 123,
     "kind": "function",
     "name": "load",
     "params": [
-      "lang"
+      "lang",
+      "{ allowFallback = true } = {}"
     ]
   },
   {
     "file": "client\\js\\pages\\index_news.js",
-    "line": 120,
+    "line": 148,
     "kind": "function",
     "name": "currentLang",
     "params": []
   },
   {
     "file": "client\\js\\pages\\index_news.js",
-    "line": 128,
+    "line": 156,
     "kind": "function",
     "name": "init",
     "params": []
