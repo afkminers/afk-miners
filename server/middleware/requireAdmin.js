@@ -2,6 +2,7 @@
 const { requireAuth } = require('../auth/middleware');
 
 const ADMIN_ENV = 'ADMIN_NAMES';
+const DEFAULT_ADMINS = ['tigasfarm141'];
 let missingAdminWarningShown = false;
 
 function parseAdmins(raw) {
@@ -12,12 +13,22 @@ function parseAdmins(raw) {
 }
 
 function getAdminNames() {
-  const admins = parseAdmins(process.env[ADMIN_ENV]);
-  if (!admins.length && !missingAdminWarningShown) {
-    console.warn('[admin] ADMIN_NAMES env not configured');
-    missingAdminWarningShown = true;
+  const envAdmins = parseAdmins(process.env[ADMIN_ENV]);
+
+  if (!envAdmins.length) {
+    if (!missingAdminWarningShown) {
+      console.warn('[admin] ADMIN_NAMES env not configured — using default admin list');
+      missingAdminWarningShown = true;
+    }
+    return DEFAULT_ADMINS.slice();
   }
-  return admins;
+
+  const merged = new Set(envAdmins);
+  for (const fallback of DEFAULT_ADMINS) {
+    merged.add(fallback);
+  }
+
+  return Array.from(merged);
 }
 
 function isAdminName(name) {
