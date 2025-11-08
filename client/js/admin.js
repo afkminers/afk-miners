@@ -99,7 +99,7 @@ async function apiFetch(url, options = {}) {
     await csrfApi.ensureCsrfCookie(false);
   }
   let token = csrfApi?.getCsrfToken ? await csrfApi.getCsrfToken() : null;
-  if (!token && csrfApi?.ensureCsrfCookie) {
+  if ((!token || !String(token).trim()) && csrfApi?.ensureCsrfCookie) {
     await csrfApi.ensureCsrfCookie(true);
     token = csrfApi?.getCsrfToken ? await csrfApi.getCsrfToken() : null;
   }
@@ -107,6 +107,7 @@ async function apiFetch(url, options = {}) {
   const buildOptions = (tok) => {
     const headers = {
       'Content-Type': 'application/json',
+      'X-Requested-With': 'fetch',
     };
     if (tok) {
       headers['X-CSRF-Token'] = tok;
@@ -133,6 +134,10 @@ async function apiFetch(url, options = {}) {
   if (response.status === 403 && csrfApi?.ensureCsrfCookie) {
     await csrfApi.ensureCsrfCookie(true);
     token = csrfApi?.getCsrfToken ? await csrfApi.getCsrfToken() : null;
+    if ((!token || !String(token).trim()) && csrfApi?.ensureCsrfCookie) {
+      await csrfApi.ensureCsrfCookie(true);
+      token = csrfApi?.getCsrfToken ? await csrfApi.getCsrfToken() : null;
+    }
     response = await fetch(withToken(token), buildOptions(token));
   }
   return response;
