@@ -13551,7 +13551,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 114,
+    "line": 106,
     "kind": "function",
     "name": "weaponForClass",
     "params": [
@@ -13560,7 +13560,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 121,
+    "line": 113,
     "kind": "function",
     "name": "attackIntervalForWeaponType",
     "params": [
@@ -13569,14 +13569,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 132,
+    "line": 124,
     "kind": "function",
     "name": "ensureActiveHero",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 151,
+    "line": 143,
     "kind": "function",
     "name": "emitCombatWarning",
     "params": [
@@ -13586,14 +13586,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 162,
+    "line": 154,
     "kind": "function",
     "name": "clearCombatWarnings",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 168,
+    "line": 160,
     "kind": "function",
     "name": "resolveWarningFromPayload",
     "params": [
@@ -13602,7 +13602,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 185,
+    "line": 177,
     "kind": "function",
     "name": "friendlyMessage",
     "params": [
@@ -13612,7 +13612,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 198,
+    "line": 190,
     "kind": "function",
     "name": "handleCombatWarning",
     "params": [
@@ -13622,7 +13622,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 229,
+    "line": 221,
     "kind": "function",
     "name": "resolveServerTarget",
     "params": [
@@ -13632,14 +13632,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 252,
+    "line": 244,
     "kind": "function",
     "name": "getHeroWorldPos",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 262,
+    "line": 254,
     "kind": "function",
     "name": "messageFromWarning",
     "params": [
@@ -13649,7 +13649,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 269,
+    "line": 261,
     "kind": "function",
     "name": "hasWarning",
     "params": [
@@ -13659,7 +13659,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 276,
+    "line": 268,
     "kind": "function",
     "name": "extractWarning",
     "params": [
@@ -13669,7 +13669,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 290,
+    "line": 282,
     "kind": "function",
     "name": "composeRangeMessage",
     "params": [
@@ -13678,7 +13678,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 305,
+    "line": 297,
     "kind": "function",
     "name": "pushCombatLog",
     "params": [
@@ -13687,7 +13687,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 314,
+    "line": 306,
     "kind": "function",
     "name": "warnRange",
     "params": [
@@ -13697,7 +13697,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 329,
+    "line": 321,
     "kind": "function",
     "name": "warnLos",
     "params": [
@@ -13707,7 +13707,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 345,
+    "line": 337,
     "kind": "function",
     "name": "pickMobAtWorld",
     "params": [
@@ -13716,14 +13716,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 376,
+    "line": 395,
     "kind": "function",
     "name": "doHit",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 432,
+    "line": 451,
     "kind": "function",
     "name": "startLoop",
     "params": [
@@ -13732,7 +13732,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 442,
+    "line": 461,
     "kind": "function",
     "name": "startAttack",
     "params": [
@@ -13741,7 +13741,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 508,
+    "line": 527,
     "kind": "function",
     "name": "stopAttack",
     "params": [
@@ -13750,14 +13750,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 523,
+    "line": 542,
     "kind": "function",
     "name": "attachControls",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 530,
+    "line": 549,
     "kind": "arrow",
     "name": "suppressContextMenu",
     "params": [
@@ -13766,7 +13766,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 542,
+    "line": 561,
     "kind": "arrow",
     "name": "onPointerDown",
     "params": [

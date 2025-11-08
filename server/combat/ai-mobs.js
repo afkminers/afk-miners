@@ -1073,6 +1073,14 @@ async function tickLoop() {
     const heroes = await fetchOnlineHeroesInMap(mapKey);
 
     const { grid, cols } = await getGrid(mapKey);
+
+    // 🔍 LOG DE SANIDADE DO GRID (1x por minuto)
+    if (!global.__gridLogged || Date.now() - global.__gridLogged > 60000) {
+      const rows = Math.floor(grid.length / cols);
+      console.log(`[GRID] map=${mapKey} cols=${cols} rows=${rows} len=${grid.length}`);
+      global.__gridLogged = Date.now();
+    }
+
     const losGrid = { data: grid, cols };
     const occupancy = buildMobOccupancy(list);
 
