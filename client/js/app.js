@@ -494,21 +494,6 @@ async function initGlobalChatUI() {
     appendChatRow({ fromId: d.fromId, fromName: d.fromName, text: d.text, ts: d.ts || Date.now() });
   });
 
-  initDmChat({
-    tabsEl: chatTabs,
-    panelsEl: chatPanels,
-    input: chatInput,
-    focusInput: () => chatInput.focus(),
-  });
-
-  window.addEventListener('dm:open', (event) => {
-    const detail = event.detail || {};
-    const friend = detail.friend || { friendId: detail.friendId };
-    if (!friend || !friend.friendId) return;
-    setScope(`dm:${friend.friendId}`);
-    openDmConversation(friend);
-  });
-
   let chatScope = 'default';
   function setScope(scope) {
     chatScope = scope;
@@ -532,6 +517,7 @@ async function initGlobalChatUI() {
     }
   }
 
+  // ✅ Inicializa o módulo de DM **uma única vez**
   initDmChat({
     tabsEl: chatTabs,
     tabsAnchorEl: dmTabAnchor,
@@ -542,12 +528,15 @@ async function initGlobalChatUI() {
     getScope: () => chatScope,
   });
 
+  // ✅ Um único listener para abrir conversa DM
   window.addEventListener('dm:open', (event) => {
     const detail = event.detail || {};
     const friend = detail.friend || { friendId: detail.friendId };
     if (!friend || !friend.friendId) return;
+    setScope(`dm:${friend.friendId}`);
     openDmConversation(friend);
   });
+
 
   btnDefault.addEventListener('click', ()=> setScope('default'));
   btnGlobal.addEventListener('click',  ()=> setScope('global'));
