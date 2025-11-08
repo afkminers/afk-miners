@@ -4,19 +4,38 @@ const { get, all } = require('../models/db');
 const TILE = 32;
 const cache = new Map(); // mapKey -> { grid: Uint8Array, cols, rows }
 
-/** propsJSON pode vir como array [{name,value}] ou objeto {solid:true} */
+/** propsJSON pode vir como array [{name,value}], objeto {solid:true} ou string JSON */
 function hasSolidPropRow(row) {
   try {
-    const p = row.propsJSON;
-    if (Array.isArray(p)) return p.some(v => v?.name === 'solid' && (v.value === true || v.value === 1));
-    if (p && typeof p === 'object') return !!(p.solid === true || p.solid === 1);
+    let p = row.propsJSON;
+
+    // Se vier como string (TEXT), tenta fazer parse
+    if (typeof p === 'string') {
+      try {
+        p = JSON.parse(p);
+      } catch {
+        // se não der parse, ignora e cai no return false
+      }
+    }
+
+    if (Array.isArray(p)) {
+      return p.some(
+        (v) => v?.name === 'solid' && (v.value === true || v.value === 1)
+      );
+    }
+
+    if (p && typeof p === 'object') {
+      return p.solid === true || p.solid === 1;
+    }
   } catch {}
   return false;
 }
 
 function markSolidRect(grid, cols, rows, x, y, w, h) {
-  const x0 = Math.floor(x / TILE), y0 = Math.floor(y / TILE);
-  const x1 = Math.floor((x + w - 1) / TILE), y1 = Math.floor((y + h - 1) / TILE);
+  const x0 = Math.floor(x / TILE);
+  const y0 = Math.floor(y / TILE);
+  const x1 = Math.floor((x + w - 1) / TILE);
+  const y1 = Math.floor((y + h - 1) / TILE);
   for (let cy = y0; cy <= y1; cy++) {
     if (cy < 0 || cy >= rows) continue;
     for (let cx = x0; cx <= x1; cx++) {
@@ -59,7 +78,9 @@ function buildCollisionFromTiled(json) {
   const cols = (json && Number(json.width)) | 0;
   const rows = (json && Number(json.height)) | 0;
   if (!cols || !rows) {
-    throw new Error(`[maps/grid] invalid tiled dims width=${json?.width} height=${json?.height}`);
+    throw new Error(
+      `[maps/grid] invalid tiled dims width=${json?.width} height=${json?.height}`
+    );
   }
   const grid = new Uint8Array(cols * rows); // tudo walkable por padrão
   return { grid, cols, rows };
@@ -74,33 +95,40 @@ async function getGrid(mapKey) {
 
   // mapa (JSON do Tiled) — a fonte do tamanho correto
   const mapRow = await get(
-    `SELECT key, dataJSON AS "dataJSON" FROM maps WHERE key = $1`,
+    `SELECT key, "dataJSON" AS "dataJSON" FROM maps WHERE key = $1`,
     [mapKey]
   );
-  if (!mapRow || !mapRow.dataJSON) throw new Error(`[maps/grid] map not found: ${mapKey}`);
-
-  const mapJson = typeof mapRow.dataJSON === 'string'
-    ? JSON.parse(mapRow.dataJSON)
-    : mapRow.dataJSON;
-
-  const cols = (Number(mapJson.width) | 0);
-  const rows = (Number(mapJson.height) | 0);
-  if (!cols || !rows) {
-    throw new Error(`[maps/grid] invalid map size (no fallbacks): key=${mapKey} width=${mapJson.width} height=${mapJson.height}`);
+  if (!mapRow || !mapRow.dataJSON) {
+    throw new Error(`[maps/grid] map not found: ${mapKey}`);
   }
 
-  // objetos sólidos (preferência)
+  const mapJson =
+    typeof mapRow.dataJSON === 'string'
+      ? JSON.parse(mapRow.dataJSON)
+      : mapRow.dataJSON;
+
+  const cols = Number(mapJson.width) | 0;
+  const rows = Number(mapJson.height) | 0;
+  if (!cols || !rows) {
+    throw new Error(
+      `[maps/grid] invalid map size (no fallbacks): key=${mapKey} width=${mapJson.width} height=${mapJson.height}`
+    );
+  }
+
+  // objetos sólidos (preferência) – usa os nomes reais da tabela: "mapKey" e "propsJSON"
   const objs = await all(
-    `SELECT x, y, w, h, type, propsJSON AS "propsJSON"
-       FROM map_objects
-      WHERE mapKey = $1`,
+    `
+    SELECT x, y, w, h, type, "propsJSON" AS "propsJSON"
+      FROM map_objects
+     WHERE "mapKey" = $1
+  `,
     [mapKey]
   );
 
-
-  const built = (objs && objs.length)
-    ? buildCollisionFromObjects(cols, rows, objs)
-    : buildCollisionFromTiled(mapJson);
+  const built =
+    objs && objs.length
+      ? buildCollisionFromObjects(cols, rows, objs)
+      : buildCollisionFromTiled(mapJson);
 
   const entry = { grid: built.grid, cols: built.cols, rows: built.rows };
   cache.set(mapKey, entry);
