@@ -5,6 +5,7 @@
 
 import { apiPost } from '../api.js';
 import { getSocket, onMessage } from '../ws/singleton.js';
+import { playHeroAttackSfx, playHeroMissSfx } from '../sfx/combat-sfx.js';
 
 const TILE = 32;
 const HALF_TILE = TILE / 2;
@@ -173,6 +174,27 @@ function pushFloaterAtSprite(sprite, text, ttl = 900, color = "rgba(255,0,0,0.92
   state.floaters.push({ x, y, text, ttl, vy: -0.038, color, outline });
 }
 
+function pushMissEffectAtSprite(sprite) {
+  if (!sprite) return;
+  const meta = sprite.meta || {};
+  const frameW = meta.frame?.width ?? 32;
+  const frameH = meta.frame?.height ?? 32;
+  const ax = meta.anchor?.x ?? 0.5;
+  const ay = meta.anchor?.y ?? 0.9;
+  const cx = Math.round(sprite.x - frameW * ax + frameW * 0.5);
+  const cy = Math.round(sprite.y - frameH * ay + frameH * 0.25);
+  const radius = Math.max(10, Math.min(18, Math.round(frameW * 0.45)));
+  state.floaters.push({
+    kind: 'miss-cloud',
+    x: cx,
+    y: cy,
+    ttl: 420,
+    initialTtl: 420,
+    radius,
+    vy: 0,
+  });
+}
+
 function pushHeroDamageFloater(heroId, amount) {
   const dmg = Math.round(Math.abs(Number(amount)));
   if (!Number.isFinite(dmg) || dmg <= 0) return;
@@ -264,7 +286,25 @@ function updateAndDrawFloaters(ctx, dtMs) {
     const f = list[i];
     f.ttl -= dtMs;
     if (f.ttl <= 0) { list.splice(i, 1); continue; }
-    f.y += f.vy * dtMs;
+    const vy = Number.isFinite(f.vy) ? f.vy : 0;
+    if (vy !== 0) f.y += vy * dtMs;
+    if (f.kind === 'miss-cloud') {
+      const initial = f.initialTtl || (f.initialTtl = f.ttl);
+      const progress = initial > 0 ? Math.max(0, Math.min(1, 1 - (f.ttl / initial))) : 0;
+      const baseRadius = f.radius || 14;
+      const radius = baseRadius * (0.65 + progress * 0.6);
+      const alpha = Math.max(0, 0.6 - progress * 0.6);
+      ctx.save();
+      const gradient = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, radius);
+      gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(Math.round(f.x), Math.round(f.y), radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      continue;
+    }
     ctx.save();
     ctx.font = 'bold 12px "Trebuchet MS", Arial, sans-serif';
     ctx.textAlign = 'center';
@@ -320,6 +360,19 @@ function installWsHandlers() {
     if (!s) unbound.add(id);
 
     const dmg = (typeof msg.dmg === 'number') ? msg.dmg : (prevHp != null ? Math.max(0, prevHp - m.hp) : 0);
+    const heroHitId = normalizeHeroId(msg.byHero ?? msg.heroId ?? msg.fromHeroId);
+    const activeHeroId = normalizeHeroId(getActiveHeroIdMaybe());
+    const isMyHeroHit = heroHitId && activeHeroId && heroHitId === activeHeroId;
+    const hasExplicitDamage = typeof msg.dmg === 'number';
+    const didDamage = Number.isFinite(dmg) && dmg > 0;
+    if (isMyHeroHit) {
+      if (didDamage) {
+        playHeroAttackSfx({ heroId: heroHitId, payload: msg });
+      } else if ((hasExplicitDamage && dmg <= 0) || (prevHp != null && prevHp <= m.hp)) {
+        playHeroMissSfx();
+        if (s) pushMissEffectAtSprite(s);
+      }
+    }
     if (dmg > 0 && s) {
       const isCrit = dmg >= (m.maxHp / 2);
       pushFloaterAtSprite(s, `-${dmg}`, 950, isCrit ? "#fff176" : "#ff4444", isCrit ? "#000" : "#fff");
