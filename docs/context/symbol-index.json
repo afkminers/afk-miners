@@ -666,6 +666,7 @@
       "drawGround",
       "drawLoot",
       "drawMob",
+      "drawOtherPlayer",
       "drawPlayer",
       "ensureImgLoaded",
       "ensureServerMonsterSprite",
@@ -674,6 +675,7 @@
       "frame",
       "getHeroWorldPosition",
       "getOrCreateServerMonsterState",
+      "getOtherPlayersSnapshot",
       "handleLegacyMobPos",
       "handleServerMonsterDead",
       "handleServerMonsterMove",
@@ -718,7 +720,8 @@
       "updateMonsterBlocking",
       "updateRespawns",
       "updateServerDrivenMonsters",
-      "updateSpriteFacingFromDelta"
+      "updateSpriteFacingFromDelta",
+      "upsertOtherPlayer"
     ]
   },
   {
