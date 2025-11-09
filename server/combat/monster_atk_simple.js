@@ -2169,6 +2169,7 @@ async function tick() {
             const attackIntervalMs = cooldownMs;
             const hitMapKey = attackRes.attackerPos?.mapKey ?? targetHero.map_key ?? m.map_key;
             if (hitMapKey != null) targetHero.map_key = hitMapKey;
+            const ownerPlayerId = targetHero.player_id != null ? String(targetHero.player_id) : (targetHero.playerId != null ? String(targetHero.playerId) : null);
             global._sendToMap(hitMapKey, {
               type: 'hero_hit',
               heroId: targetHero.hero_id,
@@ -2179,6 +2180,9 @@ async function tick() {
               instanceId: m.id,
               face: m.face,
               attackIntervalMs,
+              mapKey: hitMapKey,
+              playerId: ownerPlayerId,
+              scope: 'map',
               monster: {
                 id: m.id,
                 key: m.monster_key || 'unknown',
@@ -2214,6 +2218,9 @@ async function tick() {
               hp: attackRes.hpAfter,
               hpMax: attackRes.maxHp ?? targetHero.max_hp,
               delta: attackRes.damage != null ? -Math.abs(Number(attackRes.damage)) : null,
+              mapKey: hitMapKey,
+              playerId: ownerPlayerId,
+              scope: 'map',
             });
           }
 

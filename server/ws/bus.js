@@ -125,13 +125,32 @@ function sendToPlayer(playerId, obj) {
 /** Envia mensagem apenas para quem está em um dado mapa */
 function broadcastToMap(mapKey, obj) {
   const set = rooms.get(String(mapKey || 'house'));
-  if (!set || set.size === 0) return;
+  if (!set || set.size === 0) return 0;
   const msg = JSON.stringify(obj);
+  let delivered = 0;
   for (const c of set) {
     if (isOpen(c)) {
-      try { c.send(msg); } catch {}
+      try { c.send(msg); delivered += 1; } catch {}
     }
   }
+  return delivered;
+}
+
+function broadcastToMapExcept(mapKey, obj, excludePlayerId) {
+  const set = rooms.get(String(mapKey || 'house'));
+  if (!set || set.size === 0) return 0;
+  const msg = JSON.stringify(obj);
+  const exclude = excludePlayerId != null ? String(excludePlayerId) : null;
+  let delivered = 0;
+  for (const c of set) {
+    if (!isOpen(c)) continue;
+    if (exclude) {
+      const pid = resolveSocketPlayerId(c);
+      if (pid && pid === exclude) continue;
+    }
+    try { c.send(msg); delivered += 1; } catch {}
+  }
+  return delivered;
 }
 
 module.exports = {
@@ -140,6 +159,7 @@ module.exports = {
   joinMapSocket,
   moveSocketToMap,
   broadcastToMap,
+  broadcastToMapExcept,
   sendToPlayer,
   movePlayerToMap,
 };

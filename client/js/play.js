@@ -27,68 +27,243 @@ const playerVis = { w: 32, h: 32, img: null, heroKey: null, anchorX: 0.5, anchor
 const ENABLE_LOCAL_MOB_AI = false;
 
 // ======= Estado de outros jogadores visíveis no mapa =======
-const otherPlayers = new Map(); // playerId -> { id, name, x, y, mapKey, lastSeenAt }
+const otherPlayers = new Map(); // playerId -> entry
+const otherHeroes = new Map();  // heroId -> entry
 const OTHER_PLAYER_TTL_MS = Number(window.ENV?.OTHER_PLAYER_TTL_MS || 0);
 
-function upsertOtherPlayer(msg) {
-  if (!msg) return;
-  const rawId = msg.id != null ? String(msg.id) : '';
-  if (!rawId) return;
+function normalizePlayerId(raw) {
+  if (raw == null) return null;
+  const value = String(raw);
+  if (!value || value === 'undefined' || value === 'null') return null;
+  return value;
+}
 
-  const myId = window.MyPlayerId ? String(window.MyPlayerId) : null;
-  if (myId && myId === rawId) return; // ignora minhas próprias mensagens
+function parseFiniteNumber(...values) {
+  for (const value of values) {
+    if (value == null || value === '') continue;
+    const num = Number(value);
+    if (Number.isFinite(num)) return num;
+  }
+  return null;
+}
+
+function linkHeroEntry(entry, heroId) {
+  const normalized = normalizeHeroId(heroId);
+  if (!normalized || !entry) return;
+  if (entry.heroId && entry.heroId !== normalized) {
+    if (otherHeroes.get(entry.heroId) === entry) otherHeroes.delete(entry.heroId);
+  }
+  entry.heroId = normalized;
+  otherHeroes.set(normalized, entry);
+}
+
+function unlinkHeroEntry(heroId, entry) {
+  const normalized = normalizeHeroId(heroId);
+  if (!normalized) return;
+  const current = otherHeroes.get(normalized);
+  if (!current) return;
+  if (!entry || current === entry) {
+    otherHeroes.delete(normalized);
+  }
+}
+
+function updateEntryVitals(entry, msg = {}) {
+  if (!entry || !msg) return;
+  const hp = parseFiniteNumber(msg.hp, msg.hpAfter, msg.currentHp, msg.curHp);
+  if (hp != null) entry.hp = hp;
+
+  const maxHp = parseFiniteNumber(msg.maxHp, msg.hpMax, msg.max_hp, msg.maxhp);
+  if (maxHp != null && maxHp > 0) entry.maxHp = maxHp;
+
+  const mana = parseFiniteNumber(msg.mana, msg.currentMana, msg.mp);
+  if (mana != null) entry.mana = mana;
+
+  const maxMana = parseFiniteNumber(msg.maxMana, msg.max_mana, msg.manaMax, msg.max_mp);
+  if (maxMana != null && maxMana >= 0) entry.maxMana = maxMana;
+
+  if (typeof msg.alive === 'boolean') entry.alive = msg.alive;
+  if (msg.died === true) entry.alive = false;
+  if (msg.heroAlive === true && entry.alive === false) entry.alive = true;
+  if (msg.heroAlive === false) entry.alive = false;
+}
+
+function ensureOtherPlayerEntry(playerId) {
+  const pid = normalizePlayerId(playerId);
+  if (!pid) return null;
+  let entry = otherPlayers.get(pid);
+  if (!entry) {
+    entry = { id: pid, playerId: pid, alive: true };
+    otherPlayers.set(pid, entry);
+  }
+  return entry;
+}
+
+function upsertOtherPlayer(msg) {
+  if (!msg) return null;
+  const playerId = normalizePlayerId(msg.id);
+  if (!playerId) return null;
+
+  const myId = normalizePlayerId(window.MyPlayerId);
+  if (myId && myId === playerId) return null; // ignora minhas próprias mensagens
 
   const mapKey = String(msg.mapKey || MAP_KEY || 'house');
-  if (mapKey !== MAP_KEY) return; // só desenha quem está no mesmo mapa
+  if (mapKey !== MAP_KEY) return null; // só desenha quem está no mesmo mapa
 
   const x = Number(msg.x);
   const y = Number(msg.y);
-  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
 
-  const prev = otherPlayers.get(rawId) || {};
-  otherPlayers.set(rawId, {
-    id: rawId,
-    name: String(msg.name || prev.name || ''),
-    x,
-    y,
-    mapKey,
-    lastSeenAt: performance.now(),
-  });
+  const entry = ensureOtherPlayerEntry(playerId);
+  if (!entry) return null;
+
+  entry.id = playerId;
+  entry.playerId = playerId;
+  entry.name = String(msg.name || entry.name || '');
+  entry.x = x;
+  entry.y = y;
+  entry.renderX = x;
+  entry.renderY = y;
+  entry.mapKey = mapKey;
+  entry.lastSeenAt = performance.now();
+  entry.lastUpdatedAt = entry.lastSeenAt;
+
+  if (msg.scope === 'map') entry.scope = 'map';
+
+  updateEntryVitals(entry, msg);
+
+  const heroId = msg.heroId ?? msg.hero_id ?? msg.activeHeroId ?? msg.hero?.id;
+  if (heroId != null) linkHeroEntry(entry, heroId);
+
+  return entry;
 }
 
 function removeOtherPlayer(target) {
   if (!target) return;
   let rawId = '';
   let mapKey = null;
+  let heroId = null;
 
   if (typeof target === 'string') {
     rawId = target;
   } else {
     rawId = target.id != null ? String(target.id) : '';
     if (target.mapKey != null) mapKey = String(target.mapKey);
+    heroId = target.heroId ?? target.hero_id ?? null;
   }
 
   if (!rawId) return;
 
   if (mapKey && mapKey !== MAP_KEY) return;
 
+  const entry = otherPlayers.get(rawId);
+  if (entry) {
+    if (entry.heroId) unlinkHeroEntry(entry.heroId, entry);
+  }
+  if (heroId) unlinkHeroEntry(heroId, entry);
   otherPlayers.delete(rawId);
 }
 
 function getOtherPlayersSnapshot() {
   const now = performance.now();
   const list = [];
-  for (const [id, p] of otherPlayers.entries()) {
+  for (const [id, entry] of otherPlayers.entries()) {
+    if (entry.mapKey && entry.mapKey !== MAP_KEY) continue;
     if (OTHER_PLAYER_TTL_MS > 0) {
-      const age = now - (p.lastSeenAt || 0);
+      const age = now - (entry.lastSeenAt || 0);
       if (age > OTHER_PLAYER_TTL_MS) {
         otherPlayers.delete(id);
+        if (entry.heroId) unlinkHeroEntry(entry.heroId, entry);
         continue;
       }
     }
-    list.push(p);
+    list.push(entry);
   }
   return list;
+}
+
+function touchRemoteHeroEntry(msg) {
+  if (!msg || msg.scope !== 'map') return null;
+  if (msg.mapKey && String(msg.mapKey) !== MAP_KEY) return null;
+
+  const myId = normalizePlayerId(window.MyPlayerId);
+  const playerId = normalizePlayerId(msg.playerId ?? msg.player_id ?? msg.ownerId);
+  if (playerId && myId && playerId === myId) return null;
+
+  const heroIdRaw = msg.heroId ?? msg.hero_id ?? msg.id ?? msg.targetHeroId ?? msg.playerHeroId;
+  const heroId = normalizeHeroId(heroIdRaw);
+  let entry = heroId ? otherHeroes.get(heroId) : null;
+
+  if (!entry && playerId) {
+    entry = ensureOtherPlayerEntry(playerId);
+  }
+
+  if (!entry) return null;
+
+  if (playerId) {
+    entry.playerId = playerId;
+    entry.id = playerId;
+    otherPlayers.set(playerId, entry);
+  }
+
+  if (heroId) linkHeroEntry(entry, heroId);
+
+  entry.mapKey = msg.mapKey ? String(msg.mapKey) : entry.mapKey || MAP_KEY;
+  entry.lastSeenAt = performance.now();
+  entry.lastVitalsAt = entry.lastSeenAt;
+  entry.name = String(msg.name || entry.name || '');
+
+  const px = parseFiniteNumber(msg.x, msg.posX);
+  const py = parseFiniteNumber(msg.y, msg.posY);
+  if (px != null) { entry.x = px; entry.renderX = px; }
+  if (py != null) { entry.y = py; entry.renderY = py; }
+
+  updateEntryVitals(entry, msg);
+  return entry;
+}
+
+function spawnRemoteHeroDamage(entry, msg = {}, kind = 'from_mob') {
+  if (!entry || entry.mapKey !== MAP_KEY) return;
+  if (!window.HeroDamageUI || typeof window.HeroDamageUI.spawn !== 'function') return;
+
+  const amount = parseFiniteNumber(msg.amount, msg.dmg, msg.damage, msg.delta != null ? -msg.delta : null);
+  if (amount == null) return;
+
+  const x = parseFiniteNumber(msg.x, entry.x, entry.renderX);
+  const y = parseFiniteNumber(msg.y, entry.y, entry.renderY);
+  if (x == null || y == null) return;
+
+  window.HeroDamageUI.spawn({ x, y, amount, kind: kind || 'from_mob' });
+}
+
+function handleRemoteHeroHp(msg) {
+  return touchRemoteHeroEntry(msg);
+}
+
+function handleRemoteHeroHit(msg) {
+  const entry = touchRemoteHeroEntry(msg);
+  if (!entry) return;
+  spawnRemoteHeroDamage(entry, msg, 'from_mob');
+}
+
+function handleRemoteHeroDmg(msg) {
+  const entry = touchRemoteHeroEntry(msg);
+  if (!entry) return;
+  spawnRemoteHeroDamage(entry, msg, 'from_mob');
+}
+
+function handleRemoteHeroRespawn(msg) {
+  const entry = touchRemoteHeroEntry({ ...msg, heroAlive: true, alive: true });
+  if (!entry) return;
+  entry.alive = true;
+  const hp = parseFiniteNumber(msg.hp, entry.hp, entry.maxHp);
+  if (hp != null) entry.hp = hp;
+}
+
+function handleRemoteHeroDeath(msg) {
+  const entry = touchRemoteHeroEntry({ ...msg, hp: 0, alive: false, died: true });
+  if (!entry) return;
+  entry.alive = false;
+  entry.hp = 0;
 }
 
 // === buffer de pos_snap recebido cedo (antes do controller existir)
@@ -125,6 +300,22 @@ onMessage('pos_leave', (msg) => {
   } catch (err) {
     console.warn('[play] failed to remove other player', err);
   }
+});
+
+onMessage('hp:update', (msg) => {
+  if (!msg || msg.scope !== 'map') return;
+  if (msg.entity && String(msg.entity) !== 'hero') return;
+  try { handleRemoteHeroHp(msg); } catch (err) { console.warn('[play] failed to handle hp:update', err); }
+});
+
+onMessage('hero_dmg', (msg) => {
+  if (!msg || msg.scope !== 'map') return;
+  try { handleRemoteHeroDmg(msg); } catch (err) { console.warn('[play] failed to handle remote hero_dmg', err); }
+});
+
+onMessage('hero_dead', (msg) => {
+  if (!msg || msg.scope !== 'map') return;
+  try { handleRemoteHeroDeath(msg); } catch (err) { console.warn('[play] failed to handle remote hero_dead', err); }
 });
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -241,6 +432,12 @@ function resolveMobName(raw) {
 // … (helpers já definidos acima: normalizeHeroId, resolveHeroId, etc.)
 
 onMessage('hero_hp', (msg) => {
+  if (!msg) return;
+  if (msg.scope === 'map') {
+    try { handleRemoteHeroHp(msg); } catch (err) { console.warn('[play] failed to handle remote hero_hp', err); }
+    return;
+  }
+
   // Só mexe na HUD se o dano for do MEU herói ativo local
   const myId   = resolveHeroId(); // pega do estado local (ActiveHeroId/Team/HeroState)
   const target = normalizeHeroId(msg.heroId ?? msg.id ?? msg.targetHeroId);
@@ -266,6 +463,12 @@ onMessage('hero_hp', (msg) => {
 
 // Respawn -> força refresh HUD imediato
 onMessage('hero_respawn', (msg) => {
+  if (!msg) return;
+  if (msg.scope === 'map') {
+    try { handleRemoteHeroRespawn(msg); } catch (err) { console.warn('[play] failed to handle remote respawn', err); }
+    return;
+  }
+
   if (window.HUD_ApplyHeroHpUpdate) {
     const hid = resolveHeroId(msg.heroId ?? msg.id ?? msg.targetHeroId);
     if (hid) window.HUD_ApplyHeroHpUpdate(hid, Number(msg.hp), Number(msg.hp));
@@ -297,14 +500,21 @@ onMessage('combat_log', (m) => {
 
 // == NOVO: evento rico dizendo "quem bateu" ==
 onMessage('hero_hit', (msg) => {
+  if (!msg) return;
+  if (msg.scope === 'map') {
+    try { handleRemoteHeroHit(msg); } catch (err) { console.warn('[play] failed to handle remote hero_hit', err); }
+    return;
+  }
+
+  const myId = resolveHeroId();
+  const target = normalizeHeroId(msg.heroId ?? msg.id ?? msg.targetHeroId);
+  if (!myId || !target || myId !== target) return;
+
   // Atualiza HUD de HP do herói
   if (window.HUD_ApplyHeroHpUpdate) {
-    const hid = resolveHeroId(msg.heroId ?? msg.id ?? msg.targetHeroId);
-    if (hid) {
-      const cur = Number(msg.hp);
-      const max = Number(msg.hpMax ?? msg.maxHp ?? msg.hp_max ?? msg.maxhp);
-      window.HUD_ApplyHeroHpUpdate(hid, cur, max);
-    }
+    const cur = Number(msg.hp);
+    const max = Number(msg.hpMax ?? msg.maxHp ?? msg.hp_max ?? msg.maxhp);
+    window.HUD_ApplyHeroHpUpdate(myId, cur, max);
   }
 
   // Nome do bicho que bateu (cai em chaves até achar algo útil)
@@ -1353,9 +1563,18 @@ function handleServerMonsterDead(msg = {}) {
 }
 
 function getHeroWorldPosition(heroId) {
-  if (heroId == null) return null;
+  const normalized = normalizeHeroId(heroId);
+  if (!normalized) return null;
+
+  const entry = otherHeroes.get(normalized);
+  if (entry && entry.mapKey === MAP_KEY) {
+    const px = parseFiniteNumber(entry.x, entry.renderX);
+    const py = parseFiniteNumber(entry.y, entry.renderY);
+    if (px != null && py != null) return { x: px, y: py };
+  }
+
   const active = window.ActiveHeroId != null ? String(window.ActiveHeroId) : null;
-  if (active && String(heroId) === active) {
+  if (active && normalized === active) {
     const ctrl = window.GameScene?.controller;
     const pos = ctrl?.getPosition?.();
     if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
@@ -1819,11 +2038,67 @@ function drawPlayer(controller) {
   }
 }
 
+function drawStatusBar(x, y, width, height, pct, fillColor, bgColor, borderColor) {
+  const clamped = Math.max(0, Math.min(1, pct));
+
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = bgColor || 'rgba(15,23,42,0.9)';
+  ctx.fillRect(x - 1, y - 1, width + 2, height + 2);
+  ctx.restore();
+
+  ctx.save();
+  ctx.fillStyle = fillColor || '#ef4444';
+  ctx.fillRect(x, y, Math.round(width * clamped), height);
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = borderColor || 'rgba(0,0,0,0.85)';
+  ctx.lineWidth = 0.8;
+  ctx.strokeRect(x - 1, y - 1, width + 2, height + 2);
+  ctx.restore();
+}
+
+function drawOtherHeroVitals(player, x, y) {
+  if (!player) return null;
+  const anchorX = Number.isFinite(playerVis.anchorX) ? playerVis.anchorX : 0.5;
+  const anchorY = Number.isFinite(playerVis.anchorY) ? playerVis.anchorY : 0.9;
+  const spriteTop = Math.round(y - playerVis.h * anchorY);
+  const barWidth = Math.max(24, Math.round(playerVis.w * 0.75));
+  let currentY = spriteTop - 6;
+  let barsDrawn = false;
+
+  const hp = Number(player.hp);
+  const maxHp = Number(player.maxHp);
+  if (Number.isFinite(hp) && Number.isFinite(maxHp) && maxHp > 0) {
+    barsDrawn = true;
+    const pct = Math.max(0, Math.min(1, hp / maxHp));
+    const bx = Math.round(x - barWidth / 2);
+    drawStatusBar(bx, currentY, barWidth, 4, pct, '#ef4444', 'rgba(17,24,39,0.9)', 'rgba(0,0,0,0.85)');
+    currentY -= 6;
+  }
+
+  const mana = Number(player.mana);
+  const maxMana = Number(player.maxMana);
+  if (Number.isFinite(mana) && Number.isFinite(maxMana) && maxMana > 0) {
+    barsDrawn = true;
+    const pct = Math.max(0, Math.min(1, mana / maxMana));
+    const bx = Math.round(x - barWidth / 2);
+    drawStatusBar(bx, currentY, barWidth, 3, pct, '#3b82f6', 'rgba(15,23,42,0.85)', 'rgba(8,11,19,0.85)');
+    currentY -= 5;
+  }
+
+  if (!barsDrawn) return y - 24;
+  return currentY - 4;
+}
+
 function drawOtherPlayer(player) {
   if (!player) return;
   const x = Number(player.x);
   const y = Number(player.y);
   if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+  const alive = player.alive !== false;
 
   if (imgReady(playerVis.img)) {
     const anchorX = Number.isFinite(playerVis.anchorX) ? playerVis.anchorX : 0.5;
@@ -1832,17 +2107,20 @@ function drawOtherPlayer(player) {
     const oy = Math.round(y - playerVis.h * anchorY);
 
     ctx.save();
-    ctx.globalAlpha = 0.95;
+    ctx.globalAlpha = alive ? 0.95 : 0.55;
     ctx.drawImage(playerVis.img, ox, oy, playerVis.w, playerVis.h);
     ctx.restore();
   } else {
     ctx.save();
-    ctx.fillStyle = "#38bdf8"; // outro jogador = cor diferente
+    ctx.globalAlpha = alive ? 1 : 0.55;
+    ctx.fillStyle = alive ? "#38bdf8" : '#0ea5e9'; // outro jogador = cor diferente
     const size = 32;
     const half = size / 2;
     ctx.fillRect(x - half, y - half, size, size);
     ctx.restore();
   }
+
+  const labelY = drawOtherHeroVitals(player, x, y);
 
   if (player.name) {
     ctx.save();
@@ -1850,11 +2128,13 @@ function drawOtherPlayer(player) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
 
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillText(player.name, x + 1, y - 24 + 1);
+    const baseline = Number.isFinite(labelY) ? labelY : (y - 24);
 
-    ctx.fillStyle = '#f9fafb';
-    ctx.fillText(player.name, x, y - 24);
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillText(player.name, x + 1, baseline + 1);
+
+    ctx.fillStyle = alive ? '#f9fafb' : '#e5e7eb';
+    ctx.fillText(player.name, x, baseline);
     ctx.restore();
   }
 }

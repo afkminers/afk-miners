@@ -4,7 +4,7 @@ const { get, run } = require('../models/db');
 const K = require('../balance/config');
 const { applyTries, getClassRate } = require('../skills/engine');
 const wsBus = require('../ws/bus');
-const { broadcast, sendToPlayer, broadcastToMap } = wsBus;
+const { broadcast, sendToPlayer, broadcastToMap, broadcastToMapExcept } = wsBus;
 const { TILE } = require('./geom');
 const { toTileCoords, chebyshevTiles, isValidTile } = require('../utils/tile-coords');
 const lootService = require('../services/loot');
@@ -241,8 +241,22 @@ async function respawnHero(targetHeroId) {
 
   // notifica cliente (snap + respawn) — **apenas para o dono**
   if (playerId) {
+    const playerIdStr = String(playerId);
+    const directRespawn = { type: 'hero_respawn', heroId: targetHeroId, hp: hpOnRevive, mapKey, x, y };
     sendToPlayer(playerId, { type: 'pos_snap_hero', heroId: targetHeroId, mapKey, x, y });
-    sendToPlayer(playerId, { type: 'hero_respawn',  heroId: targetHeroId, hp: hpOnRevive, mapKey, x, y });
+    sendToPlayer(playerId, directRespawn);
+
+    try {
+      broadcastToMapExcept(
+        mapKey,
+        {
+          ...directRespawn,
+          scope: 'map',
+          playerId: playerIdStr,
+        },
+        playerIdStr,
+      );
+    } catch {}
   }
 
   // limpa ameaças para não nascer "em combate"
@@ -729,33 +743,67 @@ async function applyMobHit({ attackerInstanceId, targetHeroId, attackInfo, attac
     } catch {}
   }
 
-  // ===== AQUI muda: unicast para o dono do herói =====
-  sendToPlayer(hero.player_id, {
+  const playerIdStr = hero?.player_id != null ? String(hero.player_id) : null;
+  const mapKeyForBroadcast = hpos?.map_key != null
+    ? String(hpos.map_key)
+    : effectiveMapKey != null
+      ? String(effectiveMapKey)
+      : inst?.map_key != null
+        ? String(inst.map_key)
+        : hero?.map_key != null
+          ? String(hero.map_key)
+          : null;
+
+  const mapBase = mapKeyForBroadcast
+    ? {
+        scope: 'map',
+        mapKey: mapKeyForBroadcast,
+        playerId: playerIdStr,
+      }
+    : null;
+
+  const heroHpPayload = {
     type: 'hero_hp',
     heroId: targetHeroId,
     hp: newHp,
     maxHp: row.max_hp,
     byMob: inst.monster_key,
     instanceId: inst.id,
-    dmg
-  });
+    dmg,
+  };
 
-  sendToPlayer(hero.player_id, {
+  const heroDmgPayload = {
     type: 'hero_dmg',
     heroId: targetHeroId,
     amount: dmg,
     byMob: inst.monster_key,
-    instanceId: inst.id
-  });
+    instanceId: inst.id,
+  };
+
+  // ===== AQUI muda: unicast para o dono do herói =====
+  sendToPlayer(hero.player_id, heroHpPayload);
+  sendToPlayer(hero.player_id, heroDmgPayload);
 
   if (dead) {
-    sendToPlayer(hero.player_id, {
+    const heroDeadPayload = {
       type: 'hero_dead',
       heroId: targetHeroId,
       byMob: inst.monster_key,
       instanceId: inst.id,
-      autoRespawn: false
-    });
+      autoRespawn: false,
+    };
+    sendToPlayer(hero.player_id, heroDeadPayload);
+
+    if (mapBase) {
+      try {
+        broadcastToMapExcept(mapKeyForBroadcast, { ...heroDeadPayload, ...mapBase }, playerIdStr);
+      } catch {}
+    }
+  }
+
+  if (mapBase) {
+    try { broadcastToMapExcept(mapKeyForBroadcast, { ...heroHpPayload, ...mapBase }, playerIdStr); } catch {}
+    try { broadcastToMapExcept(mapKeyForBroadcast, { ...heroDmgPayload, ...mapBase }, playerIdStr); } catch {}
   }
   // ===== fim das mudanças de unicast =====
 

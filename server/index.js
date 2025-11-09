@@ -1463,6 +1463,8 @@ async function seedAIMobsFromDB(aiMobs) {
               y: ny,
               mapKey,
               name: ws._player?.name || '',
+              heroId: ws._activeHeroId ? String(ws._activeHeroId) : undefined,
+              heroAlive: heroAlive,
             };
 
             // se tiver helper global por mapa, usa ele; senão, cai no broadcast antigo
