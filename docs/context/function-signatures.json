@@ -4932,7 +4932,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 78,
+    "line": 79,
     "kind": "function",
     "name": "hasLoSpx",
     "params": [
@@ -4945,7 +4945,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 85,
+    "line": 86,
     "kind": "function",
     "name": "normalizeMonsterPos",
     "params": [
@@ -4956,7 +4956,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 120,
+    "line": 121,
     "kind": "function",
     "name": "computeSpawnCenterPx",
     "params": [
@@ -4966,7 +4966,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 141,
+    "line": 142,
     "kind": "function",
     "name": "canMobHitNow",
     "params": [
@@ -4978,7 +4978,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 198,
+    "line": 199,
     "kind": "function",
     "name": "recordHeroObservation",
     "params": [
@@ -4991,7 +4991,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 228,
+    "line": 229,
     "kind": "function",
     "name": "updateHeroMemoryForMap",
     "params": [
@@ -5002,7 +5002,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 247,
+    "line": 248,
     "kind": "function",
     "name": "predictHeroTileCx",
     "params": [
@@ -5013,7 +5013,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 269,
+    "line": 270,
     "kind": "function",
     "name": "computeMobDensityPenalty",
     "params": [
@@ -5027,7 +5027,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 304,
+    "line": 305,
     "kind": "function",
     "name": "computeMobFlankBonus",
     "params": [
@@ -5040,14 +5040,14 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 323,
+    "line": 324,
     "kind": "function",
     "name": "fetchAliveMonsters",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 363,
+    "line": 364,
     "kind": "function",
     "name": "fetchOnlineHeroesInMap",
     "params": [
@@ -5056,7 +5056,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 412,
+    "line": 413,
     "kind": "function",
     "name": "getHeroLastPosPx",
     "params": [
@@ -5066,7 +5066,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 431,
+    "line": 432,
     "kind": "function",
     "name": "resolveMobSpeedPx",
     "params": [
@@ -5075,7 +5075,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 439,
+    "line": 440,
     "kind": "function",
     "name": "ensureMob",
     "params": [
@@ -5085,7 +5085,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 591,
+    "line": 596,
     "kind": "function",
     "name": "computeRepathCooldownMs",
     "params": [
@@ -5094,7 +5094,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 598,
+    "line": 603,
     "kind": "function",
     "name": "seedPosition",
     "params": [
@@ -5111,7 +5111,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 634,
+    "line": 641,
     "kind": "function",
     "name": "addThreatFromHeroHit",
     "params": [
@@ -5122,21 +5122,21 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 650,
+    "line": 660,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 691,
+    "line": 701,
     "kind": "function",
     "name": "stop",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 742,
+    "line": 752,
     "kind": "function",
     "name": "tileKey",
     "params": [
@@ -5146,7 +5146,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 746,
+    "line": 756,
     "kind": "function",
     "name": "coerceTileSet",
     "params": [
@@ -5155,7 +5155,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 752,
+    "line": 762,
     "kind": "function",
     "name": "losGridRows",
     "params": [
@@ -5164,7 +5164,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 757,
+    "line": 767,
     "kind": "function",
     "name": "isSolidTile",
     "params": [
@@ -5175,7 +5175,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 767,
+    "line": 777,
     "kind": "function",
     "name": "isTileBlockedByMobs",
     "params": [
@@ -5187,7 +5187,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 780,
+    "line": 790,
     "kind": "function",
     "name": "estaAoLadoDoJogador",
     "params": [
@@ -5198,7 +5198,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 790,
+    "line": 800,
     "kind": "function",
     "name": "buildHeroTileSet",
     "params": [
@@ -5209,7 +5209,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 815,
+    "line": 825,
     "kind": "function",
     "name": "buildMobOccupancy",
     "params": [
@@ -5218,7 +5218,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 835,
+    "line": 845,
     "kind": "function",
     "name": "buildRingOptions",
     "params": [
@@ -5234,7 +5234,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 873,
+    "line": 883,
     "kind": "function",
     "name": "maybeReturnMobHome",
     "params": [
@@ -5247,7 +5247,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 980,
+    "line": 991,
     "kind": "function",
     "name": "teleportMobToTile",
     "params": [
@@ -5259,7 +5259,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1025,
+    "line": 1036,
     "kind": "function",
     "name": "resolveMobStacks",
     "params": [
@@ -5271,14 +5271,14 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1065,
+    "line": 1076,
     "kind": "function",
     "name": "tickLoop",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1116,
+    "line": 1127,
     "kind": "function",
     "name": "stepMob",
     "params": [
@@ -5293,7 +5293,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1446,
+    "line": 1460,
     "kind": "function",
     "name": "decayThreat",
     "params": [
@@ -5303,7 +5303,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1456,
+    "line": 1470,
     "kind": "function",
     "name": "selectTargetByThreat",
     "params": [
@@ -5315,7 +5315,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1567,
+    "line": 1582,
     "kind": "function",
     "name": "isBlockedPx",
     "params": [
@@ -5326,7 +5326,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1576,
+    "line": 1591,
     "kind": "function",
     "name": "selectMobChaseGoal",
     "params": [
@@ -5342,7 +5342,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1709,
+    "line": 1724,
     "kind": "function",
     "name": "planMobChaseStep",
     "params": [
@@ -5358,7 +5358,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1732,
+    "line": 1747,
     "kind": "function",
     "name": "pickCombatDanceStep",
     "params": [
@@ -5372,7 +5372,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1778,
+    "line": 1793,
     "kind": "function",
     "name": "maybeHandleCombatDance",
     "params": [
@@ -5388,7 +5388,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1858,
+    "line": 1873,
     "kind": "function",
     "name": "pickStepGreedy",
     "params": [
@@ -5403,7 +5403,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1927,
+    "line": 1942,
     "kind": "function",
     "name": "pickStepAlternate",
     "params": [
@@ -5419,7 +5419,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 2027,
+    "line": 2042,
     "kind": "function",
     "name": "clampToMapPx",
     "params": [
@@ -5429,7 +5429,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 2038,
+    "line": 2053,
     "kind": "function",
     "name": "moveMobAndPersist",
     "params": [
@@ -5442,7 +5442,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 2119,
+    "line": 2134,
     "kind": "function",
     "name": "removeHeroThreat",
     "params": [
@@ -12831,7 +12831,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 10,
+    "line": 11,
     "kind": "method",
     "class": "PlayerController",
     "name": "constructor",
@@ -12845,7 +12845,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 31,
+    "line": 32,
     "kind": "method",
     "class": "PlayerController",
     "name": "setCollision",
@@ -12857,7 +12857,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 32,
+    "line": 33,
     "kind": "method",
     "class": "PlayerController",
     "name": "setDynamicBlockChecker",
@@ -12867,7 +12867,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 33,
+    "line": 34,
     "kind": "method",
     "class": "PlayerController",
     "name": "setPosition",
@@ -12878,7 +12878,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 34,
+    "line": 35,
     "kind": "method",
     "class": "PlayerController",
     "name": "getPosition",
@@ -12886,7 +12886,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 36,
+    "line": 37,
     "kind": "method",
     "class": "PlayerController",
     "name": "_snap",
@@ -12896,7 +12896,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 38,
+    "line": 40,
     "kind": "method",
     "class": "PlayerController",
     "name": "_centerOf",
@@ -12907,7 +12907,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 43,
+    "line": 45,
     "kind": "method",
     "class": "PlayerController",
     "name": "followPath",
@@ -12917,7 +12917,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 51,
+    "line": 55,
     "kind": "method",
     "class": "PlayerController",
     "name": "isBlockedCell",
@@ -12928,7 +12928,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 62,
+    "line": 66,
     "kind": "method",
     "class": "PlayerController",
     "name": "tryMove",
@@ -12939,7 +12939,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 76,
+    "line": 80,
     "kind": "method",
     "class": "PlayerController",
     "name": "for",
@@ -12949,7 +12949,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 77,
+    "line": 81,
     "kind": "method",
     "class": "PlayerController",
     "name": "for",
@@ -12959,7 +12959,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 87,
+    "line": 91,
     "kind": "method",
     "class": "PlayerController",
     "name": "requestStep",
@@ -12969,7 +12969,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 92,
+    "line": 96,
     "kind": "method",
     "class": "PlayerController",
     "name": "if",
@@ -12979,7 +12979,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 112,
+    "line": 115,
     "kind": "method",
     "class": "PlayerController",
     "name": "update",
@@ -12990,7 +12990,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 119,
+    "line": 122,
     "kind": "method",
     "class": "PlayerController",
     "name": "if",
@@ -13000,32 +13000,12 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 176,
+    "line": 180,
     "kind": "method",
     "class": "PlayerController",
     "name": "if",
     "params": [
       "feature"
-    ]
-  },
-  {
-    "file": "client\\js\\engine\\player_controller.js",
-    "line": 201,
-    "kind": "method",
-    "class": "PlayerController",
-    "name": "if",
-    "params": [
-      "moved"
-    ]
-  },
-  {
-    "file": "client\\js\\engine\\player_controller.js",
-    "line": 204,
-    "kind": "method",
-    "class": "PlayerController",
-    "name": "if",
-    "params": [
-      "!this._moving && !this.path"
     ]
   },
   {
@@ -13035,12 +13015,32 @@
     "class": "PlayerController",
     "name": "if",
     "params": [
+      "moved"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\player_controller.js",
+    "line": 209,
+    "kind": "method",
+    "class": "PlayerController",
+    "name": "if",
+    "params": [
+      "!this._moving && !this.path"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\player_controller.js",
+    "line": 211,
+    "kind": "method",
+    "class": "PlayerController",
+    "name": "if",
+    "params": [
       "this.onMoved && this._accumMoved >= 64"
     ]
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 213,
+    "line": 218,
     "kind": "method",
     "class": "PlayerController",
     "name": "if",
@@ -13050,7 +13050,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 216,
+    "line": 221,
     "kind": "method",
     "class": "PlayerController",
     "name": "if",
@@ -13060,7 +13060,7 @@
   },
   {
     "file": "client\\js\\engine\\player_controller.js",
-    "line": 234,
+    "line": 239,
     "kind": "method",
     "class": "PlayerController",
     "name": "if",

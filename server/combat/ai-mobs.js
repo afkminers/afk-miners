@@ -326,22 +326,23 @@ async function fetchAliveMonsters() {
     SELECT mi.id,
           COALESCE(mi.map_key, s."mapKey") AS map_key,
           mi.x, mi.y,
-          mm.attack_range,      -- tiles
-          mm.aggro_range,       -- tiles
-          mm.attack_ms,         -- ms
-          mm.speed              AS speed,
-          mm.key                AS monster_key,
+          mm.attack_range,
+          mm.aggro_range,
+          mm.attack_ms,
+          mm.speed,
+          mm.key AS monster_key,
           COALESCE(mm."attacksJSON", '[]'::jsonb) AS attacks_json,
           s.x  AS spawn_x,
           s.y  AS spawn_y,
           COALESCE(s.w, 0) AS spawn_w,
           COALESCE(s.h, 0) AS spawn_h,
-          COALESCE(s."leashPx", 0) AS leash_px
+          COALESCE(s."leashPx", mm.leash_px, 0) AS leash_px   -- 👈 ALTERADO AQUI
       FROM monster_instances mi
       JOIN monsters_master mm ON mm.id = mi.monster_id
       LEFT JOIN spawns s ON s.id = mi.spawn_id
     WHERE mi.state = 'ALIVE' AND mi.hp > 0
   `)) || [];
+
   return rows.map(row => {
     const profile = resolveMonsterAttackProfile({
       attack_ms: row.attack_ms,
