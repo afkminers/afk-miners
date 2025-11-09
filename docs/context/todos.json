@@ -84,6 +84,12 @@
     "text": "'Você está invisível (Aparecer Offline).' }, // alias p/ chamadas antigas"
   },
   {
+    "file": "client\\js\\map\\corpse-layer.js",
+    "line": 136,
+    "tag": "TODO",
+    "text": "mundo (CorpseWindow inclusive) que este corpse sumiu"
+  },
+  {
     "file": "client\\js\\ui\\presence-controls.js",
     "line": 138,
     "tag": "NOTE",

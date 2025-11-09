@@ -176,6 +176,38 @@
     }
   }
 
+  /**
+   * Tenta abrir o corpse debaixo do cursor (clientX/clientY).
+   * Retorna true se abriu algum loot, false caso contrário.
+   */
+  function openCorpseAtEvent(ev) {
+    if (!ev) return false;
+
+    const clientX = ev.clientX ?? (ev.touches && ev.touches[0]?.clientX);
+    const clientY = ev.clientY ?? (ev.touches && ev.touches[0]?.clientY);
+    if (!Number.isFinite(clientX) || !Number.isFinite(clientY) || typeof document.elementFromPoint !== 'function') {
+      return false;
+    }
+
+    const top = document.elementFromPoint(clientX, clientY);
+    if (!top || typeof top.closest !== 'function') return false;
+
+    const hit = top.closest('.corpse-hitbox');
+    if (!hit) return false;
+
+    const id = hit.dataset && hit.dataset.corpseId;
+    if (!id) return false;
+
+    try {
+      window.CorpseWindow?.open(id);
+    } catch (err) {
+      console.warn('[corpse-layer] openCorpseAtEvent failed:', err);
+      return false;
+    }
+    return true;
+  }
+
+
   window.addEventListener('corpse:spawn', (ev) => { upsertCorpse(ev?.detail || ev?.corpse || ev); });
   window.addEventListener('corpse:refresh', (ev) => { upsertCorpse(ev?.detail || ev); });
   window.addEventListener('corpse:updated', (ev) => {
@@ -196,6 +228,10 @@
   setInterval(refresh, 2500);
   refresh();
 
+  // expõe helper para outros módulos (ex: attack-controls)
+  state.openAtEvent = openCorpseAtEvent;
+
   state.__ready = true;
   window.CorpseLayer = state;
 })();
+

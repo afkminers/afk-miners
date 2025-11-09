@@ -11216,14 +11216,14 @@
   },
   {
     "file": "client\\js\\ui\\corpse-window.js",
-    "line": 234,
+    "line": 248,
     "kind": "function",
     "name": "close",
     "params": []
   },
   {
     "file": "client\\js\\ui\\corpse-window.js",
-    "line": 242,
+    "line": 256,
     "kind": "function",
     "name": "handleCorpseRefresh",
     "params": [
@@ -11232,7 +11232,7 @@
   },
   {
     "file": "client\\js\\ui\\corpse-window.js",
-    "line": 249,
+    "line": 263,
     "kind": "function",
     "name": "handleCorpseUpdated",
     "params": [
@@ -11241,7 +11241,7 @@
   },
   {
     "file": "client\\js\\ui\\corpse-window.js",
-    "line": 261,
+    "line": 275,
     "kind": "function",
     "name": "handleCorpseRemoved",
     "params": [
@@ -12241,7 +12241,7 @@
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 222,
+    "line": 226,
     "kind": "function",
     "name": "removeLoot",
     "params": [
@@ -12250,14 +12250,14 @@
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 230,
+    "line": 234,
     "kind": "function",
     "name": "layout",
     "params": []
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 247,
+    "line": 251,
     "kind": "function",
     "name": "refresh",
     "params": []
@@ -12340,7 +12340,7 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 141,
+    "line": 148,
     "kind": "function",
     "name": "refresh",
     "params": []

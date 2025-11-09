@@ -596,8 +596,22 @@ function attachControls() {
 
     // Check if we should use RMB mode
     if (ATTACK_USE_RMB) {
-      // Right mouse button (button === 2) starts attack
+      // Right mouse button (button === 2) starts attack / loot
       if (e.button === 2) {
+
+        // 0) Se clicou em um corpse, abre loot e NÃO ataca
+        try {
+          if (window.CorpseLayer && typeof window.CorpseLayer.openAtEvent === 'function') {
+            const opened = window.CorpseLayer.openAtEvent(e);
+            if (opened) {
+              console.log('[attack] RMB on corpse - opening loot instead of attack');
+              return;
+            }
+          }
+        } catch (err) {
+          console.warn('[attack] failed to delegate RMB to corpse-layer', err);
+        }
+
         const { x, y } = getMouseWorldFromEvent(e, canvas);
         console.log('[attack] RMB click @', Math.round(x), Math.round(y));
 
@@ -634,6 +648,7 @@ function attachControls() {
         stopAttack();
         return;
       }
+
 
     } else {
       // Legacy mode: left-click only
