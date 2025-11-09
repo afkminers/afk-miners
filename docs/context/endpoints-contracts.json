@@ -1176,7 +1176,7 @@
     "method": "GET",
     "path": "/cache/stats",
     "file": "server\\routes\\loot.js",
-    "line": 433,
+    "line": 477,
     "sample": {},
     "errors": [
       {
@@ -1935,7 +1935,7 @@
     "method": "POST",
     "path": "/loot/corpse/open",
     "file": "server\\routes\\loot.js",
-    "line": 110,
+    "line": 150,
     "sample": {},
     "errors": [
       {
@@ -1990,7 +1990,7 @@
     "method": "POST",
     "path": "/loot/corpse/take",
     "file": "server\\routes\\loot.js",
-    "line": 148,
+    "line": 190,
     "sample": {},
     "errors": [
       {
@@ -2041,7 +2041,7 @@
     "method": "POST",
     "path": "/loot/drop",
     "file": "server\\routes\\loot.js",
-    "line": 369,
+    "line": 413,
     "sample": {},
     "errors": [
       {
@@ -2072,7 +2072,7 @@
     "method": "POST",
     "path": "/loot/pickup",
     "file": "server\\routes\\loot.js",
-    "line": 287,
+    "line": 331,
     "sample": {},
     "errors": [
       {
@@ -2127,7 +2127,7 @@
     "method": "GET",
     "path": "/map/:mapKey/corpses",
     "file": "server\\routes\\loot.js",
-    "line": 98,
+    "line": 138,
     "sample": {
       "params": {
         "mapKey": "value"
@@ -2190,7 +2190,7 @@
     "method": "GET",
     "path": "/map/:mapKey/loot",
     "file": "server\\routes\\loot.js",
-    "line": 86,
+    "line": 126,
     "sample": {
       "params": {
         "mapKey": "value"

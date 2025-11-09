@@ -254,7 +254,7 @@
       },
       {
         "file": "server\\routes\\loot.js",
-        "index": 435
+        "index": 485
       }
     ],
     "defaults": [
@@ -545,7 +545,7 @@
     "occurrences": [
       {
         "file": "server\\routes\\loot.js",
-        "index": 519
+        "index": 569
       }
     ],
     "defaults": [

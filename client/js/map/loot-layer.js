@@ -154,7 +154,11 @@
     const node = document.createElement('div');
     node.className = 'loot-marker';
     node.style.position = 'absolute';
-    node.style.transform = 'translate(-50%, -80%)'; // âncora levemente acima do centro
+    node.style.transform = 'translate(-50%, -50%)'; // centraliza exatamente no centro do tile
+    node.style.width = '32px';
+    node.style.height = '32px';
+    node.style.pointerEvents = 'auto';
+
     node.style.pointerEvents = 'auto';
 
     // decide ícone

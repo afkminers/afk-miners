@@ -1452,7 +1452,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 481,
+    "line": 487,
     "kind": "function",
     "name": "distanceTiles",
     "params": [
@@ -2343,7 +2343,27 @@
   },
   {
     "file": "server\\routes\\loot.js",
-    "line": 19,
+    "line": 15,
+    "kind": "function",
+    "name": "normalizeMapKey",
+    "params": [
+      "value"
+    ]
+  },
+  {
+    "file": "server\\routes\\loot.js",
+    "line": 20,
+    "kind": "function",
+    "name": "resolveTileCoord",
+    "params": [
+      "tileValue",
+      "rawValue",
+      "sourceHint = null"
+    ]
+  },
+  {
+    "file": "server\\routes\\loot.js",
+    "line": 43,
     "kind": "function",
     "name": "assertHeroAliveOwned",
     "params": [
@@ -2353,7 +2373,7 @@
   },
   {
     "file": "server\\routes\\loot.js",
-    "line": 30,
+    "line": 54,
     "kind": "function",
     "name": "takeFromBackpack",
     "params": [
@@ -2364,7 +2384,7 @@
   },
   {
     "file": "server\\routes\\loot.js",
-    "line": 70,
+    "line": 94,
     "kind": "function",
     "name": "ensureHeroProximity",
     "params": [
@@ -2373,6 +2393,8 @@
       "mapKey",
       "tileX",
       "tileY",
+      "posX = null",
+      "posY = null",
       "range }"
     ]
   },
@@ -12263,14 +12285,14 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 45,
+    "line": 49,
     "kind": "function",
     "name": "getCanvasRects",
     "params": []
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 54,
+    "line": 58,
     "kind": "function",
     "name": "tileToCanvasPx",
     "params": [
@@ -12280,7 +12302,7 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 69,
+    "line": 73,
     "kind": "function",
     "name": "canvasPxToCss",
     "params": [
@@ -12290,7 +12312,7 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 76,
+    "line": 80,
     "kind": "function",
     "name": "tileToCss",
     "params": [
@@ -12300,7 +12322,7 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 81,
+    "line": 85,
     "kind": "function",
     "name": "upsertCorpse",
     "params": [
@@ -12309,7 +12331,7 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 128,
+    "line": 133,
     "kind": "function",
     "name": "removeCorpse",
     "params": [
@@ -12318,7 +12340,7 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 136,
+    "line": 141,
     "kind": "function",
     "name": "refresh",
     "params": []
@@ -13991,7 +14013,25 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 83,
+    "line": 81,
+    "kind": "function",
+    "name": "isLootUiTarget",
+    "params": [
+      "node"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 87,
+    "kind": "function",
+    "name": "shouldBlockAttackFromEvent",
+    "params": [
+      "e"
+    ]
+  },
+  {
+    "file": "client\\js\\combat\\attack-controls.js",
+    "line": 108,
     "kind": "function",
     "name": "localPickUnderCursor",
     "params": [
@@ -14000,7 +14040,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 106,
+    "line": 131,
     "kind": "function",
     "name": "weaponForClass",
     "params": [
@@ -14009,7 +14049,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 113,
+    "line": 138,
     "kind": "function",
     "name": "attackIntervalForWeaponType",
     "params": [
@@ -14018,14 +14058,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 124,
+    "line": 149,
     "kind": "function",
     "name": "ensureActiveHero",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 143,
+    "line": 168,
     "kind": "function",
     "name": "emitCombatWarning",
     "params": [
@@ -14035,14 +14075,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 154,
+    "line": 179,
     "kind": "function",
     "name": "clearCombatWarnings",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 160,
+    "line": 185,
     "kind": "function",
     "name": "resolveWarningFromPayload",
     "params": [
@@ -14051,7 +14091,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 177,
+    "line": 202,
     "kind": "function",
     "name": "friendlyMessage",
     "params": [
@@ -14061,7 +14101,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 190,
+    "line": 215,
     "kind": "function",
     "name": "handleCombatWarning",
     "params": [
@@ -14071,7 +14111,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 221,
+    "line": 246,
     "kind": "function",
     "name": "resolveServerTarget",
     "params": [
@@ -14081,14 +14121,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 244,
+    "line": 269,
     "kind": "function",
     "name": "getHeroWorldPos",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 254,
+    "line": 279,
     "kind": "function",
     "name": "messageFromWarning",
     "params": [
@@ -14098,7 +14138,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 261,
+    "line": 286,
     "kind": "function",
     "name": "hasWarning",
     "params": [
@@ -14108,7 +14148,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 268,
+    "line": 293,
     "kind": "function",
     "name": "extractWarning",
     "params": [
@@ -14118,7 +14158,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 282,
+    "line": 307,
     "kind": "function",
     "name": "composeRangeMessage",
     "params": [
@@ -14127,7 +14167,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 297,
+    "line": 322,
     "kind": "function",
     "name": "pushCombatLog",
     "params": [
@@ -14136,7 +14176,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 306,
+    "line": 331,
     "kind": "function",
     "name": "warnRange",
     "params": [
@@ -14146,7 +14186,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 321,
+    "line": 346,
     "kind": "function",
     "name": "warnLos",
     "params": [
@@ -14156,7 +14196,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 337,
+    "line": 362,
     "kind": "function",
     "name": "pickMobAtWorld",
     "params": [
@@ -14165,14 +14205,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 395,
+    "line": 420,
     "kind": "function",
     "name": "doHit",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 451,
+    "line": 476,
     "kind": "function",
     "name": "startLoop",
     "params": [
@@ -14181,7 +14221,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 461,
+    "line": 486,
     "kind": "function",
     "name": "startAttack",
     "params": [
@@ -14190,7 +14230,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 527,
+    "line": 552,
     "kind": "function",
     "name": "stopAttack",
     "params": [
@@ -14199,14 +14239,14 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 542,
+    "line": 567,
     "kind": "function",
     "name": "attachControls",
     "params": []
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 549,
+    "line": 574,
     "kind": "arrow",
     "name": "suppressContextMenu",
     "params": [
@@ -14215,7 +14255,7 @@
   },
   {
     "file": "client\\js\\combat\\attack-controls.js",
-    "line": 561,
+    "line": 586,
     "kind": "arrow",
     "name": "onPointerDown",
     "params": [

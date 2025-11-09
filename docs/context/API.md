@@ -542,7 +542,7 @@ _Sem payload inferido_
 
 ### GET /cache/stats
 
-Arquivo: `server\routes\loot.js:433`
+Arquivo: `server\routes\loot.js:477`
 
 _Sem payload inferido_
 
@@ -739,7 +739,7 @@ Arquivo: `server\starter\routes.js:43`
 
 ### GET /map/:mapKey/corpses
 
-Arquivo: `server\routes\loot.js:98`
+Arquivo: `server\routes\loot.js:138`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -769,7 +769,7 @@ Arquivo: `server\routes\loot.js:98`
 
 ### GET /map/:mapKey/loot
 
-Arquivo: `server\routes\loot.js:86`
+Arquivo: `server\routes\loot.js:126`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -1544,7 +1544,7 @@ _Sem payload inferido_
 
 ### POST /loot/corpse/open
 
-Arquivo: `server\routes\loot.js:110`
+Arquivo: `server\routes\loot.js:150`
 
 _Sem payload inferido_
 
@@ -1567,7 +1567,7 @@ _Sem payload inferido_
 
 ### POST /loot/corpse/take
 
-Arquivo: `server\routes\loot.js:148`
+Arquivo: `server\routes\loot.js:190`
 
 _Sem payload inferido_
 
@@ -1589,7 +1589,7 @@ _Sem payload inferido_
 
 ### POST /loot/drop
 
-Arquivo: `server\routes\loot.js:369`
+Arquivo: `server\routes\loot.js:413`
 
 _Sem payload inferido_
 
@@ -1606,7 +1606,7 @@ _Sem payload inferido_
 
 ### POST /loot/pickup
 
-Arquivo: `server\routes\loot.js:287`
+Arquivo: `server\routes\loot.js:331`
 
 _Sem payload inferido_
 

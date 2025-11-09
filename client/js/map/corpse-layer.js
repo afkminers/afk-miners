@@ -95,8 +95,8 @@
       node = document.createElement('div');
       node.className = 'corpse-hitbox';
       node.style.position = 'absolute';
-      node.style.width = '36px';
-      node.style.height = '36px';
+      node.style.width = '32px';
+      node.style.height = '32px';
       node.style.pointerEvents = 'auto';
       node.style.zIndex = '7';
       node.style.transform = 'translate(-50%, -50%)';
@@ -132,11 +132,18 @@
 
   function removeCorpse(id) {
     const key = String(id);
+
+    // avisa todo mundo (CorpseWindow inclusive) que este corpse sumiu
+    try {
+      window.dispatchEvent(new CustomEvent('corpse:removed', { detail: { id: key } }));
+    } catch {}
+
     const node = state.nodes.get(key);
     if (node && node.parentNode) try { node.parentNode.removeChild(node); } catch {}
     state.nodes.delete(key);
     state.corpses.delete(key);
   }
+
 
   async function refresh() {
     const mapKey = getMapKey();

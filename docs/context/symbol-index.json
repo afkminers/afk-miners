@@ -210,6 +210,7 @@
       "getMouseWorldFromEvent",
       "handleCombatWarning",
       "hasWarning",
+      "isLootUiTarget",
       "localPickUnderCursor",
       "messageFromWarning",
       "pickCamera",
@@ -220,6 +221,7 @@
       "resolveWarningFromPayload",
       "safeNumber",
       "screenToWorld",
+      "shouldBlockAttackFromEvent",
       "startAttack",
       "startLoop",
       "warnLos",
@@ -1702,6 +1704,8 @@
     "symbols": [
       "assertHeroAliveOwned",
       "ensureHeroProximity",
+      "normalizeMapKey",
+      "resolveTileCoord",
       "takeFromBackpack"
     ]
   },

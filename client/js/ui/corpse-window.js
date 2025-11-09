@@ -225,11 +225,25 @@ import { apiPost, apiGet } from '../api.js';
 
   async function open(corpseId) {
     try {
-      await fetchCorpse(corpseId, { heroId: heroIdFromState() });
+      const corpse = await fetchCorpse(corpseId);
+      if (!corpse) return;
     } catch (e) {
-      console.warn('[corpse-window] open failed:', e?.message || e);
+      const msg = String(e?.message || '');
+      // fecha e informa o motivo mais comum
+      if (msg.includes('request-failed 409')) {
+        try { close(); } catch {}
+        try { window.toast?.warn?.('Muito longe do corpo. Aproxime-se mais.'); } catch {}
+        return;
+      }
+      if (msg.includes('request-failed 410') || msg.includes('corpse-expired')) {
+        try { close(); } catch {}
+        try { window.toast?.info?.('O corpo apodreceu e desapareceu.'); } catch {}
+        return;
+      }
+      console.warn('[corpse-window] open failed:', msg);
     }
   }
+
 
   function close() {
     state.open = false;
