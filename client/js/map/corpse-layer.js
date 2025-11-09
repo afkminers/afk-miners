@@ -68,29 +68,43 @@
     return { rect, cw, ch };
   }
 
+  function getCamera() {
+    return (window.GameScene && window.GameScene.camera) || null;
+  }
+
+  // world(px) -> coords dentro do canvas (antes do scaling CSS)
+  function worldToCanvasPx(wx, wy) {
+    const cam = getCamera();
+    if (cam && typeof cam.worldToScreen === 'function') {
+      const p = cam.worldToScreen(wx, wy) || {};
+      if (Number.isFinite(p.x) && Number.isFinite(p.y)) return p;
+      const z = cam.getZoom ? Number(cam.getZoom()) || 1 : 1;
+      const cx = Number(cam.x || 0);
+      const cy = Number(cam.y || 0);
+      return { x: (wx - cx) * z, y: (wy - cy) * z };
+    }
+    return { x: wx, y: wy };
+  }
+
+  // TILE -> world center -> canvas coords
   function tileToCanvasPx(tileX, tileY) {
     const gs = window.GameScene || null;
-    if (gs && typeof gs.tileToScreen === 'function') {
-      const p = gs.tileToScreen(tileX, tileY) || {};
-      if (Number.isFinite(p.x) && Number.isFinite(p.y)) return p;
-    }
     const tileSize = Number(
       gs?.tileSize || gs?.TILE_SIZE || window.TILE_SIZE || 32,
     );
-    const camX = Number(gs?.cameraX ?? gs?.camera?.x ?? gs?.viewX ?? 0) || 0;
-    const camY = Number(gs?.cameraY ?? gs?.camera?.y ?? gs?.viewY ?? 0) || 0;
-    return {
-      x: tileX * tileSize - camX + tileSize / 2,
-      y: tileY * tileSize - camY + tileSize / 2,
-    };
+    const wx = tileX * tileSize + tileSize / 2;
+    const wy = tileY * tileSize + tileSize / 2;
+    return worldToCanvasPx(wx, wy);
   }
 
   function canvasPxToCss(px, py) {
     const { rect, cw, ch } = getCanvasRects();
     const scaleX = Math.max(0.0001, rect.width / cw);
     const scaleY = Math.max(0.0001, rect.height / ch);
-    return { x: px * scaleX, y: py * scaleY };
+    // SOMA O OFFSET DO CANVAS NA PÁGINA
+    return { x: rect.left + px * scaleX, y: rect.top + py * scaleY };
   }
+
 
   function tileToCss(tileX, tileY) {
     const p = tileToCanvasPx(tileX, tileY);
@@ -102,6 +116,7 @@
     const mapKey = corpse.mapKey || corpse.map_key || null;
     const currentMap = getMapKey();
     if (mapKey && currentMap && mapKey !== currentMap) return;
+
     const id = String(corpse.id);
     state.corpses.set(id, corpse);
 
@@ -119,7 +134,7 @@
       node.style.background = 'rgba(0,0,0,0)';
       node.dataset.corpseId = id;
 
-      // abre loot pelo menu de contexto
+      // RMB / context menu abre loot
       node.addEventListener('contextmenu', (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
@@ -127,8 +142,6 @@
           window.CorpseWindow?.open(id);
         } catch {}
       });
-
-      // RMB direto no corpse
       node.addEventListener('pointerdown', (ev) => {
         if (ev.button === 2) {
           ev.preventDefault();
@@ -155,7 +168,7 @@
     }
   }
 
-  // remove só o estado local/DOM – não dispara evento
+  // remove só localmente, sem disparar evento (quem dispara é o servidor / refresh)
   function removeCorpse(id) {
     const key = String(id);
     const node = state.nodes.get(key);
@@ -195,9 +208,7 @@
         upsertCorpse(corpse);
       }
 
-      // qualquer corpse que existia no estado mas não veio mais do servidor
-      // é considerado "despawn" -> dispara evento para UI (fechar janela) e
-      // o listener global cuida de remover do DOM.
+      // Qualquer corpse que existia localmente e não veio mais do servidor => despawn
       for (const key of Array.from(state.corpses.keys())) {
         if (!seen.has(key)) {
           try {
@@ -209,13 +220,13 @@
           } catch {}
         }
       }
-    } catch (e) {
-      // ignore errors silently
+    } catch {
+      // ignora erro
     }
   }
 
   /**
-   * Tenta abrir o corpse debaixo do cursor (clientX/clientY).
+   * Tenta abrir o corpse exatamente debaixo do cursor (clientX/clientY).
    * Retorna true se abriu algum loot, false caso contrário.
    */
   function openCorpseAtEvent(ev) {
@@ -249,16 +260,13 @@
     return true;
   }
 
-  // eventos globais
-
+  // eventos globais vindos do servidor/UI
   window.addEventListener('corpse:spawn', (ev) => {
     upsertCorpse(ev?.detail || ev?.corpse || ev);
   });
-
   window.addEventListener('corpse:refresh', (ev) => {
     upsertCorpse(ev?.detail || ev);
   });
-
   window.addEventListener('corpse:updated', (ev) => {
     const detail = ev?.detail || null;
     if (!detail?.id) return;
@@ -267,8 +275,6 @@
     existing.isEmpty = detail.isEmpty === true;
     upsertCorpse(existing);
   });
-
-  // aqui é o único lugar que realmente chama removeCorpse()
   window.addEventListener('corpse:removed', (ev) => {
     const id = ev?.detail?.id || ev?.detail || ev?.corpseId || null;
     if (id) removeCorpse(id);
@@ -281,7 +287,7 @@
   setInterval(refresh, 2500);
   refresh();
 
-  // expõe helper para outros módulos (ex: attack-controls)
+  // expõe helper pro attack-controls usar RMB em cima do corpse
   state.openAtEvent = openCorpseAtEvent;
 
   state.__ready = true;

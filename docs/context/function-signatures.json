@@ -1292,7 +1292,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 20,
+    "line": 22,
     "kind": "function",
     "name": "pxToTile",
     "params": [
@@ -1302,7 +1302,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 26,
+    "line": 33,
     "kind": "function",
     "name": "rollMonsterLoot",
     "params": [
@@ -1311,7 +1311,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 46,
+    "line": 53,
     "kind": "function",
     "name": "withClient",
     "params": [
@@ -1320,7 +1320,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 143,
+    "line": 159,
     "kind": "function",
     "name": "listCorpses",
     "params": [
@@ -1329,7 +1329,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 160,
+    "line": 176,
     "kind": "function",
     "name": "getCorpseWithItems",
     "params": [
@@ -1338,7 +1338,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 185,
+    "line": 201,
     "kind": "function",
     "name": "cleanupEmptyCorpse",
     "params": [
@@ -1349,7 +1349,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 203,
+    "line": 219,
     "kind": "function",
     "name": "takeCorpseItem",
     "params": [
@@ -1361,7 +1361,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 269,
+    "line": 285,
     "kind": "function",
     "name": "dropGroundItem",
     "params": [
@@ -1376,7 +1376,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 312,
+    "line": 328,
     "kind": "function",
     "name": "listGroundItems",
     "params": [
@@ -1385,7 +1385,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 324,
+    "line": 340,
     "kind": "function",
     "name": "getGroundItem",
     "params": [
@@ -1394,7 +1394,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 334,
+    "line": 350,
     "kind": "function",
     "name": "pickupGroundItem",
     "params": [
@@ -1404,7 +1404,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 394,
+    "line": 410,
     "kind": "function",
     "name": "openCorpse",
     "params": [
@@ -1414,35 +1414,35 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 406,
+    "line": 422,
     "kind": "function",
     "name": "cleanupExpiredCorpses",
     "params": []
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 420,
+    "line": 436,
     "kind": "function",
     "name": "cleanupExpiredGroundItems",
     "params": []
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 435,
+    "line": 451,
     "kind": "function",
     "name": "startCleanupLoop",
     "params": []
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 445,
+    "line": 461,
     "kind": "function",
     "name": "stopCleanupLoop",
     "params": []
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 450,
+    "line": 466,
     "kind": "function",
     "name": "getHeroTilePosition",
     "params": [
@@ -1452,7 +1452,7 @@
   },
   {
     "file": "server\\services\\loot.js",
-    "line": 487,
+    "line": 503,
     "kind": "function",
     "name": "distanceTiles",
     "params": [
@@ -12278,21 +12278,21 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 30,
+    "line": 32,
     "kind": "function",
     "name": "getOverlayRoot",
     "params": []
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 49,
+    "line": 51,
     "kind": "function",
     "name": "getCanvasRects",
     "params": []
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 58,
+    "line": 71,
     "kind": "function",
     "name": "tileToCanvasPx",
     "params": [
@@ -12302,7 +12302,7 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 73,
+    "line": 88,
     "kind": "function",
     "name": "canvasPxToCss",
     "params": [
@@ -12312,7 +12312,7 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 80,
+    "line": 95,
     "kind": "function",
     "name": "tileToCss",
     "params": [
@@ -12322,7 +12322,7 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 85,
+    "line": 100,
     "kind": "function",
     "name": "upsertCorpse",
     "params": [
@@ -12331,7 +12331,7 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 133,
+    "line": 159,
     "kind": "function",
     "name": "removeCorpse",
     "params": [
@@ -12340,14 +12340,14 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 148,
+    "line": 171,
     "kind": "function",
     "name": "refresh",
     "params": []
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 183,
+    "line": 221,
     "kind": "function",
     "name": "openCorpseAtEvent",
     "params": [
