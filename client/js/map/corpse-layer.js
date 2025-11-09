@@ -34,8 +34,12 @@
       el = document.createElement('div');
       el.id = 'corpseLayer';
       el.style.position = 'absolute';
-      el.style.inset = '0';
-      el.style.pointerEvents = 'none';
+      el.style.left = '0';
+      el.style.top = '0';
+      el.style.width = '0';
+      el.style.height = '0';
+      el.style.overflow = 'visible';
+      el.style.pointerEvents = 'auto';
       el.style.zIndex = '7';
       host.appendChild(el);
     }
@@ -94,6 +98,7 @@
       node.style.width = '36px';
       node.style.height = '36px';
       node.style.pointerEvents = 'auto';
+      node.style.zIndex = '7';
       node.style.transform = 'translate(-50%, -50%)';
       node.style.cursor = 'pointer';
       node.style.background = 'rgba(0,0,0,0)';

@@ -7,9 +7,33 @@ const { run, all, get } = require('../models/db');
 const { listBackpack, getBackpackSpec, putLootItemsForHero } = require('../services/backpack');
 const lootSvc = require('../services/loot');
 const lootCache = require('../services/lootCache');
+const { TILE } = require('../utils/tile-coords');
 
 const CORPSE_RANGE = Math.max(1, Number(process.env.CORPSE_LOOT_RANGE_TILES || 1));
 const GROUND_RANGE = Math.max(1, Number(process.env.GROUND_ITEM_RANGE_TILES || CORPSE_RANGE));
+
+function normalizeMapKey(value) {
+  if (value == null) return null;
+  return String(value).trim().toLowerCase();
+}
+
+function resolveTileCoord(tileValue, rawValue, sourceHint = null) {
+  const tileNum = Number(tileValue);
+  if (Number.isInteger(tileNum) && sourceHint !== 'db-raw') {
+    return tileNum;
+  }
+  const rawNum = Number(rawValue);
+  if (sourceHint === 'db-raw' && Number.isFinite(rawNum)) {
+    return Math.floor(rawNum / TILE);
+  }
+  if (Number.isFinite(rawNum)) {
+    return Math.floor(rawNum / TILE);
+  }
+  if (Number.isFinite(tileNum)) {
+    return Math.floor(tileNum);
+  }
+  return NaN;
+}
 
 router.use(requireAuth);
 
@@ -67,15 +91,31 @@ async function takeFromBackpack(heroId, itemKey, qty) {
   return (Number(qty) | 0) - left; // quanto foi removido
 }
 
-async function ensureHeroProximity({ playerId, heroId, mapKey, tileX, tileY, range }) {
+async function ensureHeroProximity({ playerId, heroId, mapKey, tileX, tileY, posX = null, posY = null, range }) {
   const pos = await lootSvc.getHeroTilePosition(playerId, heroId);
   if (!pos || pos.mapKey == null) {
     return { ok: false, code: 409, error: 'hero-pos-unavailable' };
   }
-  if (String(pos.mapKey) !== String(mapKey)) {
+  const heroMapKey = normalizeMapKey(pos.mapKey);
+  const targetMapKey = normalizeMapKey(mapKey) || heroMapKey;
+  if (heroMapKey && targetMapKey && heroMapKey !== targetMapKey) {
+    console.warn('[loot] wrong-map', {
+      playerId: String(playerId),
+      heroId: String(heroId),
+      heroMapKey,
+      corpseMapKey: targetMapKey,
+    });
     return { ok: false, code: 409, error: 'wrong-map' };
   }
-  const dist = lootSvc.distanceTiles(pos, { tileX, tileY });
+  const heroTile = {
+    tileX: resolveTileCoord(pos.tileX, pos.rawX, pos.tileSource),
+    tileY: resolveTileCoord(pos.tileY, pos.rawY, pos.tileSource),
+  };
+  const corpseTile = {
+    tileX: resolveTileCoord(tileX, posX, null),
+    tileY: resolveTileCoord(tileY, posY, null),
+  };
+  const dist = lootSvc.distanceTiles(heroTile, corpseTile);
   if (!Number.isFinite(dist) || dist > range) {
     return { ok: false, code: 409, error: 'too-far', distance: dist };
   }
@@ -133,6 +173,8 @@ router.post('/loot/corpse/open', express.json(), async (req, res) => {
       mapKey: corpseMapKey,
       tileX: corpse.tileX,
       tileY: corpse.tileY,
+      posX: corpse.posX,
+      posY: corpse.posY,
       range: CORPSE_RANGE,
     });
     if (!near.ok) return res.status(near.code).json({ ok: false, error: near.error });
@@ -176,6 +218,8 @@ router.post('/loot/corpse/take', express.json(), async (req, res) => {
       mapKey: corpseMapKey,
       tileX: corpse.tileX,
       tileY: corpse.tileY,
+      posX: corpse.posX,
+      posY: corpse.posY,
       range: CORPSE_RANGE,
     });
     if (!near.ok) return res.status(near.code).json({ ok: false, error: near.error });

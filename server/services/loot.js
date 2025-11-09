@@ -453,9 +453,12 @@ async function getHeroTilePosition(playerId, fallbackHeroId = null) {
     const tile = pxToTile(live.x, live.y);
     if (Number.isInteger(tile.tx) && Number.isInteger(tile.ty)) {
       return {
-        mapKey: live.mapKey,
+        mapKey: String(live.mapKey).trim(),
         tileX: tile.tx,
         tileY: tile.ty,
+        rawX: Number.isFinite(Number(live.x)) ? Number(live.x) : null,
+        rawY: Number.isFinite(Number(live.y)) ? Number(live.y) : null,
+        tileSource: 'live',
         heroId: live.heroId || fallbackHeroId,
       };
     }
@@ -468,9 +471,12 @@ async function getHeroTilePosition(playerId, fallbackHeroId = null) {
     if (row) {
       const tile = pxToTile(row.x, row.y);
       return {
-        mapKey: row.map_key,
-        tileX: Number.isInteger(tile.tx) ? tile.tx : Number(row.x) | 0,
-        tileY: Number.isInteger(tile.ty) ? tile.ty : Number(row.y) | 0,
+        mapKey: String(row.map_key || '').trim(),
+        tileX: Number.isInteger(tile.tx) ? tile.tx : (Number(row.x) | 0),
+        tileY: Number.isInteger(tile.ty) ? tile.ty : (Number(row.y) | 0),
+        rawX: Number.isFinite(Number(row.x)) ? Number(row.x) : null,
+        rawY: Number.isFinite(Number(row.y)) ? Number(row.y) : null,
+        tileSource: Number.isInteger(tile.tx) && Number.isInteger(tile.ty) ? 'db-tile' : 'db-raw',
         heroId: fallbackHeroId,
       };
     }
