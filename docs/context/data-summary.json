@@ -1,5 +1,9 @@
 [
   {
+    "file": "docs\\releases\\2025-11-09_163513-auto\\ctx.yml",
+    "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
+  },
+  {
     "file": "docs\\releases\\2025-11-09_143438-auto\\ctx.yml",
     "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
   },
@@ -836,7 +840,7 @@
   {
     "file": "data\\monsters\\bear.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -848,6 +852,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",
@@ -857,7 +862,7 @@
   {
     "file": "data\\monsters\\balor.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -869,6 +874,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",

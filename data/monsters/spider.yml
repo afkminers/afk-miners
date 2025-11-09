@@ -15,7 +15,7 @@ elements:
   earth: 20
 attack_range: 1
 aggro_range: 8
-leash_px: 640 # 6 tiles * 32px — desiste e volta pra casa fora disso
+leash_px: 1600 # 6 tiles * 32px — desiste e volta pra casa fora disso
 attack_ms: 1800
 attacks:
 - type: melee
