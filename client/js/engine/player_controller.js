@@ -86,7 +86,14 @@ export class PlayerController {
     // Solicita um passo cardinal (dir: {x:-1|0|1, y:-1|0|1} com |x|+|y| = 1)
     requestStep(dir) {
       if (!dir || (dir.x && dir.y)) return; // ignora diagonal
-      if (this.path) return;                // se está seguindo path, ignora input manual
+
+      // Se estiver seguindo um path de clique, teclado tem prioridade:
+      // cancela o caminho e deixa o passo manual assumir.
+      if (this.path) {
+        this.path = null;
+        this.pathIdx = 0;
+      }
+
       if (this._moving) return;             // já executando um passo
 
       // célula atual e alvo
@@ -99,6 +106,7 @@ export class PlayerController {
       this._stepTarget = { x: c.x, y: c.y };
       this._moving = true;
     }
+
 
     // dt em segundos; dir = {x:-1..1, y:-1..1} (contínuo legado)
     update(dt, dir) {

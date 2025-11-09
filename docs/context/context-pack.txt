@@ -1,5 +1,5 @@
 AFK Miners — Context Pack
-Commit: bbb2a60 | Branch: main | Last Tag: n/a
+Commit: d02ba4b | Branch: main | Last Tag: n/a
 
 == Estrutura (nível 4) ==
 2025-09-18_000141-auto.zip
@@ -445,6 +445,10 @@ docs\backups\2025-11-09_023642-pre-main-7a5d155.zip
 docs\backups\2025-11-09_023704-post-main-9b15cf7.zip
 docs\backups\2025-11-09_031428-pre-main-198d0db.zip
 docs\backups\2025-11-09_031448-post-main-bbb2a60.zip
+docs\backups\2025-11-09_034933-pre-main-bbb2a60.zip
+docs\backups\2025-11-09_102438-pre-main-c0d4ca1.zip
+docs\backups\2025-11-09_133535-pre-main-c0d4ca1.zip
+docs\backups\2025-11-09_133555-post-main-d02ba4b.zip
 docs\backups\playjs-and-indexjs-playerview2025-11-08_210304-post-main-dfe256d.zip
 docs\context
 docs\context\API.md
@@ -2522,6 +2526,38 @@ docs\releases\2025-11-09_023721-auto\responses-sample.json
 docs\releases\2025-11-09_023721-auto\route-history.json
 docs\releases\2025-11-09_023721-auto\symbol-index.json
 docs\releases\2025-11-09_023721-auto\todos.json
+docs\releases\2025-11-09_031504-auto
+docs\releases\2025-11-09_031504-auto.zip
+docs\releases\2025-11-09_031504-auto\API.md
+docs\releases\2025-11-09_031504-auto\_README.txt
+docs\releases\2025-11-09_031504-auto\changes-since.txt
+docs\releases\2025-11-09_031504-auto\context-pack.txt
+docs\releases\2025-11-09_031504-auto\ctx.yml
+docs\releases\2025-11-09_031504-auto\data-summary.json
+docs\releases\2025-11-09_031504-auto\db-counts.txt
+docs\releases\2025-11-09_031504-auto\db-enums.json
+docs\releases\2025-11-09_031504-auto\db-extensions.txt
+docs\releases\2025-11-09_031504-auto\db-fks.json
+docs\releases\2025-11-09_031504-auto\db-functions.sql
+docs\releases\2025-11-09_031504-auto\db-indexes.json
+docs\releases\2025-11-09_031504-auto\db-schema.sql
+docs\releases\2025-11-09_031504-auto\db-sequences.json
+docs\releases\2025-11-09_031504-auto\db-sizes.txt
+docs\releases\2025-11-09_031504-auto\db-tables.json
+docs\releases\2025-11-09_031504-auto\db-triggers.sql
+docs\releases\2025-11-09_031504-auto\db-views.sql
+docs\releases\2025-11-09_031504-auto\deps-graph.json
+docs\releases\2025-11-09_031504-auto\deps.txt
+docs\releases\2025-11-09_031504-auto\endpoints-contracts.json
+docs\releases\2025-11-09_031504-auto\env-usage.json
+docs\releases\2025-11-09_031504-auto\error-map.json
+docs\releases\2025-11-09_031504-auto\function-signatures.json
+docs\releases\2025-11-09_031504-auto\openapi.json
+docs\releases\2025-11-09_031504-auto\package.json
+docs\releases\2025-11-09_031504-auto\responses-sample.json
+docs\releases\2025-11-09_031504-auto\route-history.json
+docs\releases\2025-11-09_031504-auto\symbol-index.json
+docs\releases\2025-11-09_031504-auto\todos.json
 exit
 fix-camel-columns.js
 fix-sql-columns.js
@@ -3643,14 +3679,14 @@ undo-fix-baks.js
 weapon-files.txt
 
 == Inventário por extensão ==
-.json : 1114
+.json : 1131
 .png : 637
-.txt : 507
-.sql : 285
-.zip : 212
+.txt : 514
+.sql : 289
+.zip : 217
 .js : 172
-.yml : 110
-.md : 73
+.yml : 111
+.md : 74
 .aseprite : 52
 .css : 37
 .gif : 28
@@ -3675,6 +3711,10 @@ weapon-files.txt
 .tsx : 1
 
 == Top 20 maiores arquivos ==
+138203.4 KB	docs\backups\2025-11-09_133535-pre-main-c0d4ca1.zip
+138203.3 KB	docs\backups\2025-11-09_133555-post-main-d02ba4b.zip
+138202.6 KB	docs\backups\2025-11-09_034933-pre-main-bbb2a60.zip
+138202.5 KB	docs\backups\2025-11-09_102438-pre-main-c0d4ca1.zip
 138202.4 KB	docs\backups\2025-11-09_023642-pre-main-7a5d155.zip
 138202.3 KB	docs\backups\2025-11-09_023704-post-main-9b15cf7.zip
 138202.2 KB	docs\backups\2025-11-09_031428-pre-main-198d0db.zip
@@ -3691,10 +3731,6 @@ weapon-files.txt
 138183.7 KB	docs\backups\playjs-and-indexjs-playerview2025-11-08_210304-post-main-dfe256d.zip
 138182.5 KB	docs\backups\2025-11-08_192845-pre-main-4c772f3.zip
 138182.4 KB	docs\backups\2025-11-08_192909-post-main-199ae56.zip
-138163.3 KB	docs\backups\2025-11-08_024207-pre-main-dfec6cc.zip
-138163.2 KB	docs\backups\2025-11-08_024227-post-main-4c772f3.zip
-138162.7 KB	docs\backups\2025-11-08_022935-pre-main-e0719f8.zip
-138162.6 KB	docs\backups\2025-11-08_022955-post-main-dfec6cc.zip
 
 == Rotas detectadas (server) ==
 [GET] /_ping  (server\combat\routes.js:137)
@@ -3823,6 +3859,15 @@ client\pages\heroes.html :: title="" | scripts=0 | styles=0 | 298 bytes
 client\pages\dungeon.html :: title="" | scripts=0 | styles=0 | 295 bytes
 
 == YAML — sumário (repo inteiro) ==
+ERR docs\releases\2025-11-09_031504-auto\ctx.yml :: YAMLException: bad indentation of a sequence entry (20:11)
+
+ 17 |     notes: YAML/JSON de catálogo/config;  ...
+ 18 | 
+ 19 | endpoints:
+ 20 |   - [GET] /api/admin/content/map/:key/obj ...
+----------------^
+ 21 | 
+ 22 | important_env:
 ERR docs\releases\2025-11-09_023721-auto\ctx.yml :: YAMLException: bad indentation of a sequence entry (20:11)
 
  17 |     notes: YAML/JSON de catálogo/config;  ...
@@ -4426,21 +4471,21 @@ data\sprites\monsters\cave_rat.yml :: 7 chaves | keys: key, kind, image, frame, 
 data\sprites\monsters\bear.yml :: 7 chaves | keys: key, kind, image, frame, grid, anchor, anims
 data\sprites\monsters\balor.yml :: 7 chaves | keys: key, kind, image, frame, grid, anchor, anims
 data\sprites\characters\knight.yml :: 7 chaves | keys: key, image, frame, grid, directions, anims, anchor
-data\monsters\wolf.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
+data\monsters\wolf.yml :: 15 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, leash_px, attack_ms, attacks, defenses, loot
 data\monsters\teste.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
-data\monsters\spider.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
-data\monsters\skeleton.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
-data\monsters\rotworm.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
-data\monsters\rotmaw.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
-data\monsters\rat.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
-data\monsters\poison_spider.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
+data\monsters\spider.yml :: 15 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, leash_px, attack_ms, attacks, defenses, loot
+data\monsters\skeleton.yml :: 15 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, leash_px, attack_ms, attacks, defenses, loot
+data\monsters\rotworm.yml :: 15 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, leash_px, attack_ms, attacks, defenses, loot
+data\monsters\rotmaw.yml :: 15 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, leash_px, attack_ms, attacks, defenses, loot
+data\monsters\rat.yml :: 15 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, leash_px, attack_ms, attacks, defenses, loot
+data\monsters\poison_spider.yml :: 15 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, leash_px, attack_ms, attacks, defenses, loot
 data\monsters\index.yml :: 1 chaves | keys: monsters
-data\monsters\goblin.yml :: 12 chaves | keys: key, name, xp, health, speed, look, flags, attack_range, aggro_range, attack_ms, attacks, loot
-data\monsters\ghost.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
-data\monsters\fire_devil.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
-data\monsters\demon_bonefiend.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
+data\monsters\goblin.yml :: 13 chaves | keys: key, name, xp, health, speed, look, flags, attack_range, aggro_range, leash_px, attack_ms, attacks, loot
+data\monsters\ghost.yml :: 15 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, leash_px, attack_ms, attacks, defenses, loot
+data\monsters\fire_devil.yml :: 15 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, leash_px, attack_ms, attacks, defenses, loot
+data\monsters\demon_bonefiend.yml :: 15 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, leash_px, attack_ms, attacks, defenses, loot
 data\monsters\deer.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
-data\monsters\cave_rat.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
+data\monsters\cave_rat.yml :: 15 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, leash_px, attack_ms, attacks, defenses, loot
 data\monsters\bear.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
 data\monsters\balor.yml :: 14 chaves | keys: key, name, xp, health, speed, look, flags, elements, attack_range, aggro_range, attack_ms, attacks, defenses, loot
 data\items\starter_sword.yml :: 11 chaves | keys: key, name, type, slot, kind, weapon_type, icon, atk, def, stackable, weapon
@@ -4462,6 +4507,23 @@ package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, 
 server\package.json :: 8 chaves | keys: name, version, description, main, scripts, dependencies, devDependencies, engines | 2409 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 90768 bytes
 server\content\data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 25614 bytes
+docs\releases\2025-11-09_031504-auto\todos.json :: 22 itens | 3217 bytes
+docs\releases\2025-11-09_031504-auto\symbol-index.json :: 143 itens | 42235 bytes
+docs\releases\2025-11-09_031504-auto\route-history.json :: 0 itens | 2 bytes
+docs\releases\2025-11-09_031504-auto\responses-sample.json :: 20 chaves | keys: GET /_ping, GET /_routes, POST /:friendId/accept, POST /:friendId/block, GET /:friendId/dms, POST /:friendId/reject, POST /:friendId/unblock, DELETE /:friendId, POST /:heroId/deposit, GET /:heroId/slots, GET /:heroId, GET /admin, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites | 7732 bytes
+docs\releases\2025-11-09_031504-auto\package.json :: 8 chaves | keys: name, version, description, main, scripts, dependencies, devDependencies, engines | 2377 bytes
+docs\releases\2025-11-09_031504-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 99148 bytes
+docs\releases\2025-11-09_031504-auto\function-signatures.json :: 1593 itens | 259586 bytes
+docs\releases\2025-11-09_031504-auto\error-map.json :: 20 chaves | keys: GET /_ping, GET /_routes, POST /:friendId/accept, POST /:friendId/block, GET /:friendId/dms, POST /:friendId/reject, POST /:friendId/unblock, DELETE /:friendId, POST /:heroId/deposit, GET /:heroId/slots, GET /:heroId, GET /admin, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites | 35445 bytes
+docs\releases\2025-11-09_031504-auto\env-usage.json :: 98 itens | 20967 bytes
+docs\releases\2025-11-09_031504-auto\endpoints-contracts.json :: 84 itens | 72417 bytes
+docs\releases\2025-11-09_031504-auto\deps-graph.json :: 75 itens | 6089 bytes
+docs\releases\2025-11-09_031504-auto\db-tables.json :: 3 chaves | keys: tables, tablesInfo, constraints | 146123 bytes
+docs\releases\2025-11-09_031504-auto\db-sequences.json :: 12 itens | 1700 bytes
+docs\releases\2025-11-09_031504-auto\db-indexes.json :: 129 itens | 28124 bytes
+docs\releases\2025-11-09_031504-auto\db-fks.json :: 13 chaves | keys: afk_boxes, afk_inventories, afk_workers, direct_messages, farm_plots, friendships, hero_equipment, map_loot_items, map_objects, monster_corpse_items, monster_instances, player_inventories, spawns | 4955 bytes
+docs\releases\2025-11-09_031504-auto\db-enums.json :: 1 chaves | keys: friend_status | 73 bytes
+docs\releases\2025-11-09_031504-auto\data-summary.json :: 112 itens | 33497 bytes
 docs\releases\2025-11-09_023721-auto\todos.json :: 22 itens | 3217 bytes
 docs\releases\2025-11-09_023721-auto\symbol-index.json :: 143 itens | 42150 bytes
 docs\releases\2025-11-09_023721-auto\route-history.json :: 0 itens | 2 bytes
@@ -5546,28 +5608,28 @@ docs\releases\2025-09-17_132223-auto\endpoints-contracts.json :: 61 itens | 5909
 docs\releases\2025-09-17_132223-auto\deps-graph.json :: 18 itens | 1302 bytes
 docs\releases\2025-09-17_132223-auto\data-summary.json :: 38 itens | 8855 bytes
 docs\context\todos.json :: 22 itens | 3217 bytes
-docs\context\symbol-index.json :: 143 itens | 42150 bytes
+docs\context\symbol-index.json :: 143 itens | 42235 bytes
 docs\context\route-history.json :: 0 itens | 2 bytes
 docs\context\responses-sample.json :: 20 chaves | keys: GET /_ping, GET /_routes, POST /:friendId/accept, POST /:friendId/block, GET /:friendId/dms, POST /:friendId/reject, POST /:friendId/unblock, DELETE /:friendId, POST /:heroId/deposit, GET /:heroId/slots, GET /:heroId, GET /admin, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites | 7732 bytes
 docs\context\openapi.json :: 3 chaves | keys: openapi, info, paths | 99148 bytes
-docs\context\function-signatures.json :: 1590 itens | 259110 bytes
+docs\context\function-signatures.json :: 1593 itens | 259586 bytes
 docs\context\error-map.json :: 20 chaves | keys: GET /_ping, GET /_routes, POST /:friendId/accept, POST /:friendId/block, GET /:friendId/dms, POST /:friendId/reject, POST /:friendId/unblock, DELETE /:friendId, POST /:heroId/deposit, GET /:heroId/slots, GET /:heroId, GET /admin, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites | 35445 bytes
 docs\context\env-usage.json :: 98 itens | 20967 bytes
 docs\context\endpoints-contracts.json :: 84 itens | 72417 bytes
 docs\context\deps-graph.json :: 75 itens | 6089 bytes
 docs\context\db-tables.json :: 3 chaves | keys: tables, tablesInfo, constraints | 146123 bytes
-docs\context\db-table-stats.json :: 49 itens | 25785 bytes
+docs\context\db-table-stats.json :: 49 itens | 25786 bytes
 docs\context\db-srvinfo.json :: 7 chaves | keys: raw_version, current_user, current_database, current_schema, snapshot_time, search_path, database_size_bytes | 341 bytes
 docs\context\db-sequences.json :: 12 itens | 1700 bytes
 docs\context\db-partitions.json :: 0 itens | 2 bytes
 docs\context\db-indexes.json :: 129 itens | 28124 bytes
-docs\context\db-index-usage.json :: 129 itens | 20978 bytes
+docs\context\db-index-usage.json :: 129 itens | 20982 bytes
 docs\context\db-fks.json :: 13 chaves | keys: afk_boxes, afk_inventories, afk_workers, direct_messages, farm_plots, friendships, hero_equipment, map_loot_items, map_objects, monster_corpse_items, monster_instances, player_inventories, spawns | 4955 bytes
 docs\context\db-enums.json :: 1 chaves | keys: friend_status | 73 bytes
 docs\context\db-domains.json :: 0 itens | 2 bytes
 docs\context\db-comments.json :: 3 chaves | keys: tables, columns, indexes | 52 bytes
-docs\context\db-column-stats.json :: 213 itens | 215841 bytes
-docs\context\data-summary.json :: 111 itens | 33167 bytes
+docs\context\db-column-stats.json :: 213 itens | 215872 bytes
+docs\context\data-summary.json :: 112 itens | 33497 bytes
 data\cms-content.json :: 2 chaves | keys: en, pt-BR | 2998 bytes
 data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 100774 bytes
 client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1779 bytes

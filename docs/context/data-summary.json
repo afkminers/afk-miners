@@ -1,5 +1,9 @@
 [
   {
+    "file": "docs\\releases\\2025-11-09_031504-auto\\ctx.yml",
+    "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
+  },
+  {
     "file": "docs\\releases\\2025-11-09_023721-auto\\ctx.yml",
     "error": "YAMLException: bad indentation of a sequence entry (20:11)\n\n 17 |     notes: YAML/JSON de catálogo/config;  ...\n 18 | \n 19 | endpoints:\n 20 |   - [GET] /api/admin/content/map/:key/obj ...\n----------------^\n 21 | \n 22 | important_env:"
   },
@@ -512,7 +516,7 @@
   {
     "file": "data\\monsters\\wolf.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -524,6 +528,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",
@@ -554,7 +559,7 @@
   {
     "file": "data\\monsters\\spider.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -566,6 +571,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",
@@ -575,7 +581,7 @@
   {
     "file": "data\\monsters\\skeleton.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -587,6 +593,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",
@@ -596,7 +603,7 @@
   {
     "file": "data\\monsters\\rotworm.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -608,6 +615,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",
@@ -617,7 +625,7 @@
   {
     "file": "data\\monsters\\rotmaw.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -629,6 +637,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",
@@ -638,7 +647,7 @@
   {
     "file": "data\\monsters\\rat.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -650,6 +659,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",
@@ -659,7 +669,7 @@
   {
     "file": "data\\monsters\\poison_spider.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -671,6 +681,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",
@@ -688,7 +699,7 @@
   {
     "file": "data\\monsters\\goblin.yml",
     "kind": "object",
-    "size": 12,
+    "size": 13,
     "topKeys": [
       "key",
       "name",
@@ -699,6 +710,7 @@
       "flags",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "loot"
@@ -707,7 +719,7 @@
   {
     "file": "data\\monsters\\ghost.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -719,6 +731,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",
@@ -728,7 +741,7 @@
   {
     "file": "data\\monsters\\fire_devil.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -740,6 +753,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",
@@ -749,7 +763,7 @@
   {
     "file": "data\\monsters\\demon_bonefiend.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -761,6 +775,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",
@@ -791,7 +806,7 @@
   {
     "file": "data\\monsters\\cave_rat.yml",
     "kind": "object",
-    "size": 14,
+    "size": 15,
     "topKeys": [
       "key",
       "name",
@@ -803,6 +818,7 @@
       "elements",
       "attack_range",
       "aggro_range",
+      "leash_px",
       "attack_ms",
       "attacks",
       "defenses",

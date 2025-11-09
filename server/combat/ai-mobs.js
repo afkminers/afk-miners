@@ -634,11 +634,17 @@ function seedPosition({ id, x, y, mapKey, spawnRect, speed = null, monsterKey = 
 function addThreatFromHeroHit(instanceId, heroId, amount = THREAT_ON_HIT) {
   const mob = mobs.get(String(instanceId));
   if (!mob) return;
+
+  // Se o mob está voltando pra casa por causa de leash,
+  // ignora hits para não reacender agro no caminho.
+  if (mob._returningHome) return;
+
   const cur = mob.threat.get(String(heroId)) || 0;
   const inc = Math.max(0, Number(amount) || 0);
   mob.threat.set(String(heroId), cur + inc);
   if (DEBUG_AI) console.log(`[ai-mobs] threat++ mob=${instanceId} hero=${heroId} -> ${cur}+${inc}`);
 }
+
 
 // --------- Boot/Stop ----------
 async function start() {
@@ -1450,6 +1456,12 @@ function decayThreat(mob, dt) {
 function selectTargetByThreat(now, mob, heroes, losGrid) {
   const aggroR2 = (mob.aggroRangePx || (8 * PX_PER_TILE)) ** 2;
 
+  // Se o mob estourou o leash e está explicitamente voltando pra casa,
+  // ele não deve ganhar/agregar threat novo até chegar.
+  if (mob._returningHome) {
+    return;
+  }
+
   // DEBUG: distância mais próxima (mesmo que fora do aggro)
   let nearest = { id: null, d2: Infinity };
 
@@ -1549,6 +1561,7 @@ function selectTargetByThreat(now, mob, heroes, losGrid) {
     mob.agroSince = now;
   }
 }
+
 
 // --------- Movement ----------
 function isBlockedPx(losGrid, wx, wy) {
