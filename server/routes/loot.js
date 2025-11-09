@@ -125,10 +125,12 @@ router.post('/loot/corpse/open', express.json(), async (req, res) => {
       return res.status(410).json({ error: 'corpse-expired' });
     }
 
+    const corpseMapKey = corpse.mapKey || corpse.map_key || null;
+
     const near = await ensureHeroProximity({
       playerId: req.user.id,
       heroId,
-      mapKey: corpse.mapKey,
+      mapKey: corpseMapKey,
       tileX: corpse.tileX,
       tileY: corpse.tileY,
       range: CORPSE_RANGE,
@@ -166,10 +168,12 @@ router.post('/loot/corpse/take', express.json(), async (req, res) => {
       return res.status(410).json({ error: 'corpse-expired' });
     }
 
+    const corpseMapKey = corpse.mapKey || corpse.map_key || null;
+
     const near = await ensureHeroProximity({
       playerId: req.user.id,
       heroId,
-      mapKey: corpse.mapKey,
+      mapKey: corpseMapKey,
       tileX: corpse.tileX,
       tileY: corpse.tileY,
       range: CORPSE_RANGE,
@@ -180,11 +184,11 @@ router.post('/loot/corpse/take', express.json(), async (req, res) => {
     const wantsDrop = dropTarget && (dropTarget.tileX != null || dropTarget.tileY != null || dropTarget.x != null || dropTarget.y != null);
     let dropTileX = null;
     let dropTileY = null;
-    let dropMapKey = corpse.mapKey;
+    let dropMapKey = corpseMapKey;
     if (wantsDrop) {
       dropTileX = Number.isInteger(dropTarget.tileX) ? dropTarget.tileX : Number.isInteger(dropTarget.x) ? dropTarget.x : null;
       dropTileY = Number.isInteger(dropTarget.tileY) ? dropTarget.tileY : Number.isInteger(dropTarget.y) ? dropTarget.y : null;
-      dropMapKey = dropTarget.mapKey ? String(dropTarget.mapKey) : corpse.mapKey;
+      dropMapKey = dropTarget.mapKey ? String(dropTarget.mapKey) : corpseMapKey;
       if (!Number.isInteger(dropTileX) || !Number.isInteger(dropTileY)) {
         return res.status(400).json({ error: 'bad-drop-target' });
       }

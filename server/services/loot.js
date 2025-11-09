@@ -143,7 +143,7 @@ async function createCorpse({
 async function listCorpses(mapKey) {
   return await all(
     `SELECT id, monster_instance_id, monster_key, monster_name,
-            map_key, tile_x AS "tileX", tile_y AS "tileY",
+            map_key AS "mapKey", tile_x AS "tileX", tile_y AS "tileY",
             pos_x AS "posX", pos_y AS "posY",
             owner_player_id AS "ownerPlayerId",
             owner_hero_id AS "ownerHeroId",
@@ -160,7 +160,7 @@ async function listCorpses(mapKey) {
 async function getCorpseWithItems(corpseId) {
   const corpse = await get(
     `SELECT id, monster_instance_id, monster_key, monster_name,
-            map_key, tile_x AS "tileX", tile_y AS "tileY",
+            map_key AS "mapKey", tile_x AS "tileX", tile_y AS "tileY",
             pos_x AS "posX", pos_y AS "posY",
             owner_player_id AS "ownerPlayerId",
             owner_hero_id AS "ownerHeroId",
