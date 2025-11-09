@@ -942,6 +942,20 @@
     ]
   },
   {
+    "key": "OPENAI_API_KEY",
+    "occurrences": [
+      {
+        "file": "server\\services\\translator.js",
+        "index": 105
+      },
+      {
+        "file": "server\\services\\translator.js",
+        "index": 258
+      }
+    ],
+    "defaults": []
+  },
+  {
     "key": "PG_DUMP_PATH",
     "occurrences": [
       {

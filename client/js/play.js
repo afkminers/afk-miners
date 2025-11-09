@@ -26,6 +26,49 @@ const playerVis = { w: 32, h: 32, img: null, heroKey: null, anchorX: 0.5, anchor
 // Desliga a IA local de mobs; posição deve vir do servidor
 const ENABLE_LOCAL_MOB_AI = false;
 
+// ======= Estado de outros jogadores visíveis no mapa =======
+const otherPlayers = new Map(); // playerId -> { id, name, x, y, mapKey, lastSeenAt }
+const OTHER_PLAYER_TTL_MS = 5000;
+
+function upsertOtherPlayer(msg) {
+  if (!msg) return;
+  const rawId = msg.id != null ? String(msg.id) : '';
+  if (!rawId) return;
+
+  const myId = window.MyPlayerId ? String(window.MyPlayerId) : null;
+  if (myId && myId === rawId) return; // ignora minhas próprias mensagens
+
+  const mapKey = String(msg.mapKey || MAP_KEY || 'house');
+  if (mapKey !== MAP_KEY) return; // só desenha quem está no mesmo mapa
+
+  const x = Number(msg.x);
+  const y = Number(msg.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+  const prev = otherPlayers.get(rawId) || {};
+  otherPlayers.set(rawId, {
+    id: rawId,
+    name: String(msg.name || prev.name || ''),
+    x,
+    y,
+    mapKey,
+    lastSeenAt: performance.now(),
+  });
+}
+
+function getOtherPlayersSnapshot() {
+  const now = performance.now();
+  const list = [];
+  for (const [id, p] of otherPlayers.entries()) {
+    const age = now - (p.lastSeenAt || 0);
+    if (age > OTHER_PLAYER_TTL_MS) {
+      otherPlayers.delete(id);
+      continue;
+    }
+    list.push(p);
+  }
+  return list;
+}
 
 // === buffer de pos_snap recebido cedo (antes do controller existir)
 let _earlySnap = null;
@@ -45,6 +88,15 @@ onMessage('pos_snap', (msg) => {
   try { ctrl.setPosition(msg.x | 0, msg.y | 0); } catch {}
 });
 
+// atualiza cache de outros jogadores quando o servidor manda posição
+onMessage('pos', (msg) => {
+  try {
+    upsertOtherPlayer(msg);
+  } catch (err) {
+    console.warn('[play] failed to upsert other player pos', err);
+  }
+});
+
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // WS Auth: garante que o servidor sabe quem é o player (id/nome) e
 // assim persiste sua posição no banco (player_last_pos). Sem isso, no F5
@@ -60,10 +112,18 @@ async function bootAuth() {
     // em alguns lugares o payload vem como { profile: {...} }, noutros, direto
     const p = (me && me.profile) ? me.profile : me;
 
+    // normaliza id do player
+    const id = String(p?.id || p?.playerId || '');
+
+    // deixa o id disponível globalmente para ignorar a própria posição no WS
+    if (id && id !== 'undefined' && id !== 'null') {
+      window.MyPlayerId = id;
+    }
+
     // devolve o shape que o singleton espera
     return {
-      id:   String(p?.id || p?.playerId || ''), // <<<<<< ESSENCIAL
-      name:        p?.name || p?.username || 'Player'
+      id,
+      name: p?.name || p?.username || 'Player',
     };
   });
 }
@@ -1729,6 +1789,46 @@ function drawPlayer(controller) {
   }
 }
 
+function drawOtherPlayer(player) {
+  if (!player) return;
+  const x = Number(player.x);
+  const y = Number(player.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+  if (imgReady(playerVis.img)) {
+    const anchorX = Number.isFinite(playerVis.anchorX) ? playerVis.anchorX : 0.5;
+    const anchorY = Number.isFinite(playerVis.anchorY) ? playerVis.anchorY : 0.9;
+    const ox = Math.round(x - playerVis.w * anchorX);
+    const oy = Math.round(y - playerVis.h * anchorY);
+
+    ctx.save();
+    ctx.globalAlpha = 0.95;
+    ctx.drawImage(playerVis.img, ox, oy, playerVis.w, playerVis.h);
+    ctx.restore();
+  } else {
+    ctx.save();
+    ctx.fillStyle = "#38bdf8"; // outro jogador = cor diferente
+    const size = 32;
+    const half = size / 2;
+    ctx.fillRect(x - half, y - half, size, size);
+    ctx.restore();
+  }
+
+  if (player.name) {
+    ctx.save();
+    ctx.font = '8px "Press Start 2P", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillText(player.name, x + 1, y - 24 + 1);
+
+    ctx.fillStyle = '#f9fafb';
+    ctx.fillText(player.name, x, y - 24);
+    ctx.restore();
+  }
+}
+
 function drawMob(m) {
   if (m.hidden) return;
 
@@ -2448,6 +2548,14 @@ function updateRespawns(now) {
       drawGround(camera);
       for (const l of loots.values()) drawLoot(l);
       for (const m of mobs) drawMob(m);
+
+      // desenha outros jogadores primeiro…
+      const others = getOtherPlayersSnapshot();
+      for (const p of others) {
+        drawOtherPlayer(p);
+      }
+
+      // …e por último o próprio player (fica "por cima")
       drawPlayer(controller);
     });
 

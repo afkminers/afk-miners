@@ -77,6 +77,7 @@
 - `MONSTER_STEP_MS` (defaults: 150)
 - `MONSTER_STEP_SEARCH_DEPTH` (defaults: 4)
 - `NODE_ENV` (defaults: development)
+- `OPENAI_API_KEY`
 - `PG_DUMP_PATH`
 - `PGSSLMODE`
 - `PORT` (defaults: 3000)
