@@ -44,6 +44,7 @@ const COMBAT_DANCE_COOLDOWN_MS = 950; // intervalo para o "passinho" em combate
 const COMBAT_DANCE_RETURN_DELAY_MS = 180; // espera mínima antes de tentar voltar
 const COMBAT_DANCE_STAGE_TIMEOUT_MS = 850; // cancela se ficar travado em uma etapa
 const LAST_KNOWN_HERO_GRACE_MS = Math.max(GIVEUP_MS * 2, 16000);
+const LEASH_COOLDOWN_MS = 1800;
 
 // Anti-hit fantasma (idades máximas aceitáveis das posições)
 const STALE_HERO_MS = Math.max(900, Number(LIVE_POS_TTL_MS) + 350);
@@ -534,6 +535,9 @@ function ensureMob(instanceId, patch = {}) {
     ? Boolean(patch._returningHome)
     : (resetThreat ? false : Boolean(cur._returningHome));
 
+  // janela pós-leash: até quando o mob deve ignorar agro novo
+  const leashCooldownUntil = Number(patch.leashCooldownUntil ?? cur.leashCooldownUntil ?? 0) || 0;
+
   const next = {
     instanceId: id,
     mapKey: patch.mapKey ?? cur.mapKey ?? null,
@@ -559,7 +563,6 @@ function ensureMob(instanceId, patch = {}) {
     combatStep,
     lastCombatStepAt,
 
-
     // === Ranges em PX e cooldown em ms, todos no mesmo relógio (ms) ===
     attackRangeTiles: Math.max(1, attackRangeTiles | 0),
     aggroRangePx:  (aggroRangeTiles  * PX_PER_TILE) | 0,
@@ -582,11 +585,13 @@ function ensureMob(instanceId, patch = {}) {
     leashRangePx,
     leashPx: leashRangePx,
     _returningHome: returningHome,
+    leashCooldownUntil,
   };
 
   mobs.set(id, next);
   return next;
 }
+
 
 function computeRepathCooldownMs(mob) {
   const speed = Number.isFinite(mob?.moveSpeedPx) ? mob.moveSpeedPx : DEFAULT_CHASE_SPEED_PX_S;
@@ -623,7 +628,9 @@ function seedPosition({ id, x, y, mapKey, spawnRect, speed = null, monsterKey = 
     patch.lastProgressAt = now;
     patch.nextAttackAt = now;
     patch._returningHome = false;
+    patch.leashCooldownUntil = 0;
   }
+
 
   ensureMob(id, patch);
 }
@@ -635,15 +642,18 @@ function addThreatFromHeroHit(instanceId, heroId, amount = THREAT_ON_HIT) {
   const mob = mobs.get(String(instanceId));
   if (!mob) return;
 
-  // Se o mob está voltando pra casa por causa de leash,
-  // ignora hits para não reacender agro no caminho.
-  if (mob._returningHome) return;
+  const now = Date.now();
+  const cooldownUntil = Number(mob.leashCooldownUntil || 0);
+  // Se o mob acabou de estourar o leash e está na janela de retorno,
+  // ignora threat de hit para não reacender agro no caminho.
+  if (cooldownUntil && now < cooldownUntil) return;
 
   const cur = mob.threat.get(String(heroId)) || 0;
   const inc = Math.max(0, Number(amount) || 0);
   mob.threat.set(String(heroId), cur + inc);
   if (DEBUG_AI) console.log(`[ai-mobs] threat++ mob=${instanceId} hero=${heroId} -> ${cur}+${inc}`);
 }
+
 
 
 // --------- Boot/Stop ----------
@@ -885,6 +895,7 @@ async function maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles }) {
   const distChebyPx = Math.max(Math.abs(mob.x - homeX), Math.abs(mob.y - homeY));
   if (distChebyPx <= HOME_TOLERANCE_PX) {
     mob._returningHome = false;
+    mob.leashCooldownUntil = 0;
     if (distChebyPx > 0) {
       mob.x = homeX | 0;
       mob.y = homeY | 0;
@@ -1130,10 +1141,13 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       mob.pendingStep = null;
       mob.combatStep = null;
       mob.agroSince = 0;
+      // durante alguns ms após estourar o leash, ignora novo agro
+      mob.leashCooldownUntil = now + LEASH_COOLDOWN_MS;
       await maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles });
       return;
     }
   }
+
 
   if (!mob.targetHeroId) {
     mob.mode = 'idle';
@@ -1456,9 +1470,10 @@ function decayThreat(mob, dt) {
 function selectTargetByThreat(now, mob, heroes, losGrid) {
   const aggroR2 = (mob.aggroRangePx || (8 * PX_PER_TILE)) ** 2;
 
-  // Se o mob estourou o leash e está explicitamente voltando pra casa,
-  // ele não deve ganhar/agregar threat novo até chegar.
-  if (mob._returningHome) {
+  // Durante a janela pós-leash, o mob ignora agro novo para conseguir,
+  // de fato, voltar pra casa.
+  const cooldownUntil = Number(mob.leashCooldownUntil || 0);
+  if (cooldownUntil && now < cooldownUntil) {
     return;
   }
 
