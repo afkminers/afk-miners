@@ -336,12 +336,13 @@ async function fetchAliveMonsters() {
           s.y  AS spawn_y,
           COALESCE(s.w, 0) AS spawn_w,
           COALESCE(s.h, 0) AS spawn_h,
-          COALESCE(s."leashPx", mm.leash_px, 0) AS leash_px   -- 👈 ALTERADO AQUI
+          COALESCE(s."leashPx", 0) AS leash_px   -- 👈 AGORA ASSIM
       FROM monster_instances mi
       JOIN monsters_master mm ON mm.id = mi.monster_id
       LEFT JOIN spawns s ON s.id = mi.spawn_id
     WHERE mi.state = 'ALIVE' AND mi.hp > 0
   `)) || [];
+
 
   return rows.map(row => {
     const profile = resolveMonsterAttackProfile({
@@ -897,29 +898,37 @@ async function maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles }) {
   if (distChebyPx <= HOME_TOLERANCE_PX) {
     mob._returningHome = false;
     mob.leashCooldownUntil = 0;
-    if (distChebyPx > 0) {
-      mob.x = homeX | 0;
-      mob.y = homeY | 0;
-      mob.posUpdatedAt = Date.now();
-      mob._tileCx = Math.floor(mob.x / STEP_PX);
-      mob._tileCy = Math.floor(mob.y / STEP_PX);
-      mob._tileKey = tileKey(mob._tileCx, mob._tileCy);
+
+    // snap exato pro centro do spawn
+    mob.x = homeX | 0;
+    mob.y = homeY | 0;
+    mob.posUpdatedAt = Date.now();
+    mob._tileCx = Math.floor(mob.x / STEP_PX);
+    mob._tileCy = Math.floor(mob.y / STEP_PX);
+    mob._tileKey = tileKey(mob._tileCx, mob._tileCy);
+
+    try {
+      await run(
+        `UPDATE monster_instances
+           SET x = $2,
+               y = $3,
+               hp = max_hp,      -- 👈 cura full ao chegar em casa
+               updated_at = now()
+         WHERE id = $1`,
+        [mob.instanceId, mob.x | 0, mob.y | 0]
+      );
       try {
-        await run(
-          `UPDATE monster_instances SET x=$2, y=$3, updated_at=now() WHERE id=$1`,
-          [mob.instanceId, mob.x | 0, mob.y | 0]
-        );
-        try {
-          broadcast({ type: 'mob_pos', instanceId: mob.instanceId, mapKey: mob.mapKey, x: mob.x, y: mob.y });
-        } catch {}
-      } catch (e) {
-        console.warn('[ai-mobs] home persist error:', e?.message);
-      }
+        broadcast({ type: 'mob_pos', instanceId: mob.instanceId, mapKey: mob.mapKey, x: mob.x, y: mob.y });
+      } catch {}
+    } catch (e) {
+      console.warn('[ai-mobs] home persist error:', e?.message);
     }
+
     mob.pendingStep = null;
     mob.combatStep = null;
     return;
   }
+
 
   if (!mob._returningHome) {
     mob.pendingStep = null;
@@ -1162,33 +1171,41 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     return;
   }
 
-  // 1) Posição do alvo: tentar "ao vivo" na lista heroes; se não houver, cair pro DB.
-  let tgtPos =
-    heroes.find(h => h.heroId === mob.targetHeroId) ||
-    await getHeroLastPosPx(mob.targetHeroId, mob.mapKey);
-
   if (!tgtPos) {
-    const mem = mob.targetHeroId ? heroMemory.get(String(mob.targetHeroId)) : null;
-    if (mem && mem.mapKey === mob.mapKey && now - (mem.updatedAt || 0) <= HERO_MEMORY_TTL_MS) {
-      tgtPos = {
-        heroId: mob.targetHeroId,
-        x: mem.cx * STEP_PX + STEP_PX / 2,
-        y: mem.cy * STEP_PX + STEP_PX / 2,
-        updatedMs: mem.updatedAt || now,
-      };
+    // não temos mais posição útil do herói -> esquece alvo e manda voltar pra casa
+    if (now - mob.lastSeenAt > GIVEUP_MS) {
+      if (mob.targetHeroId) mob.threat.delete(String(mob.targetHeroId));
+      mob.targetHeroId = null;
+      mob.mode = 'idle';
+      mob.lastKnownHeroPos = null;
+      mob.agroSince = 0;
     }
-  }
-
-  if (tgtPos && mob.targetHeroId) {
-    recordHeroObservation({ heroId: mob.targetHeroId, mapKey: mob.mapKey, x: tgtPos.x, y: tgtPos.y, now });
-  }
-
-  if (!tgtPos) {
-    if (now - mob.lastSeenAt > GIVEUP_MS) { mob.targetHeroId = null; mob.mode = 'idle'; mob.lastKnownHeroPos = null; }
     mob.pendingStep = null;
     mob.combatStep = null;
+    await maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles });
     return;
   }
+
+  // 👇 NOVO BLOCO: perda de agro quando o herói "sai da tela"
+  const visionPx = mob.aggroRangePx || (8 * PX_PER_TILE); // raio de visão/base
+  const dxVision = (mob.x ?? 0) - (tgtPos.x ?? 0);
+  const dyVision = (mob.y ?? 0) - (tgtPos.y ?? 0);
+  const distVision2 = dxVision * dxVision + dyVision * dyVision;
+
+  // se está fora da visão E faz tempo que não vê o herói -> reseta e volta pro spawn
+  if (distVision2 > visionPx * visionPx && now - (mob.lastSeenAt || 0) > GIVEUP_MS) {
+    if (mob.targetHeroId) mob.threat.delete(String(mob.targetHeroId));
+    mob.targetHeroId = null;
+    mob.mode = 'idle';
+    mob.pendingStep = null;
+    mob.combatStep = null;
+    mob.agroSince = 0;
+    mob.lastKnownHeroPos = null;
+
+    await maybeReturnMobHome({ mob, dt, losGrid, occupancy, heroTiles });
+    return;
+  }
+
 
   let heroMem = mob.targetHeroId ? heroMemory.get(String(mob.targetHeroId)) : null;
 
