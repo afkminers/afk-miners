@@ -250,9 +250,14 @@
     if (!mapKey) return;
 
     try {
+      // (opcional mas útil) garante índice de items carregado
+      await ensureItemsIndex();
+
+      // rota correta exposta pelo backend
       const list = await getJSON(
-        `/api/loot/map/${encodeURIComponent(mapKey)}/ground`,
+        `/api/map/${encodeURIComponent(mapKey)}/loot`,
       );
+
       const seen = new Set();
       for (const raw of list || []) {
         const loot = {
@@ -276,6 +281,7 @@
       console.warn('[loot-layer] refresh failed', e);
     }
   }
+
 
   // eventos WS
   window.addEventListener('loot:ground-spawn', (ev) => {

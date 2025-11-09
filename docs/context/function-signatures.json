@@ -334,7 +334,7 @@
   },
   {
     "file": "server\\index.js",
-    "line": 1427,
+    "line": 1429,
     "kind": "arrow",
     "name": "sameTile",
     "params": [
@@ -6154,12 +6154,21 @@
     "file": "client\\js\\play.js",
     "line": 59,
     "kind": "function",
+    "name": "removeOtherPlayer",
+    "params": [
+      "target"
+    ]
+  },
+  {
+    "file": "client\\js\\play.js",
+    "line": 78,
+    "kind": "function",
     "name": "getOtherPlayersSnapshot",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 75,
+    "line": 96,
     "kind": "function",
     "name": "_applyEarlySnapIfAny",
     "params": [
@@ -6168,14 +6177,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 104,
+    "line": 134,
     "kind": "function",
     "name": "bootAuth",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 139,
+    "line": 169,
     "kind": "function",
     "name": "normalizeHeroId",
     "params": [
@@ -6184,7 +6193,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 146,
+    "line": 176,
     "kind": "function",
     "name": "resolveHeroId",
     "params": [
@@ -6193,7 +6202,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 167,
+    "line": 197,
     "kind": "function",
     "name": "interpolate",
     "params": [
@@ -6203,7 +6212,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 178,
+    "line": 208,
     "kind": "function",
     "name": "formatNumberLocale",
     "params": [
@@ -6212,7 +6221,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 191,
+    "line": 221,
     "kind": "function",
     "name": "translateLog",
     "params": [
@@ -6222,7 +6231,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 203,
+    "line": 233,
     "kind": "function",
     "name": "resolveMobName",
     "params": [
@@ -6231,7 +6240,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 355,
+    "line": 385,
     "kind": "function",
     "name": "uniq",
     "params": [
@@ -6240,7 +6249,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 437,
+    "line": 467,
     "kind": "function",
     "name": "pickFreeSpriteForSpawn",
     "params": [
@@ -6249,7 +6258,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 489,
+    "line": 519,
     "kind": "function",
     "name": "getOrCreateServerMonsterState",
     "params": [
@@ -6258,7 +6267,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 518,
+    "line": 548,
     "kind": "function",
     "name": "resolveServerMoveSnapshot",
     "params": [
@@ -6268,7 +6277,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 584,
+    "line": 614,
     "kind": "function",
     "name": "currentSpriteRenderPos",
     "params": [
@@ -6278,7 +6287,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 604,
+    "line": 634,
     "kind": "function",
     "name": "computeTweenDuration",
     "params": [
@@ -6288,7 +6297,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 612,
+    "line": 642,
     "kind": "function",
     "name": "monsterTileKey",
     "params": [
@@ -6298,21 +6307,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 616,
+    "line": 646,
     "kind": "function",
     "name": "clearHeroBlocking",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 624,
+    "line": 654,
     "kind": "function",
     "name": "heroSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 634,
+    "line": 664,
     "kind": "function",
     "name": "heroFootboxTiles",
     "params": [
@@ -6322,7 +6331,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 656,
+    "line": 686,
     "kind": "function",
     "name": "updateHeroBlocking",
     "params": [
@@ -6332,7 +6341,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 696,
+    "line": 726,
     "kind": "function",
     "name": "removeMonsterFromTile",
     "params": [
@@ -6341,7 +6350,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 709,
+    "line": 739,
     "kind": "function",
     "name": "updateMonsterBlocking",
     "params": [
@@ -6352,7 +6361,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 746,
+    "line": 776,
     "kind": "function",
     "name": "clearMonsterBlocking",
     "params": [
@@ -6361,7 +6370,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 752,
+    "line": 782,
     "kind": "function",
     "name": "isTileBlockedByMonster",
     "params": [
@@ -6372,7 +6381,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 770,
+    "line": 800,
     "kind": "function",
     "name": "msgMatchesCurrentMap",
     "params": [
@@ -6381,7 +6390,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 779,
+    "line": 809,
     "kind": "function",
     "name": "ensureServerMonsterSprite",
     "params": [
@@ -6390,7 +6399,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 830,
+    "line": 860,
     "kind": "function",
     "name": "pickFaceFromDelta",
     "params": [
@@ -6401,7 +6410,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 846,
+    "line": 876,
     "kind": "function",
     "name": "updateSpriteFacingFromDelta",
     "params": [
@@ -6413,7 +6422,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 852,
+    "line": 882,
     "kind": "function",
     "name": "setMonsterAction",
     "params": [
@@ -6426,7 +6435,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 876,
+    "line": 906,
     "kind": "function",
     "name": "applyServerPosition",
     "params": [
@@ -6439,7 +6448,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1080,
+    "line": 1110,
     "kind": "function",
     "name": "updateServerDrivenMonsters",
     "params": [
@@ -6448,21 +6457,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1155,
+    "line": 1185,
     "kind": "function",
     "name": "retryBindPendingServerMonsters",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1191,
+    "line": 1221,
     "kind": "function",
     "name": "scheduleServerMonsterRetry",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1200,
+    "line": 1230,
     "kind": "function",
     "name": "handleServerMonsterRespawn",
     "params": [
@@ -6471,7 +6480,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1222,
+    "line": 1252,
     "kind": "function",
     "name": "handleServerMonsterMove",
     "params": [
@@ -6480,7 +6489,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1258,
+    "line": 1288,
     "kind": "function",
     "name": "handleServerMonsterDead",
     "params": [
@@ -6489,7 +6498,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1325,
+    "line": 1355,
     "kind": "function",
     "name": "getHeroWorldPosition",
     "params": [
@@ -6498,7 +6507,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1338,
+    "line": 1368,
     "kind": "function",
     "name": "triggerMonsterAttackAnimation",
     "params": [
@@ -6507,7 +6516,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1396,
+    "line": 1426,
     "kind": "function",
     "name": "normalizeLegacyMobPos",
     "params": [
@@ -6516,7 +6525,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1411,
+    "line": 1441,
     "kind": "function",
     "name": "handleLegacyMobPos",
     "params": [
@@ -6525,7 +6534,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1429,
+    "line": 1459,
     "kind": "function",
     "name": "pickElByIds",
     "params": [
@@ -6535,7 +6544,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1457,
+    "line": 1487,
     "kind": "arrow",
     "name": "$",
     "params": [
@@ -6544,7 +6553,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1463,
+    "line": 1493,
     "kind": "function",
     "name": "assetUrl",
     "params": [
@@ -6554,7 +6563,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1475,
+    "line": 1505,
     "kind": "function",
     "name": "normalizeTilesetPath",
     "params": [
@@ -6563,7 +6572,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1483,
+    "line": 1513,
     "kind": "function",
     "name": "loadTilesetImage",
     "params": [
@@ -6572,21 +6581,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1504,
+    "line": 1534,
     "kind": "function",
     "name": "applySmoothing",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1519,
+    "line": 1549,
     "kind": "function",
     "name": "resize",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1541,
+    "line": 1571,
     "kind": "function",
     "name": "loadImg",
     "params": [
@@ -6595,7 +6604,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1549,
+    "line": 1579,
     "kind": "function",
     "name": "imgReady",
     "params": [
@@ -6604,7 +6613,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1550,
+    "line": 1580,
     "kind": "function",
     "name": "ensureImgLoaded",
     "params": [
@@ -6613,7 +6622,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1559,
+    "line": 1589,
     "kind": "function",
     "name": "normKey",
     "params": [
@@ -6622,7 +6631,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1569,
+    "line": 1599,
     "kind": "function",
     "name": "indexSpriteMeta",
     "params": [
@@ -6631,7 +6640,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1581,
+    "line": 1611,
     "kind": "function",
     "name": "asObj",
     "params": [
@@ -6640,14 +6649,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1587,
+    "line": 1617,
     "kind": "function",
     "name": "loadSpriteMeta",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1593,
+    "line": 1623,
     "kind": "function",
     "name": "findMetaFor",
     "params": [
@@ -6656,7 +6665,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1606,
+    "line": 1636,
     "kind": "function",
     "name": "buildMonsterCandidates",
     "params": [
@@ -6667,7 +6676,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1629,
+    "line": 1659,
     "kind": "function",
     "name": "loadMonsterImg",
     "params": [
@@ -6678,7 +6687,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1641,
+    "line": 1671,
     "kind": "function",
     "name": "inferMetaFromImage",
     "params": [
@@ -6688,7 +6697,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1730,
+    "line": 1760,
     "kind": "function",
     "name": "lootAtWorld",
     "params": [
@@ -6698,7 +6707,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1735,
+    "line": 1765,
     "kind": "function",
     "name": "drawLoot",
     "params": [
@@ -6707,14 +6716,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1746,
+    "line": 1776,
     "kind": "function",
     "name": "clear",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1748,
+    "line": 1778,
     "kind": "function",
     "name": "drawGround",
     "params": [
@@ -6723,7 +6732,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1774,
+    "line": 1804,
     "kind": "function",
     "name": "drawPlayer",
     "params": [
@@ -6732,7 +6741,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1792,
+    "line": 1822,
     "kind": "function",
     "name": "drawOtherPlayer",
     "params": [
@@ -6741,7 +6750,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 1832,
+    "line": 1862,
     "kind": "function",
     "name": "drawMob",
     "params": [
@@ -6750,7 +6759,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2021,
+    "line": 2051,
     "kind": "function",
     "name": "buildCollisionGridFromObjects",
     "params": [
@@ -6761,7 +6770,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2039,
+    "line": 2069,
     "kind": "function",
     "name": "buildCollisionGridFromTiled",
     "params": [
@@ -6770,7 +6779,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2049,
+    "line": 2079,
     "kind": "function",
     "name": "mapSpawnsFromTiledJSON",
     "params": [
@@ -6779,14 +6788,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2072,
+    "line": 2102,
     "kind": "function",
     "name": "resolvePlayerSprite",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2110,
+    "line": 2140,
     "kind": "function",
     "name": "addMobFromSpawn",
     "params": [
@@ -6795,7 +6804,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2156,
+    "line": 2186,
     "kind": "function",
     "name": "buildSpawnersFromDefs",
     "params": [
@@ -6804,7 +6813,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2170,
+    "line": 2200,
     "kind": "function",
     "name": "updateRespawns",
     "params": [
@@ -6813,7 +6822,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2194,
+    "line": 2224,
     "kind": "function",
     "name": "normalizeApiJson",
     "params": [
@@ -6822,7 +6831,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2225,
+    "line": 2255,
     "kind": "function",
     "name": "hasSolidProp",
     "params": [
@@ -6831,14 +6840,14 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2264,
+    "line": 2294,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2284,
+    "line": 2314,
     "kind": "arrow",
     "name": "monsterBlockChecker",
     "params": [
@@ -6848,7 +6857,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2387,
+    "line": 2417,
     "kind": "function",
     "name": "addGroundLootEntry",
     "params": [
@@ -6857,7 +6866,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2411,
+    "line": 2441,
     "kind": "function",
     "name": "removeGroundLootEntry",
     "params": [
@@ -6866,7 +6875,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2420,
+    "line": 2450,
     "kind": "function",
     "name": "registerCorpseEntry",
     "params": [
@@ -6875,7 +6884,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2442,
+    "line": 2472,
     "kind": "function",
     "name": "updateCorpseEntry",
     "params": [
@@ -6884,7 +6893,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2456,
+    "line": 2486,
     "kind": "function",
     "name": "removeCorpseEntry",
     "params": [
@@ -6893,7 +6902,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2483,
+    "line": 2513,
     "kind": "function",
     "name": "frame",
     "params": [
@@ -6902,7 +6911,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2519,
+    "line": 2549,
     "kind": "arrow",
     "name": "cellOf",
     "params": [
@@ -6912,7 +6921,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2520,
+    "line": 2550,
     "kind": "arrow",
     "name": "centerOf",
     "params": [
@@ -6922,7 +6931,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2521,
+    "line": 2551,
     "kind": "arrow",
     "name": "isBlocked",
     "params": [
@@ -6932,7 +6941,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2526,
+    "line": 2556,
     "kind": "arrow",
     "name": "inBound",
     "params": [
@@ -6943,7 +6952,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2534,
+    "line": 2564,
     "kind": "arrow",
     "name": "faceFrom",
     "params": [
@@ -6953,21 +6962,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2589,
+    "line": 2619,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2607,
+    "line": 2637,
     "kind": "arrow",
     "name": "featureMovement",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2608,
+    "line": 2638,
     "kind": "arrow",
     "name": "legacyToTile",
     "params": [
@@ -6976,7 +6985,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2609,
+    "line": 2639,
     "kind": "arrow",
     "name": "tileCoord",
     "params": [
@@ -6985,7 +6994,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2610,
+    "line": 2640,
     "kind": "arrow",
     "name": "tileCenterPx",
     "params": [
@@ -12109,14 +12118,14 @@
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 16,
+    "line": 17,
     "kind": "function",
     "name": "ensureCsrf",
     "params": []
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 20,
+    "line": 25,
     "kind": "function",
     "name": "postJSON",
     "params": [
@@ -12126,14 +12135,14 @@
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 21,
+    "line": 26,
     "kind": "arrow",
     "name": "send",
     "params": []
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 37,
+    "line": 48,
     "kind": "function",
     "name": "getJSON",
     "params": [
@@ -12142,67 +12151,56 @@
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 51,
+    "line": 61,
     "kind": "function",
     "name": "getHeroId",
     "params": []
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 60,
+    "line": 72,
     "kind": "function",
     "name": "getMapKey",
     "params": []
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 70,
+    "line": 82,
     "kind": "function",
     "name": "ensureItemsIndex",
     "params": []
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 82,
-    "kind": "function",
-    "name": "iconFor",
-    "params": [
-      "itemKey"
-    ]
-  },
-  {
-    "file": "client\\js\\map\\loot-layer.js",
-    "line": 86,
-    "kind": "function",
-    "name": "nameFor",
-    "params": [
-      "itemKey"
-    ]
-  },
-  {
-    "file": "client\\js\\map\\loot-layer.js",
-    "line": 92,
+    "line": 95,
     "kind": "function",
     "name": "getOverlayRoot",
     "params": []
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 108,
+    "line": 111,
     "kind": "function",
     "name": "getCanvas",
     "params": []
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 111,
+    "line": 114,
     "kind": "function",
     "name": "getCanvasRects",
     "params": []
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 119,
+    "line": 134,
+    "kind": "function",
+    "name": "getCamera",
+    "params": []
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 139,
     "kind": "function",
     "name": "tileToCanvasPx",
     "params": [
@@ -12212,7 +12210,7 @@
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 141,
+    "line": 164,
     "kind": "function",
     "name": "canvasPxToCss",
     "params": [
@@ -12222,7 +12220,7 @@
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 147,
+    "line": 171,
     "kind": "function",
     "name": "tileToCss",
     "params": [
@@ -12232,7 +12230,7 @@
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 153,
+    "line": 177,
     "kind": "function",
     "name": "makeNode",
     "params": [
@@ -12241,7 +12239,16 @@
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 226,
+    "line": 202,
+    "kind": "function",
+    "name": "getOrCreateNode",
+    "params": [
+      "loot"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\loot-layer.js",
+    "line": 222,
     "kind": "function",
     "name": "removeLoot",
     "params": [
@@ -12252,12 +12259,14 @@
     "file": "client\\js\\map\\loot-layer.js",
     "line": 234,
     "kind": "function",
-    "name": "layout",
-    "params": []
+    "name": "pickupLoot",
+    "params": [
+      "id"
+    ]
   },
   {
     "file": "client\\js\\map\\loot-layer.js",
-    "line": 251,
+    "line": 248,
     "kind": "function",
     "name": "refresh",
     "params": []
@@ -12294,27 +12303,24 @@
     "file": "client\\js\\map\\corpse-layer.js",
     "line": 71,
     "kind": "function",
+    "name": "getCamera",
+    "params": []
+  },
+  {
+    "file": "client\\js\\map\\corpse-layer.js",
+    "line": 76,
+    "kind": "function",
+    "name": "worldToCanvasPx",
+    "params": [
+      "wx",
+      "wy"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\corpse-layer.js",
+    "line": 90,
+    "kind": "function",
     "name": "tileToCanvasPx",
-    "params": [
-      "tileX",
-      "tileY"
-    ]
-  },
-  {
-    "file": "client\\js\\map\\corpse-layer.js",
-    "line": 88,
-    "kind": "function",
-    "name": "canvasPxToCss",
-    "params": [
-      "px",
-      "py"
-    ]
-  },
-  {
-    "file": "client\\js\\map\\corpse-layer.js",
-    "line": 95,
-    "kind": "function",
-    "name": "tileToCss",
     "params": [
       "tileX",
       "tileY"
@@ -12324,6 +12330,26 @@
     "file": "client\\js\\map\\corpse-layer.js",
     "line": 100,
     "kind": "function",
+    "name": "canvasPxToCss",
+    "params": [
+      "px",
+      "py"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\corpse-layer.js",
+    "line": 109,
+    "kind": "function",
+    "name": "tileToCss",
+    "params": [
+      "tileX",
+      "tileY"
+    ]
+  },
+  {
+    "file": "client\\js\\map\\corpse-layer.js",
+    "line": 114,
+    "kind": "function",
     "name": "upsertCorpse",
     "params": [
       "corpse"
@@ -12331,7 +12357,7 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 159,
+    "line": 172,
     "kind": "function",
     "name": "removeCorpse",
     "params": [
@@ -12340,14 +12366,14 @@
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 171,
+    "line": 184,
     "kind": "function",
     "name": "refresh",
     "params": []
   },
   {
     "file": "client\\js\\map\\corpse-layer.js",
-    "line": 221,
+    "line": 232,
     "kind": "function",
     "name": "openCorpseAtEvent",
     "params": [

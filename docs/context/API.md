@@ -469,7 +469,7 @@ Arquivo: `server\index.js:612`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1576`
+Arquivo: `server\index.js:1633`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -1221,7 +1221,7 @@ Arquivo: `server\index.js:733`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1599`
+Arquivo: `server\index.js:1656`
 
 _Sem payload inferido_
 

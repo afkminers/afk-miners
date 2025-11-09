@@ -532,6 +532,7 @@
     "file": "client\\js\\map\\corpse-layer.js",
     "symbols": [
       "canvasPxToCss",
+      "getCamera",
       "getCanvasRects",
       "getHeroId",
       "getMapKey",
@@ -541,7 +542,8 @@
       "removeCorpse",
       "tileToCanvasPx",
       "tileToCss",
-      "upsertCorpse"
+      "upsertCorpse",
+      "worldToCanvasPx"
     ]
   },
   {
@@ -550,17 +552,17 @@
       "canvasPxToCss",
       "ensureCsrf",
       "ensureItemsIndex",
+      "getCamera",
       "getCanvas",
       "getCanvasRects",
       "getCookie",
       "getHeroId",
       "getJSON",
       "getMapKey",
+      "getOrCreateNode",
       "getOverlayRoot",
-      "iconFor",
-      "layout",
       "makeNode",
-      "nameFor",
+      "pickupLoot",
       "postJSON",
       "refresh",
       "removeLoot",
@@ -727,6 +729,7 @@
       "removeCorpseEntry",
       "removeGroundLootEntry",
       "removeMonsterFromTile",
+      "removeOtherPlayer",
       "resize",
       "resolveHeroId",
       "resolveMobName",
