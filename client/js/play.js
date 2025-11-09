@@ -28,7 +28,7 @@ const ENABLE_LOCAL_MOB_AI = false;
 
 // ======= Estado de outros jogadores visíveis no mapa =======
 const otherPlayers = new Map(); // playerId -> { id, name, x, y, mapKey, lastSeenAt }
-const OTHER_PLAYER_TTL_MS = 5000;
+const OTHER_PLAYER_TTL_MS = Number(window.ENV?.OTHER_PLAYER_TTL_MS || 0);
 
 function upsertOtherPlayer(msg) {
   if (!msg) return;
@@ -56,14 +56,35 @@ function upsertOtherPlayer(msg) {
   });
 }
 
+function removeOtherPlayer(target) {
+  if (!target) return;
+  let rawId = '';
+  let mapKey = null;
+
+  if (typeof target === 'string') {
+    rawId = target;
+  } else {
+    rawId = target.id != null ? String(target.id) : '';
+    if (target.mapKey != null) mapKey = String(target.mapKey);
+  }
+
+  if (!rawId) return;
+
+  if (mapKey && mapKey !== MAP_KEY) return;
+
+  otherPlayers.delete(rawId);
+}
+
 function getOtherPlayersSnapshot() {
   const now = performance.now();
   const list = [];
   for (const [id, p] of otherPlayers.entries()) {
-    const age = now - (p.lastSeenAt || 0);
-    if (age > OTHER_PLAYER_TTL_MS) {
-      otherPlayers.delete(id);
-      continue;
+    if (OTHER_PLAYER_TTL_MS > 0) {
+      const age = now - (p.lastSeenAt || 0);
+      if (age > OTHER_PLAYER_TTL_MS) {
+        otherPlayers.delete(id);
+        continue;
+      }
     }
     list.push(p);
   }
@@ -94,6 +115,15 @@ onMessage('pos', (msg) => {
     upsertOtherPlayer(msg);
   } catch (err) {
     console.warn('[play] failed to upsert other player pos', err);
+  }
+});
+
+// remove jogador quando o servidor indicar que saiu do mapa/conexão
+onMessage('pos_leave', (msg) => {
+  try {
+    removeOtherPlayer(msg);
+  } catch (err) {
+    console.warn('[play] failed to remove other player', err);
   }
 });
 

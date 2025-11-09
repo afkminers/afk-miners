@@ -1380,7 +1380,9 @@ async function seedAIMobsFromDB(aiMobs) {
 
             const nx = Number(data.x || 0) | 0;
             const ny = Number(data.y || 0) | 0;
-            const mapKey = String(data.mapKey || ws._mapKey || 'house');
+            const prevMapKey = ws._mapKey || 'house';
+            const mapKey = String(data.mapKey || prevMapKey || 'house');
+            const mapChanged = prevMapKey && prevMapKey !== mapKey;
 
             // >>> BLOQUEIO DE MOVIMENTO PARA HERÓI MORTO (server-authoritative)
             let activeHeroId = null;
@@ -1474,6 +1476,33 @@ async function seedAIMobsFromDB(aiMobs) {
               });
             }
 
+            if (mapChanged) {
+              const playerIdStr = String(pid);
+              let hasOtherInstance = false;
+              wss.clients.forEach((sock) => {
+                if (hasOtherInstance) return;
+                if (sock === ws) return;
+                if (sock.readyState !== WebSocketLib.OPEN) return;
+                if (String(sock?._player?.id || '') !== playerIdStr) return;
+                if ((sock._mapKey || 'house') !== prevMapKey) return;
+                hasOtherInstance = true;
+              });
+
+              if (!hasOtherInstance) {
+                const leavePayload = { type: 'pos_leave', id: playerIdStr, mapKey: prevMapKey };
+                if (typeof global._sendToMap === 'function') {
+                  try { global._sendToMap(prevMapKey, leavePayload); } catch {}
+                } else {
+                  wss.clients.forEach((c) => {
+                    if (c === ws) return;
+                    if (c.readyState !== WebSocketLib.OPEN) return;
+                    if ((c._mapKey || 'house') !== prevMapKey) return;
+                    try { c.send(JSON.stringify(leavePayload)); } catch {}
+                  });
+                }
+              }
+            }
+
             return;
           }
 
@@ -1511,6 +1540,34 @@ async function seedAIMobsFromDB(aiMobs) {
             } else {
               clearLivePlayerPosition(playerId);
               markOfflineByPlayer(playerId).catch(() => {});
+            }
+
+            const mapKey = ws._mapKey ? String(ws._mapKey) : null;
+            if (mapKey) {
+              const playerIdStr = String(playerId);
+              let hasOtherInstance = false;
+              wss.clients.forEach((sock) => {
+                if (hasOtherInstance) return;
+                if (sock === ws) return;
+                if (sock.readyState !== WebSocketLib.OPEN) return;
+                if (String(sock?._player?.id || '') !== playerIdStr) return;
+                if ((sock._mapKey || 'house') !== mapKey) return;
+                hasOtherInstance = true;
+              });
+
+              if (!hasOtherInstance) {
+                const leavePayload = { type: 'pos_leave', id: playerIdStr, mapKey };
+                if (typeof global._sendToMap === 'function') {
+                  try { global._sendToMap(mapKey, leavePayload); } catch {}
+                } else {
+                  wss.clients.forEach((c) => {
+                    if (c === ws) return;
+                    if (c.readyState !== WebSocketLib.OPEN) return;
+                    if ((c._mapKey || 'house') !== mapKey) return;
+                    try { c.send(JSON.stringify(leavePayload)); } catch {}
+                  });
+                }
+              }
             }
           }
         });
