@@ -12346,6 +12346,15 @@
     "params": []
   },
   {
+    "file": "client\\js\\map\\corpse-layer.js",
+    "line": 183,
+    "kind": "function",
+    "name": "openCorpseAtEvent",
+    "params": [
+      "ev"
+    ]
+  },
+  {
     "file": "client\\js\\i18n\\lang-menu.js",
     "line": 13,
     "kind": "function",

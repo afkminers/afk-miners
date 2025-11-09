@@ -584,6 +584,22 @@ function attachControls() {
   canvas.addEventListener('contextmenu', suppressContextMenu);
 
   const onPointerDown = async (e) => {
+    // 1) Em modo RMB, antes de QUALQUER coisa tenta abrir loot
+    if (ATTACK_USE_RMB && e.button === 2) {
+      try {
+        if (window.CorpseLayer && typeof window.CorpseLayer.openAtEvent === 'function') {
+          const opened = window.CorpseLayer.openAtEvent(e);
+          if (opened) {
+            console.log('[attack] RMB on corpse - opening loot instead of attack');
+            return; // abriu loot, não ataca
+          }
+        }
+      } catch (err) {
+        console.warn('[attack] failed to delegate RMB to corpse-layer', err);
+      }
+    }
+
+    // 2) Se o clique tá em UI de loot (corpseWindow, slots etc), nem tenta atacar
     if (shouldBlockAttackFromEvent(e)) {
       return;
     }
@@ -596,22 +612,8 @@ function attachControls() {
 
     // Check if we should use RMB mode
     if (ATTACK_USE_RMB) {
-      // Right mouse button (button === 2) starts attack / loot
+      // Right mouse button (button === 2) starts attack (se não abriu loot acima)
       if (e.button === 2) {
-
-        // 0) Se clicou em um corpse, abre loot e NÃO ataca
-        try {
-          if (window.CorpseLayer && typeof window.CorpseLayer.openAtEvent === 'function') {
-            const opened = window.CorpseLayer.openAtEvent(e);
-            if (opened) {
-              console.log('[attack] RMB on corpse - opening loot instead of attack');
-              return;
-            }
-          }
-        } catch (err) {
-          console.warn('[attack] failed to delegate RMB to corpse-layer', err);
-        }
-
         const { x, y } = getMouseWorldFromEvent(e, canvas);
         console.log('[attack] RMB click @', Math.round(x), Math.round(y));
 
@@ -628,10 +630,10 @@ function attachControls() {
         // 2. Fallback to server targeting
         console.log('[attack] local pick failed, trying server...');
         const m = await resolveServerTarget(x, y);
-        if (!m?.id) { 
-          console.log('[attack] no server target - canceling attack'); 
-          stopAttack(); 
-          return; 
+        if (!m?.id) {
+          console.log('[attack] no server target - canceling attack');
+          stopAttack();
+          return;
         }
 
         const stat = combatState.monsters.get(String(m.id)) || { id: String(m.id) };
@@ -641,24 +643,26 @@ function attachControls() {
 
         await startAttack(String(m.id));
         return;
-      } 
+      }
       // Right-click on empty space or left-click cancel attack
       else if (e.button === 0) {
         console.log('[attack] RMB on empty space or left-click - canceling attack');
         stopAttack();
         return;
       }
-
-
     } else {
       // Legacy mode: left-click only
       if (e.button != null && e.button !== 0) return;
-      
+
       const { x, y } = getMouseWorldFromEvent(e, canvas);
       console.log('[attack] legacy click @', Math.round(x), Math.round(y));
 
       const m = await resolveServerTarget(x, y);
-      if (!m?.id) { console.log('[attack] nenhum alvo (server) — stop'); stopAttack(); return; }
+      if (!m?.id) {
+        console.log('[attack] nenhum alvo (server) — stop');
+        stopAttack();
+        return;
+      }
 
       const stat = combatState.monsters.get(String(m.id)) || { id: String(m.id) };
       if (Number.isFinite(m.hp)) stat.hp = Number(m.hp);
@@ -668,6 +672,7 @@ function attachControls() {
       await startAttack(String(m.id));
     }
   };
+
 
   canvas.addEventListener('mousedown', onPointerDown);
   canvas.addEventListener('touchstart', onPointerDown, { passive: true });

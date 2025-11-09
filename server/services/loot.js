@@ -17,10 +17,17 @@ const CORPSE_LOOT_RANGE_TILES = Math.max(1, Number(process.env.CORPSE_LOOT_RANGE
 function nowDate() { return new Date(); }
 function futureDate(seconds) { return new Date(Date.now() + Math.max(0, seconds) * 1000); }
 
+// Converte pixel → tile, usando toTileCoords quando possível.
+// Fallback usa Math.round para não empurrar sempre para o noroeste.
 function pxToTile(px, py) {
   if (!Number.isFinite(px) || !Number.isFinite(py)) return { tx: NaN, ty: NaN };
   const t = toTileCoords({ x: px, y: py });
-  return { tx: Number.isFinite(t.tx) ? t.tx : Math.floor(px / TILE), ty: Number.isFinite(t.ty) ? t.ty : Math.floor(py / TILE) };
+  const fallbackTx = Math.round(px / TILE);
+  const fallbackTy = Math.round(py / TILE);
+  return {
+    tx: Number.isFinite(t.tx) ? t.tx : fallbackTx,
+    ty: Number.isFinite(t.ty) ? t.ty : fallbackTy,
+  };
 }
 
 function rollMonsterLoot(lootJson) {
@@ -63,8 +70,17 @@ async function createCorpse({
   ownerHeroId = null,
   lootItems = [],
 }) {
+  // Tile base do corpse (já normalizado)
   const tile = pxToTile(x, y);
+  const baseTileX = Number.isInteger(tile.tx) ? tile.tx : 0;
+  const baseTileY = Number.isInteger(tile.ty) ? tile.ty : 0;
+
+  // Posição em px sempre no centro do tile para evitar drift / diagonal
+  const posX = baseTileX * TILE + TILE / 2;
+  const posY = baseTileY * TILE + TILE / 2;
+
   const expiresAt = futureDate(CORPSE_DECAY_SECONDS);
+
   const inserted = await withClient(async (client) => {
     await client.query('BEGIN');
     const corpseRes = await client.query(
@@ -80,10 +96,10 @@ async function createCorpse({
         monsterKey || null,
         monsterName || null,
         String(mapKey || 'house'),
-        Number.isInteger(tile.tx) ? tile.tx : 0,
-        Number.isInteger(tile.ty) ? tile.ty : 0,
-        Number.isFinite(x) ? Math.round(x) : null,
-        Number.isFinite(y) ? Math.round(y) : null,
+        baseTileX,
+        baseTileY,
+        Number.isFinite(posX) ? Math.round(posX) : null,
+        Number.isFinite(posY) ? Math.round(posY) : null,
         ownerPlayerId || null,
         ownerHeroId || null,
         expiresAt,

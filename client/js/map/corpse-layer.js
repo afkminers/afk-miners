@@ -20,7 +20,9 @@
   function getHeroId() {
     return (
       window.ActiveHeroId ||
-      (window.Team && typeof window.Team.getActiveHeroId === 'function' && window.Team.getActiveHeroId()) ||
+      (window.Team &&
+        typeof window.Team.getActiveHeroId === 'function' &&
+        window.Team.getActiveHeroId()) ||
       (window.GameScene && window.GameScene.activeHeroId) ||
       (window.Player && window.Player.activeHeroId) ||
       null
@@ -48,8 +50,19 @@
 
   function getCanvasRects() {
     const canvas = document.getElementById('scene');
-    if (!canvas) return { rect: { left: 0, top: 0, width: 1, height: 1 }, cw: 1, ch: 1 };
-    const rect = canvas.getBoundingClientRect?.() || { left: 0, top: 0, width: 1, height: 1 };
+    if (!canvas)
+      return {
+        rect: { left: 0, top: 0, width: 1, height: 1 },
+        cw: 1,
+        ch: 1,
+      };
+    const rect =
+      canvas.getBoundingClientRect?.() || {
+        left: 0,
+        top: 0,
+        width: 1,
+        height: 1,
+      };
     const cw = Number(canvas.width || rect.width || 1);
     const ch = Number(canvas.height || rect.height || 1);
     return { rect, cw, ch };
@@ -61,7 +74,9 @@
       const p = gs.tileToScreen(tileX, tileY) || {};
       if (Number.isFinite(p.x) && Number.isFinite(p.y)) return p;
     }
-    const tileSize = Number(gs?.tileSize || gs?.TILE_SIZE || window.TILE_SIZE || 32);
+    const tileSize = Number(
+      gs?.tileSize || gs?.TILE_SIZE || window.TILE_SIZE || 32,
+    );
     const camX = Number(gs?.cameraX ?? gs?.camera?.x ?? gs?.viewX ?? 0) || 0;
     const camY = Number(gs?.cameraY ?? gs?.camera?.y ?? gs?.viewY ?? 0) || 0;
     return {
@@ -103,24 +118,34 @@
       node.style.cursor = 'pointer';
       node.style.background = 'rgba(0,0,0,0)';
       node.dataset.corpseId = id;
+
+      // abre loot pelo menu de contexto
       node.addEventListener('contextmenu', (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
-        try { window.CorpseWindow?.open(id); } catch {}
+        try {
+          window.CorpseWindow?.open(id);
+        } catch {}
       });
+
+      // RMB direto no corpse
       node.addEventListener('pointerdown', (ev) => {
         if (ev.button === 2) {
           ev.preventDefault();
           ev.stopPropagation();
-          try { window.CorpseWindow?.open(id); } catch {}
+          try {
+            window.CorpseWindow?.open(id);
+          } catch {}
         }
       });
+
       getOverlayRoot().appendChild(node);
       state.nodes.set(id, node);
     }
 
     node.dataset.empty = corpse.isEmpty ? '1' : '0';
     node.style.opacity = corpse.isEmpty ? '0.35' : '1';
+
     const tileX = Number(corpse.tileX ?? corpse.tile_x);
     const tileY = Number(corpse.tileY ?? corpse.tile_y);
     if (Number.isInteger(tileX) && Number.isInteger(tileY)) {
@@ -130,26 +155,27 @@
     }
   }
 
+  // remove só o estado local/DOM – não dispara evento
   function removeCorpse(id) {
     const key = String(id);
-
-    // avisa todo mundo (CorpseWindow inclusive) que este corpse sumiu
-    try {
-      window.dispatchEvent(new CustomEvent('corpse:removed', { detail: { id: key } }));
-    } catch {}
-
     const node = state.nodes.get(key);
-    if (node && node.parentNode) try { node.parentNode.removeChild(node); } catch {}
+    if (node && node.parentNode) {
+      try {
+        node.parentNode.removeChild(node);
+      } catch {}
+    }
     state.nodes.delete(key);
     state.corpses.delete(key);
   }
-
 
   async function refresh() {
     const mapKey = getMapKey();
     if (!mapKey) return;
     try {
-      const res = await fetch(`/api/map/${encodeURIComponent(mapKey)}/corpses`, { credentials: 'include' });
+      const res = await fetch(
+        `/api/map/${encodeURIComponent(mapKey)}/corpses`,
+        { credentials: 'include' },
+      );
       if (!res.ok) return;
       const list = await res.json();
       const seen = new Set();
@@ -168,8 +194,20 @@
         seen.add(corpse.id);
         upsertCorpse(corpse);
       }
+
+      // qualquer corpse que existia no estado mas não veio mais do servidor
+      // é considerado "despawn" -> dispara evento para UI (fechar janela) e
+      // o listener global cuida de remover do DOM.
       for (const key of Array.from(state.corpses.keys())) {
-        if (!seen.has(key)) removeCorpse(key);
+        if (!seen.has(key)) {
+          try {
+            window.dispatchEvent(
+              new CustomEvent('corpse:removed', {
+                detail: { id: key, cause: 'despawn' },
+              }),
+            );
+          } catch {}
+        }
       }
     } catch (e) {
       // ignore errors silently
@@ -185,7 +223,11 @@
 
     const clientX = ev.clientX ?? (ev.touches && ev.touches[0]?.clientX);
     const clientY = ev.clientY ?? (ev.touches && ev.touches[0]?.clientY);
-    if (!Number.isFinite(clientX) || !Number.isFinite(clientY) || typeof document.elementFromPoint !== 'function') {
+    if (
+      !Number.isFinite(clientX) ||
+      !Number.isFinite(clientY) ||
+      typeof document.elementFromPoint !== 'function'
+    ) {
       return false;
     }
 
@@ -207,9 +249,16 @@
     return true;
   }
 
+  // eventos globais
 
-  window.addEventListener('corpse:spawn', (ev) => { upsertCorpse(ev?.detail || ev?.corpse || ev); });
-  window.addEventListener('corpse:refresh', (ev) => { upsertCorpse(ev?.detail || ev); });
+  window.addEventListener('corpse:spawn', (ev) => {
+    upsertCorpse(ev?.detail || ev?.corpse || ev);
+  });
+
+  window.addEventListener('corpse:refresh', (ev) => {
+    upsertCorpse(ev?.detail || ev);
+  });
+
   window.addEventListener('corpse:updated', (ev) => {
     const detail = ev?.detail || null;
     if (!detail?.id) return;
@@ -218,12 +267,16 @@
     existing.isEmpty = detail.isEmpty === true;
     upsertCorpse(existing);
   });
+
+  // aqui é o único lugar que realmente chama removeCorpse()
   window.addEventListener('corpse:removed', (ev) => {
     const id = ev?.detail?.id || ev?.detail || ev?.corpseId || null;
     if (id) removeCorpse(id);
   });
 
-  window.addEventListener('gamescene:ready', () => { refresh(); });
+  window.addEventListener('gamescene:ready', () => {
+    refresh();
+  });
 
   setInterval(refresh, 2500);
   refresh();
@@ -234,4 +287,3 @@
   state.__ready = true;
   window.CorpseLayer = state;
 })();
-
