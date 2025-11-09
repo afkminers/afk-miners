@@ -1,5 +1,9 @@
 [
   {
+    "from": "server\\services\\translator.js",
+    "to": "openai"
+  },
+  {
     "from": "client\\js\\pos-publisher.js",
     "to": "./ws/singleton.js"
   },

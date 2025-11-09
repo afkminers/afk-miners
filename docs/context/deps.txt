@@ -1,3 +1,4 @@
+server\services\translator.js -> openai
 client\js\pos-publisher.js -> ./ws/singleton.js
 client\js\player_profile.js -> ./api.js
 client\js\play.js -> ./api.js
