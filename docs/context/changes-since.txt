@@ -1,1 +1,4 @@
 (sem tag anterior)
+- Loot Phase 1: novas tabelas `monster_corpses`/`monster_corpse_items`/`ground_items` e serviços de loot persistente.
+- Rotas `/api/loot/*` reescritas para abrir/saquear corpos, pegar e dropar itens no chão com validação no servidor.
+- Camadas de front adicionadas (loot/corpses overlay, janela de corpse e drag-and-drop) sincronizando via WebSocket.

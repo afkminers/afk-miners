@@ -68,10 +68,12 @@
 
   const DnD = {
     __ready: false,
-    drag: null,              // { source:'backpack', itemKey, qty, bpIndex }
+    drag: null,              // { source:'backpack'|'corpse', ... }
     __hoverTile: null,       // { mapKey, x, y }
     __lastMapKey: null,
     __hud: null,
+    __mapTarget: null,
+    __mapHandlers: null,
 
     resolveHeroId() {
       return (
@@ -94,16 +96,18 @@
     },
 
     getCanvas() {
-      return document.getElementById('scene') || document.querySelector('[data-drop-map]') || document.body;
+      return document.getElementById('scene') || document.querySelector('canvas[data-scene]') || null;
     },
 
     toCanvasSpace(clientX, clientY, target) {
-      const el = target || this.getCanvas();
+      const canvas = this.getCanvas();
+      const el = canvas || target || document.body;
       const rect = el.getBoundingClientRect?.() || { left: 0, top: 0, width: 1, height: 1 };
       const cssX = clientX - rect.left;
       const cssY = clientY - rect.top;
-      const cw = Number(el.width || rect.width || 1);
-      const ch = Number(el.height || rect.height || 1);
+      const basis = canvas || el;
+      const cw = Number(basis?.width || rect.width || 1);
+      const ch = Number(basis?.height || rect.height || 1);
       const scaleX = cw / Math.max(1, rect.width || cw);
       const scaleY = ch / Math.max(1, rect.height || ch);
       return { x: cssX * scaleX, y: cssY * scaleY };
@@ -246,13 +250,94 @@
         this.__hoverTile = null;
         if (this.__hud) { try { this.__hud.remove(); } catch {} this.__hud = null; }
       });
+
+      panel.addEventListener('dragover', (ev) => {
+        if (!this.drag) return;
+        if (this.drag.source === 'corpse') {
+          ev.preventDefault();
+          if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy';
+        }
+      });
+
+      panel.addEventListener('drop', async (ev) => {
+        if (!this.drag || this.drag.source !== 'corpse') return;
+        ev.preventDefault();
+        try {
+          const heroId = this.resolveHeroId();
+          if (!heroId) return;
+          const qty = this.qtyFromModifiers(this.drag.qty, ev);
+          if (qty <= 0) return;
+          const res = await postJSON('/api/loot/corpse/take', {
+            heroId,
+            corpseId: this.drag.corpseId,
+            corpseItemId: this.drag.corpseItemId,
+            amount: qty,
+          });
+          if (res?.snapshot) {
+            window.dispatchEvent(new CustomEvent('backpack:update', { detail: { heroId, snapshot: res.snapshot } }));
+          }
+          if (res?.corpse) {
+            try { window.dispatchEvent(new CustomEvent('corpse:refresh', { detail: res.corpse })); } catch {}
+          }
+        } catch (e) {
+          console.warn('[DnD] corpse->backpack error:', e?.message || e);
+        } finally {
+          this.drag = null;
+        }
+      });
+    },
+
+    wireCorpse(panel) {
+      if (!panel) return;
+      if (panel.dataset.dndCorpseWired === '1') return;
+      panel.dataset.dndCorpseWired = '1';
+
+      panel.addEventListener('dragstart', (ev) => {
+        const slot = ev.target?.closest?.('.corpse-slot');
+        if (!slot) return;
+        const corpseId = slot.dataset.corpseId || null;
+        const corpseItemId = slot.dataset.corpseItemId || null;
+        const itemKey = slot.dataset.itemKey || null;
+        const qty = Number(slot.dataset.qty || 0) || 0;
+        if (!corpseId || !corpseItemId || !itemKey || qty <= 0) {
+          ev.preventDefault?.();
+          return;
+        }
+        const dragLabel = `${itemKey} ×${qty}`;
+        const iconUrl = slot.querySelector('img')?.src || null;
+        const img = this.makeDragImage(iconUrl, dragLabel);
+        try { ev.dataTransfer?.setDragImage(img, 10, 10); } catch {}
+        setTimeout(() => img.remove(), 0);
+        if (ev.dataTransfer) ev.dataTransfer.effectAllowed = 'copy';
+        this.drag = { source: 'corpse', corpseId, corpseItemId, itemKey, qty };
+        if (!this.__hud) this.__hud = makeDebugHud();
+      });
+
+      panel.addEventListener('dragend', () => {
+        this.drag = null;
+        this.__hoverTile = null;
+        if (this.__hud) { try { this.__hud.remove(); } catch {} this.__hud = null; }
+      });
     },
 
     // Alvo: mapa
     wireMapDropTarget(scope) {
       const target = scope || this.getCanvas();
-      if (!target || target.dataset.dndMapWired === '1') return;
-      target.dataset.dndMapWired = '1';
+      if (!target) {
+        setTimeout(() => this.wireMapDropTarget(scope), 300);
+        return;
+      }
+
+      if (this.__mapTarget === target) return;
+
+      if (this.__mapTarget && this.__mapHandlers) {
+        const prev = this.__mapTarget;
+        const h = this.__mapHandlers;
+        prev.removeEventListener('dragenter', h.enter);
+        prev.removeEventListener('dragover', h.over);
+        prev.removeEventListener('drop', h.drop);
+        prev.removeEventListener('dragleave', h.leave);
+      }
 
       const updateHover = (ev) => {
         if (!this.drag) return;
@@ -270,22 +355,24 @@
         if (this.__hud && this.__hoverTile) this.__hud.textContent = `tile: ${this.__hoverTile.mapKey} (${this.__hoverTile.x}, ${this.__hoverTile.y})`;
       };
 
-      target.addEventListener('dragenter', updateHover);
-      target.addEventListener('dragover', (ev) => {
+      const enter = (ev) => { updateHover(ev); };
+      const over = (ev) => {
         if (!this.drag) return;
         ev.preventDefault();
         if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
         updateHover(ev);
-      });
+      };
+      const leave = () => {
+        this.__hoverTile = null;
+      };
 
-      target.addEventListener('drop', async (ev) => {
-        if (!this.drag || this.drag.source !== 'backpack') return;
+      const drop = async (ev) => {
+        if (!this.drag) return;
         try {
           const heroId = this.resolveHeroId();
           if (!heroId) return;
 
           let tile = this.resolveDropTile(ev, target);
-          // último fallback: player tile se permitido
           if ((!tile?.mapKey || !Number.isInteger(tile.x) || !Number.isInteger(tile.y)) && FEAT.dropAtPlayerOnInvalid) {
             const mk = this.getMapKey();
             const px = window.GameScene?.playerTileX ?? window.Player?.tileX;
@@ -300,12 +387,29 @@
           const qty = this.qtyFromModifiers(this.drag.qty, ev);
           if (qty <= 0) return;
 
-          const { ok, snapshot } = await this.dropToGround({ heroId, itemKey: this.drag.itemKey, qty, tile });
-          if (ok && snapshot) {
-            window.dispatchEvent(new CustomEvent('backpack:update', { detail: { heroId, snapshot } }));
-          } else {
-            try { window.BackpackUI?.render(heroId); } catch {}
+          if (this.drag.source === 'backpack') {
+            const { ok, snapshot } = await this.dropToGround({ heroId, itemKey: this.drag.itemKey, qty, tile });
+            if (ok && snapshot) {
+              window.dispatchEvent(new CustomEvent('backpack:update', { detail: { heroId, snapshot } }));
+            } else {
+              try { window.BackpackUI?.render(heroId); } catch {}
+            }
+          } else if (this.drag.source === 'corpse') {
+            const res = await postJSON('/api/loot/corpse/take', {
+              heroId,
+              corpseId: this.drag.corpseId,
+              corpseItemId: this.drag.corpseItemId,
+              amount: qty,
+              drop: { mapKey: tile.mapKey, tileX: tile.x, tileY: tile.y },
+            });
+            if (res?.snapshot) {
+              window.dispatchEvent(new CustomEvent('backpack:update', { detail: { heroId, snapshot: res.snapshot } }));
+            }
+            if (res?.corpse) {
+              try { window.dispatchEvent(new CustomEvent('corpse:refresh', { detail: res.corpse })); } catch {}
+            }
           }
+
           try { document.dispatchEvent(new CustomEvent('map:loot-refresh', { detail: { mapKey: tile.mapKey } })); } catch {}
         } catch (e) {
           console.warn('[DnD] drop error:', e?.message || e);
@@ -314,7 +418,16 @@
           this.__hoverTile = null;
           if (this.__hud) { try { this.__hud.remove(); } catch {} this.__hud = null; }
         }
-      });
+      };
+
+      target.addEventListener('dragenter', enter);
+      target.addEventListener('dragover', over);
+      target.addEventListener('drop', drop);
+      target.addEventListener('dragleave', leave);
+
+      this.__mapTarget = target;
+      this.__mapHandlers = { enter, over, drop, leave };
+      target.dataset.dndMapWired = '1';
     },
 
     // Alvo: slots equipáveis
@@ -370,6 +483,9 @@
     init() {
       this.wireMapDropTarget();
       this.wireEquipDropTargets();
+      window.addEventListener('gamescene:ready', () => {
+        setTimeout(() => this.wireMapDropTarget(), 0);
+      });
       this.__ready = true;
     }
   };
