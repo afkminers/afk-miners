@@ -172,6 +172,10 @@
     "to": "./presence-controls.js"
   },
   {
+    "from": "client\\js\\ui\\corpse-window.js",
+    "to": "../api.js"
+  },
+  {
     "from": "client\\js\\ui\\chat-context.js",
     "to": "../api.js"
   },

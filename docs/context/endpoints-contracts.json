@@ -1176,7 +1176,7 @@
     "method": "GET",
     "path": "/cache/stats",
     "file": "server\\routes\\loot.js",
-    "line": 191,
+    "line": 433,
     "sample": {},
     "errors": [
       {
@@ -1933,9 +1933,115 @@
   },
   {
     "method": "POST",
+    "path": "/loot/corpse/open",
+    "file": "server\\routes\\loot.js",
+    "line": 110,
+    "sample": {},
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:'bad-args' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'corpse-not-found' }"
+      },
+      {
+        "status": 403,
+        "body": "{error:'not-owner' }"
+      },
+      {
+        "status": 410,
+        "body": "{error:'corpse-expired' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'corpse-open-failed' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'bad-args' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'corpse-not-found' }"
+      },
+      {
+        "status": 403,
+        "body": "{error:'not-owner' }"
+      },
+      {
+        "status": 410,
+        "body": "{error:'corpse-expired' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'bad-drop-target' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,corpse }"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/loot/corpse/take",
+    "file": "server\\routes\\loot.js",
+    "line": 148,
+    "sample": {},
+    "errors": [
+      {
+        "status": 400,
+        "body": "{error:'bad-args' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'corpse-not-found' }"
+      },
+      {
+        "status": 403,
+        "body": "{error:'not-owner' }"
+      },
+      {
+        "status": 410,
+        "body": "{error:'corpse-expired' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'bad-drop-target' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'corpse-take-failed' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'bad-args' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'no-backpack' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'loot-not-found' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,removed,corpse:updatedCorpse || takeRes.corpse,placed,leftover,dropped:droppedList,snapshot:backpackSnapshot,backpack:backpackSnapshot,}"
+      }
+    ]
+  },
+  {
+    "method": "POST",
     "path": "/loot/drop",
     "file": "server\\routes\\loot.js",
-    "line": 143,
+    "line": 369,
     "sample": {},
     "errors": [
       {
@@ -1958,7 +2064,7 @@
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
+        "body": "{ok:true,snapshot:backpackSnapshot,backpack:backpackSnapshot,}"
       }
     ]
   },
@@ -1966,13 +2072,8 @@
     "method": "POST",
     "path": "/loot/pickup",
     "file": "server\\routes\\loot.js",
-    "line": 85,
-    "sample": {
-      "body": {
-        "try {\n    const { heroId": 1,
-        "lootId": 1
-      }
-    },
+    "line": 287,
+    "sample": {},
     "errors": [
       {
         "status": 400,
@@ -1987,8 +2088,8 @@
         "body": "{error:'loot-not-found' }"
       },
       {
-        "status": 404,
-        "body": "{error:'loot-not-found' }"
+        "status": 409,
+        "body": "{ok:false,error:picked?.error || 'loot-pickup-failed' }"
       },
       {
         "status": 500,
@@ -2014,11 +2115,74 @@
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true,snapshot:{heroId:String(heroId),capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec2.key },placed,leftover }"
+        "body": "{ok:true,removed:picked.removed,placed,leftover,dropped:droppedLeftover,snapshot:backpackSnapshot,backpack:backpackSnapshot,}"
       },
       {
         "status": 200,
-        "body": "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
+        "body": "{ok:true,snapshot:backpackSnapshot,backpack:backpackSnapshot,}"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/map/:mapKey/corpses",
+    "file": "server\\routes\\loot.js",
+    "line": 98,
+    "sample": {
+      "params": {
+        "mapKey": "value"
+      }
+    },
+    "errors": [
+      {
+        "status": 500,
+        "body": "{error:'corpse-list-failed' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'bad-args' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'corpse-not-found' }"
+      },
+      {
+        "status": 403,
+        "body": "{error:'not-owner' }"
+      },
+      {
+        "status": 410,
+        "body": "{error:'corpse-expired' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'corpse-open-failed' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'bad-args' }"
+      },
+      {
+        "status": 404,
+        "body": "{error:'corpse-not-found' }"
+      },
+      {
+        "status": 403,
+        "body": "{error:'not-owner' }"
+      },
+      {
+        "status": 410,
+        "body": "{error:'corpse-expired' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'bad-drop-target' }"
+      }
+    ],
+    "ok": [
+      {
+        "status": 200,
+        "body": "{ok:true,corpse }"
       }
     ]
   },
@@ -2026,14 +2190,10 @@
     "method": "GET",
     "path": "/map/:mapKey/loot",
     "file": "server\\routes\\loot.js",
-    "line": 73,
+    "line": 86,
     "sample": {
       "params": {
         "mapKey": "value"
-      },
-      "body": {
-        "try {\n    const { heroId": 1,
-        "lootId": 1
       }
     },
     "errors": [
@@ -2042,50 +2202,54 @@
         "body": "{error:'loot-list-failed' }"
       },
       {
-        "status": 400,
-        "body": "{error:'bad-args' }"
-      },
-      {
-        "status": 400,
-        "body": "{error:'no-backpack' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'loot-not-found' }"
-      },
-      {
-        "status": 404,
-        "body": "{error:'loot-not-found' }"
-      },
-      {
         "status": 500,
-        "body": "{error:'loot-pickup-failed' }"
+        "body": "{error:'corpse-list-failed' }"
       },
       {
         "status": 400,
         "body": "{error:'bad-args' }"
       },
       {
+        "status": 404,
+        "body": "{error:'corpse-not-found' }"
+      },
+      {
+        "status": 403,
+        "body": "{error:'not-owner' }"
+      },
+      {
+        "status": 410,
+        "body": "{error:'corpse-expired' }"
+      },
+      {
+        "status": 500,
+        "body": "{error:'corpse-open-failed' }"
+      },
+      {
         "status": 400,
-        "body": "{error:'not-enough-qty' }"
+        "body": "{error:'bad-args' }"
       },
       {
-        "status": 500,
-        "body": "{error:'drop-failed' }"
+        "status": 404,
+        "body": "{error:'corpse-not-found' }"
       },
       {
-        "status": 500,
-        "body": "{error:'cache-stats-failed' }"
+        "status": 403,
+        "body": "{error:'not-owner' }"
+      },
+      {
+        "status": 410,
+        "body": "{error:'corpse-expired' }"
+      },
+      {
+        "status": 400,
+        "body": "{error:'bad-drop-target' }"
       }
     ],
     "ok": [
       {
         "status": 200,
-        "body": "{ok:true,snapshot:{heroId:String(heroId),capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec2.key },placed,leftover }"
-      },
-      {
-        "status": 200,
-        "body": "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
+        "body": "{ok:true,corpse }"
       }
     ]
   },
