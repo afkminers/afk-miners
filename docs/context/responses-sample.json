@@ -164,16 +164,24 @@
     "{ok:true }",
     "{profile,isAdmin:isAdminName(profile.name) }"
   ],
+  "POST /loot/corpse/open": [
+    "{ok:true,corpse }"
+  ],
+  "POST /loot/corpse/take": [
+    "{ok:true,removed,corpse:updatedCorpse || takeRes.corpse,placed,leftover,dropped:droppedList,snapshot:backpackSnapshot,backpack:backpackSnapshot,}"
+  ],
   "POST /loot/drop": [
-    "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
+    "{ok:true,snapshot:backpackSnapshot,backpack:backpackSnapshot,}"
   ],
   "POST /loot/pickup": [
-    "{ok:true,snapshot:{heroId:String(heroId),capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec2.key },placed,leftover }",
-    "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
+    "{ok:true,removed:picked.removed,placed,leftover,dropped:droppedLeftover,snapshot:backpackSnapshot,backpack:backpackSnapshot,}",
+    "{ok:true,snapshot:backpackSnapshot,backpack:backpackSnapshot,}"
+  ],
+  "GET /map/:mapKey/corpses": [
+    "{ok:true,corpse }"
   ],
   "GET /map/:mapKey/loot": [
-    "{ok:true,snapshot:{heroId:String(heroId),capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec2.key },placed,leftover }",
-    "{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }"
+    "{ok:true,corpse }"
   ],
   "GET /me": [
     "{profile,isAdmin:isAdminName(profile.name) }"

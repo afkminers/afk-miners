@@ -1,5 +1,9 @@
 [
   {
+    "from": "server\\services\\translator.js",
+    "to": "openai"
+  },
+  {
     "from": "client\\js\\pos-publisher.js",
     "to": "./ws/singleton.js"
   },
@@ -166,6 +170,10 @@
   {
     "from": "client\\js\\ui\\dm-chat.js",
     "to": "./presence-controls.js"
+  },
+  {
+    "from": "client\\js\\ui\\corpse-window.js",
+    "to": "../api.js"
   },
   {
     "from": "client\\js\\ui\\chat-context.js",

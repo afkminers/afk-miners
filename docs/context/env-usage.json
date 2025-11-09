@@ -146,7 +146,7 @@
       },
       {
         "file": "server\\combat\\service.js",
-        "index": 15412
+        "index": 14727
       },
       {
         "file": "server\\combat\\routes.js",
@@ -232,6 +232,35 @@
       }
     ],
     "defaults": []
+  },
+  {
+    "key": "CORPSE_DECAY_SECONDS",
+    "occurrences": [
+      {
+        "file": "server\\services\\loot.js",
+        "index": 715
+      }
+    ],
+    "defaults": [
+      "180"
+    ]
+  },
+  {
+    "key": "CORPSE_LOOT_RANGE_TILES",
+    "occurrences": [
+      {
+        "file": "server\\services\\loot.js",
+        "index": 911
+      },
+      {
+        "file": "server\\routes\\loot.js",
+        "index": 485
+      }
+    ],
+    "defaults": [
+      "1",
+      "1"
+    ]
   },
   {
     "key": "CSRF_COOKIE",
@@ -500,6 +529,30 @@
     "defaults": []
   },
   {
+    "key": "GROUND_ITEM_DECAY_SECONDS",
+    "occurrences": [
+      {
+        "file": "server\\services\\loot.js",
+        "index": 812
+      }
+    ],
+    "defaults": [
+      "300"
+    ]
+  },
+  {
+    "key": "GROUND_ITEM_RANGE_TILES",
+    "occurrences": [
+      {
+        "file": "server\\routes\\loot.js",
+        "index": 569
+      }
+    ],
+    "defaults": [
+      "CORPSE_RANGE"
+    ]
+  },
+  {
     "key": "IDLE_SCHEDULER_CHECK_MS",
     "occurrences": [
       {
@@ -599,27 +652,15 @@
     ]
   },
   {
-    "key": "LOOT_CLEANUP_EVERY_SECONDS",
+    "key": "LOOT_CLEANUP_INTERVAL_MS",
     "occurrences": [
       {
         "file": "server\\services\\loot.js",
-        "index": 384
+        "index": 13846
       }
     ],
     "defaults": [
-      "30"
-    ]
-  },
-  {
-    "key": "LOOT_EXPIRE_SECONDS",
-    "occurrences": [
-      {
-        "file": "server\\services\\loot.js",
-        "index": 301
-      }
-    ],
-    "defaults": [
-      "120"
+      "45_000"
     ]
   },
   {
@@ -940,6 +981,20 @@
       "development",
       "development"
     ]
+  },
+  {
+    "key": "OPENAI_API_KEY",
+    "occurrences": [
+      {
+        "file": "server\\services\\translator.js",
+        "index": 105
+      },
+      {
+        "file": "server\\services\\translator.js",
+        "index": 258
+      }
+    ],
+    "defaults": []
   },
   {
     "key": "PG_DUMP_PATH",

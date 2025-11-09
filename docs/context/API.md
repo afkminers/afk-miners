@@ -21,6 +21,8 @@
 - `COOKIE_NAME`
 - `COOKIE_SAME_SITE`
 - `COOKIE_SECURE`
+- `CORPSE_DECAY_SECONDS` (defaults: 180)
+- `CORPSE_LOOT_RANGE_TILES` (defaults: 1)
 - `CSRF_COOKIE` (defaults: csrf)
 - `CSRF_DEBUG` (defaults: 0)
 - `CTX_DEPTH` (defaults: 4)
@@ -42,6 +44,8 @@
 - `ENDPOINT_METRICS_TOP_N` (defaults: 10)
 - `FLUSH_POS_INTERVAL_MS` (defaults: 1000)
 - `GEN_CONTEXT_ON_START`
+- `GROUND_ITEM_DECAY_SECONDS` (defaults: 300)
+- `GROUND_ITEM_RANGE_TILES` (defaults: CORPSE_RANGE)
 - `IDLE_SCHEDULER_CHECK_MS` (defaults: 30000)
 - `JSON_LIMIT` (defaults: 64kb)
 - `JWT_SECRET` (defaults: changeme, CHANGE_ME_DEV_ONLY)
@@ -50,8 +54,7 @@
 - `LIVE_POS_TTL_MS` (defaults: 1500)
 - `LOOT_CACHE_ENABLED`
 - `LOOT_CACHE_TTL_SEC` (defaults: 5)
-- `LOOT_CLEANUP_EVERY_SECONDS` (defaults: 30)
-- `LOOT_EXPIRE_SECONDS` (defaults: 120)
+- `LOOT_CLEANUP_INTERVAL_MS` (defaults: 45_000)
 - `MONSTER_AGGRO_LOSS_MS` (defaults: 6000)
 - `MONSTER_AGGRO_PERSIST_BONUS` (defaults: 1.5)
 - `MONSTER_AGGRO_SWITCH_DELTA` (defaults: 2)
@@ -77,6 +80,7 @@
 - `MONSTER_STEP_MS` (defaults: 150)
 - `MONSTER_STEP_SEARCH_DEPTH` (defaults: 4)
 - `NODE_ENV` (defaults: development)
+- `OPENAI_API_KEY`
 - `PG_DUMP_PATH`
 - `PGSSLMODE`
 - `PORT` (defaults: 3000)
@@ -465,7 +469,7 @@ Arquivo: `server\index.js:612`
 
 ### GET /api/chat/global
 
-Arquivo: `server\index.js:1562`
+Arquivo: `server\index.js:1576`
 
 **Payloads (exemplos inferidos):**
 - query:
@@ -538,7 +542,7 @@ _Sem payload inferido_
 
 ### GET /cache/stats
 
-Arquivo: `server\routes\loot.js:191`
+Arquivo: `server\routes\loot.js:477`
 
 _Sem payload inferido_
 
@@ -733,9 +737,9 @@ Arquivo: `server\starter\routes.js:43`
 - `HTTP 400` → {error:'starter já escolhido' }
 - `HTTP 400` → {error:'heroKey inválido' }
 
-### GET /map/:mapKey/loot
+### GET /map/:mapKey/corpses
 
-Arquivo: `server\routes\loot.js:73`
+Arquivo: `server\routes\loot.js:138`
 
 **Payloads (exemplos inferidos):**
 - params:
@@ -744,30 +748,55 @@ Arquivo: `server\routes\loot.js:73`
   "mapKey": "value"
 }
 ```
-- body:
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,corpse }
+```
+
+**Erros conhecidos:**
+- `HTTP 500` → {error:'corpse-list-failed' }
+- `HTTP 400` → {error:'bad-args' }
+- `HTTP 404` → {error:'corpse-not-found' }
+- `HTTP 403` → {error:'not-owner' }
+- `HTTP 410` → {error:'corpse-expired' }
+- `HTTP 500` → {error:'corpse-open-failed' }
+- `HTTP 400` → {error:'bad-args' }
+- `HTTP 404` → {error:'corpse-not-found' }
+- `HTTP 403` → {error:'not-owner' }
+- `HTTP 410` → {error:'corpse-expired' }
+- `HTTP 400` → {error:'bad-drop-target' }
+
+### GET /map/:mapKey/loot
+
+Arquivo: `server\routes\loot.js:126`
+
+**Payloads (exemplos inferidos):**
+- params:
 ```json
 {
-  "try {\n    const { heroId": 1,
-  "lootId": 1
+  "mapKey": "value"
 }
 ```
 
 **Resposta de sucesso (amostra):**
 ```json
-{ok:true,snapshot:{heroId:String(heroId),capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec2.key },placed,leftover }
+{ok:true,corpse }
 ```
 
 **Erros conhecidos:**
 - `HTTP 500` → {error:'loot-list-failed' }
+- `HTTP 500` → {error:'corpse-list-failed' }
 - `HTTP 400` → {error:'bad-args' }
-- `HTTP 400` → {error:'no-backpack' }
-- `HTTP 404` → {error:'loot-not-found' }
-- `HTTP 404` → {error:'loot-not-found' }
-- `HTTP 500` → {error:'loot-pickup-failed' }
+- `HTTP 404` → {error:'corpse-not-found' }
+- `HTTP 403` → {error:'not-owner' }
+- `HTTP 410` → {error:'corpse-expired' }
+- `HTTP 500` → {error:'corpse-open-failed' }
 - `HTTP 400` → {error:'bad-args' }
-- `HTTP 400` → {error:'not-enough-qty' }
-- `HTTP 500` → {error:'drop-failed' }
-- `HTTP 500` → {error:'cache-stats-failed' }
+- `HTTP 404` → {error:'corpse-not-found' }
+- `HTTP 403` → {error:'not-owner' }
+- `HTTP 410` → {error:'corpse-expired' }
+- `HTTP 400` → {error:'bad-drop-target' }
 
 ### GET /me
 
@@ -1192,7 +1221,7 @@ Arquivo: `server\index.js:733`
 
 ### POST /api/chat/global
 
-Arquivo: `server\index.js:1585`
+Arquivo: `server\index.js:1599`
 
 _Sem payload inferido_
 
@@ -1513,15 +1542,60 @@ _Sem payload inferido_
 - `HTTP 404` → {error:'Jogador não encontrado' }
 - `HTTP 500` → {error:'Falha ao obter perfil' }
 
-### POST /loot/drop
+### POST /loot/corpse/open
 
-Arquivo: `server\routes\loot.js:143`
+Arquivo: `server\routes\loot.js:150`
 
 _Sem payload inferido_
 
 **Resposta de sucesso (amostra):**
 ```json
-{ok:true,snapshot:{heroId,capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec.key } }
+{ok:true,corpse }
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {error:'bad-args' }
+- `HTTP 404` → {error:'corpse-not-found' }
+- `HTTP 403` → {error:'not-owner' }
+- `HTTP 410` → {error:'corpse-expired' }
+- `HTTP 500` → {error:'corpse-open-failed' }
+- `HTTP 400` → {error:'bad-args' }
+- `HTTP 404` → {error:'corpse-not-found' }
+- `HTTP 403` → {error:'not-owner' }
+- `HTTP 410` → {error:'corpse-expired' }
+- `HTTP 400` → {error:'bad-drop-target' }
+
+### POST /loot/corpse/take
+
+Arquivo: `server\routes\loot.js:190`
+
+_Sem payload inferido_
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,removed,corpse:updatedCorpse || takeRes.corpse,placed,leftover,dropped:droppedList,snapshot:backpackSnapshot,backpack:backpackSnapshot,}
+```
+
+**Erros conhecidos:**
+- `HTTP 400` → {error:'bad-args' }
+- `HTTP 404` → {error:'corpse-not-found' }
+- `HTTP 403` → {error:'not-owner' }
+- `HTTP 410` → {error:'corpse-expired' }
+- `HTTP 400` → {error:'bad-drop-target' }
+- `HTTP 500` → {error:'corpse-take-failed' }
+- `HTTP 400` → {error:'bad-args' }
+- `HTTP 400` → {error:'no-backpack' }
+- `HTTP 404` → {error:'loot-not-found' }
+
+### POST /loot/drop
+
+Arquivo: `server\routes\loot.js:413`
+
+_Sem payload inferido_
+
+**Resposta de sucesso (amostra):**
+```json
+{ok:true,snapshot:backpackSnapshot,backpack:backpackSnapshot,}
 ```
 
 **Erros conhecidos:**
@@ -1532,27 +1606,20 @@ _Sem payload inferido_
 
 ### POST /loot/pickup
 
-Arquivo: `server\routes\loot.js:85`
+Arquivo: `server\routes\loot.js:331`
 
-**Payloads (exemplos inferidos):**
-- body:
-```json
-{
-  "try {\n    const { heroId": 1,
-  "lootId": 1
-}
-```
+_Sem payload inferido_
 
 **Resposta de sucesso (amostra):**
 ```json
-{ok:true,snapshot:{heroId:String(heroId),capacity:data.capacity,used:data.used,items:data.items,backpackKey:spec2.key },placed,leftover }
+{ok:true,removed:picked.removed,placed,leftover,dropped:droppedLeftover,snapshot:backpackSnapshot,backpack:backpackSnapshot,}
 ```
 
 **Erros conhecidos:**
 - `HTTP 400` → {error:'bad-args' }
 - `HTTP 400` → {error:'no-backpack' }
 - `HTTP 404` → {error:'loot-not-found' }
-- `HTTP 404` → {error:'loot-not-found' }
+- `HTTP 409` → {ok:false,error:picked?.error || 'loot-pickup-failed' }
 - `HTTP 500` → {error:'loot-pickup-failed' }
 - `HTTP 400` → {error:'bad-args' }
 - `HTTP 400` → {error:'not-enough-qty' }
@@ -1973,17 +2040,31 @@ _Sem payload inferido_
   - HTTP 400: {error:'heroKey é obrigatório' }
   - HTTP 400: {error:'starter já escolhido' }
   - HTTP 400: {error:'heroKey inválido' }
+- **GET /map/:mapKey/corpses**
+  - HTTP 500: {error:'corpse-list-failed' }
+  - HTTP 400: {error:'bad-args' }
+  - HTTP 404: {error:'corpse-not-found' }
+  - HTTP 403: {error:'not-owner' }
+  - HTTP 410: {error:'corpse-expired' }
+  - HTTP 500: {error:'corpse-open-failed' }
+  - HTTP 400: {error:'bad-args' }
+  - HTTP 404: {error:'corpse-not-found' }
+  - HTTP 403: {error:'not-owner' }
+  - HTTP 410: {error:'corpse-expired' }
+  - HTTP 400: {error:'bad-drop-target' }
 - **GET /map/:mapKey/loot**
   - HTTP 500: {error:'loot-list-failed' }
+  - HTTP 500: {error:'corpse-list-failed' }
   - HTTP 400: {error:'bad-args' }
-  - HTTP 400: {error:'no-backpack' }
-  - HTTP 404: {error:'loot-not-found' }
-  - HTTP 404: {error:'loot-not-found' }
-  - HTTP 500: {error:'loot-pickup-failed' }
+  - HTTP 404: {error:'corpse-not-found' }
+  - HTTP 403: {error:'not-owner' }
+  - HTTP 410: {error:'corpse-expired' }
+  - HTTP 500: {error:'corpse-open-failed' }
   - HTTP 400: {error:'bad-args' }
-  - HTTP 400: {error:'not-enough-qty' }
-  - HTTP 500: {error:'drop-failed' }
-  - HTTP 500: {error:'cache-stats-failed' }
+  - HTTP 404: {error:'corpse-not-found' }
+  - HTTP 403: {error:'not-owner' }
+  - HTTP 410: {error:'corpse-expired' }
+  - HTTP 400: {error:'bad-drop-target' }
 - **GET /me**
   - HTTP 400: {error:'heroId é obrigatório' }
   - HTTP 404: {error:'Herói não encontrado' }
@@ -2168,6 +2249,27 @@ _Sem payload inferido_
 - **POST /logout**
   - HTTP 404: {error:'Jogador não encontrado' }
   - HTTP 500: {error:'Falha ao obter perfil' }
+- **POST /loot/corpse/open**
+  - HTTP 400: {error:'bad-args' }
+  - HTTP 404: {error:'corpse-not-found' }
+  - HTTP 403: {error:'not-owner' }
+  - HTTP 410: {error:'corpse-expired' }
+  - HTTP 500: {error:'corpse-open-failed' }
+  - HTTP 400: {error:'bad-args' }
+  - HTTP 404: {error:'corpse-not-found' }
+  - HTTP 403: {error:'not-owner' }
+  - HTTP 410: {error:'corpse-expired' }
+  - HTTP 400: {error:'bad-drop-target' }
+- **POST /loot/corpse/take**
+  - HTTP 400: {error:'bad-args' }
+  - HTTP 404: {error:'corpse-not-found' }
+  - HTTP 403: {error:'not-owner' }
+  - HTTP 410: {error:'corpse-expired' }
+  - HTTP 400: {error:'bad-drop-target' }
+  - HTTP 500: {error:'corpse-take-failed' }
+  - HTTP 400: {error:'bad-args' }
+  - HTTP 400: {error:'no-backpack' }
+  - HTTP 404: {error:'loot-not-found' }
 - **POST /loot/drop**
   - HTTP 400: {error:'bad-args' }
   - HTTP 400: {error:'not-enough-qty' }
@@ -2177,7 +2279,7 @@ _Sem payload inferido_
   - HTTP 400: {error:'bad-args' }
   - HTTP 400: {error:'no-backpack' }
   - HTTP 404: {error:'loot-not-found' }
-  - HTTP 404: {error:'loot-not-found' }
+  - HTTP 409: {ok:false,error:picked?.error || 'loot-pickup-failed' }
   - HTTP 500: {error:'loot-pickup-failed' }
   - HTTP 400: {error:'bad-args' }
   - HTTP 400: {error:'not-enough-qty' }

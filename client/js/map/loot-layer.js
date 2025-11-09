@@ -43,7 +43,7 @@
   // ===== estado =====
   const state = {
     itemsIndex: null, // { key: { icon, name, ... } }
-    loots: new Map(), // id -> { id, mapKey, x, y, items:[{key,amount}] }
+    loots: new Map(), // id -> { id, mapKey, tileX, tileY, itemKey, amount }
     nodes: new Map(), // id -> HTMLElement
     __ready: false
   };
@@ -154,16 +154,19 @@
     const node = document.createElement('div');
     node.className = 'loot-marker';
     node.style.position = 'absolute';
-    node.style.transform = 'translate(-50%, -80%)'; // âncora levemente acima do centro
+    node.style.transform = 'translate(-50%, -50%)'; // centraliza exatamente no centro do tile
+    node.style.width = '32px';
+    node.style.height = '32px';
+    node.style.pointerEvents = 'auto';
+
     node.style.pointerEvents = 'auto';
 
     // decide ícone
-    const first = (loot.items || [])[0] || {};
-    const icon = iconFor(first.key);
+    const icon = iconFor(loot.itemKey);
     if (icon) {
       const img = document.createElement('img');
       img.src = icon;
-      img.alt = first.key || 'loot';
+      img.alt = loot.itemKey || 'loot';
       img.width = 22; img.height = 22;
       img.style.imageRendering = 'pixelated';
       img.style.filter = 'drop-shadow(0 1px 1px rgba(0,0,0,.6))';
@@ -180,7 +183,7 @@
     }
 
     // badge quantidade (se for 1 item com quantidade > 1)
-    const amount = Number(first.amount || first.qty || 0);
+    const amount = Number(loot.amount || 0);
     if (amount > 1) {
       const badge = document.createElement('div');
       badge.textContent = '×' + amount;
@@ -195,9 +198,7 @@
     }
 
     // tooltip simples
-    node.title = (loot.items || [])
-      .map(i => `${nameFor(i.key)} ×${i.amount || i.qty || 1}`)
-      .join('\n');
+    node.title = `${nameFor(loot.itemKey)} ×${amount || 1}`;
 
     // click-to-pickup
     node.addEventListener('click', async (ev) => {
@@ -239,7 +240,7 @@
         state.nodes.set(id, node);
         root.appendChild(node);
       }
-      const pos = tileToCss(loot.x, loot.y);
+      const pos = tileToCss(loot.tileX, loot.tileY);
       node.style.left = (pos.x | 0) + 'px';
       node.style.top = (pos.y | 0) + 'px';
     }
@@ -255,13 +256,20 @@
       const list = await getJSON(`/api/map/${encodeURIComponent(mapKey)}/loot`);
       // normaliza
       const next = new Map();
+      const tileSize = Number(window.GameScene?.tileSize || window.GameScene?.TILE_SIZE || window.TILE_SIZE || 32);
       for (const r of list || []) {
         const id = String(r.id);
+        const tileX = Number.isFinite(Number(r.tileX ?? r.tile_x)) ? Number(r.tileX ?? r.tile_x) : null;
+        const tileY = Number.isFinite(Number(r.tileY ?? r.tile_y)) ? Number(r.tileY ?? r.tile_y) : null;
+        const px = Number.isFinite(r.x) ? Number(r.x) : (tileX != null ? tileX * tileSize + tileSize / 2 : null);
+        const py = Number.isFinite(r.y) ? Number(r.y) : (tileY != null ? tileY * tileSize + tileSize / 2 : null);
         next.set(id, {
           id,
           mapKey: r.mapKey || r.map_key || mapKey,
-          x: Number(r.x), y: Number(r.y),
-          items: Array.isArray(r.items) ? r.items.map(i => ({ key: String(i.key || i.item_key), amount: Number(i.amount || i.qty || 1) })) : []
+          tileX: tileX != null ? tileX : Math.floor((px ?? 0) / tileSize),
+          tileY: tileY != null ? tileY : Math.floor((py ?? 0) / tileSize),
+          itemKey: r.itemKey || r.item_key || (Array.isArray(r.items) && r.items[0]?.key) || null,
+          amount: Number(r.amount ?? r.qty ?? (Array.isArray(r.items) ? r.items[0]?.amount ?? r.items[0]?.qty : 1)) || 1,
         });
       }
       // remove os que sumiram
@@ -280,6 +288,24 @@
   window.addEventListener('map:loot-refresh', () => { refresh(); });
   window.addEventListener('loot:picked', (ev) => {
     const id = ev?.detail?.lootId || ev?.detail?.id || null;
+    if (id) removeLoot(String(id));
+  });
+  window.addEventListener('ground-item:update', (ev) => {
+    const data = ev?.detail || null;
+    if (!data) return;
+    const mapKey = data.mapKey || data.map_key || getMapKey();
+    if (mapKey && mapKey !== getMapKey()) return;
+    state.loots.set(String(data.id), {
+      id: String(data.id),
+      mapKey,
+      tileX: Number.isFinite(Number(data.tileX ?? data.tile_x)) ? Number(data.tileX ?? data.tile_x) : Math.floor(Number(data.x || 0) / (Number(window.GameScene?.tileSize || 32))),
+      tileY: Number.isFinite(Number(data.tileY ?? data.tile_y)) ? Number(data.tileY ?? data.tile_y) : Math.floor(Number(data.y || 0) / (Number(window.GameScene?.tileSize || 32))),
+      itemKey: data.itemKey || data.item_key || null,
+      amount: Number(data.amount ?? data.qty ?? 1) || 1,
+    });
+  });
+  window.addEventListener('ground-item:removed', (ev) => {
+    const id = ev?.detail?.id || ev?.detail || null;
     if (id) removeLoot(String(id));
   });
 

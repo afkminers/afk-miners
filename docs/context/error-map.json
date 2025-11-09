@@ -935,6 +935,86 @@
       "body": "{error:'Falha ao obter perfil' }"
     }
   ],
+  "POST /loot/corpse/open": [
+    {
+      "status": 400,
+      "body": "{error:'bad-args' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'corpse-not-found' }"
+    },
+    {
+      "status": 403,
+      "body": "{error:'not-owner' }"
+    },
+    {
+      "status": 410,
+      "body": "{error:'corpse-expired' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'corpse-open-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'bad-args' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'corpse-not-found' }"
+    },
+    {
+      "status": 403,
+      "body": "{error:'not-owner' }"
+    },
+    {
+      "status": 410,
+      "body": "{error:'corpse-expired' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'bad-drop-target' }"
+    }
+  ],
+  "POST /loot/corpse/take": [
+    {
+      "status": 400,
+      "body": "{error:'bad-args' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'corpse-not-found' }"
+    },
+    {
+      "status": 403,
+      "body": "{error:'not-owner' }"
+    },
+    {
+      "status": 410,
+      "body": "{error:'corpse-expired' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'bad-drop-target' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'corpse-take-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'bad-args' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'no-backpack' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'loot-not-found' }"
+    }
+  ],
   "POST /loot/drop": [
     {
       "status": 400,
@@ -967,8 +1047,8 @@
       "body": "{error:'loot-not-found' }"
     },
     {
-      "status": 404,
-      "body": "{error:'loot-not-found' }"
+      "status": 409,
+      "body": "{ok:false,error:picked?.error || 'loot-pickup-failed' }"
     },
     {
       "status": 500,
@@ -991,46 +1071,100 @@
       "body": "{error:'cache-stats-failed' }"
     }
   ],
+  "GET /map/:mapKey/corpses": [
+    {
+      "status": 500,
+      "body": "{error:'corpse-list-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'bad-args' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'corpse-not-found' }"
+    },
+    {
+      "status": 403,
+      "body": "{error:'not-owner' }"
+    },
+    {
+      "status": 410,
+      "body": "{error:'corpse-expired' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'corpse-open-failed' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'bad-args' }"
+    },
+    {
+      "status": 404,
+      "body": "{error:'corpse-not-found' }"
+    },
+    {
+      "status": 403,
+      "body": "{error:'not-owner' }"
+    },
+    {
+      "status": 410,
+      "body": "{error:'corpse-expired' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'bad-drop-target' }"
+    }
+  ],
   "GET /map/:mapKey/loot": [
     {
       "status": 500,
       "body": "{error:'loot-list-failed' }"
     },
     {
-      "status": 400,
-      "body": "{error:'bad-args' }"
-    },
-    {
-      "status": 400,
-      "body": "{error:'no-backpack' }"
-    },
-    {
-      "status": 404,
-      "body": "{error:'loot-not-found' }"
-    },
-    {
-      "status": 404,
-      "body": "{error:'loot-not-found' }"
-    },
-    {
       "status": 500,
-      "body": "{error:'loot-pickup-failed' }"
+      "body": "{error:'corpse-list-failed' }"
     },
     {
       "status": 400,
       "body": "{error:'bad-args' }"
     },
     {
+      "status": 404,
+      "body": "{error:'corpse-not-found' }"
+    },
+    {
+      "status": 403,
+      "body": "{error:'not-owner' }"
+    },
+    {
+      "status": 410,
+      "body": "{error:'corpse-expired' }"
+    },
+    {
+      "status": 500,
+      "body": "{error:'corpse-open-failed' }"
+    },
+    {
       "status": 400,
-      "body": "{error:'not-enough-qty' }"
+      "body": "{error:'bad-args' }"
     },
     {
-      "status": 500,
-      "body": "{error:'drop-failed' }"
+      "status": 404,
+      "body": "{error:'corpse-not-found' }"
     },
     {
-      "status": 500,
-      "body": "{error:'cache-stats-failed' }"
+      "status": 403,
+      "body": "{error:'not-owner' }"
+    },
+    {
+      "status": 410,
+      "body": "{error:'corpse-expired' }"
+    },
+    {
+      "status": 400,
+      "body": "{error:'bad-drop-target' }"
     }
   ],
   "GET /me": [
