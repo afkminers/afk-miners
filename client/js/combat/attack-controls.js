@@ -76,6 +76,31 @@ function getMouseWorldFromEvent(e, canvas) {
   return screenToWorld(canvas, cx - rect.left, cy - rect.top);
 }
 
+const LOOT_UI_SELECTOR = '.corpse-hitbox, #corpseWindow, .corpse-slot';
+
+function isLootUiTarget(node) {
+  if (!node || node === window || node === document) return false;
+  if (typeof node.closest !== 'function') return false;
+  return Boolean(node.closest(LOOT_UI_SELECTOR));
+}
+
+function shouldBlockAttackFromEvent(e) {
+  if (!e) return false;
+  if (isLootUiTarget(e.target)) return true;
+  if (typeof e.composedPath === 'function') {
+    for (const el of e.composedPath()) {
+      if (isLootUiTarget(el)) return true;
+    }
+  }
+  const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX);
+  const clientY = e.clientY ?? (e.touches && e.touches[0]?.clientY);
+  if (Number.isFinite(clientX) && Number.isFinite(clientY) && typeof document.elementFromPoint === 'function') {
+    const top = document.elementFromPoint(clientX, clientY);
+    if (isLootUiTarget(top)) return true;
+  }
+  return false;
+}
+
 /**
  * Local picking function that uses the existing pickMobAtWorld from render-combat.js
  * Returns monster ID if found, null otherwise
@@ -559,10 +584,14 @@ function attachControls() {
   canvas.addEventListener('contextmenu', suppressContextMenu);
 
   const onPointerDown = async (e) => {
-    const hero = await ensureActiveHero(); 
-    if (!hero.id) { 
-      alert('Nenhum herói ativo encontrado.'); 
-      return; 
+    if (shouldBlockAttackFromEvent(e)) {
+      return;
+    }
+
+    const hero = await ensureActiveHero();
+    if (!hero.id) {
+      alert('Nenhum herói ativo encontrado.');
+      return;
     }
 
     // Check if we should use RMB mode

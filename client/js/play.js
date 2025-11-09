@@ -21,6 +21,7 @@ import { TILE, toTile, tileCenter, footColliderPx } from './engine/movement_cont
 
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
+const TILE_SIZE = Number(window.TILE_SIZE || 32);
 const playerVis = { w: 32, h: 32, img: null, heroKey: null, anchorX: 0.5, anchorY: 0.9 };
 // Desliga a IA local de mobs; posição deve vir do servidor
 const ENABLE_LOCAL_MOB_AI = false;
@@ -1660,9 +1661,11 @@ const mobs = [];
 window.GameScene.mobs = mobs;
 let mobAutoId = 1;
 
-/* ========================= Loot (estado) ========================== */
-const loots = new Map(); // id -> { id, x, y, items:[...] }
+/* ========================= Loot / Corpses ======================== */
+const loots = new Map(); // id -> { id, mapKey, tileX, tileY, x, y, itemKey, amount }
+const corpses = new Map(); // id -> { id, mapKey, tileX, tileY, posX, posY, ownerPlayerId, ownerHeroId, isEmpty }
 window.GameScene.loots = loots;
+window.GameScene.corpses = corpses;
 
 function lootAtWorld(x, y) {
   for (const l of loots.values()) if (Math.abs(x - l.x) <= 16 && Math.abs(y - l.y) <= 16) return l;
@@ -2281,13 +2284,95 @@ function updateRespawns(now) {
   }
 
 
-  // === WS: loot
-  onMessage('loot_spawned', (msg) => {
-    loots.set(String(msg.id), { id: String(msg.id), x: msg.x, y: msg.y, items: msg.items || [] });
-  });
-  onMessage('loot_removed', (msg) => {
-    loots.delete(String(msg.id));
-  });
+  function addGroundLootEntry(raw) {
+    if (!raw) return;
+    const data = raw.item ? raw.item : raw;
+    const mapKey = data.mapKey || data.map_key || null;
+    if (mapKey && String(mapKey) !== MAP_KEY) return;
+    const id = String(data.id);
+    const tileX = Number.isFinite(Number(data.tileX ?? data.tile_x)) ? Number(data.tileX ?? data.tile_x) : null;
+    const tileY = Number.isFinite(Number(data.tileY ?? data.tile_y)) ? Number(data.tileY ?? data.tile_y) : null;
+    const px = Number.isFinite(data.x) ? Number(data.x) : (tileX != null ? tileX * TILE_SIZE + TILE_SIZE / 2 : null);
+    const py = Number.isFinite(data.y) ? Number(data.y) : (tileY != null ? tileY * TILE_SIZE + TILE_SIZE / 2 : null);
+    const entry = {
+      id,
+      mapKey: mapKey || MAP_KEY,
+      tileX: tileX != null ? tileX : Math.floor((px ?? 0) / TILE_SIZE),
+      tileY: tileY != null ? tileY : Math.floor((py ?? 0) / TILE_SIZE),
+      x: Number.isFinite(px) ? px : ((tileX ?? 0) * TILE_SIZE + TILE_SIZE / 2),
+      y: Number.isFinite(py) ? py : ((tileY ?? 0) * TILE_SIZE + TILE_SIZE / 2),
+      itemKey: data.itemKey || data.item_key || (Array.isArray(data.items) && data.items[0]?.key) || null,
+      amount: Number(data.amount ?? data.qty ?? (Array.isArray(data.items) ? data.items[0]?.amount ?? data.items[0]?.qty : 1)) || 1,
+    };
+    loots.set(id, entry);
+    try { window.dispatchEvent(new CustomEvent('ground-item:update', { detail: entry })); } catch {}
+  }
+
+  function removeGroundLootEntry(raw) {
+    const id = raw && raw.itemId ? raw.itemId : raw && raw.id ? raw.id : raw && raw.lootId ? raw.lootId : raw;
+    if (id == null) return;
+    const key = String(id);
+    const prev = loots.get(key) || null;
+    loots.delete(key);
+    try { window.dispatchEvent(new CustomEvent('ground-item:removed', { detail: { id: key, previous: prev } })); } catch {}
+  }
+
+  function registerCorpseEntry(raw) {
+    if (!raw) return;
+    const data = raw.corpse ? raw.corpse : raw;
+    const mapKey = data.mapKey || data.map_key || null;
+    if (mapKey && String(mapKey) !== MAP_KEY) return;
+    const id = String(data.id);
+    const corpse = {
+      id,
+      mapKey: mapKey || MAP_KEY,
+      tileX: Number.isFinite(Number(data.tileX ?? data.tile_x)) ? Number(data.tileX ?? data.tile_x) : null,
+      tileY: Number.isFinite(Number(data.tileY ?? data.tile_y)) ? Number(data.tileY ?? data.tile_y) : null,
+      posX: Number.isFinite(data.posX) ? Number(data.posX) : Number.isFinite(data.pos_x) ? Number(data.pos_x) : null,
+      posY: Number.isFinite(data.posY) ? Number(data.posY) : Number.isFinite(data.pos_y) ? Number(data.pos_y) : null,
+      ownerPlayerId: data.ownerPlayerId || data.owner_player_id || null,
+      ownerHeroId: data.ownerHeroId || data.owner_hero_id || null,
+      expiresAt: data.expiresAt || data.expires_at || null,
+      isEmpty: data.isEmpty === true || data.is_fully_looted === true,
+    };
+    corpses.set(id, corpse);
+    try { window.dispatchEvent(new CustomEvent('corpse:spawn', { detail: corpse })); } catch {}
+  }
+
+  function updateCorpseEntry(raw) {
+    if (!raw) return;
+    const id = raw.corpseId || raw.id;
+    if (!id) return;
+    const key = String(id);
+    const corpse = corpses.get(key);
+    if (!corpse) return;
+    if (raw.isEmpty != null) corpse.isEmpty = !!raw.isEmpty;
+    if (raw.ownerPlayerId) corpse.ownerPlayerId = raw.ownerPlayerId;
+    if (raw.ownerHeroId) corpse.ownerHeroId = raw.ownerHeroId;
+    corpses.set(key, corpse);
+    try { window.dispatchEvent(new CustomEvent('corpse:updated', { detail: corpse })); } catch {}
+  }
+
+  function removeCorpseEntry(raw) {
+    if (!raw) return;
+    const id = raw.corpseId || raw.id || raw;
+    if (!id) return;
+    const key = String(id);
+    const prev = corpses.get(key) || null;
+    corpses.delete(key);
+    try { window.dispatchEvent(new CustomEvent('corpse:removed', { detail: { id: key, corpse: prev } })); } catch {}
+  }
+
+  // === WS: loot/corpses ===
+  onMessage('ground-item:spawn', (msg) => { addGroundLootEntry(msg); });
+  onMessage('ground-item:removed', (msg) => { removeGroundLootEntry(msg); });
+  // Legacy support (older servers)
+  onMessage('loot_spawned', (msg) => { addGroundLootEntry(msg); });
+  onMessage('loot_removed', (msg) => { removeGroundLootEntry(msg); });
+
+  onMessage('corpse:spawn', (msg) => { registerCorpseEntry(msg); });
+  onMessage('corpse:updated', (msg) => { updateCorpseEntry(msg); });
+  onMessage('corpse:removed', (msg) => { removeCorpseEntry(msg); });
 
   // sinaliza que a cena está pronta (outros módulos podem iniciar)
   window.dispatchEvent(new CustomEvent('game:ready', { detail: { canvas, ctx, camera, controller } }));
