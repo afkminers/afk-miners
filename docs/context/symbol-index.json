@@ -210,6 +210,7 @@
       "getMouseWorldFromEvent",
       "handleCombatWarning",
       "hasWarning",
+      "isLootUiTarget",
       "localPickUnderCursor",
       "messageFromWarning",
       "pickCamera",
@@ -220,6 +221,7 @@
       "resolveWarningFromPayload",
       "safeNumber",
       "screenToWorld",
+      "shouldBlockAttackFromEvent",
       "startAttack",
       "startLoop",
       "warnLos",
@@ -527,6 +529,22 @@
     ]
   },
   {
+    "file": "client\\js\\map\\corpse-layer.js",
+    "symbols": [
+      "canvasPxToCss",
+      "getCanvasRects",
+      "getHeroId",
+      "getMapKey",
+      "getOverlayRoot",
+      "openCorpseAtEvent",
+      "refresh",
+      "removeCorpse",
+      "tileToCanvasPx",
+      "tileToCss",
+      "upsertCorpse"
+    ]
+  },
+  {
     "file": "client\\js\\map\\loot-layer.js",
     "symbols": [
       "canvasPxToCss",
@@ -647,6 +665,7 @@
     "file": "client\\js\\play.js",
     "symbols": [
       "_applyEarlySnapIfAny",
+      "addGroundLootEntry",
       "addMobFromSpawn",
       "applyCameraZoom",
       "applyServerPosition",
@@ -666,6 +685,7 @@
       "drawGround",
       "drawLoot",
       "drawMob",
+      "drawOtherPlayer",
       "drawPlayer",
       "ensureImgLoaded",
       "ensureServerMonsterSprite",
@@ -674,6 +694,7 @@
       "frame",
       "getHeroWorldPosition",
       "getOrCreateServerMonsterState",
+      "getOtherPlayersSnapshot",
       "handleLegacyMobPos",
       "handleServerMonsterDead",
       "handleServerMonsterMove",
@@ -702,6 +723,9 @@
       "pickElByIds",
       "pickFaceFromDelta",
       "pickFreeSpriteForSpawn",
+      "registerCorpseEntry",
+      "removeCorpseEntry",
+      "removeGroundLootEntry",
       "removeMonsterFromTile",
       "resize",
       "resolveHeroId",
@@ -714,11 +738,13 @@
       "translateLog",
       "triggerMonsterAttackAnimation",
       "uniq",
+      "updateCorpseEntry",
       "updateHeroBlocking",
       "updateMonsterBlocking",
       "updateRespawns",
       "updateServerDrivenMonsters",
-      "updateSpriteFacingFromDelta"
+      "updateSpriteFacingFromDelta",
+      "upsertOtherPlayer"
     ]
   },
   {
@@ -875,6 +901,24 @@
       "onFrame",
       "pushHint",
       "render"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\corpse-window.js",
+    "symbols": [
+      "close",
+      "ensureDnDLoaded",
+      "ensureItemsIndex",
+      "ensureRoot",
+      "fetchCorpse",
+      "handleCorpseRefresh",
+      "handleCorpseRemoved",
+      "handleCorpseUpdated",
+      "heroIdFromState",
+      "iconFor",
+      "nameFor",
+      "open",
+      "renderCorpse"
     ]
   },
   {
@@ -1397,12 +1441,10 @@
       "getInstanceWithMonster",
       "getRespawnSeconds",
       "normalizeCombatPosition",
-      "persistDrops",
       "posMod",
       "resolveSkillFromWeapon",
       "resolveWeaponSpeedMs",
-      "respawnHero",
-      "rollLoot"
+      "respawnHero"
     ]
   },
   {
@@ -1662,6 +1704,9 @@
     "file": "server\\routes\\loot.js",
     "symbols": [
       "assertHeroAliveOwned",
+      "ensureHeroProximity",
+      "normalizeMapKey",
+      "resolveTileCoord",
       "takeFromBackpack"
     ]
   },
@@ -1818,13 +1863,27 @@
   {
     "file": "server\\services\\loot.js",
     "symbols": [
-      "cleanupExpiredOnce",
-      "createLootFromKill",
-      "ensureMap",
-      "getMapLoot",
-      "nowMs",
-      "pickupLoot",
-      "startCleanupLoop"
+      "cleanupEmptyCorpse",
+      "cleanupExpiredCorpses",
+      "cleanupExpiredGroundItems",
+      "createCorpse",
+      "distanceTiles",
+      "dropGroundItem",
+      "futureDate",
+      "getCorpseWithItems",
+      "getGroundItem",
+      "getHeroTilePosition",
+      "listCorpses",
+      "listGroundItems",
+      "nowDate",
+      "openCorpse",
+      "pickupGroundItem",
+      "pxToTile",
+      "rollMonsterLoot",
+      "startCleanupLoop",
+      "stopCleanupLoop",
+      "takeCorpseItem",
+      "withClient"
     ]
   },
   {
@@ -1853,6 +1912,12 @@
     "file": "server\\services\\starterHero.js",
     "symbols": [
       "createStarterHeroIfMissing"
+    ]
+  },
+  {
+    "file": "server\\services\\translator.js",
+    "symbols": [
+      "translatePostToEn"
     ]
   },
   {

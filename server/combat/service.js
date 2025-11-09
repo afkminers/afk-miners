@@ -7,6 +7,7 @@ const wsBus = require('../ws/bus');
 const { broadcast, sendToPlayer, broadcastToMap, broadcastToMapExcept } = wsBus;
 const { TILE } = require('./geom');
 const { toTileCoords, chebyshevTiles, isValidTile } = require('../utils/tile-coords');
+const lootService = require('../services/loot');
 const { resolveMonsterAttackProfile } = require('./monster_attack_profile');
 const { hasLineOfSightTiles } = require('./los');
 const { getGrid } = require('../maps/grid');
@@ -139,7 +140,7 @@ async function getInstanceWithMonster(instanceId) {
     `SELECT mi.id, mi.hp, mi.max_hp, mi.state, mi.spawn_id,
             COALESCE(mi.map_key, s."mapKey") AS map_key,
             mi.x, mi.y,
-            m.id AS monster_id, m.key AS monster_key,
+            m.id AS monster_id, m.key AS monster_key, m.name AS monster_name,
             COALESCE(m.xp,25)                      AS xp_reward,
             COALESCE(m."lootJSON",'[]'::jsonb)     AS loot_json,
             COALESCE(m."defensesJSON",'{}'::jsonb) AS defenses_json,
@@ -177,43 +178,6 @@ async function getRespawnSeconds(spawnId) {
     [spawnId]
   );
   return row?.sec ?? 30;
-}
-
-/** Rola loot de acordo com lootJSON */
-function rollLoot(lootJson) {
-  const drops = [];
-  const arr = Array.isArray(lootJson) ? lootJson : [];
-  for (const e of arr) {
-    const item   = e?.item;
-    const min    = Number(e?.min ?? 1);
-    const max    = Number(e?.max ?? 1);
-    const chance = Number(e?.chance ?? 0); // %
-    if (!item || chance <= 0) continue;
-    const roll = Math.random() * 100;
-    if (roll <= chance) {
-      const amount = min >= max ? min : (min + Math.floor(Math.random() * (max - min + 1)));
-      if (amount > 0) drops.push({ item_key: String(item), amount });
-    }
-  }
-  return drops;
-}
-
-/** Persiste drops em hero_loot_drops */
-async function persistDrops(heroId, instanceId, drops) {
-  if (!drops || !drops.length) return 0;
-  const values = [];
-  const params = [];
-  let i = 1;
-  for (const d of drops) {
-    values.push(`($${i++}, $${i++}, $${i++}, $${i++})`);
-    params.push(heroId, instanceId, d.item_key, d.amount);
-  }
-  await run(
-    `INSERT INTO hero_loot_drops (hero_id, monster_instance_id, item_key, amount)
-     VALUES ${values.join(',')}`,
-    params
-  );
-  return drops.length;
 }
 
 /** =======================
@@ -400,16 +364,27 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
 
   let xpGained = 0;
   let drops = [];
+  let corpseRow = null;
   if (dead) {
     xpGained = Number(inst.xp_reward || 0);
     try { await giveXp(attackerHeroId, xpGained); } catch {}
 
     try {
       const lootArray = Array.isArray(inst.loot_json) ? inst.loot_json : [];
-      drops = rollLoot(lootArray);
-      if (drops.length) await persistDrops(attackerHeroId, inst.id, drops);
+      drops = lootService.rollMonsterLoot(lootArray);
+      corpseRow = await lootService.createCorpse({
+        monsterInstanceId: inst.id,
+        monsterKey: inst.monster_key,
+        monsterName: inst.monster_name || null,
+        mapKey: inst.map_key,
+        x: inst.x,
+        y: inst.y,
+        ownerPlayerId: hero.player_id || null,
+        ownerHeroId: hero.hero_id || null,
+        lootItems: drops,
+      });
     } catch (e) {
-      console.warn('[combat] loot roll error:', e?.message);
+      console.warn('[combat] loot/corpse error:', e?.message);
     }
 
     const sec = await getRespawnSeconds(inst.spawn_id);
@@ -424,7 +399,8 @@ async function applyHit({ attackerHeroId, targetInstanceId, weaponType }) {
       type: 'monster_dead',
       id: inst.id,
       xp: xpGained,
-      drops
+      drops,
+      corpseId: corpseRow?.id || null,
     });
 
     try {
