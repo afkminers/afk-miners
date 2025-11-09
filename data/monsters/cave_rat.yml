@@ -14,7 +14,8 @@ elements:
   physical: 0
 attack_range: 1
 aggro_range: 8
-attack_ms: 900
+leash_px: 192 # 6 tiles * 32px — desiste e volta pra casa fora disso
+attack_ms: 1200
 attacks:
 - type: melee
   intervalMs: 900

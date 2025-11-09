@@ -102,12 +102,16 @@ function _applyEarlySnapIfAny(controller) {
 
 // registre o handler o quanto antes (ainda no topo do arquivo)
 onMessage('pos_snap', (msg) => {
-  // se o controller ainda não existe, guarda; senão aplica na hora
   const ctrl = window.GameScene?.controller;
   if (!ctrl) { _earlySnap = msg; return; }
   if (msg.mapKey && msg.mapKey !== MAP_KEY) return;
-  try { ctrl.setPosition(msg.x | 0, msg.y | 0); } catch {}
+  try {
+    ctrl.setPosition(msg.x | 0, msg.y | 0);
+    // 👇 cancela qualquer A* pendente pra evitar “puxa e solta”
+    if (typeof ctrl.followPath === 'function') ctrl.followPath(null);
+  } catch {}
 });
+
 
 // atualiza cache de outros jogadores quando o servidor manda posição
 onMessage('pos', (msg) => {
@@ -2530,7 +2534,15 @@ function updateRespawns(now) {
 
     // Teclado: 1 passo de 32x32 por tecla (N/S/L/O)
     const step = Input.getStepIntent && Input.getStepIntent();
-    if (step) window.GameScene?.controller?.requestStep?.(step);
+    if (step) {
+      // 👇 prioridade do WASD: cancela A* antes de pedir o passo
+      const ctrl = window.GameScene?.controller;
+      if (ctrl && typeof ctrl.followPath === 'function' && ctrl.path) {
+        ctrl.followPath(null);
+      }
+      window.GameScene?.controller?.requestStep?.(step);
+    }
+
     const ctrlInstance = window.GameScene?.controller;
     ctrlInstance?.update?.(dt, null);
     if (ctrlInstance?.getPosition) {

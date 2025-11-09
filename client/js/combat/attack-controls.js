@@ -4,9 +4,6 @@ import { HeroState } from '../state/hero-state.js';
 import { showCombatMessage, hideCombatMessage } from '../ui/combat-message.js';
 import { playHeroAttackSfx } from '../sfx/combat-sfx.js'; // <<< NOVO
 
-
-
-
 const combatState = (window.combatState = window.combatState || {
   monsters: new Map(),
   targetId: null,
@@ -18,7 +15,6 @@ const combatState = (window.combatState = window.combatState || {
 
   lastWarningCode: null,
   lastWarningAt: 0,
-
 });
 
 // Check environment flag for RMB attack mode
@@ -49,7 +45,6 @@ const toTile = (n) => (Math.floor(n / TILE) | 0);
 const chebyshevSqm = (ax, ay, bx, by) =>
   Math.max(Math.abs(toTile(ax) - toTile(bx)), Math.abs(toTile(ay) - toTile(by)));
 
-
 function safeNumber(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
@@ -57,17 +52,17 @@ function safeNumber(v) {
 
 function pickCanvas() {
   return (window.GameScene && window.GameScene.canvas)
-      || document.getElementById('scene')
-      || document.getElementById('view')
-      || document.querySelector('canvas');
+    || document.getElementById('scene')
+    || document.getElementById('view')
+    || document.querySelector('canvas');
 }
 function pickCamera() { return (window.GameScene && window.GameScene.camera) || null; }
 function screenToWorld(canvas, sx, sy) {
   const cam = pickCamera();
   if (cam?.screenToWorld) return cam.screenToWorld(sx, sy);
   const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
-  return { x: sx*scaleX, y: sy*scaleY };
+  const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+  return { x: sx * scaleX, y: sy * scaleY };
 }
 function getMouseWorldFromEvent(e, canvas) {
   const rect = canvas.getBoundingClientRect();
@@ -126,7 +121,6 @@ function localPickUnderCursor(worldPos) {
   }
 }
 
-
 let ACTIVE_HERO = { id: null, heroClass: null };
 function weaponForClass(heroClass) {
   const c = String(heroClass || '').toUpperCase();
@@ -152,7 +146,7 @@ async function ensureActiveHero() {
     const me = await apiGet('/api/player/me');
 
     // >>> NOVO: manter estado global sincronizado (idempotente)
-    try { HeroState.setFromServer(me); } catch {}
+    try { HeroState.setFromServer(me); } catch { }
 
     const heroes = Array.isArray(me?.heroes) ? me.heroes : [];
     const main = heroes.find(h => h.isStarter === 1 || h.isStarter === true) || heroes[0];
@@ -160,10 +154,9 @@ async function ensureActiveHero() {
       ACTIVE_HERO.id = String(main.id ?? main.heroId);
       ACTIVE_HERO.heroClass = String(main.class ?? main.heroClass ?? '').toUpperCase() || null;
     }
-  } catch {}
+  } catch { }
   return ACTIVE_HERO;
 }
-
 
 function emitCombatWarning(code, message) {
   if (!message) return;
@@ -241,7 +234,6 @@ function handleCombatWarning(payload, opts = {}) {
   return true;
 }
 
-
 /** resolve alvo no servidor; retorna { id, x, y, hp, maxHp } ou null */
 async function resolveServerTarget(pxClick, pyClick) {
   const map = window.GameScene?.mapKey || 'house';
@@ -251,7 +243,7 @@ async function resolveServerTarget(pxClick, pyClick) {
   try {
     const ctrl = window.GameScene?.controller;
     if (ctrl?.getPosition) { const p = ctrl.getPosition(); px = Math.round(p.x); py = Math.round(p.y); }
-  } catch {}
+  } catch { }
 
   const qs = new URLSearchParams({
     map,
@@ -272,7 +264,7 @@ function getHeroWorldPos() {
     if (ctrl && typeof ctrl.getPosition === 'function') {
       return ctrl.getPosition();
     }
-  } catch {}
+  } catch { }
   return null;
 }
 
@@ -416,7 +408,6 @@ function pickMobAtWorld(pt) {
   return null;
 }
 
-
 async function doHit() {
   if (!combatState.attacking || !combatState.targetId) return;
   const hero = await ensureActiveHero();
@@ -425,11 +416,10 @@ async function doHit() {
   try {
     const resp = await apiPost('/api/combat/hit', {
       targetInstanceId: combatState.targetId,
-      targetId:         combatState.targetId,
-      heroId:           hero.id,
+      targetId: combatState.targetId,
+      heroId: hero.id,
       damage: 10
     });
-
 
     if (!resp?.ok) {
       if (handleCombatWarning(resp)) return;
@@ -448,19 +438,19 @@ async function doHit() {
       console.warn('[combat-sfx] error on hit', err);
     }
 
-    const id     = String(resp.id || resp.targetId || combatState.targetId);
-    const hpNow  = Number(resp.hpAfter ?? resp.hp);
+    const id = String(resp.id || resp.targetId || combatState.targetId);
+    const hpNow = Number(resp.hpAfter ?? resp.hp);
     const hpPrev = Number(resp.hpBefore ?? (isFinite(hpNow) ? hpNow + Number(resp.dmg || 0) : 0));
-    const hpMax  = Number(resp.maxHp) || Math.max(100, Number(combatState.monsters.get(id)?.hpMax || 100));
-    const dmg    = Number(resp.dmg ?? Math.max(0, (isFinite(hpPrev)&&isFinite(hpNow)) ? (hpPrev-hpNow) : 0));
-    const dead   = !!resp.dead || (isFinite(hpNow) && hpNow <= 0);
+    const hpMax = Number(resp.maxHp) || Math.max(100, Number(combatState.monsters.get(id)?.hpMax || 100));
+    const dmg = Number(resp.dmg ?? Math.max(0, (isFinite(hpPrev) && isFinite(hpNow)) ? (hpPrev - hpNow) : 0));
+    const dead = !!resp.dead || (isFinite(hpNow) && hpNow <= 0);
 
     const m = combatState.monsters.get(id) || { id };
     if (isFinite(hpNow)) m.hp = Math.max(0, hpNow);
     m.hpMax = hpMax;
     combatState.monsters.set(id, m);
 
-    window.dispatchEvent(new CustomEvent('combat:hit', { detail:{ id, dmg, hp:hpNow, maxHp:hpMax, dead } }));
+    window.dispatchEvent(new CustomEvent('combat:hit', { detail: { id, dmg, hp: hpNow, maxHp: hpMax, dead } }));
     if (dead) stopAttack();
   } catch (e) {
     const msg = String(e?.message || '');
@@ -471,7 +461,6 @@ async function doHit() {
     }
   }
 }
-
 
 function startLoop(intervalMs) {
   const ms = Math.max(400, Number(intervalMs) || combatState.attackIntervalMs || DEFAULT_ATTACK_INTERVAL_MS);
@@ -497,13 +486,13 @@ export async function startAttack(targetId) {
     if (heroPos && mob) {
       // mesmo critério do servidor: Chebyshev em PIXELS
       const distPx = Math.max(Math.abs(heroPos.x - mob.x), Math.abs(heroPos.y - mob.y));
-  
+
       // palpite de alcance por tipo de arma (o servidor valida com precisão)
       const RANGE_TILES = { SWORD: 1, BOW: 5, STAFF: 3 };
       const w = weaponForClass(hero.heroClass);
       const rangeTiles = RANGE_TILES[w] ?? 1;
       const rangePx = rangeTiles * TILE;
-  
+
       if (distPx > rangePx) {
         const distTiles = Math.floor(distPx / TILE);
         showCombatMessage(`Alvo fora do alcance (${distTiles} > ${rangeTiles} sqm).`);
@@ -511,17 +500,16 @@ export async function startAttack(targetId) {
         // return;
       }
     }
-  } catch {}
-
+  } catch { }
 
   // >>> garante CSRF fresquinho ANTES do POST (evita "CSRF inválido")
-  try { await getCsrf(); } catch {}
+  try { await getCsrf(); } catch { }
 
   const payload = {
-    heroId:            String(hero.id),
-    weaponType:        String(weaponType),
-    targetInstanceId:  String(targetId),
-    targetId:          String(targetId),
+    heroId: String(hero.id),
+    weaponType: String(weaponType),
+    targetInstanceId: String(targetId),
+    targetId: String(targetId),
   };
 
   try {
@@ -538,7 +526,6 @@ export async function startAttack(targetId) {
       handleCombatWarning({ error: 'info', message: resp.message });
     } else {
       clearCombatWarnings();
-
     }
   } catch (err) { console.warn('[attack] start falhou:', err?.message || err); return; }
 
@@ -546,7 +533,7 @@ export async function startAttack(targetId) {
   combatState.attacking = true;
   window.combatState.selectedTargetId = combatState.targetId;
   startLoop(swingInterval);
-  window.dispatchEvent(new CustomEvent('combat:attack:start', { detail:{ targetId: combatState.targetId } }));
+  window.dispatchEvent(new CustomEvent('combat:attack:start', { detail: { targetId: combatState.targetId } }));
 }
 
 export async function stopAttack(options = {}) {
@@ -560,7 +547,7 @@ export async function stopAttack(options = {}) {
 
   if (combatState.loopHandle) { clearInterval(combatState.loopHandle); combatState.loopHandle = null; }
   combatState.attackIntervalMs = DEFAULT_ATTACK_INTERVAL_MS;
-  try { await apiPost('/api/combat/attack/stop', { heroId: hero?.id || null }); } catch {}
+  try { await apiPost('/api/combat/attack/stop', { heroId: hero?.id || null }); } catch { }
   window.dispatchEvent(new CustomEvent('combat:attack:stop'));
 }
 
@@ -584,7 +571,7 @@ function attachControls() {
   canvas.addEventListener('contextmenu', suppressContextMenu);
 
   const onPointerDown = async (e) => {
-    // 1) Em modo RMB, antes de QUALQUER coisa tenta abrir loot
+    // 1) Em modo RMB, antes de QUALQUER coisa tenta abrir loot (apenas RMB)
     if (ATTACK_USE_RMB && e.button === 2) {
       try {
         if (window.CorpseLayer && typeof window.CorpseLayer.openAtEvent === 'function') {
@@ -610,9 +597,9 @@ function attachControls() {
       return;
     }
 
-    // Check if we should use RMB mode
+    // --- MODO RMB ---
     if (ATTACK_USE_RMB) {
-      // Right mouse button (button === 2) starts attack (se não abriu loot acima)
+      // Só o botão direito (2) entra aqui. Left-click é só movimento, ignorado.
       if (e.button === 2) {
         const { x, y } = getMouseWorldFromEvent(e, canvas);
         console.log('[attack] RMB click @', Math.round(x), Math.round(y));
@@ -631,8 +618,8 @@ function attachControls() {
         console.log('[attack] local pick failed, trying server...');
         const m = await resolveServerTarget(x, y);
         if (!m?.id) {
-          console.log('[attack] no server target - canceling attack');
-          stopAttack();
+          console.log('[attack] no server target - keeping current attack state');
+          // NÃO chamamos stopAttack() aqui pra não derrubar target atual
           return;
         }
 
@@ -644,35 +631,32 @@ function attachControls() {
         await startAttack(String(m.id));
         return;
       }
-      // Right-click on empty space or left-click cancel attack
-      else if (e.button === 0) {
-        console.log('[attack] RMB on empty space or left-click - canceling attack');
-        stopAttack();
-        return;
-      }
-    } else {
-      // Legacy mode: left-click only
-      if (e.button != null && e.button !== 0) return;
 
-      const { x, y } = getMouseWorldFromEvent(e, canvas);
-      console.log('[attack] legacy click @', Math.round(x), Math.round(y));
-
-      const m = await resolveServerTarget(x, y);
-      if (!m?.id) {
-        console.log('[attack] nenhum alvo (server) — stop');
-        stopAttack();
-        return;
-      }
-
-      const stat = combatState.monsters.get(String(m.id)) || { id: String(m.id) };
-      if (Number.isFinite(m.hp)) stat.hp = Number(m.hp);
-      if (Number.isFinite(m.maxHp)) stat.hpMax = Number(m.maxHp);
-      combatState.monsters.set(String(m.id), stat);
-
-      await startAttack(String(m.id));
+      // Qualquer outro botão em modo RMB (incluindo left-click) é ignorado pelo sistema de ataque.
+      // Left-click continua sendo só "andar" via outro módulo (click-to-move).
+      return;
     }
-  };
 
+    // --- MODO LEGADO (sem RMB): left-click para atacar ---
+    if (e.button != null && e.button !== 0) return;
+
+    const { x, y } = getMouseWorldFromEvent(e, canvas);
+    console.log('[attack] legacy click @', Math.round(x), Math.round(y));
+
+    const m = await resolveServerTarget(x, y);
+    if (!m?.id) {
+      console.log('[attack] nenhum alvo (server) — stop');
+      stopAttack();
+      return;
+    }
+
+    const stat = combatState.monsters.get(String(m.id)) || { id: String(m.id) };
+    if (Number.isFinite(m.hp)) stat.hp = Number(m.hp);
+    if (Number.isFinite(m.maxHp)) stat.hpMax = Number(m.maxHp);
+    combatState.monsters.set(String(m.id), stat);
+
+    await startAttack(String(m.id));
+  };
 
   canvas.addEventListener('mousedown', onPointerDown);
   canvas.addEventListener('touchstart', onPointerDown, { passive: true });
@@ -692,8 +676,8 @@ function attachControls() {
 }
 
 (async () => {
-  await getCsrf().catch(()=>{});
-  await ensureActiveHero().catch(()=>{});
+  await getCsrf().catch(() => { });
+  await ensureActiveHero().catch(() => { });
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     setTimeout(attachControls, 0);
   } else {
