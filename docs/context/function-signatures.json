@@ -1146,6 +1146,15 @@
     ]
   },
   {
+    "file": "server\\services\\translator.js",
+    "line": 8,
+    "kind": "function",
+    "name": "translatePostToEn",
+    "params": [
+      "postPt"
+    ]
+  },
+  {
     "file": "server\\services\\starterHero.js",
     "line": 10,
     "kind": "function",
@@ -8652,7 +8661,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 53,
+    "line": 54,
     "kind": "function",
     "name": "showToast",
     "params": [
@@ -8662,7 +8671,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 62,
+    "line": 63,
     "kind": "function",
     "name": "showBanner",
     "params": [
@@ -8672,14 +8681,14 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 71,
+    "line": 72,
     "kind": "function",
     "name": "hideBanner",
     "params": []
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 76,
+    "line": 77,
     "kind": "function",
     "name": "toLocalDatetimeInput",
     "params": [
@@ -8688,7 +8697,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 85,
+    "line": 86,
     "kind": "function",
     "name": "apiFetch",
     "params": [
@@ -8698,7 +8707,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 107,
+    "line": 108,
     "kind": "arrow",
     "name": "buildOptions",
     "params": [
@@ -8707,7 +8716,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 125,
+    "line": 126,
     "kind": "arrow",
     "name": "withToken",
     "params": [
@@ -8716,7 +8725,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 146,
+    "line": 147,
     "kind": "function",
     "name": "readJson",
     "params": [
@@ -8725,7 +8734,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 156,
+    "line": 157,
     "kind": "function",
     "name": "handleAuthError",
     "params": [
@@ -8734,7 +8743,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 193,
+    "line": 194,
     "kind": "function",
     "name": "loadPosts",
     "params": [
@@ -8743,21 +8752,21 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 217,
+    "line": 218,
     "kind": "function",
     "name": "renderPosts",
     "params": []
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 301,
+    "line": 302,
     "kind": "function",
     "name": "resetPostForm",
     "params": []
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 317,
+    "line": 318,
     "kind": "function",
     "name": "startEditPost",
     "params": [
@@ -8766,7 +8775,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 334,
+    "line": 335,
     "kind": "function",
     "name": "submitPostForm",
     "params": [
@@ -8775,7 +8784,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 381,
+    "line": 424,
     "kind": "function",
     "name": "deletePost",
     "params": [
@@ -8784,7 +8793,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 403,
+    "line": 446,
     "kind": "function",
     "name": "reorderPost",
     "params": [
@@ -8794,7 +8803,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 442,
+    "line": 485,
     "kind": "function",
     "name": "loadOverrides",
     "params": [
@@ -8803,21 +8812,21 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 466,
+    "line": 509,
     "kind": "function",
     "name": "renderOverrides",
     "params": []
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 520,
+    "line": 563,
     "kind": "function",
     "name": "resetOverrideForm",
     "params": []
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 528,
+    "line": 571,
     "kind": "function",
     "name": "startEditOverride",
     "params": [
@@ -8826,7 +8835,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 537,
+    "line": 580,
     "kind": "function",
     "name": "submitOverrideForm",
     "params": [
@@ -8835,7 +8844,7 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 576,
+    "line": 619,
     "kind": "function",
     "name": "deleteOverride",
     "params": [
@@ -8844,28 +8853,28 @@
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 598,
+    "line": 641,
     "kind": "function",
     "name": "setupTabs",
     "params": []
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 621,
+    "line": 664,
     "kind": "function",
     "name": "setupEvents",
     "params": []
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 638,
+    "line": 681,
     "kind": "function",
     "name": "checkAuth",
     "params": []
   },
   {
     "file": "client\\js\\admin.js",
-    "line": 667,
+    "line": 710,
     "kind": "function",
     "name": "init",
     "params": []
