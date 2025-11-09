@@ -336,12 +336,13 @@ async function fetchAliveMonsters() {
           s.y  AS spawn_y,
           COALESCE(s.w, 0) AS spawn_w,
           COALESCE(s.h, 0) AS spawn_h,
-          COALESCE(s."leashPx", 0) AS leash_px   -- 👈 AGORA ASSIM
+          COALESCE(s."leashPx", mm.leash_px, 0) AS leash_px   -- 👈 spawn > monstro > 0
       FROM monster_instances mi
       JOIN monsters_master mm ON mm.id = mi.monster_id
       LEFT JOIN spawns s ON s.id = mi.spawn_id
     WHERE mi.state = 'ALIVE' AND mi.hp > 0
   `)) || [];
+
 
 
   return rows.map(row => {

@@ -375,6 +375,7 @@ async function migrate() {
       attack_range INTEGER,
       aggro_range INTEGER,
       attack_ms INTEGER,
+      leash_px INTEGER,
       "flagsJSON"   TEXT,
       "elementsJSON" TEXT,
       "attacksJSON"  TEXT,
@@ -385,12 +386,15 @@ async function migrate() {
     )
   `);
 
+
   await run(`
     ALTER TABLE monsters_master
       ADD COLUMN IF NOT EXISTS attack_range INTEGER,
       ADD COLUMN IF NOT EXISTS aggro_range INTEGER,
-      ADD COLUMN IF NOT EXISTS attack_ms INTEGER
+      ADD COLUMN IF NOT EXISTS attack_ms INTEGER,
+      ADD COLUMN IF NOT EXISTS leash_px INTEGER
   `);
+
 
   // === items_master: preparado para YAML ===
   await run(`

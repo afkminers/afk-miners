@@ -1,5 +1,5 @@
 AFK Miners — Context Pack
-Commit: 0ea837a | Branch: main | Last Tag: n/a
+Commit: b44abff | Branch: main | Last Tag: n/a
 
 == Estrutura (nível 4) ==
 2025-09-18_000141-auto.zip
@@ -456,6 +456,8 @@ docs\backups\2025-11-09_201052-pre-main-57fcf5e.zip
 docs\backups\2025-11-09_201114-post-main-d181bf8.zip
 docs\backups\2025-11-09_203257-pre-main-d181bf8.zip
 docs\backups\2025-11-09_203319-post-main-0ea837a.zip
+docs\backups\2025-11-09_204235-pre-main-0ea837a.zip
+docs\backups\2025-11-09_204255-post-main-b44abff.zip
 docs\backups\click+awsd+quase+perfeito-2025-11-09_133555-post-main-d02ba4b.zip
 docs\backups\playjs-and-indexjs-playerview2025-11-08_210304-post-main-dfe256d.zip
 docs\context
@@ -2694,6 +2696,38 @@ docs\releases\2025-11-09_201132-auto\responses-sample.json
 docs\releases\2025-11-09_201132-auto\route-history.json
 docs\releases\2025-11-09_201132-auto\symbol-index.json
 docs\releases\2025-11-09_201132-auto\todos.json
+docs\releases\2025-11-09_203338-auto
+docs\releases\2025-11-09_203338-auto.zip
+docs\releases\2025-11-09_203338-auto\API.md
+docs\releases\2025-11-09_203338-auto\_README.txt
+docs\releases\2025-11-09_203338-auto\changes-since.txt
+docs\releases\2025-11-09_203338-auto\context-pack.txt
+docs\releases\2025-11-09_203338-auto\ctx.yml
+docs\releases\2025-11-09_203338-auto\data-summary.json
+docs\releases\2025-11-09_203338-auto\db-counts.txt
+docs\releases\2025-11-09_203338-auto\db-enums.json
+docs\releases\2025-11-09_203338-auto\db-extensions.txt
+docs\releases\2025-11-09_203338-auto\db-fks.json
+docs\releases\2025-11-09_203338-auto\db-functions.sql
+docs\releases\2025-11-09_203338-auto\db-indexes.json
+docs\releases\2025-11-09_203338-auto\db-schema.sql
+docs\releases\2025-11-09_203338-auto\db-sequences.json
+docs\releases\2025-11-09_203338-auto\db-sizes.txt
+docs\releases\2025-11-09_203338-auto\db-tables.json
+docs\releases\2025-11-09_203338-auto\db-triggers.sql
+docs\releases\2025-11-09_203338-auto\db-views.sql
+docs\releases\2025-11-09_203338-auto\deps-graph.json
+docs\releases\2025-11-09_203338-auto\deps.txt
+docs\releases\2025-11-09_203338-auto\endpoints-contracts.json
+docs\releases\2025-11-09_203338-auto\env-usage.json
+docs\releases\2025-11-09_203338-auto\error-map.json
+docs\releases\2025-11-09_203338-auto\function-signatures.json
+docs\releases\2025-11-09_203338-auto\openapi.json
+docs\releases\2025-11-09_203338-auto\package.json
+docs\releases\2025-11-09_203338-auto\responses-sample.json
+docs\releases\2025-11-09_203338-auto\route-history.json
+docs\releases\2025-11-09_203338-auto\symbol-index.json
+docs\releases\2025-11-09_203338-auto\todos.json
 exit
 fix-camel-columns.js
 fix-sql-columns.js
@@ -3815,14 +3849,14 @@ undo-fix-baks.js
 weapon-files.txt
 
 == Inventário por extensão ==
-.json : 1199
+.json : 1216
 .png : 637
-.txt : 542
-.sql : 305
-.zip : 229
+.txt : 549
+.sql : 309
+.zip : 232
 .js : 172
-.yml : 115
-.md : 78
+.yml : 116
+.md : 79
 .aseprite : 52
 .css : 37
 .gif : 28
@@ -3847,6 +3881,8 @@ weapon-files.txt
 .tsx : 1
 
 == Top 20 maiores arquivos ==
+138206.2 KB	docs\backups\2025-11-09_204235-pre-main-0ea837a.zip
+138206.1 KB	docs\backups\2025-11-09_204255-post-main-b44abff.zip
 138205.5 KB	docs\backups\2025-11-09_203257-pre-main-d181bf8.zip
 138205.3 KB	docs\backups\2025-11-09_203319-post-main-0ea837a.zip
 138205.1 KB	docs\backups\2025-11-09_201052-pre-main-57fcf5e.zip
@@ -3865,8 +3901,6 @@ weapon-files.txt
 138202.1 KB	docs\backups\2025-11-09_031448-post-main-bbb2a60.zip
 138201.6 KB	docs\backups\2025-11-09_010039-pre-main-692b3b1.zip
 138201.5 KB	docs\backups\2025-11-09_010059-post-main-7a5d155.zip
-138199.9 KB	docs\backups\2025-11-08_233456-pre-main-67fe665.zip
-138199.8 KB	docs\backups\2025-11-08_233517-post-main-692b3b1.zip
 
 == Rotas detectadas (server) ==
 [GET] /_ping  (server\combat\routes.js:137)
@@ -3995,6 +4029,15 @@ client\pages\heroes.html :: title="" | scripts=0 | styles=0 | 298 bytes
 client\pages\dungeon.html :: title="" | scripts=0 | styles=0 | 295 bytes
 
 == YAML — sumário (repo inteiro) ==
+ERR docs\releases\2025-11-09_203338-auto\ctx.yml :: YAMLException: bad indentation of a sequence entry (20:11)
+
+ 17 |     notes: YAML/JSON de catálogo/config;  ...
+ 18 | 
+ 19 | endpoints:
+ 20 |   - [GET] /api/admin/content/map/:key/obj ...
+----------------^
+ 21 | 
+ 22 | important_env:
 ERR docs\releases\2025-11-09_201132-auto\ctx.yml :: YAMLException: bad indentation of a sequence entry (20:11)
 
  17 |     notes: YAML/JSON de catálogo/config;  ...
@@ -4679,6 +4722,23 @@ package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, 
 server\package.json :: 8 chaves | keys: name, version, description, main, scripts, dependencies, devDependencies, engines | 2409 bytes
 server\package-lock.json :: 5 chaves | keys: name, version, lockfileVersion, requires, packages | 90768 bytes
 server\content\data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 25614 bytes
+docs\releases\2025-11-09_203338-auto\todos.json :: 22 itens | 3217 bytes
+docs\releases\2025-11-09_203338-auto\symbol-index.json :: 143 itens | 42235 bytes
+docs\releases\2025-11-09_203338-auto\route-history.json :: 0 itens | 2 bytes
+docs\releases\2025-11-09_203338-auto\responses-sample.json :: 20 chaves | keys: GET /_ping, GET /_routes, POST /:friendId/accept, POST /:friendId/block, GET /:friendId/dms, POST /:friendId/reject, POST /:friendId/unblock, DELETE /:friendId, POST /:heroId/deposit, GET /:heroId/slots, GET /:heroId, GET /admin, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites | 7732 bytes
+docs\releases\2025-11-09_203338-auto\package.json :: 8 chaves | keys: name, version, description, main, scripts, dependencies, devDependencies, engines | 2377 bytes
+docs\releases\2025-11-09_203338-auto\openapi.json :: 3 chaves | keys: openapi, info, paths | 99148 bytes
+docs\releases\2025-11-09_203338-auto\function-signatures.json :: 1594 itens | 259780 bytes
+docs\releases\2025-11-09_203338-auto\error-map.json :: 20 chaves | keys: GET /_ping, GET /_routes, POST /:friendId/accept, POST /:friendId/block, GET /:friendId/dms, POST /:friendId/reject, POST /:friendId/unblock, DELETE /:friendId, POST /:heroId/deposit, GET /:heroId/slots, GET /:heroId, GET /admin, GET /api/admin/content/map/:key/data, GET /api/admin/content/map/:key/objects, GET /api/admin/content/map/:key/spawns, GET /api/admin/content/maps, GET /api/admin/content/monsters, POST /api/admin/content/reload-map, GET /api/assets/items, GET /api/assets/sprites | 35445 bytes
+docs\releases\2025-11-09_203338-auto\env-usage.json :: 98 itens | 20967 bytes
+docs\releases\2025-11-09_203338-auto\endpoints-contracts.json :: 84 itens | 72417 bytes
+docs\releases\2025-11-09_203338-auto\deps-graph.json :: 75 itens | 6089 bytes
+docs\releases\2025-11-09_203338-auto\db-tables.json :: 3 chaves | keys: tables, tablesInfo, constraints | 146124 bytes
+docs\releases\2025-11-09_203338-auto\db-sequences.json :: 12 itens | 1700 bytes
+docs\releases\2025-11-09_203338-auto\db-indexes.json :: 129 itens | 28124 bytes
+docs\releases\2025-11-09_203338-auto\db-fks.json :: 13 chaves | keys: afk_boxes, afk_inventories, afk_workers, direct_messages, farm_plots, friendships, hero_equipment, map_loot_items, map_objects, monster_corpse_items, monster_instances, player_inventories, spawns | 4955 bytes
+docs\releases\2025-11-09_203338-auto\db-enums.json :: 1 chaves | keys: friend_status | 73 bytes
+docs\releases\2025-11-09_203338-auto\data-summary.json :: 117 itens | 35399 bytes
 docs\releases\2025-11-09_201132-auto\todos.json :: 22 itens | 3217 bytes
 docs\releases\2025-11-09_201132-auto\symbol-index.json :: 143 itens | 42235 bytes
 docs\releases\2025-11-09_201132-auto\route-history.json :: 0 itens | 2 bytes
@@ -5858,7 +5918,7 @@ docs\context\env-usage.json :: 98 itens | 20967 bytes
 docs\context\endpoints-contracts.json :: 84 itens | 72417 bytes
 docs\context\deps-graph.json :: 75 itens | 6089 bytes
 docs\context\db-tables.json :: 3 chaves | keys: tables, tablesInfo, constraints | 146124 bytes
-docs\context\db-table-stats.json :: 49 itens | 25824 bytes
+docs\context\db-table-stats.json :: 49 itens | 25827 bytes
 docs\context\db-srvinfo.json :: 7 chaves | keys: raw_version, current_user, current_database, current_schema, snapshot_time, search_path, database_size_bytes | 341 bytes
 docs\context\db-sequences.json :: 12 itens | 1700 bytes
 docs\context\db-partitions.json :: 0 itens | 2 bytes
@@ -5868,8 +5928,8 @@ docs\context\db-fks.json :: 13 chaves | keys: afk_boxes, afk_inventories, afk_wo
 docs\context\db-enums.json :: 1 chaves | keys: friend_status | 73 bytes
 docs\context\db-domains.json :: 0 itens | 2 bytes
 docs\context\db-comments.json :: 3 chaves | keys: tables, columns, indexes | 52 bytes
-docs\context\db-column-stats.json :: 213 itens | 219545 bytes
-docs\context\data-summary.json :: 116 itens | 35069 bytes
+docs\context\db-column-stats.json :: 213 itens | 220475 bytes
+docs\context\data-summary.json :: 117 itens | 35399 bytes
 data\cms-content.json :: 2 chaves | keys: en, pt-BR | 2998 bytes
 data\maps\house.json :: 15 chaves | keys: compressionlevel, height, infinite, layers, nextlayerid, nextobjectid, orientation, renderorder, tiledversion, tileheight, tilesets, tilewidth, type, version, width | 100774 bytes
 client\data\hero_meta.json :: 15 chaves | keys: aric, lyria, brokk, seraph, kaelen, morrin, elara, darrion, sylva, ragnar, selene, tharion, auriel, zephyr, arkan | 1779 bytes
