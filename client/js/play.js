@@ -1,3 +1,4 @@
+
 // /client/js/play.js
 // Cena jogável genérica (House/PvP): usa ?map=<key> (padrão house).
 // Agora 100% WS para posição: cliente publica (publishPos) e aceita correção (pos_snap).
@@ -110,87 +111,96 @@ onMessage('pos_snap', (msg) => {
     const snapX = msg.x | 0;
     const snapY = msg.y | 0;
 
-    // diferença entre o que o cliente acha e o que o servidor mandou
     let diff = Infinity;
-    if (typeof ctrl.getPosition === 'function') {
-      const p = ctrl.getPosition();
-      if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
-        const dx = snapX - p.x;
-        const dy = snapY - p.y;
-        diff = Math.hypot(dx, dy);
-      }
+    let cur = ctrl.getPosition?.();
+    if (cur && Number.isFinite(cur.x) && Number.isFinite(cur.y)) {
+      diff = Math.hypot(snapX - cur.x, snapY - cur.y);
     }
 
+    const SMALL_SNAP = 6;   // ignora micro correções (< ~1/5 de tile)
+    const BIG_SNAP   = 16;  // > meio tile = reposiciona e zera caminho
+
+    if (diff <= SMALL_SNAP) {
+      // muito pequeno: ignora; evita “vai-e-volta” no mesmo tile
+      return;
+    }
+
+    if (diff > SMALL_SNAP && diff <= BIG_SNAP) {
+      // pequeno: aproxima sem resetar tudo
+      ctrl.setPosition(snapX, snapY);
+      // não reseta caminho/lastGoal — mantêm fluidez
+      return;
+    }
+
+    // grande: teleporte/correção forte
     ctrl.setPosition(snapX, snapY);
+    if (typeof ctrl.followPath === 'function') ctrl.followPath(null);
+    const ctm = window.GameScene?.clickToMove;
+    if (ctm && '_lastGoal' in ctm) ctm._lastGoal = null;
 
-    // Só cancela o caminho se a correção for grande (ex: teleporte)
-    const BIG_SNAP_THRESHOLD = 24; // ~meio tile (32px)
-    if (diff > BIG_SNAP_THRESHOLD) {
-      // 1) cancela qualquer caminho em andamento
-      if (typeof ctrl.followPath === 'function') {
-        ctrl.followPath(null);
-      }
-
-      // 2) limpa o último destino do click-to-move
-      const ctm = window.GameScene?.clickToMove;
-      if (ctm && '_lastGoal' in ctm) {
-        ctm._lastGoal = null;
-      }
-    }
+    // evita publicar “salto” depois do snap
+    resetTilePublishCache();
   } catch {}
 });
 
 
-// atualiza cache de outros jogadores quando o servidor manda posição
-onMessage('pos', (msg) => {
-  try {
-    upsertOtherPlayer(msg);
-  } catch (err) {
-    console.warn('[play] failed to upsert other player pos', err);
-  }
-});
+// ===== Publicação segura "tile-a-tile" =====
+let _lastSentTileKey = null;
 
-// remove jogador quando o servidor indicar que saiu do mapa/conexão
-onMessage('pos_leave', (msg) => {
-  try {
-    removeOtherPlayer(msg);
-  } catch (err) {
-    console.warn('[play] failed to remove other player', err);
-  }
-});
-
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// WS Auth: garante que o servidor sabe quem é o player (id/nome) e
-// assim persiste sua posição no banco (player_last_pos). Sem isso, no F5
-// você volta para o spawn porque o server não sabe seu player_id.
-async function bootAuth() {
-  await authenticate(async () => {
-    // usa teu endpoint atual
-    const me = await apiGet('/api/player/me').catch(() => null);
-
-    // >>> NOVO: alimenta o estado global do herói (idempotente)
-    try { HeroState.setFromServer(me); } catch {}
-
-    // em alguns lugares o payload vem como { profile: {...} }, noutros, direto
-    const p = (me && me.profile) ? me.profile : me;
-
-    // normaliza id do player
-    const id = String(p?.id || p?.playerId || '');
-
-    // deixa o id disponível globalmente para ignorar a própria posição no WS
-    if (id && id !== 'undefined' && id !== 'null') {
-      window.MyPlayerId = id;
-    }
-
-    // devolve o shape que o singleton espera
-    return {
-      id,
-      name: p?.name || p?.username || 'Player',
-    };
-  });
+function tileKeyFromPx(px, py) {
+  const cx = tileCoord(px);
+  const cy = tileCoord(py);
+  return `${cx},${cy}`;
 }
 
-// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+function centerPxFromTileKey(key) {
+  const [cx, cy] = key.split(',').map(n => Number(n));
+  return { x: tileCenterPx(cx), y: tileCenterPx(cy) };
+}
+
+function publishPosTileSafe(px, py) {
+  // Nunca publica salto > 1 tile sem quebrar em tiles intermediários
+  const prevKey = _lastSentTileKey;
+  const nextKey = tileKeyFromPx(px, py);
+
+  if (nextKey === prevKey) return;
+
+  if (prevKey) {
+    const [pcx, pcy] = prevKey.split(',').map(n => Number(n));
+    const [ncx, ncy] = nextKey.split(',').map(n => Number(n));
+
+    const dx = Math.abs(ncx - pcx);
+    const dy = Math.abs(ncy - pcy);
+    const steps = Math.max(dx, dy);
+
+    if (steps > 1) {
+      // Quebra em uma sequência de tiles adjacentes
+      let cx = pcx, cy = pcy;
+      for (let i = 0; i < steps; i++) {
+        if (cx < ncx) cx++;
+        else if (cx > ncx) cx--;
+        if (cy < ncy) cy++;
+        else if (cy > ncy) cy--;
+        const c = { x: tileCenterPx(cx), y: tileCenterPx(cy) };
+        publishPos(c.x, c.y);
+      }
+      _lastSentTileKey = `${ncx},${ncy}`;
+      return;
+    }
+  }
+
+  // Tile adjacente: publica o centro do tile
+  const c = centerPxFromTileKey(nextKey);
+  publishPos(c.x, c.y);
+  _lastSentTileKey = nextKey;
+}
+
+// Reseta o último tile publicado (ex.: teleporte/snap grande)
+function resetTilePublishCache() {
+  _lastSentTileKey = null;
+}
+
+
 
 // HP em tempo real -> HUD
 const LOG_FALLBACKS = {
@@ -2135,12 +2145,14 @@ async function resolvePlayerSprite() {
   try {
     const me = await apiGet('/api/player/me');
 
-    // >>> NOVO: sincroniza estado de herói sempre que carregarmos /me
+    // mantém o estado global do herói sincronizado
     try { HeroState.setFromServer(me); } catch {}
 
     const heroes = Array.isArray(me.heroes) ? me.heroes : [];
     const teamIds = heroes.slice(0, 3).map(h => String(h.id));
-    if (teamIds.length > 0) { try { window.Team.setActiveTeam(teamIds); } catch {} }
+    if (teamIds.length > 0) {
+      try { window.Team.setActiveTeam(teamIds); } catch {}
+    }
 
     const preferred =
       heroes.find(h => h.isStarter === 1 || h.isStarter === true) ||
@@ -2148,24 +2160,66 @@ async function resolvePlayerSprite() {
 
     if (preferred) {
       try { window.setActiveHero(preferred.id); } catch {}
-      playerVis.heroKey = preferred.heroKey || preferred.key || null;
-      const candidate = playerVis.heroKey ? `/sprites/characters/${playerVis.heroKey}.png` : null;
+
+      const heroKeyRaw = preferred.heroKey || preferred.hero_key || preferred.key || null;
+      const spriteKeyRaw = preferred.spriteKey || preferred.sprite_key || null;
+
+      const heroKey = heroKeyRaw ? String(heroKeyRaw).trim() : null;
+      const spriteKey = spriteKeyRaw ? String(spriteKeyRaw).trim() : null;
+
+      playerVis.heroKey = heroKey || null;
+
+      // ========================= Lyria com sprite nova =========================
+      // Se o herói ativo for a Lyria, usamos os PNGs da pasta:
+      // client/img/heroes/lyria/valla_idle_s/1.png
+      if (heroKey === 'lyria') {
+        // Tamanho real dos frames da Valla (print que você mandou: 60x80)
+        playerVis.w = 60;
+        playerVis.h = 80;
+        // Âncora parecida com o padrão, só que aplicada ao sprite maior
+        playerVis.anchorX = 0.5;
+        playerVis.anchorY = 0.9;
+
+        // Por enquanto: frame 1 da animação idle voltada para o Sul
+        playerVis.img = loadImg('/img/heroes/lyria/valla_idle_s/1.png');
+        await ensureImgLoaded(playerVis.img).catch(() => {});
+        if (imgReady(playerVis.img)) return;
+        // se der ruim (arquivo não carregar), cai no fluxo normal abaixo
+      }
+      // ========================================================================
+
+      // Para os demais heróis (ou fallback da Lyria), tenta sprite sheet clássico
+      const keyForSheet = spriteKey || heroKey;
+      const candidate = keyForSheet
+        ? `/sprites/characters/${keyForSheet}.png`
+        : null;
+
       if (candidate) {
         playerVis.img = loadImg(candidate);
         await ensureImgLoaded(playerVis.img).catch(() => {});
         if (imgReady(playerVis.img)) return;
       }
+
+      // Último fallback: se vier uma imageUrl do servidor
       if (preferred.imageUrl) {
         playerVis.img = loadImg(preferred.imageUrl);
         await ensureImgLoaded(playerVis.img).catch(() => {});
         if (imgReady(playerVis.img)) return;
       }
     }
-  } catch (e) { console.warn('resolvePlayerSprite:', e.message); }
+  } catch (e) {
+    console.warn('resolvePlayerSprite:', e?.message || e);
+  }
 
+  // Fallback genérico se nada acima deu certo
+  playerVis.w = 32;
+  playerVis.h = 32;
+  playerVis.anchorX = 0.5;
+  playerVis.anchorY = 0.9;
   playerVis.img = loadImg("/sprites/characters/player.png");
   ensureImgLoaded(playerVis.img).catch(() => {});
 }
+
 
 
 /* =========================== Respawn Manager ========================== */
@@ -2354,9 +2408,10 @@ function updateRespawns(now) {
       try {
         localStorage.setItem(`lastPos:${MAP_KEY}`, JSON.stringify({ x, y, t: Date.now() }));
       } catch {}
-      publishPos(x, y);
+      publishPosTileSafe(x, y);
     },
   });
+
 
   if (controller && typeof controller.setPosition === 'function') {
     const originalSetPosition = controller.setPosition.bind(controller);
@@ -2379,10 +2434,11 @@ function updateRespawns(now) {
   // ==== Posição inicial: prioridade = pos_snap do servidor -> localStorage -> spawn ====
   // 2.1) tenta aplicar um pos_snap que pode ter chegado antes do controller existir
   let usedInitial = false;
-  if (_earlySnap && (!_earlySnap.mapKey || _earlySnap.mapKey === MAP_KEY)) {
-    try { controller.setPosition(_earlySnap.x | 0, _earlySnap.y | 0); usedInitial = true; } catch {}
-    _earlySnap = null;
+  if (_earlySnap) {
+    _applyEarlySnapIfAny(controller);
+    if (!_earlySnap) usedInitial = true;
   }
+
 
   // 2.2) se ainda não usamos nada, tenta localStorage
   if (!usedInitial) {
@@ -2392,23 +2448,29 @@ function updateRespawns(now) {
         const { x, y } = JSON.parse(raw);
         if (Number.isFinite(x) && Number.isFinite(y)) {
           controller.setPosition(x | 0, y | 0);
+          resetTilePublishCache();              // <<< AQUI
           usedInitial = true;
         }
       }
     } catch {}
   }
 
+
   // 2.3) fallback: spawn do mapa
   if (!usedInitial) {
     if (starts[0]) controller.setPosition(starts[0].x, starts[0].y);
     else controller.setPosition(TILE * 2 + TILE / 2, TILE * 2 + TILE / 2);
+    resetTilePublishCache();                    // <<< E AQUI
   }
+
 
   // 2.4) publica imediatamente a posição inicial para o servidor responder com pos_snap
   try {
+    resetTilePublishCache(); // garante que o primeiro publish "zera" o histórico
     const p0 = controller.getPosition();
-    publishPos(p0.x | 0, p0.y | 0);
+    publishPosTileSafe(p0.x | 0, p0.y | 0);
   } catch {}
+
 
   // === A* e click-to-move (pode ficar logo depois da posição inicial)
   const astar = new AStarGrid(grid, cols, rows);
@@ -2545,39 +2607,48 @@ function updateRespawns(now) {
 
   // Loop principal
   let last = performance.now();
+  let lastClickAt = 0;           // <-- NOVO
+  const CLICK_DEBOUNCE_MS = 35;  // <-- NOVO
   function frame(now) {
+
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
     let clickIssued = false;
 
-
-    // Click-to-move (PRIORIZA LOOT)
+    // Click-to-move (PRIORIZA LOOT) + debounce leve
     const m = Input.getMouse();
     if (Input.consumeClick()) {
-      const rect = canvas.getBoundingClientRect();
-      const sx = m.x - rect.left, sy = m.y - rect.top;
-      const w = camera.screenToWorld(sx, sy);
-      const loot = lootAtWorld(w.x, w.y);
-      if (loot) {
-        try { CombatActions?.pickupLoot?.(loot.id); } catch {}
-      } else {
-        const ctrl = window.GameScene?.controller;
-        if (ctrl && typeof ctrl.followPath === 'function') {
-          // ❗ corta qualquer caminho atual (do clique antigo)
-          ctrl.followPath(null);
-        }
+      if (now - lastClickAt >= CLICK_DEBOUNCE_MS) {
+        lastClickAt = now;
 
-        // limpa alvo anterior, se o ClickToMove guardar isso
-        if (clickMove && '_lastGoal' in clickMove) {
-          clickMove._lastGoal = null;
-        }
+        const rect = canvas.getBoundingClientRect();
+        const sx = m.x - rect.left, sy = m.y - rect.top;
+        const w = camera.screenToWorld(sx, sy);
+        const loot = lootAtWorld(w.x, w.y);
 
-        // novo clique = novo caminho, já a partir da posição atual
-        clickMove.handleClick(sx, sy);
-        clickIssued = true;
+        if (loot) {
+          try { CombatActions?.pickupLoot?.(loot.id); } catch {}
+        } else {
+          const ctrl = window.GameScene?.controller;
+          if (ctrl && typeof ctrl.followPath === 'function') {
+            // ❗ corta qualquer caminho atual (do clique antigo)
+            ctrl.followPath(null);
+          }
+
+          // limpa alvo anterior, se o ClickToMove guardar isso
+          const ctm = window.GameScene?.clickToMove;
+          if (ctm && '_lastGoal' in ctm) {
+            ctm._lastGoal = null;
+          }
+
+          // novo clique = novo caminho, já a partir da posição atual
+          clickMove.handleClick(sx, sy);
+          clickIssued = true;
+        }
       }
     }
+
 
 
     // Teclado: 1 passo de 32x32 por tecla (N/S/L/O)

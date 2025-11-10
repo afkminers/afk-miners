@@ -6948,7 +6948,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2604,
+    "line": 2617,
     "kind": "arrow",
     "name": "cellOf",
     "params": [
@@ -6958,7 +6958,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2605,
+    "line": 2618,
     "kind": "arrow",
     "name": "centerOf",
     "params": [
@@ -6968,7 +6968,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2606,
+    "line": 2619,
     "kind": "arrow",
     "name": "isBlocked",
     "params": [
@@ -6978,7 +6978,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2611,
+    "line": 2624,
     "kind": "arrow",
     "name": "inBound",
     "params": [
@@ -6989,7 +6989,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2619,
+    "line": 2632,
     "kind": "arrow",
     "name": "faceFrom",
     "params": [
@@ -6999,21 +6999,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2674,
+    "line": 2687,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2692,
+    "line": 2705,
     "kind": "arrow",
     "name": "featureMovement",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2693,
+    "line": 2706,
     "kind": "arrow",
     "name": "legacyToTile",
     "params": [
@@ -7022,7 +7022,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2694,
+    "line": 2707,
     "kind": "arrow",
     "name": "tileCoord",
     "params": [
@@ -7031,7 +7031,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2695,
+    "line": 2708,
     "kind": "arrow",
     "name": "tileCenterPx",
     "params": [
