@@ -19,6 +19,34 @@ import { Input } from './engine/input.js';
 import { TILE, toTile, tileCenter, footColliderPx } from './engine/movement_contract.js';
 
 
+// Garante que há sessão HTTP e autentica o socket (/ws)
+async function bootAuth() {
+  // garante cookie/CSRF ok
+  await getCsrf().catch(() => {});
+
+  // checa a sessão
+  const me = await apiGet('/api/auth/me');
+
+  // se não estiver logado, manda de volta pra landing
+  if (!me || !me.profile || !me.profile.id) {
+    location.href = '/';
+    return;
+  }
+
+  const playerId   = String(me.profile.id);
+  const playerName = String(
+    me.profile.name ||
+    me.profile.nickname ||
+    `Player #${playerId}`
+  );
+
+  // deixa visível para outros módulos
+  window.MyPlayerId = playerId;
+
+  // informa pro servidor WS qual é o player_id desta conexão
+  await authenticate(playerId, playerName);
+}
+
 
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
@@ -2301,6 +2329,7 @@ function updateRespawns(now) {
   await getCsrf().catch(() => {});
   await bootAuth();
   console.log('[ws-auth] autenticado, o servidor agora conhece seu player_id');
+
   await loadSpriteMeta();
   clearHeroBlocking();
 
@@ -2757,7 +2786,10 @@ function updateRespawns(now) {
 /* ============================ util local ============================ */
 function applyCameraZoom() {
   if (!camera) return;
-  const st = (window.GameSettings?.getState && window.GameSettings.getState()) || {};
+  const st =
+    (window.GameSettings?.getState && window.GameSettings.getState()) ||
+    {};
+
   if (st.zoomByTiles) {
     const tilesY = Math.max(6, Number(st.tilesY || 13));
     const zRaw = canvas.height / (tilesY * TILE);
@@ -2773,7 +2805,19 @@ function applyCameraZoom() {
     camera.setZoom?.(zClamped);
   }
 }
-const featureMovement = () => typeof window !== 'undefined' && !!window.FEATURE_MOVEMENT_GRID_V1;
+
+// Se um dia quiser desligar o sistema novo de movimento por ENV:
+const featureMovement = () =>
+  typeof window !== 'undefined' &&
+  window.ENV &&
+  window.ENV.FEATURE_MOVEMENT_V2; // true = usa toTile/tileCenter do contrato novo
+
 const legacyToTile = (px) => Math.floor(px / TILE);
-const tileCoord = (px) => (featureMovement() ? toTile(px) : legacyToTile(px));
-const tileCenterPx = (t) => (featureMovement() ? tileCenter(t) : t * TILE + TILE / 2);
+
+// Funções usadas no arquivo inteiro
+const tileCoord = (px) =>
+  featureMovement() ? toTile(px) : legacyToTile(px);
+
+const tileCenterPx = (t) =>
+  featureMovement() ? tileCenter(t) : t * TILE + TILE / 2;
+
