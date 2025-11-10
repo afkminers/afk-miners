@@ -368,6 +368,7 @@ async function fetchOnlineHeroesInMap(mapKey) {
   const merged = [];
   const seen = new Set();
 
+  // 1) presença realmente online (player_online + live_positions)
   const live = listFreshHeroesByMap(mapKey, ONLINE_RECENT_MS) || [];
   for (const lp of live) {
     if (!lp?.heroId) continue;
@@ -382,19 +383,20 @@ async function fetchOnlineHeroesInMap(mapKey) {
     seen.add(hid);
   }
 
+  // 2) fallback: última posição conhecida no mapa (player_last_pos)
   const rows = await all(`
-    SELECT hlp.hero_id::text AS hero_id,
-           hlp.x|0           AS x,
-           hlp.y|0           AS y,
-           (EXTRACT(EPOCH FROM hlp.updated_at) * 1000)::bigint AS updated_ms
-      FROM hero_last_pos hlp
-      JOIN player_heroes ph ON ph.id::text = hlp.hero_id::text
-    WHERE hlp.map_key = $1
+    SELECT ph.id::text                                  AS hero_id,
+           plp.x|0                                      AS x,
+           plp.y|0                                      AS y,
+           (EXTRACT(EPOCH FROM plp.updated_at) * 1000)::bigint AS updated_ms
+      FROM player_last_pos plp
+      JOIN player_heroes ph
+        ON ph."playerId"::text = plp.player_id::text
+    WHERE plp.map_key = $1
       AND ph.hp > 0
-      AND hlp.updated_at >= NOW() - ($2 || ' milliseconds')::interval
-    ORDER BY hlp.updated_at DESC
+      AND plp.updated_at >= NOW() - ($2 || ' milliseconds')::interval
+    ORDER BY plp.updated_at DESC
   `, [mapKey, String(Math.max(ONLINE_RECENT_MS, 60000))]) || [];
-
 
   for (const row of rows) {
     const hid = row?.hero_id ? String(row.hero_id) : null;
@@ -412,23 +414,26 @@ async function fetchOnlineHeroesInMap(mapKey) {
 }
 
 
+
 async function getHeroLastPosPx(heroId, mapKey) {
   const row = await all(`
-    SELECT hlp.x|0 AS x,
-           hlp.y|0 AS y,
-           (EXTRACT(EPOCH FROM hlp.updated_at) * 1000)::bigint AS updated_ms
-      FROM hero_last_pos hlp
-     WHERE hlp.hero_id::text = $1
-       AND hlp.map_key = $2
-     ORDER BY hlp.updated_at DESC
-     LIMIT 1
+    SELECT plp.x|0 AS x,
+           plp.y|0 AS y,
+           (EXTRACT(EPOCH FROM plp.updated_at) * 1000)::bigint AS updated_ms
+      FROM player_last_pos plp
+      JOIN player_heroes ph
+        ON ph."playerId"::text = plp.player_id::text
+    WHERE ph.id::text = $1
+      AND plp.map_key = $2
+    ORDER BY plp.updated_at DESC
+    LIMIT 1
   `, [String(heroId), String(mapKey)]);
-
 
   return row?.[0]
     ? { x: row[0].x | 0, y: row[0].y | 0, updatedMs: Number(row[0].updated_ms || 0) }
     : null;
 }
+
 
 
 // --------- State helpers ----------
