@@ -838,11 +838,15 @@
     "symbols": [
       "fetchCsrf",
       "getStarterStory",
+      "handleFirstInteraction",
       "jget",
       "jpost",
       "main",
+      "playClick",
+      "setupAudio",
       "showError",
-      "spriteUrlFrom"
+      "spriteUrlFrom",
+      "stopBgm"
     ]
   },
   {

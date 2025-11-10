@@ -5767,7 +5767,35 @@
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 69,
+    "line": 74,
+    "kind": "function",
+    "name": "setupAudio",
+    "params": []
+  },
+  {
+    "file": "client\\js\\starter.js",
+    "line": 93,
+    "kind": "function",
+    "name": "handleFirstInteraction",
+    "params": []
+  },
+  {
+    "file": "client\\js\\starter.js",
+    "line": 107,
+    "kind": "function",
+    "name": "playClick",
+    "params": []
+  },
+  {
+    "file": "client\\js\\starter.js",
+    "line": 116,
+    "kind": "function",
+    "name": "stopBgm",
+    "params": []
+  },
+  {
+    "file": "client\\js\\starter.js",
+    "line": 124,
     "kind": "function",
     "name": "spriteUrlFrom",
     "params": [
@@ -5777,7 +5805,7 @@
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 85,
+    "line": 140,
     "kind": "function",
     "name": "getStarterStory",
     "params": [
@@ -5786,7 +5814,7 @@
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 99,
+    "line": 154,
     "kind": "function",
     "name": "showError",
     "params": [
@@ -5795,7 +5823,7 @@
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 110,
+    "line": 165,
     "kind": "function",
     "name": "main",
     "params": []

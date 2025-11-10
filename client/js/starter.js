@@ -71,6 +71,18 @@ let clickSfx = null;
 let bgmAudio = null;
 let bgmStarted = false;
 
+function removeStarterInteractionListeners() {
+  window.removeEventListener('pointerdown', handleStarterFirstInteraction);
+  window.removeEventListener('keydown', handleStarterFirstInteraction);
+}
+
+function handleStarterFirstInteraction() {
+  if (!bgmAudio || bgmStarted) return;
+  bgmStarted = true;
+  bgmAudio.play().catch(() => {});
+  removeStarterInteractionListeners();
+}
+
 function setupAudio() {
   try {
     // som de clique de UI
@@ -81,33 +93,31 @@ function setupAudio() {
   }
 
   try {
-    // música de fundo suave/loop
+    // mesma BGM do landing
     bgmAudio = new Audio('/sfx/starter-bgm-loop.mp3');
     bgmAudio.loop = true;
     bgmAudio.volume = 0.35;
+
+    // tenta autoplay logo de cara
+    bgmAudio.play().then(() => {
+      bgmStarted = true;
+      removeStarterInteractionListeners();
+    }).catch((err) => {
+      console.warn('[starter] autoplay bloqueado, aguardando interação:', err?.message || err);
+      // se bloquear, deixamos o fallback abaixo
+    });
   } catch (e) {
     console.warn('[starter] falha ao criar bgmAudio', e);
   }
 
-  // Por causa das regras de autoplay, só podemos dar play após interação do usuário.
-  function handleFirstInteraction() {
-    if (bgmStarted || !bgmAudio) return;
-    bgmStarted = true;
-    bgmAudio.play().catch((err) => {
-      console.warn('[starter] não conseguiu tocar BGM:', err?.message || err);
-    });
-    window.removeEventListener('pointerdown', handleFirstInteraction);
-    window.removeEventListener('keydown', handleFirstInteraction);
-  }
-
-  window.addEventListener('pointerdown', handleFirstInteraction);
-  window.addEventListener('keydown', handleFirstInteraction);
+  // fallback se autoplay for bloqueado
+  window.addEventListener('pointerdown', handleStarterFirstInteraction);
+  window.addEventListener('keydown', handleStarterFirstInteraction);
 }
 
 function playClick() {
   if (!clickSfx) return;
   try {
-    // reseta pro começo pra vários cliques seguidos
     clickSfx.currentTime = 0;
     clickSfx.play().catch(() => {});
   } catch {}
@@ -115,9 +125,7 @@ function playClick() {
 
 function stopBgm() {
   if (!bgmAudio) return;
-  try {
-    bgmAudio.pause();
-  } catch {}
+  try { bgmAudio.pause(); } catch {}
 }
 
 /* ===================== Helpers de imagem e lore ===================== */
@@ -155,7 +163,6 @@ function showError(msg) {
   if (!errBox) return;
   errBox.textContent = msg;
   errBox.classList.remove('shake');
-  // força reflow pra animação reiniciar
   void errBox.offsetWidth;
   errBox.classList.add('shake');
   setTimeout(() => errBox.classList.remove('shake'), 450);
@@ -167,7 +174,7 @@ async function main() {
     await jget('/api/auth/me');
     await fetchCsrf().catch(() => null);
 
-    // inicializa áudio (mas só toca após interação)
+    // inicializa áudio (tenta autoplay)
     setupAudio();
 
     const status = await jget('/api/starter/status'); // { canSelect: boolean }
