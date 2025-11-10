@@ -2551,6 +2551,7 @@ function updateRespawns(now) {
 
     let clickIssued = false;
 
+
     // Click-to-move (PRIORIZA LOOT)
     const m = Input.getMouse();
     if (Input.consumeClick()) {
@@ -2561,11 +2562,23 @@ function updateRespawns(now) {
       if (loot) {
         try { CombatActions?.pickupLoot?.(loot.id); } catch {}
       } else {
-        // clique vira caminho A*
+        const ctrl = window.GameScene?.controller;
+        if (ctrl && typeof ctrl.followPath === 'function') {
+          // ❗ corta qualquer caminho atual (do clique antigo)
+          ctrl.followPath(null);
+        }
+
+        // limpa alvo anterior, se o ClickToMove guardar isso
+        if (clickMove && '_lastGoal' in clickMove) {
+          clickMove._lastGoal = null;
+        }
+
+        // novo clique = novo caminho, já a partir da posição atual
         clickMove.handleClick(sx, sy);
-        clickIssued = true; // 👈 esse frame já usou clique pra mover
+        clickIssued = true;
       }
     }
+
 
     // Teclado: 1 passo de 32x32 por tecla (N/S/L/O)
     const step = !clickIssued && Input.getStepIntent && Input.getStepIntent();

@@ -9851,23 +9851,30 @@
     "file": "client\\js\\ui\\settings_panel.js",
     "line": 10,
     "kind": "function",
-    "name": "isMusicMutedFromState",
+    "name": "isBgmMuted",
+    "params": []
+  },
+  {
+    "file": "client\\js\\ui\\settings_panel.js",
+    "line": 13,
+    "kind": "function",
+    "name": "setBgmMuted",
     "params": [
-      "st"
+      "muted"
     ]
   },
   {
     "file": "client\\js\\ui\\settings_panel.js",
     "line": 17,
     "kind": "function",
-    "name": "getInitialMusicMuted",
+    "name": "syncGlobalBgm",
     "params": [
-      "st"
+      "muted"
     ]
   },
   {
     "file": "client\\js\\ui\\settings_panel.js",
-    "line": 24,
+    "line": 43,
     "kind": "function",
     "name": "mountPanel",
     "params": [

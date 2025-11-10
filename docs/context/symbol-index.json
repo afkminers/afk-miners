@@ -1125,9 +1125,10 @@
     "file": "client\\js\\ui\\settings_panel.js",
     "symbols": [
       "fmt",
-      "getInitialMusicMuted",
-      "isMusicMutedFromState",
-      "mountPanel"
+      "isBgmMuted",
+      "mountPanel",
+      "setBgmMuted",
+      "syncGlobalBgm"
     ]
   },
   {
