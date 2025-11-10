@@ -105,12 +105,32 @@ onMessage('pos_snap', (msg) => {
   const ctrl = window.GameScene?.controller;
   if (!ctrl) { _earlySnap = msg; return; }
   if (msg.mapKey && msg.mapKey !== MAP_KEY) return;
+
   try {
-    ctrl.setPosition(msg.x | 0, msg.y | 0);
-    // 👇 cancela qualquer A* pendente pra evitar “puxa e solta”
-    if (typeof ctrl.followPath === 'function') ctrl.followPath(null);
+    const snapX = msg.x | 0;
+    const snapY = msg.y | 0;
+
+    // diferença entre o que o cliente acha e o que o servidor mandou
+    let diff = Infinity;
+    if (typeof ctrl.getPosition === 'function') {
+      const p = ctrl.getPosition();
+      if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
+        const dx = snapX - p.x;
+        const dy = snapY - p.y;
+        diff = Math.hypot(dx, dy);
+      }
+    }
+
+    ctrl.setPosition(snapX, snapY);
+
+    // Só cancela o caminho se a correção for grande (ex: teleporte)
+    const BIG_SNAP_THRESHOLD = 24; // ~meio tile (32px)
+    if (diff > BIG_SNAP_THRESHOLD && typeof ctrl.followPath === 'function') {
+      ctrl.followPath(null);
+    }
   } catch {}
 });
+
 
 
 // atualiza cache de outros jogadores quando o servidor manda posição
