@@ -65,6 +65,61 @@ const grid    = document.getElementById('grid');
 const errBox  = document.getElementById('err');
 const btnSkip = document.getElementById('btnSkip');
 
+/* ===================== Áudio (SFX + BGM) ===================== */
+
+let clickSfx = null;
+let bgmAudio = null;
+let bgmStarted = false;
+
+function setupAudio() {
+  try {
+    // som de clique de UI
+    clickSfx = new Audio('/sfx/ui-click-01.mp3');
+    clickSfx.volume = 0.6;
+  } catch (e) {
+    console.warn('[starter] falha ao criar clickSfx', e);
+  }
+
+  try {
+    // música de fundo suave/loop
+    bgmAudio = new Audio('/sfx/starter-bgm-loop.mp3');
+    bgmAudio.loop = true;
+    bgmAudio.volume = 0.35;
+  } catch (e) {
+    console.warn('[starter] falha ao criar bgmAudio', e);
+  }
+
+  // Por causa das regras de autoplay, só podemos dar play após interação do usuário.
+  function handleFirstInteraction() {
+    if (bgmStarted || !bgmAudio) return;
+    bgmStarted = true;
+    bgmAudio.play().catch((err) => {
+      console.warn('[starter] não conseguiu tocar BGM:', err?.message || err);
+    });
+    window.removeEventListener('pointerdown', handleFirstInteraction);
+    window.removeEventListener('keydown', handleFirstInteraction);
+  }
+
+  window.addEventListener('pointerdown', handleFirstInteraction);
+  window.addEventListener('keydown', handleFirstInteraction);
+}
+
+function playClick() {
+  if (!clickSfx) return;
+  try {
+    // reseta pro começo pra vários cliques seguidos
+    clickSfx.currentTime = 0;
+    clickSfx.play().catch(() => {});
+  } catch {}
+}
+
+function stopBgm() {
+  if (!bgmAudio) return;
+  try {
+    bgmAudio.pause();
+  } catch {}
+}
+
 /* ===================== Helpers de imagem e lore ===================== */
 function spriteUrlFrom(h, dbHero) {
   // 1º: card grandão 400x600 (starter)
@@ -112,8 +167,12 @@ async function main() {
     await jget('/api/auth/me');
     await fetchCsrf().catch(() => null);
 
+    // inicializa áudio (mas só toca após interação)
+    setupAudio();
+
     const status = await jget('/api/starter/status'); // { canSelect: boolean }
     if (!status?.canSelect) {
+      stopBgm();
       location.href = '/app.html';
       return;
     }
@@ -170,8 +229,10 @@ async function main() {
 
       const btn = card.querySelector('button');
       btn.onclick = async () => {
+        playClick();
         try {
           await jpost('/api/starter/select', { heroKey: h.heroKey });
+          stopBgm();
           location.href = '/app.html';
         } catch (e) {
           console.error(e);
@@ -184,7 +245,13 @@ async function main() {
       grid.appendChild(card);
     }
 
-    if (btnSkip) btnSkip.onclick = () => { location.href = '/app.html'; };
+    if (btnSkip) {
+      btnSkip.onclick = () => {
+        playClick();
+        stopBgm();
+        location.href = '/app.html';
+      };
+    }
 
   } catch (e) {
     console.error(e);

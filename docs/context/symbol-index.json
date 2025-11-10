@@ -841,6 +841,7 @@
       "jget",
       "jpost",
       "main",
+      "showError",
       "spriteUrlFrom"
     ]
   },

@@ -5786,7 +5786,16 @@
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 100,
+    "line": 99,
+    "kind": "function",
+    "name": "showError",
+    "params": [
+      "msg"
+    ]
+  },
+  {
+    "file": "client\\js\\starter.js",
+    "line": 110,
     "kind": "function",
     "name": "main",
     "params": []
