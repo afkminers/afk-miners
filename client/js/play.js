@@ -2886,6 +2886,7 @@ function updateRespawns(now) {
 });
 
 function updatePlayerAnim(controller, dt) {
+  // se animação não estiver ativa (herói que não seja Lyria)
   if (!playerAnim.enabled) {
     playerAnim.t += dt;
     return;
@@ -2902,24 +2903,35 @@ function updatePlayerAnim(controller, dt) {
     return;
   }
 
-  const last = updatePlayerAnim._lastPos;
-  if (last && Number.isFinite(last.x) && Number.isFinite(last.y)) {
-    const dx = pos.x - last.x;
-    const dy = pos.y - last.y;
-    const distSq = dx * dx + dy * dy;
+  // 1) vê se o controller está andando por path ou step único
+  const hasPath =
+    Array.isArray(controller.path) && controller.pathIdx < controller.path.length;
+  const stepping = !!controller._moving && !!controller._stepTarget;
 
-    const moving = distSq > 1;
-    playerAnim.state = moving ? 'walk' : 'idle';
+  let moving = hasPath || stepping;
 
-    // pra debug: olha no console segurando W/S
-    console.log('anim:', playerAnim.state, 'distSq:', distSq.toFixed(2));
-  } else {
-    playerAnim.state = 'idle';
+  // 2) se não tem path/step, cai no modo “medir delta de posição”
+  if (!moving) {
+    const last = updatePlayerAnim._lastPos;
+    if (last && Number.isFinite(last.x) && Number.isFinite(last.y)) {
+      const dx = pos.x - last.x;
+      const dy = pos.y - last.y;
+      const distSq = dx * dx + dy * dy;
+
+      // threshold bem pequeno só pra não oscilar
+      const EPS = 0.01; // ~0.1px²
+      moving = distSq > EPS;
+    } else {
+      moving = false;
+    }
   }
+
+  playerAnim.state = moving ? 'walk' : 'idle';
 
   updatePlayerAnim._lastPos = { x: pos.x, y: pos.y };
   playerAnim.t += dt;
 }
+
 
 
 
