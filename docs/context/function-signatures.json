@@ -5769,33 +5769,40 @@
     "file": "client\\js\\starter.js",
     "line": 74,
     "kind": "function",
+    "name": "removeStarterInteractionListeners",
+    "params": []
+  },
+  {
+    "file": "client\\js\\starter.js",
+    "line": 79,
+    "kind": "function",
+    "name": "handleStarterFirstInteraction",
+    "params": []
+  },
+  {
+    "file": "client\\js\\starter.js",
+    "line": 86,
+    "kind": "function",
     "name": "setupAudio",
     "params": []
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 93,
-    "kind": "function",
-    "name": "handleFirstInteraction",
-    "params": []
-  },
-  {
-    "file": "client\\js\\starter.js",
-    "line": 107,
+    "line": 118,
     "kind": "function",
     "name": "playClick",
     "params": []
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 116,
+    "line": 126,
     "kind": "function",
     "name": "stopBgm",
     "params": []
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 124,
+    "line": 132,
     "kind": "function",
     "name": "spriteUrlFrom",
     "params": [
@@ -5805,7 +5812,7 @@
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 140,
+    "line": 148,
     "kind": "function",
     "name": "getStarterStory",
     "params": [
@@ -5814,7 +5821,7 @@
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 154,
+    "line": 162,
     "kind": "function",
     "name": "showError",
     "params": [
@@ -5823,7 +5830,7 @@
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 165,
+    "line": 172,
     "kind": "function",
     "name": "main",
     "params": []
@@ -7321,6 +7328,34 @@
     "line": 260,
     "kind": "function",
     "name": "sync",
+    "params": []
+  },
+  {
+    "file": "client\\js\\landing-bgm.js",
+    "line": 13,
+    "kind": "function",
+    "name": "removeInteractionListeners",
+    "params": []
+  },
+  {
+    "file": "client\\js\\landing-bgm.js",
+    "line": 18,
+    "kind": "function",
+    "name": "tryAutoplay",
+    "params": []
+  },
+  {
+    "file": "client\\js\\landing-bgm.js",
+    "line": 29,
+    "kind": "function",
+    "name": "handleFirstInteraction",
+    "params": []
+  },
+  {
+    "file": "client\\js\\landing-bgm.js",
+    "line": 36,
+    "kind": "function",
+    "name": "initBgm",
     "params": []
   },
   {

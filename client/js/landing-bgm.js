@@ -18,18 +18,21 @@
   function tryAutoplay() {
     if (!bgmAudio || bgmStarted) return;
     bgmAudio.play().then(() => {
+      console.log('[landing-bgm] autoplay OK');
       bgmStarted = true;
       removeInteractionListeners();
     }).catch((err) => {
-      console.warn('[landing-bgm] autoplay bloqueado pelo navegador:', err?.message || err);
-      // se bloquear, a gente deixa o fallback de clique/tecla ativo
+      console.warn('[landing-bgm] autoplay bloqueado:', err?.message || err);
+      // navegador bloqueou, vamos depender da interação do usuário
     });
   }
 
   function handleFirstInteraction() {
     if (!bgmAudio || bgmStarted) return;
     bgmStarted = true;
-    bgmAudio.play().catch(() => {});
+    bgmAudio.play().catch((err) => {
+      console.warn('[landing-bgm] play após interação falhou:', err?.message || err);
+    });
     removeInteractionListeners();
   }
 
@@ -39,18 +42,20 @@
       bgmAudio.loop = true;
       bgmAudio.volume = 0.35;
 
-      // tenta tocar assim que carregar
+      console.log('[landing-bgm] inicializado');
+
+      // tenta autoplay na carga
       tryAutoplay();
 
-      // fallback se o navegador bloquear o autoplay
+      // fallback se autoplay for bloqueado
       window.addEventListener('pointerdown', handleFirstInteraction);
       window.addEventListener('keydown', handleFirstInteraction);
     } catch (e) {
-      console.warn('[landing-bgm] não foi possível iniciar áudio:', e);
+      console.warn('[landing-bgm] erro ao iniciar:', e);
     }
   }
 
-  // expõe stop caso você queira parar de fora
+  // expõe um stop global caso você queira parar de fora
   window.AFK_LANDING_BGM = {
     stop() {
       if (!bgmAudio) return;

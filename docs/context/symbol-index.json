@@ -512,6 +512,15 @@
     ]
   },
   {
+    "file": "client\\js\\landing-bgm.js",
+    "symbols": [
+      "handleFirstInteraction",
+      "initBgm",
+      "removeInteractionListeners",
+      "tryAutoplay"
+    ]
+  },
+  {
     "file": "client\\js\\login_fx.js",
     "symbols": [
       "celebrate",
@@ -838,11 +847,12 @@
     "symbols": [
       "fetchCsrf",
       "getStarterStory",
-      "handleFirstInteraction",
+      "handleStarterFirstInteraction",
       "jget",
       "jpost",
       "main",
       "playClick",
+      "removeStarterInteractionListeners",
       "setupAudio",
       "showError",
       "spriteUrlFrom",
