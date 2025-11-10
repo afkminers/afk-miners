@@ -1894,19 +1894,39 @@ function getCurrentPlayerImage() {
   // Se animação estiver ativa (Lyria)
   if (playerAnim.enabled && playerVis.animSets) {
     const stateKey = playerAnim.state === 'walk' ? 'walk' : 'idle';
-    const frames = playerVis.animSets[stateKey];
+    const animSet = playerVis.animSets[stateKey];
     const fps = stateKey === 'walk' ? 10 : 6; // anda mais rápido que idle
 
-    if (Array.isArray(frames) && frames.length) {
-      const idx = Math.floor(playerAnim.t * fps) % frames.length;
-      const img = frames[idx];
+    // MODO ANTIGO (array simples) – continua funcionando p/ outros heróis
+    if (Array.isArray(animSet) && animSet.length) {
+      const idx = Math.floor(playerAnim.t * fps) % animSet.length;
+      const img = animSet[idx];
       if (imgReady(img)) return img;
+    }
+
+    // NOVO: animSet[state][dir]
+    if (animSet && typeof animSet === 'object') {
+      const dirKey = playerAnim.dir || 's';
+
+      // tenta: dir atual -> sul -> qualquer direção disponível
+      const frames =
+        animSet[dirKey] ||
+        animSet.s ||
+        animSet.down ||
+        Object.values(animSet)[0];
+
+      if (Array.isArray(frames) && frames.length) {
+        const idx = Math.floor(playerAnim.t * fps) % frames.length;
+        const img = frames[idx];
+        if (imgReady(img)) return img;
+      }
     }
   }
 
   // Fallback: sprite única antiga
   return playerVis.img;
 }
+
 
 
 function drawPlayer(controller) {
@@ -2300,45 +2320,58 @@ function loadLyriaFrames(subdir, count) {
   const n = Number(count) || 0;
 
   for (let i = 1; i <= n; i++) {
-    // vai gerar: /img/heroes/lyria/valla_idle_s/1.png ...
-    //            /img/heroes/lyria/valla_go_s/1.png ...
-    const img = loadImg(`/img/heroes/lyria/${subdir}/${i}.png`);
+    // subdir já vem com o caminho completo
+    const img = loadImg(`${subdir}/${i}.png`);
     frames.push(img);
-    // pré-carrega, mas se der erro não trava nada
     ensureImgLoaded(img).catch(() => {});
   }
 
   return frames;
 }
 
+
 function setupLyriaSprites() {
-  // tamanho real dos frames (o da Valla/Lyria)
-  playerVis.w = 60;
-  playerVis.h = 80;
-  playerVis.anchorX = 0.5;
-  playerVis.anchorY = 0.9;
+  const base = '/img/heroes/lyria';
 
-  // batendo com as tuas pastas:
-  // client/img/heroes/lyria/valla_idle_s/1.png..5.png
-  // client/img/heroes/lyria/valla_go_s/1.png..8.png
-  const idleFrames = loadLyriaFrames('valla_idle_s', 5);
-  const walkFrames = loadLyriaFrames('valla_go_s', 8);
-
-  playerVis.animSets = {
-    idle: idleFrames,
-    walk: walkFrames,
+  // 5 frames de idle por pasta
+  const idle = {
+    s:  loadLyriaFrames(`${base}/valla_idle_s`, 5),
+    n:  loadLyriaFrames(`${base}/valla_idle_n`, 5),
+    e:  loadLyriaFrames(`${base}/valla_idle_e`, 5),
+    w:  loadLyriaFrames(`${base}/valla_idle_w`, 5),
+    se: loadLyriaFrames(`${base}/valla_idle_se`, 5),
+    sw: loadLyriaFrames(`${base}/valla_idle_sw`, 5),
+    ne: loadLyriaFrames(`${base}/valla_idle_ne`, 5),
+    nw: loadLyriaFrames(`${base}/valla_idle_nw`, 5),
   };
 
-  // liga o sistema de animação
+  // 8 frames de walk por pasta
+  const walk = {
+    s:  loadLyriaFrames(`${base}/valla_go_s`, 8),
+    n:  loadLyriaFrames(`${base}/valla_go_n`, 8),
+    e:  loadLyriaFrames(`${base}/valla_go_e`, 8),
+    w:  loadLyriaFrames(`${base}/valla_go_w`, 8),
+    se: loadLyriaFrames(`${base}/valla_go_se`, 8),
+    sw: loadLyriaFrames(`${base}/valla_go_sw`, 8),
+    ne: loadLyriaFrames(`${base}/valla_go_ne`, 8),
+    nw: loadLyriaFrames(`${base}/valla_go_nw`, 8),
+  };
+
+  // guarda assim: animSets[state][dir]
+  playerVis.animSets = { idle, walk };
+
   playerAnim.enabled = true;
   playerAnim.t = 0;
   playerAnim.state = 'idle';
+  playerAnim.dir = 's'; // começa olhando pra baixo
 
-  // fallback = primeiro frame do idle
-  if (idleFrames[0]) {
-    playerVis.img = idleFrames[0];
+  // fallback: primeiro frame do idle sul
+  const idleSouth = idle.s;
+  if (Array.isArray(idleSouth) && idleSouth[0]) {
+    playerVis.img = idleSouth[0];
   }
 }
+
 
 
 
@@ -2884,6 +2917,26 @@ function updateRespawns(now) {
   console.error(err);
   if (hud) hud.textContent = "Erro: " + err.message;
 });
+// helper: converte delta (dx, dy) em uma das 8 direções
+function pickDir8(dx, dy) {
+  const len = Math.hypot(dx, dy);
+  if (!Number.isFinite(len) || len <= 0.0001) return 's';
+
+  const nx = dx / len;
+  const ny = dy / len;
+
+  const ang = Math.atan2(ny, nx); // radianos
+  const deg = (ang * 180 / Math.PI + 360) % 360;
+
+  if (deg >= 337.5 || deg < 22.5)  return 'e';
+  if (deg >= 22.5  && deg < 67.5)  return 'se';
+  if (deg >= 67.5  && deg < 112.5) return 's';
+  if (deg >= 112.5 && deg < 157.5) return 'sw';
+  if (deg >= 157.5 && deg < 202.5) return 'w';
+  if (deg >= 202.5 && deg < 247.5) return 'nw';
+  if (deg >= 247.5 && deg < 292.5) return 'n';
+  return 'ne';
+}
 
 function updatePlayerAnim(controller, dt) {
   // se animação não estiver ativa (herói que não seja Lyria)
@@ -2909,29 +2962,33 @@ function updatePlayerAnim(controller, dt) {
   const stepping = !!controller._moving && !!controller._stepTarget;
 
   let moving = hasPath || stepping;
+  let dx = 0;
+  let dy = 0;
 
-  // 2) se não tem path/step, cai no modo “medir delta de posição”
-  if (!moving) {
-    const last = updatePlayerAnim._lastPos;
-    if (last && Number.isFinite(last.x) && Number.isFinite(last.y)) {
-      const dx = pos.x - last.x;
-      const dy = pos.y - last.y;
+  // 2) sempre calcula o delta de posição desde o último frame
+  const last = updatePlayerAnim._lastPos;
+  if (last && Number.isFinite(last.x) && Number.isFinite(last.y)) {
+    dx = pos.x - last.x;
+    dy = pos.y - last.y;
+
+    // se o controller não marcou path/step, decide pelo delta
+    if (!moving) {
       const distSq = dx * dx + dy * dy;
-
-      // threshold bem pequeno só pra não oscilar
       const EPS = 0.01; // ~0.1px²
       moving = distSq > EPS;
-    } else {
-      moving = false;
     }
   }
 
   playerAnim.state = moving ? 'walk' : 'idle';
 
+  // direção só muda quando está se movendo
+  if (moving && (dx !== 0 || dy !== 0)) {
+    playerAnim.dir = pickDir8(dx, dy);
+  }
+
   updatePlayerAnim._lastPos = { x: pos.x, y: pos.y };
   playerAnim.t += dt;
 }
-
 
 
 

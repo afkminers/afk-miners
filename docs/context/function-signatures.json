@@ -7069,21 +7069,21 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2927,
+    "line": 2939,
     "kind": "function",
     "name": "applyCameraZoom",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2950,
+    "line": 2962,
     "kind": "arrow",
     "name": "featureMovement",
     "params": []
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2955,
+    "line": 2967,
     "kind": "arrow",
     "name": "legacyToTile",
     "params": [
@@ -7092,7 +7092,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2958,
+    "line": 2970,
     "kind": "arrow",
     "name": "tileCoord",
     "params": [
@@ -7101,7 +7101,7 @@
   },
   {
     "file": "client\\js\\play.js",
-    "line": 2961,
+    "line": 2973,
     "kind": "arrow",
     "name": "tileCenterPx",
     "params": [
