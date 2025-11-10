@@ -32,10 +32,22 @@ export class ClickToMove {
     const gx = featureEnabled() ? toTile(world.x) : legacyToTile(world.x);
     const gy = featureEnabled() ? toTile(world.y) : legacyToTile(world.y);
 
-    // se clicou de novo no MESMO tile de destino, não faz nada
-    if (this._lastGoal && this._lastGoal.x === gx && this._lastGoal.y === gy) {
+    // só ignorar clique repetido se ainda existir um path ativo indo pra lá
+    const hasActivePath =
+      Array.isArray(this.ctrl.path) &&
+      this.ctrl.pathIdx >= 0 &&
+      this.ctrl.pathIdx < this.ctrl.path.length;
+
+    if (
+      hasActivePath &&
+      this._lastGoal &&
+      this._lastGoal.x === gx &&
+      this._lastGoal.y === gy
+    ) {
+      // já estamos indo pra esse tile, não recalcular
       return;
     }
+
 
     const pos = this.ctrl.getPosition();
     const sx0 = featureEnabled() ? toTile(pos.x) : legacyToTile(pos.x);

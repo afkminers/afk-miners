@@ -125,12 +125,20 @@ onMessage('pos_snap', (msg) => {
 
     // Só cancela o caminho se a correção for grande (ex: teleporte)
     const BIG_SNAP_THRESHOLD = 24; // ~meio tile (32px)
-    if (diff > BIG_SNAP_THRESHOLD && typeof ctrl.followPath === 'function') {
-      ctrl.followPath(null);
+    if (diff > BIG_SNAP_THRESHOLD) {
+      // 1) cancela qualquer caminho em andamento
+      if (typeof ctrl.followPath === 'function') {
+        ctrl.followPath(null);
+      }
+
+      // 2) limpa o último destino do click-to-move
+      const ctm = window.GameScene?.clickToMove;
+      if (ctm && '_lastGoal' in ctm) {
+        ctm._lastGoal = null;
+      }
     }
   } catch {}
 });
-
 
 
 // atualiza cache de outros jogadores quando o servidor manda posição
@@ -2410,6 +2418,9 @@ function updateRespawns(now) {
   const clickMove = new ClickToMove({ canvas, camera, controller, grid });
   clickMove.setAStar(astar);
 
+  // expõe o click-to-move pra outros pontos (pos_snap, etc.)
+  window.GameScene.clickToMove = clickMove;
+
   // Input
   Input.attach(window, canvas);
 
@@ -2560,12 +2571,21 @@ function updateRespawns(now) {
     const step = !clickIssued && Input.getStepIntent && Input.getStepIntent();
     if (step) {
       const ctrl = window.GameScene?.controller;
-      // WASD quebra o auto-walk quando você começa a segurar
+
+      // WASD quebra qualquer auto-walk / click-to-move ativo
       if (ctrl && typeof ctrl.followPath === 'function' && ctrl.path) {
         ctrl.followPath(null);
       }
+
+      // e garante que o próximo clique sempre vai recalcular o caminho
+      const ctm = window.GameScene?.clickToMove;
+      if (ctm && '_lastGoal' in ctm) {
+        ctm._lastGoal = null;
+      }
+
       ctrl?.requestStep?.(step);
     }
+
 
     const ctrlInstance = window.GameScene?.controller;
     ctrlInstance?.update?.(dt, null);
