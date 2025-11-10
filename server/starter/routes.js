@@ -53,6 +53,10 @@ function buildStarterRouter() {
           attack_type: 'MELEE',
           weapon_pref: 'sword',
           spriteKey: 'knight_v1',
+          // arte grande do card 400x600
+          cardImage: 'img/heroes/cards/aric_card_400x600.png',
+          // lore curtinha
+          story: 'Aric cresceu defendendo as entradas das minas. É um espadachim equilibrado, ótimo para quem está começando.',
         },
         {
           heroKey: 'brokk',
@@ -64,6 +68,8 @@ function buildStarterRouter() {
           attack_type: 'MELEE',
           weapon_pref: 'hammer_shield',
           spriteKey: 'dwarf_v1',
+          cardImage: 'img/heroes/cards/brokk_card_400x600.png',
+          story: 'Brokk é um anão teimoso que não recua. Ele segura a linha de frente enquanto o resto da party faz o estrago.',
         },
         {
           heroKey: 'lyria',
@@ -75,8 +81,11 @@ function buildStarterRouter() {
           attack_type: 'RANGED',
           weapon_pref: 'bow',
           spriteKey: 'archer_v1',
+          cardImage: 'img/heroes/cards/lyria_card_400x600.png',
+          story: 'Lyria aprendeu a atirar em alvos nas florestas ao redor das minas. Causa muito dano à distância, mas precisa se manter segura.',
         },
       ];
+
       res.json(starters);
     } catch (err) {
       console.error('[starter] list error:', err);

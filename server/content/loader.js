@@ -137,13 +137,12 @@ async function loadMonsters(db, root) {
     const attackMs    = Number.isFinite(data.attack_ms)    ? data.attack_ms    : null;
     const leashPx     = Number.isFinite(data.leash_px)     ? Math.round(data.leash_px) : null;
 
-
     await run(`
       INSERT INTO monsters_master
         (key, name, xp, "healthMax", speed,
          "flagsJSON","elementsJSON","attacksJSON","defensesJSON","lootJSON","lookJSON",
          attack_range, aggro_range, attack_ms, leash_px, updated_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14, now())
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15, now())
       ON CONFLICT (key) DO UPDATE SET
         name=EXCLUDED.name,
         xp=EXCLUDED.xp,
@@ -161,7 +160,11 @@ async function loadMonsters(db, root) {
         leash_px=EXCLUDED.leash_px,
         updated_at=now()
     `, [
-      data.key, data.name, data.xp, data.health.max, data.speed,
+      data.key,
+      data.name,
+      data.xp,
+      data.health.max,
+      data.speed,
       JSON.stringify(data.flags || {}),
       JSON.stringify(data.elements || {}),
       JSON.stringify(data.attacks || []),
@@ -170,7 +173,8 @@ async function loadMonsters(db, root) {
       JSON.stringify(data.look || {}),
       attackRange,
       aggroRange,
-      attackMs
+      attackMs,
+      leashPx
     ]);
 
     await run(`
@@ -188,6 +192,7 @@ async function loadMonsters(db, root) {
     console.log(`[monsters] processed: ${updatedCount} updated, ${skippedCount} skipped (unchanged)`);
   }
 }
+
 
 function toNumber(val) {
   if (val == null) return null;
