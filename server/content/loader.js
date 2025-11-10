@@ -93,9 +93,11 @@ async function ensureMonsterColumns(db) {
     ALTER TABLE monsters_master
       ADD COLUMN IF NOT EXISTS attack_range INTEGER,
       ADD COLUMN IF NOT EXISTS aggro_range INTEGER,
-      ADD COLUMN IF NOT EXISTS attack_ms   INTEGER
+      ADD COLUMN IF NOT EXISTS attack_ms   INTEGER,
+      ADD COLUMN IF NOT EXISTS leash_px    INTEGER
   `);
 }
+
 
 async function loadMonsters(db, root) {
   const { get, run } = db;
@@ -133,12 +135,14 @@ async function loadMonsters(db, root) {
     const attackRange = Number.isFinite(data.attack_range) ? data.attack_range : null;
     const aggroRange  = Number.isFinite(data.aggro_range)  ? data.aggro_range  : null;
     const attackMs    = Number.isFinite(data.attack_ms)    ? data.attack_ms    : null;
+    const leashPx     = Number.isFinite(data.leash_px)     ? Math.round(data.leash_px) : null;
+
 
     await run(`
       INSERT INTO monsters_master
         (key, name, xp, "healthMax", speed,
          "flagsJSON","elementsJSON","attacksJSON","defensesJSON","lootJSON","lookJSON",
-         attack_range, aggro_range, attack_ms, updated_at)
+         attack_range, aggro_range, attack_ms, leash_px, updated_at)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14, now())
       ON CONFLICT (key) DO UPDATE SET
         name=EXCLUDED.name,
@@ -154,6 +158,7 @@ async function loadMonsters(db, root) {
         attack_range=EXCLUDED.attack_range,
         aggro_range=EXCLUDED.aggro_range,
         attack_ms=EXCLUDED.attack_ms,
+        leash_px=EXCLUDED.leash_px,
         updated_at=now()
     `, [
       data.key, data.name, data.xp, data.health.max, data.speed,

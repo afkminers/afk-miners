@@ -5056,7 +5056,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 415,
+    "line": 418,
     "kind": "function",
     "name": "getHeroLastPosPx",
     "params": [
@@ -5066,7 +5066,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 435,
+    "line": 440,
     "kind": "function",
     "name": "resolveMobSpeedPx",
     "params": [
@@ -5075,7 +5075,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 443,
+    "line": 448,
     "kind": "function",
     "name": "ensureMob",
     "params": [
@@ -5085,7 +5085,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 600,
+    "line": 605,
     "kind": "function",
     "name": "computeRepathCooldownMs",
     "params": [
@@ -5094,7 +5094,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 655,
+    "line": 660,
     "kind": "function",
     "name": "addThreatFromHeroHit",
     "params": [
@@ -5105,21 +5105,21 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 674,
+    "line": 679,
     "kind": "function",
     "name": "start",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 715,
+    "line": 720,
     "kind": "function",
     "name": "stop",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 766,
+    "line": 771,
     "kind": "function",
     "name": "tileKey",
     "params": [
@@ -5129,7 +5129,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 770,
+    "line": 775,
     "kind": "function",
     "name": "coerceTileSet",
     "params": [
@@ -5138,7 +5138,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 776,
+    "line": 781,
     "kind": "function",
     "name": "losGridRows",
     "params": [
@@ -5147,7 +5147,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 781,
+    "line": 786,
     "kind": "function",
     "name": "isSolidTile",
     "params": [
@@ -5158,7 +5158,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 791,
+    "line": 796,
     "kind": "function",
     "name": "isTileBlockedByMobs",
     "params": [
@@ -5170,7 +5170,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 804,
+    "line": 809,
     "kind": "function",
     "name": "estaAoLadoDoJogador",
     "params": [
@@ -5181,7 +5181,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 814,
+    "line": 819,
     "kind": "function",
     "name": "buildHeroTileSet",
     "params": [
@@ -5192,7 +5192,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 839,
+    "line": 844,
     "kind": "function",
     "name": "buildMobOccupancy",
     "params": [
@@ -5201,7 +5201,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 859,
+    "line": 864,
     "kind": "function",
     "name": "buildRingOptions",
     "params": [
@@ -5217,7 +5217,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 897,
+    "line": 902,
     "kind": "function",
     "name": "maybeReturnMobHome",
     "params": [
@@ -5230,7 +5230,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1013,
+    "line": 1018,
     "kind": "function",
     "name": "teleportMobToTile",
     "params": [
@@ -5242,7 +5242,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1058,
+    "line": 1063,
     "kind": "function",
     "name": "resolveMobStacks",
     "params": [
@@ -5254,14 +5254,14 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1098,
+    "line": 1103,
     "kind": "function",
     "name": "tickLoop",
     "params": []
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1149,
+    "line": 1154,
     "kind": "function",
     "name": "stepMob",
     "params": [
@@ -5276,7 +5276,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1500,
+    "line": 1505,
     "kind": "function",
     "name": "decayThreat",
     "params": [
@@ -5286,7 +5286,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1510,
+    "line": 1515,
     "kind": "function",
     "name": "selectTargetByThreat",
     "params": [
@@ -5298,7 +5298,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1622,
+    "line": 1627,
     "kind": "function",
     "name": "isBlockedPx",
     "params": [
@@ -5309,7 +5309,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1631,
+    "line": 1636,
     "kind": "function",
     "name": "selectMobChaseGoal",
     "params": [
@@ -5325,7 +5325,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1764,
+    "line": 1769,
     "kind": "function",
     "name": "planMobChaseStep",
     "params": [
@@ -5341,7 +5341,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1787,
+    "line": 1792,
     "kind": "function",
     "name": "pickCombatDanceStep",
     "params": [
@@ -5355,7 +5355,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1833,
+    "line": 1838,
     "kind": "function",
     "name": "maybeHandleCombatDance",
     "params": [
@@ -5371,7 +5371,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1913,
+    "line": 1918,
     "kind": "function",
     "name": "pickStepGreedy",
     "params": [
@@ -5386,7 +5386,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 1982,
+    "line": 1987,
     "kind": "function",
     "name": "pickStepAlternate",
     "params": [
@@ -5402,7 +5402,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 2082,
+    "line": 2087,
     "kind": "function",
     "name": "clampToMapPx",
     "params": [
@@ -5412,7 +5412,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 2093,
+    "line": 2098,
     "kind": "function",
     "name": "moveMobAndPersist",
     "params": [
@@ -5425,7 +5425,7 @@
   },
   {
     "file": "server\\combat\\ai-mobs.js",
-    "line": 2174,
+    "line": 2179,
     "kind": "function",
     "name": "removeHeroThreat",
     "params": [
