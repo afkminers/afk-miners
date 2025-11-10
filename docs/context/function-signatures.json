@@ -7346,14 +7346,14 @@
   },
   {
     "file": "client\\js\\landing-bgm.js",
-    "line": 29,
+    "line": 30,
     "kind": "function",
     "name": "handleFirstInteraction",
     "params": []
   },
   {
     "file": "client\\js\\landing-bgm.js",
-    "line": 36,
+    "line": 39,
     "kind": "function",
     "name": "initBgm",
     "params": []

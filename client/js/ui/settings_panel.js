@@ -7,8 +7,27 @@
     return Number.isFinite(v) ? (Math.round(v * 100) / 100).toString() : String(n);
   }
 
+  function isMusicMutedFromState(st) {
+    // tenta pegar de GameSettings
+    if (typeof st?.musicMuted === 'boolean') return st.musicMuted;
+    if (typeof st?.bgmMuted === 'boolean') return st.bgmMuted;
+    return false;
+  }
+
+  function getInitialMusicMuted(st) {
+    const ls = localStorage.getItem('bgm-muted');
+    if (ls === '1') return true;
+    if (ls === '0') return false;
+    return isMusicMutedFromState(st);
+  }
+
   function mountPanel(container) {
-    const st = (window.GameSettings && window.GameSettings.getState()) || { pixelArt: true, dprCap: 1, zoom: 1 };
+    const st = (window.GameSettings && window.GameSettings.getState()) || {
+      pixelArt: true,
+      dprCap: 1,
+      zoom: 1,
+      musicMuted: false,
+    };
 
     const panel = document.createElement('div');
     panel.className = 'panel';
@@ -20,6 +39,11 @@
         <label style="display:flex;align-items:center;justify-content:space-between;gap:12px">
           <span>Pixel Art</span>
           <input id="gs_pixel" type="checkbox">
+        </label>
+
+        <label style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <span>Music</span>
+          <input id="gs_music" type="checkbox">
         </label>
 
         <div>
@@ -46,6 +70,7 @@
     `;
 
     const chkPixel = panel.querySelector('#gs_pixel');
+    const chkMusic = panel.querySelector('#gs_music');
     const rngDpr   = panel.querySelector('#gs_dpr');
     const lblDpr   = panel.querySelector('#gs_dpr_val');
     const rngZoom  = panel.querySelector('#gs_zoom');
@@ -58,9 +83,30 @@
     rngDpr.value = String(st.dprCap);
     rngZoom.value = String(st.zoom);
 
-    // wire events -> GameSettings
+    const initialMusicMuted = getInitialMusicMuted(st);
+    // checkbox marcado = música ligada
+    chkMusic.checked = !initialMusicMuted;
+
+    // wire events -> GameSettings / BGM
     chkPixel.addEventListener('change', () => {
       window.GameSettings && window.GameSettings.set({ pixelArt: chkPixel.checked });
+    });
+
+    chkMusic.addEventListener('change', () => {
+      const muted = !chkMusic.checked;
+      // persiste preferência
+      localStorage.setItem('bgm-muted', muted ? '1' : '0');
+
+      // avisa quem estiver tocando BGM (landing, app, etc)
+      document.dispatchEvent(new CustomEvent('bgm-mute', {
+        detail: { muted }
+      }));
+
+      // se teu GameSettings guardar isso, mantém em sincronia
+      window.GameSettings && window.GameSettings.set({
+        musicMuted: muted,
+        bgmMuted: muted,
+      });
     });
 
     rngDpr.addEventListener('input', () => {
@@ -81,6 +127,9 @@
       chkPixel.checked = !!ns.pixelArt;
       rngDpr.value = String(ns.dprCap); lblDpr.textContent = fmt(ns.dprCap);
       rngZoom.value = String(ns.zoom);  lblZoom.textContent = fmt(ns.zoom);
+
+      const autoMuted = getInitialMusicMuted(ns);
+      chkMusic.checked = !autoMuted;
     });
 
     btnClose.addEventListener('click', () => panel.remove());
@@ -89,7 +138,9 @@
     document.addEventListener('settings:changed', (ev) => {
       const ns = ev && ev.detail ? ev.detail : (window.GameSettings && window.GameSettings.getState());
       if (!ns) return;
+
       chkPixel.checked = !!ns.pixelArt;
+
       if (String(rngDpr.value) !== String(ns.dprCap)) {
         rngDpr.value = String(ns.dprCap);
         lblDpr.textContent = fmt(ns.dprCap);
@@ -97,6 +148,11 @@
       if (String(rngZoom.value) !== String(ns.zoom)) {
         rngZoom.value = String(ns.zoom);
         lblZoom.textContent = fmt(ns.zoom);
+      }
+
+      if (typeof ns.musicMuted === 'boolean' || typeof ns.bgmMuted === 'boolean') {
+        const muted = isMusicMutedFromState(ns);
+        chkMusic.checked = !muted;
       }
     });
 
