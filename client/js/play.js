@@ -2538,10 +2538,10 @@ function updateRespawns(now) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
+    let clickIssued = false;
+
     // Click-to-move (PRIORIZA LOOT)
     const m = Input.getMouse();
-    let clickConsumedForMove = false;
-
     if (Input.consumeClick()) {
       const rect = canvas.getBoundingClientRect();
       const sx = m.x - rect.left, sy = m.y - rect.top;
@@ -2552,15 +2552,19 @@ function updateRespawns(now) {
       } else {
         // clique vira caminho A*
         clickMove.handleClick(sx, sy);
-        clickConsumedForMove = true;   // 👈 marca que esse frame já usou clique pra mover
+        clickIssued = true; // 👈 esse frame já usou clique pra mover
       }
     }
 
     // Teclado: 1 passo de 32x32 por tecla (N/S/L/O)
-    const step = Input.getStepIntent && Input.getStepIntent();
-    if (step && !clickConsumedForMove) {
-      // se o frame já teve click-to-move, não deixamos o WASD brigar
-      window.GameScene?.controller?.requestStep?.(step);
+    const step = !clickIssued && Input.getStepIntent && Input.getStepIntent();
+    if (step) {
+      const ctrl = window.GameScene?.controller;
+      // WASD quebra o auto-walk quando você começa a segurar
+      if (ctrl && typeof ctrl.followPath === 'function' && ctrl.path) {
+        ctrl.followPath(null);
+      }
+      ctrl?.requestStep?.(step);
     }
 
     const ctrlInstance = window.GameScene?.controller;
@@ -2572,7 +2576,6 @@ function updateRespawns(now) {
       }
     }
 
-    // Camera
     camera.update(dt);
 
 
