@@ -837,6 +837,7 @@
     "file": "client\\js\\starter.js",
     "symbols": [
       "fetchCsrf",
+      "getStarterStory",
       "jget",
       "jpost",
       "main",

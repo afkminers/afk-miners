@@ -991,7 +991,7 @@ Arquivo: `server\routes\farm.js:71`
 
 ### GET /status
 
-Arquivo: `server\starter\routes.js:87`
+Arquivo: `server\starter\routes.js:96`
 
 **Payloads (exemplos inferidos):**
 - body:
@@ -1858,7 +1858,7 @@ Arquivo: `server\routes\revive.js:2`
 
 ### POST /select
 
-Arquivo: `server\starter\routes.js:105`
+Arquivo: `server\starter\routes.js:114`
 
 **Payloads (exemplos inferidos):**
 - body:

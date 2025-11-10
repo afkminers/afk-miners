@@ -3438,7 +3438,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 192,
+    "line": 197,
     "kind": "function",
     "name": "toNumber",
     "params": [
@@ -3447,7 +3447,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 199,
+    "line": 204,
     "kind": "function",
     "name": "parseLeashPx",
     "params": [
@@ -3456,7 +3456,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 234,
+    "line": 239,
     "kind": "function",
     "name": "loadItems",
     "params": [
@@ -3466,7 +3466,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 312,
+    "line": 317,
     "kind": "function",
     "name": "loadSprites",
     "params": [
@@ -3476,7 +3476,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 393,
+    "line": 398,
     "kind": "function",
     "name": "loadMap",
     "params": [
@@ -3487,7 +3487,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 475,
+    "line": 480,
     "kind": "function",
     "name": "loadAll",
     "params": [
@@ -5740,14 +5740,14 @@
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 4,
+    "line": 6,
     "kind": "function",
     "name": "fetchCsrf",
     "params": []
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 19,
+    "line": 24,
     "kind": "function",
     "name": "jget",
     "params": [
@@ -5756,7 +5756,7 @@
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 25,
+    "line": 38,
     "kind": "function",
     "name": "jpost",
     "params": [
@@ -5767,16 +5767,26 @@
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 44,
+    "line": 69,
     "kind": "function",
     "name": "spriteUrlFrom",
     "params": [
-      "h"
+      "h",
+      "dbHero"
     ]
   },
   {
     "file": "client\\js\\starter.js",
-    "line": 51,
+    "line": 85,
+    "kind": "function",
+    "name": "getStarterStory",
+    "params": [
+      "key"
+    ]
+  },
+  {
+    "file": "client\\js\\starter.js",
+    "line": 100,
     "kind": "function",
     "name": "main",
     "params": []

@@ -3125,7 +3125,7 @@
     "method": "POST",
     "path": "/select",
     "file": "server\\starter\\routes.js",
-    "line": 105,
+    "line": 114,
     "sample": {
       "body": {
         "const playerId = req.user.id;\n\n    try {\n      const { heroKey": 1
@@ -3329,7 +3329,7 @@
     "method": "GET",
     "path": "/status",
     "file": "server\\starter\\routes.js",
-    "line": 87,
+    "line": 96,
     "sample": {
       "body": {
         "const playerId = req.user.id;\n\n    try {\n      const { heroKey": 1

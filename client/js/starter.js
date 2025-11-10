@@ -86,20 +86,29 @@ function getStarterStory(key) {
   const k = String(key || '').toLowerCase();
   switch (k) {
     case 'aric':
-      return 'Aric começou como guarda das entradas das minas. É o cavaleiro mais simples e seguro pra iniciar sua jornada.';
+      return 'Aric cresceu defendendo as entradas das minas. É um espadachim equilibrado, ótimo para quem está começando.';
     case 'brokk':
-      return 'Brokk prefere sentir o peso dos golpes no escudo. Ele não liga de apanhar, desde que ninguém encoste na party.';
+      return 'Brokk é um anão teimoso que não recua. Ele segura a linha de frente enquanto o resto da party faz o estrago.';
     case 'lyria':
-      return 'Lyria aprendeu a caçar na floresta e nunca erra o alvo. Causa muito dano de longe, mas odeia lutar corpo a corpo.';
+      return 'Lyria aprendeu a atirar em alvos nas florestas ao redor das minas. Causa muito dano à distância, mas precisa se manter segura.';
     default:
       return '';
   }
 }
 
+function showError(msg) {
+  if (!errBox) return;
+  errBox.textContent = msg;
+  errBox.classList.remove('shake');
+  // força reflow pra animação reiniciar
+  void errBox.offsetWidth;
+  errBox.classList.add('shake');
+  setTimeout(() => errBox.classList.remove('shake'), 450);
+}
+
 /* ===================== Fluxo principal ===================== */
 async function main() {
   try {
-    // garante que está logado
     await jget('/api/auth/me');
     await fetchCsrf().catch(() => null);
 
@@ -109,7 +118,7 @@ async function main() {
       return;
     }
 
-    // === NOVO: carregar heróis do banco para mostrar stats base ===
+    // carrega heróis do banco pra puxar stats base
     let masterByKey = new Map();
     try {
       const masters = await jget('/api/heroes/master');
@@ -168,7 +177,7 @@ async function main() {
           console.error(e);
           let msg = e?.message || 'falha ao selecionar';
           try { msg = JSON.parse(msg).error || msg; } catch {}
-          errBox.textContent = 'Erro: ' + msg;
+          showError('Erro: ' + msg);
         }
       };
 
@@ -181,7 +190,7 @@ async function main() {
     console.error(e);
     let msg = e?.message || 'falha';
     try { msg = JSON.parse(msg).error || msg; } catch {}
-    errBox.textContent = 'Erro ao carregar: ' + msg;
+    showError('Erro ao carregar: ' + msg);
   }
 }
 
