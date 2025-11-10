@@ -515,9 +515,13 @@
     "file": "client\\js\\landing-bgm.js",
     "symbols": [
       "handleFirstInteraction",
+      "handleMuteChange",
       "initBgm",
+      "isMuted",
       "removeInteractionListeners",
-      "tryAutoplay"
+      "setMutedFlag",
+      "tryAutoplay",
+      "tryPlay"
     ]
   },
   {
@@ -1121,6 +1125,8 @@
     "file": "client\\js\\ui\\settings_panel.js",
     "symbols": [
       "fmt",
+      "getInitialMusicMuted",
+      "isMusicMutedFromState",
       "mountPanel"
     ]
   },

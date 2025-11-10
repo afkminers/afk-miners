@@ -7,18 +7,37 @@
     return Number.isFinite(v) ? (Math.round(v * 100) / 100).toString() : String(n);
   }
 
-  function isMusicMutedFromState(st) {
-    // tenta pegar de GameSettings
-    if (typeof st?.musicMuted === 'boolean') return st.musicMuted;
-    if (typeof st?.bgmMuted === 'boolean') return st.bgmMuted;
-    return false;
+  function isBgmMuted() {
+    return localStorage.getItem('bgm-muted') === '1';
+  }
+  function setBgmMuted(muted) {
+    localStorage.setItem('bgm-muted', muted ? '1' : '0');
   }
 
-  function getInitialMusicMuted(st) {
-    const ls = localStorage.getItem('bgm-muted');
-    if (ls === '1') return true;
-    if (ls === '0') return false;
-    return isMusicMutedFromState(st);
+  function syncGlobalBgm(muted) {
+    // avisa o script da música (landing-bgm.js ou outro que escute esse evento)
+    try {
+      document.dispatchEvent(new CustomEvent('bgm-mute', { detail: { muted: !!muted } }));
+    } catch (e) {
+      console.warn('[settings_panel] erro ao emitir bgm-mute:', e);
+    }
+
+    // tenta controlar o áudio global, se existir
+    try {
+      if (window.AFK_LANDING_BGM && typeof window.AFK_LANDING_BGM.getAudio === 'function') {
+        const audio = window.AFK_LANDING_BGM.getAudio();
+        if (audio) {
+          if (muted) {
+            audio.pause();
+          } else if (audio.paused) {
+            // não cria áudio novo; só tenta dar play no mesmo objeto
+            audio.play().catch(() => {});
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[settings_panel] erro ao controlar BGM:', e);
+    }
   }
 
   function mountPanel(container) {
@@ -26,8 +45,16 @@
       pixelArt: true,
       dprCap: 1,
       zoom: 1,
-      musicMuted: false,
+      music: !isBgmMuted(),
     };
+
+    // estado inicial da música:
+    // 1) se GameSettings tiver .music, usa
+    // 2) senão, usa localStorage bgm-muted
+    const musicOn =
+      typeof st.music === 'boolean'
+        ? st.music
+        : !isBgmMuted();
 
     const panel = document.createElement('div');
     panel.className = 'panel';
@@ -80,33 +107,27 @@
 
     // apply initial values
     chkPixel.checked = !!st.pixelArt;
+    chkMusic.checked = !!musicOn;
     rngDpr.value = String(st.dprCap);
     rngZoom.value = String(st.zoom);
 
-    const initialMusicMuted = getInitialMusicMuted(st);
-    // checkbox marcado = música ligada
-    chkMusic.checked = !initialMusicMuted;
+    // garante que o estado global de mute já reflita o valor inicial do checkbox
+    setBgmMuted(!musicOn);
+    syncGlobalBgm(!musicOn);
 
-    // wire events -> GameSettings / BGM
+    // wire events -> GameSettings
     chkPixel.addEventListener('change', () => {
       window.GameSettings && window.GameSettings.set({ pixelArt: chkPixel.checked });
     });
 
     chkMusic.addEventListener('change', () => {
-      const muted = !chkMusic.checked;
-      // persiste preferência
-      localStorage.setItem('bgm-muted', muted ? '1' : '0');
+      const enabled = chkMusic.checked;
+      // salva nas GameSettings também, pra quem quiser ler
+      window.GameSettings && window.GameSettings.set({ music: enabled });
 
-      // avisa quem estiver tocando BGM (landing, app, etc)
-      document.dispatchEvent(new CustomEvent('bgm-mute', {
-        detail: { muted }
-      }));
-
-      // se teu GameSettings guardar isso, mantém em sincronia
-      window.GameSettings && window.GameSettings.set({
-        musicMuted: muted,
-        bgmMuted: muted,
-      });
+      const muted = !enabled;
+      setBgmMuted(muted);
+      syncGlobalBgm(muted);
     });
 
     rngDpr.addEventListener('input', () => {
@@ -128,8 +149,12 @@
       rngDpr.value = String(ns.dprCap); lblDpr.textContent = fmt(ns.dprCap);
       rngZoom.value = String(ns.zoom);  lblZoom.textContent = fmt(ns.zoom);
 
-      const autoMuted = getInitialMusicMuted(ns);
-      chkMusic.checked = !autoMuted;
+      if (typeof ns.music === 'boolean') {
+        chkMusic.checked = !!ns.music;
+        const muted = !ns.music;
+        setBgmMuted(muted);
+        syncGlobalBgm(muted);
+      }
     });
 
     btnClose.addEventListener('click', () => panel.remove());
@@ -150,9 +175,14 @@
         lblZoom.textContent = fmt(ns.zoom);
       }
 
-      if (typeof ns.musicMuted === 'boolean' || typeof ns.bgmMuted === 'boolean') {
-        const muted = isMusicMutedFromState(ns);
-        chkMusic.checked = !muted;
+      if (typeof ns.music === 'boolean' && chkMusic) {
+        const on = !!ns.music;
+        if (chkMusic.checked !== on) {
+          chkMusic.checked = on;
+        }
+        const muted = !on;
+        setBgmMuted(muted);
+        syncGlobalBgm(muted);
       }
     });
 

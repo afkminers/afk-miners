@@ -7334,26 +7334,58 @@
     "file": "client\\js\\landing-bgm.js",
     "line": 13,
     "kind": "function",
-    "name": "removeInteractionListeners",
+    "name": "isMuted",
     "params": []
   },
   {
     "file": "client\\js\\landing-bgm.js",
     "line": 18,
     "kind": "function",
+    "name": "setMutedFlag",
+    "params": [
+      "muted"
+    ]
+  },
+  {
+    "file": "client\\js\\landing-bgm.js",
+    "line": 22,
+    "kind": "function",
+    "name": "removeInteractionListeners",
+    "params": []
+  },
+  {
+    "file": "client\\js\\landing-bgm.js",
+    "line": 27,
+    "kind": "function",
+    "name": "tryPlay",
+    "params": []
+  },
+  {
+    "file": "client\\js\\landing-bgm.js",
+    "line": 39,
+    "kind": "function",
     "name": "tryAutoplay",
     "params": []
   },
   {
     "file": "client\\js\\landing-bgm.js",
-    "line": 30,
+    "line": 47,
     "kind": "function",
     "name": "handleFirstInteraction",
     "params": []
   },
   {
     "file": "client\\js\\landing-bgm.js",
-    "line": 39,
+    "line": 56,
+    "kind": "function",
+    "name": "handleMuteChange",
+    "params": [
+      "muted"
+    ]
+  },
+  {
+    "file": "client\\js\\landing-bgm.js",
+    "line": 82,
     "kind": "function",
     "name": "initBgm",
     "params": []
@@ -9818,6 +9850,24 @@
   {
     "file": "client\\js\\ui\\settings_panel.js",
     "line": 10,
+    "kind": "function",
+    "name": "isMusicMutedFromState",
+    "params": [
+      "st"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\settings_panel.js",
+    "line": 17,
+    "kind": "function",
+    "name": "getInitialMusicMuted",
+    "params": [
+      "st"
+    ]
+  },
+  {
+    "file": "client\\js\\ui\\settings_panel.js",
+    "line": 24,
     "kind": "function",
     "name": "mountPanel",
     "params": [
