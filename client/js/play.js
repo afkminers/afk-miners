@@ -51,9 +51,28 @@ async function bootAuth() {
 const QS = new URLSearchParams(location.search);
 const MAP_KEY = QS.get('map') || 'house';
 const TILE_SIZE = Number(window.TILE_SIZE || 32);
-const playerVis = { w: 32, h: 32, img: null, heroKey: null, anchorX: 0.5, anchorY: 0.9 };
+
+// Visual do player (herói controlado)
+const playerVis = {
+  w: 32,
+  h: 32,
+  img: null,
+  heroKey: null,
+  anchorX: 0.5,
+  anchorY: 0.9,
+  animSets: null, // usado pela Lyria
+};
+
+// Controle simples de animação do player
+const playerAnim = {
+  enabled: false,
+  t: 0,
+  state: 'idle', // 'idle' | 'walk'
+};
+
 // Desliga a IA local de mobs; posição deve vir do servidor
 const ENABLE_LOCAL_MOB_AI = false;
+
 
 // ======= Estado de outros jogadores visíveis no mapa =======
 const otherPlayers = new Map(); // playerId -> { id, name, x, y, mapKey, lastSeenAt }
@@ -1871,14 +1890,35 @@ function drawGround(cameraObj) {
   }
 }
 
+function getCurrentPlayerImage() {
+  // Se animação estiver ativa (Lyria)
+  if (playerAnim.enabled && playerVis.animSets) {
+    const stateKey = playerAnim.state === 'walk' ? 'walk' : 'idle';
+    const frames = playerVis.animSets[stateKey];
+    const fps = stateKey === 'walk' ? 10 : 6; // anda mais rápido que idle
+
+    if (Array.isArray(frames) && frames.length) {
+      const idx = Math.floor(playerAnim.t * fps) % frames.length;
+      const img = frames[idx];
+      if (imgReady(img)) return img;
+    }
+  }
+
+  // Fallback: sprite única antiga
+  return playerVis.img;
+}
+
+
 function drawPlayer(controller) {
   const p = controller.getPosition();
-  if (imgReady(playerVis.img)) {
+  const img = getCurrentPlayerImage();
+
+  if (imgReady(img)) {
     const anchorX = Number.isFinite(playerVis.anchorX) ? playerVis.anchorX : 0.5;
     const anchorY = Number.isFinite(playerVis.anchorY) ? playerVis.anchorY : 0.9;
     const ox = Math.round(p.x - playerVis.w * anchorX);
     const oy = Math.round(p.y - playerVis.h * anchorY);
-    ctx.drawImage(playerVis.img, ox, oy, playerVis.w, playerVis.h);
+    ctx.drawImage(img, ox, oy, playerVis.w, playerVis.h);
   } else {
     ctx.save();
     ctx.fillStyle = "#f59e0b";
@@ -1888,6 +1928,7 @@ function drawPlayer(controller) {
     ctx.restore();
   }
 }
+
 
 function drawOtherPlayer(player) {
   if (!player) return;
@@ -2173,7 +2214,7 @@ async function resolvePlayerSprite() {
   try {
     const me = await apiGet('/api/player/me');
 
-    // mantém o estado global do herói sincronizado
+    // mantém estado global do herói sincronizado
     try { HeroState.setFromServer(me); } catch {}
 
     const heroes = Array.isArray(me.heroes) ? me.heroes : [];
@@ -2186,6 +2227,14 @@ async function resolvePlayerSprite() {
       heroes.find(h => h.isStarter === 1 || h.isStarter === true) ||
       heroes[0] || null;
 
+    // reset visual/anim a cada resolução (caso troque de herói etc.)
+    playerVis.animSets = null;
+    playerAnim.enabled = false;
+    playerVis.w = 32;
+    playerVis.h = 32;
+    playerVis.anchorX = 0.5;
+    playerVis.anchorY = 0.9;
+
     if (preferred) {
       try { window.setActiveHero(preferred.id); } catch {}
 
@@ -2197,26 +2246,20 @@ async function resolvePlayerSprite() {
 
       playerVis.heroKey = heroKey || null;
 
-      // ========================= Lyria com sprite nova =========================
-      // Se o herói ativo for a Lyria, usamos os PNGs da pasta:
-      // client/img/heroes/lyria/valla_idle_s/1.png
+      // ========================= Lyria com sprite animada nova =========================
       if (heroKey === 'lyria') {
-        // Tamanho real dos frames da Valla (print que você mandou: 60x80)
+        // tamanho real dos frames da Valla (print: 60x80)
         playerVis.w = 60;
         playerVis.h = 80;
-        // Âncora parecida com o padrão, só que aplicada ao sprite maior
         playerVis.anchorX = 0.5;
         playerVis.anchorY = 0.9;
 
-        // Por enquanto: frame 1 da animação idle voltada para o Sul
-        playerVis.img = loadImg('/img/heroes/lyria/valla_idle_s/1.png');
-        await ensureImgLoaded(playerVis.img).catch(() => {});
-        if (imgReady(playerVis.img)) return;
-        // se der ruim (arquivo não carregar), cai no fluxo normal abaixo
+        setupLyriaSprites();
+        return; // não tenta mais nada, usamos só a sprite nova
       }
-      // ========================================================================
+      // ================================================================================
 
-      // Para os demais heróis (ou fallback da Lyria), tenta sprite sheet clássico
+      // Demais heróis → fluxo antigo usando spritesheet 32x32
       const keyForSheet = spriteKey || heroKey;
       const candidate = keyForSheet
         ? `/sprites/characters/${keyForSheet}.png`
@@ -2228,7 +2271,6 @@ async function resolvePlayerSprite() {
         if (imgReady(playerVis.img)) return;
       }
 
-      // Último fallback: se vier uma imageUrl do servidor
       if (preferred.imageUrl) {
         playerVis.img = loadImg(preferred.imageUrl);
         await ensureImgLoaded(playerVis.img).catch(() => {});
@@ -2239,7 +2281,10 @@ async function resolvePlayerSprite() {
     console.warn('resolvePlayerSprite:', e?.message || e);
   }
 
-  // Fallback genérico se nada acima deu certo
+  // Fallback genérico
+  playerVis.heroKey = null;
+  playerVis.animSets = null;
+  playerAnim.enabled = false;
   playerVis.w = 32;
   playerVis.h = 32;
   playerVis.anchorX = 0.5;
@@ -2247,6 +2292,43 @@ async function resolvePlayerSprite() {
   playerVis.img = loadImg("/sprites/characters/player.png");
   ensureImgLoaded(playerVis.img).catch(() => {});
 }
+
+// ======================= Sprites da Lyria (Valla) =======================
+
+function loadLyriaFrames(basePath, count) {
+  const frames = [];
+  const n = Number(count) || 0;
+  for (let i = 1; i <= n; i++) {
+    const img = loadImg(`${basePath}/${i}.png`);
+    frames.push(img);
+    // pré-carrega, mas sem travar nada se falhar
+    ensureImgLoaded(img).catch(() => {});
+  }
+  return frames;
+}
+
+function setupLyriaSprites() {
+  const base = '/img/heroes/lyria';
+
+  const idleFrames = loadLyriaFrames(`${base}/valla_idle_s`, 5); // 5 frames
+  const walkFrames = loadLyriaFrames(`${base}/valla_go_s`, 8);   // 8 frames
+
+  playerVis.animSets = {
+    idle: idleFrames,
+    walk: walkFrames,
+  };
+
+  // animação ligada só pra Lyria
+  playerAnim.enabled = true;
+  playerAnim.t = 0;
+  playerAnim.state = 'idle';
+
+  // fallback: primeiro frame do idle
+  if (idleFrames[0]) {
+    playerVis.img = idleFrames[0];
+  }
+}
+
 
 
 
@@ -2710,6 +2792,50 @@ function updateRespawns(now) {
     }
 
     camera.update(dt);
+
+        // Atualiza animação do player (Lyria usa isso)
+    if (controller && typeof controller.getPosition === 'function') {
+      updatePlayerAnim(controller, dt);
+    } else {
+      // se não tiver controller por algum motivo, só avança o tempo
+      playerAnim.t += dt;
+    }
+
+function updatePlayerAnim(controller, dt) {
+  // se animação não estiver ativa (herói que não seja Lyria)
+  if (!playerAnim.enabled) {
+    playerAnim.t += dt;
+    return;
+  }
+
+  if (!controller || typeof controller.getPosition !== 'function') {
+    playerAnim.t += dt;
+    return;
+  }
+
+  const pos = controller.getPosition();
+  if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) {
+    playerAnim.t += dt;
+    return;
+  }
+
+  const last = updatePlayerAnim._lastPos;
+  if (last && Number.isFinite(last.x) && Number.isFinite(last.y)) {
+    const dx = pos.x - last.x;
+    const dy = pos.y - last.y;
+    const distSq = dx * dx + dy * dy;
+
+    // 1px² de threshold pra considerar "movendo"
+    const moving = distSq > 1;
+    playerAnim.state = moving ? 'walk' : 'idle';
+  } else {
+    // primeira vez que pegamos posição → começa em idle
+    playerAnim.state = 'idle';
+  }
+
+  updatePlayerAnim._lastPos = { x: pos.x, y: pos.y };
+  playerAnim.t += dt;
+}
 
 
     // ===== IA dos mobs em passos de 32x32 (DESATIVADA; servidor manda posição) =====
