@@ -343,8 +343,6 @@ async function fetchAliveMonsters() {
     WHERE mi.state = 'ALIVE' AND mi.hp > 0
   `)) || [];
 
-
-
   return rows.map(row => {
     const profile = resolveMonsterAttackProfile({
       attack_ms: row.attack_ms,
@@ -357,10 +355,11 @@ async function fetchAliveMonsters() {
       attack_range: profile.rangeTiles,
       attack_ms: profile.intervalMs,
       attack_type: profile.type,
-      leash_px: Number(row.leash_px || 0),
+      leash_px: Number(row.leash_px || 0),          // 👈 entra no objeto usado pelo ensureMob
     };
   });
 }
+
 
 // 💡 Usa player_online (presença real) + última posição daquele player no mesmo mapa.
 //    **Filtra só heróis VIVOS (hp > 0)** para não mirar em morto.
@@ -384,18 +383,18 @@ async function fetchOnlineHeroesInMap(mapKey) {
   }
 
   const rows = await all(`
-    SELECT ph.id::text         AS hero_id,
-          plp.x|0             AS x,
-          plp.y|0             AS y,
-          (EXTRACT(EPOCH FROM plp.updated_at) * 1000)::bigint AS updated_ms
-      FROM player_last_pos plp
-      JOIN player_heroes ph
-        ON ph."playerId"::text = plp.player_id::text
-    WHERE plp.map_key = $1
+    SELECT hlp.hero_id::text AS hero_id,
+           hlp.x|0           AS x,
+           hlp.y|0           AS y,
+           (EXTRACT(EPOCH FROM hlp.updated_at) * 1000)::bigint AS updated_ms
+      FROM hero_last_pos hlp
+      JOIN player_heroes ph ON ph.id::text = hlp.hero_id::text
+    WHERE hlp.map_key = $1
       AND ph.hp > 0
-      AND plp.updated_at >= NOW() - ($2 || ' milliseconds')::interval
-    ORDER BY plp.updated_at DESC
+      AND hlp.updated_at >= NOW() - ($2 || ' milliseconds')::interval
+    ORDER BY hlp.updated_at DESC
   `, [mapKey, String(Math.max(ONLINE_RECENT_MS, 60000))]) || [];
+
 
   for (const row of rows) {
     const hid = row?.hero_id ? String(row.hero_id) : null;
@@ -415,15 +414,16 @@ async function fetchOnlineHeroesInMap(mapKey) {
 
 async function getHeroLastPosPx(heroId, mapKey) {
   const row = await all(`
-    SELECT plp.x|0 AS x, plp.y|0 AS y,
-           (EXTRACT(EPOCH FROM plp.updated_at) * 1000)::bigint AS updated_ms
-      FROM player_last_pos plp
-      JOIN player_heroes ph ON ph."playerId"::text = plp.player_id::text
-    WHERE ph.id::text = $1
-      AND plp.map_key = $2
-    ORDER BY plp.updated_at DESC
-    LIMIT 1
+    SELECT hlp.x|0 AS x,
+           hlp.y|0 AS y,
+           (EXTRACT(EPOCH FROM hlp.updated_at) * 1000)::bigint AS updated_ms
+      FROM hero_last_pos hlp
+     WHERE hlp.hero_id::text = $1
+       AND hlp.map_key = $2
+     ORDER BY hlp.updated_at DESC
+     LIMIT 1
   `, [String(heroId), String(mapKey)]);
+
 
   return row?.[0]
     ? { x: row[0].x | 0, y: row[0].y | 0, updatedMs: Number(row[0].updated_ms || 0) }
@@ -505,6 +505,7 @@ function ensureMob(instanceId, patch = {}) {
         ? { x: pendingStepPatch.x | 0, y: pendingStepPatch.y | 0 }
         : null);
 
+  // leash: prioriza patch -> estado atual -> null
   const rawLeash = patch.leashPx ?? patch.leash_px ?? cur.leashRangePx ?? cur.leashPx ?? null;
   const leashRangePx = Number.isFinite(rawLeash) && rawLeash > 0
     ? Math.max(PX_PER_TILE, Math.round(rawLeash))
@@ -582,7 +583,7 @@ function ensureMob(instanceId, patch = {}) {
     attack_ms:    attackMs,
     attack_type:  attackType,
 
-    // debug
+    // debug / leash
     spawnRect,
     home,
     leashRangePx,
@@ -603,7 +604,17 @@ function computeRepathCooldownMs(mob) {
 }
 
 // Exposta para seed inicial a partir do index.js
-function seedPosition({ id, x, y, mapKey, spawnRect, speed = null, monsterKey = null, leashPx = null, resetThreat = false }) {
+function seedPosition({
+  id,
+  x,
+  y,
+  mapKey,
+  spawnRect,
+  speed = null,
+  monsterKey = null,
+  leashPx = null,
+  resetThreat = false
+}) {
   const now = Date.now();
   const patch = {
     x: Number.isFinite(x) ? (x | 0) : undefined,
@@ -634,9 +645,9 @@ function seedPosition({ id, x, y, mapKey, spawnRect, speed = null, monsterKey = 
     patch.leashCooldownUntil = 0;
   }
 
-
   ensureMob(id, patch);
 }
+
 
 
 
@@ -1139,12 +1150,16 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   decayThreat(mob, dt);
   selectTargetByThreat(now, mob, heroes, losGrid);
 
+  // 1) GATE de leash: se passou do raio, limpa agro e volta pra casa
   const leashRangePx = Number.isFinite(mob?.leashRangePx) ? mob.leashRangePx : null;
   if (
     leashRangePx != null && leashRangePx > 0 &&
     mob?.home && Number.isFinite(mob.home.x) && Number.isFinite(mob.home.y)
   ) {
-    const distFromHome = Math.hypot((mob.x ?? mob.home.x) - mob.home.x, (mob.y ?? mob.home.y) - mob.home.y);
+    const distFromHome = Math.hypot(
+      (mob.x ?? mob.home.x) - mob.home.x,
+      (mob.y ?? mob.home.y) - mob.home.y
+    );
     if (distFromHome > leashRangePx + HOME_TOLERANCE_PX) {
       if (mob.targetHeroId) mob.threat.delete(String(mob.targetHeroId));
       mob.targetHeroId = null;
@@ -1159,7 +1174,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     }
   }
 
-
+  // Sem alvo -> idle + return home
   if (!mob.targetHeroId) {
     mob.mode = 'idle';
     mob.agroSince = 0;
@@ -1172,9 +1187,45 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     return;
   }
 
+  // ---- NOVO: resolve posição atual do alvo (tgtPos) uma vez ----
+  let tgtPos = null;
+  if (mob.targetHeroId) {
+    // 1) player online e fresco
+    tgtPos = heroes.find(h => h.heroId === mob.targetHeroId) || null;
+
+    // 2) se não estiver online, usa memória local do próprio mob (lastKnownHeroPos)
+    if (!tgtPos) {
+      const memPos = mob.lastKnownHeroPos;
+      if (memPos && Number.isFinite(memPos.x) && Number.isFinite(memPos.y)) {
+        const memAge = now - (memPos.updatedMs ?? 0);
+        if (memAge <= LAST_KNOWN_HERO_GRACE_MS) {
+          tgtPos = {
+            heroId: mob.targetHeroId,
+            x: memPos.x | 0,
+            y: memPos.y | 0,
+            updatedMs: memPos.updatedMs ?? 0,
+          };
+        }
+      }
+    }
+
+    // 3) fallback: última posição vinda do DB (hero_last_pos)
+    if (!tgtPos) {
+      const fb = await getHeroLastPosPx(mob.targetHeroId, mob.mapKey);
+      if (fb && Number.isFinite(fb.x) && Number.isFinite(fb.y)) {
+        tgtPos = {
+          heroId: mob.targetHeroId,
+          x: fb.x | 0,
+          y: fb.y | 0,
+          updatedMs: fb.updatedMs || 0,
+        };
+      }
+    }
+  }
+
+  // se ainda assim não temos posição útil -> esquece alvo e volta pra casa
   if (!tgtPos) {
-    // não temos mais posição útil do herói -> esquece alvo e manda voltar pra casa
-    if (now - mob.lastSeenAt > GIVEUP_MS) {
+    if (now - (mob.lastSeenAt || 0) > GIVEUP_MS) {
       if (mob.targetHeroId) mob.threat.delete(String(mob.targetHeroId));
       mob.targetHeroId = null;
       mob.mode = 'idle';
@@ -1187,13 +1238,12 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     return;
   }
 
-  // 👇 NOVO BLOCO: perda de agro quando o herói "sai da tela"
-  const visionPx = mob.aggroRangePx || (8 * PX_PER_TILE); // raio de visão/base
+  // 👇 Perda de agro quando o herói sai da "tela" por muito tempo
+  const visionPx = mob.aggroRangePx || (8 * PX_PER_TILE); // raio base
   const dxVision = (mob.x ?? 0) - (tgtPos.x ?? 0);
   const dyVision = (mob.y ?? 0) - (tgtPos.y ?? 0);
   const distVision2 = dxVision * dxVision + dyVision * dyVision;
 
-  // se está fora da visão E faz tempo que não vê o herói -> reseta e volta pro spawn
   if (distVision2 > visionPx * visionPx && now - (mob.lastSeenAt || 0) > GIVEUP_MS) {
     if (mob.targetHeroId) mob.threat.delete(String(mob.targetHeroId));
     mob.targetHeroId = null;
@@ -1207,13 +1257,10 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     return;
   }
 
-
   let heroMem = mob.targetHeroId ? heroMemory.get(String(mob.targetHeroId)) : null;
 
-  // 2) Melee estilo Tibia: aceita adjacência em 8-direções (inclui diagonal)
-  //    e também checa alcance real do monstro em pixels com tolerância.
+  // --- geometria básica / stuck / orbit ---
   const TILE = PX_PER_TILE;
-
   const mobCx  = Math.floor(mob.x / TILE);
   const mobCy  = Math.floor(mob.y / TILE);
   const heroCx = Math.floor(tgtPos.x / TILE);
@@ -1255,7 +1302,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     );
   }
 
-
+  // 2) Se não está em range/LOS, volta pra chase
   if (!(inRangeTiles && canSeeNow)) {
     if (mob.mode === 'attack') mob.mode = 'chase';
     if (shouldForceAlternate) {
@@ -1264,36 +1311,10 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     mob.combatStep = null;
   }
 
+  // 3) ATAQUE
   if (inRangeTiles && canSeeNow) {
-    // compõe alvo com timestamp (se veio do DB, virá velho)
-    let tgt = heroes.find(h => h.heroId === mob.targetHeroId);
-    if (tgt && Number.isFinite(tgt.x) && Number.isFinite(tgt.y)) {
-      mob.lastKnownHeroPos = {
-        x: tgt.x | 0,
-        y: tgt.y | 0,
-        updatedMs: now,
-      };
-    }
-
-    if (!tgt) {
-      const memPos = mob.lastKnownHeroPos;
-      if (memPos && Number.isFinite(memPos.x) && Number.isFinite(memPos.y)) {
-        const memAge = now - (memPos.updatedMs ?? 0);
-        if (memAge <= LAST_KNOWN_HERO_GRACE_MS) {
-          tgt = {
-            heroId: mob.targetHeroId,
-            x: memPos.x | 0,
-            y: memPos.y | 0,
-            updatedMs: memPos.updatedMs ?? 0,
-          };
-        }
-      }
-    }
-
-    if (!tgt) {
-      const fb = await getHeroLastPosPx(mob.targetHeroId, mob.mapKey);
-      tgt = fb ? { heroId: mob.targetHeroId, x: fb.x, y: fb.y, updatedMs: fb.updatedMs || 0 } : null;
-    }
+    // usa posição já resolvida (tgtPos) como base
+    let tgt = tgtPos;
 
     let gate = canMobHitNow({ now, mob, tgtPos: tgt, losGrid });
     if (!gate.ok && shouldForceAlternate && heroMem) {
@@ -1347,7 +1368,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     if (now >= (mob.nextAttackAt || 0)) {
       mob.nextAttackAt = now + cd;
 
-      // 👇 mantém a posição do mob "fresca" mesmo parado, sem depender de movimento
+      // mantém a posição do mob "fresca" mesmo parado, sem depender de movimento
       mob.posUpdatedAt = now;
 
       if (DEBUG_AI) {
@@ -1381,6 +1402,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
       }
       mob.lastProgressAt = now;
     }
+
     await maybeHandleCombatDance({
       mob,
       now,
@@ -1394,9 +1416,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
     return;
   }
 
-
-
-  // 3) CHASE (greedy cardinal com colisão no servidor)
+  // 4) CHASE (greedy cardinal com colisão + leash no passo)
   mob.mode = 'chase';
   mob.combatStep = null;
 
@@ -1447,6 +1467,7 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   }
 
   if (stepTarget) {
+    // leash também limita o passo máximo
     if (
       leashRangePx != null && leashRangePx > 0 &&
       mob?.home && Number.isFinite(mob.home.x) && Number.isFinite(mob.home.y)
@@ -1472,8 +1493,8 @@ async function stepMob(now, dt, mob, heroes, losGrid, occupancy, heroTiles) {
   } else if (shouldForceAlternate) {
     mob.forcedAltUntil = Math.max(mob.forcedAltUntil || 0, now + ALT_PATH_WINDOW_MS);
   }
-
 }
+
 
 // --------- Threat ----------
 function decayThreat(mob, dt) {
