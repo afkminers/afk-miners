@@ -3428,7 +3428,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 100,
+    "line": 102,
     "kind": "function",
     "name": "loadMonsters",
     "params": [
@@ -3438,7 +3438,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 187,
+    "line": 192,
     "kind": "function",
     "name": "toNumber",
     "params": [
@@ -3447,7 +3447,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 194,
+    "line": 199,
     "kind": "function",
     "name": "parseLeashPx",
     "params": [
@@ -3456,7 +3456,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 229,
+    "line": 234,
     "kind": "function",
     "name": "loadItems",
     "params": [
@@ -3466,7 +3466,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 307,
+    "line": 312,
     "kind": "function",
     "name": "loadSprites",
     "params": [
@@ -3476,7 +3476,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 388,
+    "line": 393,
     "kind": "function",
     "name": "loadMap",
     "params": [
@@ -3487,7 +3487,7 @@
   },
   {
     "file": "server\\content\\loader.js",
-    "line": 470,
+    "line": 475,
     "kind": "function",
     "name": "loadAll",
     "params": [

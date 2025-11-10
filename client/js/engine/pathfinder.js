@@ -61,7 +61,7 @@ export class AStarGrid {
       return diag * Math.SQRT2 + straight;
     }
 
-    findPath(start, goal, maxIter = 4000) {
+    findPath(start, goal, maxIter = 2000) {
       const sx = start.x | 0, sy = start.y | 0;
       const gx = goal.x  | 0, gy = goal.y  | 0;
 

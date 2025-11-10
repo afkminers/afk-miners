@@ -5,7 +5,7 @@ const legacyToTile = (px) => Math.floor(px / TILE);
 const featureEnabled = () => typeof window !== 'undefined' && !!window.FEATURE_MOVEMENT_GRID_V1;
 const tileCoord = (px) => (featureEnabled() ? toTile(px) : legacyToTile(px));
 const centerOfTile = (t) => (featureEnabled() ? tileCenter(t) : t * TILE + TILE / 2);
-const snapThreshold = () => (featureEnabled() ? 2 : 1);
+const snapThreshold = () => (featureEnabled() ? 1 : 0.5);
 
 export class PlayerController {
   constructor({ speed = 120, collisionGrid = null, cols = 0, rows = 0, onMoved = null }) {
