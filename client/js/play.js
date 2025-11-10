@@ -2520,6 +2520,8 @@ function updateRespawns(now) {
 
     // Click-to-move (PRIORIZA LOOT)
     const m = Input.getMouse();
+    let clickConsumedForMove = false;
+
     if (Input.consumeClick()) {
       const rect = canvas.getBoundingClientRect();
       const sx = m.x - rect.left, sy = m.y - rect.top;
@@ -2528,18 +2530,16 @@ function updateRespawns(now) {
       if (loot) {
         try { CombatActions?.pickupLoot?.(loot.id); } catch {}
       } else {
+        // clique vira caminho A*
         clickMove.handleClick(sx, sy);
+        clickConsumedForMove = true;   // 👈 marca que esse frame já usou clique pra mover
       }
     }
 
     // Teclado: 1 passo de 32x32 por tecla (N/S/L/O)
     const step = Input.getStepIntent && Input.getStepIntent();
-    if (step) {
-      // 👇 prioridade do WASD: cancela A* antes de pedir o passo
-      const ctrl = window.GameScene?.controller;
-      if (ctrl && typeof ctrl.followPath === 'function' && ctrl.path) {
-        ctrl.followPath(null);
-      }
+    if (step && !clickConsumedForMove) {
+      // se o frame já teve click-to-move, não deixamos o WASD brigar
       window.GameScene?.controller?.requestStep?.(step);
     }
 

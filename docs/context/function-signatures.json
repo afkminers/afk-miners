@@ -13144,7 +13144,7 @@
     "params": [
       "start",
       "goal",
-      "maxIter = 4000"
+      "maxIter = 2000"
     ]
   },
   {
@@ -13398,7 +13398,7 @@
   },
   {
     "file": "client\\js\\engine\\click_to_move.js",
-    "line": 8,
+    "line": 9,
     "kind": "method",
     "class": "ClickToMove",
     "name": "constructor",
@@ -13411,7 +13411,7 @@
   },
   {
     "file": "client\\js\\engine\\click_to_move.js",
-    "line": 12,
+    "line": 20,
     "kind": "method",
     "class": "ClickToMove",
     "name": "setGrid",
@@ -13421,7 +13421,7 @@
   },
   {
     "file": "client\\js\\engine\\click_to_move.js",
-    "line": 13,
+    "line": 23,
     "kind": "method",
     "class": "ClickToMove",
     "name": "setAStar",
@@ -13431,7 +13431,7 @@
   },
   {
     "file": "client\\js\\engine\\click_to_move.js",
-    "line": 15,
+    "line": 27,
     "kind": "method",
     "class": "ClickToMove",
     "name": "handleClick",
@@ -13442,7 +13442,47 @@
   },
   {
     "file": "client\\js\\engine\\click_to_move.js",
-    "line": 28,
+    "line": 36,
+    "kind": "method",
+    "class": "ClickToMove",
+    "name": "if",
+    "params": [
+      "this._lastGoal && this._lastGoal.x === gx && this._lastGoal.y === gy"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\click_to_move.js",
+    "line": 58,
+    "kind": "method",
+    "class": "ClickToMove",
+    "name": "if",
+    "params": [
+      "curPath && curIdx < curPath.length"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\click_to_move.js",
+    "line": 62,
+    "kind": "method",
+    "class": "ClickToMove",
+    "name": "if",
+    "params": [
+      "last"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\click_to_move.js",
+    "line": 78,
+    "kind": "method",
+    "class": "ClickToMove",
+    "name": "if",
+    "params": [
+      "!newPath || !newPath.length"
+    ]
+  },
+  {
+    "file": "client\\js\\engine\\click_to_move.js",
+    "line": 92,
     "kind": "method",
     "class": "ClickToMove",
     "name": "if",

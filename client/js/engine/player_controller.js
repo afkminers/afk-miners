@@ -91,25 +91,27 @@ export class PlayerController {
   requestStep(dir) {
     if (!dir || (dir.x && dir.y)) return; // ignora diagonal
 
-    // Se estiver seguindo um path de clique, teclado tem prioridade:
-    // cancela o caminho e deixa o passo manual assumir.
+    // célula atual e alvo
+    const ccx = tileCoord(this.x), ccy = tileCoord(this.y);
+    const nx = ccx + (dir.x || 0);
+    const ny = ccy + (dir.y || 0);
+
+    // Se o passo é inválido (parede / bloqueio dinâmico), NÃO mexe no path atual
+    if (this.isBlockedCell(nx, ny)) return;
+
+    // Só aqui o teclado toma prioridade sobre um caminho de clique existente
     if (this.path) {
       this.path = null;
       this.pathIdx = 0;
     }
 
-    if (this._moving) return;             // já executando um passo
-
-    // célula atual e alvo
-    const ccx = tileCoord(this.x), ccy = tileCoord(this.y);
-    const nx = ccx + (dir.x || 0);
-    const ny = ccy + (dir.y || 0);
-    if (this.isBlockedCell(nx, ny)) return; // passo inválido
+    if (this._moving) return; // já executando um passo de tile
 
     const c = this._centerOf(nx, ny);
     this._stepTarget = { x: c.x, y: c.y };
     this._moving = true;
   }
+
 
   // dt em segundos; dir = {x:-1..1, y:-1..1} (contínuo legado)
   update(dt, dir) {
