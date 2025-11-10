@@ -2295,39 +2295,51 @@ async function resolvePlayerSprite() {
 
 // ======================= Sprites da Lyria (Valla) =======================
 
-function loadLyriaFrames(basePath, count) {
+function loadLyriaFrames(subdir, count) {
   const frames = [];
   const n = Number(count) || 0;
+
   for (let i = 1; i <= n; i++) {
-    const img = loadImg(`${basePath}/${i}.png`);
+    // vai gerar: /img/heroes/lyria/valla_idle_s/1.png ...
+    //            /img/heroes/lyria/valla_go_s/1.png ...
+    const img = loadImg(`/img/heroes/lyria/${subdir}/${i}.png`);
     frames.push(img);
-    // pré-carrega, mas sem travar nada se falhar
+    // pré-carrega, mas se der erro não trava nada
     ensureImgLoaded(img).catch(() => {});
   }
+
   return frames;
 }
 
 function setupLyriaSprites() {
-  const base = '/img/heroes/lyria';
+  // tamanho real dos frames (o da Valla/Lyria)
+  playerVis.w = 60;
+  playerVis.h = 80;
+  playerVis.anchorX = 0.5;
+  playerVis.anchorY = 0.9;
 
-  const idleFrames = loadLyriaFrames(`${base}/valla_idle_s`, 5); // 5 frames
-  const walkFrames = loadLyriaFrames(`${base}/valla_go_s`, 8);   // 8 frames
+  // batendo com as tuas pastas:
+  // client/img/heroes/lyria/valla_idle_s/1.png..5.png
+  // client/img/heroes/lyria/valla_go_s/1.png..8.png
+  const idleFrames = loadLyriaFrames('valla_idle_s', 5);
+  const walkFrames = loadLyriaFrames('valla_go_s', 8);
 
   playerVis.animSets = {
     idle: idleFrames,
     walk: walkFrames,
   };
 
-  // animação ligada só pra Lyria
+  // liga o sistema de animação
   playerAnim.enabled = true;
   playerAnim.t = 0;
   playerAnim.state = 'idle';
 
-  // fallback: primeiro frame do idle
+  // fallback = primeiro frame do idle
   if (idleFrames[0]) {
     playerVis.img = idleFrames[0];
   }
 }
+
 
 
 
@@ -2801,42 +2813,6 @@ function updateRespawns(now) {
       playerAnim.t += dt;
     }
 
-function updatePlayerAnim(controller, dt) {
-  // se animação não estiver ativa (herói que não seja Lyria)
-  if (!playerAnim.enabled) {
-    playerAnim.t += dt;
-    return;
-  }
-
-  if (!controller || typeof controller.getPosition !== 'function') {
-    playerAnim.t += dt;
-    return;
-  }
-
-  const pos = controller.getPosition();
-  if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) {
-    playerAnim.t += dt;
-    return;
-  }
-
-  const last = updatePlayerAnim._lastPos;
-  if (last && Number.isFinite(last.x) && Number.isFinite(last.y)) {
-    const dx = pos.x - last.x;
-    const dy = pos.y - last.y;
-    const distSq = dx * dx + dy * dy;
-
-    // 1px² de threshold pra considerar "movendo"
-    const moving = distSq > 1;
-    playerAnim.state = moving ? 'walk' : 'idle';
-  } else {
-    // primeira vez que pegamos posição → começa em idle
-    playerAnim.state = 'idle';
-  }
-
-  updatePlayerAnim._lastPos = { x: pos.x, y: pos.y };
-  playerAnim.t += dt;
-}
-
 
     // ===== IA dos mobs em passos de 32x32 (DESATIVADA; servidor manda posição) =====
     const hasGrid = !!grid && Number.isFinite(cols) && Number.isFinite(rows);
@@ -2908,6 +2884,44 @@ function updatePlayerAnim(controller, dt) {
   console.error(err);
   if (hud) hud.textContent = "Erro: " + err.message;
 });
+
+function updatePlayerAnim(controller, dt) {
+  if (!playerAnim.enabled) {
+    playerAnim.t += dt;
+    return;
+  }
+
+  if (!controller || typeof controller.getPosition !== 'function') {
+    playerAnim.t += dt;
+    return;
+  }
+
+  const pos = controller.getPosition();
+  if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) {
+    playerAnim.t += dt;
+    return;
+  }
+
+  const last = updatePlayerAnim._lastPos;
+  if (last && Number.isFinite(last.x) && Number.isFinite(last.y)) {
+    const dx = pos.x - last.x;
+    const dy = pos.y - last.y;
+    const distSq = dx * dx + dy * dy;
+
+    const moving = distSq > 1;
+    playerAnim.state = moving ? 'walk' : 'idle';
+
+    // pra debug: olha no console segurando W/S
+    console.log('anim:', playerAnim.state, 'distSq:', distSq.toFixed(2));
+  } else {
+    playerAnim.state = 'idle';
+  }
+
+  updatePlayerAnim._lastPos = { x: pos.x, y: pos.y };
+  playerAnim.t += dt;
+}
+
+
 
 /* ============================ util local ============================ */
 function applyCameraZoom() {
