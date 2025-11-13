@@ -738,6 +738,7 @@
       "normalizeHeroId",
       "normalizeLegacyMobPos",
       "normalizeTilesetPath",
+      "pickDir8",
       "pickElByIds",
       "pickFaceFromDelta",
       "pickFreeSpriteForSpawn",

@@ -1,0 +1,13 @@
+SELECT
+  ph.id         AS hero_id,
+  ph."heroKey"  AS hero_key,
+  ph.name       AS hero_name,
+  ph.rarity     AS hero_rarity,
+  ph."playerId" AS owner_player_id,
+  p.name        AS player_name,
+  p.coins,
+  p.gems,
+  p.createdAt   AS player_created_at
+FROM player_heroes ph
+JOIN players p ON p.id = ph."playerId"
+WHERE ph.id = '4631a844-f21c-48a6-a7c6-a2a588408458';

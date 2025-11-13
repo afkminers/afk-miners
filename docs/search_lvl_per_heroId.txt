@@ -1,0 +1,12 @@
+SELECT
+  ph.id         AS hero_id,
+  ph."heroKey"  AS hero_key,
+  ph.name       AS hero_name,
+  ph.rarity     AS hero_rarity,
+  ph.level      AS hero_level,
+  ph.xp         AS hero_xp,
+  ph."playerId" AS owner_player_id,
+  ph."createdAt" AS hero_created_at,
+  ph."updatedAt" AS hero_updated_at
+FROM player_heroes ph
+WHERE ph.id = '4631a844-f21c-48a6-a7c6-a2a588408458';
