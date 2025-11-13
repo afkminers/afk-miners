@@ -13,6 +13,7 @@ export default {
     play: 'Jogar',
     leaderboard: 'Leaderboard',
     support: 'Suporte',
+    downloads: 'Downloads',    // << adicionado
     adminPanel: 'Painel Admin',
   },
   common: {
