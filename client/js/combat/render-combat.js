@@ -155,7 +155,9 @@ async function attemptMonsterPush({ monsterId, startTile }, dropTileX, dropTileY
       else console.warn('[push] ' + resp.message);
     }
   } catch (err) {
-    console.warn('[push] request failed', err?.message || err);
+    const msg = err?.payload?.message || err?.message || err;
+    if (msg && window.Chat?.pushLog) window.Chat.pushLog(`[Empurrar] ${msg}`);
+    console.warn('[push] request failed', msg);
   }
   return false;
 }
@@ -796,7 +798,7 @@ export default function installCombatOverlay() {
       }
 
       let handled = false;
-      if (dragState.active && dragState.dragging && dragState.startTile) {
+      if (dragState.active && dragState.startTile && dragState.monsterId) {
         const rect = canvas.getBoundingClientRect();
         const sx = e.clientX - rect.left;
         const sy = e.clientY - rect.top;
